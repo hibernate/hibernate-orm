@@ -19,6 +19,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -69,7 +70,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
-		options.remove( AvailableSettings.CONNECTION_PROVIDER );
+//		options.remove( AvailableSettings.CONNECTION_PROVIDER );
 	}
 
 	@Test
@@ -101,6 +102,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
                               jiraKey = "HHH-7252" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testFindWithPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -115,30 +117,31 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( lock2 ) );
 
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				try {
-					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
-					Map<String, Object> properties = new HashMap<String, Object>();
-					properties.put( AvailableSettings.JPA_LOCK_TIMEOUT, 0L );
+				TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), () -> {
+					try {
+						Map<String, Object> properties = new HashMap<String, Object>();
+						properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 0L );
 
-					entityManager.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
-					fail( "Exception should be thrown" );
-				}
-				catch (LockTimeoutException lte) {
-					// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
-					lte.getCause();
-				}
-				catch (PessimisticLockException pe) {
-					fail( "Find with immediate timeout should have thrown LockTimeoutException." );
-				}
-				catch (PersistenceException pe) {
-					log.info(
-							"EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
-									"This is likely a consequence of " + getDialect().getClass()
-									.getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
-									"See HHH-7251 for an example of one such situation.", pe
-					);
-					fail( "EntityManager should be throwing LockTimeoutException." );
-				}
+						entityManager.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
+						fail( "Exception should be thrown" );
+					}
+					catch (LockTimeoutException lte) {
+						// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
+						lte.getCause();
+					}
+					catch (PessimisticLockException pe) {
+						fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+					}
+					catch (PersistenceException pe) {
+						log.info(
+								"EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
+										"This is likely a consequence of " + getDialect().getClass()
+										.getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
+										"See HHH-7251 for an example of one such situation.", pe
+						);
+						fail( "EntityManager should be throwing LockTimeoutException." );
+					}
+				} );
 			} );
 		} );
 	}
@@ -149,6 +152,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getSingleResult.",
 			jiraKey = "HHH-13364" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testQuerySingleResultPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -163,27 +167,28 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( lock2 ) );
 
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				try {
-					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
-					entityManager.createQuery( "from Lock_ where id = " + lock.getId(), Lock.class )
-							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-							.setHint( "javax.persistence.lock.timeout", 0 )
-							.getSingleResult();
-					fail( "Exception should be thrown" );
-				}
-				catch (LockTimeoutException lte) {
-					// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
-					lte.getCause();
-				}
-				catch (PessimisticLockException pe) {
-					fail( "Find with immediate timeout should have thrown LockTimeoutException." );
-				}
-				catch (PersistenceException pe) {
-					log.info("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
-									 "This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
-									 "See HHH-7251 for an example of one such situation.", pe);
-					fail( "EntityManager should be throwing LockTimeoutException." );
-				}
+				TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), () -> {
+					try {
+						entityManager.createQuery( "from Lock_ where id = " + lock.getId(), Lock.class )
+								.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+								.setHint( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 0 )
+								.getSingleResult();
+						fail( "Exception should be thrown" );
+					}
+					catch (LockTimeoutException lte) {
+						// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
+						lte.getCause();
+					}
+					catch (PessimisticLockException pe) {
+						fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+					}
+					catch (PersistenceException pe) {
+						log.info("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
+										 "This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
+										 "See HHH-7251 for an example of one such situation.", pe);
+						fail( "EntityManager should be throwing LockTimeoutException." );
+					}
+				} );
 			} );
 		} );
 	}
@@ -194,6 +199,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getResultList.",
 			jiraKey = "HHH-13364" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testQueryResultListPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -208,30 +214,31 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( lock2 ) );
 
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				try {
-					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
-					entityManager.createQuery( "from Lock_ where id = " + lock.getId(), Lock.class )
-							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-							.setHint( "javax.persistence.lock.timeout", 0 )
-							.getResultList();
-					fail( "Exception should be thrown" );
-				}
-				catch (LockTimeoutException lte) {
-					// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
-					lte.getCause();
-				}
-				catch (PessimisticLockException pe) {
-					fail( "Find with immediate timeout should have thrown LockTimeoutException." );
-				}
-				catch (PersistenceException pe) {
-					log.info(
-						"EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
-								"This is likely a consequence of " + getDialect().getClass()
-								.getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
-								"See HHH-7251 for an example of one such situation.", pe
-					);
-					fail( "EntityManager should be throwing LockTimeoutException." );
-				}
+				TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), () -> {
+					try {
+						entityManager.createQuery( "from Lock_ where id = " + lock.getId(), Lock.class )
+								.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+								.setHint( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 0 )
+								.getResultList();
+						fail( "Exception should be thrown" );
+					}
+					catch (LockTimeoutException lte) {
+						// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
+						lte.getCause();
+					}
+					catch (PessimisticLockException pe) {
+						fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+					}
+					catch (PersistenceException pe) {
+						log.info(
+								"EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
+										"This is likely a consequence of " + getDialect().getClass()
+										.getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
+										"See HHH-7251 for an example of one such situation.", pe
+						);
+						fail( "EntityManager should be throwing LockTimeoutException." );
+					}
+				} );
 			} );
 		} );
 	}
@@ -242,6 +249,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for NamedQuery#getResultList.",
 			jiraKey = "HHH-13364" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testNamedQueryResultListPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -256,27 +264,28 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( lock2 ) );
 
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				try {
-					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
-					entityManager.createNamedQuery( "AllLocks", Lock.class ).getResultList();
-					fail( "Exception should be thrown" );
-				}
-				catch (LockTimeoutException lte) {
-					// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
-					lte.getCause();
-				}
-				catch (PessimisticLockException pe) {
-					fail( "Find with immediate timeout should have thrown LockTimeoutException." );
-				}
-				catch (PersistenceException pe) {
-					log.info(
-							"EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
-									"This is likely a consequence of " + getDialect().getClass()
-									.getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
-									"See HHH-7251 for an example of one such situation.", pe
-					);
-					fail( "EntityManager should be throwing LockTimeoutException." );
-				}
+				TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), () -> {
+					try {
+						entityManager.createNamedQuery( "AllLocks", Lock.class ).getResultList();
+						fail( "Exception should be thrown" );
+					}
+					catch (LockTimeoutException lte) {
+						// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
+						lte.getCause();
+					}
+					catch (PessimisticLockException pe) {
+						fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+					}
+					catch (PersistenceException pe) {
+						log.info(
+								"EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
+										"This is likely a consequence of " + getDialect().getClass()
+										.getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
+										"See HHH-7251 for an example of one such situation.", pe
+						);
+						fail( "EntityManager should be throwing LockTimeoutException." );
+					}
+				} );
 			} );
 		} );
 	}
@@ -301,19 +310,20 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 			try {
 				doInJPA( this::entityManagerFactory, entityManager -> {
-					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
-					try {
-						entityManager.createNativeQuery( updateStatement() )
-							.setParameter( "name", "changed" )
-							.setParameter( "id", lock.getId() )
-							.executeUpdate();
-						fail("Should throw Exception");
-					}
-					catch (Exception e) {
-						if ( !ExceptionUtil.isSqlLockTimeout( e) ) {
-							fail( "Unknown exception thrown: " + e.getMessage() );
+					TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), () -> {
+						try {
+							entityManager.createNativeQuery( updateStatement() )
+									.setParameter( "name", "changed" )
+									.setParameter( "id", lock.getId() )
+									.executeUpdate();
+							fail("Should throw Exception");
 						}
-					}
+						catch (Exception e) {
+							if ( !ExceptionUtil.isSqlLockTimeout( e) ) {
+								fail( "Unknown exception thrown: " + e.getMessage() );
+							}
+						}
+					} );
 				} );
 			}
 			catch (Exception e) {
@@ -345,18 +355,19 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 			try {
 				doInJPA( this::entityManagerFactory, entityManager -> {
-					try {
-						TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
-						entityManager.createNativeQuery( updateStatement() )
-								.setParameter( "name", "changed" )
-								.setParameter( "id", lock.getId() )
-								.executeUpdate();
-					}
-					catch (Exception e) {
-						if ( ExceptionUtil.isSqlLockTimeout( e ) ) {
-							failureExpected.set( true );
+					TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), () -> {
+						try {
+							entityManager.createNativeQuery( updateStatement() )
+									.setParameter( "name", "changed" )
+									.setParameter( "id", lock.getId() )
+									.executeUpdate();
 						}
-					}
+						catch (Exception e) {
+							if ( ExceptionUtil.isSqlLockTimeout( e ) ) {
+								failureExpected.set( true );
+							}
+						}
+					} );
 				} );
 			}
 			catch (Exception e) {
@@ -578,7 +589,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(HSQLDialect.class)
 	// ASE15.5 will generate select...holdlock and fail at this test, but ASE15.7 passes it. Skip it for ASE15.5
 	// only.
-	@SkipForDialect(value = { SQLServerDialect.class })
+	@SkipForDialect(SQLServerDialect.class)
 	@SkipForDialect(DerbyDialect.class)
 	public void testContendedPessimisticLock() throws Exception {
 		final CountDownLatch latch = new CountDownLatch( 1 );
@@ -591,25 +602,26 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					try {
 
 						doInJPA( this::entityManagerFactory, _entityManager -> {
-							TransactionUtil.setJdbcTimeout( _entityManager.unwrap( Session.class ) );
-							log.info( "testContendedPessimisticLock: (BG) about to issue (PESSIMISTIC_READ) query against write-locked entity" );
+							TransactionUtil.withJdbcTimeout( _entityManager.unwrap( Session.class ), () -> {
+								log.info( "testContendedPessimisticLock: (BG) about to issue (PESSIMISTIC_READ) query against write-locked entity" );
 
-							try {
-								// we should block on the following read
-								Query query = _entityManager.createQuery(
-										"select L from Lock_ L where L.id < 10000 "
-								);
-								query.setLockMode( LockModeType.PESSIMISTIC_READ );
-								List<Lock> resultList = query.getResultList();
-								Lock _lock = resultList.get( 0 );
-								backgroundThreadHasReadNewValue.set( _lock.getName().equals( "foo" ) );
-							}
-							catch ( RuntimeException e ) {
-								if ( !ExceptionUtil.isSqlLockTimeout( e ) ) {
-									fail( "An error occurred waiting while attempting to read the entity: " + e.getMessage() );
+								try {
+									// we should block on the following read
+									Query query = _entityManager.createQuery(
+											"select L from Lock_ L where L.id < 10000 "
+									);
+									query.setLockMode( LockModeType.PESSIMISTIC_READ );
+									List<Lock> resultList = query.getResultList();
+									Lock _lock = resultList.get( 0 );
+									backgroundThreadHasReadNewValue.set( _lock.getName().equals( "foo" ) );
 								}
-								backgroundThreadHasReadNewValue.set( false );
-							}
+								catch ( RuntimeException e ) {
+									if ( !ExceptionUtil.isSqlLockTimeout( e ) ) {
+										fail( "An error occurred waiting while attempting to read the entity: " + e.getMessage() );
+									}
+									backgroundThreadHasReadNewValue.set( false );
+								}
+							} );
 						} );
 					}
 					catch (TransactionException e) {
@@ -836,7 +848,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( { OracleDialect.class, PostgreSQLDialect.class })
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
     @RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticWriteLockNoWait() throws Exception {
 
@@ -1169,14 +1182,13 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test(timeout = 70 * 1000) //70 seconds
 	@TestForIssue( jiraKey = "HHH-13135" )
-	@SkipForDialect(value = {
-			MySQLDialect.class,
-			MariaDBDialect.class
-	}, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	public void testLockInsertFkTarget() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -1191,12 +1203,14 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( lock2 ) );
 
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ), 60 * 1000L ); // wait up to a minute
-				LockReference ref = new LockReference( 1, "name" );
-				ref.setLock( entityManager.getReference( Lock.class, lock.getId() ) );
+				// wait up to a minute
+				TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), 60 * 1000L, () -> {
+					LockReference ref = new LockReference( 1, "name" );
+					ref.setLock( entityManager.getReference( Lock.class, lock.getId() ) );
 
-				// Check that we can insert a LockReference, referring to a Lock that is PESSIMISTIC_WRITE locked
-				entityManager.persist( ref );
+					// Check that we can insert a LockReference, referring to a Lock that is PESSIMISTIC_WRITE locked
+					entityManager.persist( ref );
+				} );
 			} );
 		} );
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -1207,14 +1221,13 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test(timeout = 70 * 1000) //70 seconds
 	@TestForIssue( jiraKey = "HHH-13135" )
-	@SkipForDialect(value = {
-			MySQLDialect.class,
-			MariaDBDialect.class
-	}, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "FK constraint checks are not compatible with exclusive locks")
 	public void testLockUpdateFkTarget() {
 		Lock lock1 = new Lock();
 		lock1.setName( "l1" );
@@ -1237,11 +1250,13 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( l2 ) );
 
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ), 60 * 1000L ); // wait up to a minute );
-				LockReference lockReference = entityManager.find( LockReference.class, ref.getId() );
+				// wait up to a minute
+				TransactionUtil.withJdbcTimeout( entityManager.unwrap( Session.class ), 60 * 1000L, () -> {
+					LockReference lockReference = entityManager.find( LockReference.class, ref.getId() );
 
-				// Check that we can update a LockReference, referring to a Lock that is PESSIMISTIC_WRITE locked
-				lockReference.setLock( entityManager.getReference( Lock.class, lock2.getId() ) );
+					// Check that we can update a LockReference, referring to a Lock that is PESSIMISTIC_WRITE locked
+					lockReference.setLock( entityManager.getReference( Lock.class, lock2.getId() ) );
+				} );
 			} );
 		} );
 		doInJPA( this::entityManagerFactory, entityManager -> {

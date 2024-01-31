@@ -31,6 +31,7 @@ import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -74,7 +75,7 @@ public class SimpleNationalizedTest {
 
 	@Test
 	public void simpleNationalizedTest() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			final MetadataSources ms = new MetadataSources( ssr );

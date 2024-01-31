@@ -19,6 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -33,18 +34,18 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 		buildSessionFactory(EmptyColumnNameEntity.class);
 	}
 
-	@Test
+	@Test(expected = AnnotationException.class)
 	public void testUniqueConstraintWithEmptyColumnNameList() {
 		buildSessionFactory(EmptyColumnNameListEntity.class);
 	}
 
-	@Test(expected = AnnotationException.class)
+	@Test
 	public void testUniqueConstraintWithNotExistsColumnName() {
 		buildSessionFactory(NotExistsColumnEntity.class);
 	}
 
 	private void buildSessionFactory(Class<?> entity) {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			new MetadataSources( serviceRegistry )

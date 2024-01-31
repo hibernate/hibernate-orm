@@ -9,6 +9,8 @@ import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface Dao {
@@ -63,6 +65,24 @@ public interface Dao {
 //    @HQL("from Book where title like :title")
 //    SelectionQuery<Book> findByTitleWithOrderingByVarargs(String title, Order<? super Book>... order);
 
+    @HQL("select count(*) from Book")
+    long countBooks();
+
+    @HQL("select count(*)>1 from Book")
+    boolean booksExist();
+
+    @HQL("delete from Book")
+    int deleteBooks();
+
+    @HQL("select count(*), count(*)>1 from Book")
+    Object[] funnyQueryReturningArray();
+
+    class Record {
+        Record(Long count, Boolean exists) {}
+    }
+    @HQL("select count(*), count(*)>1 from Book")
+    Record funnyQueryReturningRecord();
+
     @HQL("from Book where isbn = :isbn")
     Book findByIsbn(String isbn);
 
@@ -74,4 +94,19 @@ public interface Dao {
 
     @Find
     List<Bean> beansForText(String text);
+
+    @HQL("where isbn = ?1")
+    List<Book> sortedBooksForIsbn(String isbn, Order<? super Book>... order);
+
+    @Find
+    List<Book> sortedBooks(String isbn, Order<? super Book>... order);
+
+    @HQL("select local date")
+    LocalDate localDate();
+
+    @HQL("select local datetime")
+    LocalDateTime localDatetime();
+
+    @HQL("select avg(pages) from Book")
+    double averagePageCount();
 }

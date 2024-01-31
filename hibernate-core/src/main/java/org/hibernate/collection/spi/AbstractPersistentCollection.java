@@ -782,8 +782,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public boolean needsRecreate(CollectionPersister persister) {
-		// Workaround for situations like HHH-7072.  If the collection element is a component that consists entirely
-		// of nullable properties, we currently have to forcefully recreate the entire collection.  See the use
+		// Workaround for situations like HHH-7072.  If the collection element is a component that consists
+		// nullable properties, we currently have to forcefully recreate the entire collection.  See the use
 		// of hasNotNullableColumns in the AbstractCollectionPersister constructor for more info.  In order to delete
 		// row-by-row, that would require SQL like "WHERE ( COL = ? OR ( COL is null AND ? is null ) )", rather than
 		// the current "WHERE COL = ?" (fails for null for most DBs).  Note that
@@ -793,7 +793,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		// Selecting a type used in where part of update statement
 		// (must match condition in org.hibernate.persister.collection.BasicCollectionPersister#doUpdateRows).
 		// See HHH-9474
-		Type whereType;
+		final Type whereType;
 		if ( persister.hasIndex() ) {
 			whereType = persister.getIndexType();
 		}
@@ -801,8 +801,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			whereType = persister.getElementType();
 		}
 		if ( whereType instanceof CompositeType ) {
-			CompositeType componentIndexType = (CompositeType) whereType;
-			return !componentIndexType.hasNotNullProperty();
+			final CompositeType componentIndexType = (CompositeType) whereType;
+			return componentIndexType.hasNullProperty();
 		}
 		return false;
 	}

@@ -8,6 +8,8 @@ package org.hibernate.orm.test.mapping.collections.custom.parameterized;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.FetchType;
@@ -50,7 +52,7 @@ public class Entity {
 			type = DefaultableListType.class,
 			parameters = @Parameter(name = "default", value = "Hello" )
 	)
-	@JoinColumn( name = "ENT_ID" )
+	@CollectionTable(name = "ENTVALS", joinColumns = @JoinColumn( name = "ENT_ID" ))
 	@OrderColumn( name = "POS" )
 	@Column(name = "VAL")
 	public List getValues() {

@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -21,6 +20,7 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.SharedCacheMode;
 
@@ -79,6 +79,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
+	public List<CompositeUserType<?>> getCompositeUserTypes() {
+		return delegate.getCompositeUserTypes();
+	}
+
+	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return delegate.getTypeConfiguration();
 	}
@@ -111,11 +116,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public boolean isMultiTenancyEnabled() {
 		return delegate.isMultiTenancyEnabled();
-	}
-
-	@Override
-	public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
-		return delegate.getIdGenerationTypeInterpreter();
 	}
 
 	@Override
@@ -178,7 +178,7 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public boolean disallowExtensionsInCdi() {
-		return delegate.disallowExtensionsInCdi();
+	public boolean isAllowExtensionsInCdi() {
+		return delegate.isAllowExtensionsInCdi();
 	}
 }

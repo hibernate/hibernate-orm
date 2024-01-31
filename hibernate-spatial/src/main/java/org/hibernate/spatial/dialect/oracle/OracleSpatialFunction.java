@@ -9,6 +9,7 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -24,7 +25,10 @@ public class OracleSpatialFunction extends NamedSqmFunctionDescriptor {
 
 	@Override
 	public void render(
-			SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
-		super.render( sqlAppender, sqlAstArguments, walker );
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
+		super.render( sqlAppender, sqlAstArguments, returnType, walker );
 	}
 }

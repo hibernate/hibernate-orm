@@ -20,6 +20,7 @@ import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.tool.schema.Action;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -47,7 +48,7 @@ public class ImmediateMixedAccessTests implements BeanContainer.LifecycleOptions
 		try ( final SeContainer cdiContainer = Helper.createSeContainer();
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build() ) {
 
-			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();

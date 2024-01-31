@@ -17,6 +17,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -105,7 +106,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		return EnhancementHelper.performWork(
 				this,
 				(session, isTempSession) -> {
-					final Object[] writtenValues;
+					final Object[] writtenAttributeValues;
+					final AttributeMapping[] writtenAttributeMappings;
 
 					final EntityPersister entityPersister =
 							session.getFactory().getMappingMetamodel()
@@ -125,16 +127,19 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 						// 		the force initialization below so that we can "replay" them after the
 						// 		initialization
 
-						writtenValues = new Object[writtenFieldNames.size()];
+						writtenAttributeValues = new Object[writtenFieldNames.size()];
+						writtenAttributeMappings = new AttributeMapping[writtenFieldNames.size()];
 
 						int index = 0;
 						for ( String writtenFieldName : writtenFieldNames ) {
-							writtenValues[index] = entityPersister.getPropertyValue( target, writtenFieldName );
+							writtenAttributeMappings[index] = entityPersister.findAttributeMapping( writtenFieldName );
+							writtenAttributeValues[index] = writtenAttributeMappings[index].getValue( target );
 							index++;
 						}
 					}
 					else {
-						writtenValues = null;
+						writtenAttributeValues = null;
+						writtenAttributeMappings = null;
 					}
 
 					final Object initializedValue = forceInitialize(
@@ -146,19 +151,13 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 					setInitialized();
 
-					if ( writtenValues != null ) {
+					if ( writtenAttributeValues != null ) {
 						// here is the replaying of the explicitly set values we prepared above
-						for ( String writtenFieldName : writtenFieldNames ) {
-							final int size = entityPersister.getNumberOfAttributeMappings();
-							for ( int index = 0; index < size; index++ ) {
-								final String name = entityPersister.getAttributeMapping( index ).getAttributeName();
-								if ( writtenFieldName.contains( name ) ) {
-									entityPersister.setValue(
-											target,
-											index,
-											writtenValues[index]
-									);
-								}
+						for ( int i = 0; i < writtenAttributeMappings.length; i++ ) {
+							final AttributeMapping attribute = writtenAttributeMappings[i];
+							attribute.setValue( target, writtenAttributeValues[i] );
+							if ( inLineDirtyChecking ) {
+								asSelfDirtinessTracker( target ).$$_hibernate_trackChange( attribute.getAttributeName() );
 							}
 						}
 						writtenFieldNames.clear();

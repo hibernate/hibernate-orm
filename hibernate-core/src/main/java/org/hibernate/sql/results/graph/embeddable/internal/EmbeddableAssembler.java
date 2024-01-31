@@ -35,4 +35,15 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 		return initializer.getCompositeInstance();
 	}
 
+	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		// use resolveState instead of initialize instance to avoid
+		// unneeded embeddable instantiation and injection
+		initializer.resolveState( rowProcessingState );
+	}
+
+	@Override
+	public EmbeddableInitializer getInitializer() {
+		return initializer;
+	}
 }

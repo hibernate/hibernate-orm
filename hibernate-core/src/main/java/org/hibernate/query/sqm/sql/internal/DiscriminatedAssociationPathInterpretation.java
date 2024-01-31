@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.sql.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -22,11 +23,12 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.update.Assignable;
 
 /**
  * SqmPathInterpretation for discriminated association (ANY) mappings
  */
-public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements SqlTupleContainer {
+public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements SqlTupleContainer, Assignable {
 
 	public static <T> DiscriminatedAssociationPathInterpretation<T> from(
 			SqmAnyValuedSimplePath<T> sqmPath,
@@ -85,5 +87,22 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 	@Override
 	public SqlTuple getSqlTuple() {
 		return sqlTuple;
+	}
+
+	@Override
+	public List<ColumnReference> getColumnReferences() {
+		final List<ColumnReference> results = new ArrayList<>();
+		visitColumnReferences( results::add );
+		return results;
+	}
+
+	@Override
+	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
+		for ( Expression expression : sqlTuple.getExpressions() ) {
+			if ( !( expression instanceof ColumnReference ) ) {
+				throw new IllegalArgumentException( "Expecting ColumnReference, found : " + expression );
+			}
+			columnReferenceConsumer.accept( (ColumnReference) expression );
+		}
 	}
 }

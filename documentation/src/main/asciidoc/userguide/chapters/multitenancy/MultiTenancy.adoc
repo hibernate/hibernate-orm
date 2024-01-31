@@ -81,7 +81,7 @@ include::{example-dir-multitenancy}/AbstractMultiTenancyTest.java[tags=multitena
 For the partitioned data approach, each entity representing partitioned data must declare a field
 annotated `@TenantId`.
 
-[[multitenacy-hibernate-MultiTenantConnectionProvider-example]]
+[[multitenacy-hibernate-TenantId-example]]
 .A `@TenantId` usage example
 ====
 [source, JAVA, indent=0]

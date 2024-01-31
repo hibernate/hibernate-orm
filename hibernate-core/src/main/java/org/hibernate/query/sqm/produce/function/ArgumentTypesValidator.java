@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -26,6 +27,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -94,7 +96,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			JdbcTypeIndicators indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
 			SqmExpressible<?> nodeType = argument.getNodeType();
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
-			if ( nodeType != null ) {
+			if ( nodeType != null && type != FunctionParameterType.ANY ) {
 				JavaType<?> javaType = nodeType.getRelationalJavaType();
 				if (javaType != null) {
 					checkArgumentType( functionName, count, argument, indicators, type, javaType );
@@ -102,7 +104,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 				switch (type) {
 					case TEMPORAL_UNIT:
 						if ( !(argument instanceof SqmExtractUnit) && !(argument instanceof SqmDurationUnit) ) {
-							throwError(type, Object.class, functionName, count);
+							throwError(type, Object.class, null, functionName, count);
 						}
 						break;
 					// the following are not really necessary for the functions we have today
@@ -111,12 +113,23 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 					// something crazy by the parser
 					case TRIM_SPEC:
 						if ( !(argument instanceof SqmTrimSpecification) ) {
-							throwError(type, Object.class, functionName, count);
+							throwError(type, Object.class, null, functionName, count);
 						}
 						break;
 					case COLLATION:
 						if ( !(argument instanceof SqmCollation) ) {
-							throwError(type, Object.class, functionName, count);
+							throwError(type, Object.class, null, functionName, count);
+						}
+						break;
+					case NO_UNTYPED:
+						if ( argument instanceof SqmLiteralNull<?> ) {
+							throw new FunctionArgumentException(
+									String.format(
+											"Parameter %d of function '%s()' does not permit untyped expressions like null literals. Please cast the expression to a type",
+											count,
+											functionName
+									)
+							);
 						}
 						break;
 				}
@@ -137,9 +150,11 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		if ( !isUnknown( javaType ) ) {
 			DomainType<?> domainType = argument.getExpressible().getSqmType();
 			if ( domainType instanceof JdbcMapping ) {
+				JdbcType jdbcType = ((JdbcMapping) domainType).getJdbcType();
 				checkArgumentType(
 						count, functionName, type,
-						((JdbcMapping) domainType).getJdbcType().getDefaultSqlTypeCode(),
+						jdbcType.getDefaultSqlTypeCode(),
+						jdbcType.getFriendlyName(),
 						javaType.getJavaTypeClass()
 				);
 			}
@@ -149,6 +164,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 					checkArgumentType(
 							count, functionName, type,
 							getJdbcType( indicators, javaType ),
+							null,
 							javaType.getJavaTypeClass()
 					);
 				}
@@ -206,25 +222,27 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 				&& isUnknown( ((BasicType<?>) expressionType).getJavaTypeDescriptor() );
 	}
 
-	private int validateArgument(int count, JdbcMappingContainer expressionType, String functionName) {
+	private int validateArgument(int paramNumber, JdbcMappingContainer expressionType, String functionName) {
 		final int jdbcTypeCount = expressionType.getJdbcTypeCount();
 		for ( int i = 0; i < jdbcTypeCount; i++ ) {
 			final JdbcMapping mapping = expressionType.getJdbcMapping( i );
-			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
-			if (type != null) {
+			FunctionParameterType type = paramNumber < types.length ? types[paramNumber++] : types[types.length - 1];
+			if ( type != null ) {
 				checkArgumentType(
-						count,
+						paramNumber,
 						functionName,
 						type,
 						mapping.getJdbcType().getDefaultSqlTypeCode(),
+						mapping.getJdbcType().getFriendlyName(),
 						mapping.getJavaTypeDescriptor().getJavaType()
 				);
 			}
 		}
-		return count;
+		return paramNumber;
 	}
 
-	private void checkArgumentType(int count, String functionName, FunctionParameterType type, int code, Type javaType) {
+	private static void checkArgumentType(
+			int paramNumber, String functionName, FunctionParameterType type, int code, String sqlType, Type javaType) {
 		switch (type) {
 			case COMPARABLE:
 				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code) && !isEnumType( code )
@@ -234,68 +252,83 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 						// as a special case, we consider a binary column
 						// comparable when it is mapped by a Java UUID
 						&& !( javaType == java.util.UUID.class && code == Types.BINARY ) ) {
-					throwError(type, javaType, functionName, count);
+					throwError(type, javaType, sqlType, functionName, paramNumber);
 				}
 				break;
 			case STRING:
 				if ( !isCharacterType(code) && !isEnumType(code) ) {
-					throwError(type, javaType, functionName, count);
+					throwError(type, javaType, sqlType, functionName, paramNumber);
 				}
 				break;
 			case STRING_OR_CLOB:
 				if ( !isCharacterOrClobType(code) ) {
-					throwError(type, javaType, functionName, count);
+					throwError(type, javaType, sqlType, functionName, paramNumber);
 				}
 				break;
 			case NUMERIC:
 				if ( !isNumericType(code) ) {
-					throwError(type, javaType, functionName, count);
+					throwError(type, javaType, sqlType, functionName, paramNumber);
 				}
 				break;
 			case INTEGER:
 				if ( !isIntegral(code) ) {
-					throwError(type, javaType, functionName, count);
+					throwError(type, javaType, sqlType, functionName, paramNumber);
 				}
 				break;
 			case BOOLEAN:
 				// ugh, need to be careful here, need to accept all the
 				// JDBC type codes that a Dialect might use for BOOLEAN
 				if ( code != BOOLEAN && code != BIT && code != TINYINT && code != SMALLINT ) {
-					throwError(type, javaType, functionName, count);
+					throwError(type, javaType, sqlType, functionName, paramNumber);
 				}
 				break;
 			case TEMPORAL:
 				if ( !isTemporalType(code) ) {
-					throwError(type, javaType, functionName, count);
+					throwError(type, javaType, sqlType, functionName, paramNumber);
 				}
 				break;
 			case DATE:
 				if ( !hasDatePart(code) ) {
-					throwError(type, javaType, functionName, count);
+					throwError(type, javaType, sqlType, functionName, paramNumber);
 				}
 				break;
 			case TIME:
 				if ( !hasTimePart(code) ) {
-					throwError(type, javaType, functionName, count);
+					throwError(type, javaType, sqlType, functionName, paramNumber);
 				}
 				break;
 			case SPATIAL:
 				if ( !isSpatialType( code ) ) {
-					throwError( type, javaType, functionName, count );
+					throwError( type, javaType, sqlType, functionName, paramNumber );
 				}
 		}
 	}
 
-	private void throwError(FunctionParameterType type, Type javaType, String functionName, int count) {
-		throw new FunctionArgumentException(
-				String.format(
-						"Parameter %d of function '%s()' has type '%s', but argument is of type '%s'",
-						count,
-						functionName,
-						type,
-						javaType.getTypeName()
-				)
-		);
+	private static void throwError(
+			FunctionParameterType type, Type javaType, String sqlType, String functionName, int paramNumber) {
+		if ( sqlType == null ) {
+			throw new FunctionArgumentException(
+					String.format(
+							"Parameter %d of function '%s()' has type '%s', but argument is of type '%s'",
+							paramNumber,
+							functionName,
+							type,
+							javaType.getTypeName()
+					)
+			);
+		}
+		else {
+			throw new FunctionArgumentException(
+					String.format(
+							"Parameter %d of function '%s()' has type '%s', but argument is of type '%s' mapped to '%s'",
+							paramNumber,
+							functionName,
+							type,
+							javaType.getTypeName(),
+							sqlType
+					)
+			);
+		}
 	}
 
 	@Override

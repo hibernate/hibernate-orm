@@ -12,7 +12,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -138,11 +137,6 @@ public abstract class Constraint implements Exportable, Serializable {
 
 	public Column getColumn(int i) {
 		return columns.get( i );
-	}
-
-	@Deprecated(since = "6.0")
-	public Iterator<Column> getColumnIterator() {
-		return getColumns().iterator();
 	}
 
 	public Table getTable() {

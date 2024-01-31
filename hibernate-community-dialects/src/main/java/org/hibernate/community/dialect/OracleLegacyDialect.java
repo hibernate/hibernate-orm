@@ -90,6 +90,7 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
@@ -99,16 +100,19 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.HOUR;
@@ -122,6 +126,8 @@ import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -131,6 +137,7 @@ import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.SQLXML;
 import static org.hibernate.type.SqlTypes.STRUCT;
+import static org.hibernate.type.SqlTypes.TABLE;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -148,17 +155,20 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  */
 public class OracleLegacyDialect extends Dialect {
 
-	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b" );
-	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\sby\\b" );
-	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border\\sby\\b" );
-	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
-	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b", CASE_INSENSITIVE );
+	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\s+by\\b", CASE_INSENSITIVE );
+	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border\\s+by\\b", CASE_INSENSITIVE );
+	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b", CASE_INSENSITIVE );
+
+	private static final Pattern SQL_STATEMENT_TYPE_PATTERN =
+			Pattern.compile( "^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", CASE_INSENSITIVE );
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private static final String yqmSelect =
-			"( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') + ( LEAST( EXTRACT( DAY FROM %2$s ), EXTRACT( DAY FROM LAST_DAY( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') ) ) ) - 1 ) )";
+			"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
 
 	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
@@ -218,6 +228,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.addMonths();
 		functionFactory.monthsBetween();
 		functionFactory.everyAny_minMaxCase();
+		functionFactory.repeat_rpad();
 
 		functionFactory.radians_acos();
 		functionFactory.degrees_acos();
@@ -271,6 +282,26 @@ public class OracleLegacyDialect extends Dialect {
 				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+
+		functionFactory.array_oracle();
+		functionFactory.arrayAggregate_jsonArrayagg();
+		functionFactory.arrayPosition_oracle();
+		functionFactory.arrayPositions_oracle();
+		functionFactory.arrayLength_oracle();
+		functionFactory.arrayConcat_oracle();
+		functionFactory.arrayPrepend_oracle();
+		functionFactory.arrayAppend_oracle();
+		functionFactory.arrayContains_oracle();
+		functionFactory.arrayOverlaps_oracle();
+		functionFactory.arrayGet_oracle();
+		functionFactory.arraySet_oracle();
+		functionFactory.arrayRemove_oracle();
+		functionFactory.arrayRemoveIndex_oracle();
+		functionFactory.arraySlice_oracle();
+		functionFactory.arrayReplace_oracle();
+		functionFactory.arrayTrim_oracle();
+		functionFactory.arrayFill_oracle();
+		functionFactory.arrayToString_oracle();
 	}
 
 	@Override
@@ -473,8 +504,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-
-		StringBuilder pattern = new StringBuilder();
+		final StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
 			case YEAR:
 				pattern.append( ADD_YEAR_EXPRESSION );
@@ -486,22 +516,31 @@ public class OracleLegacyDialect extends Dialect {
 				pattern.append( ADD_MONTH_EXPRESSION );
 				break;
 			case WEEK:
-				pattern.append("(?3+numtodsinterval((?2)*7,'day'))");
+				if ( temporalType != TemporalType.DATE ) {
+					pattern.append( "(?3+numtodsinterval((?2)*7,'day'))" );
+				}
+				else {
+					pattern.append( "(?3+(?2)" ).append( unit.conversionFactor( DAY, this ) ).append( ")" );
+				}
 				break;
 			case DAY:
+				if ( temporalType == TemporalType.DATE ) {
+					pattern.append( "(?3+(?2))" );
+					break;
+				}
 			case HOUR:
 			case MINUTE:
 			case SECOND:
-				pattern.append("(?3+numtodsinterval(?2,'?1'))");
+				pattern.append( "(?3+numtodsinterval(?2,'?1'))" );
 				break;
 			case NANOSECOND:
-				pattern.append("(?3+numtodsinterval((?2)/1e9,'second'))");
+				pattern.append( "(?3+numtodsinterval((?2)/1e9,'second'))" );
 				break;
 			case NATIVE:
-				pattern.append("(?3+numtodsinterval(?2,'second'))");
+				pattern.append( "(?3+numtodsinterval(?2,'second'))" );
 				break;
 			default:
-				throw new SemanticException(unit + " is not a legal field");
+				throw new SemanticException( unit + " is not a legal field" );
 		}
 		return pattern.toString();
 	}
@@ -522,42 +561,51 @@ public class OracleLegacyDialect extends Dialect {
 				extractField( pattern, MONTH, unit );
 				pattern.append( ")" );
 				break;
-			case WEEK:
 			case DAY:
-				extractField( pattern, DAY, unit );
-				break;
-			case HOUR:
-				pattern.append( "(" );
-				extractField( pattern, DAY, unit );
 				if ( hasTimePart ) {
-					pattern.append( "+" );
-					extractField( pattern, HOUR, unit );
+					pattern.append( "(cast(?3 as date)-cast(?2 as date))" );
 				}
-				pattern.append( ")" );
+				else {
+					pattern.append( "(?3-?2)" );
+				}
 				break;
+			case WEEK:
 			case MINUTE:
-				pattern.append( "(" );
-				extractField( pattern, DAY, unit );
+			case SECOND:
+			case HOUR:
 				if ( hasTimePart ) {
-					pattern.append( "+" );
-					extractField( pattern, HOUR, unit );
-					pattern.append( "+" );
-					extractField( pattern, MINUTE, unit );
+					pattern.append( "((cast(?3 as date)-cast(?2 as date))" );
 				}
+				else {
+					pattern.append( "((?3-?2)" );
+				}
+				pattern.append( TemporalUnit.DAY.conversionFactor(unit ,this ) );
 				pattern.append( ")" );
 				break;
 			case NATIVE:
 			case NANOSECOND:
-			case SECOND:
-				pattern.append( "(" );
-				extractField( pattern, DAY, unit );
 				if ( hasTimePart ) {
-					pattern.append( "+" );
-					extractField( pattern, HOUR, unit );
-					pattern.append( "+" );
-					extractField( pattern, MINUTE, unit );
-					pattern.append( "+" );
-					extractField( pattern, SECOND, unit );
+					if ( supportsLateral() ) {
+						pattern.append( "(select extract(day from t.i)" ).append( TemporalUnit.DAY.conversionFactor( unit, this ) )
+								.append( "+extract(hour from t.i)" ).append( TemporalUnit.HOUR.conversionFactor( unit, this ) )
+								.append( "+extract(minute from t.i)" ).append( MINUTE.conversionFactor( unit, this ) )
+								.append( "+extract(second from t.i)" ).append( SECOND.conversionFactor( unit, this ) )
+								.append( " from(select ?3-?2 i from dual)t" );
+					}
+					else {
+						pattern.append( "(" );
+						extractField( pattern, DAY, unit );
+						pattern.append( "+" );
+						extractField( pattern, HOUR, unit );
+						pattern.append( "+" );
+						extractField( pattern, MINUTE, unit );
+						pattern.append( "+" );
+						extractField( pattern, SECOND, unit );
+					}
+				}
+				else {
+					pattern.append( "((?3-?2)" );
+					pattern.append( TemporalUnit.DAY.conversionFactor( unit, this ) );
 				}
 				pattern.append( ")" );
 				break;
@@ -570,17 +618,16 @@ public class OracleLegacyDialect extends Dialect {
 	private void extractField(StringBuilder pattern, TemporalUnit unit, TemporalUnit toUnit) {
 		pattern.append( "extract(" );
 		pattern.append( translateExtractField( unit ) );
-		pattern.append( " from (?3-?2) " );
+		pattern.append( " from (?3-?2)" );
 		switch ( unit ) {
 			case YEAR:
 			case MONTH:
-				pattern.append( "year to month" );
+				pattern.append( " year(9) to month" );
 				break;
 			case DAY:
 			case HOUR:
 			case MINUTE:
 			case SECOND:
-				pattern.append( "day to second" );
 				break;
 			default:
 				throw new SemanticException( unit + " is not a legal field" );
@@ -607,6 +654,10 @@ public class OracleLegacyDialect extends Dialect {
 			case REAL:
 				// Oracle's 'real' type is actually double precision
 				return "float(24)";
+			case DOUBLE:
+				// Oracle's 'double precision' means float(126), and
+				// we never need 126 bits (38 decimal digits)
+				return "float(53)";
 
 			case NUMERIC:
 			case DECIMAL:
@@ -652,6 +703,9 @@ public class OracleLegacyDialect extends Dialect {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
 			}
 		}
+
+		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
+		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this, false ) );
 	}
 
 	@Override
@@ -704,14 +758,34 @@ public class OracleLegacyDialect extends Dialect {
 					}
 				}
 				break;
-			case Types.NUMERIC:
-				if ( scale == -127 ) {
-					// For some reason, the Oracle JDBC driver reports FLOAT
-					// as NUMERIC with scale -127
-					if ( precision <= getFloatPrecision() ) {
-						return jdbcTypeRegistry.getDescriptor( Types.FLOAT );
+			case ARRAY:
+				if ( "MDSYS.SDO_ORDINATE_ARRAY".equals( columnTypeName ) ) {
+					final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
+					if ( jdbcTypeConstructor != null ) {
+						return jdbcTypeConstructor.resolveType(
+								jdbcTypeRegistry.getTypeConfiguration(),
+								this,
+								jdbcTypeRegistry.getDescriptor( NUMERIC ),
+								ColumnTypeInformation.EMPTY
+						);
 					}
-					return jdbcTypeRegistry.getDescriptor( Types.DOUBLE );
+				}
+				break;
+			case Types.NUMERIC:
+				if ( precision > 8 // precision of 0 means something funny
+						// For some reason, the Oracle JDBC driver reports
+						// FLOAT or DOUBLE as NUMERIC with scale -127
+						// (but note that expressions with unknown type
+						//  also get reported this way, so take care)
+						&& scale == -127 ) {
+					if ( precision <= 24 ) {
+						// Can be represented as a Java float
+						return jdbcTypeRegistry.getDescriptor( FLOAT );
+					}
+					else if ( precision <= 53 ) {
+						// Can be represented as a Java double
+						return jdbcTypeRegistry.getDescriptor( DOUBLE );
+					}
 				}
 				//intentional fall-through:
 			case Types.DECIMAL:
@@ -794,6 +868,7 @@ public class OracleLegacyDialect extends Dialect {
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcTypeConstructor( OracleJdbcHelper.getArrayJdbcTypeConstructor( serviceRegistry ) );
+			typeContributions.contributeJdbcTypeConstructor( OracleJdbcHelper.getNestedTableJdbcTypeConstructor( serviceRegistry ) );
 		}
 		else {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );
@@ -933,6 +1008,7 @@ public class OracleLegacyDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
+			final String constraintName;
 			// interpreting Oracle exceptions is much much more precise based on their specific vendor codes.
 			switch ( JdbcExceptionHelper.extractErrorCode( sqlException ) ) {
 
@@ -940,13 +1016,13 @@ public class OracleLegacyDialect extends Dialect {
 
 				case 30006:
 					// ORA-30006: resource busy; acquire with WAIT timeout expired
-					throw new LockTimeoutException(message, sqlException, sql);
+					return new LockTimeoutException(message, sqlException, sql);
 				case 54:
 					// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
-					throw new LockTimeoutException(message, sqlException, sql);
+					return new LockTimeoutException(message, sqlException, sql);
 				case 4021:
 					// ORA-04021 timeout occurred while waiting to lock object
-					throw new LockTimeoutException(message, sqlException, sql);
+					return new LockTimeoutException(message, sqlException, sql);
 
 				// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -961,13 +1037,23 @@ public class OracleLegacyDialect extends Dialect {
 
 				case 1013:
 					// ORA-01013: user requested cancel of current operation
-					throw new QueryTimeoutException(  message, sqlException, sql );
+					return new QueryTimeoutException(  message, sqlException, sql );
 
 				// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+				case 1:
+					// ORA-00001: unique constraint violated
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							constraintName
+					);
 				case 1407:
 					// ORA-01407: cannot update column to NULL
-					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 
 				default:
@@ -1229,7 +1315,7 @@ public class OracleLegacyDialect extends Dialect {
 			case LockOptions.WAIT_FOREVER:
 				return lockString;
 			default:
-				return supportsWait() ? lockString + " wait " + Math.round(timeout / 1e3f) : lockString;
+				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
 		}
 	}
 
@@ -1444,5 +1530,10 @@ public class OracleLegacyDialect extends Dialect {
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

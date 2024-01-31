@@ -2,9 +2,9 @@
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
-  print "INFO: Build skipped due to trigger being Branch Indexing"
-  currentBuild.result = 'ABORTED'
-  return
+  	print "INFO: Build skipped due to trigger being Branch Indexing"
+	currentBuild.result = 'NOT_BUILT'
+  	return
 }
 
 pipeline {
@@ -29,13 +29,19 @@ pipeline {
         stage('Build') {
         	steps {
 				script {
+					// Don't build the TCK on PRs, unless they use the tck label
+					if ( env.CHANGE_ID && !pullRequest.labels.contains( 'tck' ) ) {
+						print "INFO: Build skipped because pull request doesn't have 'tck' label"
+						currentBuild.result = 'NOT_BUILT'
+						return
+					}
 					docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 						docker.image('openjdk:11-jdk').pull()
 					}
 				}
 				dir('hibernate') {
 					checkout scm
-					sh './gradlew publishToMavenLocal -DjakartaJpaVersion=3.2.0-SNAPSHOT'
+					sh './gradlew publishToMavenLocal -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com -DjakartaJpaVersion=3.2.0-SNAPSHOT'
 					script {
 						env.HIBERNATE_VERSION = sh (
 							script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",

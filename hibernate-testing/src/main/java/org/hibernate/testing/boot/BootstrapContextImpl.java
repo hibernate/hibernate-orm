@@ -29,7 +29,7 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -159,11 +159,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public void registerAdHocBasicType(BasicTypeImpl<?> basicType) {
+	public void registerAdHocBasicType(BasicType<?> basicType) {
 	}
 
 	@Override
-	public <T> BasicTypeImpl<T> resolveAdHocBasicType(String key) {
+	public <T> BasicType<T> resolveAdHocBasicType(String key) {
 		return null;
 	}
 

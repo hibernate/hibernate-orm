@@ -282,8 +282,13 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
-		return parent.addJoin( joinTableAnn, noDelayInPkColumnCreation );
+	public Join addJoin(JoinTable joinTable, boolean noDelayInPkColumnCreation) {
+		return parent.addJoin( joinTable, noDelayInPkColumnCreation );
+	}
+
+	@Override
+	public Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation) {
+		return parent.addJoin( joinTable, table, noDelayInPkColumnCreation );
 	}
 
 	@Override

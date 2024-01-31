@@ -56,6 +56,7 @@ import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -83,9 +84,9 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
@@ -133,12 +134,12 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 10 and above.
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 11 and above.
  *
  * @author Gavin King
  */
 public class PostgreSQLDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
@@ -253,6 +254,9 @@ public class PostgreSQLDialect extends Dialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		// We need to configure that the array type uses the raw element type for casts
+		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, true ) );
 
 		// Register this type to be able to support Float[]
 		// The issue is that the JDBC driver can't handle createArrayOf( "float(24)", ... )
@@ -465,20 +469,23 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( intervalType != null ) {
-			return "(?2+?3)";
-		}
-		switch ( unit ) {
+		return intervalType != null
+				? "(?2+?3)"
+				: "cast(?3+" + intervalPattern( unit ) + " as " + temporalType.name().toLowerCase() + ")";
+	}
+
+	private static String intervalPattern(TemporalUnit unit) {
+		switch (unit) {
 			case NANOSECOND:
-				return "(?3+(?2)/1e3*interval '1 microsecond')";
+				return "(?2)/1e3*interval '1 microsecond'";
 			case NATIVE:
-				return "(?3+(?2)*interval '1 second')";
+				return "(?2)*interval '1 second'";
 			case QUARTER: //quarter is not supported in interval literals
-				return "(?3+(?2)*interval '3 month')";
+				return "(?2)*interval '3 month'";
 			case WEEK: //week is not supported in interval literals
-				return "(?3+(?2)*interval '7 day')";
+				return "(?2)*interval '7 day'";
 			default:
-				return "(?3+(?2)*interval '1 ?1')";
+				return "(?2)*interval '1 " + unit + "'";
 		}
 	}
 
@@ -580,16 +587,11 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.degrees();
 		functionFactory.log();
 		functionFactory.mod_operator();
-		if ( getVersion().isSameOrAfter( 12 ) ) {
-			functionFactory.log10();
-			functionFactory.tanh();
-			functionFactory.sinh();
-			functionFactory.cosh();
-			functionFactory.moreHyperbolic();
-		}
-		else {
-			functionContributions.getFunctionRegistry().registerAlternateKey( "log10", "log" );
-		}
+		functionFactory.log10();
+		functionFactory.tanh();
+		functionFactory.sinh();
+		functionFactory.cosh();
+		functionFactory.moreHyperbolic();
 		functionFactory.cbrt();
 		functionFactory.pi();
 		functionFactory.trim2();
@@ -627,6 +629,30 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "varchar" );
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayContains_postgresql();
+		functionFactory.arrayOverlaps_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySet_unnest();
+		functionFactory.arrayRemove();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			functionFactory.arrayTrim_trim_array();
+		}
+		else {
+			functionFactory.arrayTrim_unnest();
+		}
+		functionFactory.arrayFill_postgresql();
+		functionFactory.arrayToString_postgresql();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
@@ -760,6 +786,10 @@ public class PostgreSQLDialect extends Dialect {
 	public boolean supportsNonQueryWithCTE() {
 		return true;
 	}
+	@Override
+	public boolean supportsConflictClauseForInsertCTE() {
+		return true;
+	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
@@ -856,7 +886,7 @@ public class PostgreSQLDialect extends Dialect {
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// TODO: adapt this to handle named enum types!
 		// Workaround for postgres bug #1453
-		return "null::" + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName();
+		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName() + ")";
 	}
 
 	@Override
@@ -1031,9 +1061,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return getVersion().isSameOrAfter( 11 )
-				? PostgreSQLCallableStatementSupport.INSTANCE
-				: PostgreSQLCallableStatementSupport.V10_INSTANCE;
+		return PostgreSQLCallableStatementSupport.INSTANCE;
 	}
 
 	@Override
@@ -1388,7 +1416,6 @@ public class PostgreSQLDialect extends Dialect {
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
-		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE ); // HHH-9562
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
@@ -1424,6 +1451,7 @@ public class PostgreSQLDialect extends Dialect {
 		);
 
 		jdbcTypeRegistry.addDescriptor( new PostgreSQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLUUIDJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -1452,6 +1480,22 @@ public class PostgreSQLDialect extends Dialect {
 		return OTHER;
 	}
 
+	@Override
+	public String getQueryHintString(String sql, String hints) {
+		return "/*+ " + hints + " */ " + sql;
+	}
+
+	@Override
+	public String addSqlHintOrComment(String sql, QueryOptions queryOptions, boolean commentsEnabled) {
+		// PostgreSQL's extension pg_hint_plan needs the hint to be the first comment
+		if ( commentsEnabled && queryOptions.getComment() != null ) {
+			sql = prependComment( sql, queryOptions.getComment() );
+		}
+		if ( queryOptions.getDatabaseHints() != null && queryOptions.getDatabaseHints().size() > 0 ) {
+			sql = getQueryHintString( sql, queryOptions.getDatabaseHints() );
+		}
+		return sql;
+	}
 
 	@FunctionalInterface
 	private interface OptionalTableUpdateStrategy {
@@ -1499,5 +1543,21 @@ public class PostgreSQLDialect extends Dialect {
 		public String createMarker(int position, JdbcType jdbcType) {
 			return "$" + position;
 		}
+	}
+
+	@Override
+	public int getDefaultIntervalSecondScale() {
+		// The maximum scale for `interval second` is 6 unfortunately
+		return 6;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

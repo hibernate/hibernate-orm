@@ -79,21 +79,22 @@ public class EagerManyToOneStreamTest {
 					QueryImplementor<Child> query = session
 							.createQuery( "select c from Child as c where c.parent.someField=:someField", Child.class )
 							.setParameter( "someField", FIELD_VALUE );
-					Stream<Child> resultStream = query.getResultStream();
+					try (Stream<Child> resultStream = query.getResultStream()) {
 
-					List<Child> children = resultStream.collect( Collectors.toList() );
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+						List<Child> children = resultStream.collect( Collectors.toList() );
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
 
-					assertThat( children.size() ).isEqualTo( 1 );
+						assertThat( children.size() ).isEqualTo( 1 );
 
-					Parent parent = children.get( 0 ).getParent();
-					assertThat( parent ).isNotNull();
+						Parent parent = children.get( 0 ).getParent();
+						assertThat( parent ).isNotNull();
 
-					assertThat( Hibernate.isInitialized( parent ) ).isTrue();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+						assertThat( Hibernate.isInitialized( parent ) ).isTrue();
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
 
-					assertThat( parent.getSomeField() ).isEqualTo( FIELD_VALUE );
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+						assertThat( parent.getSomeField() ).isEqualTo( FIELD_VALUE );
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+					}
 				}
 		);
 	}
@@ -106,29 +107,30 @@ public class EagerManyToOneStreamTest {
 				session -> {
 					QueryImplementor<Child> query = session
 							.createQuery( "select c from Child as c ", Child.class );
-					Stream<Child> resultStream = query.getResultStream();
+					try (Stream<Child> resultStream = query.getResultStream()) {
 
-					List<Child> children = resultStream.collect( Collectors.toList() );
-					// with Stream the association is not batch loaded
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
+						List<Child> children = resultStream.collect( Collectors.toList() );
+						// with Stream the association is not batch loaded
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
 
-					assertThat( children.size() ).isEqualTo( 2 );
+						assertThat( children.size() ).isEqualTo( 2 );
 
-					Parent parent = children.get( 0 ).getParent();
-					assertThat( parent ).isNotNull();
-					assertThat( Hibernate.isInitialized( parent ) ).isTrue();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
+						Parent parent = children.get( 0 ).getParent();
+						assertThat( parent ).isNotNull();
+						assertThat( Hibernate.isInitialized( parent ) ).isTrue();
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
 
-					assertThat( parent.getSomeField() ).isEqualTo( FIELD_VALUE );
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
+						assertThat( parent.getSomeField() ).isEqualTo( FIELD_VALUE );
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
 
-					Parent parent1 = children.get( 1 ).getParent();
-					assertThat( parent1 ).isNotNull();
-					assertThat( Hibernate.isInitialized( parent1 ) ).isTrue();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
+						Parent parent1 = children.get( 1 ).getParent();
+						assertThat( parent1 ).isNotNull();
+						assertThat( Hibernate.isInitialized( parent1 ) ).isTrue();
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
 
-					assertThat( parent1.getSomeField() ).isEqualTo( FIELD_VALUE_2 );
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
+						assertThat( parent1.getSomeField() ).isEqualTo( FIELD_VALUE_2 );
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 3 );
+					}
 				}
 		);
 	}
@@ -140,9 +142,11 @@ public class EagerManyToOneStreamTest {
 					QueryImplementor<Child> query = session
 							.createQuery( "select c from Child as c", Child.class );
 
-					query.getResultStream().forEach(
-							child -> assertThat( child.getParent() ).isNotNull()
-					);
+					try (Stream<Child> resultStream = query.getResultStream()) {
+						resultStream.forEach(
+								child -> assertThat( child.getParent() ).isNotNull()
+						);
+					}
 				}
 		);
 	}
@@ -154,10 +158,11 @@ public class EagerManyToOneStreamTest {
 					QueryImplementor<Child> query = session
 							.createQuery( "select c from Child as c where c.parent.someField=:someField", Child.class )
 							.setParameter( "someField", FIELD_VALUE );
-					Stream<Child> resultStream = query.getResultStream();
-					Optional<Child> child = resultStream.findFirst();
-					assertThat( child.isEmpty() ).isFalse();
-					assertThat( child.get().getParent() ).isNotNull();
+					try (Stream<Child> resultStream = query.getResultStream()) {
+						Optional<Child> child = resultStream.findFirst();
+						assertThat( child.isEmpty() ).isFalse();
+						assertThat( child.get().getParent() ).isNotNull();
+					}
 				}
 		);
 	}

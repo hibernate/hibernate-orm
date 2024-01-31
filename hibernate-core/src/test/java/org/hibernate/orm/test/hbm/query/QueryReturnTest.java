@@ -3,6 +3,7 @@ package org.hibernate.orm.test.hbm.query;
 import java.io.StringReader;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.ReaderInputStream;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
@@ -11,8 +12,10 @@ import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.results.complete.CompleteResultBuilderEntityValued;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -21,6 +24,7 @@ import org.junit.Test;
  * @author Koen Aers
  */
 @TestForIssue( jiraKey = "HHH-10405" )
+@RequiresDialect( H2Dialect.class )
 public class QueryReturnTest extends BaseUnitTestCase {
 	
 	private static String QUERY_RETURN_HBM_XML =
@@ -44,9 +48,9 @@ public class QueryReturnTest extends BaseUnitTestCase {
 	@Test
 	public void testQueryReturn() {
 		Configuration cfg = new Configuration();
-		cfg.setProperty( "hibernate.dialect", "org.hibernate.dialect.HSQLDialect" );
 		cfg.setProperty( "hibernate.temp.use_jdbc_metadata_defaults", "false" );
 		cfg.addInputStream( new ReaderInputStream( new StringReader( QUERY_RETURN_HBM_XML ) ) );
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory();
 		try {
 			NamedResultSetMappingMemento mappingMemento = sessionFactory.getQueryEngine()

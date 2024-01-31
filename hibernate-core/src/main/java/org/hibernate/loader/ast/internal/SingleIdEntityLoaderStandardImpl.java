@@ -7,6 +7,7 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.EnumMap;
+import java.util.function.BiFunction;
 
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
@@ -29,20 +30,36 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	private final EnumMap<LockMode, SingleIdLoadPlan<T>> selectByLockMode = new EnumMap<>( LockMode.class );
 	private EnumMap<CascadingFetchProfile, SingleIdLoadPlan<T>> selectByInternalCascadeProfile;
 
+	private final BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator;
+
 	public SingleIdEntityLoaderStandardImpl(
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
+		this(
+				entityDescriptor,
+				sessionFactory,
+				(lockOptions, influencers) -> createLoadPlan( entityDescriptor, lockOptions, influencers, sessionFactory )
+		);
+	}
+
+	/**
+	 * For Hibernate Reactive.
+	 * <p>
+	 * Hibernate Reactive needs to be able to override the LoadPlan.
+	 * </p>
+	 */
+	protected SingleIdEntityLoaderStandardImpl(
+			EntityMappingType entityDescriptor,
+			SessionFactoryImplementor sessionFactory,
+			BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator) {
 		// todo (6.0) : consider creating a base AST and "cloning" it
 		super( entityDescriptor, sessionFactory );
+		this.loadPlanCreator = loadPlanCreator;
 		// see org.hibernate.persister.entity.AbstractEntityPersister#createLoaders
 		// we should preload a few - maybe LockMode.NONE and LockMode.READ
 		final LockOptions lockOptions = LockOptions.NONE;
 		final LoadQueryInfluencers influencers = new LoadQueryInfluencers( sessionFactory );
-		final SingleIdLoadPlan<T> plan = createLoadPlan(
-				lockOptions,
-				influencers,
-				sessionFactory
-		);
+		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( LockOptions.NONE, influencers );
 		if ( isLoadPlanReusable( lockOptions, influencers ) ) {
 			selectByLockMode.put( lockOptions.getLockMode(), plan );
 		}
@@ -83,7 +100,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			// This case is special because the filters need to be applied in order to
 			// properly restrict the SQL/JDBC results.  For this reason it has higher
 			// precedence than even "internal" fetch profiles.
-			return createLoadPlan( lockOptions, loadQueryInfluencers, sessionFactory );
+			return loadPlanCreator.apply( lockOptions, loadQueryInfluencers );
 		}
 		else if ( loadQueryInfluencers.hasEnabledCascadingFetchProfile()
 				&& LockMode.WRITE.greaterThan( lockOptions.getLockMode() ) ) {
@@ -115,17 +132,13 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				return existing;
 			}
 			else {
-				final SingleIdLoadPlan<T> plan = createLoadPlan(
-						lockOptions,
-						loadQueryInfluencers,
-						sessionFactory
-				);
+				final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( lockOptions, loadQueryInfluencers );
 				selectByLockMode.put( lockOptions.getLockMode(), plan );
 				return plan;
 			}
 		}
 		else {
-			return createLoadPlan( lockOptions, loadQueryInfluencers, sessionFactory );
+			return loadPlanCreator.apply( lockOptions, loadQueryInfluencers );
 		}
 	}
 
@@ -148,11 +161,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			}
 		}
 
-		final SingleIdLoadPlan<T> plan = createLoadPlan(
-				lockOptions,
-				loadQueryInfluencers,
-				sessionFactory
-		);
+		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( lockOptions, loadQueryInfluencers );
 		selectByInternalCascadeProfile.put( fetchProfile, plan );
 		return plan;
 	}
@@ -163,17 +172,18 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			&& !getLoadable().isAffectedByEnabledFetchProfiles( loadQueryInfluencers );
 	}
 
-	private SingleIdLoadPlan<T> createLoadPlan(
+	private static <T> SingleIdLoadPlan<T> createLoadPlan(
+			EntityMappingType loadable,
 			LockOptions lockOptions,
 			LoadQueryInfluencers queryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 
 		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
-				getLoadable(),
+				loadable,
 				// null here means to select everything
 				null,
-				getLoadable().getIdentifierMapping(),
+				loadable.getIdentifierMapping(),
 				null,
 				1,
 				queryInfluencers,
@@ -182,8 +192,8 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				sessionFactory
 		);
 		return new SingleIdLoadPlan<>(
-				getLoadable(),
-				getLoadable().getIdentifierMapping(),
+				loadable,
+				loadable.getIdentifierMapping(),
 				sqlAst,
 				jdbcParametersBuilder.build(),
 				lockOptions,

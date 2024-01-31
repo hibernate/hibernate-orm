@@ -20,13 +20,13 @@ package org.hibernate.context.spi;
  *
  * @author Steve Ebersole
  */
-public interface CurrentTenantIdentifierResolver {
+public interface CurrentTenantIdentifierResolver<T> {
 	/**
 	 * Resolve the current tenant identifier.
-	 * 
+	 *
 	 * @return The current tenant identifier
 	 */
-	String resolveCurrentTenantIdentifier();
+	T resolveCurrentTenantIdentifier();
 
 	/**
 	 * Should we validate that the tenant identifier of a "current sessions" that
@@ -47,7 +47,7 @@ public interface CurrentTenantIdentifierResolver {
 	 *
 	 * @return true is this is root tenant
 	 */
-	default boolean isRoot(String tenantId) {
+	default boolean isRoot(T tenantId) {
 		return false;
 	}
 }

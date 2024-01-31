@@ -708,18 +708,19 @@ public class LoaderSelectBuilder {
 		else {
 			final TableGroup parentTableGroup = astCreationState.getFromClauseAccess().getTableGroup(
 					parentNavigablePath );
-			TableGroupJoin pluralTableGroupJoin = null;
-			for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-				if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
-					pluralTableGroupJoin = nestedTableGroupJoin;
-					break;
-				}
-			}
-
+			final TableGroupJoin pluralTableGroupJoin = parentTableGroup.findTableGroupJoin( tableGroup );
 			assert pluralTableGroupJoin != null;
 
+			final TableGroupJoin joinForPredicate;
+			if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
+				joinForPredicate = pluralTableGroupJoin;
+			}
+			else {
+				joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
+			}
+
 			pluralAttributeMapping.applyBaseRestrictions(
-					pluralTableGroupJoin::applyPredicate,
+					joinForPredicate::applyPredicate,
 					tableGroup,
 					true,
 					loadQueryInfluencers.getEnabledFilters(),
@@ -727,7 +728,7 @@ public class LoaderSelectBuilder {
 					astCreationState
 			);
 			pluralAttributeMapping.applyBaseManyToManyRestrictions(
-					pluralTableGroupJoin::applyPredicate,
+					joinForPredicate::applyPredicate,
 					tableGroup,
 					true,
 					loadQueryInfluencers.getEnabledFilters(),
@@ -973,7 +974,7 @@ public class LoaderSelectBuilder {
 					}
 					else if ( fetchDepth > maximumFetchDepth + 1 ) {
 						// We can preserve the existing value of joined for basic and embedded values
-						if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
+						if ( fetchable.asBasicValuedModelPart() == null && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
 							joined = false;
 						}
 					}
@@ -1148,8 +1149,7 @@ public class LoaderSelectBuilder {
 
 		final Expression fkExpression;
 
-		final int jdbcTypeCount = fkDescriptor.getJdbcTypeCount();
-		if ( jdbcTypeCount == 1 ) {
+		if ( !fkDescriptor.isEmbedded() ) {
 			assert fkDescriptor instanceof SimpleForeignKeyDescriptor;
 			final SimpleForeignKeyDescriptor simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
 			final TableReference tableReference = rootTableGroup.resolveTableReference(
@@ -1163,7 +1163,7 @@ public class LoaderSelectBuilder {
 			);
 		}
 		else {
-			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
+			final List<ColumnReference> columnReferences = new ArrayList<>( fkDescriptor.getJdbcTypeCount() );
 			fkDescriptor.forEachSelectable(
 					(columnIndex, selection) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference(

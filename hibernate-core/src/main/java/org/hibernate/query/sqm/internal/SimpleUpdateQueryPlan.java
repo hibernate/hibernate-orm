@@ -23,7 +23,9 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
@@ -35,7 +37,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 	private final SqmUpdateStatement<?> sqmUpdate;
 	private final DomainParameterXref domainParameterXref;
 
-	private JdbcOperationQueryUpdate jdbcUpdate;
+	private JdbcOperationQueryMutation jdbcUpdate;
 	private FromClauseAccess tableGroupAccess;
 	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 	private Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParamMappingTypeResolutions;
@@ -53,7 +55,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		SqlAstTranslator<JdbcOperationQueryUpdate> updateTranslator = null;
+		SqlAstTranslator<? extends JdbcOperationQueryMutation> updateTranslator = null;
 		if ( jdbcUpdate == null ) {
 			updateTranslator = createUpdateTranslator( executionContext );
 		}
@@ -96,12 +98,12 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 		);
 	}
 
-	private SqlAstTranslator<JdbcOperationQueryUpdate> createUpdateTranslator(DomainQueryExecutionContext executionContext) {
+	private SqlAstTranslator<? extends JdbcOperationQueryMutation> createUpdateTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final SqmTranslation<UpdateStatement> sqmInterpretation =
+		final SqmTranslation<? extends MutationStatement> sqmInterpretation =
 				factory.getQueryEngine().getSqmTranslatorFactory()
-						.createSimpleUpdateTranslator(
+						.createMutationTranslator(
 								sqmUpdate,
 								executionContext.getQueryOptions(),
 								domainParameterXref,
@@ -121,6 +123,6 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 		this.sqmParamMappingTypeResolutions = sqmInterpretation.getSqmParameterMappingModelTypeResolutions();
 
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-				.buildUpdateTranslator( factory, sqmInterpretation.getSqlAst() );
+				.buildMutationTranslator( factory, sqmInterpretation.getSqlAst() );
 	}
 }

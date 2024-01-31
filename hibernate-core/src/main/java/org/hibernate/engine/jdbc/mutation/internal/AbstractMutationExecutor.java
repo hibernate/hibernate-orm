@@ -12,14 +12,16 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ValuesAnalysis;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_TRACE_ENABLED;
 
 /**
  * Base support for MutationExecutor implementations
@@ -44,23 +46,31 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 	 * </ol>
 	 */
 	@Override
-	public final Object execute(
+	public final GeneratedValues execute(
 			Object modelReference,
 			ValuesAnalysis valuesAnalysis,
 			TableInclusionChecker inclusionChecker,
 			OperationResultChecker resultChecker,
 			SharedSessionContractImplementor session) {
-		performNonBatchedOperations( valuesAnalysis, inclusionChecker, resultChecker, session );
+		final GeneratedValues generatedValues = performNonBatchedOperations(
+				modelReference,
+				valuesAnalysis,
+				inclusionChecker,
+				resultChecker,
+				session
+		);
 		performSelfExecutingOperations( valuesAnalysis, inclusionChecker, session );
 		performBatchedOperations( valuesAnalysis, inclusionChecker );
-		return null;
+		return generatedValues;
 	}
 
-	protected void performNonBatchedOperations(
+	protected GeneratedValues performNonBatchedOperations(
+			Object modelReference,
 			ValuesAnalysis valuesAnalysis,
 			TableInclusionChecker inclusionChecker,
 			OperationResultChecker resultChecker,
 			SharedSessionContractImplementor session) {
+		return null;
 	}
 
 	protected void performSelfExecutingOperations(
@@ -79,6 +89,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 	 */
 	protected void performNonBatchedMutation(
 			PreparedStatementDetails statementDetails,
+			Object id,
 			JdbcValueBindings valueBindings,
 			TableInclusionChecker inclusionChecker,
 			OperationResultChecker resultChecker,
@@ -89,13 +100,27 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 
 		final TableMapping tableDetails = statementDetails.getMutatingTableDetails();
 		if ( inclusionChecker != null && !inclusionChecker.include( tableDetails ) ) {
-			if ( MODEL_MUTATION_LOGGER_TRACE_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 				MODEL_MUTATION_LOGGER.tracef(
 						"Skipping execution of secondary insert : %s",
 						tableDetails.getTableName()
 				);
 			}
 			return;
+		}
+
+		if ( id != null ) {
+			assert !tableDetails.isIdentifierTable() : "Unsupported identifier table with generated id";
+			( (EntityTableMapping) tableDetails ).getKeyMapping().breakDownKeyJdbcValues(
+					id,
+					(jdbcValue, columnMapping) -> valueBindings.bindValue(
+							jdbcValue,
+							tableDetails.getTableName(),
+							columnMapping.getColumnName(),
+							ParameterUsage.SET
+					),
+					session
+			);
 		}
 
 		// If we get here the statement is needed - make sure it is resolved

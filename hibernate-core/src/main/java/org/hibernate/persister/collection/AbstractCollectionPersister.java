@@ -6,6 +6,18 @@
  */
 package org.hibernate.persister.collection;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
@@ -16,7 +28,9 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.TransientObjectException;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -120,17 +134,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -195,6 +199,7 @@ public abstract class AbstractCollectionPersister
 	private final boolean isLazy;
 	private final boolean isExtraLazy;
 	protected final boolean isInverse;
+	private final boolean keyIsUpdateable;
 	private final boolean isMutable;
 	private final boolean isVersioned;
 	protected final int batchSize;
@@ -210,9 +215,10 @@ public abstract class AbstractCollectionPersister
 	private final BeforeExecutionGenerator identifierGenerator;
 	private final PropertyMapping elementPropertyMapping;
 	private final EntityPersister elementPersister;
-	private final CollectionDataAccess cacheAccessStrategy;
+	private final @Nullable CollectionDataAccess cacheAccessStrategy;
 
 	private final CacheEntryStructure cacheEntryStructure;
+	private final boolean useShallowQueryCacheLayout;
 
 	// dynamic filters for the collection
 	private final FilterHelper filterHelper;
@@ -238,14 +244,14 @@ public abstract class AbstractCollectionPersister
 	@Deprecated(since = "6.0")
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
-			CollectionDataAccess cacheAccessStrategy,
+			@Nullable CollectionDataAccess cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
 		this( collectionBootDescriptor, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
 	}
 
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
-			CollectionDataAccess cacheAccessStrategy,
+			@Nullable CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 		this.factory = creationContext.getSessionFactory();
 		this.collectionSemantics = creationContext.getBootstrapContext()
@@ -262,6 +268,10 @@ public abstract class AbstractCollectionPersister
 		else {
 			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
+		useShallowQueryCacheLayout = shouldUseShallowCacheLayout(
+				collectionBootDescriptor.getQueryCacheLayout(),
+				creationContext.getSessionFactoryOptions()
+		);
 
 		dialect = creationContext.getDialect();
 		sqlExceptionHelper = creationContext.getJdbcServices().getSqlExceptionHelper();
@@ -492,6 +502,8 @@ public abstract class AbstractCollectionPersister
 
 		isInverse = collectionBootDescriptor.isInverse();
 
+		keyIsUpdateable = collectionBootDescriptor.getKey().isUpdateable();
+
 		if ( collectionBootDescriptor.isArray() ) {
 			elementClass = ( (org.hibernate.mapping.Array) collectionBootDescriptor ).getElementClass();
 		}
@@ -595,6 +607,18 @@ public abstract class AbstractCollectionPersister
 		return (BeforeExecutionGenerator) generator;
 	}
 
+	private boolean shouldUseShallowCacheLayout(CacheLayout collectionQueryCacheLayout, SessionFactoryOptions options) {
+		final CacheLayout queryCacheLayout;
+		if ( collectionQueryCacheLayout == null ) {
+			queryCacheLayout = options.getQueryCacheLayout();
+		}
+		else {
+			queryCacheLayout = collectionQueryCacheLayout;
+		}
+		return queryCacheLayout == CacheLayout.SHALLOW || queryCacheLayout == CacheLayout.AUTO &&
+				cacheAccessStrategy != null;
+	}
+
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
@@ -613,10 +637,10 @@ public abstract class AbstractCollectionPersister
 	public void postInstantiate() throws MappingException {
 		if ( hasNamedQueryLoader() ) {
 			// We pass null as metamodel because we did the initialization during construction already
-			collectionLoader = new CollectionLoaderNamedQuery( this, getNamedQueryMemento( null ) );
+			collectionLoader = createNamedQueryCollectionLoader( this, getNamedQueryMemento( null ) );
 		}
 		else {
-			collectionLoader = createCollectionLoader( new LoadQueryInfluencers( factory ) );
+			collectionLoader = createNamedQueryCollectionLoader( new LoadQueryInfluencers( factory ) );
 		}
 
 		if ( attributeMapping.getIndexDescriptor() != null ) {
@@ -642,7 +666,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void logStaticSQL() {
-		if ( !ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		if ( !ModelMutationLogging.MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 			return;
 		}
 
@@ -720,7 +744,7 @@ public abstract class AbstractCollectionPersister
 		}
 
 		return attributeMapping.isAffectedByInfluencers( influencers )
-				? createCollectionLoader( influencers )
+				? createNamedQueryCollectionLoader( influencers )
 				: getCollectionLoader();
 	}
 
@@ -765,7 +789,7 @@ public abstract class AbstractCollectionPersister
 //		return attributeMapping.isNotAffectedByInfluencers( loadQueryInfluencers );
 //	}
 
-	private CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	private CollectionLoader createNamedQueryCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
@@ -773,8 +797,22 @@ public abstract class AbstractCollectionPersister
 					.createCollectionBatchLoader( batchSize, loadQueryInfluencers, attributeMapping, factory );
 		}
 		else {
-			return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, factory );
+			return createSingleKeyCollectionLoader( loadQueryInfluencers );
 		}
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected CollectionLoader createNamedQueryCollectionLoader(CollectionPersister persister, NamedQueryMemento namedQueryMemento) {
+		return new CollectionLoaderNamedQuery(persister, namedQueryMemento);
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected CollectionLoader createSingleKeyCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+		return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, factory );
 	}
 
 	@Override
@@ -785,6 +823,11 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean hasCache() {
 		return cacheAccessStrategy != null;
+	}
+
+	@Override
+	public boolean useShallowQueryCacheLayout() {
+		return useShallowQueryCacheLayout;
 	}
 
 	protected abstract RowMutationOperations getRowMutationOperations();
@@ -1084,7 +1127,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected boolean isRowDeleteEnabled() {
-		return true;
+		return keyIsUpdateable;
 	}
 
 	@Override
@@ -1093,7 +1136,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected boolean isRowInsertEnabled() {
-		return true;
+		return keyIsUpdateable;
 	}
 
 	public String getOwnerEntityName() {
@@ -1133,6 +1176,11 @@ public abstract class AbstractCollectionPersister
 	public void applyBaseRestrictions(Consumer<Predicate> predicateConsumer, TableGroup tableGroup, boolean useQualifier, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations, SqlAstCreationState creationState) {
 		applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
 		applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
+	}
+
+	@Override
+	public boolean hasWhereRestrictions() {
+		return hasWhere() || manyToManyWhereTemplate != null;
 	}
 
 	@Override
@@ -1761,11 +1809,35 @@ public abstract class AbstractCollectionPersister
 				ParameterUsage.RESTRICT,
 				keyColumnCount
 		);
-		final java.util.List<ColumnValueBinding> keyRestrictionBindings = arrayList( keyColumnCount );
-		fkDescriptor.getKeyPart().forEachSelectable( parameterBinders );
-		for ( ColumnValueParameter columnValueParameter : parameterBinders ) {
+		final java.util.List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
+		applyKeyRestrictions( tableReference, parameterBinders, restrictionBindings );
+
+		//noinspection unchecked,rawtypes
+		return (RestrictedTableMutation) new TableDeleteStandard(
+				tableReference,
+				this,
+				"one-shot delete for " + getRolePath(),
+				restrictionBindings,
+				Collections.emptyList(),
+				parameterBinders,
+				sqlWhereString
+		);
+	}
+
+	protected void applyKeyRestrictions(
+			MutatingTableReference tableReference,
+			ColumnValueParameterList parameterList,
+			java.util.List<ColumnValueBinding> restrictionBindings) {
+
+		final ForeignKeyDescriptor fkDescriptor = getAttributeMapping().getKeyDescriptor();
+		assert fkDescriptor != null;
+
+		final int keyColumnCount = fkDescriptor.getJdbcTypeCount();
+
+		fkDescriptor.getKeyPart().forEachSelectable( parameterList );
+		for ( ColumnValueParameter columnValueParameter : parameterList ) {
 			final ColumnReference columnReference = columnValueParameter.getColumnReference();
-			keyRestrictionBindings.add(
+			restrictionBindings.add(
 					new ColumnValueBinding(
 							columnReference,
 							new ColumnWriteFragment(
@@ -1776,16 +1848,6 @@ public abstract class AbstractCollectionPersister
 					)
 			);
 		}
-
-		//noinspection unchecked,rawtypes
-		return (RestrictedTableMutation) new TableDeleteStandard(
-				tableReference,
-				this,
-				"one-shot delete for " + getRolePath(),
-				keyRestrictionBindings,
-				Collections.emptyList(),
-				parameterBinders
-		);
 	}
 
 

@@ -26,7 +26,4 @@ public interface LoaderLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".loader";
 
 	Logger LOADER_LOGGER = Logger.getLogger( LOGGER_NAME );
-
-	boolean DEBUG_ENABLED = LOADER_LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = LOADER_LOGGER.isTraceEnabled();
 }

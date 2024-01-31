@@ -224,6 +224,15 @@ public class ColumnReference implements Expression, Assignable {
 
 	@Override
 	public String toString() {
+		if ( StringHelper.isNotEmpty( qualifier ) ) {
+			return String.format(
+					Locale.ROOT,
+					"%s(%s.%s)",
+					getClass().getSimpleName(),
+					qualifier,
+					getExpressionText()
+			);
+		}
 		return String.format(
 				Locale.ROOT,
 				"%s(%s)",

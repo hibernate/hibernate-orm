@@ -55,7 +55,7 @@ public class TableReferenceJoin implements TableJoin, PredicateContainer {
 
 	@Override
 	public String toString() {
-		return getJoinType().getText() + " join " + getJoinedTableReference().toString();
+		return getJoinType().getText() + "join " + getJoinedTableReference().toString();
 	}
 
 	@Override

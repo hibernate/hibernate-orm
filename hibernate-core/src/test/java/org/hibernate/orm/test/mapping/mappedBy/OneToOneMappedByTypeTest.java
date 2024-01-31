@@ -11,6 +11,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class OneToOneMappedByTypeTest {
 	@Test
 	public void testCorrect() {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
 					.addAnnotatedClass( EntityACorrect.class )
 					.addAnnotatedClass( EntityBCorrect.class );
@@ -38,7 +39,7 @@ public class OneToOneMappedByTypeTest {
 
 	@Test
 	public void testWrong() {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
 					.addAnnotatedClass( EntityAWrong.class )
 					.addAnnotatedClass( EntityBWrong.class )
@@ -50,7 +51,7 @@ public class OneToOneMappedByTypeTest {
 
 	@Test
 	public void testCorrectSuperclass() {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
 					.addAnnotatedClass( SuperclassEntity.class )
 					.addAnnotatedClass( SubclassEntity.class );
@@ -62,7 +63,7 @@ public class OneToOneMappedByTypeTest {
 	public void testCorrectSameTable() {
 		// Allow different entity types which map to the same table since the mappedBy
 		// in that case would still make sense from a database perspective
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
 					.addAnnotatedClass( EntityACorrect.class )
 					.addAnnotatedClass( EntityBCorrect.class )
@@ -75,7 +76,7 @@ public class OneToOneMappedByTypeTest {
 	public void testCorrectSubtype() {
 		// Allow mappedBy subtypes given that users might want to filter the
 		// association with custom @Where annotations and still use a supertype
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
 					.addAnnotatedClass( EntityASupertype.class )
 					.addAnnotatedClass( EntityAMappedSuperclass.class )

@@ -193,7 +193,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					updatable,
 					false,
 					dialect,
-					null
+					null,
+					creationContext
 			);
 			final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
 			final int sqlTypeCode = aggregateColumn.getSqlTypeCode();
@@ -227,7 +228,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				typeConfiguration.getJdbcTypeRegistry().resolveAggregateDescriptor(
 						aggregateColumn.getSqlTypeCode(),
 						aggregateColumn.getSqlTypeCode() == SqlTypes.STRUCT
-								? aggregateColumn.getSqlType()
+								? aggregateColumn.getSqlType( creationContext.getMetadata() )
 								: null,
 						this,
 						creationContext
@@ -378,6 +379,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final Long length;
 				final Integer precision;
 				final Integer scale;
+				final Integer temporalPrecision;
+				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column ) {
 					final Column column = (Column) selectable;
@@ -385,7 +388,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
-					nullable = column.isNullable();
+					temporalPrecision = column.getTemporalPrecision();
+					isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
+					nullable = bootPropertyDescriptor.isOptional() && column.isNullable() ;
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
 				}
 				else {
@@ -393,7 +398,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					length = null;
 					precision = null;
 					scale = null;
-					nullable = true;
+					temporalPrecision = null;
+					isLob = false;
+					nullable = bootPropertyDescriptor.isOptional();
 					selectablePath = basicValue.createSelectablePath( bootPropertyDescriptor.getName() );
 				}
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
@@ -414,6 +421,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						length,
 						precision,
 						scale,
+						temporalPrecision,
+						isLob,
 						nullable,
 						insertability[columnPosition],
 						updateability[columnPosition],

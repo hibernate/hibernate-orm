@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import org.hamcrest.CoreMatchers;
@@ -34,7 +35,7 @@ public class EntityTransactionTests extends BaseUnitTestCase {
 
 	@Test
 	public void testGetRollbackOnlyExpectations() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" )
 				.build();
 
@@ -69,7 +70,7 @@ public class EntityTransactionTests extends BaseUnitTestCase {
 
 	@Test
 	public void testMarkRollbackOnlyNoTransaction() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" )
 				.build();
 
@@ -104,7 +105,7 @@ public class EntityTransactionTests extends BaseUnitTestCase {
 
 	@Test
 	public void testSetRollbackOnlyOutcomeExpectations() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" )
 				.build();
 
@@ -176,7 +177,7 @@ public class EntityTransactionTests extends BaseUnitTestCase {
 
 	@Test
 	public void testSetRollbackOnlyExpectations() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" )
 				.build();
 
@@ -211,7 +212,7 @@ public class EntityTransactionTests extends BaseUnitTestCase {
 
 	@Test
 	public void testRollbackExpectations() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" )
 				.build();
 

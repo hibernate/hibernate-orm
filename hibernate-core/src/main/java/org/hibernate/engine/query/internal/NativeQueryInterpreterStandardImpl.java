@@ -21,11 +21,17 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 	/**
 	 * Singleton access
 	 */
-	public static final NativeQueryInterpreterStandardImpl NATIVE_QUERY_INTERPRETER = new NativeQueryInterpreterStandardImpl();
+	public static final NativeQueryInterpreterStandardImpl NATIVE_QUERY_INTERPRETER = new NativeQueryInterpreterStandardImpl( false );
+
+	private boolean nativeJdbcParametersIgnored;
+
+	public NativeQueryInterpreterStandardImpl(boolean nativeJdbcParametersIgnored) {
+		this.nativeJdbcParametersIgnored = nativeJdbcParametersIgnored;
+	}
 
 	@Override
 	public void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer) {
-		ParameterParser.parse( nativeQuery, recognizer );
+		ParameterParser.parse( nativeQuery, recognizer, nativeJdbcParametersIgnored );
 	}
 
 	@Override

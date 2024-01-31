@@ -13,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
+import org.hibernate.PersistentObjectException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.TransientObjectException;
@@ -120,7 +121,8 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			rollbackIfNecessary( converted );
 			return converted;
 		}
-		else if ( exception instanceof org.hibernate.NonUniqueObjectException ) {
+		else if ( exception instanceof org.hibernate.NonUniqueObjectException
+					|| exception instanceof PersistentObjectException) {
 			final EntityExistsException converted = new EntityExistsException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;

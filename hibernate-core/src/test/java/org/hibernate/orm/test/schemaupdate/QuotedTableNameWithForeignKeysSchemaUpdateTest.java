@@ -18,6 +18,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 
 	@Before
 	public void setUp() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml" )
@@ -46,7 +47,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 
 	@Test
 	public void testUpdateExistingSchema() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml" )
@@ -60,7 +61,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 
 	@Test
 	public void testGeneratingUpdateScript() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
@@ -75,7 +76,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 
 	@After
 	public void tearDown() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )

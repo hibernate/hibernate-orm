@@ -9,9 +9,11 @@ package org.hibernate.sql.ast.tree.expression;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -27,7 +29,7 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
  * @author Steve Ebersole
  */
 public class EntityTypeLiteral
-		implements Expression, MappingModelExpressible<Object>, DomainResultProducer<Object>, JavaTypedExpressible<Object> {
+		implements Expression, DomainResultProducer<Object>, BasicValuedMapping {
 	private final EntityPersister entityTypeDescriptor;
 	private final DiscriminatorType<?> discriminatorType;
 
@@ -41,11 +43,21 @@ public class EntityTypeLiteral
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// MappingModelExpressible
+	// BasicValuedMapping
 
 	@Override
 	public MappingModelExpressible getExpressionType() {
 		return this;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
+		return discriminatorType;
+	}
+
+	@Override
+	public MappingType getMappedType() {
+		return discriminatorType;
 	}
 
 	@Override

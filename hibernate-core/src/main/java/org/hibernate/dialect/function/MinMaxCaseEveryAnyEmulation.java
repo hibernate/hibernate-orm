@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -54,6 +55,7 @@ public class MinMaxCaseEveryAnyEmulation extends AbstractSqmSelfRenderingFunctio
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		if ( every ) {
 			sqlAppender.appendSql( "min(case when " );
@@ -77,7 +79,10 @@ public class MinMaxCaseEveryAnyEmulation extends AbstractSqmSelfRenderingFunctio
 
 	@Override
 	public void render(
-			SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
-		this.render( sqlAppender, sqlAstArguments, null, walker );
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
+		this.render( sqlAppender, sqlAstArguments, null, returnType, walker );
 	}
 }

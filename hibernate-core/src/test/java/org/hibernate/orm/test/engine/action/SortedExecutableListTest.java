@@ -39,7 +39,7 @@ public class SortedExecutableListTest {
 	private static class AnExecutable implements ComparableExecutable {
 
 		private final int n;
-		private Serializable[] spaces;
+		private String[] spaces;
 		private transient boolean afterDeserializeCalled;
 
 		public AnExecutable(int n, String... spaces) {
@@ -73,7 +73,7 @@ public class SortedExecutableListTest {
 		}
 
 		@Override
-		public Serializable[] getPropertySpaces() {
+		public String[] getPropertySpaces() {
 			return spaces;
 		}
 

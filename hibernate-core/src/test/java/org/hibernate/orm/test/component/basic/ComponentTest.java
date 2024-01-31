@@ -60,7 +60,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 		PersistentClass user = metadata.getEntityBinding( User.class.getName() );
 		org.hibernate.mapping.Property personProperty = user.getProperty( "person" );
 		Component component = ( Component ) personProperty.getValue();
-		Formula f = ( Formula ) component.getProperty( "yob" ).getValue().getColumnIterator().next();
+		Formula f = ( Formula ) component.getProperty( "yob" ).getValue().getSelectables().get( 0 );
 
 		String pattern = metadata.getDatabase().getJdbcEnvironment().getDialect().extractPattern( TemporalUnit.YEAR );
 		String formula = pattern.replace( "?1", "YEAR" ).replace( "?2", "dob" );

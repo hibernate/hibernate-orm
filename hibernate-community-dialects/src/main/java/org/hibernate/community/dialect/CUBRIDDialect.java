@@ -106,7 +106,12 @@ public class CUBRIDDialect extends Dialect {
 		//length parameter is measured in bits, not bytes)
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BINARY, "bit($l)", this ) );
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARBINARY, columnType( BLOB ), this )
+				CapacityDependentDdlType.builder(
+								VARBINARY,
+								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
+								columnType( BLOB ),
+								this
+						)
 						.withTypeCapacity( getMaxVarbinaryLength(), "bit varying($l)" )
 						.build()
 		);

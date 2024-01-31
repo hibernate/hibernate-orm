@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -64,7 +65,8 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			boolean[] insertable,
 			boolean[] updateable,
 			Dialect dialect,
-			SqmFunctionRegistry sqmFunctionRegistry) {
+			SqmFunctionRegistry sqmFunctionRegistry,
+			RuntimeModelCreationContext creationContext) {
 		if ( insertable.length == 0 ) {
 			return from(
 					containingTableExpression,
@@ -73,7 +75,8 @@ public class SelectableMappingsImpl implements SelectableMappings {
 					mapping,
 					typeConfiguration,
 					dialect,
-					sqmFunctionRegistry
+					sqmFunctionRegistry,
+					creationContext
 			);
 		}
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
@@ -92,7 +95,8 @@ public class SelectableMappingsImpl implements SelectableMappings {
 					updateable[i],
 					false,
 					dialect,
-					sqmFunctionRegistry
+					sqmFunctionRegistry,
+					creationContext
 			);
 		}
 
@@ -106,7 +110,8 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			Mapping mapping,
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
-			SqmFunctionRegistry sqmFunctionRegistry) {
+			SqmFunctionRegistry sqmFunctionRegistry,
+			RuntimeModelCreationContext creationContext) {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
 		resolveJdbcMappings( jdbcMappings, mapping, value.getType() );
 
@@ -123,7 +128,8 @@ public class SelectableMappingsImpl implements SelectableMappings {
 					false,
 					false,
 					dialect,
-					sqmFunctionRegistry
+					sqmFunctionRegistry,
+					creationContext
 			);
 		}
 

@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.MultipatternSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
@@ -61,7 +62,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEM
  *
  * @author Christian Beikov
  */
-public class FormatFunction extends AbstractSqmFunctionDescriptor implements FunctionRenderingSupport {
+public class FormatFunction extends AbstractSqmFunctionDescriptor implements FunctionRenderer {
 
 	private final String nativeFunctionName;
 	private final boolean reversedArguments;
@@ -103,6 +104,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( nativeFunctionName );
 		sqlAppender.append( '(' );
@@ -171,6 +173,10 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		private final boolean supportsPatternLiterals;
 		private final TypeConfiguration typeConfiguration;
 
+		/**
+		 * @deprecated Use {@link #FormatSqmFunction(SqmFunctionDescriptor, FunctionRenderer, List, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, boolean, QueryEngine)} instead
+		 */
+		@Deprecated(forRemoval = true)
 		public FormatSqmFunction(
 				SqmFunctionDescriptor descriptor,
 				FunctionRenderingSupport renderingSupport,
@@ -194,12 +200,33 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			this.typeConfiguration = queryEngine.getTypeConfiguration();
 		}
 
+		public FormatSqmFunction(
+				SqmFunctionDescriptor descriptor,
+				FunctionRenderer renderer,
+				List<? extends SqmTypedNode<?>> arguments,
+				ReturnableType<T> impliedResultType,
+				ArgumentsValidator argumentsValidator,
+				FunctionReturnTypeResolver returnTypeResolver,
+				boolean supportsPatternLiterals,
+				QueryEngine queryEngine) {
+			super(
+					descriptor,
+					renderer,
+					arguments,
+					impliedResultType,
+					argumentsValidator,
+					returnTypeResolver,
+					queryEngine.getCriteriaBuilder(),
+					"format"
+			);
+			this.supportsPatternLiterals = supportsPatternLiterals;
+			this.typeConfiguration = queryEngine.getTypeConfiguration();
+		}
+
 		@Override
 		public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
 			final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
-			final ReturnableType<?> resultType = resolveResultType(
-					walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-			);
+			final ReturnableType<?> resultType = resolveResultType( walker );
 			final MappingModelExpressible<?> mappingModelExpressible = resultType == null ? null : getMappingModelExpressible(
 					walker,
 					resultType,
@@ -295,7 +322,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 												formatExpression,
 												new SelfRenderingFunctionSqlAstExpression(
 														getFunctionName(),
-														getRenderingSupport(),
+														getFunctionRenderer(),
 														List.of(
 																arguments.get( 0 ),
 																new QueryLiteral<>( formatPart, stringType )
@@ -421,7 +448,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								formatExpression,
 								new SelfRenderingFunctionSqlAstExpression(
 										getFunctionName(),
-										getRenderingSupport(),
+										getFunctionRenderer(),
 										List.of( arguments.get( 0 ), new Format( chunks[i] ) ),
 										resultType,
 										mappingModelExpressible
@@ -442,7 +469,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			}
 			return new SelfRenderingFunctionSqlAstExpression(
 					getFunctionName(),
-					getRenderingSupport(),
+					getFunctionRenderer(),
 					arguments,
 					resultType,
 					mappingModelExpressible

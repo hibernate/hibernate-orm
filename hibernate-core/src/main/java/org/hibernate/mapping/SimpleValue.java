@@ -266,11 +266,6 @@ public abstract class SimpleValue implements KeyValue {
 		return columns.get( position );
 	}
 
-	@Override @Deprecated
-	public Iterator<Selectable> getColumnIterator() {
-		return columns.iterator();
-	}
-
 	@Override
 	public List<Selectable> getSelectables() {
 		return columns;
@@ -287,8 +282,12 @@ public abstract class SimpleValue implements KeyValue {
 		return (List) columns;
 	}
 
+	/**
+	 * @deprecated Use {@link #getSelectables()} instead
+	 */
+	@Deprecated(forRemoval = true, since = "6.3")
 	public Iterator<Selectable> getConstraintColumnIterator() {
-		return getColumnIterator();
+		return getSelectables().iterator();
 	}
 
 	public String getTypeName() {

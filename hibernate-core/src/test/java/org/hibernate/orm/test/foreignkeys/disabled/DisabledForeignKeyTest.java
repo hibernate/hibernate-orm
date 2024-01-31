@@ -22,6 +22,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -35,8 +36,7 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9704" )
 	public void basicTests() {
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
-		StandardServiceRegistry standardRegistry = registryBuilder.build();
+		StandardServiceRegistry standardRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataSources sources = new MetadataSources( standardRegistry );
 
@@ -76,8 +76,7 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9704" )
 	public void expandedTests() {
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
-		StandardServiceRegistry standardRegistry = registryBuilder.build();
+		StandardServiceRegistry standardRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataSources sources = new MetadataSources( standardRegistry );
 

@@ -8,7 +8,6 @@ package org.hibernate.internal;
 
 import java.util.Set;
 
-import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -23,6 +22,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -30,16 +30,18 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
+import jakarta.persistence.EntityGraph;
 import jakarta.transaction.SystemException;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -48,6 +50,7 @@ import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -77,6 +80,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		connectionProvided = options.getConnection() != null;
 		temporaryPersistenceContext = new StatefulPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
+		setUpMultitenancy( factory, influencers );
 	}
 
 	@Override
@@ -99,17 +103,18 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final Object id;
 		final Object[] state = persister.getValues( entity );
 		final Generator generator = persister.getGenerator();
-		if ( !generator.generatedOnExecution() ) {
+		if ( !generator.generatedOnExecution( entity, this ) ) {
 			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
 			if ( persister.isVersioned() ) {
 				if ( seedVersion( entity, state, persister, this ) ) {
 					persister.setValues( entity, state );
 				}
 			}
-			persister.insert( id, state, entity, this );
+			persister.getInsertCoordinator().insert( entity, id, state, this );
 		}
 		else {
-			id = persister.insert( state, entity, this );
+			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
+			id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 		}
 		persister.setIdentifier( entity, id, this );
 		return id;
@@ -130,7 +135,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
-		persister.delete( id, version, entity, this );
+		persister.getDeleteCoordinator().delete( entity, id, version, this );
 	}
 
 
@@ -164,7 +169,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else {
 			oldVersion = null;
 		}
-		persister.update( id, state, null, false, null, oldVersion, entity, null, this );
+		persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 	}
 
 	@Override
@@ -200,7 +205,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else {
 			oldVersion = null;
 		}
-		persister.merge( id, state, null, false, null, oldVersion, entity, null, this );
+		persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 //		persister.setIdentifier( entity, id, this );
 	}
 
@@ -350,11 +355,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 		// first, try to load it from the temp PC associated to this SS
 		final PersistenceContext persistenceContext = getPersistenceContext();
-		final Object loaded = persistenceContext.getEntity( entityKey );
-		if ( loaded != null ) {
+		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+		if ( holder != null && holder.getEntity() != null ) {
 			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
 			// containing eager fetches via join fetch
-			return loaded;
+			return holder.getEntity();
 		}
 
 		if ( !eager ) {
@@ -370,7 +375,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
 				if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
-					final Object proxy = persistenceContext.getProxy( entityKey );
+					final Object proxy = holder == null ? null : holder.getProxy();
 
 					if ( proxy != null ) {
 						if ( LOG.isTraceEnabled() ) {
@@ -400,7 +405,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				if ( persister.hasProxy() ) {
-					final Object existingProxy = persistenceContext.getProxy( entityKey );
+					final Object existingProxy = holder == null ? null : holder.getProxy();
 					if ( existingProxy != null ) {
 						return persistenceContext.narrowProxy( existingProxy, persister, entityKey, null );
 					}

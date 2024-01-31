@@ -6,13 +6,15 @@
  */
 package org.hibernate.boot.archive.scan.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 
 /**
  * @author Steve Ebersole
  */
-public class ClassDescriptorImpl implements ClassDescriptor {
+public class ClassDescriptorImpl implements ClassDescriptor, Serializable {
 	private final String name;
 	private final Categorization categorization;
 	private final InputStreamAccess streamAccess;

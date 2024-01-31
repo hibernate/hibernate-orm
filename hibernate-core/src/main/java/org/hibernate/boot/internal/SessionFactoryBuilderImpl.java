@@ -14,6 +14,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -31,6 +32,7 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.type.format.FormatMapper;
 
 /**
  * @author Gail Badner
@@ -261,7 +263,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
+	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		this.optionsBuilder.applyCurrentTenantIdentifierResolver( resolver );
 		return this;
 	}
@@ -281,6 +283,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyQueryCacheSupport(boolean enabled) {
 		this.optionsBuilder.enableQueryCacheSupport( enabled );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout) {
+		this.optionsBuilder.applyQueryCacheLayout( cacheLayout );
 		return this;
 	}
 
@@ -419,6 +427,18 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
 		this.optionsBuilder.enableJpaClosedCompliance( enabled );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+		this.optionsBuilder.applyJsonFormatMapper( jsonFormatMapper );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+		this.optionsBuilder.applyXmlFormatMapper( xmlFormatMapper );
 		return this;
 	}
 

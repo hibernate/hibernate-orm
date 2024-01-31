@@ -82,8 +82,6 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		LazyTableGroup.ParentTableGroupUseChecker {
 	private ForeignKeyDescriptor foreignKey;
 	private ValuedModelPart fkTargetModelPart;
-	private boolean[] isInsertable;
-	private boolean[] isUpdatable;
 
 	public ManyToManyCollectionPart(
 			Nature nature,
@@ -502,7 +500,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 					false,
 					false,
 					creationProcess.getCreationContext().getDialect(),
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 
 			final BasicAttributeMapping keyModelPart = BasicAttributeMapping.withSelectableMapping(
@@ -538,7 +537,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 					elementBootDescriptor.getColumnInsertability(),
 					elementBootDescriptor.getColumnUpdateability(),
 					creationProcess.getCreationContext().getDialect(),
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 
 			return new EmbeddedForeignKeyDescriptor(
@@ -620,14 +620,15 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 
 		final String collectionTableName = ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping().getTableName();
 
-		if ( fkTargetModelPart instanceof BasicValuedModelPart ) {
+		final BasicValuedModelPart basicFkTarget = fkTargetModelPart.asBasicValuedModelPart();
+		if ( basicFkTarget != null ) {
 			return createSimpleForeignKeyDescriptor(
 					fkBootDescriptorSource,
 					entityType,
 					creationProcess,
 					dialect,
 					collectionTableName,
-					(BasicValuedModelPart) fkTargetModelPart
+					basicFkTarget
 			);
 		}
 
@@ -676,7 +677,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 						fkBootDescriptorSource.getColumnInsertability(),
 						fkBootDescriptorSource.getColumnUpdateability(),
 						creationProcess.getCreationContext().getDialect(),
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				return foreignKeyDescriptor.withKeySelectionMapping(
 						declaringType,
@@ -718,7 +720,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				columnUpdateable,
 				fkValue.isPartitionKey(),
 				dialect,
-				creationProcess.getSqmFunctionRegistry()
+				creationProcess.getSqmFunctionRegistry(),
+				creationProcess.getCreationContext()
 		);
 
 		// here we build a ModelPart that represents the many-to-many table key referring to the element table

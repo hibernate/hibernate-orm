@@ -14,22 +14,29 @@ import org.hibernate.HibernateException;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 
 /**
  * @author Steve Ebersole
  */
 public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
-	private final String tenantIdentifier;
+	private final Object tenantIdentifier;
 	private final SessionEventListener listener;
-	private final MultiTenantConnectionProvider connectionProvider;
+	private final MultiTenantConnectionProvider<Object> connectionProvider;
+	private final SharedSessionContractImplementor session;
+
 
 	public ContextualJdbcConnectionAccess(
-			String tenantIdentifier,
+			Object tenantIdentifier,
 			SessionEventListener listener,
-			MultiTenantConnectionProvider connectionProvider) {
+			MultiTenantConnectionProvider<Object> connectionProvider,
+			SharedSessionContractImplementor session) {
 		this.tenantIdentifier = tenantIdentifier;
 		this.listener = listener;
 		this.connectionProvider = connectionProvider;
+		this.session = session;
 	}
 
 	@Override
@@ -38,11 +45,18 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 			throw new HibernateException( "Tenant identifier required" );
 		}
 
+		final EventManager eventManager = session.getEventManager();
+		final HibernateMonitoringEvent jdbcConnectionAcquisitionEvent = eventManager.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
 			return connectionProvider.getConnection( tenantIdentifier );
 		}
 		finally {
+			eventManager.completeJdbcConnectionAcquisitionEvent(
+					jdbcConnectionAcquisitionEvent,
+					session,
+					tenantIdentifier
+			);
 			listener.jdbcConnectionAcquisitionEnd();
 		}
 	}
@@ -53,11 +67,14 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 			throw new HibernateException( "Tenant identifier required" );
 		}
 
+		final EventManager eventManager = session.getEventManager();
+		final HibernateMonitoringEvent jdbcConnectionReleaseEvent = eventManager.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
 			connectionProvider.releaseConnection( tenantIdentifier, connection );
 		}
 		finally {
+			eventManager.completeJdbcConnectionReleaseEvent( jdbcConnectionReleaseEvent, session, tenantIdentifier );
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}

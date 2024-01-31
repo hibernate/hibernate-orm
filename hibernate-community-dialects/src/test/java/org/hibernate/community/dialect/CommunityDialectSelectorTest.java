@@ -23,6 +23,7 @@ public class CommunityDialectSelectorTest {
 
 		testDialectNamingResolution( Cache71Dialect.class );
 		testDialectNamingResolution( CUBRIDDialect.class );
+		testDialectNamingResolution( AltibaseDialect.class );
 
 		testDialectNamingResolution( DerbyTenFiveDialect.class );
 		testDialectNamingResolution( DerbyTenSixDialect.class );
@@ -38,13 +39,16 @@ public class CommunityDialectSelectorTest {
 		testDialectNamingResolution( MariaDB53Dialect.class );
 		testDialectNamingResolution( MariaDB10Dialect.class );
 		testDialectNamingResolution( MariaDB102Dialect.class );
+		testDialectNamingResolution( MariaDB103Dialect.class );
 
 		testDialectNamingResolution( MySQL5Dialect.class );
 		testDialectNamingResolution( MySQL55Dialect.class );
+		testDialectNamingResolution( MySQL57Dialect.class );
 
 		testDialectNamingResolution( Oracle8iDialect.class );
 		testDialectNamingResolution( Oracle9iDialect.class );
 		testDialectNamingResolution( Oracle10gDialect.class );
+		testDialectNamingResolution( Oracle12cDialect.class );
 
 		testDialectNamingResolution( PostgreSQL81Dialect.class );
 		testDialectNamingResolution( PostgreSQL82Dialect.class );
@@ -54,10 +58,12 @@ public class CommunityDialectSelectorTest {
 		testDialectNamingResolution( PostgreSQL93Dialect.class );
 		testDialectNamingResolution( PostgreSQL94Dialect.class );
 		testDialectNamingResolution( PostgreSQL95Dialect.class );
+		testDialectNamingResolution( PostgreSQL10Dialect.class );
 
 		testDialectNamingResolution( SAPDBDialect.class );
 
 		testDialectNamingResolution( SQLServer2005Dialect.class );
+		testDialectNamingResolution( SQLServer2008Dialect.class );
 
 		testDialectNamingResolution( SybaseAnywhereDialect.class );
 		testDialectNamingResolution( Sybase11Dialect.class );

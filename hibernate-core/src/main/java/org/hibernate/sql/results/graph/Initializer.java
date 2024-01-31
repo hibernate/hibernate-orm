@@ -7,14 +7,17 @@
 package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Defines a multi-step process for initializing entity, collection and
@@ -31,6 +34,12 @@ public interface Initializer {
 
 	Object getInitializedInstance();
 
+	default void startLoading(RowProcessingState rowProcessingState) {
+	}
+
+	default void markShallowCached() {
+	}
+
 	/**
 	 * Step 1 - Resolve the key value for this initializer for the current
 	 * row.
@@ -46,9 +55,6 @@ public interface Initializer {
 	 *
 	 * After this point, the initializer knows the entity/collection/component
 	 * instance for the current row based on the resolved key
-	 *
-	 * todo (6.0) : much of the various implementations of this are similar enough to handle in a common base implementation (templating?)
-	 * 		things like resolving as managed (Session cache), from second-level cache, from LoadContext, etc..
 	 */
 	void resolveInstance(RowProcessingState rowProcessingState);
 
@@ -62,6 +68,18 @@ public interface Initializer {
 	void initializeInstance(RowProcessingState rowProcessingState);
 
 	/**
+	 * Step 3.1 - Initialize the state of the instance as extracted from the given parentInstance.
+	 * Extraction can be done with the {@link #getInitializedPart()}.
+	 * Initializers are supposed to recursively call this method for sub-initializers.
+	 *
+	 * This alternative initialization protocol is used for shallow query cache hits,
+	 * in which case there is no data available in the {@link org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit}
+	 * to initialize potentially lazy associations.
+	 */
+	default void initializeInstanceFromParent(Object parentInstance, RowProcessingState rowProcessingState) {
+	}
+
+	/**
 	 * Lifecycle method called at the end of the current row processing.
 	 * Provides ability to complete processing from the current row and
 	 * prepare for the next row.
@@ -71,38 +89,30 @@ public interface Initializer {
 	/**
 	 * Lifecycle method called at the very end of the result values processing
 	 */
-	default void endLoading(ExecutionContext context) {
+	default void endLoading(ExecutionContext executionContext) {
 		// by default - nothing to do
 	}
 
-	default boolean isAttributeAssignableToConcreteDescriptor(
-			FetchParentAccess parentAccess,
-			AttributeMapping referencedModelPart) {
-		final EntityInitializer entityInitializer = parentAccess == null ?
-				null :
-				parentAccess.findFirstEntityInitializer();
-		if ( entityInitializer != null ) {
-			final EntityPersister concreteDescriptor = entityInitializer.getConcreteDescriptor();
-			if ( concreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
-				final EntityPersister declaringType = (EntityPersister) referencedModelPart.getDeclaringType()
-						.findContainingEntityMapping();
-				if ( concreteDescriptor != declaringType ) {
-					return declaringType.getSubclassEntityNames().contains( concreteDescriptor.getEntityName() );
-				}
-			}
-		}
-		return true;
+	boolean isPartOfKey();
+
+	static boolean isPartOfKey(NavigablePath navigablePath, FetchParentAccess parentAccess) {
+		return parentAccess != null && parentAccess.isEmbeddableInitializer() && parentAccess.isPartOfKey()
+				|| navigablePath instanceof EntityIdentifierNavigablePath
+				|| ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() );
 	}
 
-	default boolean isEmbeddableInitializer(){
+	boolean isResultInitializer();
+
+	default boolean isEmbeddableInitializer() {
 		return false;
 	}
 
-	default boolean isEntityInitializer(){
+	default boolean isEntityInitializer() {
 		return false;
 	}
 
-	default boolean isCollectionInitializer(){
+	default boolean isCollectionInitializer() {
 		return false;
 	}
 
@@ -111,7 +121,7 @@ public interface Initializer {
 	 *
 	 * @return EntityInitializer if this is an instance of EntityInitializer otherwise {@code null}
 	 */
-	default EntityInitializer asEntityInitializer() {
+	default @Nullable EntityInitializer asEntityInitializer() {
 		return null;
 	}
 
@@ -120,7 +130,16 @@ public interface Initializer {
 	 *
 	 * @return EmbeddableInitializer if this is an instance of EmbeddableInitializer otherwise {@code null}
 	 */
-	default EmbeddableInitializer asEmbeddableInitializer() {
+	default @Nullable EmbeddableInitializer asEmbeddableInitializer() {
+		return null;
+	}
+
+	/**
+	 * A utility method to avoid casting explicitly to CollectionInitializer
+	 *
+	 * @return CollectionInitializer if this is an instance of CollectionInitializer otherwise {@code null}
+	 */
+	default @Nullable CollectionInitializer asCollectionInitializer() {
 		return null;
 	}
 

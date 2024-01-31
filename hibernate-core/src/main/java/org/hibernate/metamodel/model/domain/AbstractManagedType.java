@@ -187,7 +187,7 @@ public abstract class AbstractManagedType<J>
 		}
 
 		for ( ManagedDomainType<? extends J> subType : subTypes ) {
-			final PersistentAttribute<?,?> subTypeAttribute = subType.findAttribute( name );
+			final PersistentAttribute<?,?> subTypeAttribute = subType.findSubTypesAttribute( name );
 			if ( subTypeAttribute != null ) {
 				return subTypeAttribute;
 			}
@@ -377,7 +377,7 @@ public abstract class AbstractManagedType<J>
 			return attribute;
 		}
 		else if ( getSuperType() != null ) {
-			return getSuperType().findDeclaredPluralAttribute( name );
+			return getSuperType().findPluralAttribute( name );
 		}
 		else {
 			return null;

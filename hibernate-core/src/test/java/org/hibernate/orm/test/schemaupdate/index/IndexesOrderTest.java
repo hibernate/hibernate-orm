@@ -15,6 +15,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -35,7 +36,7 @@ public class IndexesOrderTest {
 	@JiraKey("HHH-16953")
 	// see https://jakarta.ee/specifications/persistence/3.1/jakarta-persistence-spec-3.1.html#a14862
 	public void testCreatedIndexColumnsOrderedAsSpecified() throws Exception {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
 		try {

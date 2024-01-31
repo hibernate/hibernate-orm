@@ -23,7 +23,7 @@ import org.junit.Test;
 
 /**
  * Tests mapping of child entity that declares all of its ancestors as audited with {@link Audited#auditParents()} property.
- * All supperclasses are marked with {@link MappedSuperclass} annotation but not {@link Audited}.
+ * All superclasses are marked with {@link MappedSuperclass} annotation but not {@link Audited}.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */

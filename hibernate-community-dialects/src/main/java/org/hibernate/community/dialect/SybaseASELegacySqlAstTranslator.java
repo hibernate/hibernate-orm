@@ -11,14 +11,19 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -33,6 +38,9 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
+import org.hibernate.sql.ast.tree.from.ValuesTableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -40,6 +48,7 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -53,6 +62,77 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	public SybaseASELegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	@Override
+	protected void renderDeleteClause(DeleteStatement statement) {
+		appendSql( "delete " );
+		final Stack<Clause> clauseStack = getClauseStack();
+		try {
+			clauseStack.push( Clause.DELETE );
+			renderDmlTargetTableExpression( statement.getTargetTable() );
+			if ( statement.getFromClause().getRoots().isEmpty() ) {
+				appendSql( " from " );
+				renderDmlTargetTableExpression( statement.getTargetTable() );
+				renderTableReferenceIdentificationVariable( statement.getTargetTable() );
+			}
+			else {
+				visitFromClause( statement.getFromClause() );
+			}
+		}
+		finally {
+			clauseStack.pop();
+		}
+	}
+
+	@Override
+	protected void renderUpdateClause(UpdateStatement updateStatement) {
+		appendSql( "update " );
+		final Stack<Clause> clauseStack = getClauseStack();
+		try {
+			clauseStack.push( Clause.UPDATE );
+			renderDmlTargetTableExpression( updateStatement.getTargetTable() );
+		}
+		finally {
+			clauseStack.pop();
+		}
+	}
+
+	@Override
+	protected boolean supportsJoinsInDelete() {
+		return true;
+	}
+
+	@Override
+	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
+		if ( statement.getFromClause().getRoots().isEmpty() ) {
+			appendSql( " from " );
+			renderDmlTargetTableExpression( statement.getTargetTable() );
+			renderTableReferenceIdentificationVariable( statement.getTargetTable() );
+		}
+		else {
+			visitFromClause( statement.getFromClause() );
+		}
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+			}
+		}
 	}
 
 	@Override
@@ -130,14 +210,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 			appendSql( " )" );
 
 			registerAffectedTable( tableReference );
-			final Clause currentClause = getClauseStack().getCurrent();
-			if ( rendersTableReferenceAlias( currentClause ) ) {
-				final String identificationVariable = tableReference.getIdentificationVariable();
-				if ( identificationVariable != null ) {
-					appendSql( ' ' );
-					appendSql( identificationVariable );
-				}
-			}
+			renderTableReferenceIdentificationVariable( tableReference );
 		}
 		else {
 			super.renderNamedTableReference( tableReference, lockMode );
@@ -176,23 +249,16 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
-		if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
-			appendSql( ", " );
-		}
-		else {
-			appendSql( WHITESPACE );
+		appendSql( WHITESPACE );
+		if ( tableGroupJoin.getJoinType() != SqlAstJoinType.CROSS ) {
+			// No support for cross joins, so we emulate it with an inner join and always true on condition
 			appendSql( tableGroupJoin.getJoinType().getText() );
-			appendSql( "join " );
 		}
+		appendSql( "join " );
 
 		final Predicate predicate;
 		if ( tableGroupJoin.getPredicate() == null ) {
-			if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
-				predicate = null;
-			}
-			else {
-				predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
-			}
+			predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
 		}
 		else {
 			predicate = tableGroupJoin.getPredicate();
@@ -257,6 +323,14 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	protected void visitValuesList(List<Values> valuesList) {
 		visitValuesListEmulateSelectUnion( valuesList );
+	}
+
+	@Override
+	public void visitValuesTableReference(ValuesTableReference tableReference) {
+		append( '(' );
+		visitValuesListEmulateSelectUnion( tableReference.getValuesList() );
+		append( ')' );
+		renderDerivedTableReference( tableReference );
 	}
 
 	@Override
@@ -393,63 +467,32 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	public void visitColumnReference(ColumnReference columnReference) {
-		final String dmlTargetTableAlias = getDmlTargetTableAlias();
-		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
-			// Sybase needs a table name prefix
-			// but not if this is a restricted union table reference subquery
-			final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
-			final List<TableGroup> roots;
-			if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
-					&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1
-					&& roots.get( 0 ).getPrimaryTableReference() instanceof UnionTableReference ) {
-				columnReference.appendReadExpression( this );
-			}
-			// for now, use the unqualified form
-			else if ( columnReference.isColumnExpressionFormula() ) {
-				// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
-				// This is fine for now as this is only temporary anyway until we render aliases for table references
-				appendSql(
-						columnReference.getColumnExpression()
-								.replaceAll( "(\\b)(" + dmlTargetTableAlias + "\\.)(\\b)", "$1$3" )
-				);
-			}
-			else {
-				columnReference.appendReadExpression(
-						this,
-						getCurrentDmlStatement().getTargetTable().getTableExpression()
-				);
-			}
+	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
+		final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
+		final MutationStatement currentDmlStatement;
+		final String dmlAlias;
+		if ( qualifierSupport == DmlTargetColumnQualifierSupport.TABLE_ALIAS
+				|| ( currentDmlStatement = getCurrentDmlStatement() ) == null
+				|| ( dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable() ) == null
+				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
+			return columnReference.getQualifier();
+		}
+		// Sybase needs a table name prefix
+		// but not if this is a restricted union table reference subquery
+		final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final List<TableGroup> roots;
+		if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
+				&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1
+				&& roots.get( 0 ).getPrimaryTableReference() instanceof UnionTableReference ) {
+			return columnReference.getQualifier();
+		}
+		else if ( columnReference.isColumnExpressionFormula() ) {
+			// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
+			// This is fine for now as this is only temporary anyway until we render aliases for table references
+			return null;
 		}
 		else {
-			columnReference.appendReadExpression( this );
-		}
-	}
-
-	@Override
-	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
-		final String dmlTargetTableAlias = getDmlTargetTableAlias();
-		final ColumnReference columnReference = aggregateColumnWriteExpression.getColumnReference();
-		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
-			// Sybase needs a table name prefix
-			// but not if this is a restricted union table reference subquery
-			final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
-			final List<TableGroup> roots;
-			if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
-					&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1
-					&& roots.get( 0 ).getPrimaryTableReference() instanceof UnionTableReference ) {
-				aggregateColumnWriteExpression.appendWriteExpression( this, this );
-			}
-			else {
-				aggregateColumnWriteExpression.appendWriteExpression(
-						this,
-						this,
-						getCurrentDmlStatement().getTargetTable().getTableExpression()
-				);
-			}
-		}
-		else {
-			aggregateColumnWriteExpression.appendWriteExpression( this, this );
+			return getCurrentDmlStatement().getTargetTable().getTableExpression();
 		}
 	}
 
@@ -479,8 +522,8 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from (select 1) dual(c1)";
+	protected String getDual() {
+		return "(select 1 c1)";
 	}
 
 	private boolean supportsTopClause() {

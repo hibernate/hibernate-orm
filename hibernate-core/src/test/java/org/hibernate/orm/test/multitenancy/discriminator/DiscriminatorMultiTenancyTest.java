@@ -16,14 +16,14 @@ import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
@@ -35,6 +35,8 @@ import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.multitenancy.schema.Customer;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
@@ -51,7 +53,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 	private SessionFactoryImplementor sessionFactory;
 
-	private DriverManagerConnectionProviderImpl connectionProvider;
+	private ConnectionProvider connectionProvider;
 
 	private final TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();
 
@@ -62,7 +64,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		settings.put(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName());
 		settings.put(Environment.GENERATE_STATISTICS, "true");
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings(settings)
 				.build();
 
@@ -114,7 +116,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 	@After
 	public void destroy() {
 		sessionFactory.close();
-		connectionProvider.stop();
+		( (Stoppable) connectionProvider ).stop();
 	}
 
 	public SessionFactoryImplementor sessionFactory() {
@@ -180,7 +182,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		} );
 	}
 
-	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver {
+	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver<Object> {
 		private String currentTenantIdentifier;
 		private final AtomicBoolean postBoot = new AtomicBoolean(false);
 
@@ -189,7 +191,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public String resolveCurrentTenantIdentifier() {
+		public Object resolveCurrentTenantIdentifier() {
 			if ( postBoot.get() == false ) {
 				//Check to prevent any optimisation which might want to cache the tenantId too early during bootstrap:
 				//it's a common use case to want to provide the tenantId, for example, via a ThreadLocal.

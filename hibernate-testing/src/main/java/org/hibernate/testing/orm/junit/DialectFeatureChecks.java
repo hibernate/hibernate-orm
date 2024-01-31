@@ -420,7 +420,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsInverseDistributionFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 1, 4, 200 )
+			return dialect instanceof H2Dialect
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
 					|| dialect instanceof CockroachDialect
@@ -434,7 +434,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsHypotheticalSetFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 1, 4, 200 )
+			return dialect instanceof H2Dialect
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
 					|| dialect instanceof CockroachDialect
@@ -670,6 +670,18 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsCommentOn implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsCommentOn();
+		}
+	}
+
+	public static class SupportsStructuralArrays implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getPreferredSqlTypeCodeForArray() != SqlTypes.VARBINARY;
+		}
+	}
+
+	public static class SupportsUpsertOrMerge implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !( dialect instanceof DerbyDialect );
 		}
 	}
 }

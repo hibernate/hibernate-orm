@@ -209,7 +209,7 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 			return context.getPropertyAuditingData().getPositionMappedBy();
 		}
 		else if ( hasCollectionIndex( context ) ) {
-			return ( (IndexedCollection) context.getCollection() ).getIndex().getColumnIterator().next().getText();
+			return ( (IndexedCollection) context.getCollection() ).getIndex().getSelectables().get( 0 ).getText();
 		}
 		return null;
 	}

@@ -314,7 +314,7 @@ public class IdTest {
 	@Test
 	public void testColumnDefinition(SessionFactoryScope scope) {
 		Column idCol = (Column) scope.getMetadataImplementor().getEntityBinding( Ball.class.getName() )
-				.getIdentifierProperty().getValue().getColumnIterator().next();
+				.getIdentifierProperty().getValue().getSelectables().get( 0 );
 		assertEquals( "ball_id", idCol.getName() );
 	}
 

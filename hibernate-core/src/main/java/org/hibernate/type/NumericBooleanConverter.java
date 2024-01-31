@@ -6,12 +6,10 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 /**
@@ -20,8 +18,7 @@ import jakarta.persistence.Converter;
  * @author Steve Ebersole
  */
 @Converter
-public class NumericBooleanConverter implements AttributeConverter<Boolean, Integer>,
-		BasicValueConverter<Boolean, Integer> {
+public class NumericBooleanConverter implements StandardBooleanConverter<Integer> {
 	/**
 	 * Singleton access
 	 */

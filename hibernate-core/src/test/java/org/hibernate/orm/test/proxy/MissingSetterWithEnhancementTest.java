@@ -21,6 +21,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class MissingSetterWithEnhancementTest {
     public void setUp() {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		builder.applyClassLoader( getClass().getClassLoader() );
-		serviceRegistry = new StandardServiceRegistryBuilder( builder.build() )
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder( builder.build() )
 				.applySettings( Environment.getProperties() )
 				.build();
     }

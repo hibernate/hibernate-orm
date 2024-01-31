@@ -147,8 +147,8 @@ public class ClassesAuditingData {
 
 	private void addSyntheticIndexProperty(List value, String propertyAccessorName, ClassAuditingData classAuditingData) {
 		final Value indexValue = value.getIndex();
-		if ( indexValue != null && indexValue.getColumnIterator().hasNext() ) {
-			final String indexColumnName = indexValue.getColumnIterator().next().getText();
+		if ( indexValue != null && indexValue.getSelectables().size() > 0 ) {
+			final String indexColumnName = indexValue.getSelectables().get( 0 ).getText();
 			if ( indexColumnName != null ) {
 				final PropertyAuditingData auditingData = new PropertyAuditingData(
 						indexColumnName,
@@ -166,8 +166,8 @@ public class ClassesAuditingData {
 	private void addMapEnumeratedKey(Value value, String propertyAccessorName, ClassAuditingData classAuditingData) {
 		if ( value instanceof org.hibernate.mapping.Map ) {
 			final Value indexValue = ( (org.hibernate.mapping.Map) value ).getIndex();
-			if ( indexValue != null && indexValue.getColumnIterator().hasNext() ) {
-				final String indexColumnName = indexValue.getColumnIterator().next().getText();
+			if ( indexValue != null && indexValue.getSelectables().size() > 0 ) {
+				final String indexColumnName = indexValue.getSelectables().get( 0 ).getText();
 				if ( !StringTools.isEmpty( indexColumnName ) ) {
 					final PropertyAuditingData propertyAuditingData = new PropertyAuditingData(
 							indexColumnName,

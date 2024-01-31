@@ -26,7 +26,6 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
 
 /**
  * OneToMany delete coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
@@ -58,7 +57,7 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 
 	@Override
 	public void deleteRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
-		if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 			MODEL_MUTATION_LOGGER.debugf(
 					"Deleting removed collection rows - %s : %s",
 					mutationTarget.getRolePath(),

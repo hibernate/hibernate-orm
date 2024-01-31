@@ -7,7 +7,6 @@
 package org.hibernate.query.derived;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Incubating;
@@ -16,7 +15,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
@@ -25,6 +23,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.sql.ast.spi.SqlSelection;
 
 import jakarta.persistence.metamodel.Attribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Christian Beikov
@@ -107,7 +106,7 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 
 	@Override
 	public EmbeddableMappingType getPartMappingType() {
-		return (EmbeddableMappingType) super.getPartMappingType();
+		return this;
 	}
 
 	@Override
@@ -133,5 +132,10 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+		return delegate.areEqual( one, other, session );
 	}
 }

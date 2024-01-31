@@ -59,23 +59,16 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
-		if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
-			appendSql( ", " );
-		}
-		else {
-			appendSql( WHITESPACE );
+		appendSql( WHITESPACE );
+		if ( tableGroupJoin.getJoinType() != SqlAstJoinType.CROSS ) {
+			// No support for cross joins, so we emulate it with an inner join and always true on condition
 			appendSql( tableGroupJoin.getJoinType().getText() );
-			appendSql( "join " );
 		}
+		appendSql( "join " );
 
 		final Predicate predicate;
 		if ( tableGroupJoin.getPredicate() == null ) {
-			if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
-				predicate = null;
-			}
-			else {
-				predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
-			}
+			predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
 		}
 		else {
 			predicate = tableGroupJoin.getPredicate();

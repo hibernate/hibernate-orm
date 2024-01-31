@@ -30,9 +30,6 @@ public interface DialectLogging {
 	Logger DIALECT_LOGGER = Logger.getLogger(LOGGER_NAME);
 	DialectLogging DIALECT_MESSAGE_LOGGER = Logger.getMessageLogger(DialectLogging.class, LOGGER_NAME);
 
-	boolean DEBUG_ENABLED = DIALECT_LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = DIALECT_LOGGER.isTraceEnabled();
-
 	@LogMessage(level = DEBUG)
 	@Message(value = "Using dialect: %s", id = 35001)
 	void usingDialect(Dialect dialect);

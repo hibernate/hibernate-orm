@@ -2410,7 +2410,7 @@ public class ModelBinder {
 	}
 
 	private Object typeInstance(String typeName, Class<?> typeJavaType) {
-		if ( metadataBuildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !metadataBuildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( typeJavaType );
 		}
 		else {
@@ -2621,7 +2621,7 @@ public class ModelBinder {
 					if ( CompositeUserType.class.isAssignableFrom( componentClass ) ) {
 						componentBinding.setTypeName( explicitComponentClassName );
 						CompositeUserType<?> compositeUserType;
-						if ( sourceDocument.getBuildingOptions().disallowExtensionsInCdi() ) {
+						if ( !sourceDocument.getBuildingOptions().isAllowExtensionsInCdi() ) {
 							compositeUserType = (CompositeUserType<?>) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( componentClass );
 						}
 						else {

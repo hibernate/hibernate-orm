@@ -93,6 +93,46 @@ public class ToHqlStringTest {
 		);
 	}
 
+	@Test
+	@JiraKey("HHH-16526")
+	public void testCriteriaWithFunctionTakingOneArgument(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Object> criteriaQuery = builder.createQuery( Object.class );
+
+					criteriaQuery.from( TestEntity.class );
+					criteriaQuery.where(
+							builder.equal( builder.lower( builder.literal( "Foo" ) ), builder.literal( "foo" ) )
+					);
+
+					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
+					String hqlString = ( (SqmQuery) query ).getSqmStatement().toHqlString();
+					assertThat( hqlString, containsString( "where lower('Foo') = 'foo'" ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-16526")
+	public void testCriteriaWithFunctionTakingTwoArguments(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Object> criteriaQuery = builder.createQuery( Object.class );
+
+					criteriaQuery.from( TestEntity.class );
+					criteriaQuery.where( builder.isTrue(
+							builder.function( "myFunction", Boolean.class, builder.literal( 0 ), builder.literal( 10 ) )
+					) );
+
+					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
+					String hqlString = ( (SqmQuery) query ).getSqmStatement().toHqlString();
+					assertThat( hqlString, containsString( "where myFunction(0, 10)" ) );
+				}
+		);
+	}
+
 	public static class TestDto {
 		@Id
 		public Integer id;

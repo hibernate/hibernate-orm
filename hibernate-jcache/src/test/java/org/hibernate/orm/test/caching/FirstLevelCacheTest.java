@@ -44,8 +44,8 @@ public class FirstLevelCacheTest {
 			entityManager.persist(new Person());
 			entityManager.persist(new Person());
 			Person person = new Person();
-            entityManager.persist(person);
-        });
+			entityManager.persist(person);
+		});
 		scope.inTransaction( entityManager -> {
 			List<Object> dtos = new ArrayList<>();
 			//tag::caching-management-jpa-detach-example[]
@@ -86,7 +86,7 @@ public class FirstLevelCacheTest {
 			session.contains(person);
 			//end::caching-management-contains-example[]
 		});
-    }
+	}
 
 	private Object toDTO(Person person) {
 		return person;

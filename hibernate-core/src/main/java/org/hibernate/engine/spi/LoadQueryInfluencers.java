@@ -27,6 +27,8 @@ import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static java.util.Collections.emptySet;
 import static org.hibernate.engine.FetchStyle.SUBSELECT;
 
@@ -41,15 +43,6 @@ import static org.hibernate.engine.FetchStyle.SUBSELECT;
  * @author Steve Ebersole
  */
 public class LoadQueryInfluencers implements Serializable {
-	/**
-	 * Static reference useful for cases where we are creating load SQL
-	 * outside the context of any influencers.  One such example is
-	 * anything created by the session factory.
-	 *
-	 * @deprecated use {@link #LoadQueryInfluencers(SessionFactoryImplementor)}
-	 */
-	@Deprecated(forRemoval = true)
-	public static final LoadQueryInfluencers NONE = new LoadQueryInfluencers();
 
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -69,10 +62,6 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private Boolean readOnly;
 
-	public LoadQueryInfluencers() {
-		this.sessionFactory = null;
-	}
-
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 		batchSize = sessionFactory.getSessionFactoryOptions().getDefaultBatchFetchSize();
@@ -85,7 +74,7 @@ public class LoadQueryInfluencers implements Serializable {
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 	}
 
-	public EffectiveEntityGraph applyEntityGraph(RootGraphImplementor<?> rootGraph, GraphSemantic graphSemantic) {
+	public EffectiveEntityGraph applyEntityGraph(@Nullable RootGraphImplementor<?> rootGraph, @Nullable GraphSemantic graphSemantic) {
 		final EffectiveEntityGraph effectiveEntityGraph = getEffectiveEntityGraph();
 		if ( graphSemantic != null ) {
 			if ( rootGraph == null ) {
@@ -132,7 +121,6 @@ public class LoadQueryInfluencers implements Serializable {
 	 * Set the effective {@linkplain #getEnabledCascadingFetchProfile() cascading fetch-profile}
 	 */
 	public void setEnabledCascadingFetchProfile(CascadingFetchProfile enabledCascadingFetchProfile) {
-		checkMutability();
 		this.enabledCascadingFetchProfile = enabledCascadingFetchProfile;
 	}
 
@@ -186,7 +174,7 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 	}
 
-	public Filter getEnabledFilter(String filterName) {
+	public @Nullable Filter getEnabledFilter(String filterName) {
 		if ( enabledFilters == null ) {
 			return null;
 		}
@@ -196,7 +184,6 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Filter enableFilter(String filterName) {
-		checkMutability();
 		FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
 			this.enabledFilters = new HashMap<>();
@@ -223,7 +210,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return filter.getParameter( parsed[1] );
 	}
 
-	public static String[] parseFilterParameterName(String filterParameterName) {
+	public static String [] parseFilterParameterName(String filterParameterName) {
 		int dot = filterParameterName.lastIndexOf( '.' );
 		if ( dot <= 0 ) {
 			throw new IllegalArgumentException(
@@ -247,7 +234,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	private void checkFetchProfileName(String name) {
-		if ( sessionFactory != null && !sessionFactory.containsFetchProfileDefinition( name ) ) {
+		if ( !sessionFactory.containsFetchProfileDefinition( name ) ) {
 			throw new UnknownProfileException( name );
 		}
 	}
@@ -258,7 +245,6 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public void enableFetchProfile(String name) throws UnknownProfileException {
-		checkMutability();
 		checkFetchProfileName( name );
 		if ( enabledFetchProfileNames == null ) {
 			this.enabledFetchProfileNames = new HashSet<>();
@@ -274,7 +260,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	@Internal
-	public HashSet<String> adjustFetchProfiles(Set<String> disabledFetchProfiles, Set<String> enabledFetchProfiles) {
+	public @Nullable HashSet<String> adjustFetchProfiles(@Nullable Set<String> disabledFetchProfiles, @Nullable Set<String> enabledFetchProfiles) {
 		final HashSet<String> oldFetchProfiles =
 				hasEnabledFetchProfiles() ? new HashSet<>( enabledFetchProfileNames ) : null;
 		if ( disabledFetchProfiles != null && enabledFetchProfileNames != null ) {
@@ -353,7 +339,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private boolean isSubselectFetchEnabledInProfile(CollectionPersister persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			for ( String profile : getEnabledFetchProfileNames() ) {
-				final FetchProfile fetchProfile = sessionFactory.getFetchProfile( profile );
+				final FetchProfile fetchProfile = persister.getFactory().getFetchProfile( profile )	;
 				if ( fetchProfile != null ) {
 					final Fetch fetch = fetchProfile.getFetchByRole( persister.getRole() );
 					if ( fetch != null && fetch.getMethod() == SUBSELECT) {
@@ -365,14 +351,6 @@ public class LoadQueryInfluencers implements Serializable {
 		return false;
 	}
 
-	private void checkMutability() {
-		if ( sessionFactory == null ) {
-			// that's the signal that this is the immutable, context-less
-			// variety
-			throw new IllegalStateException( "Cannot modify context-less LoadQueryInfluencers" );
-		}
-	}
-
 	public boolean hasSubselectLoadableCollections(EntityPersister persister) {
 		return persister.hasSubselectLoadableCollections()
 			|| subselectFetchEnabled && persister.hasCollections()
@@ -382,7 +360,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			for ( String profile : getEnabledFetchProfileNames() ) {
-				if ( sessionFactory.getFetchProfile( profile )
+				if ( persister.getFactory().getFetchProfile( profile )
 						.hasSubselectLoadableCollectionsEnabled( persister ) ) {
 					return true;
 				}

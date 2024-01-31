@@ -197,7 +197,7 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 			);
 			assertEquals(
 					inverseForeignKeyNameExpected,
-					inverseCollection.getKey().getColumnIterator().next().getText()
+					inverseCollection.getKey().getSelectables().get( 0 ).getText()
 			);
 		}
 		boolean hasOwnerFK = false;

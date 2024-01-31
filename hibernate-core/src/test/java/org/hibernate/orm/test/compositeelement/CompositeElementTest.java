@@ -41,7 +41,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 	protected void afterMetadataBuilt(Metadata metadata) {
 		Collection children = metadata.getCollectionBinding( Parent.class.getName() + ".children" );
 		Component childComponents = ( Component ) children.getElement();
-		Formula f = ( Formula ) childComponents.getProperty( "bioLength" ).getValue().getColumnIterator().next();
+		Formula f = ( Formula ) childComponents.getProperty( "bioLength" ).getValue().getSelectables().get( 0 );
 
 //		SQLFunction lengthFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "length" );
 //		if ( lengthFunction != null ) {

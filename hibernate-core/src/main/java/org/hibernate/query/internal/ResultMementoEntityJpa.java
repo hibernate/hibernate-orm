@@ -59,7 +59,7 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 			ResultSetMappingResolutionContext context) {
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 		final BasicValuedFetchBuilder discriminatorFetchBuilder;
-		if ( discriminatorMapping == null ) {
+		if ( discriminatorMapping == null || !entityDescriptor.hasSubclasses() ) {
 			assert discriminatorMemento == null;
 			discriminatorFetchBuilder = null;
 		}
@@ -87,11 +87,11 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 			// Implicit basic fetches are DELAYED by default, so register fetch builders for the remaining basic fetchables
 			entityDescriptor.forEachAttributeMapping(
 					attributeMapping -> {
-						final Function<String, FetchBuilder> fetchBuilderCreator;
-						if ( attributeMapping instanceof BasicValuedModelPart ) {
-							fetchBuilderCreator = k -> new DelayedFetchBuilderBasicPart(
+						final BasicValuedModelPart basicPart = attributeMapping.asBasicValuedModelPart();
+						if ( basicPart != null ) {
+							final Function<String, FetchBuilder> fetchBuilderCreator = k -> new DelayedFetchBuilderBasicPart(
 									navigablePath.append( k ),
-									(BasicValuedModelPart) attributeMapping,
+									basicPart,
 									isEnhancedForLazyLoading
 							);
 							explicitFetchBuilderMap.computeIfAbsent(

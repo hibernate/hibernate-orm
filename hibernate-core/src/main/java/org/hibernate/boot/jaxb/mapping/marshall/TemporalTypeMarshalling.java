@@ -15,10 +15,10 @@ import jakarta.persistence.TemporalType;
  */
 public class TemporalTypeMarshalling {
 	public static TemporalType fromXml(String name) {
-		return TemporalType.valueOf( name );
+		return name == null ? null : TemporalType.valueOf( name );
 	}
 
 	public static String toXml(TemporalType temporalType) {
-		return temporalType.name();
+		return temporalType == null ? null : temporalType.name();
 	}
 }

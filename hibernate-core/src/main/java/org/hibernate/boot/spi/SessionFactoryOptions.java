@@ -15,6 +15,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -32,6 +33,8 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.format.FormatMapper;
 
 /**
@@ -154,7 +157,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isMultiTenancyEnabled();
 
-	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
 
 	boolean isJtaTrackByThread();
 
@@ -163,6 +166,9 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isSecondLevelCacheEnabled();
 
 	boolean isQueryCacheEnabled();
+
+	@Incubating
+	CacheLayout getQueryCacheLayout();
 
 	TimestampsCacheFactory getTimestampsCacheFactory();
 
@@ -228,6 +234,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE
 	 */
 	default boolean isCriteriaCopyTreeEnabled() {
+		return false;
+	}
+
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#NATIVE_IGNORE_JDBC_PARAMETERS
+	 */
+	default boolean getNativeJdbcParametersIgnored() {
 		return false;
 	}
 
@@ -319,6 +332,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	@Incubating
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
+	boolean isPreferJavaTimeJdbcTypesEnabled();
+
 	/**
 	 * The format mapper to use for serializing/deserializing JSON data.
 	 *
@@ -334,4 +349,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	@Incubating
 	FormatMapper getXmlFormatMapper();
+
+	/**
+	 * The default tenant identifier java type to use, in case no explicit tenant identifier property is defined.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	default JavaType<Object> getDefaultTenantIdentifierJavaType() {
+		return ObjectJavaType.INSTANCE;
+	}
 }

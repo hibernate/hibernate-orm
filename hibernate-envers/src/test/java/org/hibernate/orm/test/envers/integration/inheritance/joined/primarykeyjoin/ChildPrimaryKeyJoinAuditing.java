@@ -87,6 +87,6 @@ public class ChildPrimaryKeyJoinAuditing extends BaseEnversJPAFunctionalTestCase
 		// for the existence of the specific key column rather than the expectation that is exists at
 		// a specific order in the iterator.
 		final PersistentClass persistentClass = metadata().getEntityBinding( ChildPrimaryKeyJoinEntity.class.getName() + "_AUD" );
-		Assert.assertNotNull( getColumnFromIteratorByName( persistentClass.getKey().getColumnIterator(), "other_id" ) );
+		Assert.assertNotNull( getColumnFromIteratorByName( persistentClass.getKey().getSelectables(), "other_id" ) );
 	}
 }

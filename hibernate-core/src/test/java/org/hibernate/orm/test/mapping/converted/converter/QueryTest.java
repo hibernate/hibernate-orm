@@ -95,7 +95,6 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@FailureExpected( jiraKey = "HHH-14975", message = "Not yet implemented" )
-	@NotImplementedYet
 	@JiraKey( "HHH-14975" )
 	public void testAutoAppliedConverterAsNativeQueryResult() {
 		inTransaction( (session) -> {

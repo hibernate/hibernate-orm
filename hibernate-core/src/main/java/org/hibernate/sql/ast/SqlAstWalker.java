@@ -39,6 +39,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -172,6 +173,8 @@ public interface SqlAstWalker {
 	void visitJdbcLiteral(JdbcLiteral<?> jdbcLiteral);
 
 	void visitQueryLiteral(QueryLiteral<?> queryLiteral);
+
+	<N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal);
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 

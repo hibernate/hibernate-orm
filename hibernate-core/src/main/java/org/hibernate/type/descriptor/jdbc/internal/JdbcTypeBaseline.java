@@ -19,11 +19,17 @@ import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.DoubleJdbcType;
 import org.hibernate.type.descriptor.jdbc.FloatJdbcType;
+import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.RealJdbcType;
 import org.hibernate.type.descriptor.jdbc.RowIdJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
@@ -34,6 +40,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
 
 /**
  * Registers the base {@link JdbcType} instances.
@@ -60,6 +67,14 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( RealJdbcType.INSTANCE );
 		target.addDescriptor( SmallIntJdbcType.INSTANCE );
 		target.addDescriptor( TinyIntJdbcType.INSTANCE );
+
+		target.addDescriptor( InstantJdbcType.INSTANCE );
+		target.addDescriptor( LocalDateTimeJdbcType.INSTANCE );
+		target.addDescriptor( LocalDateJdbcType.INSTANCE );
+		target.addDescriptor( LocalTimeJdbcType.INSTANCE );
+		target.addDescriptor( OffsetDateTimeJdbcType.INSTANCE );
+		target.addDescriptor( OffsetTimeJdbcType.INSTANCE );
+		target.addDescriptor( ZonedDateTimeJdbcType.INSTANCE );
 
 		target.addDescriptor( DateJdbcType.INSTANCE );
 		target.addDescriptor( TimestampJdbcType.INSTANCE );

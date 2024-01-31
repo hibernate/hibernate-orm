@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -28,13 +29,6 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 	 */
 	public static final BatchBuilderInitiator INSTANCE = new BatchBuilderInitiator();
 
-	/**
-	 * Names the BatchBuilder implementation to use.
-	 *
-	 * @see AvailableSettings#BATCH_STRATEGY
-	 */
-	public static final String BUILDER = "hibernate.jdbc.batch.builder";
-
 	@Override
 	public Class<BatchBuilder> getServiceInitiated() {
 		return BatchBuilder.class;
@@ -42,15 +36,15 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 
 	@Override
 	public BatchBuilder initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		Object builder = configurationValues.get( BUILDER );
+		Object builder = configurationValues.get( BatchSettings.BUILDER );
 
 		if ( builder == null ) {
-			builder = configurationValues.get( AvailableSettings.BATCH_STRATEGY );
+			builder = configurationValues.get( BatchSettings.BATCH_STRATEGY );
 		}
 
 		if ( builder == null ) {
 			return new BatchBuilderImpl(
-					ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, 1 )
+					ConfigurationHelper.getInt( BatchSettings.STATEMENT_BATCH_SIZE, configurationValues, 1 )
 			);
 		}
 

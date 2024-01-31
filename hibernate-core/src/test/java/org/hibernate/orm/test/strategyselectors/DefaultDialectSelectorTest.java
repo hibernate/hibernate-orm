@@ -10,7 +10,10 @@ import org.hibernate.boot.registry.selector.internal.DefaultDialectSelector;
 import org.hibernate.community.dialect.DerbyTenFiveDialect;
 import org.hibernate.community.dialect.DerbyTenSevenDialect;
 import org.hibernate.community.dialect.DerbyTenSixDialect;
+import org.hibernate.community.dialect.MySQL57Dialect;
 import org.hibernate.community.dialect.MySQL5Dialect;
+import org.hibernate.community.dialect.Oracle12cDialect;
+import org.hibernate.community.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.*;
 
 import org.junit.jupiter.api.Test;
@@ -34,6 +37,7 @@ public class DefaultDialectSelectorTest {
 		testDialectNamingResolution( DerbyTenSevenDialect.class );
 
 		testDialectNamingResolution( H2Dialect.class );
+		testDialectNamingResolution( HANADialect.class );
 		testDialectNamingResolution( HANAColumnStoreDialect.class );
 		testDialectNamingResolution( HANARowStoreDialect.class );
 		testDialectNamingResolution( HSQLDialect.class );
@@ -48,7 +52,6 @@ public class DefaultDialectSelectorTest {
 
 		testDialectNamingResolution( PostgreSQLDialect.class );
 		testDialectNamingResolution( PostgresPlusDialect.class );
-		testDialectNamingResolution( PostgreSQL10Dialect.class );
 
 		testDialectNamingResolution( SQLServerDialect.class );
 		testDialectNamingResolution( SQLServer2008Dialect.class );

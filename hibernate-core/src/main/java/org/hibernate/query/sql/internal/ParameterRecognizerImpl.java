@@ -100,7 +100,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			parameterStyle = ParameterStyle.JDBC;
 		}
 		else if ( parameterStyle != ParameterStyle.JDBC ) {
-			throw new IllegalStateException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
+			throw new ParameterRecognitionException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
 		}
 
 		int implicitPosition = ordinalParameterImplicitPosition++;
@@ -164,7 +164,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			parameterStyle = ParameterStyle.NAMED;
 		}
 		else if ( parameterStyle != ParameterStyle.NAMED ) {
-			throw new IllegalStateException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
+			throw new ParameterRecognitionException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
 		}
 
 		if ( position < 1 ) {

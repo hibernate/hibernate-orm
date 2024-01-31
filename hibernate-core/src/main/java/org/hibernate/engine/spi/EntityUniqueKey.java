@@ -14,6 +14,10 @@ import java.io.Serializable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Used to uniquely key an entity instance in relation to a particular session
  * by some unique property reference, as opposed to identifier.
@@ -41,7 +45,7 @@ public class EntityUniqueKey implements Serializable {
 		this.entityName = entityName;
 		this.key = key;
 		this.keyType = keyType;
-		this.hashCode = generateHashCode( factory );
+		this.hashCode = generateHashCode( entityName, uniqueKeyName, keyType, key, factory );
 	}
 
 	public String getEntityName() {
@@ -56,7 +60,7 @@ public class EntityUniqueKey implements Serializable {
 		return uniqueKeyName;
 	}
 
-	public int generateHashCode(SessionFactoryImplementor factory) {
+	public static int generateHashCode(String entityName, String uniqueKeyName, Type keyType, Object key, SessionFactoryImplementor factory) {
 		int result = 17;
 		result = 37 * result + entityName.hashCode();
 		result = 37 * result + uniqueKeyName.hashCode();
@@ -70,7 +74,10 @@ public class EntityUniqueKey implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
+		if ( other == null || other.getClass() != EntityUniqueKey.class ) {
+			return false;
+		}
 		EntityUniqueKey that = (EntityUniqueKey) other;
 		return that != null && that.entityName.equals( entityName )
 				&& that.uniqueKeyName.equals( uniqueKeyName )

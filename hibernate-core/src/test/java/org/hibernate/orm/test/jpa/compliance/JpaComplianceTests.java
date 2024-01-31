@@ -17,6 +17,7 @@ import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
 
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,7 +88,7 @@ public class JpaComplianceTests {
 	@Test
 	public void testSettingTrue() {
 		ServiceRegistryScope.using(
-				() -> new StandardServiceRegistryBuilder()
+				() -> ServiceRegistryUtil.serviceRegistryBuilder()
 						.applySetting( AvailableSettings.JPA_COMPLIANCE, true )
 						.build(),
 				(serviceRegistryScope) -> {
@@ -108,7 +109,7 @@ public class JpaComplianceTests {
 	@Test
 	public void testSettingFalse() {
 		ServiceRegistryScope.using(
-				() -> new StandardServiceRegistryBuilder()
+				() -> ServiceRegistryUtil.serviceRegistryBuilder()
 						.applySetting( AvailableSettings.JPA_COMPLIANCE, false )
 						.build(),
 				(serviceRegistryScope) -> {

@@ -309,7 +309,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "select db_name()";
+		return "select user_name()";
 	}
 
 	@Override
@@ -448,12 +448,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return super.trimPattern(specification, character)
-				.replace("replace", "str_replace");
-	}
-
-	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		throw new UnsupportedOperationException( "format() function not supported on Sybase");
 	}
@@ -477,9 +471,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
-		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
-		return NameQualifierSupport.CATALOG;
+		return NameQualifierSupport.BOTH;
 	}
 
 	@Override
@@ -515,5 +507,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		return driverKind == SybaseDriverKind.JTDS
 				? AbstractTransactSQLIdentityColumnSupport.INSTANCE
 				: SybaseJconnIdentityColumnSupport.INSTANCE;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

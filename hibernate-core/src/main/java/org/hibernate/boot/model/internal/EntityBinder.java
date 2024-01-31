@@ -23,6 +23,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.DiscriminatorFormula;
@@ -31,7 +32,6 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
@@ -44,19 +44,21 @@ import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.Proxy;
+import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLInserts;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
 import org.hibernate.annotations.SelectBeforeUpdate;
+import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
@@ -66,6 +68,7 @@ import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -115,6 +118,8 @@ import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -136,6 +141,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclass
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
+import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
@@ -146,6 +152,7 @@ import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClas
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
+import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -196,6 +203,7 @@ public class EntityBinder {
 	private String cacheRegion;
 	private boolean cacheLazyProperty;
 	private String naturalIdCacheRegion;
+	private CacheLayout queryCacheLayout;
 
 	/**
 	 * Bind an entity class. This can be done in a single pass.
@@ -214,6 +222,7 @@ public class EntityBinder {
 		final InheritanceState inheritanceState = inheritanceStates.get( clazzToProcess );
 		final PersistentClass superEntity = getSuperEntity( clazzToProcess, inheritanceStates, context, inheritanceState );
 		detectedAttributeOverrideProblem( clazzToProcess, superEntity );
+
 		final PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context );
 		final EntityBinder entityBinder = new EntityBinder( clazzToProcess, persistentClass, context );
 		entityBinder.bindEntity();
@@ -233,6 +242,7 @@ public class EntityBinder {
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( persistentClass instanceof RootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( (RootClass) persistentClass ) );
+			bindSoftDelete( clazzToProcess, (RootClass) persistentClass, inheritanceState, context );
 		}
 		if ( persistentClass instanceof Subclass) {
 			assert superEntity != null;
@@ -246,6 +256,51 @@ public class EntityBinder {
 		entityBinder.processComplementaryTableDefinitions();
 		bindCallbacks( clazzToProcess, persistentClass, context );
 		entityBinder.callTypeBinders( persistentClass );
+	}
+
+	private static void bindSoftDelete(
+			XClass xClass,
+			RootClass rootClass,
+			InheritanceState inheritanceState,
+			MetadataBuildingContext context) {
+		// todo (soft-delete) : do we assume all package-level registrations are already available?
+		//		or should this be a "second pass"?
+
+		final SoftDelete softDelete = extractSoftDelete( xClass, rootClass, inheritanceState, context );
+		if ( softDelete == null ) {
+			return;
+		}
+
+		SoftDeleteHelper.bindSoftDeleteIndicator(
+				softDelete,
+				rootClass,
+				rootClass.getRootTable(),
+				context
+		);
+	}
+
+	private static SoftDelete extractSoftDelete(
+			XClass xClass,
+			RootClass rootClass,
+			InheritanceState inheritanceState,
+			MetadataBuildingContext context) {
+		final SoftDelete fromClass = xClass.getAnnotation( SoftDelete.class );
+		if ( fromClass != null ) {
+			return fromClass;
+		}
+
+		MappedSuperclass mappedSuperclass = rootClass.getSuperMappedSuperclass();
+		while ( mappedSuperclass != null ) {
+			// todo (soft-delete) : use XClass for MappedSuperclass? for the time being, just use the Java type
+			final SoftDelete fromMappedSuperclass = mappedSuperclass.getMappedClass().getAnnotation( SoftDelete.class );
+			if ( fromMappedSuperclass != null ) {
+				return fromMappedSuperclass;
+			}
+
+			mappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
+		}
+
+		return extractFromPackage( SoftDelete.class, xClass, context );
 	}
 
 	private void handleCheckConstraints() {
@@ -644,21 +699,21 @@ public class EntityBinder {
 		final String schema;
 		final String table;
 		final String catalog;
-		final List<UniqueConstraintHolder> uniqueConstraints;
+		final UniqueConstraint[] uniqueConstraints;
 		boolean hasTableAnnotation = annotatedClass.isAnnotationPresent( jakarta.persistence.Table.class );
 		if ( hasTableAnnotation ) {
 			final jakarta.persistence.Table tableAnnotation = annotatedClass.getAnnotation( jakarta.persistence.Table.class );
 			table = tableAnnotation.name();
 			schema = tableAnnotation.schema();
 			catalog = tableAnnotation.catalog();
-			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tableAnnotation.uniqueConstraints() );
+			uniqueConstraints = tableAnnotation.uniqueConstraints();
 		}
 		else {
 			//might be no @Table annotation on the annotated class
 			schema = "";
 			table = "";
 			catalog = "";
-			uniqueConstraints = Collections.emptyList();
+			uniqueConstraints = new UniqueConstraint[0];
 		}
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
@@ -684,7 +739,7 @@ public class EntityBinder {
 			String schema,
 			String table,
 			String catalog,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			InFlightMetadataCollector collector) {
 		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
 		final View view = annotatedClass.getAnnotation( View.class );
@@ -792,34 +847,38 @@ public class EntityBinder {
 	}
 
 	private static void handleForeignKeys(XClass clazzToProcess, MetadataBuildingContext context, DependantValue key) {
-		final ForeignKey foreignKey = clazzToProcess.getAnnotation( ForeignKey.class );
-		if ( foreignKey != null && !foreignKey.name().isEmpty() ) {
-			key.setForeignKeyName( foreignKey.name() );
+		final PrimaryKeyJoinColumn pkJoinColumn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
+		final PrimaryKeyJoinColumns pkJoinColumns = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
+		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+		if ( pkJoinColumn != null && noConstraint( pkJoinColumn.foreignKey(), noConstraintByDefault )
+				|| pkJoinColumns != null && noConstraint( pkJoinColumns.foreignKey(), noConstraintByDefault ) ) {
+			key.disableForeignKey();
 		}
 		else {
-			final PrimaryKeyJoinColumn pkJoinColumn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
-			final PrimaryKeyJoinColumns pkJoinColumns = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
-			final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
-			if ( pkJoinColumns != null && ( pkJoinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-					|| pkJoinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
-				// don't apply a constraint based on ConstraintMode
-				key.disableForeignKey();
+			final org.hibernate.annotations.ForeignKey fk =
+					clazzToProcess.getAnnotation( org.hibernate.annotations.ForeignKey.class );
+			if ( fk != null && isNotEmpty( fk.name() ) ) {
+				key.setForeignKeyName( fk.name() );
 			}
-			else if ( pkJoinColumns != null && isNotEmpty( pkJoinColumns.foreignKey().name() ) ) {
-				key.setForeignKeyName( pkJoinColumns.foreignKey().name() );
-				if ( !pkJoinColumns.foreignKey().foreignKeyDefinition().isEmpty() ) {
-					key.setForeignKeyDefinition( pkJoinColumns.foreignKey().foreignKeyDefinition() );
+			else {
+				final ForeignKey foreignKey = clazzToProcess.getAnnotation( ForeignKey.class );
+				if ( noConstraint( foreignKey, noConstraintByDefault ) ) {
+					key.disableForeignKey();
 				}
-			}
-			else if ( pkJoinColumn != null && ( pkJoinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-					|| pkJoinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
-				// don't apply a constraint based on ConstraintMode
-				key.disableForeignKey();
-			}
-			else if ( pkJoinColumn != null && isNotEmpty( pkJoinColumn.foreignKey().name() ) ) {
-				key.setForeignKeyName( pkJoinColumn.foreignKey().name() );
-				if ( !pkJoinColumn.foreignKey().foreignKeyDefinition().isEmpty() ) {
-					key.setForeignKeyDefinition( pkJoinColumn.foreignKey().foreignKeyDefinition() );
+				else if ( foreignKey != null ) {
+					key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+				}
+				else if ( noConstraintByDefault ) {
+					key.disableForeignKey();
+				}
+				else if ( pkJoinColumns != null ) {
+					key.setForeignKeyName( nullIfEmpty( pkJoinColumns.foreignKey().name() ) );
+					key.setForeignKeyDefinition( nullIfEmpty( pkJoinColumns.foreignKey().foreignKeyDefinition() ) );
+				}
+				else if ( pkJoinColumn != null ) {
+					key.setForeignKeyName( nullIfEmpty( pkJoinColumn.foreignKey().name() ) );
+					key.setForeignKeyDefinition( nullIfEmpty( pkJoinColumn.foreignKey().foreignKeyDefinition() ) );
 				}
 			}
 		}
@@ -966,14 +1025,22 @@ public class EntityBinder {
 		for ( PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
 			final String propertyName = propertyAnnotatedElement.getPropertyName();
 			if ( !idPropertiesIfIdClass.contains( propertyName ) ) {
+				final XProperty property = propertyAnnotatedElement.getProperty();
+				boolean hasIdAnnotation = hasIdAnnotation( property );
 				if ( !idPropertiesIfIdClass.isEmpty() && !isIgnoreIdAnnotations()
-						&& hasIdAnnotation( propertyAnnotatedElement.getProperty() ) ) {
+						&& hasIdAnnotation ) {
 					missingEntityProperties.add( propertyName );
 				}
 				else {
 					boolean subclassAndSingleTableStrategy =
 							inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 									&& inheritanceState.hasParents();
+					if ( !hasIdAnnotation && property.isAnnotationPresent( GeneratedValue.class ) ) {
+						throw new AnnotationException(
+								"Property '"
+										+ BinderHelper.getPath( propertyHolder, propertyAnnotatedElement )
+										+ "' is annotated @GeneratedValue but is not part of an identifier" );
+					}
 					processElementAnnotations(
 							propertyHolder,
 							subclassAndSingleTableStrategy
@@ -1207,6 +1274,7 @@ public class EntityBinder {
 		persistentClass.setEntityName( annotatedClass.getName() );
 		persistentClass.setCached( isCached );
 		persistentClass.setLazy( lazy );
+		persistentClass.setQueryCacheLayout( queryCacheLayout );
 		if ( proxyClass != null ) {
 			persistentClass.setProxyInterfaceName( proxyClass.getName() );
 		}
@@ -1485,20 +1553,18 @@ public class EntityBinder {
 		final Proxy proxy = annotatedClass.getAnnotation( Proxy.class );
 		if ( proxy != null ) {
 			lazy = proxy.lazy();
-			if ( !lazy ) {
-				proxyClass = null;
-			}
-			else {
-				final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
-				proxyClass = isDefault( reflectionManager.toXClass(proxy.proxyClass() ), context )
-						? annotatedClass
-						: reflectionManager.toXClass(proxy.proxyClass());
-			}
+			proxyClass = lazy ? proxyClass( proxy ) : null;
 		}
 		else {
 			lazy = true; //needed to allow association lazy loading.
 			proxyClass = annotatedClass;
 		}
+	}
+
+	private XClass proxyClass(Proxy proxy) {
+		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
+		final XClass proxyClass = reflectionManager.toXClass( proxy.proxyClass() );
+		return isDefault( proxyClass, context ) ? annotatedClass : proxyClass;
 	}
 
 	public void bindWhere() {
@@ -1537,6 +1603,7 @@ public class EntityBinder {
 		cacheConcurrentStrategy = null;
 		cacheRegion = null;
 		cacheLazyProperty = true;
+		queryCacheLayout = null;
 		final SharedCacheMode sharedCacheMode  = context.getBuildingOptions().getSharedCacheMode();
 		if ( persistentClass instanceof RootClass ) {
 			bindRootClassCache( sharedCacheMode, context );
@@ -1581,6 +1648,9 @@ public class EntityBinder {
 		cacheConcurrentStrategy = resolveCacheConcurrencyStrategy( effectiveCache.usage() );
 		cacheRegion = effectiveCache.region();
 		cacheLazyProperty = isCacheLazy( effectiveCache, annotatedClass );
+
+		final QueryCacheLayout queryCache = annotatedClass.getAnnotation( QueryCacheLayout.class );
+		queryCacheLayout = queryCache == null ? null : queryCache.layout();
 	}
 
 	private static boolean isCacheLazy(Cache effectiveCache, XClass annotatedClass) {
@@ -1751,7 +1821,7 @@ public class EntityBinder {
 			String schema,
 			String catalog,
 			String tableName,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			String rowId,
 			String viewQuery,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
@@ -1895,7 +1965,6 @@ public class EntityBinder {
 	}
 
 	private void setForeignKeyNameIfDefined(Join join) {
-		// just awful..
 		final String tableName = join.getTable().getQuotedName();
 		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
 		final SimpleValue key = (SimpleValue) join.getKey();
@@ -2043,7 +2112,7 @@ public class EntityBinder {
 	}
 
 	public Join addJoin(SecondaryTable secondaryTable, PropertyHolder holder, boolean noDelayInPkColumnCreation) {
-		Join join = addJoin(
+		final Join join = addJoin(
 				holder,
 				noDelayInPkColumnCreation,
 				true,
@@ -2053,7 +2122,8 @@ public class EntityBinder {
 				secondaryTable.pkJoinColumns(),
 				secondaryTable.uniqueConstraints()
 		);
-		TableBinder.addIndexes( join.getTable(), secondaryTable.indexes(), context );
+		final Table table = join.getTable();
+		new IndexBinder( context ).bindIndexes( table, secondaryTable.indexes() );
 		return join;
 	}
 
@@ -2086,13 +2156,13 @@ public class EntityBinder {
 						catalog,
 						logicalName.getTableName(),
 						false,
-						TableBinder.buildUniqueConstraintHolders( uniqueConstraints ),
+						uniqueConstraints,
 						context
 				)
 		);
 	}
 
-	private Join createJoin(
+	Join createJoin(
 			PropertyHolder propertyHolder,
 			boolean noDelayInPkColumnCreation,
 			boolean secondaryTable,
@@ -2240,7 +2310,7 @@ public class EntityBinder {
 
 	public void processComplementaryTableDefinitions(jakarta.persistence.Table table) {
 		if ( table != null ) {
-			TableBinder.addIndexes( persistentClass.getTable(), table.indexes(), context );
+			new IndexBinder( context ).bindIndexes( persistentClass.getTable(), table.indexes() );
 		}
 	}
 

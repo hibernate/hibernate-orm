@@ -56,7 +56,8 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
  * @author Steve Ebersole
  */
 public interface EntityMappingType
-		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminable {
+		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminable,
+		SoftDeletableModelPart {
 
 	/**
 	 * The entity name.
@@ -102,6 +103,11 @@ public interface EntityMappingType
 	@Override
 	default JavaType<?> getJavaType() {
 		return getMappedJavaType();
+	}
+
+	@Override
+	default EntityMappingType asEntityMappingType() {
+		return this;
 	}
 
 	@Override
@@ -350,6 +356,18 @@ public interface EntityMappingType
 	 * The mapping for the row-id of the entity, if one is defined.
 	 */
 	EntityRowIdMapping getRowIdMapping();
+
+	/**
+	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
+	 */
+	default SoftDeleteMapping getSoftDeleteMapping() {
+		return null;
+	}
+
+	@Override
+	default TableDetails getSoftDeleteTableDetails() {
+		return getIdentifierTableDetails();
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -617,6 +635,11 @@ public interface EntityMappingType
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState) {
 		getEntityPersister().applyBaseRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, treatAsDeclarations, creationState );
+	}
+
+	@Override
+	default boolean hasWhereRestrictions() {
+		return getEntityPersister().hasWhereRestrictions();
 	}
 
 	@Override

@@ -6,13 +6,12 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.SequenceGenerators;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.TableGenerators;
-import jakarta.persistence.Version;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -24,7 +23,7 @@ import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
+import org.hibernate.boot.internal.GenerationStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -43,13 +42,16 @@ import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.IdentifierGeneratorCreator;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+
 import org.jboss.logging.Logger;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.SequenceGenerators;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.TableGenerators;
+import jakarta.persistence.Version;
 
 import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
@@ -173,7 +175,6 @@ public class GeneratorBinder {
 						.getReflectionManager()
 						.toClass( idProperty.getType() ),
 				generatedValue.generator(),
-				buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter(),
 				interpretGenerationType( generatedValue )
 		);
 	}
@@ -253,24 +254,23 @@ public class GeneratorBinder {
 	}
 
 	static String generatorType(GeneratedValue generatedValue, final XClass javaClass, MetadataBuildingContext context) {
-		return context.getBuildingOptions().getIdGenerationTypeInterpreter()
-				.determineGeneratorName(
-						generatedValue.strategy(),
-						new IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext() {
-							Class<?> javaType = null;
-							@Override
-							public Class<?> getIdType() {
-								if ( javaType == null ) {
-									javaType = context.getBootstrapContext().getReflectionManager().toClass( javaClass );
-								}
-								return javaType;
-							}
-							@Override
-							public String getGeneratedValueGeneratorName() {
-								return generatedValue.generator();
-							}
+		return GenerationStrategyInterpreter.STRATEGY_INTERPRETER.determineGeneratorName(
+				generatedValue.strategy(),
+				new GenerationStrategyInterpreter.GeneratorNameDeterminationContext() {
+					Class<?> javaType = null;
+					@Override
+					public Class<?> getIdType() {
+						if ( javaType == null ) {
+							javaType = context.getBootstrapContext().getReflectionManager().toClass( javaClass );
 						}
-				);
+						return javaType;
+					}
+					@Override
+					public String getGeneratedValueGeneratorName() {
+						return generatedValue.generator();
+					}
+				}
+		);
 	}
 
 	static IdentifierGeneratorDefinition buildIdGenerator(
@@ -282,7 +282,7 @@ public class GeneratorBinder {
 
 		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		if ( generatorAnnotation instanceof TableGenerator ) {
-			context.getBuildingOptions().getIdGenerationTypeInterpreter().interpretTableGenerator(
+			GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretTableGenerator(
 					(TableGenerator) generatorAnnotation,
 					definitionBuilder
 			);
@@ -291,7 +291,7 @@ public class GeneratorBinder {
 			}
 		}
 		else if ( generatorAnnotation instanceof SequenceGenerator ) {
-			context.getBuildingOptions().getIdGenerationTypeInterpreter().interpretSequenceGenerator(
+			GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretSequenceGenerator(
 					(SequenceGenerator) generatorAnnotation,
 					definitionBuilder
 			);

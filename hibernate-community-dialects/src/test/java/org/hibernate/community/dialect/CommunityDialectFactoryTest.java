@@ -19,6 +19,7 @@ import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,7 +37,7 @@ public class CommunityDialectFactoryTest extends BaseUnitTestCase {
 		final BootstrapServiceRegistry bootReg = new BootstrapServiceRegistryBuilder().applyClassLoader(
 				CommunityDialectFactoryTest.class.getClassLoader()
 		).build();
-		registry = new StandardServiceRegistryBuilder( bootReg ).build();
+		registry = ServiceRegistryUtil.serviceRegistryBuilder( bootReg ).build();
 
 		dialectFactory = new DialectFactoryImpl();
 		dialectFactory.injectServices( (ServiceRegistryImplementor) registry );

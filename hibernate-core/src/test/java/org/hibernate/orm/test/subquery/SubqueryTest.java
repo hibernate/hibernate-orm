@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -22,7 +23,7 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolv
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -59,9 +60,12 @@ public class SubqueryTest extends BaseSessionFactoryFunctionalTest {
 
 		@Override
 		public void render(
-                SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+				SqlAppender sqlAppender,
+				List<? extends SqlAstNode> sqlAstArguments,
+				ReturnableType<?> returnType,
+				SqlAstTranslator<?> walker) {
 			sqlAstArguments.get( 0 ).accept( walker );
-			sqlAppender.appendSql( " limit " + ( (QueryLiteral<?>) sqlAstArguments.get( 1 ) ).getLiteralValue() );
+			sqlAppender.appendSql( " limit " + ( (UnparsedNumericLiteral<?>) sqlAstArguments.get( 1 ) ).getUnparsedLiteralValue() );
 		}
 	}
 

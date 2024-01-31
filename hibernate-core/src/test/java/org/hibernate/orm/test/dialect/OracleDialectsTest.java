@@ -24,12 +24,14 @@
 package org.hibernate.orm.test.dialect;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.community.dialect.OracleLegacyDialect;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.JiraKey;
 
-import org.hibernate.testing.TestForIssue;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,21 +41,21 @@ import static org.junit.Assert.assertEquals;
 public class OracleDialectsTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9990")
-	public void testDefaultBatchVersionDataProperty(){
-		OracleDialect oracleDialect = new OracleDialect();
-		assertEquals( "false", oracleDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
+	@JiraKey("HHH-9990")
+	public void testDefaultBatchVersionDataProperty() {
+		Dialect oracleDialect = new OracleDialect();
+		assertEquals( "true", oracleDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 
-		OracleDialect oracle8iDialect = new OracleDialect( DatabaseVersion.make( 8 ) );
+		Dialect oracle8iDialect = new OracleLegacyDialect( DatabaseVersion.make( 8 ) );
 		assertEquals( "false", oracle8iDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 
-		OracleDialect oracle10gDialect = new OracleDialect( DatabaseVersion.make( 10 ) );
+		Dialect oracle10gDialect = new OracleLegacyDialect( DatabaseVersion.make( 10 ) );
 		assertEquals( "false", oracle10gDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 
-		OracleDialect oracle9iDialect = new OracleDialect( DatabaseVersion.make( 9 ) );
+		Dialect oracle9iDialect = new OracleLegacyDialect( DatabaseVersion.make( 9 ) );
 		assertEquals( "false", oracle9iDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 
-		OracleDialect oracle12cDialect = new OracleDialect( DatabaseVersion.make( 12 ) );
+		Dialect oracle12cDialect = new OracleLegacyDialect( DatabaseVersion.make( 12 ) );
 		assertEquals( "true", oracle12cDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 	}
 }

@@ -13,8 +13,11 @@ import org.hibernate.Incubating;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.util.NullnessUtil;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Think of this as the composite modeling of a graph
@@ -33,8 +36,8 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 
 	private final boolean allowOverwrite;
 
-	private GraphSemantic semantic;
-	private RootGraphImplementor<?> graph;
+	private @Nullable GraphSemantic semantic;
+	private @Nullable RootGraphImplementor<?> graph;
 
 	/**
 	 * @implSpec I explicitly made this constructor package protected
@@ -59,12 +62,12 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	}
 
 	@Override
-	public GraphSemantic getSemantic() {
+	public @Nullable GraphSemantic getSemantic() {
 		return semantic;
 	}
 
 	@Override
-	public RootGraphImplementor<?> getGraph() {
+	public @Nullable RootGraphImplementor<?> getGraph() {
 		return graph;
 	}
 
@@ -75,7 +78,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @throws IllegalArgumentException Thrown if the semantic is null
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
-	public void applyGraph(RootGraphImplementor<?> graph, GraphSemantic semantic) {
+	public void applyGraph(RootGraphImplementor<?> graph, @Nullable GraphSemantic semantic) {
 		if ( semantic == null ) {
 			throw new IllegalArgumentException( "Graph semantic cannot be null" );
 		}
@@ -107,7 +110,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @throws IllegalArgumentException If both kinds of graphs were present in the properties/hints
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
-	public void applyConfiguredGraph(Map<String,?> properties) {
+	public void applyConfiguredGraph(@Nullable Map<String,?> properties) {
 		if ( properties == null || properties.isEmpty() ) {
 			return;
 		}
@@ -138,6 +141,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 			applyGraph( fetchHint, GraphSemantic.FETCH );
 		}
 		else {
+			assert loadHint != null : "@AssumeAssertion(nullness)";
 			applyGraph( loadHint, GraphSemantic.LOAD );
 		}
 	}

@@ -9,16 +9,18 @@ package org.hibernate.sql.results.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.internal.AbstractCollectionInitializer;
 import org.hibernate.sql.results.graph.entity.internal.AbstractBatchEntitySelectFetchInitializer;
+import org.hibernate.sql.results.graph.entity.internal.DiscriminatedEntityInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Internal helper to keep track of the various
@@ -36,14 +38,14 @@ public final class InitializersList {
 	private final Initializer[] sortedNonCollectionsFirst;
 	private final Initializer[] sortedForResolveInstance;
 	private final boolean hasCollectionInitializers;
-	private final Map<NavigablePath, Initializer> initializerMap;
+	private final NavigablePathMapToInitializer initializerMap;
 
 	private InitializersList(
 			Initializer[] initializers,
 			Initializer[] sortedNonCollectionsFirst,
 			Initializer[] sortedForResolveInstance,
 			boolean hasCollectionInitializers,
-			Map<NavigablePath, Initializer> initializerMap) {
+			NavigablePathMapToInitializer initializerMap) {
 		this.initializers = initializers;
 		this.sortedNonCollectionsFirst = sortedNonCollectionsFirst;
 		this.sortedForResolveInstance = sortedForResolveInstance;
@@ -56,7 +58,7 @@ public final class InitializersList {
 		return Arrays.asList( initializers );
 	}
 
-	public Initializer resolveInitializer(final NavigablePath path) {
+	public Initializer resolveInitializer(final @Nullable NavigablePath path) {
 		return initializerMap.get( path );
 	}
 
@@ -69,6 +71,12 @@ public final class InitializersList {
 	public void initializeInstance(final RowProcessingState rowProcessingState) {
 		for ( Initializer init : initializers ) {
 			init.initializeInstance( rowProcessingState );
+		}
+	}
+
+	public void startLoading(final RowProcessingState rowProcessingState) {
+		for ( int i = initializers.length - 1; i >= 0; i-- ) {
+			initializers[i].startLoading( rowProcessingState );
 		}
 	}
 
@@ -119,11 +127,12 @@ public final class InitializersList {
 		private static boolean initializeFirst(final Initializer initializer) {
 			return !( initializer instanceof EntityDelayedFetchInitializer )
 					&& !( initializer instanceof EntitySelectFetchInitializer )
+					&& !( initializer instanceof DiscriminatedEntityInitializer )
 					&& !( initializer instanceof AbstractCollectionInitializer )
 					&& !(initializer instanceof AbstractBatchEntitySelectFetchInitializer );
 		}
 
-		InitializersList build(final Map<NavigablePath, Initializer> initializerMap) {
+		InitializersList build(final NavigablePathMapToInitializer initializerMap) {
 			final int size = initializers.size();
 			final Initializer[] sortedNonCollectionsFirst = new Initializer[size];
 			final Initializer[] sortedForResolveInstance = new Initializer[size];

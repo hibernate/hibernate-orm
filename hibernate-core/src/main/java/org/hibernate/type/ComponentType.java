@@ -63,6 +63,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private final boolean isAggregate;
 	private final boolean isKey;
 	private boolean hasNotNullProperty;
+	private boolean hasNullProperty;
 
 	private EmbeddableValuedModelPart mappingModelPart;
 
@@ -97,8 +98,11 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			this.propertyNullability[i] = property.isOptional();
 			this.cascade[i] = property.getCascadeStyle();
 			this.joinedFetch[i] = property.getValue().getFetchMode();
-			if ( !propertyNullability[i] ) {
+			if ( !property.isOptional() ) {
 				hasNotNullProperty = true;
+			}
+			else {
+				hasNullProperty = true;
 			}
 			i++;
 		}
@@ -496,17 +500,12 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Object owner,
 			Map<Object, Object> copyCache) {
 
-		if ( !isMutable() ) {
-			return original;
-		}
 		if ( original == null ) {
 			return null;
 		}
-		//if ( original == target ) return target;
 
 		final Object[] originalValues = getPropertyValues( original );
-		final Object[] resultValues = target == null ? new Object[originalValues.length] : getPropertyValues( target );
-
+		final Object[] resultValues = getPropertyValues( target );
 		final Object[] replacedValues = TypeHelper.replace(
 				originalValues,
 				resultValues,
@@ -516,7 +515,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				copyCache
 		);
 
-		if ( target == null ) {
+		if ( target == null || !isMutable() ) {
 			return instantiator().instantiate( () -> replacedValues, session.getSessionFactory() );
 		}
 		else {
@@ -534,24 +533,11 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 
-		if ( !isMutable() ) {
-			return original;
-		}
 		if ( original == null ) {
 			return null;
 		}
-		//if ( original == target ) return target;
-
 		final Object[] originalValues = getPropertyValues( original );
-		final Object[] resultValues;
-
-		if ( target == null ) {
-			resultValues = new Object[originalValues.length];
-		}
-		else {
-			resultValues = getPropertyValues( target );
-		}
-
+		final Object[] resultValues = getPropertyValues( target );
 		final Object[] replacedValues = TypeHelper.replace(
 				originalValues,
 				resultValues,
@@ -562,7 +548,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				foreignKeyDirection
 		);
 
-		if ( target == null ) {
+		if ( target == null || !isMutable() ) {
 			return instantiator().instantiate( () -> replacedValues, session.getSessionFactory() );
 		}
 		else {
@@ -627,7 +613,14 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				assembled[i] = propertyTypes[i].assemble( (Serializable) values[i], session, owner );
 			}
 
-			return instantiator().instantiate( () -> assembled, session.getFactory() );
+			final Object instance = instantiator().instantiate( () -> assembled, session.getFactory() );
+
+			final PropertyAccess parentInjectionAccess = mappingModelPart.getParentInjectionAttributePropertyAccess();
+			if ( parentInjectionAccess != null ) {
+				parentInjectionAccess.getSetter().set( instance, owner );
+			}
+
+			return instance;
 		}
 	}
 
@@ -763,13 +756,18 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return embeddableTypeDescriptor().getAggregateMapping().getJdbcMapping().getJdbcValueExtractor();
 	}
 
-	private EmbeddableInstantiator instantiator() {
+	protected final EmbeddableInstantiator instantiator() {
 		return embeddableTypeDescriptor().getRepresentationStrategy().getInstantiator();
 	}
 
 	@Override
 	public boolean hasNotNullProperty() {
 		return hasNotNullProperty;
+	}
+
+	@Override
+	public boolean hasNullProperty() {
+		return hasNullProperty;
 	}
 
 	@Override
@@ -797,5 +795,14 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			throw new IllegalStateException( "Attempt to access EmbeddableValuedModelPart prior to its injection" );
 		}
 		return mappingModelPart;
+	}
+
+	@Override
+	public Object replacePropertyValues(Object component, Object[] values, SharedSessionContractImplementor session)
+			throws HibernateException {
+		if ( !isMutable() ) {
+			return instantiator().instantiate( () -> values, session.getSessionFactory() );
+		}
+		return CompositeTypeImplementor.super.replacePropertyValues( component, values, session );
 	}
 }

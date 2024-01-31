@@ -13,6 +13,8 @@ import java.io.Serializable;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * An ordered pair of a value and its Hibernate type.
  * 
@@ -28,7 +30,7 @@ public final class TypedValue implements Serializable {
 	public TypedValue(final Type type, final Object value) {
 		this.type = type;
 		this.value = value;
-		initTransients();
+		this.hashcode = hashCode(type, value);
 	}
 
 	public Object getValue() {
@@ -47,7 +49,7 @@ public final class TypedValue implements Serializable {
 		return hashcode.getValue();
 	}
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		if ( this == other ) {
 			return true;
 		}
@@ -62,10 +64,10 @@ public final class TypedValue implements Serializable {
 	private void readObject(ObjectInputStream ois)
 			throws ClassNotFoundException, IOException {
 		ois.defaultReadObject();
-		initTransients();
+		this.hashcode = hashCode(type, value);
 	}
 
-	private void initTransients() {
-		this.hashcode = new ValueHolder<>( () -> value == null ? 0 : type.getHashCode( value ) );
+	private static ValueHolder hashCode(Type type, Object value) {
+		return new ValueHolder<>( () -> value == null ? 0 : type.getHashCode( value ) );
 	}
 }

@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Test;
 
@@ -141,7 +142,7 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 			settings.put( AvailableSettings.JPA_CACHING_COMPLIANCE, "true" );
 		}
 
-		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build();
 		try {

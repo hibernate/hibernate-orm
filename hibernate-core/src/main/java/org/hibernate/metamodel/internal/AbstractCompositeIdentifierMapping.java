@@ -125,13 +125,7 @@ public abstract class AbstractCompositeIdentifierMapping
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
-		}
-		else {
-			joinType = requestedJoinType;
-		}
+		final SqlAstJoinType joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -294,4 +288,5 @@ public abstract class AbstractCompositeIdentifierMapping
 	public boolean containsTableReference(String tableExpression) {
 		return entityMapping.containsTableReference( tableExpression );
 	}
+
 }

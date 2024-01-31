@@ -30,7 +30,7 @@ public class DiscriminatorType implements Bindable<JaxbHbmEntityDiscriminatorTyp
 		final JaxbHbmEntityDiscriminatorType mapping = new JaxbHbmEntityDiscriminatorType();
 		mapping.setType( discriminator.getType().getName() );
 
-		final Iterator<Selectable> iterator = discriminator.getColumnIterator();
+		final Iterator<Selectable> iterator = discriminator.getSelectables().iterator();
 		while ( iterator.hasNext() ) {
 			final Selectable selectable = iterator.next();
 			if ( selectable.isFormula() ) {

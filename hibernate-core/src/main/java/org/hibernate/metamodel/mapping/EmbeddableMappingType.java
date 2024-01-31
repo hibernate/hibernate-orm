@@ -44,6 +44,11 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		return getAggregateMapping() != null;
 	}
 
+	@Override
+	default EmbeddableMappingType getPartMappingType() {
+		return this;
+	}
+
 	default boolean shouldMutateAggregateMapping() {
 		// For insert and update we always want to mutate the whole aggregate
 		return getAggregateMapping() != null;

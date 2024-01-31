@@ -14,4 +14,9 @@ package org.hibernate.sql.ast.tree.from;
  */
 public interface VirtualTableGroup extends TableGroup {
 	TableGroup getUnderlyingTableGroup();
+
+	@Override
+	default boolean isVirtual() {
+		return true;
+	}
 }

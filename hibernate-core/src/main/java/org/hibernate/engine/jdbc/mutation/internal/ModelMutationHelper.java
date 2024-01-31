@@ -21,8 +21,8 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -97,6 +97,7 @@ public class ModelMutationHelper {
 	public static PreparedStatementGroup toPreparedStatementGroup(
 			MutationType mutationType,
 			MutationTarget<?> mutationTarget,
+			GeneratedValuesMutationDelegate delegate,
 			List<PreparableMutationOperation> mutations,
 			SharedSessionContractImplementor session) {
 		if ( mutations == null || mutations.isEmpty() ) {
@@ -104,37 +105,32 @@ public class ModelMutationHelper {
 		}
 
 		if ( mutations.size() == 1 ) {
-			return new PreparedStatementGroupSingleTable( mutations.get( 0 ), session );
+			return new PreparedStatementGroupSingleTable( mutations.get( 0 ), delegate, session );
 		}
 
-		return new PreparedStatementGroupStandard( mutationType, mutationTarget, mutations, session );
+		return new PreparedStatementGroupStandard( mutationType, mutationTarget, delegate, mutations, session );
 	}
 
 	public static PreparedStatementDetails standardPreparation(
 			PreparableMutationOperation jdbcMutation,
+			GeneratedValuesMutationDelegate delegate,
 			SharedSessionContractImplementor session) {
 		return new PreparedStatementDetailsStandard(
 				jdbcMutation,
-				() -> standardStatementPreparation( jdbcMutation, session ),
+				() -> delegate != null ?
+						delegateStatementPreparation( jdbcMutation, delegate, session ) :
+						standardStatementPreparation( jdbcMutation, session ),
 				session.getJdbcServices()
 		);
 	}
 
-	public static PreparedStatementDetails identityPreparation(
+	public static PreparedStatement delegateStatementPreparation(
 			PreparableMutationOperation jdbcMutation,
+			GeneratedValuesMutationDelegate delegate,
 			SharedSessionContractImplementor session) {
-		return new PreparedStatementDetailsStandard(
-				jdbcMutation,
-				() -> {
-					final EntityMutationTarget target = (EntityMutationTarget) jdbcMutation.getMutationTarget();
-					final PreparedStatement statement = target
-							.getIdentityInsertDelegate()
-							.prepareStatement( jdbcMutation.getSqlString(), session );
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().register( null, statement );
-					return statement;
-				},
-				session.getJdbcServices()
-		);
+		final PreparedStatement statement = delegate.prepareStatement( jdbcMutation.getSqlString(), session );
+		session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().register( null, statement );
+		return statement;
 	}
 
 	public static PreparedStatement standardStatementPreparation(

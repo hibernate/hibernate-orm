@@ -13,6 +13,8 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
+
 /**
  * @author Steve Ebersole
  */
@@ -31,6 +33,9 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		this.expression = expression;
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
+
+		assertComparable( expression, lowerBound, nodeBuilder.getSessionFactory() );
+		assertComparable( expression, upperBound, nodeBuilder.getSessionFactory() );
 
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
 				expression.getExpressible(),

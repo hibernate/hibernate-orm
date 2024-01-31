@@ -12,14 +12,15 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.Internal;
-import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicType;
@@ -52,12 +53,22 @@ public class StandardFunctionReturnTypeResolvers {
 					ReturnableType<?> impliedType,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
-				return isAssignableTo( invariantType, impliedType )
-						? impliedType : invariantType;
+				return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
 			}
 
 			@Override
-			public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+			public ReturnableType<?> resolveFunctionReturnType(
+					ReturnableType<?> impliedType,
+					Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+					List<? extends SqmTypedNode<?>> arguments,
+					TypeConfiguration typeConfiguration) {
+				return isAssignableTo( invariantType, impliedType ) ? impliedType : invariantType;
+			}
+
+			@Override
+			public BasicValuedMapping resolveFunctionReturnType(
+					Supplier<BasicValuedMapping> impliedTypeAccess,
+					List<? extends SqlAstNode> arguments) {
 				return useImpliedTypeIfPossible( invariantType, impliedTypeAccess.get() );
 			}
 
@@ -71,13 +82,27 @@ public class StandardFunctionReturnTypeResolvers {
 	public static FunctionReturnTypeResolver useArgType(int argPosition) {
 		return new FunctionReturnTypeResolver() {
 			@Override
-			public ReturnableType<?> resolveFunctionReturnType(ReturnableType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
+			public ReturnableType<?> resolveFunctionReturnType(
+					ReturnableType<?> impliedType,
+					List<? extends SqmTypedNode<?>> arguments,
+					TypeConfiguration typeConfiguration) {
+				return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
+			}
+
+			@Override
+			public ReturnableType<?> resolveFunctionReturnType(
+					ReturnableType<?> impliedType,
+					Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+					List<? extends SqmTypedNode<?>> arguments,
+					TypeConfiguration typeConfiguration) {
 				ReturnableType<?> argType = extractArgumentType( arguments, argPosition );
 				return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 			}
 
 			@Override
-			public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+			public BasicValuedMapping resolveFunctionReturnType(
+					Supplier<BasicValuedMapping> impliedTypeAccess,
+					List<? extends SqlAstNode> arguments) {
 				final BasicValuedMapping specifiedArgType = extractArgumentValuedMapping( arguments, argPosition );
 				return useImpliedTypeIfPossible( specifiedArgType, impliedTypeAccess.get() );
 			}
@@ -87,7 +112,9 @@ public class StandardFunctionReturnTypeResolvers {
 	public static FunctionReturnTypeResolver useFirstNonNull() {
 		return new FunctionReturnTypeResolver() {
 			@Override
-			public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+			public BasicValuedMapping resolveFunctionReturnType(
+					Supplier<BasicValuedMapping> impliedTypeAccess,
+					List<? extends SqlAstNode> arguments) {
 				for ( SqlAstNode arg: arguments ) {
 					if ( ! ( arg instanceof Expression ) ) {
 						continue;
@@ -108,11 +135,21 @@ public class StandardFunctionReturnTypeResolvers {
 					ReturnableType<?> impliedType,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
-				for ( SqmTypedNode<?> arg : arguments ) {
-					final SqmExpressible<?> argumentNodeType = arg != null ? getArgumentExpressible( arg ) : null;
-					if ( argumentNodeType instanceof ReturnableType ) {
-						ReturnableType<?> argType = (ReturnableType<?>) argumentNodeType;
-						return isAssignableTo( argType, impliedType ) ? impliedType : argType;
+				return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
+			}
+
+			@Override
+			public ReturnableType<?> resolveFunctionReturnType(
+					ReturnableType<?> impliedType,
+					Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+					List<? extends SqmTypedNode<?>> arguments,
+					TypeConfiguration typeConfiguration) {
+				for ( int i = 0; i < arguments.size(); i++ ) {
+					if ( arguments.get( i ) != null ) {
+						final ReturnableType<?> argType = extractArgumentType( arguments, i + 1 );
+						if ( argType != null ) {
+							return isAssignableTo( argType, impliedType ) ? impliedType : argType;
+						}
 					}
 				}
 				return impliedType;
@@ -214,7 +251,10 @@ public class StandardFunctionReturnTypeResolvers {
 			int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
 		final SqmExpressible<?> specifiedArgType = getArgumentExpressible( specifiedArgument );
-		if ( !(specifiedArgType instanceof ReturnableType ) ) {
+		if ( specifiedArgType == null || specifiedArgType instanceof NullSqmExpressible ) {
+			return null;
+		}
+		else if ( !(specifiedArgType instanceof ReturnableType) ) {
 			throw new FunctionArgumentException(
 					String.format(
 							Locale.ROOT,
@@ -225,15 +265,19 @@ public class StandardFunctionReturnTypeResolvers {
 					)
 			);
 		}
-
-		return (ReturnableType<?>) specifiedArgType;
+		else {
+			return (ReturnableType<?>) specifiedArgType;
+		}
 	}
 
 	private static SqmExpressible<?> getArgumentExpressible(SqmTypedNode<?> specifiedArgument) {
-		final SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
-		return specifiedArgType instanceof SqmPathSource ?
-				( (SqmPathSource<?>) specifiedArgType ).getSqmPathType() :
-				specifiedArgType;
+		final SqmExpressible<?> expressible = specifiedArgument.getNodeType();
+		final SqmExpressible<?> specifiedArgType = expressible instanceof SqmTypedNode<?>
+				? ( (SqmTypedNode<?>) expressible ).getNodeType()
+				: expressible;
+		return specifiedArgType instanceof SqmPathSource
+				? ( (SqmPathSource<?>) specifiedArgType ).getSqmPathType()
+				: specifiedArgType;
 	}
 
 	public static JdbcMapping extractArgumentJdbcMapping(

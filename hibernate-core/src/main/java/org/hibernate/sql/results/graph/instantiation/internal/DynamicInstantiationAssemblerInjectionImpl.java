@@ -95,7 +95,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 
 	private Field findField(Class<?> declaringClass, String name, Class<?> javaType) {
 		try {
-			Field field = declaringClass.getDeclaredField( name );
+			final Field field = declaringClass.getDeclaredField( name );
 			// field should never be null
 			if ( Compatibility.areAssignmentCompatible( field.getType(), javaType ) ) {
 				field.setAccessible( true );
@@ -103,6 +103,9 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			}
 		}
 		catch (NoSuchFieldException ignore) {
+			if ( declaringClass.getSuperclass() != null ) {
+				return findField( declaringClass.getSuperclass(), name, javaType );
+			}
 		}
 
 		return null;

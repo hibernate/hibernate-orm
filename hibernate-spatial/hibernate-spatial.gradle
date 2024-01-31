@@ -35,7 +35,7 @@ dependencies {
 }
 
 sourceSets.test.resources {
-	setSrcDirs( ['src/test/java', 'src/test/resources'] )
+	setSrcDirs( ['src/test/resources'] )
 }
 
 tasks.test {
@@ -50,6 +50,7 @@ tasks.test {
 			   'mysql_ci',
 			   'oracle',
 			   'oracle_ci',
+			   'oracle_xe_ci',
 			   'mssql',
 			   'mssql_ci'
 	].contains( project.db )

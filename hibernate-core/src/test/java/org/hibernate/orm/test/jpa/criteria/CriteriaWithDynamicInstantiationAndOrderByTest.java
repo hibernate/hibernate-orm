@@ -3,6 +3,7 @@ package org.hibernate.orm.test.jpa.criteria;
 import java.util.List;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -153,6 +154,96 @@ public class CriteriaWithDynamicInstantiationAndOrderByTest {
 		);
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17530" )
+	public void testNestedConstruct(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final CriteriaBuilder cb = em.getCriteriaBuilder();
+			final CriteriaQuery<R1> cq = cb.createQuery( R1.class );
+			final Root<Item> root = cq.from( Item.class );
+			final CompoundSelection<R1> construct = cb.construct(
+					R1.class,
+					root.get( "id" ),
+					cb.construct(
+							R2.class,
+							root.get( "id" ),
+							root.get( "name" )
+					)
+			);
+			cq.select( construct );
+			cq.orderBy( cb.asc( root.get( "id" ) ) );
+			final R1 result = em.createQuery( cq ).getSingleResult();
+			assertThat( result.getA() ).isEqualTo( ITEM_ID );
+			assertThat( result.getR2().getA() ).isEqualTo( ITEM_ID );
+			assertThat( result.getR2().getB() ).isEqualTo( ITEM_NAME );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17530" )
+	public void testMultiselectAndNestedConstruct(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final CriteriaBuilder cb = em.getCriteriaBuilder();
+			final CriteriaQuery<Tuple> cq = cb.createQuery( Tuple.class );
+			final Root<Item> root = cq.from( Item.class );
+			final CompoundSelection<R1> construct = cb.construct(
+					R1.class,
+					root.get( "id" ),
+					cb.construct(
+							R2.class,
+							root.get( "id" ),
+							root.get( "name" )
+					)
+			);
+			cq.multiselect(
+					cb.construct( R1.class, root.get( "id" ) ),
+					construct
+			);
+			cq.orderBy( cb.asc( root.get( "id" ) ) );
+			final Tuple result = em.createQuery( cq ).getSingleResult();
+			final R1 first = result.get( 0, R1.class );
+			assertThat( first.getA() ).isEqualTo( ITEM_ID );
+			final R1 second = result.get( 1, R1.class );
+			assertThat( second.getA() ).isEqualTo( ITEM_ID );
+			assertThat( second.getR2().getA() ).isEqualTo( ITEM_ID );
+			assertThat( second.getR2().getB() ).isEqualTo( ITEM_NAME );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17530" )
+	public void testDoubleNestedConstruct(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final CriteriaBuilder cb = em.getCriteriaBuilder();
+			final CriteriaQuery<R1> cq = cb.createQuery( R1.class );
+			final Root<Item> root = cq.from( Item.class );
+			final CompoundSelection<R1> construct = cb.construct(
+					R1.class,
+					root.get( "id" ),
+					cb.construct(
+							R2.class,
+							root.get( "id" ),
+							root.get( "name" ),
+							cb.construct(
+									R3.class,
+									root.get( "id" ),
+									root.get( "name" ),
+									root.get( "name" )
+							)
+					)
+			);
+			cq.select( construct );
+			cq.orderBy( cb.asc( root.get( "id" ) ) );
+			final R1 result = em.createQuery( cq ).getSingleResult();
+			assertThat( result.getA() ).isEqualTo( ITEM_ID );
+			assertThat( result.getR2().getA() ).isEqualTo( ITEM_ID );
+			assertThat( result.getR2().getB() ).isEqualTo( ITEM_NAME );
+			assertThat( result.getR2().getR3().getA() ).isEqualTo( ITEM_ID );
+			assertThat( result.getR2().getR3().getB() ).isEqualTo( ITEM_NAME );
+			assertThat( result.getR2().getR3().getC() ).isEqualTo( ITEM_NAME );
+		} );
+	}
+
 	@Entity(name = "Item")
 	@Table(name = "ITEM_TABLE")
 	public static class Item {
@@ -174,12 +265,23 @@ public class CriteriaWithDynamicInstantiationAndOrderByTest {
 	public static class R1 {
 		private Long a;
 
+		private R2 r2;
+
 		public R1(Long a) {
 			this.a = a;
 		}
 
+		public R1(Long a, R2 r2) {
+			this.a = a;
+			this.r2 = r2;
+		}
+
 		public Long getA() {
 			return a;
+		}
+
+		public R2 getR2() {
+			return r2;
 		}
 	}
 
@@ -187,9 +289,17 @@ public class CriteriaWithDynamicInstantiationAndOrderByTest {
 		private Long a;
 		private String b;
 
+		private R3 r3;
+
 		public R2(Long a, String b) {
 			this.a = a;
 			this.b = b;
+		}
+
+		public R2(Long a, String b, R3 r3) {
+			this.a = a;
+			this.b = b;
+			this.r3 = r3;
 		}
 
 		public Long getA() {
@@ -198,6 +308,10 @@ public class CriteriaWithDynamicInstantiationAndOrderByTest {
 
 		public String getB() {
 			return b;
+		}
+
+		public R3 getR3() {
+			return r3;
 		}
 	}
 

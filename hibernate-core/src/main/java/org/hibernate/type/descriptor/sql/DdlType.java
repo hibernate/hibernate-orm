@@ -89,6 +89,29 @@ public interface DdlType extends Serializable {
 	@Deprecated(since = "6.3")
 	String getTypeName(Long size, Integer precision, Integer scale);
 
+	default boolean isLob(Size size) {
+		// Let's be defensive and assume that LONG32 are LOBs as well
+		return JdbcType.isLobOrLong( getSqlTypeCode() );
+	}
+
+	/**
+	 * Return the database type corresponding to the given {@link SqlExpressible}
+	 * that may be used as a target type in casting operations using the SQL
+	 * {@code CAST()} function. The length is usually
+	 * chosen to be the maximum possible length for the dialect.
+	 *
+	 * @see JavaType#getDefaultSqlScale(Dialect, JdbcType)
+	 * @see JavaType#getDefaultSqlPrecision(Dialect, JdbcType)
+	 * @see Dialect#getMaxVarcharLength()
+	 *
+	 * @return The SQL type name
+	 *
+	 * @since 6.3
+	 */
+	default String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
+		return getCastTypeName( type, columnSize.getLength(), columnSize.getPrecision(), columnSize.getScale() );
+	}
+
 	/**
 	 * Return the database type corresponding to the given {@link JdbcType}
 	 * that may be used as a target type in casting operations using the SQL
@@ -101,7 +124,9 @@ public interface DdlType extends Serializable {
 	 * @see Dialect#getMaxVarcharLength()
 	 *
 	 * @return The SQL type name
+	 * @deprecated Use {@link #getCastTypeName(Size, SqlExpressible, DdlTypeRegistry)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType);
 
 	/**
@@ -116,7 +141,9 @@ public interface DdlType extends Serializable {
 	 * @param scale the scale, or null, if unspecified
 	 *
 	 * @return The SQL type name
+	 * @deprecated Use {@link #getCastTypeName(Size, SqlExpressible, DdlTypeRegistry)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	default String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
 		return getCastTypeName(
 				type.getJdbcMapping().getJdbcType(),
@@ -141,6 +168,8 @@ public interface DdlType extends Serializable {
 	 * @see Dialect#getMaxVarcharLength()
 	 *
 	 * @return The SQL type name
+	 * @deprecated Use {@link #getCastTypeName(Size, SqlExpressible, DdlTypeRegistry)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale);
 }

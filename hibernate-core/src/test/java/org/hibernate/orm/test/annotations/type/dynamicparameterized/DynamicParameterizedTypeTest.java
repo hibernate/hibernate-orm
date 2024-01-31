@@ -26,6 +26,7 @@ package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.query.ReturnableType;
@@ -114,7 +115,19 @@ public class DynamicParameterizedTypeTest {
 					.patternDescriptorBuilder( "test_func1", "?1" )
 					.setReturnTypeResolver(new FunctionReturnTypeResolver() {
 						@Override
-						public ReturnableType<?> resolveFunctionReturnType(ReturnableType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
+						public ReturnableType<?> resolveFunctionReturnType(
+								ReturnableType<?> impliedType,
+								List<? extends SqmTypedNode<?>> arguments,
+								TypeConfiguration typeConfiguration) {
+							return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
+						}
+
+						@Override
+						public ReturnableType<?> resolveFunctionReturnType(
+								ReturnableType<?> impliedType,
+								Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+								List<? extends SqmTypedNode<?>> arguments,
+								TypeConfiguration typeConfiguration) {
 							SqmTypedNode<?> sqmTypedNode = arguments.get(0);
 							BasicDomainType sqmPathType = ((BasicSqmPathSource) sqmTypedNode.getNodeType()).getSqmPathType();
 							assertInstanceOf(CustomType.class, sqmPathType);
@@ -122,7 +135,9 @@ public class DynamicParameterizedTypeTest {
 						}
 
 						@Override
-						public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+						public BasicValuedMapping resolveFunctionReturnType(
+								Supplier<BasicValuedMapping> impliedTypeAccess,
+								List<? extends SqlAstNode> arguments) {
 							return null;
 						}
 					})

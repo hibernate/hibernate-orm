@@ -22,6 +22,8 @@ import org.hibernate.action.spi.Executable;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A list of {@link Executable executeble actions}. Responsible for
  * {@linkplain #sort() sorting} the executables, and calculating the
@@ -47,7 +49,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	private final ArrayList<E> executables;
 
-	private final Sorter<E> sorter;
+	private final @Nullable Sorter<E> sorter;
 	private final boolean requiresSorting;
 	private boolean sorted;
 
@@ -57,7 +59,7 @@ public class ExecutableList<E extends ComparableExecutable>
 	 * invalidate cache regions as it is exposed from {@link #getQuerySpaces}. This value
 	 * being {@code null} indicates that the query spaces should be calculated.
 	 */
-	private transient Set<Serializable> querySpaces;
+	private transient @Nullable Set<Serializable> querySpaces;
 
 	/**
 	 * Creates a new instance with the default settings.
@@ -296,9 +298,10 @@ public class ExecutableList<E extends ComparableExecutable>
 			oos.writeInt( -1 );
 		}
 		else {
+			final Set<Serializable> qs = querySpaces;
 			oos.writeInt( querySpaces.size() );
 			// these are always String, why we treat them as Serializable instead is beyond me...
-			for ( Serializable querySpace : querySpaces ) {
+			for ( Serializable querySpace : qs ) {
 				oos.writeUTF( querySpace.toString() );
 			}
 		}
@@ -329,10 +332,12 @@ public class ExecutableList<E extends ComparableExecutable>
 			this.querySpaces = null;
 		}
 		else {
-			querySpaces = CollectionHelper.setOfSize( numberOfQuerySpaces );
+			// The line below is for CF nullness checking purposes.
+			final Set<Serializable> querySpaces = CollectionHelper.setOfSize( numberOfQuerySpaces );
 			for ( int i = 0; i < numberOfQuerySpaces; i++ ) {
 				querySpaces.add( in.readUTF() );
 			}
+			this.querySpaces = querySpaces;
 		}
 	}
 

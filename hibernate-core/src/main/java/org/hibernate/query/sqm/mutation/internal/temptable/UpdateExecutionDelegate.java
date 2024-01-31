@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -23,6 +24,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.results.TableGroupImpl;
@@ -57,6 +59,7 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -89,22 +92,34 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			Predicate suppliedPredicate,
-			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
-			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		this.sqmConverter = sqmConverter;
 		this.idTable = idTable;
 		this.afterUseAction = afterUseAction;
 		this.sessionUidAccess = sessionUidAccess;
 		this.updatingTableGroup = updatingTableGroup;
-		this.suppliedPredicate = suppliedPredicate;
-
 		this.sessionFactory = executionContext.getSession().getFactory();
 
 		final ModelPartContainer updatingModelPart = updatingTableGroup.getModelPart();
 		assert updatingModelPart instanceof EntityMappingType;
-
 		this.entityDescriptor = (EntityMappingType) updatingModelPart;
+
+		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			final NamedTableReference rootTableReference = (NamedTableReference) updatingTableGroup.resolveTableReference(
+					updatingTableGroup.getNavigablePath(),
+					entityDescriptor.getIdentifierTableDetails().getTableName()
+			);
+			this.suppliedPredicate = Predicate.combinePredicates(
+					suppliedPredicate,
+					SoftDeleteHelper.createNonSoftDeletedRestriction( rootTableReference, softDeleteMapping )
+			);
+		}
+		else {
+			this.suppliedPredicate = suppliedPredicate;
+		}
+
+
 
 		this.assignmentsByTable = CollectionHelper.mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
 
@@ -113,14 +128,14 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				domainParameterXref,
 				SqmUtil.generateJdbcParamsXref(
 						domainParameterXref,
-						() -> parameterResolutions
+						sqmConverter::getJdbcParamsBySqmParam
 				),
 				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> updatingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
+						return (MappingModelExpressible<T>) sqmConverter.getSqmParameterMappingModelExpressibleResolutions().get(parameter);
 					}
 				},
 				executionContext.getSession()
@@ -353,8 +368,8 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 		insertSqlAst.setSourceSelectStatement( insertSourceSelectQuerySpec );
 
-		final JdbcOperationQueryInsert jdbcInsert = sqlAstTranslatorFactory
-				.buildInsertTranslator( sessionFactory, insertSqlAst )
+		final JdbcOperationQueryMutation jdbcInsert = sqlAstTranslatorFactory
+				.buildMutationTranslator( sessionFactory, insertSqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		return jdbcMutationExecutor.execute(
@@ -427,8 +442,8 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				new InSubQueryPredicate( keyExpression, idTableSubQuery, false )
 		);
 
-		final JdbcOperationQueryUpdate jdbcUpdate = sqlAstTranslatorFactory
-				.buildUpdateTranslator( sessionFactory, sqlAst )
+		final JdbcOperationQueryMutation jdbcUpdate = sqlAstTranslatorFactory
+				.buildMutationTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		final int updateCount = jdbcMutationExecutor.execute(
@@ -513,4 +528,5 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	protected SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
+
 }

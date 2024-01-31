@@ -14,6 +14,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Test;
 
@@ -39,7 +40,7 @@ public class H2DialectDataBaseToUpperTest extends BaseUnitTestCase {
 	}
 
 	private void setUp(String databaseToUpper) {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(
 						AvailableSettings.URL,
 						"jdbc:h2:mem:databaseToUpper;DATABASE_TO_UPPER=" + databaseToUpper + ";DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE"

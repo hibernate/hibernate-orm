@@ -171,8 +171,8 @@ public class BasicContributorTests {
 		assertThat(
 				targetDescriptor.getCommands(),
 				CollectionElementMatcher.hasAllOf(
-						CaseInsensitiveStartsWithMatcher.startsWith( "drop table main_table" ),
-						CaseInsensitiveStartsWithMatcher.startsWith( "drop table DynamicEntity" )
+						CaseInsensitiveStartsWithMatcher.startsWith( "drop table if exists main_table" ),
+						CaseInsensitiveStartsWithMatcher.startsWith( "drop table if exists DynamicEntity" )
 				)
 		);
 

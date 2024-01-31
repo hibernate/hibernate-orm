@@ -308,8 +308,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-4606" )
 	public void testJoinColumnConfiguredInXml() {
 		PersistentClass pc = metadata().getEntityBinding( Son.class.getName() );
-		Iterator<Join> iter = pc.getJoinIterator();
-		Table table = iter.next().getTable();
+		Table table = pc.getJoins().get( 0 ).getTable();
         Iterator<Column> columnIter = table.getColumns().iterator();
 		boolean fooFound = false;
 		boolean barFound = false;

@@ -27,6 +27,7 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.BasicArrayType;
 import org.hibernate.type.BasicCollectionType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
@@ -86,6 +87,12 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		// Support binding single element value
+		return this == javaType || componentJavaType == javaType;
+	}
+
+	@Override
 	public BasicType<?> resolveType(
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
@@ -112,17 +119,28 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		}
 		final BasicValueConverter<E, ?> valueConverter = elementType.getValueConverter();
 		if ( valueConverter == null ) {
+			final JdbcType arrayJdbcType = getArrayJdbcType(
+					typeConfiguration,
+					dialect,
+					stdIndicators.getPreferredSqlTypeCodeForArray(),
+					elementType,
+					columnTypeInformation
+			);
 			final Function<JavaType<Object>, BasicType<Object>> creator = javaType -> {
-				final JdbcType arrayJdbcType =
-						getArrayJdbcType( typeConfiguration, dialect, Types.ARRAY, elementType, columnTypeInformation );
+
 				//noinspection unchecked,rawtypes
 				return new BasicCollectionType( elementType, arrayJdbcType, collectionJavaType );
 			};
-			if ( typeConfiguration.getBasicTypeRegistry().getRegisteredType( elementType.getName() ) == elementType ) {
-				return typeConfiguration.standardBasicTypeForJavaType( collectionJavaType.getJavaType(), creator );
-			}
-			//noinspection unchecked
-			return creator.apply( (JavaType<Object>) (JavaType<?>) collectionJavaType );
+//			if ( typeConfiguration.getBasicTypeRegistry().getRegisteredType( elementType.getName() ) == elementType ) {
+//				return typeConfiguration.standardBasicTypeForJavaType( collectionJavaType.getJavaType(), creator );
+//			}
+//			//noinspection unchecked
+//			return creator.apply( (JavaType<Object>) (JavaType<?>) collectionJavaType );
+			return typeConfiguration.getBasicTypeRegistry().resolve(
+					collectionJavaType,
+					arrayJdbcType,
+					() -> new BasicCollectionType<>( elementType, arrayJdbcType, collectionJavaType )
+			);
 		}
 		else {
 			final JavaType<Object> relationalJavaType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
@@ -131,7 +149,13 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			//noinspection unchecked,rawtypes
 			return new ConvertedBasicCollectionType(
 					elementType,
-					getArrayJdbcType( typeConfiguration, dialect, Types.ARRAY, elementType, columnTypeInformation ),
+					getArrayJdbcType(
+							typeConfiguration,
+							dialect,
+							stdIndicators.getPreferredSqlTypeCodeForArray(),
+							elementType,
+							columnTypeInformation
+					),
 					collectionJavaType,
 					new CollectionConverter( valueConverter, collectionJavaType, relationalJavaType )
 			);
@@ -437,6 +461,13 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			for ( int i = 0; i < length; i++ ) {
 				wrapped.add( componentJavaType.wrap( Array.get( value, i ), options ) );
 			}
+			return wrapped;
+		}
+		else if ( getElementJavaType().isInstance( value ) ) {
+			// Support binding a single element as parameter value
+			final C wrapped = semantics.instantiateRaw( 1, null );
+			//noinspection unchecked
+			wrapped.add( (E) value );
 			return wrapped;
 		}
 

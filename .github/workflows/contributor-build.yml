@@ -51,7 +51,7 @@ jobs:
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - name: Reclaim Disk Space
@@ -61,7 +61,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
@@ -70,7 +70,7 @@ jobs:
         run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT
         shell: bash
       - name: Cache Maven local repository
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache-maven
         with:
           path: |
@@ -82,10 +82,12 @@ jobs:
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}
+          POPULATE_REMOTE_GRADLE_CACHE: true
+          GRADLE_ENTERPRISE_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_TOKEN }}"
         run: ./ci/build-github.sh
         shell: bash
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: test-reports-java11-${{ matrix.rdbms }}

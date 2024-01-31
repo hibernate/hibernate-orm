@@ -11,7 +11,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -40,7 +39,10 @@ import org.hibernate.proxy.LazyInitializer;
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * 
+ * @deprecated since {@link org.hibernate.Session#saveOrUpdate} is deprecated
  */
+@Deprecated(since="6")
 public class DefaultSaveOrUpdateEventListener
 		extends AbstractSaveEventListener<PersistContext>
 		implements SaveOrUpdateEventListener {
@@ -85,7 +87,7 @@ public class DefaultSaveOrUpdateEventListener
 	}
 
 	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
-		EntityState entityState = EntityState.getEntityState(
+		final EntityState entityState = EntityState.getEntityState(
 				event.getEntity(),
 				event.getEntityName(),
 				event.getEntry(),
@@ -120,26 +122,21 @@ public class DefaultSaveOrUpdateEventListener
 
 			final SessionFactoryImplementor factory = event.getSession().getFactory();
 
-			Object requestedId = event.getRequestedId();
-
-			Object savedId;
+			final Object requestedId = event.getRequestedId();
+			final Object savedId;
 			if ( requestedId == null ) {
 				savedId = entityEntry.getId();
 			}
 			else {
-
 				final boolean isEqual = entityEntry.getPersister().getIdentifierType()
 						.isEqual( requestedId, entityEntry.getId(), factory );
-
 				if ( isEqual ) {
 					throw new PersistentObjectException(
 							"object passed to save() was already persistent: " +
 									MessageHelper.infoString( entityEntry.getPersister(), requestedId, factory )
 					);
 				}
-
 				savedId = requestedId;
-
 			}
 
 			if ( LOG.isTraceEnabled() ) {
@@ -169,7 +166,7 @@ public class DefaultSaveOrUpdateEventListener
 
 		final EventSource source = event.getSession();
 
-		EntityEntry entityEntry = event.getEntry();
+		final EntityEntry entityEntry = event.getEntry();
 		if ( entityEntry != null ) {
 			if ( entityEntry.getStatus() == Status.DELETED ) {
 				source.forceFlush( entityEntry );
@@ -179,28 +176,20 @@ public class DefaultSaveOrUpdateEventListener
 			}
 		}
 
-		Object id = saveWithGeneratedOrRequestedId( event );
-
-		source.getPersistenceContextInternal().reassociateProxy( event.getObject(), id );
-
-		return id;
-	}
-
-	/**
-	 * Save the transient instance, assigning the right identifier
-	 *
-	 * @param event The initiating event.
-	 *
-	 * @return The entity's identifier value after saving.
-	 */
-	protected Object saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
-		return saveWithGeneratedId(
+		if ( event.getRequestedId() != null ) {
+			throw new AssertionFailure( "requested id should be null in save" );
+		}
+		final Object id = saveWithGeneratedId(
 				event.getEntity(),
 				event.getEntityName(),
 				null,
 				event.getSession(),
 				true
 		);
+
+		source.getPersistenceContextInternal().reassociateProxy( event.getObject(), id );
+
+		return id;
 	}
 
 	/**
@@ -219,8 +208,8 @@ public class DefaultSaveOrUpdateEventListener
 			throw new AssertionFailure( "entity was persistent" );
 		}
 
-		Object entity = event.getEntity();
-		EntityPersister persister = session.getEntityPersister( event.getEntityName(), entity );
+		final Object entity = event.getEntity();
+		final EntityPersister persister = session.getEntityPersister( event.getEntityName(), entity );
 		event.setRequestedId( getUpdateId( entity, persister, event.getRequestedId(), session ) );
 		performUpdate( event, entity, persister );
 	}
@@ -239,7 +228,7 @@ public class DefaultSaveOrUpdateEventListener
 	 */
 	protected Object getUpdateId(Object entity, EntityPersister persister, Object requestedId, SessionImplementor session) {
 		// use the id assigned to the instance
-		Object id = persister.getIdentifier( entity, session );
+		final Object id = persister.getIdentifier( entity, session );
 		if ( id == null ) {
 			// assume this is a newly instantiated transient object
 			// which should be saved rather than updated

@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.instantiation.internal;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,13 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 		}
 
 		return false;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		for ( ArgumentDomainResult<?> argumentResult : argumentResults ) {
+			argumentResult.collectValueIndexesToCache( valueIndexes );
+		}
 	}
 
 	@Override
@@ -148,20 +156,34 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				final Type[] genericParameterTypes = constructor.getGenericParameterTypes();
 				if ( genericParameterTypes.length == argumentReaders.size() ) {
 					for ( int i = 0; i < argumentReaders.size(); i++ ) {
+						final Type parameterType = genericParameterTypes[i];
 						final ArgumentReader<?> argumentReader = argumentReaders.get( i );
-						final JavaType<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
-								.getMappingMetamodel()
-								.getTypeConfiguration()
-								.getJavaTypeRegistry()
-								.resolveDescriptor( genericParameterTypes[i] );
+						final boolean assignmentCompatible;
+						if ( parameterType instanceof Class<?> ) {
+							assignmentCompatible = areAssignmentCompatible(
+									(Class<?>) parameterType,
+									argumentReader.getAssembledJavaType().getJavaTypeClass()
+							);
+						}
+						else {
+							final JavaType<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
+									.getMappingMetamodel()
+									.getTypeConfiguration()
+									.getJavaTypeRegistry()
+									.resolveDescriptor( parameterType );
+							assignmentCompatible = areAssignmentCompatible(
+									argumentTypeDescriptor,
+									argumentReader.getAssembledJavaType()
+							);
+						}
 
-						if ( !areAssignmentCompatible( argumentTypeDescriptor, argumentReader.getAssembledJavaType() ) ) {
+						if ( !assignmentCompatible ) {
 							if ( log.isDebugEnabled() ) {
 								log.debugf(
 										"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
 										i,
-										constructor.getParameterTypes()[i].getName(),
-										argumentTypeDescriptor.getJavaType().getTypeName()
+										argumentReader.getAssembledJavaType().getTypeName(),
+										parameterType.getTypeName()
 								);
 							}
 							continue constructor_loop;

@@ -50,6 +50,7 @@ import jakarta.persistence.Id;
 public class DirtyCheckingWithEmbeddableAndNonVisibleGenericMappedSuperclassTest {
 
 	@JiraKey("HHH-16832")
+	@Test
 	public void shouldNotBreakConstructor() {
 		// This is the actual reproducer for HHH-16832,
 		// other method are just to be consistent with tests in the same package.

@@ -16,6 +16,7 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.sql.results.spi.ResultsConsumer;
 
 /**
  * @author Steve Ebersole
@@ -25,6 +26,11 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 
 	public AggregatedSelectQueryPlanImpl(SelectQueryPlan<R>[] aggregatedQueryPlans) {
 		this.aggregatedQueryPlans = aggregatedQueryPlans;
+	}
+
+	@Override
+	public <T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

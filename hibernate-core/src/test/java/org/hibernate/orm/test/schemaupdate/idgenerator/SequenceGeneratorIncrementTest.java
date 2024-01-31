@@ -18,6 +18,7 @@ import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -211,7 +212,7 @@ public class SequenceGeneratorIncrementTest {
 	}
 
 	private void buildMetadata(Class annotatedClass, String hbm, String namingStrategy) {
-		StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
+		StandardServiceRegistryBuilder standardServiceRegistryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 		standardServiceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 
 		if ( namingStrategy != null ) {

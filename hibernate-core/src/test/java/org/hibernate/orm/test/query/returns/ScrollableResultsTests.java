@@ -68,54 +68,54 @@ public class ScrollableResultsTests {
 		scope.inTransaction(
 				session -> {
 					final QueryImplementor<String> query = session.createQuery( SINGLE_SELECTION_QUERY, String.class );
-					final ScrollableResultsImplementor<String> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
+					try (ScrollableResultsImplementor<String> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE )) {
 
-					// try to initially read in reverse - should be false
-					assertThat( results.previous(), is( false ) );
+						// try to initially read in reverse - should be false
+						assertThat( results.previous(), is( false ) );
 
-					// position at the first row
-					assertThat( results.next(), is( true ) );
-					String data = results.get();
-					assertThat( data, is( "other" ) );
+						// position at the first row
+						assertThat( results.next(), is( true ) );
+						String data = results.get();
+						assertThat( data, is( "other" ) );
 
-					// position at the second (last) row
-					assertThat( results.next(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "value" ) );
+						// position at the second (last) row
+						assertThat( results.next(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "value" ) );
 
-					// position after the second (last) row
-					assertThat( results.next(), is( false ) );
+						// position after the second (last) row
+						assertThat( results.next(), is( false ) );
 
-					// position back to the second row
-					assertThat( results.previous(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "value" ) );
+						// position back to the second row
+						assertThat( results.previous(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "value" ) );
 
-					// position back to the first row
-					assertThat( results.previous(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "other" ) );
+						// position back to the first row
+						assertThat( results.previous(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "other" ) );
 
-					// position before the first row
-					assertThat( results.previous(), is( false ) );
-					assertThat( results.previous(), is( false ) );
+						// position before the first row
+						assertThat( results.previous(), is( false ) );
+						assertThat( results.previous(), is( false ) );
 
-					assertThat( results.last(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "value" ) );
+						assertThat( results.last(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "value" ) );
 
-					assertThat( results.first(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "other" ) );
+						assertThat( results.first(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "other" ) );
 
-					assertThat( results.scroll( 1 ), is( true ) );
-					data = results.get();
-					assertThat( data, is( "value" ) );
+						assertThat( results.scroll( 1 ), is( true ) );
+						data = results.get();
+						assertThat( data, is( "value" ) );
 
-					assertThat( results.scroll( -1 ), is( true ) );
-					data = results.get();
-					assertThat( data, is( "other" ) );
-
+						assertThat( results.scroll( -1 ), is( true ) );
+						data = results.get();
+						assertThat( data, is( "other" ) );
+					}
 				}
 		);
 	}
@@ -262,7 +262,7 @@ public class ScrollableResultsTests {
 	}
 
 	private static <R> void verifyScroll(Query<R> query, Consumer<R> validator) {
-		try ( final ScrollableResults<R> results = query.scroll( ScrollMode.FORWARD_ONLY ) ) {
+		try (final ScrollableResults<R> results = query.scroll( ScrollMode.FORWARD_ONLY ) ) {
 			assertThat( results.next(), is( true ) );
 			validator.accept( results.get() );
 		}

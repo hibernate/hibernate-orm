@@ -19,6 +19,7 @@ import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.Test;
 
@@ -44,7 +45,7 @@ public class ComponentNamingStrategyForJoinColumnTest {
 
 	@Test
 	public void testNamingComponentPath() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG )
 				.build();
 
@@ -95,7 +96,7 @@ public class ComponentNamingStrategyForJoinColumnTest {
 		assertEquals( 1, collection.getOwner().getKey().getColumnSpan() );
 		assertEquals(
 			ownerForeignKeyNameExpected,
-			collection.getKey().getColumnIterator().next().getText()
+			collection.getKey().getSelectables().get( 0 ).getText()
 		);
 
 		int columnNumber = table.getColumnSpan();

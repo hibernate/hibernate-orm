@@ -10,7 +10,6 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.OrderBy;
 
@@ -57,7 +56,6 @@ public class Person {
 
 
 	@ElementCollection
-	@JoinColumn
 	@JoinTable(name = "T_NICKNAMES_A")
 	@OrderBy // testing default @OrderBy mapping
 	public Set<String> getNickNamesAscendingNaturalSort() {
@@ -69,7 +67,6 @@ public class Person {
 	}
 
 	@ElementCollection
-	@JoinColumn
 	@JoinTable(name = "T_NICKNAMES_D")
 	@OrderBy( "desc" )
 	public Set<String> getNickNamesDescendingNaturalSort() {
@@ -82,7 +79,6 @@ public class Person {
 
 
 	@ElementCollection
-	@JoinColumn
 	@OrderBy
 	@JoinTable(name = "T_ADDRESS_A")
 	public Set<Address> getAddressesAscendingNaturalSort() {
@@ -94,7 +90,6 @@ public class Person {
 	}
 
 	@ElementCollection
-	@JoinColumn
 	@OrderBy( "desc" )
 	@JoinTable(name = "T_ADDRESS_D")
 	public Set<Address> getAddressesDescendingNaturalSort() {
@@ -106,7 +101,6 @@ public class Person {
 	}
 
 	@ElementCollection
-	@JoinColumn
 	@OrderBy( "city" )
 	@JoinTable(name = "T_ADD_CITY_A")
 	public Set<Address> getAddressesCityAscendingSort() {
@@ -118,7 +112,6 @@ public class Person {
 	}
 
 	@ElementCollection
-	@JoinColumn
 	@OrderBy( "city desc" )
 	@JoinTable(name = "T_ADD_CITY_D")
 	public Set<Address> getAddressesCityDescendingSort() {

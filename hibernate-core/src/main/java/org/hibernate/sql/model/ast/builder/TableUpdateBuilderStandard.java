@@ -6,9 +6,13 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
@@ -26,19 +30,34 @@ import org.hibernate.sql.model.internal.TableUpdateStandard;
  * @author Steve Ebersole
  */
 public class TableUpdateBuilderStandard<O extends MutationOperation> extends AbstractTableUpdateBuilder<O> {
+	private final String whereFragment;
 
 	public TableUpdateBuilderStandard(
 			MutationTarget<?> mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableMapping, sessionFactory );
+		this.whereFragment = null;
 	}
 
 	public TableUpdateBuilderStandard(
 			MutationTarget<?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
+		this( mutationTarget, tableReference, sessionFactory, null );
+	}
+
+	public TableUpdateBuilderStandard(
+			MutationTarget<?> mutationTarget,
+			MutatingTableReference tableReference,
+			SessionFactoryImplementor sessionFactory,
+			String whereFragment) {
 		super( mutationTarget, tableReference, sessionFactory );
+		this.whereFragment = whereFragment;
+	}
+
+	public String getWhereFragment() {
+		return whereFragment;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -76,7 +95,10 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 				getSqlComment(),
 				valueBindings,
 				getKeyRestrictionBindings(),
-				getOptimisticLockBindings()
+				getOptimisticLockBindings(),
+				whereFragment,
+				null,
+				Collections.emptyList()
 		);
 	}
 }

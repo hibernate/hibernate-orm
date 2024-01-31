@@ -197,6 +197,33 @@ public enum TemporalUnit {
 		}
 	}
 
+	public String conversionFactorFull(TemporalUnit unit, Dialect dialect) {
+
+		if ( unit == this ) {
+			//same unit, nothing to do
+			return "";
+		}
+
+		if ( unit.normalized() != normalized() ) {
+			throw new SemanticException("Illegal unit conversion " + this + " to " + unit);
+		}
+
+		long from = normalizationFactor( dialect );
+		long to = unit.normalizationFactor( dialect );
+		if ( from == to ) {
+			// the units represent the same amount of time
+			return "";
+		}
+		else {
+			// if from < to, then this unit represents a
+			// smaller amount of time than the given unit
+			// we are converting to (so we're going to
+			// need to use division)
+			return (from < to ? "/" : "*")
+					+ (from < to ? to / from : from / to);
+		}
+	}
+
 	/**
 	 * The conversion factor required to convert this
 	 * unit to its {@link #normalized()} unit.

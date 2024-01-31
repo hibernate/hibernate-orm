@@ -19,6 +19,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -35,7 +36,7 @@ public class TimestampTest extends BaseUnitTestCase {
 
 	@BeforeClassOnce
 	public void setUp() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( VMTimestamped.class )
 				.addAnnotatedClass( DBTimestamped.class )

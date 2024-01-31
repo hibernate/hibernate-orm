@@ -35,6 +35,13 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	private SqlStatementLogger sqlStatementLogger;
 	private ParameterMarkerStrategy parameterMarkerStrategy;
 
+	public JdbcServicesImpl() {
+	}
+
+	public JdbcServicesImpl(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
+	}
+
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;

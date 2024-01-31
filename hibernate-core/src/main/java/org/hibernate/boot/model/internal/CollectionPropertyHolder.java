@@ -329,7 +329,12 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
-		throw new AssertionFailure( "Add a <join> in a second pass" );
+		throw new AssertionFailure( "Add join in a second pass" );
+	}
+
+	@Override
+	public Join addJoin(JoinTable joinTableAnn, Table table, boolean noDelayInPkColumnCreation) {
+		throw new AssertionFailure( "Add join in a second pass" );
 	}
 
 	@Override

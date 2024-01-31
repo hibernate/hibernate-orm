@@ -759,12 +759,15 @@ public class QuerySqmImpl<R>
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement sqmDelete) {
 		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getModel();
 		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
-		final EntityPersister persister =
-				getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToDelete );
+		final EntityPersister persister = getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToDelete );
 		final SqmMultiTableMutationStrategy multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
-		return multiTableStrategy == null
-				? new SimpleDeleteQueryPlan( persister, sqmDelete, domainParameterXref )
-				: new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );
+		if ( multiTableStrategy != null ) {
+			// NOTE : MultiTableDeleteQueryPlan and SqmMultiTableMutationStrategy already handle soft-deletes internally
+			return new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );
+		}
+		else {
+			return new SimpleDeleteQueryPlan( persister, sqmDelete, domainParameterXref );
+		}
 	}
 
 	private NonSelectQueryPlan buildAggregatedDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement[] concreteSqmStatements) {
@@ -824,7 +827,7 @@ public class QuerySqmImpl<R>
 			final NonSelectQueryPlan[] planParts = new NonSelectQueryPlan[valuesList.size()];
 			for ( int i = 0; i < valuesList.size(); i++ ) {
 				final SqmInsertValuesStatement<?> subInsert = insertValues.copyWithoutValues( SqmCopyContext.simpleContext() );
-				subInsert.getValuesList().add( valuesList.get( i ) );
+				subInsert.values( valuesList );
 				planParts[i] = new SimpleInsertQueryPlan( subInsert, domainParameterXref );
 			}
 

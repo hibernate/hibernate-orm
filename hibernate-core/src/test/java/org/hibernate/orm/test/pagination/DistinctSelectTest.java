@@ -8,13 +8,14 @@ package org.hibernate.orm.test.pagination;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -47,13 +48,13 @@ public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		for (int i = 0; i < 5; i++) {
-			Tag tag = new Tag("Tag: " + UUID.randomUUID());
+			Tag tag = new Tag("Tag: " + SafeRandomUUIDGenerator.safeRandomUUID());
 			tags.add(tag);
 			s.save(tag);
 		}
 
 		for (int i = 0; i < NUM_OF_USERS; i++) {
-			Entry e = new Entry("Entry: " + UUID.randomUUID());
+			Entry e = new Entry("Entry: " + SafeRandomUUIDGenerator.safeRandomUUID());
 			e.getTags().addAll(tags);
 			s.save(e);
 		}

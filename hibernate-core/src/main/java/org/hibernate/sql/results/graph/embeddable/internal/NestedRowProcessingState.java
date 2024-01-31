@@ -7,8 +7,7 @@
 package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -18,10 +17,11 @@ import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NestedRowProcessingState extends BaseExecutionContext implements RowProcessingState {
 	private final AggregateEmbeddableInitializer aggregateEmbeddableInitializer;
@@ -81,7 +81,12 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	}
 
 	@Override
-	public Initializer resolveInitializer(NavigablePath path) {
+	public void finishRowProcessing(boolean wasAdded) {
+		processingState.finishRowProcessing( wasAdded );
+	}
+
+	@Override
+	public Initializer resolveInitializer(@Nullable NavigablePath path) {
 		return processingState.resolveInitializer( path );
 	}
 
@@ -126,13 +131,23 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	}
 
 	@Override
+	public String getEntityUniqueKeyAttributePath() {
+		return processingState.getEntityUniqueKeyAttributePath();
+	}
+
+	@Override
+	public Object getEntityUniqueKey() {
+		return processingState.getEntityUniqueKey();
+	}
+
+	@Override
 	public EntityMappingType getRootEntityDescriptor() {
 		return processingState.getRootEntityDescriptor();
 	}
 
 	@Override
-	public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-		processingState.registerLoadingEntityEntry( entityKey, entry );
+	public void registerLoadingEntityHolder(EntityHolder holder) {
+		processingState.registerLoadingEntityHolder( holder );
 	}
 
 	@Override

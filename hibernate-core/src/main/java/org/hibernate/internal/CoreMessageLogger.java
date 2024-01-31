@@ -1380,10 +1380,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide", id = 404)
 	void usingOldDtd();
 
-	@LogMessage(level = INFO)
-	@Message(value = "Using bytecode reflection optimizer", id = 406)
-	void usingReflectionOptimizer();
-
 //	@LogMessage(level = INFO)
 //	@Message(value = "Using java.io streams to persist binary types", id = 407)
 //	void usingStreams();
@@ -1865,4 +1861,13 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 515)
 	HibernateException nullIdentitySelectString();
 
+	@LogMessage(level = WARN)
+	@Message(value = "Failed to discover types for enhancement from class: %s",
+			id = 516)
+	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
+
+	@LogMessage(level = WARN)
+	@Message(value = "UCP properties were encountered, but the UCP ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
+		id = 517)
+	void ucpProviderClassNotFound();
 }

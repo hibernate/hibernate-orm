@@ -30,6 +30,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -105,7 +106,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 				new NamedAuxiliaryDatabaseObject(
 						"PostgreSQL structProcedure",
 						namespace,
-						"create procedure structProcedure(OUT result structType) AS $$ begin result.theBinary = bytea '\\x01'; result.theString = 'ABC'; result.theDouble = 0; result.theInt = 0; result.theLocalDateTime = timestamp '2022-12-01 01:00:00'; result.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; end $$ language plpgsql",
+						"create procedure structProcedure(INOUT result structType) AS $$ declare res structType; begin res.theBinary = bytea '\\x01'; res.theString = 'ABC'; res.theDouble = 0; res.theInt = 0; res.theLocalDateTime = timestamp '2022-12-01 01:00:00'; res.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; result = res; end $$ language plpgsql",
 						"drop procedure structProcedure",
 						Set.of( PostgreSQLDialect.class.getName() )
 				)
@@ -128,7 +129,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 				new NamedAuxiliaryDatabaseObject(
 						"PostgrePlus structProcedure",
 						namespace,
-						"create procedure structProcedure(result OUT structType) AS $$ begin result.theBinary = bytea '\\x01'; result.theString = 'ABC'; result.theDouble = 0; result.theInt = 0; result.theLocalDateTime = timestamp '2022-12-01 01:00:00'; result.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; end $$ language plpgsql",
+						"create procedure structProcedure(result INOUT structType) AS $$ declare res structType; begin res.theBinary = bytea '\\x01'; res.theString = 'ABC'; res.theDouble = 0; res.theInt = 0; res.theLocalDateTime = timestamp '2022-12-01 01:00:00'; res.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; result = res; end $$ language plpgsql",
 						"drop procedure structProcedure",
 						Set.of( PostgresPlusDialect.class.getName() )
 				)
@@ -527,11 +528,19 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testProcedure() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
+					final Dialect dialect = entityManager.getJdbcServices().getDialect();
+					final ParameterMode parameterMode;
+					if ( dialect instanceof PostgreSQLDialect ) {
+						parameterMode = ParameterMode.INOUT;
+					}
+					else {
+						parameterMode = ParameterMode.OUT;
+					}
 					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structProcedure" );
 					ProcedureParameter<EmbeddableAggregate> resultParameter = structFunction.registerParameter(
 							"structType",
 							EmbeddableAggregate.class,
-							ParameterMode.OUT
+							parameterMode
 					);
 					structFunction.setParameter( resultParameter, null );
 					EmbeddableAggregate result = structFunction.getOutputs().getOutputParameterValue( resultParameter );

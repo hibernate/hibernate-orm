@@ -19,6 +19,7 @@ public class TrueFalseConverter extends CharBooleanConverter {
 	 * Singleton access
 	 */
 	public static final TrueFalseConverter INSTANCE = new TrueFalseConverter();
+
 	private static final String[] VALUES = {"F", "T"};
 
 	@Override

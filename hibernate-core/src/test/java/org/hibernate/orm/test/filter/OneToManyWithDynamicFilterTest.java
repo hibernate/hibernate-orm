@@ -10,6 +10,9 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,20 +24,21 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.query.Query;
-import org.hibernate.type.NumericBooleanConverter;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -49,10 +53,10 @@ import static org.junit.Assert.assertThat;
 		}
 )
 @SessionFactory
-public class OneToManyWithDynamicFilterTest {
+public class OneToManyWithDynamicFilterTest extends AbstractStatefulStatelessFilterTest {
 
 	@BeforeEach
-	void setUp(SessionFactoryScope scope) {
+	void setUp() {
 		scope.inTransaction( session -> {
 			final ArticleTrading articleTrading = new ArticleTrading();
 			articleTrading.setClassifier( "no_classification" );
@@ -69,16 +73,17 @@ public class OneToManyWithDynamicFilterTest {
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope scope) {
+	void tearDown() {
 		scope.inTransaction( session -> {
 			session.createQuery( "DELETE FROM ArticleTrading" ).executeUpdate();
 			session.createQuery( "DELETE FROM ArticleRevision" ).executeUpdate();
 		} );
 	}
 
-	@Test
-	void testForIssue(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testForIssue(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept(scope, session -> {
 			final org.hibernate.Filter enableFilter = session.enableFilter( "aliveOnly" );
 			enableFilter.setParameter( "aliveTimestamp", Timestamp.valueOf( "9999-12-31 00:00:00" ) );
 			enableFilter.setParameter( "deleted", true );

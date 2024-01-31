@@ -20,6 +20,8 @@ import org.hibernate.usertype.CompositeUserType;
  */
 public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount> {
 
+	public static final MonetaryAmountUserType INSTANCE = new MonetaryAmountUserType();
+
 	@Override
 	public Object getPropertyValue(MonetaryAmount component, int property) throws HibernateException {
 		switch ( property ) {

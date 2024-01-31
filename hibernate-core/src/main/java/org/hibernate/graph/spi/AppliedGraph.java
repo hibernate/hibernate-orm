@@ -8,6 +8,8 @@ package org.hibernate.graph.spi;
 
 import org.hibernate.graph.GraphSemantic;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Contract for anything a fetch/load graph can be applied
  *
@@ -17,10 +19,10 @@ public interface AppliedGraph {
 	/**
 	 * The applied graph
 	 */
-	RootGraphImplementor<?> getGraph();
+	@Nullable RootGraphImplementor<?> getGraph();
 
 	/**
 	 * The semantic (fetch/load) under which the graph should be applied
 	 */
-	GraphSemantic getSemantic();
+	@Nullable GraphSemantic getSemantic();
 }

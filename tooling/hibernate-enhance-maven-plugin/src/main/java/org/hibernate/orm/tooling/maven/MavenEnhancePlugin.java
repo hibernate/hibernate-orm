@@ -161,6 +161,12 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			final Enhancer enhancer = bytecodeProvider.getEnhancer( enhancementContext );
 
 			for ( File file : sourceSet ) {
+				discoverTypes( file, enhancer );
+				if ( log.isDebugEnabled() ) {
+					log.debug( "Successfully discovered types for class [" + file + "]" );
+				}
+			}
+			for ( File file : sourceSet ) {
 
 				final byte[] enhancedBytecode = doEnhancement( file, enhancer );
 
@@ -249,6 +255,35 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			}
 			buildContext.addMessage( javaClassFile, 0, 0, msg, BuildContext.SEVERITY_WARNING, e );
 			return null;
+		}
+	}
+
+	private void discoverTypes(File javaClassFile, Enhancer enhancer) throws MojoExecutionException {
+		try {
+			String className = javaClassFile.getAbsolutePath().substring(
+					base.length() + 1,
+					javaClassFile.getAbsolutePath().length() - ".class".length()
+			).replace( File.separatorChar, '.' );
+			ByteArrayOutputStream originalBytes = new ByteArrayOutputStream();
+			FileInputStream fileInputStream = new FileInputStream( javaClassFile );
+			try {
+				byte[] buffer = new byte[1024];
+				int length;
+				while ( ( length = fileInputStream.read( buffer ) ) != -1 ) {
+					originalBytes.write( buffer, 0, length );
+				}
+			}
+			finally {
+				fileInputStream.close();
+			}
+			enhancer.discoverTypes( className, originalBytes.toByteArray() );
+		}
+		catch (Exception e) {
+			String msg = "Unable to discover types for class: " + javaClassFile.getName();
+			if ( failOnError ) {
+				throw new MojoExecutionException( msg, e );
+			}
+			buildContext.addMessage( javaClassFile, 0, 0, msg, BuildContext.SEVERITY_WARNING, e );
 		}
 	}
 

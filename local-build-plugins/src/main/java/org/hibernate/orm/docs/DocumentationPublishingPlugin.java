@@ -8,58 +8,74 @@ package org.hibernate.orm.docs;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.TaskProvider;
+
+import static org.hibernate.orm.docs.DocumentationPublishing.DSL_NAME;
+import static org.hibernate.orm.docs.GenerateDescriptorTask.GEN_DESC_TASK_NAME;
+import static org.hibernate.orm.docs.PublishDescriptorTask.UPLOAD_DESC_TASK_NAME;
+import static org.hibernate.orm.docs.PublishTask.UPLOAD_TASK_NAME;
 
 /**
  * Plugin for helping with publishing documentation to the doc server - <ul>
- *     <li>Publishes a config extension ({@link DocumentationPublishing}) under {@value #EXT}</li>
- *     <li>Creates a task ({@value #UPLOAD_TASK}) to upload the documentation to the doc server</li>
- *     <li>Creates a task ({@value #GEN_DESC_TASK}) to create the "published doc descriptor" (JSON) file</li>
- *     <li>Creates a task ({@value #UPLOAD_DESC_TASK}) to upload the "published doc descriptor" (JSON) file to the doc server</li>
+ *     <li>Publishes a config extension ({@link DocumentationPublishing}) under {@value DocumentationPublishing#DSL_NAME}</li>
+ *     <li>Creates a task ({@value PublishTask#UPLOAD_TASK_NAME}) to upload the documentation to the doc server</li>
+ *     <li>Creates a task ({@value GenerateDescriptorTask#GEN_DESC_TASK_NAME}) to create the "published doc descriptor" (JSON) file</li>
+ *     <li>Creates a task ({@value PublishDescriptorTask#UPLOAD_DESC_TASK_NAME}) to upload the "published doc descriptor" (JSON) file to the doc server</li>
  * </ul>
  *
  * @author Steve Ebersole
  */
 public class DocumentationPublishingPlugin implements Plugin<Project> {
-	public static final String EXT = "documentationPublishing";
-	public static final String UPLOAD_TASK = "uploadDocumentation";
-	public static final String GEN_DESC_TASK = "generatorDocumentationDescriptor";
-	public static final String UPLOAD_DESC_TASK = "uploadDocumentationDescriptor";
-
 	@Override
 	public void apply(Project project) {
-		final DocumentationPublishing docPubDsl = project.getExtensions().create( EXT, DocumentationPublishing.class );
+		final DocumentationPublishing docPubDsl = project.getExtensions().create( DSL_NAME, DocumentationPublishing.class );
 
-		final PublishTask uploadTask = project.getTasks().create(
-				UPLOAD_TASK,
-				PublishTask.class,
-				docPubDsl
-		);
+		final boolean isSnapshot = project.getVersion().toString().endsWith( "-SNAPSHOT" );
 
-		final GenerateDescriptorTask generateDescriptorTask = project.getTasks().create(
-				GEN_DESC_TASK,
+		final TaskProvider<GenerateDescriptorTask> generateDescriptorTask = project.getTasks().register(
+				GEN_DESC_TASK_NAME,
 				GenerateDescriptorTask.class,
-				docPubDsl
+				(task) -> {
+					task.getCurrentlyBuildingFamily().convention( docPubDsl.getReleaseFamilyIdentifier() );
+					task.getJsonFile().convention( docPubDsl.getUpdatedJsonFile() );
+				}
 		);
 
-		final PublishDescriptorTask uploadDescriptorTask = project.getTasks().create(
-				UPLOAD_DESC_TASK,
+		final TaskProvider<PublishDescriptorTask> uploadDescriptorTask = project.getTasks().register(
+				UPLOAD_DESC_TASK_NAME,
 				PublishDescriptorTask.class,
-				docPubDsl
+				(task) -> {
+					task.getDocDescriptorUploadUrl().convention( docPubDsl.getDocDescriptorUploadUrl() );
+					task.getJsonFile().convention( docPubDsl.getUpdatedJsonFile() );
+
+					task.dependsOn( generateDescriptorTask );
+					task.onlyIf( (t) -> !isSnapshot && generateDescriptorTask.get().getDidWork() );
+				}
 		);
 
-		final PublishMigrationGuide publishMigrationGuideTask = project.getTasks().create(
+		//noinspection unused
+		final TaskProvider<PublishMigrationGuide> publishMigrationGuideTask = project.getTasks().register(
 				PublishMigrationGuide.NAME,
 				PublishMigrationGuide.class,
-				docPubDsl
+				(task) -> {
+					task.getCurrentlyBuildingFamily().convention( docPubDsl.getReleaseFamilyIdentifier() );
+					task.getDocServerUrl().convention( docPubDsl.getDocServerUrl() );
+					task.getMigrationGuideDirectory().convention( project.getLayout().getBuildDirectory().dir( "documentation/migration-guide" ) );
+				}
 		);
-		publishMigrationGuideTask.getMigrationGuideDirectory().convention( project.getLayout().getBuildDirectory().dir( "asciidoc/migration-guide" ) );
 
-		// todo - incorporate HibernateVersion from `gradle/base-information.gradle`
-		final boolean isSnapshot = project.getVersion().toString().endsWith( "-SNAPSHOT" );
-		uploadTask.onlyIf( (task) -> !isSnapshot );
-		uploadDescriptorTask.onlyIf( (task) -> !isSnapshot && generateDescriptorTask.getDidWork() );
+		//noinspection unused
+		final TaskProvider<PublishTask> uploadTask = project.getTasks().register(
+				UPLOAD_TASK_NAME,
+				PublishTask.class,
+				(task) -> {
+					task.getBuildingFamily().convention( docPubDsl.getReleaseFamilyIdentifier() );
+					task.getDocServerUrl().convention( docPubDsl.getDocServerUrl() );
+					task.getStagingDirectory().convention( docPubDsl.getStagingDirectory() );
 
-		uploadTask.dependsOn( uploadDescriptorTask );
-		uploadDescriptorTask.dependsOn( generateDescriptorTask );
+					task.dependsOn( uploadDescriptorTask );
+					task.onlyIf( (t) -> !isSnapshot );
+				}
+		);
 	}
 }

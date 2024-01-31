@@ -16,6 +16,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -41,6 +42,8 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -247,6 +250,32 @@ public class HSQLLegacyDialect extends Dialect {
 			functionFactory.rownum();
 		}
 		functionFactory.listagg_groupConcat();
+		functionFactory.array_hsql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_hsql();
+		functionFactory.arrayPositions_hsql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_operator();
+		functionFactory.arrayPrepend_operator();
+		functionFactory.arrayAppend_operator();
+		functionFactory.arrayContains_hsql();
+		functionFactory.arrayOverlaps_hsql();
+		functionFactory.arrayGet_unnest();
+		functionFactory.arraySet_hsql();
+		functionFactory.arrayRemove_hsql();
+		functionFactory.arrayRemoveIndex_unnest( false );
+		functionFactory.arraySlice_unnest();
+		functionFactory.arrayReplace_unnest();
+		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayFill_hsql();
+		functionFactory.arrayToString_hsql();
+
+		//trim() requires parameters to be cast when used as trim character
+		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
+				this,
+				functionContributions.getTypeConfiguration(),
+				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
+		) );
 	}
 
 	@Override
@@ -403,7 +432,7 @@ public class HSQLLegacyDialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return getVersion().isBefore( 2 ) ? LegacyHSQLLimitHandler.INSTANCE
-				: getVersion().isBefore( 2, 5 ) ? LimitOffsetLimitHandler.INSTANCE
+				: getVersion().isBefore( 2, 5 ) ? LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
@@ -477,6 +506,29 @@ public class HSQLLegacyDialect extends Dialect {
 				}
 				return null;
 			} );
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return (sqlException, message, sql) -> {
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String constraintName;
+
+			switch ( errorCode ) {
+				case -104:
+					// Unique constraint violation
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							constraintName
+					);
+			}
+
+			return null;
+		};
+	}
 
 	/**
 	 * HSQLDB 2.0 messages have changed
@@ -671,6 +723,12 @@ public class HSQLLegacyDialect extends Dialect {
 		return "call current_timestamp";
 	}
 
+	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// HSQLDB does truncation
+		return false;
+	}
+
 	/**
 	 * For HSQLDB 2.0, this is a copy of the base class implementation.
 	 * For HSQLDB 1.8, only READ_UNCOMMITTED is supported.
@@ -836,5 +894,10 @@ public class HSQLLegacyDialect extends Dialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 }

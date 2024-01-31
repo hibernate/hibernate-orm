@@ -11,10 +11,9 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
  * @author Andrea Boriero
@@ -22,21 +21,13 @@ import org.hibernate.sql.results.graph.Initializer;
  */
 public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 
-	private final DomainResult<?> keyResult;
-	private final boolean selectByUniqueKey;
-
 	public EntityDelayedFetchImpl(
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey) {
-		super( navigablePath, fetchedAttribute, fetchParent );
-
-		assert fetchedAttribute.getNotFoundAction() == null;
-
-		this.keyResult = keyResult;
-		this.selectByUniqueKey = selectByUniqueKey;
+		super( navigablePath, fetchedAttribute, fetchParent, keyResult, selectByUniqueKey );
 	}
 
 	@Override
@@ -45,41 +36,13 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 	}
 
 	@Override
-	public boolean hasTableGroup() {
-		return false;
-	}
-
-	@Override
-	public DomainResultAssembler<?> createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		final NavigablePath navigablePath = getNavigablePath();
-		final Initializer entityInitializer = creationState.resolveInitializer(
-				navigablePath,
-				getEntityValuedModelPart(),
-				() -> buildEntityDelayedFetchInitializer(
-						parentAccess,
-						navigablePath,
-						(ToOneAttributeMapping) getEntityValuedModelPart(),
-						selectByUniqueKey,
-						keyResult.createResultAssembler( parentAccess, creationState )
-				)
-		);
-
-		return buildEntityAssembler( entityInitializer );
-	}
-
-	protected EntityAssembler buildEntityAssembler(Initializer entityInitializer) {
-		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer.asEntityInitializer() );
-	}
-
-	protected Initializer buildEntityDelayedFetchInitializer(FetchParentAccess parentAccess, NavigablePath navigablePath, ToOneAttributeMapping entityValuedModelPart, boolean selectByUniqueKey, DomainResultAssembler<?> resultAssembler) {
+	public EntityInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
 		return new EntityDelayedFetchInitializer(
 				parentAccess,
-				navigablePath,
-				entityValuedModelPart,
-				selectByUniqueKey,
-				resultAssembler
+				getNavigablePath(),
+				getEntityValuedModelPart(),
+				isSelectByUniqueKey(),
+				getKeyResult().createResultAssembler( parentAccess, creationState )
 		);
 	}
 }

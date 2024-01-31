@@ -90,6 +90,10 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 		if (value instanceof Reader) {
 			return DataHelper.extractString( ( (Reader) value ) ).toCharArray();
 		}
+		else if ( value instanceof Character ) {
+			// Support binding a single element as parameter value
+			return new char[]{ (char) value };
+		}
 		throw unknownWrap( value.getClass() );
 	}
 

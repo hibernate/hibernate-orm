@@ -6,6 +6,8 @@
  */
 package org.hibernate.type;
 
+import java.util.Objects;
+
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -97,5 +99,19 @@ public class ConvertedBasicArrayType<T,S,E>
 	@Override
 	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return o == this || super.equals( o )
+				&& o instanceof ConvertedBasicArrayType<?, ?, ?>
+				&& Objects.equals( converter, ( (ConvertedBasicArrayType<?, ?, ?>) o ).converter );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + converter.hashCode();
+		return result;
 	}
 }

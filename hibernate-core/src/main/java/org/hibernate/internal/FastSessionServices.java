@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -24,6 +25,8 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.internal.EmptyEventManager;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -68,6 +71,7 @@ import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -157,7 +161,7 @@ public final class FastSessionServices {
 	final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
 	final boolean requiresMultiTenantConnectionProvider;
 	final ConnectionProvider connectionProvider;
-	final MultiTenantConnectionProvider multiTenantConnectionProvider;
+	final MultiTenantConnectionProvider<Object> multiTenantConnectionProvider;
 	final ClassLoaderService classLoaderService;
 	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
 	public final JdbcServices jdbcServices;
@@ -182,6 +186,8 @@ public final class FastSessionServices {
 	private final FormatMapper jsonFormatMapper;
 	private final FormatMapper xmlFormatMapper;
 	private final MutationExecutorService mutationExecutorService;
+	private final JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
+	private final EventManager eventManager;
 
 	FastSessionServices(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
@@ -250,6 +256,8 @@ public final class FastSessionServices {
 		this.transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
 		this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		this.entityCopyObserverFactory = serviceRegistry.getService( EntityCopyObserverFactory.class );
+		this.jdbcValuesMappingProducerProvider = serviceRegistry.getService( JdbcValuesMappingProducerProvider.class );
+
 
 		this.isJtaTransactionAccessible = isTransactionAccessible( sessionFactory, transactionCoordinatorBuilder );
 
@@ -265,6 +273,10 @@ public final class FastSessionServices {
 		this.jsonFormatMapper = sessionFactoryOptions.getJsonFormatMapper();
 		this.xmlFormatMapper = sessionFactoryOptions.getXmlFormatMapper();
 		this.batchBuilder = serviceRegistry.getService( BatchBuilder.class );
+		final Collection<EventManager> eventManagers = classLoaderService.loadJavaServices( EventManager.class );
+		this.eventManager = eventManagers.isEmpty()
+				? new EmptyEventManager()
+				: eventManagers.iterator().next();
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
@@ -367,6 +379,14 @@ public final class FastSessionServices {
 
 	public ConnectionObserverStatsBridge getDefaultJdbcObserver() {
 		return defaultJdbcObservers;
+	}
+
+	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
+		return this.jdbcValuesMappingProducerProvider;
+	}
+
+	public EventManager getEventManager() {
+		return eventManager;
 	}
 
 	public boolean useStreamForLobBinding() {

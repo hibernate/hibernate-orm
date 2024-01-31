@@ -94,11 +94,6 @@ public class OneToMany implements Value {
 	public void createUniqueKey() {
 	}
 
-	@Deprecated
-	public Iterator<Selectable> getColumnIterator() {
-		return associatedClass.getKey().getColumnIterator();
-	}
-
 	@Override
 	public List<Selectable> getSelectables() {
 		return associatedClass.getKey().getSelectables();

@@ -13,7 +13,6 @@ import org.hibernate.SessionBuilder;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -31,6 +30,7 @@ import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 
@@ -45,7 +45,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSes
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantConnectionProvider, C extends ConnectionProvider & Stoppable> extends BaseUnitTestCase {
+public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantConnectionProvider<String>, C extends ConnectionProvider> extends BaseUnitTestCase {
 	protected C acmeProvider;
 	protected C jbossProvider;
 
@@ -65,7 +65,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 
-		serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				// Make sure to continue configuring the MultiTenantConnectionProvider by adding a service,
 				// rather than by setting 'hibernate.multi_tenant_connection_provider':
@@ -142,10 +142,10 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 			serviceRegistry.destroy();
 		}
 		if ( jbossProvider != null ) {
-			jbossProvider.stop();
+			( (Stoppable) jbossProvider ).stop();
 		}
 		if ( acmeProvider != null ) {
-			acmeProvider.stop();
+			( (Stoppable) acmeProvider ).stop();
 		}
 	}
 
@@ -270,7 +270,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 	protected SessionBuilder newSession(String tenant) {
 		return sessionFactory
 			.withOptions()
-			.tenantIdentifier( tenant );
+			.tenantIdentifier( (Object) tenant );
 	}
 
 	private SessionBuilder jboss() {

@@ -147,6 +147,11 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
 	public Integer getScale() {
 		return null;
 	}
@@ -178,10 +183,10 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 
 	@Override
 	public String getContainingTableExpression() {
-		throw new UnsupportedOperationException();
+//		throw new UnsupportedOperationException();
 //		// this *should* only be used to create the sql-expression key, so just
 //		// using the primary table expr should be fine
-//		return entityDescriptor.getRootTableName();
+		return getEntityDescriptor().getMappedTableDetails().getTableName();
 	}
 
 	@Override

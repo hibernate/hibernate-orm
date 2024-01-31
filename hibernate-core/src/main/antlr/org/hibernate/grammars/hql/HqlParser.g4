@@ -55,14 +55,14 @@ targetEntity
  * A 'delete' statement
  */
 deleteStatement
-	: DELETE FROM? targetEntity whereClause?
+	: DELETE FROM? entityWithJoins whereClause?
 	;
 
 /**
  * An 'update' statement
  */
 updateStatement
-	: UPDATE VERSIONED? targetEntity setClause whereClause?
+	: UPDATE VERSIONED? entityWithJoins setClause whereClause?
 	;
 
 /**
@@ -83,7 +83,7 @@ assignment
  * An 'insert' statement
  */
 insertStatement
-	: INSERT INTO? targetEntity targetFields (queryExpression | valuesList)
+	: INSERT INTO? targetEntity targetFields (queryExpression | valuesList) conflictClause?
 	;
 
 /**
@@ -105,6 +105,18 @@ valuesList
  */
 values
 	: LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)* RIGHT_PAREN
+	;
+
+/**
+ * a 'conflict' clause in an 'insert' statement
+ */
+conflictClause: ON CONFLICT conflictTarget? conflictAction;
+conflictTarget
+	: ON CONSTRAINT identifier
+	| LEFT_PAREN simplePath (COMMA simplePath)* RIGHT_PAREN;
+conflictAction
+	: DO NOTHING
+	| DO UPDATE setClause whereClause?
 	;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -611,6 +623,7 @@ parameterOrIntegerLiteral
 parameterOrNumberLiteral
 	: parameter
 	| INTEGER_LITERAL
+	| LONG_LITERAL
 	| FLOAT_LITERAL
 	| DOUBLE_LITERAL
 	;
@@ -1006,7 +1019,7 @@ month: INTEGER_LITERAL;
 day: INTEGER_LITERAL;
 hour: INTEGER_LITERAL;
 minute: INTEGER_LITERAL;
-second: INTEGER_LITERAL | FLOAT_LITERAL;
+second: INTEGER_LITERAL | DOUBLE_LITERAL;
 zoneId
 	: IDENTIFIER (SLASH IDENTIFIER)?
 	| STRING_LITERAL;
@@ -1356,6 +1369,7 @@ trimSpecification
 
 trimCharacter
 	: STRING_LITERAL
+	| parameter
 	;
 
 /**
@@ -1599,6 +1613,8 @@ rollup
 	| CASE
 	| CAST
 	| COLLATE
+	| CONFLICT
+	| CONSTRAINT
 	| COUNT
 	| CROSS
 	| CUBE
@@ -1616,6 +1632,7 @@ rollup
 	| DEPTH
 	| DESC
 	| DISTINCT
+	| DO
 	| ELEMENT
 	| ELEMENTS
 	| ELSE
@@ -1689,6 +1706,7 @@ rollup
 	| NEXT
 	| NO
 	| NOT
+	| NOTHING
 	| NULLS
 	| OBJECT
 	| OF

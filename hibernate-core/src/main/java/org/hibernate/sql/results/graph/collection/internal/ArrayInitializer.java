@@ -6,7 +6,9 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -15,9 +17,15 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Chris Cranford
@@ -35,20 +43,25 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			PluralAttributeMapping arrayDescriptor,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler<?> collectionKeyAssembler,
-			DomainResultAssembler<?> collectionValueKeyAssembler,
-			DomainResultAssembler<Integer> listIndexAssembler,
-			DomainResultAssembler<?> elementAssembler) {
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			Fetch listIndexFetch,
+			Fetch elementFetch,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState) {
 		super(
 				navigablePath,
 				arrayDescriptor,
 				parentAccess,
 				lockMode,
-				collectionKeyAssembler,
-				collectionValueKeyAssembler
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer,
+				creationState
 		);
-		this.listIndexAssembler = listIndexAssembler;
-		this.elementAssembler = elementAssembler;
+		//noinspection unchecked
+		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
+		this.elementAssembler = elementFetch.createAssembler( this, creationState );
 		this.indexBase = getCollectionAttributeMapping().getIndexMetadata().getListIndexBase();
 	}
 
@@ -58,7 +71,13 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	public PersistentArrayHolder<?> getCollectionInstance() {
+	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
+		consumer.accept( listIndexAssembler );
+		consumer.accept( elementAssembler );
+	}
+
+	@Override
+	public @Nullable PersistentArrayHolder<?> getCollectionInstance() {
 		return (PersistentArrayHolder<?>) super.getCollectionInstance();
 	}
 
@@ -72,6 +91,11 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			throw new HibernateException( "Illegal null value for array index encountered while reading: "
 					+ getCollectionAttributeMapping().getNavigableRole() );
 		}
+		final Object element = elementAssembler.assemble( rowProcessingState );
+		if ( element == null ) {
+			// If element is null, then NotFoundAction must be IGNORE
+			return;
+		}
 		int index = indexValue;
 
 		if ( indexBase != 0 ) {
@@ -82,7 +106,27 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			loadingState.add( i, null );
 		}
 
-		loadingState.set( index, elementAssembler.assemble( rowProcessingState ) );
+		loadingState.set( index, element );
+	}
+
+	@Override
+	public void initializeInstanceFromParent(Object parentInstance, RowProcessingState rowProcessingState) {
+		final Object[] array = (Object[]) getInitializedPart().getValue( parentInstance );
+		assert array != null;
+		collectionInstance = new PersistentArrayHolder<>( rowProcessingState.getSession(), array );
+		state = State.INITIALIZED;
+		initializeSubInstancesFromParent( rowProcessingState );
+	}
+
+	@Override
+	protected void initializeSubInstancesFromParent(RowProcessingState rowProcessingState) {
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final Iterator iter = getCollectionInstance().elements();
+			while ( iter.hasNext() ) {
+				initializer.initializeInstanceFromParent( iter.next(), rowProcessingState );
+			}
+		}
 	}
 
 	@Override

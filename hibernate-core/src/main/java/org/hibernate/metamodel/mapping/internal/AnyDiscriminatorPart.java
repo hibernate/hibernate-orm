@@ -41,6 +41,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -180,6 +181,11 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	@Override
 	public Integer getPrecision() {
 		return precision;
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
+		return null;
 	}
 
 	@Override
@@ -334,20 +340,19 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		return FetchTiming.IMMEDIATE;
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// NOTE : the following are "unsupported" because handling for any-mapping
-	// discriminators into SQL AST is handled by outside code.  Consolidate
-	// with `EntityDiscriminatorMapping` to use these contracts for any-mapping
-	// discriminators as well.
-
 	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException();
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				jdbcMapping(),
+				navigablePath
+		);
 	}
 
 	@Override
@@ -356,7 +361,11 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		throw new UnsupportedOperationException();
+		return creationState.getSqlExpressionResolver().resolveSqlExpression( tableGroup.resolveTableReference(
+				navigablePath,
+				this,
+				getContainingTableExpression()
+		), this );
 	}
 
 	@Override
@@ -364,7 +373,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException();
+		resolveSqlSelection( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
@@ -373,6 +382,19 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		throw new UnsupportedOperationException();
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, creationState ), getJdbcMapping() );
+	}
+
+	private SqlSelection resolveSqlSelection(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		return sqlAstCreationState.getSqlExpressionResolver().resolveSqlSelection(
+				resolveSqlExpression( navigablePath, null, tableGroup, sqlAstCreationState ),
+				jdbcMapping().getJdbcJavaType(),
+				null,
+				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+		);
 	}
 }

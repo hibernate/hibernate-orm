@@ -91,8 +91,12 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 
 	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
-		//noinspection unchecked
-		return (EntityDomainType<S>) wrappedPath.getReferencedPathSource();
+		return treatTarget;
+	}
+
+	@Override
+	public SqmPathSource<?> getResolvedModel() {
+		return treatTarget;
 	}
 
 	@Override

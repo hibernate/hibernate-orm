@@ -9,10 +9,14 @@ package org.hibernate.dialect.unique;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UniqueKey;
 
-import static org.hibernate.mapping.Index.buildSqlCreateIndexString;
-import static org.hibernate.mapping.Index.buildSqlDropIndexString;
+import java.util.List;
+import java.util.Map;
+
+import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
  * A {@link UniqueDelegate} which uses {@code create unique index} commands when necessary.
@@ -36,15 +40,34 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
 		if ( uniqueKey.hasNullableColumn() ) {
-			return buildSqlCreateIndexString(
-					context,
-					uniqueKey.getName(),
-					uniqueKey.getTable(),
-					uniqueKey.getColumns(),
-					uniqueKey.getColumnOrderMap(),
-					true,
-					metadata
-			);
+			final Dialect dialect = context.getDialect();
+			final String name = uniqueKey.getName();
+			final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
+			final List<Column> columns = uniqueKey.getColumns();
+			final Map<Column, String> columnOrderMap = uniqueKey.getColumnOrderMap();
+			final StringBuilder statement =
+					new StringBuilder( dialect.getCreateIndexString( true ) )
+							.append( " " )
+							.append( dialect.qualifyIndexName() ? name : unqualify( name ) )
+							.append( " on " )
+							.append( tableName )
+							.append( " (" );
+			boolean first = true;
+			for ( Column column : columns ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					statement.append(", ");
+				}
+				statement.append( column.getQuotedName(dialect) );
+				if ( columnOrderMap.containsKey( column ) ) {
+					statement.append( " " ).append( columnOrderMap.get( column ) );
+				}
+			}
+			statement.append( ")" );
+			statement.append( dialect.getCreateIndexTail( true, columns ) );
+			return statement.toString();
 		}
 		else {
 			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, metadata, context );
@@ -55,13 +78,12 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
 		if ( uniqueKey.hasNullableColumn() ) {
-			return buildSqlDropIndexString(
-					uniqueKey.getName(),
-					context.format( uniqueKey.getTable().getQualifiedTableName() )
-			);
+			final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
+			return "drop index " + qualify( tableName, uniqueKey.getName() );
 		}
 		else {
 			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata, context );
 		}
 	}
+
 }

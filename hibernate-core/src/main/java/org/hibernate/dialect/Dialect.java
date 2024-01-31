@@ -444,12 +444,35 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARBINARY ) );
 
 		if ( supportsStandardArrays() ) {
-			ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
+			ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
+		}
+		if ( rowId( null ) != null ) {
+			ddlTypeRegistry.addDescriptor( simpleSqlType( ROWID ) );
+		}
+	}
+
+	protected boolean isLob(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case LONG32VARBINARY:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+			case BLOB:
+			case CLOB:
+			case NCLOB:
+				return true;
+			default:
+				return false;
 		}
 	}
 
 	private DdlTypeImpl simpleSqlType(int sqlTypeCode) {
-		return new DdlTypeImpl( sqlTypeCode, columnType( sqlTypeCode ), castType( sqlTypeCode ), this );
+		return new DdlTypeImpl(
+				sqlTypeCode,
+				isLob( sqlTypeCode ),
+				columnType( sqlTypeCode ),
+				castType( sqlTypeCode ),
+				this
+		);
 	}
 
 	/**
@@ -463,6 +486,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	private CapacityDependentDdlType.Builder sqlTypeBuilder(int sqlTypeCode, int biggestSqlTypeCode, int castTypeCode) {
 		return CapacityDependentDdlType.builder(
 				sqlTypeCode,
+				isLob( sqlTypeCode )
+						? CapacityDependentDdlType.LobKind.ALL_LOB
+						: isLob( biggestSqlTypeCode )
+								? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+								: CapacityDependentDdlType.LobKind.NONE,
 				columnType( biggestSqlTypeCode ),
 				castType( castTypeCode ),
 				this
@@ -510,6 +538,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
+			case ROWID:
+				return "rowid";
+
 			case BOOLEAN:
 				return "boolean";
 
@@ -1453,11 +1484,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @param specification {@code leading} or {@code trailing}
 	 * @param character the character to trim
+	 *
+	 * @deprecated Use {@link #trimPattern(TrimSpec, boolean)} instead.
 	 */
+	@Deprecated( forRemoval = true )
 	public String trimPattern(TrimSpec specification, char character) {
-		return character == ' '
-				? "trim(" + specification + " from ?1)"
-				: "trim(" + specification + " '" + character + "' from ?1)";
+		return trimPattern( specification, character == ' ' );
+	}
+
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code trim()} function call. The resulting
+	 * pattern must contain a ?1 placeholder for the
+	 * argument of type {@link String} and a ?2 placeholder
+	 * for the trim character if {@code isWhitespace}
+	 * was false.
+	 *
+	 * @param specification {@linkplain TrimSpec#LEADING leading}, {@linkplain TrimSpec#TRAILING trailing}
+	 * or {@linkplain TrimSpec#BOTH both}
+	 * @param isWhitespace {@code true} if the trim character is a whitespace and can be omitted,
+	 * {@code false} if it must be explicit and a ?2 placeholder should be included in the pattern
+	 */
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return "trim(" + specification + ( isWhitespace ? "" : " ?2" ) + " from ?1)";
 	}
 
 	/**
@@ -2207,6 +2256,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
+	}
+
+	protected int getTimeoutInSeconds(int millis) {
+		return millis == 0 ? 0 : Math.max( 1, Math.round( millis / 1e3f ) );
 	}
 
 
@@ -4007,13 +4060,39 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *         {@code false} if {@code InsertReturningDelegate} does not work, or only
 	 *         works for specialized identity/"autoincrement" columns
 	 *
-	 * @see org.hibernate.generator.OnExecutionGenerator#getGeneratedIdentifierDelegate
 	 * @see org.hibernate.id.insert.InsertReturningDelegate
 	 *
 	 * @since 6.2
 	 */
 	public boolean supportsInsertReturning() {
 		return false;
+	}
+
+	/**
+	 * Does this dialect supports returning the {@link org.hibernate.annotations.RowId} column
+	 * after execution of an {@code insert} statement, using native SQL syntax?
+	 *
+	 * @return {@code true} is the dialect supports returning the rowid column
+	 *
+	 * @see #supportsInsertReturning()
+	 * @since 6.5
+	 */
+	public boolean supportsInsertReturningRowId() {
+		return supportsInsertReturning();
+	}
+
+	/**
+	 * Does this dialect fully support returning arbitrary generated column values
+	 * after execution of an {@code update} statement, using native SQL syntax?
+	 * <p>
+	 * Defaults to the value of {@link #supportsInsertReturning()} but can be overridden
+	 * to explicitly disable this for updates.
+	 *
+	 * @see #supportsInsertReturning()
+	 * @since 6.5
+	 */
+	public boolean supportsUpdateReturning() {
+		return supportsInsertReturning();
 	}
 
 	/**
@@ -4037,6 +4116,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public boolean supportsInsertReturningGeneratedKeys() {
 		return false;
 	}
+
+	/**
+	 * Does this dialect require unquoting identifiers when passing them to the
+	 * {@link Connection#prepareStatement(String, String[])} JDBC method.
+	 *
+	 * @see Dialect#supportsInsertReturningGeneratedKeys()
+	 */
+	public boolean unquoteGetGeneratedKeys() {
+		return false;
+	}
+
 	/**
 	 * Does this dialect support the given {@code FETCH} clause type.
 	 *
@@ -4325,6 +4415,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support the {@code conflict} clause for insert statements
+	 * that appear in a CTE?
+	 *
+	 * @return {@code true} if {@code conflict} clause is supported
+	 * @since 6.5
+	 */
+	public boolean supportsConflictClauseForInsertCTE() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect support {@code values} lists of form
 	 * {@code VALUES (1), (2), (3)}?
 	 *
@@ -4343,6 +4444,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsValuesListForInsert() {
 		return true;
+	}
+
+	/**
+	 * Does this dialect support the {@code from} clause for update statements?
+	 *
+	 * @return {@code true} if {@code from} clause is supported
+	 * @since 6.5
+	 */
+	public boolean supportsFromClauseInUpdate() {
+		return false;
 	}
 
 	/**
@@ -4669,6 +4780,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect round a temporal when converting from a precision higher to a lower one?
+	 *
+	 * @return true if rounding is applied, false if truncation is applied
+	 */
+	public boolean doesRoundTemporalOnOverflow() {
+		return true;
+	}
+
+	/**
 	 * This is the default precision for a generated
 	 * column mapped to a Java {@link Float} or
 	 * {@code float}. That is, a value representing
@@ -4918,6 +5038,31 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Whether this Dialect supports {@linkplain PreparedStatement#addBatch() batch updates}.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not; {@code null} indicates
+	 * it might and that database-metadata should be consulted.
+	 *
+	 * @see org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData#supportsBatchUpdates
+	 */
+	public Boolean supportsBatchUpdates() {
+		// are there any databases/drivers which don't?
+		return true;
+	}
+
+	/**
+	 * Whether this Dialect supports the JDBC {@link java.sql.Types#REF_CURSOR} type.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not; {@code null} indicates
+	 * it might and that database-metadata should be consulted
+	 *
+	 * @see org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData#supportsRefCursors
+	 */
+	public Boolean supportsRefCursors() {
+		return null;
+	}
+
+	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.
 	 * <p>
@@ -4983,7 +5128,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
-						throw new IllegalArgumentException("scale has no meaning for floating point numbers");
+						throw new IllegalArgumentException("scale has no meaning for SQL floating point types");
 					}
 					// but if the user explicitly specifies a precision, we need to convert it:
 					if ( precision != null ) {
@@ -5001,7 +5146,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
-						throw new IllegalArgumentException("scale has no meaning for timestamps");
+						throw new IllegalArgumentException("scale has no meaning for SQL time or timestamp types");
 					}
 					break;
 				case SqlTypes.NUMERIC:
@@ -5330,5 +5475,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.NONE;
+	}
+
+	/**
+	 * Resolves the default scale for a {@link SqlTypes.INTERVAL_SECOND} type code for the given column
+	 * <p>
+	 * Usually 9 (nanosecond) or 6 (microseconds).
+	 *
+	 * @return the default scale, in decimal digits,
+	 *         of the fractional seconds field
+	 */
+	public int getDefaultIntervalSecondScale(){
+		// The default scale necessary is 9 i.e. nanosecond resolution
+		return 9;
 	}
 }

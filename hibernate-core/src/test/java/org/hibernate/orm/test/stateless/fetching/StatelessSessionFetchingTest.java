@@ -105,13 +105,14 @@ public class StatelessSessionFetchingTest {
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user" );
-					final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-					while ( scrollableResults.next() ) {
-						Task taskRef = (Task) scrollableResults.get();
-						assertTrue( Hibernate.isInitialized( taskRef ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
-						assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
+						while ( scrollableResults.next() ) {
+							Task taskRef = (Task) scrollableResults.get();
+							assertTrue( Hibernate.isInitialized( taskRef ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
+							assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+						}
 					}
 				}
 		);
@@ -148,13 +149,14 @@ public class StatelessSessionFetchingTest {
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user" );
-					final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-					while ( scrollableResults.next() ) {
-						Task taskRef = (Task) scrollableResults.get();
-						assertTrue( Hibernate.isInitialized( taskRef ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
-						assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
+						while ( scrollableResults.next() ) {
+							Task taskRef = (Task) scrollableResults.get();
+							assertTrue( Hibernate.isInitialized( taskRef ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
+							assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+						}
 					}
 				}
 		);
@@ -189,39 +191,21 @@ public class StatelessSessionFetchingTest {
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "select p from Producer p join fetch p.products" );
-					final ScrollableResults scrollableResults = getScrollableResults(
-							query,
-							scope.getSessionFactory()
-									.getJdbcServices()
-									.getDialect()
-					);
+					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
 
-					while ( scrollableResults.next() ) {
-						Producer producer = (Producer) scrollableResults.get();
-						assertTrue( Hibernate.isInitialized( producer ) );
-						assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
+						while ( scrollableResults.next() ) {
+							Producer producer = (Producer) scrollableResults.get();
+							assertTrue( Hibernate.isInitialized( producer ) );
+							assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
 
-						for ( Product product : producer.getProducts() ) {
-							assertTrue( Hibernate.isInitialized( product ) );
-							assertFalse( Hibernate.isInitialized( product.getVendor() ) );
+							for ( Product product : producer.getProducts() ) {
+								assertTrue( Hibernate.isInitialized( product ) );
+								assertFalse( Hibernate.isInitialized( product.getVendor() ) );
+							}
 						}
 					}
 				}
 		);
-	}
-
-	private ScrollableResults getScrollableResults(Query query, Dialect dialect) {
-		if ( dialect instanceof DB2Dialect || dialect instanceof DerbyDialect ) {
-			/*
-				FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-				but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-				set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 */
-			return query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-		}
-		else {
-			return query.scroll( ScrollMode.FORWARD_ONLY );
-		}
 	}
 
 	@AfterEach

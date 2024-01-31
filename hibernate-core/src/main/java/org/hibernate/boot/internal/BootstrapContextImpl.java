@@ -40,7 +40,7 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -220,17 +220,17 @@ public class BootstrapContextImpl implements BootstrapContext {
 		return cacheRegionDefinitions == null ? Collections.emptyList() : cacheRegionDefinitions;
 	}
 
-	private final Map<String,BasicTypeImpl<?>> adHocBasicTypeRegistrations = new HashMap<>();
+	private final Map<String,BasicType<?>> adHocBasicTypeRegistrations = new HashMap<>();
 
 	@Override
-	public void registerAdHocBasicType(BasicTypeImpl<?> basicType) {
+	public void registerAdHocBasicType(BasicType<?> basicType) {
 		adHocBasicTypeRegistrations.put( basicType.getName(), basicType );
 	}
 
 	@Override
-	public <T> BasicTypeImpl<T> resolveAdHocBasicType(String key) {
+	public <T> BasicType<T> resolveAdHocBasicType(String key) {
 		//noinspection unchecked
-		return (BasicTypeImpl<T>) adHocBasicTypeRegistrations.get( key );
+		return (BasicType<T>) adHocBasicTypeRegistrations.get( key );
 	}
 
 	@Override

@@ -38,7 +38,7 @@ public class ColumnWriteFragment implements Expression {
 
 	public ColumnWriteFragment(String fragment, ColumnValueParameter parameter, JdbcMapping jdbcMapping) {
 		this( fragment, Collections.singletonList( parameter ), jdbcMapping );
-		assert parameter != null;
+		assert !fragment.contains( "?" ) || parameter != null;
 	}
 
 	public ColumnWriteFragment(String fragment, List<ColumnValueParameter> parameters, JdbcMapping jdbcMapping) {

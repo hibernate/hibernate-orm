@@ -42,7 +42,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	@Override
 	public final void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logNullBinding(
 						index,
 						jdbcType.getDefaultSqlTypeCode()
@@ -51,7 +51,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 			doBindNull( st, index, options );
 		}
 		else {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logBinding(
 						index,
 						jdbcType.getDefaultSqlTypeCode(),
@@ -65,7 +65,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	@Override
 	public final void bind(CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logNullBinding(
 						name,
 						jdbcType.getDefaultSqlTypeCode()
@@ -74,7 +74,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 			doBindNull( st, name, options );
 		}
 		else {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logBinding(
 						name,
 						jdbcType.getDefaultSqlTypeCode(),

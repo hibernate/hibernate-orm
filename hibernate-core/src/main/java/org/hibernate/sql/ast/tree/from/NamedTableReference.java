@@ -72,7 +72,7 @@ public class NamedTableReference extends AbstractTableReference {
 
 	@Override
 	public boolean containsAffectedTableName(String requestedName) {
-		return isEmpty( requestedName ) || getTableExpression().equals( requestedName );
+		return isEmpty( requestedName ) || getTableExpression().contains( requestedName );
 	}
 
 	@Override

@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,6 +17,8 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 
 /**
@@ -45,31 +46,6 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	@Override
-	public ResultSet extract(PreparedStatement statement) {
-		// IMPL NOTE : SQL logged by caller
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		try {
-			final ResultSet rs;
-			try {
-				jdbcExecuteStatementStart();
-				rs = statement.executeQuery();
-			}
-			finally {
-				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos, context() );
-			}
-			postExtract( rs, statement );
-			return rs;
-		}
-		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not extract ResultSet" );
-		}
-	}
-
-	@Override
 	public ResultSet extract(PreparedStatement statement, String sql) {
 		// IMPL NOTE : SQL logged by caller
 		long executeStartNanos = 0;
@@ -78,11 +54,14 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
+			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery();
 			}
 			finally {
+				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 			}
@@ -107,31 +86,6 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	@Override
-	public ResultSet extract(CallableStatement callableStatement) {
-		// IMPL NOTE : SQL logged by caller
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		try {
-			final ResultSet rs;
-			try {
-				jdbcExecuteStatementStart();
-				rs = dialect.getResultSet( callableStatement );
-			}
-			finally {
-				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( callableStatement, executeStartNanos, context() );
-			}
-			postExtract( rs, callableStatement );
-			return rs;
-		}
-		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not extract ResultSet" );
-		}
-	}
-
-	@Override
 	public ResultSet extract(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
 		long executeStartNanos = 0;
@@ -140,11 +94,14 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
+			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery( sql );
 			}
 			finally {
+				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 			}
@@ -157,36 +114,6 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	@Override
-	public ResultSet execute(PreparedStatement statement) {
-		// sql logged by StatementPreparerImpl
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		try {
-			final ResultSet rs;
-			try {
-				jdbcExecuteStatementStart();
-				if ( !statement.execute() ) {
-					while ( !statement.getMoreResults() && statement.getUpdateCount() != -1 ) {
-						// do nothing until we hit the resultset
-					}
-				}
-				rs = statement.getResultSet();
-			}
-			finally {
-				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos, context() );
-			}
-			postExtract( rs, statement );
-			return rs;
-		}
-		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not execute statement" );
-		}
-	}
-
-	@Override
 	public ResultSet execute(PreparedStatement statement, String sql) {
 		// sql logged by StatementPreparerImpl
 		long executeStartNanos = 0;
@@ -195,6 +122,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
+			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute() ) {
@@ -205,6 +134,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
+				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 			}
@@ -225,6 +155,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
+			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute( sql ) ) {
@@ -235,6 +167,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
+				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 			}
@@ -247,27 +180,6 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	@Override
-	public int executeUpdate(PreparedStatement statement) {
-		assert statement != null;
-
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		try {
-			jdbcExecuteStatementStart();
-			return statement.executeUpdate();
-		}
-		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not execute statement" );
-		}
-		finally {
-			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement, executeStartNanos, context() );
-		}
-	}
-
-	@Override
 	public int executeUpdate(PreparedStatement statement, String sql) {
 		assert statement != null;
 
@@ -275,6 +187,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();
 		}
+		final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
+		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate();
@@ -283,6 +197,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
+			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			jdbcExecuteStatementEnd();
 			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 		}
@@ -295,6 +210,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();
 		}
+		final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
+		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate( sql );
@@ -303,6 +220,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
+			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			jdbcExecuteStatementEnd();
 			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 		}

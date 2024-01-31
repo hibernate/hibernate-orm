@@ -64,6 +64,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
@@ -86,6 +87,7 @@ import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
@@ -134,6 +136,8 @@ public interface SemanticQueryWalker<T> {
 	T visitInsertSelectStatement(SqmInsertSelectStatement<?> statement);
 
 	T visitInsertValuesStatement(SqmInsertValuesStatement<?> statement);
+
+	T visitConflictClause(SqmConflictClause<?> sqmConflictClause);
 
 	T visitDeleteStatement(SqmDeleteStatement<?> statement);
 
@@ -282,6 +286,8 @@ public interface SemanticQueryWalker<T> {
 	T visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral);
 
 	T visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral);
+
+	<N extends Number> T visitHqlNumericLiteral(SqmHqlNumericLiteral<N> numericLiteral);
 
 	T visitTuple(SqmTuple<?> sqmTuple);
 

@@ -14,7 +14,6 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.property.access.spi.PropertyAccess;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -24,8 +23,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * as an optimisation when not needing any byte code optimisation applied,
  * for example when the entities have been enhanced at compile time.
  * Choosing this BytecodeProvider allows to exclude the bytecode enhancement
- * libraries from the runtime classpath, but is not compatible
- * with the option AvailableSettings#USE_REFLECTION_OPTIMIZER .
+ * libraries from the runtime classpath.
  *
  * @since 5.4
  */
@@ -42,12 +40,12 @@ public final class BytecodeProviderImpl implements BytecodeProvider {
 			String[] getterNames,
 			String[] setterNames,
 			Class[] types) {
-		throw new HibernateException( "Using the ReflectionOptimizer is not possible when the configured BytecodeProvider is 'none'. Disable " + AvailableSettings.USE_REFLECTION_OPTIMIZER + " or use a different BytecodeProvider");
+		throw new HibernateException( "Using the ReflectionOptimizer is not possible when the configured BytecodeProvider is 'none'. Use a different BytecodeProvider" );
 	}
 
 	@Override
 	public @Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap) {
-		throw new HibernateException( "Using the ReflectionOptimizer is not possible when the configured BytecodeProvider is 'none'. Disable " + AvailableSettings.USE_REFLECTION_OPTIMIZER + " or use a different BytecodeProvider");
+		throw new HibernateException( "Using the ReflectionOptimizer is not possible when the configured BytecodeProvider is 'none'. Use a different BytecodeProvider" );
 	}
 
 	@Override

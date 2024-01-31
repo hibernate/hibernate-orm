@@ -10,6 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -123,11 +124,13 @@ public class IdentifierGeneratorUtil {
 			);
 		}
 
-		return identifierGeneratorFactory.createIdentifierGenerator(
+		final Generator generator = identifierGeneratorFactory.createIdentifierGenerator(
 				simpleValue.getIdentifierGeneratorStrategy(),
 				simpleValue.getType(),
 				params
 		);
+
+		return generator;
 	}
 
 }

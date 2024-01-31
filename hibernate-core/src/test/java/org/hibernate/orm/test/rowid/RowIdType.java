@@ -25,7 +25,7 @@ public class RowIdType implements UserType<Object>{
 
 	@Override
 	public int getSqlType() {
-		return Types.JAVA_OBJECT;
+		return Types.ROWID;
 	}
 
 	public Class<Object> returnedClass() {

@@ -19,6 +19,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -58,7 +59,7 @@ public class NoDepthTests {
 	}
 
 	private static SessionFactoryImplementor buildSessionFactory(boolean configureMax) {
-		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
+		final StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 		registryBuilder.applySetting( FORMAT_SQL, "true" );
 		registryBuilder.applySetting( HBM2DDL_AUTO, Action.CREATE_DROP );
 
@@ -93,6 +94,7 @@ public class NoDepthTests {
 					HBM2DDL_AUTO, Action.CREATE_DROP,
 					FORMAT_SQL, "true"
 			);
+			ServiceRegistryUtil.applySettings( settings );
 
 			final EntityManagerFactory emf = createEntityManagerFactory( "fetch-depth", settings );
 			try ( final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class ) ) {

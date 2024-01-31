@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -57,7 +58,11 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, SqlAstTranslator<?> walker) {
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 		final Expression source = (Expression) arguments.get( 0 );
 		final JdbcMapping sourceMapping = source.getExpressionType().getSingleJdbcMapping();
 		final CastType sourceType = getCastType( sourceMapping );

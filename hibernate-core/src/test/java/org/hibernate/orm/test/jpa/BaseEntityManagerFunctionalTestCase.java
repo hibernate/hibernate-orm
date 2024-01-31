@@ -23,6 +23,7 @@ import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -35,9 +36,9 @@ import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableM
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 
@@ -187,6 +188,11 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		@Override
 		public void pushClassTransformer(EnhancementContext enhancementContext) {
 		}
+
+		@Override
+		public ClassTransformer getClassTransformer() {
+			return null;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -197,6 +203,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		if ( createSchema() ) {
 			settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
+		ServiceRegistryUtil.applySettings( settings );
 		settings.put( AvailableSettings.DIALECT, getDialect().getClass().getName() );
 		return settings;
 	}
@@ -238,12 +245,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		if ( !config.containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			config.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
+		ServiceRegistryUtil.applySettings( config );
 		addConfigOptions( config );
 		return config;
 	}

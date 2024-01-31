@@ -44,10 +44,8 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = { AbstractHANADialect.class, TiDBDialect.class},
-			comment = "MySQL (MyISAM) / Hana / TiDB do not support FK violation checking"
-	)
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "Hana do not support FK violation checking")
+	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB do not support FK violation checking")
 	public void testIntegrityViolation() {
 		final Session session = openSession();
 		session.beginTransaction();

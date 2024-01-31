@@ -15,10 +15,10 @@ import jakarta.persistence.ConstraintMode;
  */
 public class ConstraintModeMarshalling {
 	public static ConstraintMode fromXml(String name) {
-		return ConstraintMode.valueOf( name );
+		return name == null ? null : ConstraintMode.valueOf( name );
 	}
 
-	public static String toXml(ConstraintMode accessType) {
-		return accessType.name();
+	public static String toXml(ConstraintMode constraintMode) {
+		return constraintMode == null ? null : constraintMode.name();
 	}
 }

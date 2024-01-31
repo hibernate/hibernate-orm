@@ -25,6 +25,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -39,7 +40,7 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9599")
 	public void basicTest() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( TestEntity.class ).buildMetadata();
 			( (MetadataImplementor) metadata ).orderColumns( false );

@@ -168,6 +168,10 @@ public class ShortPrimitiveArrayJavaType extends AbstractArrayJavaType<short[], 
 			}
 			return wrapped;
 		}
+		else if ( value instanceof Short ) {
+			// Support binding a single element as parameter value
+			return new short[]{ (short) value };
+		}
 
 		throw unknownWrap( value.getClass() );
 	}

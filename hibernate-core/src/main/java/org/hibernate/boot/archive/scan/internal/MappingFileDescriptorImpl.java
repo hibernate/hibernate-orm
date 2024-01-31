@@ -6,13 +6,15 @@
  */
 package org.hibernate.boot.archive.scan.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class MappingFileDescriptorImpl implements MappingFileDescriptor {
+public class MappingFileDescriptorImpl implements MappingFileDescriptor, Serializable {
 	private final String name;
 	private final InputStreamAccess streamAccess;
 

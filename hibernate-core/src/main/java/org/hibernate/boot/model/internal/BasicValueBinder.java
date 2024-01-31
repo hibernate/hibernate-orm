@@ -72,6 +72,8 @@ import org.hibernate.type.descriptor.java.Immutability;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.JsonJavaType;
+import org.hibernate.type.descriptor.java.spi.XmlJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -216,6 +218,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	@Override
 	public TemporalType getTemporalPrecision() {
 		return temporalPrecision;
+	}
+
+	@Override
+	public boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return buildingContext.isPreferJavaTimeJdbcTypesEnabled();
 	}
 
 	@Override
@@ -433,7 +440,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			throw new MappingException( "idbag mapping missing @CollectionId" );
 		}
 
-		final boolean useDeferredBeanContainerAccess = buildingContext.getBuildingOptions().disallowExtensionsInCdi();
+		final boolean useDeferredBeanContainerAccess = !buildingContext.getBuildingOptions().isAllowExtensionsInCdi();
 		final ManagedBeanRegistry beanRegistry = getManagedBeanRegistry();
 
 		explicitBasicTypeName = null;
@@ -556,7 +563,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			temporalPrecision = mapKeyTemporalAnn.value();
 		}
 
-		final boolean useDeferredBeanContainerAccess = buildingContext.getBuildingOptions().disallowExtensionsInCdi();
+		final boolean useDeferredBeanContainerAccess = !buildingContext.getBuildingOptions().isAllowExtensionsInCdi();
 
 		explicitJdbcTypeAccess = typeConfiguration -> {
 			final MapKeyJdbcType jdbcTypeAnn = findAnnotation( mapAttribute, MapKeyJdbcType.class );
@@ -659,7 +666,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private void prepareListIndex(XProperty listAttribute) {
 		implicitJavaTypeAccess = typeConfiguration -> Integer.class;
 
-		final boolean useDeferredBeanContainerAccess = buildingContext.getBuildingOptions().disallowExtensionsInCdi();
+		final boolean useDeferredBeanContainerAccess = !buildingContext.getBuildingOptions().isAllowExtensionsInCdi();
 		final ManagedBeanRegistry beanRegistry = buildingContext
 				.getBootstrapContext()
 				.getServiceRegistry()
@@ -874,7 +881,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private void prepareAnyKey(XProperty modelXProperty) {
 		implicitJavaTypeAccess = (typeConfiguration) -> null;
 
-		final boolean useDeferredBeanContainerAccess = buildingContext.getBuildingOptions().disallowExtensionsInCdi();
+		final boolean useDeferredBeanContainerAccess = !buildingContext.getBuildingOptions().isAllowExtensionsInCdi();
 
 		explicitJavaTypeAccess = (typeConfiguration) -> {
 			final AnyKeyJavaType javaTypeAnn = findAnnotation( modelXProperty, AnyKeyJavaType.class );
@@ -931,7 +938,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			if ( jdbcTypeAnn != null ) {
 				final Class<? extends JdbcType> jdbcTypeClass = normalizeJdbcType( jdbcTypeAnn.value() );
 				if ( jdbcTypeClass != null ) {
-					if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+					if ( !buildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass );
 					}
 					return getManagedBeanRegistry().getBean( jdbcTypeClass ).getBeanInstance();
@@ -1050,7 +1057,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			return ImmutableMutabilityPlan.instance();
 		}
 
-		if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !buildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( mutability );
 		}
 
@@ -1065,7 +1072,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			if ( javaType != null ) {
 				final Class<? extends BasicJavaType<?>> javaTypeClass = normalizeJavaType( javaType.value() );
 				if ( javaTypeClass != null ) {
-					if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+					if ( !buildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
 					}
 					return getManagedBeanRegistry().getBean( javaTypeClass ).getBeanInstance();

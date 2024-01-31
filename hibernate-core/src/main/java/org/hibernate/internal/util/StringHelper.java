@@ -20,6 +20,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class StringHelper {
@@ -42,7 +43,7 @@ public final class StringHelper {
 		return string.length() - 1;
 	}
 
-	public static String join(String seperator, String[] strings) {
+	public static String join(String separator, String[] strings) {
 		int length = strings.length;
 		if ( length == 0 ) {
 			return "";
@@ -54,7 +55,7 @@ public final class StringHelper {
 		StringBuilder buf = new StringBuilder( length * firstStringLength )
 				.append( strings[0] );
 		for ( int i = 1; i < length; i++ ) {
-			buf.append( seperator ).append( strings[i] );
+			buf.append( separator ).append( strings[i] );
 		}
 		return buf.toString();
 	}
@@ -852,6 +853,22 @@ public final class StringHelper {
 			buffer.append( String.join(", ", renderer.render( value ) ) );
 		}
 		return buffer.toString();
+	}
+
+	public static String coalesce(@NonNull String fallbackValue, @NonNull String... values) {
+		for ( int i = 0; i < values.length; i++ ) {
+			if ( isNotEmpty( values[i] ) ) {
+				return values[i];
+			}
+		}
+		return fallbackValue;
+	}
+
+	public static String coalesce(@NonNull String fallbackValue, String value) {
+		if ( isNotEmpty( value ) ) {
+			return value;
+		}
+		return fallbackValue;
 	}
 
 	public interface Renderer<T> {

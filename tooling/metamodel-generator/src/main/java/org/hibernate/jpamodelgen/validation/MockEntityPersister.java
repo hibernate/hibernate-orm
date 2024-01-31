@@ -173,8 +173,8 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 	}
 
 	@Override
-	public Serializable[] getPropertySpaces() {
-		return new Serializable[] {entityName};
+	public String[] getPropertySpaces() {
+		return new String[] {entityName};
 	}
 
 	@Override

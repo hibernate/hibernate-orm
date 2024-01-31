@@ -161,7 +161,7 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 		return true;
 	}
 
-	default TableGroup findCompatibleJoinedGroup(
+	default TableGroupJoin findCompatibleJoin(
 			TableGroupJoinProducer joinProducer,
 			SqlAstJoinType requestedJoinType) {
 		// We don't look into nested table group joins as that wouldn't be "compatible"
@@ -178,15 +178,27 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 				// regardless of the join type or predicate since the LHS is the same table group
 				// If this is a left join though, we have to check if the predicate is simply the association predicate
 				if ( joinType == SqlAstJoinType.INNER || joinProducer.isSimpleJoinPredicate( join.getPredicate() ) ) {
-					return join.getJoinedGroup();
+					return join;
 				}
 			}
 		}
 		return null;
 	}
 
+	default TableGroup findCompatibleJoinedGroup(
+			TableGroupJoinProducer joinProducer,
+			SqlAstJoinType requestedJoinType) {
+		final TableGroupJoin compatibleJoin = findCompatibleJoin( joinProducer, requestedJoinType );
+		return compatibleJoin != null ? compatibleJoin.getJoinedGroup() : null;
+	}
+
 	default TableGroupJoin findTableGroupJoin(TableGroup tableGroup) {
 		for ( TableGroupJoin join : getTableGroupJoins() ) {
+			if ( join.getJoinedGroup() == tableGroup ) {
+				return join;
+			}
+		}
+		for ( TableGroupJoin join : getNestedTableGroupJoins() ) {
 			if ( join.getJoinedGroup() == tableGroup ) {
 				return join;
 			}
@@ -197,16 +209,23 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	default boolean hasRealJoins() {
 		for ( TableGroupJoin join : getTableGroupJoins() ) {
 			final TableGroup joinedGroup = join.getJoinedGroup();
-			if ( !( joinedGroup instanceof VirtualTableGroup ) || joinedGroup.hasRealJoins() ) {
+			if ( joinedGroup.isInitialized() && !joinedGroup.isVirtual() || joinedGroup.hasRealJoins() ) {
 				return true;
 			}
 		}
 		for ( TableGroupJoin join : getNestedTableGroupJoins() ) {
 			final TableGroup joinedGroup = join.getJoinedGroup();
-			if ( !( joinedGroup instanceof VirtualTableGroup ) || joinedGroup.hasRealJoins() ) {
+			if ( joinedGroup.isInitialized() && !joinedGroup.isVirtual() || joinedGroup.hasRealJoins() ) {
 				return true;
 			}
 		}
+		return false;
+	}
+
+	/**
+	 * Utility method that indicates weather this table group is {@linkplain VirtualTableGroup virtual} or not
+	 */
+	default boolean isVirtual() {
 		return false;
 	}
 }

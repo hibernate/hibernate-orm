@@ -406,7 +406,7 @@ public class DefaultNamingCollectionElementTest {
 		);
 		// The default owner join column can only be computed if it has a PK with 1 column.
 		assertEquals( 1, ownerCollection.getOwner().getKey().getColumnSpan() );
-		assertEquals( ownerForeignKeyNameExpected, ownerCollection.getKey().getColumnIterator().next().getText() );
+		assertEquals( ownerForeignKeyNameExpected, ownerCollection.getKey().getSelectables().get( 0 ).getText() );
 
 		boolean hasOwnerFK = false;
 		for (Iterator it = ownerCollection.getCollectionTable().getForeignKeys().values().iterator(); it.hasNext(); ) {

@@ -10,6 +10,8 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Encapsulates a JPA EntityGraph provided through a JPQL query hint.  Converts the fetches into a list of AST
  * FromElements.  The logic is kept here as much as possible in order to make it easy to remove this in the future,
@@ -28,12 +30,12 @@ public class EntityGraphQueryHint implements AppliedGraph {
 	}
 
 	@Override
-	public GraphSemantic getSemantic() {
+	public @Nullable GraphSemantic getSemantic() {
 		return delegate.getSemantic();
 	}
 
 	@Override
-	public RootGraphImplementor<?> getGraph() {
+	public @Nullable RootGraphImplementor<?> getGraph() {
 		return delegate.getGraph();
 	}
 }

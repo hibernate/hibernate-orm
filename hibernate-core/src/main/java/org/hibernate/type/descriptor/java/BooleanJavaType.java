@@ -16,6 +16,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 /**
  * Descriptor for {@link Boolean} handling.
  *
+ * @see org.hibernate.cfg.AvailableSettings#PREFERRED_BOOLEAN_JDBC_TYPE
+ *
  * @author Steve Ebersole
  */
 public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements

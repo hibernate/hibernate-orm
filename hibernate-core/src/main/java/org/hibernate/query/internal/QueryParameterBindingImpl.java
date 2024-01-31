@@ -9,6 +9,7 @@ package org.hibernate.query.internal;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -19,7 +20,6 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -119,7 +119,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 					coerced = value;
 				}
 			}
-			catch (CoercionException ce) {
+			catch (HibernateException ce) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Parameter value [%s] did not match expected type [%s]",
@@ -233,7 +233,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 				try {
 					coerced = coerce( value, bindType );
 				}
-				catch (CoercionException ex) {
+				catch (HibernateException ex) {
 					throw new IllegalArgumentException(
 							String.format(
 									"Parameter value [%s] did not match expected type [%s (%s)]",
@@ -277,6 +277,12 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 	@Override
 	public void setBindValues(Collection<? extends T> values) {
+		if ( !queryParameter.allowsMultiValuedBinding() ) {
+			throw new IllegalArgumentException(
+					"Illegal attempt to bind a collection value to a single-valued parameter"
+			);
+		}
+
 		this.isBound = true;
 		this.isMultiValued = true;
 

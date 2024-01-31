@@ -9,6 +9,7 @@ package org.hibernate.community.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.OracleArrayJdbcType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -36,10 +37,12 @@ import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -50,9 +53,11 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * A SQL AST translator for Oracle.
@@ -63,6 +68,54 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	public OracleLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	@Override
+	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitUpdateStatementEmulateInlineView( statement );
+		}
+		else {
+			renderUpdateClause( statement );
+			renderSetClause( statement.getAssignments() );
+			visitWhereClause( statement.getRestriction() );
+			visitReturningColumns( statement.getReturningColumns() );
+		}
+	}
+
+	@Override
+	protected void renderMergeUpdateClause(List<Assignment> assignments, Predicate wherePredicate) {
+		appendSql( " then update" );
+		renderSetClause( assignments );
+		visitWhereClause( wherePredicate );
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+			}
+		}
 	}
 
 	@Override
@@ -225,7 +278,14 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	protected void visitValuesList(List<Values> valuesList) {
-		visitValuesListEmulateSelectUnion( valuesList );
+		if ( valuesList.size() < 2 ) {
+			visitValuesListStandard( valuesList );
+		}
+		else {
+			// Oracle doesn't support a multi-values insert
+			// So we render a select union emulation instead
+			visitValuesListEmulateSelectUnion( valuesList );
+		}
 	}
 
 	@Override
@@ -454,7 +514,8 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 			return;
 		}
-		switch ( lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) {
+		final JdbcType jdbcType = lhsExpressionType.getSingleJdbcMapping().getJdbcType();
+		switch ( jdbcType.getDdlTypeCode() ) {
 			case SqlTypes.SQLXML:
 				// In Oracle, XMLTYPE is not "comparable", so we have to use the xmldiff function for this purpose
 				switch ( operator ) {
@@ -499,44 +560,57 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				appendSql( ')' );
 				break;
 			case SqlTypes.ARRAY:
+				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getTypeName();
 				switch ( operator ) {
 					case DISTINCT_FROM:
-						appendSql( "decode(" );
-						arrayToString( lhs );
-						appendSql( ',' );
-						arrayToString( rhs );
-						appendSql( ",0,1)=1" );
-						break;
 					case NOT_DISTINCT_FROM:
-						appendSql( "decode(" );
-						arrayToString( lhs );
+						appendSql( arrayTypeName );
+						appendSql( "_distinct(" );
+						visitSqlSelectExpression( lhs );
 						appendSql( ',' );
-						arrayToString( rhs );
-						appendSql( ",0,1)=0" );
+						visitSqlSelectExpression( rhs );
+						appendSql( ")" );
 						break;
 					default:
-						arrayToString( lhs );
-						appendSql( operator.sqlText() );
-						arrayToString( rhs );
+						appendSql( arrayTypeName );
+						appendSql( "_cmp(" );
+						visitSqlSelectExpression( lhs );
+						appendSql( ',' );
+						visitSqlSelectExpression( rhs );
+						appendSql( ")" );
+						break;
+				}
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "=1" );
+						break;
+					case NOT_DISTINCT_FROM:
+						appendSql( "=0" );
+						break;
+					case EQUAL:
+						appendSql( "=0" );
+						break;
+					case NOT_EQUAL:
+						appendSql( "<>0" );
+						break;
+					case LESS_THAN:
+						appendSql( "=-1" );
+						break;
+					case GREATER_THAN:
+						appendSql( "=1" );
+						break;
+					case LESS_THAN_OR_EQUAL:
+						appendSql( "<=0" );
+						break;
+					case GREATER_THAN_OR_EQUAL:
+						appendSql( ">=0" );
+						break;
 				}
 				break;
 			default:
 				renderComparisonEmulateDecode( lhs, operator, rhs );
 				break;
 		}
-	}
-
-	private void arrayToString(Expression expression) {
-		appendSql("case when ");
-		expression.accept( this );
-		appendSql(" is not null then (select listagg(column_value||',')");
-		if ( !getDialect().getVersion().isSameOrAfter( 18 ) ) {
-			// The within group clause became optional in 18
-			appendSql(" within group(order by rownum)");
-		}
-		appendSql("||';' from table(");
-		expression.accept( this );
-		appendSql(")) else null end");
 	}
 
 	@Override
@@ -601,13 +675,13 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from dual";
+	protected String getDual() {
+		return "dual";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 
 	private boolean supportsOffsetFetchClause() {

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -63,11 +64,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state == State.INITIALIZED ) {
-			return;
-		}
-		resolveKey( rowProcessingState, referencedModelPart, parentAccess );
-		if ( entityKey == null ) {
+		if ( state != State.KEY_RESOLVED ) {
 			return;
 		}
 		state = State.INITIALIZED;
@@ -129,6 +126,8 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 						final Object loadedInstance = loadInstance( entityKey, referencedModelPart, session );
 						for ( ParentInfo parentInfo : parentInfos ) {
 							final PersistenceContext persistenceContext = session.getPersistenceContext();
+							final EntityHolder holder = persistenceContext.getEntityHolder( parentInfo.initializerEntityKey );
+							final Object entity = holder.getEntity();
 							setInstance(
 									firstEntityInitializer,
 									referencedModelPart,
@@ -136,8 +135,8 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 									parentInfo.propertyIndex,
 									loadedInstance,
 									parentInfo.parentInstance,
-									parentInfo.initializerEntityKey,
-									persistenceContext.getEntry( persistenceContext.getEntity( parentInfo.initializerEntityKey ) ),
+									entity,
+									persistenceContext.getEntry( entity ),
 									session
 							);
 						}
@@ -154,7 +153,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			int propertyIndex,
 			Object loadedInstance,
 			Object embeddableParentInstance,
-			EntityKey parentEntityKey,
+			Object parentEntity,
 			EntityEntry parentEntityEntry,
 			SharedSessionContractImplementor session) {
 		referencedModelPart.getPropertyAccess().getSetter().set( embeddableParentInstance, loadedInstance );
@@ -162,7 +161,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 				entityInitializer,
 				rootEmbeddablePropertyName,
 				propertyIndex,
-				parentEntityKey,
+				parentEntity,
 				parentEntityEntry,
 				session
 		);
@@ -172,7 +171,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			EntityInitializer entityInitializer,
 			String rootEmbeddablePropertyName,
 			int propertyIndex,
-			EntityKey parentEntityKey,
+			Object parentEntity,
 			EntityEntry parentEntityEntry,
 			SharedSessionContractImplementor session) {
 		Object[] loadedState = parentEntityEntry.getLoadedState();
@@ -186,7 +185,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			 */
 			final EntityPersister entityDescriptor = entityInitializer.getEntityDescriptor();
 			final Object rootEmbeddable = entityDescriptor.getPropertyValue(
-					session.getPersistenceContext().getEntity( parentEntityKey ),
+					parentEntity,
 					rootEmbeddablePropertyName
 			);
 			loadedState[propertyIndex] = entityDescriptor.getPropertyType( rootEmbeddablePropertyName )

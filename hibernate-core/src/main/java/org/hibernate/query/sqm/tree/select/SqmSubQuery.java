@@ -154,7 +154,17 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	@Override
 	public Integer getTupleLength() {
 		final SqmSelectClause selectClause = getQuerySpec().getSelectClause();
-		return selectClause == null ? null : selectClause.getSelectionItems().size();
+		return selectClause != null ?
+				getTupleLength( selectClause.getSelectionItems() ) :
+				null;
+	}
+
+	private int getTupleLength(List<SqmSelectableNode<?>> selectionItems) {
+		int count = 0;
+		for ( SqmSelectableNode<?> selection : selectionItems ) {
+			count += selection.getTupleLength();
+		}
+		return count;
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -35,6 +36,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.FormatMapper;
 
 /**
@@ -213,8 +215,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return delegate.getCurrentTenantIdentifierResolver();
+	}
+
+	@Override
+	public JavaType<Object> getDefaultTenantIdentifierJavaType() {
+		return delegate.getDefaultTenantIdentifierJavaType();
 	}
 
 	@Override
@@ -245,6 +252,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isQueryCacheEnabled() {
 		return delegate.isQueryCacheEnabled();
+	}
+
+	@Override
+	public CacheLayout getQueryCacheLayout() {
+		return delegate.getQueryCacheLayout();
 	}
 
 	@Override
@@ -382,6 +394,10 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isCriteriaCopyTreeEnabled();
 	}
 
+	public boolean getNativeJdbcParametersIgnored() {
+		return delegate.getNativeJdbcParametersIgnored();
+	}
+
 	@Override
 	public JpaCompliance getJpaCompliance() {
 		return delegate.getJpaCompliance();
@@ -465,6 +481,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return delegate.getDefaultTimeZoneStorageStrategy();
+	}
+
+	@Override
+	public boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return delegate.isPreferJavaTimeJdbcTypesEnabled();
 	}
 
 	@Override

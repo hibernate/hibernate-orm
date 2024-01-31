@@ -14,6 +14,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class TestKeywordRecognition extends BaseUnitTestCase {
 
 	@Before
 	public void prepareServiveRegistry() {
-		serviceRegistry = new StandardServiceRegistryBuilder()
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
 				.build();
 	}

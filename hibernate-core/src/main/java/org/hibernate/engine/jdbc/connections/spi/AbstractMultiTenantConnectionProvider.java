@@ -20,9 +20,9 @@ import org.hibernate.service.UnknownUnwrapTypeException;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractMultiTenantConnectionProvider implements MultiTenantConnectionProvider {
+public abstract class AbstractMultiTenantConnectionProvider<T> implements MultiTenantConnectionProvider<T> {
 	protected abstract ConnectionProvider getAnyConnectionProvider();
-	protected abstract ConnectionProvider selectConnectionProvider(String tenantIdentifier);
+	protected abstract ConnectionProvider selectConnectionProvider(T tenantIdentifier);
 
 	@Override
 	public Connection getAnyConnection() throws SQLException {
@@ -35,12 +35,12 @@ public abstract class AbstractMultiTenantConnectionProvider implements MultiTena
 	}
 
 	@Override
-	public Connection getConnection(String tenantIdentifier) throws SQLException {
+	public Connection getConnection(T tenantIdentifier) throws SQLException {
 		return selectConnectionProvider( tenantIdentifier ).getConnection();
 	}
 
 	@Override
-	public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
+	public void releaseConnection(T tenantIdentifier, Connection connection) throws SQLException {
 		selectConnectionProvider( tenantIdentifier ).closeConnection( connection );
 	}
 

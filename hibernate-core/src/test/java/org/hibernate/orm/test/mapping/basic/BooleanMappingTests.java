@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.OracleDialect;
@@ -358,6 +359,7 @@ public class BooleanMappingTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10)
+	@SkipForDialect(dialectClass = AltibaseDialect.class)
 	public void testBooleanFunctionInPredicate(SessionFactoryScope scope) {
 		// Not strictly relevant to boolean mappings, but test that boolean
 		// functions work *in a* predicate after HHH-16182

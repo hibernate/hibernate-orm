@@ -14,6 +14,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -46,6 +47,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -74,6 +76,7 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
@@ -124,7 +127,7 @@ public class CockroachDialect extends Dialect {
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 22, 1 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 22, 2 );
 
 	protected final PostgreSQLDriverKind driverKind;
 
@@ -134,6 +137,14 @@ public class CockroachDialect extends Dialect {
 
 	public CockroachDialect(DialectResolutionInfo info) {
 		this( fetchDataBaseVersion( info ), PostgreSQLDriverKind.determineKind( info ) );
+		registerKeywords( info );
+	}
+
+	public CockroachDialect(DialectResolutionInfo info, String versionString) {
+		this(
+				versionString != null ? parseVersion( versionString ) : info.makeCopy(),
+				PostgreSQLDriverKind.determineKind( info )
+		);
 		registerKeywords( info );
 	}
 
@@ -147,10 +158,10 @@ public class CockroachDialect extends Dialect {
 		this.driverKind = driverKind;
 	}
 
-	protected static DatabaseVersion fetchDataBaseVersion( DialectResolutionInfo info ) {
+	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info) {
 		String versionString = null;
 		if ( info.getDatabaseMetadata() != null ) {
-			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {
+			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement()) {
 				final ResultSet rs = s.executeQuery( "SELECT version()" );
 				if ( rs.next() ) {
 					versionString = rs.getString( 1 );
@@ -160,7 +171,11 @@ public class CockroachDialect extends Dialect {
 				// Ignore
 			}
 		}
-		return parseVersion( versionString );
+		if ( versionString == null ) {
+			// default to the dialect-specific configuration setting
+			versionString = ConfigurationHelper.getString( COCKROACH_VERSION_STRING, info.getConfigurationValues() );
+		}
+		return versionString != null ? parseVersion( versionString ) : info.makeCopy();
 	}
 
 	public static DatabaseVersion parseVersion( String versionString ) {
@@ -354,7 +369,7 @@ public class CockroachDialect extends Dialect {
 		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
@@ -447,11 +462,30 @@ public class CockroachDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayContains_postgresql();
+		functionFactory.arrayOverlaps_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySet_unnest();
+		functionFactory.arrayRemove();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		functionFactory.arrayTrim_unnest();
+		functionFactory.arrayFill_cockroachdb();
+		functionFactory.arrayToString_postgresql();
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",
 				new PostgreSQLTruncFunction(
-						getVersion().isSameOrAfter( 22, 2 ),
+						true,
 						functionContributions.getTypeConfiguration()
 				)
 		);
@@ -535,6 +569,11 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsConflictClauseForInsertCTE() {
 		return true;
 	}
 
@@ -753,20 +792,23 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( intervalType != null ) {
-			return "(?2+?3)";
-		}
-		switch ( unit ) {
+		return intervalType != null
+				? "(?2+?3)"
+				: "cast(?3+" + intervalPattern( unit ) + " as " + temporalType.name().toLowerCase() + ")";
+	}
+
+	private static String intervalPattern(TemporalUnit unit) {
+		switch (unit) {
 			case NANOSECOND:
-				return "(?3+(?2)/1e3*interval '1 microsecond')";
+				return "(?2)/1e3*interval '1 microsecond'";
 			case NATIVE:
-				return "(?3+(?2)*interval '1 microsecond')";
+				return "(?2)*interval '1 second'";
 			case QUARTER: //quarter is not supported in interval literals
-				return "(?3+(?2)*interval '3 month')";
+				return "(?2)*interval '3 month'";
 			case WEEK: //week is not supported in interval literals
-				return "(?3+(?2)*interval '7 day')";
+				return "(?2)*interval '7 day'";
 			default:
-				return "(?3+(?2)*interval '1 ?1')";
+				return "(?2)*interval '1 " + unit + "'";
 		}
 	}
 
@@ -1076,6 +1118,38 @@ public class CockroachDialect extends Dialect {
 		};
 	}
 
+	/**
+	 * Applies the hints to the query string.
+	 *
+	 * The hints can be <a href="https://www.cockroachlabs.com/docs/v23.1/table-expressions#force-index-selection">index selection hints</a>
+	 * or <a href="https://www.cockroachlabs.com/docs/stable/sql-grammar#opt_join_hint">join hints</a>.
+	 * <p>
+	 * For index selection hints, use the format {@code <tablename>@{FORCE_INDEX=<index>[,<DIRECTION>]}}
+	 * where the optional DIRECTION is either ASC (ascending) or DESC (descending). Multiple index hints can be provided.
+	 * The effect is that in the final SQL statement the hint is added to the table name mentioned in the hint.
+	 *<p>
+	 * For join hints, use the format {@code "<MERGE|HASH|LOOKUP|INVERTED> JOIN"}. Only one join hint will be added. It is
+	 * applied to all join statements in the SQL statement.
+	 * <p>
+	 * Hints are only added to select statements.
+	 *
+	 * @param query The query to which to apply the hint.
+	 * @param hintList The hints to apply
+	 *
+	 * @return the query with hints added
+	 */
+	@Override
+	public String getQueryHintString(String query, List<String> hintList) {
+		return new CockroachDialectQueryHints(query, hintList).getQueryHintString();
+	}
+
+	@Override
+	public int getDefaultIntervalSecondScale() {
+		// The maximum scale for `interval second` is 6 unfortunately
+		return 6;
+	}
+
+
 // CockroachDB doesn't support this by default. See sql.multiple_modifications_of_table.enabled
 //
 //	@Override
@@ -1091,4 +1165,14 @@ public class CockroachDialect extends Dialect {
 //			RuntimeModelCreationContext runtimeModelCreationContext) {
 //		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 //	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
 }

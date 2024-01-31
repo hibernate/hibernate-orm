@@ -4,6 +4,7 @@
 :extrasdir: extras
 :originalextrasdir: ../chapters/domain/extras
 
+[appendix]
 [[basic-legacy]]
 == Legacy BasicType resolution
 

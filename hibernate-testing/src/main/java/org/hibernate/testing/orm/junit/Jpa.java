@@ -124,7 +124,7 @@ public @interface Jpa {
 	String[] xmlMappings() default {};
 
 	/**
-	 * Shorthand for adding {@code @Setting( name = AvailableSettings.STATEMENT_INSPECTOR, value = "org.hibernate.testing.jdbc.SQLStatementInspector"}
+	 * Shortcut for adding {@code @Setting( name = AvailableSettings.STATEMENT_INSPECTOR, value = "org.hibernate.testing.jdbc.SQLStatementInspector"}
 	 * to the integration settings.
 	 * Note: if the statement inspector is also explicitly specified as a setting, it will be overridden by the shortcut
 	 * @see SQLStatementInspector

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,10 +28,12 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.NoParamSqmCopyContext;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -455,4 +458,83 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 							"Please disable the JPA query compliance if you want to use this feature." );
 		}
 	}
+
+	@Override
+	public JpaCriteriaQuery<Long> createCountQuery() {
+		final SqmCopyContext context = new NoParamSqmCopyContext() {
+			@Override
+			public boolean copyFetchedFlag() {
+				return false;
+			}
+		};
+		final NodeBuilder nodeBuilder = nodeBuilder();
+		final Set<SqmParameter<?>> parameters;
+		if ( this.parameters == null ) {
+			parameters = null;
+		}
+		else {
+			parameters = new LinkedHashSet<>( this.parameters.size() );
+			for ( SqmParameter<?> parameter : this.parameters ) {
+				parameters.add( parameter.copy( context ) );
+			}
+		}
+		final SqmSelectStatement<Long> selectStatement = new SqmSelectStatement<>(
+				nodeBuilder,
+				copyCteStatements( context ),
+				Long.class,
+				SqmQuerySource.CRITERIA,
+				parameters
+		);
+		final SqmQuerySpec<Long> querySpec = new SqmQuerySpec<>( nodeBuilder );
+
+		final SqmSubQuery<Tuple> subquery = new SqmSubQuery<>( selectStatement, Tuple.class, nodeBuilder );
+		final SqmQueryPart<T> queryPart = getQueryPart().copy( context );
+		resetSelections( queryPart );
+		// Reset the
+		if ( queryPart.getFetch() == null && queryPart.getOffset() == null ) {
+			queryPart.setOrderByClause( null );
+		}
+		//noinspection unchecked
+		subquery.setQueryPart( (SqmQueryPart<Tuple>) queryPart );
+
+		querySpec.setFromClause( new SqmFromClause( 1 ) );
+		querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder ) );
+		selectStatement.setQueryPart( querySpec );
+		selectStatement.select( nodeBuilder.count( new SqmStar( nodeBuilder ) ) );
+		selectStatement.from( subquery );
+		return selectStatement;
+	}
+
+	private void resetSelections(SqmQueryPart<?> queryPart) {
+		if ( queryPart instanceof SqmQuerySpec<?> ) {
+			resetSelections( (SqmQuerySpec<?>) queryPart );
+		}
+		else {
+			final SqmQueryGroup<?> group = (SqmQueryGroup<?>) queryPart;
+			for ( SqmQueryPart<?> part : group.getQueryParts() ) {
+				resetSelections( part );
+			}
+		}
+	}
+
+	private void resetSelections(SqmQuerySpec<?> querySpec) {
+		final NodeBuilder nodeBuilder = nodeBuilder();
+		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
+		final List<SqmSelectableNode<?>> subSelections = new ArrayList<>();
+
+		if ( selections.isEmpty() ) {
+			subSelections.add( (SqmSelectableNode<?>) nodeBuilder.literal( 1 ).alias( "c0" ) );
+		}
+		else {
+			for ( SqmSelection<?> selection : selections ) {
+				selection.getSelectableNode().visitSubSelectableNodes( e -> {
+					e.alias( "c" + subSelections.size() );
+					subSelections.add( e );
+				} );
+			}
+		}
+
+		querySpec.getSelectClause().setSelection( (SqmSelectableNode<?>) nodeBuilder.tuple( subSelections ) );
+	}
+
 }

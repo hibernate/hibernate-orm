@@ -29,6 +29,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
@@ -55,7 +56,7 @@ public class NegativeValueSequenceTest {
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
@@ -103,7 +104,7 @@ public class NegativeValueSequenceTest {
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
@@ -152,7 +153,7 @@ public class NegativeValueSequenceTest {
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
@@ -200,7 +201,7 @@ public class NegativeValueSequenceTest {
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "none" )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
@@ -251,7 +252,7 @@ public class NegativeValueSequenceTest {
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
@@ -301,7 +302,7 @@ public class NegativeValueSequenceTest {
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 

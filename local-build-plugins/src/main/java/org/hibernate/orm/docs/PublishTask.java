@@ -6,11 +6,10 @@
  */
 package org.hibernate.orm.docs;
 
-import javax.inject.Inject;
-
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.Directory;
-import org.gradle.api.provider.Provider;
+import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -22,33 +21,39 @@ import org.hibernate.orm.ReleaseFamilyIdentifier;
  * @author Steve Ebersole
  */
 public abstract class PublishTask extends DefaultTask {
-	private final ReleaseFamilyIdentifier buildingFamily;
-	private final Provider<String> docServerUrl;
-	private final Provider<Directory> stagingDirectory;
+	public static final String UPLOAD_TASK_NAME = "uploadDocumentation";
 
-	@Inject
-	public PublishTask(DocumentationPublishing config) {
-		setGroup( "Release" );
+	private final Property<ReleaseFamilyIdentifier> buildingFamily;
+	private final Property<String> docServerUrl;
+	private final DirectoryProperty stagingDirectory;
+
+	public PublishTask() {
+		setGroup( "documentation" );
 		setDescription( "Publish documentation to the doc server" );
 
-		buildingFamily = config.getReleaseFamilyIdentifier();
-		stagingDirectory = config.getStagingDirectory();
-		docServerUrl = config.getDocServerUrl();
+		buildingFamily = getProject().getObjects().property( ReleaseFamilyIdentifier.class );
+		docServerUrl = getProject().getObjects().property( String.class );
+		stagingDirectory = getProject().getObjects().directoryProperty();
 	}
 
 	@Input
-	public Provider<String> getDocServerUrl() {
+	public Property<String> getDocServerUrl() {
 		return docServerUrl;
 	}
 
+	@Input
+	public Property<ReleaseFamilyIdentifier> getBuildingFamily() {
+		return buildingFamily;
+	}
+
 	@InputDirectory
-	public Provider<Directory> getStagingDirectory() {
+	public Property<Directory> getStagingDirectory() {
 		return stagingDirectory;
 	}
 
 	@TaskAction
 	public void uploadDocumentation() {
-		final String releaseFamily = buildingFamily.toExternalForm();
+		final String releaseFamily = buildingFamily.get().toExternalForm();
 		final String base = docServerUrl.get();
 		final String normalizedBase = base.endsWith( "/" ) ? base : base + "/";
 		final String url = normalizedBase + releaseFamily;

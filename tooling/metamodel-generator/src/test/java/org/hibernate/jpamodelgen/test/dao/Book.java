@@ -10,4 +10,5 @@ public class Book {
     @NaturalId String title;
     @NaturalId String author;
     String text;
+    int pages;
 }

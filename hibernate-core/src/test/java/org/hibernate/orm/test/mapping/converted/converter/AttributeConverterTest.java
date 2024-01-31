@@ -23,7 +23,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.BasicValue;
@@ -45,6 +44,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import jakarta.persistence.AttributeConverter;
@@ -75,6 +75,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	public void testErrorInstantiatingConverterClass() {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try {
 			cfg.addAttributeConverter( BlowsUpConverter.class );
 			try ( final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory() ) {
@@ -112,7 +113,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicOperation() {
-		try ( StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+		try ( StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			final JdbcTypeRegistry jdbcTypeRegistry = buildingContext.getBootstrapContext()
 					.getTypeConfiguration()
@@ -141,7 +142,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testNonAutoApplyHandling() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
@@ -167,7 +168,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicConverterApplication() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
@@ -199,7 +200,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8462")
 	public void testBasicOrmXmlConverterApplication() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
@@ -233,7 +234,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-14881")
 	public void testBasicOrmXmlConverterWithOrmXmlPackage() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
@@ -269,7 +270,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicConverterDisableApplication() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
@@ -300,6 +301,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	public void testBasicUsage() {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.addAttributeConverter( IntegerToVarcharConverter.class, false );
 		cfg.addAnnotatedClass( Tester4.class );
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
@@ -340,7 +342,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-14206" )
 	public void testPrimitiveTypeConverterAutoApplied() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
@@ -372,6 +374,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	public void testBasicTimestampUsage() {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.addAttributeConverter( InstantConverter.class, false );
 		cfg.addAnnotatedClass( IrrelevantInstantEntity.class );
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
@@ -404,6 +407,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@TestForIssue(jiraKey = "HHH-14021")
 	public void testBasicByteUsage() {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.addAttributeConverter( EnumToByteConverter.class, false );
 		cfg.addAnnotatedClass( Tester4.class );
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
@@ -444,7 +448,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8866")
 	public void testEnumConverter() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 
@@ -468,17 +472,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			final JdbcMapping jdbcMapping = (JdbcMapping) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor(), instanceOf( EnumJavaType.class ) );
-
-			final int expectedJdbcTypeCode;
-			if ( metadata.getDatabase().getDialect() instanceof HANAColumnStoreDialect
-					// Only for SAP HANA Cloud
-					&& metadata.getDatabase().getDialect().getVersion().isSameOrAfter( 4 ) ) {
-				expectedJdbcTypeCode = Types.NVARCHAR;
-			}
-			else {
-				expectedJdbcTypeCode = Types.VARCHAR;
-			}
-			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( expectedJdbcTypeCode ) ) );
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) ) );
 
 			// then lets build the SF and verify its use...
 			final SessionFactory sf = metadata.buildSessionFactory();

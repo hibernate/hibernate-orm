@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph;
 
+import java.util.BitSet;
+
 import org.hibernate.Incubating;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -27,6 +29,12 @@ public interface DomainResultGraphNode {
 	default boolean containsAnyNonScalarResults() {
 		return false;
 	}
+
+	/**
+	 * Collect the JDBC value indexes used by this domain result that should be cached.
+	 */
+	@Incubating
+	void collectValueIndexesToCache(BitSet valueIndexes);
 
 	// todo (6.0) : result variable (selection alias)?  - even fetches can have alias
 

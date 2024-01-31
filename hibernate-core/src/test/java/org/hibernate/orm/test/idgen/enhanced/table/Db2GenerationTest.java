@@ -22,6 +22,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.containsString;
@@ -32,7 +33,7 @@ public class Db2GenerationTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9850" )
 	public void testNewGeneratorTableCreationOnDb2() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, DB2Dialect.class.getName() )
 				.build();
 

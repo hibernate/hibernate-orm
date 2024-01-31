@@ -136,6 +136,10 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 				throw new HibernateException( "Unable to access lob stream", e );
 			}
 		}
+		else if ( value instanceof Byte ) {
+			// Support binding a single element as parameter value
+			return new byte[]{ (byte) value };
+		}
 
 		throw unknownWrap( value.getClass() );
 	}

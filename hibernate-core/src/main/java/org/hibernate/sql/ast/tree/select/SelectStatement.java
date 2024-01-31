@@ -39,21 +39,14 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 	}
 
 	public SelectStatement(QueryPart queryPart, List<DomainResult<?>> domainResults) {
-		this( new LinkedHashMap<>(), queryPart, domainResults );
+		this( null, queryPart, domainResults );
 	}
 
 	public SelectStatement(
 			CteContainer cteContainer,
 			QueryPart queryPart,
 			List<DomainResult<?>> domainResults) {
-		this( cteContainer.getCteStatements(), queryPart, domainResults );
-	}
-
-	public SelectStatement(
-			Map<String, CteStatement> cteStatements,
-			QueryPart queryPart,
-			List<DomainResult<?>> domainResults) {
-		super( cteStatements );
+		super( cteContainer );
 		this.queryPart = queryPart;
 		this.domainResults = domainResults;
 	}

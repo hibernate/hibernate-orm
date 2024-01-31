@@ -498,6 +498,80 @@ public class SqlTypes {
 	 */
 	public static final int TIME_UTC = 3007;
 
+
+	// Java Time (java.time) "virtual" JdbcTypes
+
+	/**
+	 * A type code representing a "virtual mapping" of {@linkplain java.time.Instant}
+	 * as a JDBC type using {@linkplain java.sql.ResultSet#getObject} and
+	 * {@linkplain java.sql.PreparedStatement#setObject} which JDBC requires compliant
+	 * drivers to support.
+	 *
+	 * @see org.hibernate.type.descriptor.jdbc.InstantJdbcType
+	 */
+	public static final int INSTANT = 3008;
+
+	/**
+	 * A type code representing a "virtual mapping" of {@linkplain java.time.LocalDateTime}
+	 * as a JDBC type using {@linkplain java.sql.ResultSet#getObject} and
+	 * {@linkplain java.sql.PreparedStatement#setObject} which JDBC requires compliant
+	 * drivers to support.
+	 *
+	 * @see org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType
+	 */
+	public static final int LOCAL_DATE_TIME = 3009;
+
+	/**
+	 * A type code representing a "virtual mapping" of {@linkplain java.time.LocalDate}
+	 * as a JDBC type using {@linkplain java.sql.ResultSet#getObject} and
+	 * {@linkplain java.sql.PreparedStatement#setObject} which JDBC requires compliant
+	 * drivers to support.
+	 *
+	 * @see org.hibernate.type.descriptor.jdbc.LocalDateJdbcType
+	 */
+	public static final int LOCAL_DATE = 3010;
+
+	/**
+	 * A type code representing a "virtual mapping" of {@linkplain java.time.LocalTime}
+	 * as a JDBC type using {@linkplain java.sql.ResultSet#getObject} and
+	 * {@linkplain java.sql.PreparedStatement#setObject} which JDBC requires compliant
+	 * drivers to support.
+	 *
+	 * @see org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType
+	 */
+	public static final int LOCAL_TIME = 3011;
+
+	/**
+	 * A type code representing a "virtual mapping" of {@linkplain java.time.OffsetDateTime}
+	 * as a JDBC type using {@linkplain java.sql.ResultSet#getObject} and
+	 * {@linkplain java.sql.PreparedStatement#setObject} which JDBC requires compliant
+	 * drivers to support.
+	 *
+	 * @see org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType
+	 */
+	public static final int OFFSET_DATE_TIME = 3012;
+
+	/**
+	 * A type code representing a "virtual mapping" of {@linkplain java.time.OffsetTime}
+	 * as a JDBC type using {@linkplain java.sql.ResultSet#getObject} and
+	 * {@linkplain java.sql.PreparedStatement#setObject} which JDBC requires compliant
+	 * drivers to support.
+	 *
+	 * @see org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType
+	 */
+	public static final int OFFSET_TIME = 3013;
+
+	/**
+	 * A type code representing a "virtual mapping" of {@linkplain java.time.ZonedDateTime}
+	 * as a JDBC type using {@linkplain java.sql.ResultSet#getObject} and
+	 * {@linkplain java.sql.PreparedStatement#setObject} which JDBC requires compliant
+	 * drivers to support.
+	 *
+	 * @see org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType
+	 */
+	public static final int ZONED_DATE_TIME = 3014;
+
+
 	// Interval types
 
 	/**
@@ -550,6 +624,16 @@ public class SqlTypes {
 	 * @since 6.3
 	 */
 	public static final int NAMED_ENUM = 6001;
+
+
+	/**
+	 * A type code representing an {@code embedding vector} type for databases like
+	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} that have special extensions.
+	 * An embedding vector essentially is a {@code float[]} with a fixed size.
+	 *
+	 * @since 6.4
+	 */
+	public static final int VECTOR = 10_000;
 
 	private SqlTypes() {
 	}
@@ -756,6 +840,7 @@ public class SqlTypes {
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 			case TIMESTAMP_UTC:
+			case INSTANT:
 				return true;
 			default:
 				return false;

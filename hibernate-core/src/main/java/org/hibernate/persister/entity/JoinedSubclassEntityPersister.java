@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.entity;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,7 +43,6 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
@@ -65,7 +63,6 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CompositeType;
@@ -76,7 +73,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
-import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
@@ -197,7 +193,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final Dialect dialect = creationContext.getDialect();
 		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
-		final BasicTypeRegistry basicTypeRegistry = creationContext.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
 		// DISCRIMINATOR
 
@@ -745,7 +741,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean needsDiscriminator() {
+	public boolean needsDiscriminator() {
 		return forceDiscriminator;
 	}
 
@@ -873,7 +869,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public Serializable[] getPropertySpaces() {
+	public String[] getPropertySpaces() {
 		return spaces; // don't need subclass tables, because they can't appear in conditions
 	}
 
@@ -1285,28 +1281,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		if ( hasSubclasses() ) {
-			final EntityResultJoinedSubclassImpl entityResultJoinedSubclass = new EntityResultJoinedSubclassImpl(
-					navigablePath,
-					this,
-					tableGroup,
-					resultVariable
-			);
-			entityResultJoinedSubclass.afterInitialize( entityResultJoinedSubclass, creationState );
-			//noinspection unchecked
-			return entityResultJoinedSubclass;
-		}
-		else {
-			return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
-		}
-	}
-
-	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
 		final Set<TableReference> retainedTableReferences = new HashSet<>( entityNameUses.size() );
 		final MappingMetamodelImplementor metamodel = getFactory().getRuntimeMetamodels().getMappingMetamodel();
@@ -1326,15 +1300,17 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				final String[] subclassTableNames = persister.getSubclassTableNames();
 				// Build the intersection of all tables names that are of the class or super class
 				// These are the tables that can be safely inner joined
-				if ( tablesToInnerJoin.isEmpty() ) {
-					for ( int i = 0; i < subclassTableNames.length; i++ ) {
-						if ( persister.isClassOrSuperclassTable[i] ) {
-							tablesToInnerJoin.add( subclassTableNames[i] );
-						}
+				final Set<String> classOrSuperclassTables = new HashSet<>( subclassTableNames.length );
+				for ( int i = 0; i < subclassTableNames.length; i++ ) {
+					if ( persister.isClassOrSuperclassTable[i] ) {
+						classOrSuperclassTables.add( subclassTableNames[i] );
 					}
 				}
+				if ( tablesToInnerJoin.isEmpty() ) {
+					tablesToInnerJoin.addAll( classOrSuperclassTables );
+				}
 				else {
-					tablesToInnerJoin.retainAll( Arrays.asList( subclassTableNames ) );
+					tablesToInnerJoin.retainAll( classOrSuperclassTables );
 				}
 				if ( useKind == EntityNameUse.UseKind.FILTER && explicitDiscriminatorColumnName == null ) {
 					// If there is no discriminator column,
@@ -1367,12 +1343,19 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			if ( mainTableReference != null ) {
 				retainedTableReferences.add( mainTableReference );
 			}
+			final String sqlWhereStringTableExpression = persister.getSqlWhereStringTableExpression();
+			if ( sqlWhereStringTableExpression != null ) {
+				final TableReference tableReference = tableGroup.getTableReference( sqlWhereStringTableExpression );
+				if ( tableReference != null ) {
+					retainedTableReferences.add( tableReference );
+				}
+			}
 			if ( needsDiscriminator() ) {
 				// We allow multiple joined subclasses to use the same table if they define a discriminator column.
 				// In this case, we might need to add a discriminator condition to make sure we filter the correct subtype,
 				// see SingleTableEntityPersister#pruneForSubclasses for more details on this condition
-				needsTreatDiscriminator = needsTreatDiscriminator || !persister.isAbstract() &&
-						!isTypeOrSuperType( persister ) && useKind == EntityNameUse.UseKind.TREAT;
+				needsTreatDiscriminator = needsTreatDiscriminator || !persister.isAbstract()
+						&& useKind == EntityNameUse.UseKind.TREAT && ( isInherited() || !isTypeOrSuperType( persister ) );
 			}
 		}
 		// If no tables to inner join have been found, we add at least the super class tables of this persister
@@ -1403,11 +1386,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						entityNameUses,
 						metamodel
 				);
-				for ( int i = 0; !applied && i < tableReferenceJoins.size(); i++ ) {
+				int i = 0;
+				for ( ; !applied && i < tableReferenceJoins.size(); i++ ) {
 					final TableReferenceJoin join = tableReferenceJoins.get( i );
 					applied = applyDiscriminatorPredicate( join, join.getJoinedTableReference(), entityNameUses, metamodel );
 				}
 				assert applied : "Could not apply treat discriminator predicate to root table join";
+				if ( i != 0 ) {
+					// Always retain the root table reference join where the discriminator was applied
+					retainedTableReferences.add( tableReferenceJoins.get( i - 1 ).getJoinedTableReference() );
+				}
 			}
 		}
 		if ( tableReferenceJoins.isEmpty() ) {

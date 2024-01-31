@@ -2,6 +2,8 @@ package org.hibernate.orm.test.version;
 
 import java.util.UUID;
 
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -44,7 +46,7 @@ public class VersionedBidirectionalOneToOneMergeTest {
 	@Entity(name = "TestEntity")
 	public static class TestEntity {
 		@Id
-		UUID uuid = UUID.randomUUID();
+		UUID uuid = SafeRandomUUIDGenerator.safeRandomUUID();
 
 		@Version
 		Long version;
@@ -64,7 +66,7 @@ public class VersionedBidirectionalOneToOneMergeTest {
 	@Entity(name = "AnotherTestEntity")
 	public static class AnotherTestEntity {
 		@Id
-		UUID uuid = UUID.randomUUID();
+		UUID uuid = SafeRandomUUIDGenerator.safeRandomUUID();
 
 		String name;
 

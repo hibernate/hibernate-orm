@@ -18,7 +18,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
-import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -182,7 +181,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
 
-		final Set<Class<?>> proxyInterfaces = new java.util.HashSet<>();
+		// HHH-17578 - We need to preserve the order of the interfaces to ensure
+		// that the most general @Proxy declared interface at the top of a class
+		// hierarchy will be used first when a HibernateProxy decides what it
+		// should implement.
+		final Set<Class<?>> proxyInterfaces = new java.util.LinkedHashSet<>();
 
 		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
 		Class<?> proxyInterface;
@@ -287,9 +290,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	private ReflectionOptimizer resolveReflectionOptimizer(BytecodeProvider bytecodeProvider) {
-		if ( ! Environment.useReflectionOptimizer() ) {
-			return null;
-		}
 		return bytecodeProvider.getReflectionOptimizer(
 				mappedJtd.getJavaTypeClass(),
 				propertyAccessMap

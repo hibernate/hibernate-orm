@@ -1,0 +1,3 @@
+:source-highlighter: rouge
+:icons: font
+:doctype: book

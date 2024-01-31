@@ -70,11 +70,11 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 				}
 			}
 			if ( containsCommentInCreateTableStatement( sqlStatement ) ) {
-				if ( getDialect().supportsCommentOn() && !getDialect().getTableComment( "comment snippet" ).equals( "" ) ) {
-					fail( "Added comment on create table statement when Dialect support create comment on table statement" );
+				if ( getDialect().supportsCommentOn() || getDialect().getTableComment( "comment snippet" ).isEmpty() ) {
+					found = true;
 				}
 				else {
-					found = true;
+					fail( "Generated comment on create table statement, but Dialect does not support it" );
 				}
 			}
 		}
@@ -83,9 +83,8 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private boolean containsCommentInCreateTableStatement(String sqlStatement) {
-		return sqlStatement.toLowerCase().contains( "create table" ) && sqlStatement.toLowerCase()
-				.contains( getDialect().getTableComment( "comment snippet" )
-								   .toLowerCase() );
+		return sqlStatement.toLowerCase().contains( getDialect().getCreateTableString() )
+				&& sqlStatement.toLowerCase().contains( getDialect().getTableComment( "comment snippet" ).toLowerCase() );
 	}
 
 	@Entity(name = "TableWithComment")

@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.manytoonewithformula;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -149,6 +150,7 @@ public class ManyToOneWithFormulaTest {
 	@Test
 	@SkipForDialect( dialectClass =HSQLDialect.class, reason = "The used join conditions does not work in HSQLDB. See HHH-4497." )
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Oracle do not support 'substring' function" )
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = " Altibase char type returns with trailing spaces")
 	public void testManyToOneFromNonPkToNonPk(SessionFactoryScope scope) {
 		// also tests usage of the stand-alone @JoinFormula annotation
 		// (i.e. not wrapped within @JoinColumnsOrFormulas)

@@ -364,17 +364,6 @@ include::{example-dir-query}/HQLTest.java[tags=hql-api-basic-usage-example]
 
 A program may hook into the process of building the query results by providing a `org.hibernate.transform.ResultListTransformer` or `org.hibernate.transform.TupleTransformer`.
 
-Hibernate provides several some built-in implementations of these interfaces, for example:
-
-[[hql-api-result-transformers-example]]
-.Using a `ResultListTransformer`
-====
-[source, JAVA, indent=0]
-----
-include::{example-dir-query}/SelectDistinctTest.java[tags=hql-distinct-entity-resulttransformer-example]
-----
-====
-
 See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/transform/ResultListTransformer.html[Javadocs] along with the built-in implementations for additional details.
 
 //[[hql-api-parameters]]

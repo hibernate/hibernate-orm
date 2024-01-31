@@ -115,15 +115,16 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 					try {
 						session.getTransaction().begin();
 						int i = 0;
-						ScrollableResults sr = session.createQuery( "from DataPoint dp order by dp.x asc" )
+						try (ScrollableResults sr = session.createQuery( "from DataPoint dp order by dp.x asc" )
 								.setReadOnly( true )
-								.scroll( ScrollMode.FORWARD_ONLY );
-						while ( sr.next() ) {
-							DataPoint dp = (DataPoint) sr.get();
-							if ( ++i == 50 ) {
-								session.setReadOnly( dp, false );
+								.scroll( ScrollMode.FORWARD_ONLY )) {
+							while ( sr.next() ) {
+								DataPoint dp = (DataPoint) sr.get();
+								if ( ++i == 50 ) {
+									session.setReadOnly( dp, false );
+								}
+								dp.setDescription( "done!" );
 							}
-							dp.setDescription( "done!" );
 						}
 						session.getTransaction().commit();
 
@@ -172,18 +173,19 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 					assertInsertCount( 0, scope );
 					assertUpdateCount( 0, scope );
 
-					ScrollableResults sr = session.createQuery( "from DataPoint dp order by dp.x asc" )
+					try (ScrollableResults sr = session.createQuery( "from DataPoint dp order by dp.x asc" )
 							.setReadOnly( true )
-							.scroll( ScrollMode.FORWARD_ONLY );
+							.scroll( ScrollMode.FORWARD_ONLY )) {
 
-					assertInsertCount( 100, scope );
-					assertUpdateCount( 0, scope );
-					clearCounts( scope );
+						assertInsertCount( 100, scope );
+						assertUpdateCount( 0, scope );
+						clearCounts( scope );
 
-					while ( sr.next() ) {
-						DataPoint dp = (DataPoint) sr.get();
-						assertFalse( session.isReadOnly( dp ) );
-						session.delete( dp );
+						while ( sr.next() ) {
+							DataPoint dp = (DataPoint) sr.get();
+							assertFalse( session.isReadOnly( dp ) );
+							session.delete( dp );
+						}
 					}
 				}
 		);
@@ -462,24 +464,25 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		DataPoint dpLast = (DataPoint) s.get( DataPoint.class, dp.getId() );
 		assertFalse( s.isReadOnly( dpLast ) );
 		int i = 0;
-		ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
-				.setReadOnly( true )
-				.scroll( ScrollMode.FORWARD_ONLY );
 		int nExpectedChanges = 0;
-		while ( sr.next() ) {
-			dp = (DataPoint) sr.get();
-			if ( dp.getId() == dpLast.getId() ) {
-				//dpLast existed in the session before executing the read-only query
-				assertFalse( s.isReadOnly( dp ) );
+		try (ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+				.setReadOnly( true )
+				.scroll( ScrollMode.FORWARD_ONLY )) {
+			while ( sr.next() ) {
+				dp = (DataPoint) sr.get();
+				if ( dp.getId() == dpLast.getId() ) {
+					//dpLast existed in the session before executing the read-only query
+					assertFalse( s.isReadOnly( dp ) );
+				}
+				else {
+					assertTrue( s.isReadOnly( dp ) );
+				}
+				if ( ++i == 50 ) {
+					s.setReadOnly( dp, false );
+					nExpectedChanges = ( dp == dpLast ? 1 : 2 );
+				}
+				dp.setDescription( "done!" );
 			}
-			else {
-				assertTrue( s.isReadOnly( dp ) );
-			}
-			if ( ++i == 50 ) {
-				s.setReadOnly( dp, false );
-				nExpectedChanges = ( dp == dpLast ? 1 : 2 );
-			}
-			dp.setDescription( "done!" );
 		}
 		t.commit();
 		s.clear();
@@ -529,24 +532,25 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		assertUpdateCount( 0, scope );
 
-		ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
-				.setReadOnly( false )
-				.scroll( ScrollMode.FORWARD_ONLY );
 		int nExpectedChanges = 0;
-		while ( sr.next() ) {
-			dp = (DataPoint) sr.get();
-			if ( dp.getId() == dpLast.getId() ) {
-				//dpLast existed in the session before executing the read-only query
-				assertTrue( s.isReadOnly( dp ) );
+		try (ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+				.setReadOnly( false )
+				.scroll( ScrollMode.FORWARD_ONLY )) {
+			while ( sr.next() ) {
+				dp = (DataPoint) sr.get();
+				if ( dp.getId() == dpLast.getId() ) {
+					//dpLast existed in the session before executing the read-only query
+					assertTrue( s.isReadOnly( dp ) );
+				}
+				else {
+					assertFalse( s.isReadOnly( dp ) );
+				}
+				if ( ++i == 50 ) {
+					s.setReadOnly( dp, true );
+					nExpectedChanges = ( dp == dpLast ? 99 : 98 );
+				}
+				dp.setDescription( "done!" );
 			}
-			else {
-				assertFalse( s.isReadOnly( dp ) );
-			}
-			if ( ++i == 50 ) {
-				s.setReadOnly( dp, true );
-				nExpectedChanges = ( dp == dpLast ? 99 : 98 );
-			}
-			dp.setDescription( "done!" );
 		}
 		t.commit();
 		s.clear();

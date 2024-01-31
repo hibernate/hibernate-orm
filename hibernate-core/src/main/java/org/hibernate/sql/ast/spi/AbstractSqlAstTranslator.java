@@ -32,6 +32,7 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -48,13 +49,14 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -62,6 +64,7 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -78,25 +81,30 @@ import org.hibernate.query.sqm.function.MultipatternSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
+import org.hibernate.sql.ast.tree.cte.CteObject;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
+import org.hibernate.sql.ast.tree.cte.SelfRenderingCteObject;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
@@ -124,6 +132,7 @@ import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
@@ -131,6 +140,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
@@ -138,6 +148,7 @@ import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
@@ -145,6 +156,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
@@ -204,17 +216,16 @@ import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
-import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
@@ -481,23 +492,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return affectedTableNames;
 	}
 
-	protected String getDmlTargetTableAlias() {
-		final MutationStatement currentDmlStatement = getCurrentDmlStatement();
-		return currentDmlStatement == null
-				? null
-				: currentDmlStatement.getTargetTable().getIdentificationVariable();
-	}
-
 	protected Statement getStatement() {
 		return statementStack.getRoot();
 	}
 
 	public MutationStatement getCurrentDmlStatement() {
-		return statementStack.findCurrentFirst( AbstractSqlAstTranslator::matchMutationStatementNoInsertSelect );
+		return statementStack.findCurrentFirst( AbstractSqlAstTranslator::matchMutationStatement );
 	}
 
-	private static MutationStatement matchMutationStatementNoInsertSelect(Statement stmt) {
-		if ( stmt instanceof MutationStatement && !( stmt instanceof InsertSelectStatement ) ) {
+	private static MutationStatement matchMutationStatement(Statement stmt) {
+		if ( stmt instanceof MutationStatement ) {
 			return (MutationStatement) stmt;
 		}
 		return null;
@@ -737,6 +741,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return clauseStack;
 	}
 
+	protected Stack<Statement> getStatementStack() {
+		return statementStack;
+	}
+
 	protected Stack<QueryPart> getQueryPartStack() {
 		return queryPartStack;
 	}
@@ -840,10 +848,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 
+		final ConflictClause conflictClause = sqlAst.getConflictClause();
+		final String uniqueConstraintNameThatMayFail;
+		if ( conflictClause == null || !conflictClause.getConstraintColumnNames().isEmpty() ) {
+			uniqueConstraintNameThatMayFail = null;
+		}
+		else {
+			if ( sqlAst.getSourceSelectStatement() != null && !isFetchFirstRowOnly( sqlAst.getSourceSelectStatement() )
+					|| sqlAst.getValuesList().size() > 1 ) {
+				throw new IllegalQueryOperationException( "Can't emulate conflict clause with constraint name for more than one row to insert" );
+			}
+			uniqueConstraintNameThatMayFail = conflictClause.getConstraintName() == null
+					? ""
+					: conflictClause.getConstraintName();
+		}
 		return new JdbcOperationQueryInsertImpl(
 				getSql(),
 				getParameterBinders(),
-				getAffectedTableNames()
+				getAffectedTableNames(),
+				uniqueConstraintNameThatMayFail
 		);
 	}
 
@@ -870,8 +893,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
 		final JdbcValuesMappingProducerProvider producerProvider = getSessionFactory()
-				.getServiceRegistry()
-				.getService( JdbcValuesMappingProducerProvider.class );
+				.getFastSessionServices()
+				.getJdbcValuesMappingProducerProvider();
 		return producerProvider.buildMappingProducer( selectStatement, getSessionFactory() );
 	}
 
@@ -1041,44 +1064,131 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitDeleteStatementOnly(DeleteStatement statement) {
-		// todo (6.0) : to support joins we need dialect support
+		renderDeleteClause( statement );
+		if ( supportsJoinsInDelete() || !hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitWhereClause( statement.getRestriction() );
+		}
+		else {
+			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
+		}
+		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected boolean supportsJoinsInDelete() {
+		return false;
+	}
+
+	protected void renderDeleteClause(DeleteStatement statement) {
 		appendSql( "delete from " );
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.DELETE );
-			renderNamedTableReference( statement.getTargetTable(), LockMode.NONE );
+			renderDmlTargetTableExpression( statement.getTargetTable() );
 		}
 		finally {
 			clauseStack.pop();
 		}
-
-		visitWhereClause( statement.getRestriction() );
-		visitReturningColumns( statement.getReturningColumns() );
 	}
 
 	protected void visitUpdateStatementOnly(UpdateStatement statement) {
-		// todo (6.0) : to support joins we need dialect support
+		renderUpdateClause( statement );
+		renderSetClause( statement.getAssignments() );
+		renderFromClauseAfterUpdateSet( statement );
+		if ( dialect.supportsFromClauseInUpdate() || !hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitWhereClause( statement.getRestriction() );
+		}
+		else {
+			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
+		}
+		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected void renderUpdateClause(UpdateStatement updateStatement) {
 		appendSql( "update " );
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.UPDATE );
-			renderNamedTableReference( statement.getTargetTable(), LockMode.NONE );
+			renderDmlTargetTableExpression( updateStatement.getTargetTable() );
 		}
 		finally {
 			clauseStack.pop();
 		}
-
-		renderSetClause( statement, clauseStack );
-		visitWhereClause( statement.getRestriction() );
-		visitReturningColumns( statement.getReturningColumns() );
 	}
 
-	protected void renderSetClause(UpdateStatement statement, Stack<Clause> clauseStack) {
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		appendSql( tableReference.getTableExpression() );
+		registerAffectedTable( tableReference );
+	}
+
+	protected static boolean hasNonTrivialFromClause(FromClause fromClause) {
+		return fromClause != null && !fromClause.getRoots().isEmpty()
+				&& ( fromClause.getRoots().size() > 1 || fromClause.getRoots().get( 0 ).hasRealJoins() );
+	}
+
+	protected Predicate determineWhereClauseRestrictionWithJoinEmulation(AbstractUpdateOrDeleteStatement statement) {
+		return determineWhereClauseRestrictionWithJoinEmulation( statement, null );
+	}
+
+	protected Predicate determineWhereClauseRestrictionWithJoinEmulation(
+			AbstractUpdateOrDeleteStatement statement,
+			String dmlTargetAlias) {
+		final QuerySpec querySpec = new QuerySpec( false );
+		querySpec.getSelectClause().addSqlSelection(
+				new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
+		);
+		querySpec.applyPredicate( statement.getRestriction() );
+
+		if ( supportsJoinInMutationStatementSubquery() ) {
+			for ( TableGroup root : statement.getFromClause().getRoots() ) {
+				if ( root.getPrimaryTableReference() == statement.getTargetTable() ) {
+					final TableGroup dmlTargetTableGroup = new StandardTableGroup(
+							true,
+							new NavigablePath( "dual" ),
+							null,
+							null,
+							new NamedTableReference( getDual(), "d_" ),
+							null,
+							sessionFactory
+					);
+					querySpec.getFromClause().addRoot( dmlTargetTableGroup );
+					dmlTargetTableGroup.getTableReferenceJoins().addAll( root.getTableReferenceJoins() );
+					for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
+						dmlTargetTableGroup.addTableGroupJoin( tableGroupJoin );
+					}
+					for ( TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins() ) {
+						dmlTargetTableGroup.addNestedTableGroupJoin( tableGroupJoin );
+					}
+				}
+				else {
+					querySpec.getFromClause().addRoot( root );
+				}
+			}
+		}
+		else {
+			assert dmlTargetAlias != null;
+			final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+			assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+			for ( TableGroup root : statement.getFromClause().getRoots() ) {
+				querySpec.getFromClause().addRoot( root );
+			}
+			querySpec.applyPredicate(
+					createRowMatchingPredicate(
+							dmlTargetTableGroup,
+							dmlTargetAlias,
+							dmlTargetTableGroup.getPrimaryTableReference().getIdentificationVariable()
+					)
+			);
+		}
+
+		return new ExistsPredicate( querySpec, false, getBooleanType() );
+	}
+
+	protected void renderSetClause(List<Assignment> assignments) {
 		appendSql( " set" );
 		char separator = ' ';
 		try {
 			clauseStack.push( Clause.SET );
-			for ( Assignment assignment : statement.getAssignments() ) {
+			for ( Assignment assignment : assignments ) {
 				appendSql( separator );
 				separator = COMMA_SEPARATOR_CHAR;
 				visitSetAssignment( assignment );
@@ -1116,6 +1226,50 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected void visitSetAssignmentEmulateJoin(Assignment assignment, UpdateStatement statement) {
+		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		final Expression valueExpression;
+		if ( columnReferences.size() == 1 ) {
+			columnReferences.get( 0 ).appendColumnForWrite( this, null );
+			appendSql( '=' );
+			final Expression assignedValue = assignment.getAssignedValue();
+			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
+			if ( sqlTuple != null ) {
+				assert sqlTuple.getExpressions().size() == 1;
+				valueExpression = sqlTuple.getExpressions().get( 0 );
+			}
+			else {
+				valueExpression = assignedValue;
+			}
+		}
+		else {
+			char separator = OPEN_PARENTHESIS;
+			for ( ColumnReference columnReference : columnReferences ) {
+				appendSql( separator );
+				columnReference.appendColumnForWrite( this, null );
+				separator = COMMA_SEPARATOR_CHAR;
+			}
+			appendSql( ")=" );
+			valueExpression = assignment.getAssignedValue();
+		}
+
+		final QuerySpec querySpec = new QuerySpec( false, 1 );
+		final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+		assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+		for ( TableGroup root : statement.getFromClause().getRoots() ) {
+			querySpec.getFromClause().addRoot( root );
+		}
+		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( valueExpression ) );
+		querySpec.applyPredicate(
+				createRowMatchingPredicate(
+						dmlTargetTableGroup,
+						"dml_target_",
+						dmlTargetTableGroup.getPrimaryTableReference().getIdentificationVariable()
+				)
+		);
+		new SelectStatement( querySpec ).accept( this );
+	}
+
 	protected boolean isStruct(JdbcMappingContainer expressionType) {
 		if ( expressionType instanceof EmbeddableValuedModelPart ) {
 			final EmbeddableMappingType embeddableMappingType = ( (EmbeddableValuedModelPart) expressionType ).getEmbeddableTypeDescriptor();
@@ -1132,8 +1286,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		clauseStack.push( Clause.INSERT );
 		appendSql( "insert into " );
-		appendSql( statement.getTargetTable().getTableExpression() );
+		renderDmlTargetTableExpression( statement.getTargetTable() );
 
 		appendSql( OPEN_PARENTHESIS );
 		boolean firstPass = true;
@@ -1156,14 +1311,345 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		appendSql( ") " );
+		clauseStack.pop();
 
+		visitInsertSource( statement );
+		visitConflictClause( statement.getConflictClause() );
+		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected void visitInsertSource(InsertSelectStatement statement) {
 		if ( statement.getSourceSelectStatement() != null ) {
 			statement.getSourceSelectStatement().accept( this );
 		}
 		else {
 			visitValuesList( statement.getValuesList() );
 		}
+	}
+
+	protected void visitInsertStatementEmulateMerge(InsertSelectStatement statement) {
+		assert statement.getConflictClause() != null;
+
+		final ConflictClause conflictClause = statement.getConflictClause();
+		final String constraintName = conflictClause.getConstraintName();
+		if ( constraintName != null ) {
+			throw new IllegalQueryOperationException( "Dialect does not support constraint name in conflict clause" );
+		}
+
+		appendSql( "merge into " );
+		clauseStack.push( Clause.MERGE );
+		renderNamedTableReference( statement.getTargetTable(), LockMode.NONE );
+		clauseStack.pop();
+		appendSql(" using " );
+
+		final List<ColumnReference> targetColumnReferences = statement.getTargetColumns();
+		final List<String> columnNames = new ArrayList<>( targetColumnReferences.size() );
+		for ( ColumnReference targetColumnReference : targetColumnReferences ) {
+			columnNames.add( targetColumnReference.getColumnExpression() );
+		}
+
+		final DerivedTableReference derivedTableReference;
+		if ( statement.getSourceSelectStatement() != null ) {
+			derivedTableReference = new QueryPartTableReference(
+					new SelectStatement( statement.getSourceSelectStatement() ),
+					"excluded",
+					columnNames,
+					false,
+					sessionFactory
+			);
+		}
+		else {
+			derivedTableReference = new ValuesTableReference(
+					statement.getValuesList(),
+					"excluded",
+					columnNames,
+					sessionFactory
+			);
+		}
+		clauseStack.push( Clause.FROM );
+		derivedTableReference.accept( this );
+		appendSql( " on (" );
+
+		String separator = "";
+		for ( String constraintColumnName : conflictClause.getConstraintColumnNames() ) {
+			appendSql( separator );
+			appendSql( statement.getTargetTable().getIdentificationVariable() );
+			appendSql( '.' );
+			appendSql( constraintColumnName );
+			appendSql( "=excluded." );
+			appendSql( constraintColumnName );
+			separator = " and ";
+		}
+		appendSql( ')' );
+
+		final List<Assignment> assignments = conflictClause.getAssignments();
+		if ( !assignments.isEmpty() ) {
+			appendSql( " when matched" );
+			renderMergeUpdateClause( assignments, conflictClause.getPredicate() );
+		}
+
+		appendSql( " when not matched then insert " );
+		char separatorChar = OPEN_PARENTHESIS;
+		for ( ColumnReference targetColumnReference : targetColumnReferences ) {
+			appendSql( separatorChar );
+			appendSql( targetColumnReference.getColumnExpression() );
+			separatorChar = COMMA_SEPARATOR_CHAR;
+		}
+		clauseStack.pop();
+
+		clauseStack.push( Clause.VALUES );
+		appendSql( ") values " );
+		separatorChar = OPEN_PARENTHESIS;
+		for ( ColumnReference targetColumnReference : targetColumnReferences ) {
+			appendSql( separatorChar );
+			appendSql( "excluded." );
+			appendSql( targetColumnReference.getColumnExpression() );
+			separatorChar = COMMA_SEPARATOR_CHAR;
+		}
+		clauseStack.pop();
+
+		appendSql( ')' );
+
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected void visitUpdateStatementEmulateMerge(UpdateStatement statement) {
+		appendSql( "merge into " );
+		clauseStack.push( Clause.MERGE );
+		appendSql( statement.getTargetTable().getTableExpression() );
+		registerAffectedTable( statement.getTargetTable() );
+		appendSql( " as t" );
+		clauseStack.pop();
+
+		final QueryPartTableReference inlineView = updateSourceAsSubquery( statement, false );
+		appendSql( " using " );
+		clauseStack.push( Clause.FROM );
+		visitQueryPartTableReference( inlineView );
+		clauseStack.pop();
+		appendSql( " on " );
+		final String rowIdExpression = dialect.rowId( null );
+		if ( rowIdExpression == null ) {
+			final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+			assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+			createRowMatchingPredicate( dmlTargetTableGroup, "t", "s" ).accept( this );
+		}
+		else {
+			appendSql( "t." );
+			appendSql( rowIdExpression );
+			appendSql( "=s.c" );
+			appendSql( inlineView.getColumnNames().size() - 1 );
+		}
+		appendSql( " when matched then update set" );
+		char separator = ' ';
+		int column = 0;
+		for ( Assignment assignment : statement.getAssignments() ) {
+			final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+			for ( int j = 0; j < columnReferences.size(); j++ ) {
+				appendSql( separator );
+				columnReferences.get( j ).appendColumnForWrite( this, "t" );
+				appendSql( "=s.c" );
+				appendSql( column++ );
+				separator = ',';
+			}
+		}
+
+		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	private QueryPartTableReference updateSourceAsSubquery(UpdateStatement statement, boolean correlated) {
+		final QuerySpec inlineView = new QuerySpec( !correlated );
+		final SelectClause selectClause = inlineView.getSelectClause();
+		final List<Assignment> assignments = statement.getAssignments();
+		final List<String> columnNames = new ArrayList<>( assignments.size() );
+		for ( Assignment assignment : assignments ) {
+			final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+			final Expression assignedValue = assignment.getAssignedValue();
+			if ( columnReferences.size() == 1 ) {
+				selectClause.addSqlSelection( new SqlSelectionImpl( assignedValue ) );
+				columnNames.add( "c" + columnNames.size() );
+			}
+			else if ( assignedValue instanceof SqlTuple ) {
+				final List<? extends Expression> expressions = ( (SqlTuple) assignedValue ).getExpressions();
+				for ( int i = 0; i < columnReferences.size(); i++ ) {
+					selectClause.addSqlSelection( new SqlSelectionImpl( expressions.get( i ) ) );
+					columnNames.add( "c" + columnNames.size() );
+				}
+			}
+			else {
+				throw new IllegalQueryOperationException( "Unsupported tuple assignment in update query with joins." );
+			}
+		}
+		if ( !correlated ) {
+			final String rowIdExpression = dialect.rowId( null );
+			if ( rowIdExpression == null ) {
+				final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+				assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+				final EntityIdentifierMapping identifierMapping = dmlTargetTableGroup.getModelPart()
+						.asEntityMappingType()
+						.getIdentifierMapping();
+				identifierMapping.forEachSelectable(
+						0,
+						(selectionIndex, selectableMapping) -> {
+							selectClause.addSqlSelection( new SqlSelectionImpl(
+									new ColumnReference( statement.getTargetTable(), selectableMapping )
+							) );
+							columnNames.add( selectableMapping.getSelectionExpression() );
+						}
+				);
+			}
+			else {
+				selectClause.addSqlSelection( new SqlSelectionImpl(
+						new ColumnReference(
+								statement.getTargetTable(),
+								rowIdExpression,
+								sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
+										.resolve( Object.class, dialect.rowIdSqlType() )
+						)
+				) );
+				columnNames.add( "c" + columnNames.size() );
+			}
+		}
+
+		if ( correlated ) {
+			for ( TableGroup root : statement.getFromClause().getRoots() ) {
+				if ( statement.getTargetTable() == root.getPrimaryTableReference() ) {
+					final TableGroup dmlTargetTableGroup = new StandardTableGroup(
+							true,
+							new NavigablePath( "dual" ),
+							null,
+							null,
+							new NamedTableReference( getDual(), "d_" ),
+							null,
+							sessionFactory
+					);
+					inlineView.getFromClause().addRoot( dmlTargetTableGroup );
+					dmlTargetTableGroup.getTableReferenceJoins().addAll( root.getTableReferenceJoins() );
+					for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
+						dmlTargetTableGroup.addTableGroupJoin( tableGroupJoin );
+					}
+					for ( TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins() ) {
+						dmlTargetTableGroup.addNestedTableGroupJoin( tableGroupJoin );
+					}
+				}
+				else {
+					inlineView.getFromClause().addRoot( root );
+				}
+			}
+		}
+		else {
+			for ( TableGroup root : statement.getFromClause().getRoots() ) {
+				inlineView.getFromClause().addRoot( root );
+			}
+		}
+		inlineView.applyPredicate( statement.getRestriction() );
+
+		return new QueryPartTableReference(
+				new SelectStatement( inlineView ),
+				"s",
+				columnNames,
+				false,
+				getSessionFactory()
+		);
+	}
+
+	protected void visitUpdateStatementEmulateInlineView(UpdateStatement statement) {
+		appendSql( "update " );
+		final Stack<Clause> clauseStack = getClauseStack();
+		try {
+			clauseStack.push( Clause.UPDATE );
+			final QueryPartTableReference inlineView = updateSourceAsInlineView( statement );
+			visitQueryPartTableReference( inlineView );
+			appendSql( " set" );
+			char separator = ' ';
+			for ( int i = 0; i < inlineView.getColumnNames().size(); i += 2 ) {
+				appendSql( separator );
+				appendSql( "t.c" );
+				appendSql( i );
+				appendSql( "=t.c" );
+				appendSql( i + 1 );
+				separator = ',';
+			}
+		}
+		finally {
+			clauseStack.pop();
+		}
+		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected void visitUpdateStatementEmulateTupleSet(UpdateStatement statement) {
+		renderUpdateClause( statement );
+		appendSql( " set " );
+		char separator = '(';
+		try {
+			clauseStack.push( Clause.SET );
+			for ( Assignment assignment : statement.getAssignments() ) {
+				final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+				for ( ColumnReference columnReference : columnReferences ) {
+					appendSql( separator );
+					separator = COMMA_SEPARATOR_CHAR;
+					columnReference.appendColumnForWrite( this, null );
+				}
+			}
+			appendSql( ")=" );
+			updateSourceAsSubquery( statement, true ).getStatement().accept( this );
+		}
+		finally {
+			clauseStack.pop();
+		}
+
+		visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
+	}
+
+	private QueryPartTableReference updateSourceAsInlineView(UpdateStatement statement) {
+		final QuerySpec inlineView = new QuerySpec( true );
+		final SelectClause selectClause = inlineView.getSelectClause();
+		final List<Assignment> assignments = statement.getAssignments();
+		final List<String> columnNames = new ArrayList<>( assignments.size() );
+		for ( Assignment assignment : assignments ) {
+			final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+			final Expression assignedValue = assignment.getAssignedValue();
+			if ( columnReferences.size() == 1 ) {
+				selectClause.addSqlSelection( new SqlSelectionImpl( columnReferences.get( 0 ) ) );
+				selectClause.addSqlSelection( new SqlSelectionImpl( assignedValue ) );
+				columnNames.add( "c" + columnNames.size() );
+				columnNames.add( "c" + columnNames.size() );
+			}
+			else if ( assignedValue instanceof SqlTuple ) {
+				final List<? extends Expression> expressions = ( (SqlTuple) assignedValue ).getExpressions();
+				for ( int i = 0; i < columnReferences.size(); i++ ) {
+					selectClause.addSqlSelection( new SqlSelectionImpl( columnReferences.get( i ) ) );
+					selectClause.addSqlSelection( new SqlSelectionImpl( expressions.get( i ) ) );
+					columnNames.add( "c" + columnNames.size() );
+					columnNames.add( "c" + columnNames.size() );
+				}
+			}
+			else {
+				throw new IllegalQueryOperationException( "Unsupported tuple assignment in update query with joins." );
+			}
+		}
+		for ( TableGroup root : statement.getFromClause().getRoots() ) {
+			inlineView.getFromClause().addRoot( root );
+		}
+		inlineView.applyPredicate( statement.getRestriction() );
+
+		return new QueryPartTableReference(
+				new SelectStatement( inlineView ),
+				"t",
+				columnNames,
+				false,
+				getSessionFactory()
+		);
+	}
+
+	protected void renderMergeUpdateClause(List<Assignment> assignments, Predicate wherePredicate) {
+		if ( wherePredicate != null ) {
+			appendSql( " and " );
+			clauseStack.push( Clause.WHERE );
+			wherePredicate.accept( this );
+			clauseStack.pop();
+		}
+		appendSql( " then update" );
+		renderSetClause( assignments );
 	}
 
 	private void renderImplicitTargetColumnSpec() {
@@ -1202,25 +1688,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitValuesListEmulateSelectUnion(List<Values> valuesList) {
-		if ( valuesList.size() < 2 ) {
-			visitValuesListStandard( valuesList );
+		String separator = "";
+		final Stack<Clause> clauseStack = getClauseStack();
+		try {
+			clauseStack.push( Clause.VALUES );
+			for ( int i = 0; i < valuesList.size(); i++ ) {
+				appendSql( separator );
+				renderExpressionsAsSubquery( valuesList.get( i ).getExpressions() );
+				separator = " union all ";
+			}
 		}
-		else {
-			// Oracle doesn't support a multi-values insert
-			// So we render a select union emulation instead
-			String separator = "";
-			final Stack<Clause> clauseStack = getClauseStack();
-			try {
-				clauseStack.push( Clause.VALUES );
-				for ( int i = 0; i < valuesList.size(); i++ ) {
-					appendSql( separator );
-					renderExpressionsAsSubquery( valuesList.get( i ).getExpressions() );
-					separator = " union all ";
-				}
-			}
-			finally {
-				clauseStack.pop();
-			}
+		finally {
+			clauseStack.pop();
 		}
 	}
 
@@ -1394,7 +1873,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected LockMode getEffectiveLockMode(String alias) {
-		return getEffectiveLockMode( alias, getQueryPartStack().getCurrent().isRoot() );
+		final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
+		return currentQueryPart == null
+				? LockMode.NONE
+				: getEffectiveLockMode( alias, currentQueryPart.isRoot() );
 	}
 
 	protected LockMode getEffectiveLockMode(String alias, boolean isRoot) {
@@ -1464,7 +1946,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						tableGroupJoin -> {
 							final TableGroup group = tableGroupJoin.getJoinedGroup();
 							if ( forUpdateClause.hasAlias( group.getSourceAlias() ) ) {
-								if ( tableGroupJoin.isInitialized() && tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
+								if ( tableGroupJoin.isInitialized() && tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !group.isVirtual() ) {
 									if ( Boolean.FALSE.equals( followOnLocking ) ) {
 										throw new IllegalQueryOperationException(
 												"Locking with OUTER joins is not supported" );
@@ -1503,6 +1985,131 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			strategy = LockStrategy.FOLLOW_ON;
 		}
 		return strategy;
+	}
+
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			// By default, we only support do nothing with an optional constraint name
+			if ( !conflictClause.getConstraintColumnNames().isEmpty() ) {
+				throw new IllegalQueryOperationException( "Insert conflict clause with constraint column names is not supported" );
+			}
+			if ( conflictClause.isDoUpdate() ) {
+				throw new IllegalQueryOperationException( "Insert conflict do update clause is not supported" );
+			}
+		}
+	}
+
+	protected void visitStandardConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause == null ) {
+			return;
+		}
+
+		clauseStack.push( Clause.CONFLICT );
+		appendSql( " on conflict" );
+		final String constraintName = conflictClause.getConstraintName();
+		if ( constraintName != null ) {
+			appendSql( " on constraint " );
+			appendSql( constraintName );
+		}
+		else if ( !conflictClause.getConstraintColumnNames().isEmpty() ) {
+			char separator = '(';
+			for ( String columnName : conflictClause.getConstraintColumnNames() ) {
+				appendSql( separator );
+				appendSql( columnName );
+				separator = ',';
+			}
+			appendSql( ')' );
+		}
+		final List<Assignment> assignments = conflictClause.getAssignments();
+		if ( assignments.isEmpty() ) {
+			appendSql( " do nothing" );
+		}
+		else {
+			appendSql( " do update" );
+			renderSetClause( assignments );
+
+			final Predicate predicate = conflictClause.getPredicate();
+			if ( predicate != null ) {
+				clauseStack.push( Clause.WHERE );
+				appendSql( " where " );
+				predicate.accept( this );
+				clauseStack.pop();
+			}
+		}
+		clauseStack.pop();
+	}
+
+	protected void visitOnDuplicateKeyConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause == null ) {
+			return;
+		}
+		// The duplicate key clause does not support specifying the constraint name or constraint column names,
+		// but to allow compatibility, we have to require the user to specify either one in the SQM conflict clause.
+		// To allow meaningful usage, we simply ignore the constraint column names in this emulation.
+		// A possible problem with this is when the constraint column names contain the primary key columns,
+		// but the insert fails due to a unique constraint violation. This emulation will not cause a failure to be
+		// propagated, but instead will run the respective conflict action.
+		final String constraintName = conflictClause.getConstraintName();
+		if ( constraintName != null ) {
+			throw new IllegalQueryOperationException( "Dialect does not support constraint name in conflict clause" );
+		}
+//		final List<String> constraintColumnNames = conflictClause.getConstraintColumnNames();
+//		if ( !constraintColumnNames.isEmpty() ) {
+//			throw new IllegalQueryOperationException( "Dialect does not support constraint column names in conflict clause" );
+//		}
+
+		final InsertSelectStatement statement = (InsertSelectStatement) statementStack.getCurrent();
+		clauseStack.push( Clause.CONFLICT );
+		appendSql( " on duplicate key update" );
+		final List<Assignment> assignments = conflictClause.getAssignments();
+		if ( assignments.isEmpty() ) {
+			// Emulate do nothing by setting the first column to itself
+			final ColumnReference columnReference = statement.getTargetColumns().get( 0 );
+			try {
+				clauseStack.push( Clause.SET );
+				appendSql( ' ' );
+				appendSql( columnReference.getColumnExpression() );
+				appendSql( '=' );
+				visitColumnReference( columnReference );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+		else {
+			renderPredicatedSetAssignments( assignments, conflictClause.getPredicate() );
+		}
+		clauseStack.pop();
+	}
+
+	private void renderPredicatedSetAssignments(List<Assignment> assignments, Predicate predicate) {
+		char separator = ' ';
+		try {
+			clauseStack.push( Clause.SET );
+			for ( Assignment assignment : assignments ) {
+				appendSql( separator );
+				separator = COMMA_SEPARATOR_CHAR;
+				if ( predicate == null ) {
+					visitSetAssignment( assignment );
+				}
+				else {
+					assert assignment.getAssignable().getColumnReferences().size() == 1;
+					final Expression expression = new CaseSearchedExpression(
+							(MappingModelExpressible) assignment.getAssignedValue().getExpressionType(),
+							List.of(
+									new CaseSearchedExpression.WhenFragment(
+											predicate, assignment.getAssignedValue()
+									)
+							),
+							assignment.getAssignable().getColumnReferences().get( 0 )
+					);
+					visitSetAssignment( new Assignment( assignment.getAssignable(), expression ) );
+				}
+			}
+		}
+		finally {
+			clauseStack.pop();
+		}
 	}
 
 	protected void visitReturningColumns(Supplier<List<ColumnReference>> returningColumnsAccess) {
@@ -1545,11 +2152,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			cteStatements = originalCteStatements;
 		}
-		if ( cteStatements.isEmpty() ) {
+		final Collection<CteObject> cteObjects = cteContainer.getCteObjects().values();
+		if ( cteStatements.isEmpty() && cteObjects.isEmpty() ) {
 			return;
 		}
 		if ( !supportsWithClause() ) {
-			if ( isRecursive( cteStatements ) ) {
+			if ( isRecursive( cteStatements ) && cteObjects.isEmpty() ) {
 				throw new UnsupportedOperationException( "Can't emulate recursive CTEs!" );
 			}
 			// This should be unreachable, because #needsCteInlining() must return true if #supportsWithClause() returns false,
@@ -1591,6 +2199,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		String mainSeparator = "";
 		if ( isTopLevel ) {
 			topLevelWithClauseIndex = sqlBuffer.length();
+			for ( CteObject cte : cteObjects ) {
+				visitCteObject( cte );
+				topLevelWithClauseIndex = sqlBuffer.length();
+			}
 			for ( CteStatement cte : cteStatements ) {
 				appendSql( mainSeparator );
 				visitCteStatement( cte );
@@ -1637,6 +2249,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// This is the case when there is an existing CTE, so we need a comma for the CTE that are about to render
 				mainSeparator = COMMA_SEPARATOR;
 			}
+			for ( CteObject cte : cteObjects ) {
+				visitCteObject( cte );
+				topLevelWithClauseIndex = sqlBuffer.length();
+			}
 			for ( CteStatement cte : cteStatements ) {
 				appendSql( mainSeparator );
 				visitCteStatement( cte );
@@ -1651,6 +2267,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			sqlBuffer.append( temporaryRest );
 		}
 		else {
+			for ( CteObject cte : cteObjects ) {
+				visitCteObject( cte );
+			}
 			for ( CteStatement cte : cteStatements ) {
 				appendSql( mainSeparator );
 				visitCteStatement( cte );
@@ -1686,6 +2305,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		renderSearchClause( cte );
 		renderCycleClause( cte );
+	}
+
+	protected void visitCteObject(CteObject cteObject) {
+		if ( cteObject instanceof SelfRenderingCteObject ) {
+			( (SelfRenderingCteObject) cteObject ).render( this, this, sessionFactory );
+		}
+		else {
+			throw new IllegalArgumentException( "Can't render CTE object " + cteObject.getName() + ": " + cteObject );
+		}
 	}
 
 	private boolean isRecursive(Collection<CteStatement> cteStatements) {
@@ -2238,7 +2866,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					);
 					arguments.add( nullSeparator );
 				}
-				concat.render( this, arguments, this );
+				concat.render( this, arguments, stringType, this );
 			}
 			else {
 				arguments.add(
@@ -2277,7 +2905,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					arguments.add( nullSeparator );
 				}
 				arguments.add( nullSeparator );
-				concat.render( this, arguments, this );
+				concat.render( this, arguments, stringType, this );
 			}
 		}
 		else {
@@ -2539,7 +3167,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					null,
 					stringType
 			);
-			arguments.add( new QueryLiteral<>( "%", stringType ) );
 			for ( CteColumn cycleColumn : currentCteStatement.getCycleColumns() ) {
 				final int selectionIndex = currentCteStatement.getCteTable()
 						.getCteColumns()
@@ -2562,14 +3189,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				arguments.add( nullSeparator );
 			}
 			arguments.add( nullSeparator );
-			arguments.add( new QueryLiteral<>( "%", stringType ) );
 
 			if ( !supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				appendSql( "case when " );
-				visitColumnReference( cyclePathColumnReference );
-				appendSql( " like " );
-				concat.render( this, arguments, this );
+				renderStringContainsExactlyPredicate(
+						cyclePathColumnReference,
+						new SelfRenderingFunctionSqlAstExpression(
+								"concat",
+								concat,
+								arguments,
+								stringType,
+								stringType
+						)
+				);
 				appendSql( " then " );
 				currentCteStatement.getCycleValue().accept( this );
 				appendSql( " else " );
@@ -2578,11 +3211,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( COMMA_SEPARATOR );
 			}
 
-			// Remove the wildcard literals
-			arguments.remove( arguments.size() - 1 );
-			arguments.set( 0, cyclePathColumnReference );
+			// Add the previous path
+			arguments.add( 0, cyclePathColumnReference );
 			// Cycle path
-			concat.render( this, arguments, this );
+			concat.render( this, arguments, stringType, this );
 		}
 		else {
 			if ( !supportsRecursiveCycleClause() ) {
@@ -2627,6 +3259,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					columnSizeEstimate * MAX_RECURSION_DEPTH_ESTIMATE
 			);
 		}
+	}
+
+	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
+		final AbstractSqmSelfRenderingFunctionDescriptor position = findSelfRenderingFunction( "position", 2 );
+		new SelfRenderingFunctionSqlAstExpression(
+				"position",
+				position,
+				List.of( needle, haystack ),
+				getStringType(),
+				getStringType()
+		).accept( this );
+		append( ">0" );
 	}
 
 	/**
@@ -3393,9 +4037,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( CLOSE_PARENTHESIS );
 				}
 				else {
-					appendSql( "exists (select 1" );
-					appendSql( getFromDual() );
-					appendSql( " where (" );
+					appendSql( "exists (select 1 from " );
+					appendSql( getDual() );
+					appendSql( " d_ where (" );
 					String separator = NO_SEPARATOR;
 					for ( int i = 0; i < size; i++ ) {
 						appendSql( separator );
@@ -4426,6 +5070,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					&& !( getCurrentQueryPart() instanceof QueryGroup ) ) {
 				appendSql( '*' );
 			}
+			else if ( columnAliases != null ) {
+				String separator = "";
+				for ( String columnAlias : columnAliases ) {
+					appendSql( separator );
+					appendSql( alias );
+					appendSql( '.' );
+					appendSql( columnAlias );
+					separator = COMMA_SEPARATOR;
+				}
+			}
 			else {
 				int size = 0;
 				for ( SqlSelection sqlSelection : queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections() ) {
@@ -5109,23 +5763,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
+		final CastTarget castTarget;
 		if ( expression instanceof SqlTypedMappingJdbcParameter ) {
 			final SqlTypedMappingJdbcParameter parameter = (SqlTypedMappingJdbcParameter) expression;
 			final SqlTypedMapping sqlTypedMapping = parameter.getSqlTypedMapping();
-			arguments.add(
-					new CastTarget(
-							parameter.getJdbcMapping(),
-							sqlTypedMapping.getColumnDefinition(),
-							sqlTypedMapping.getLength(),
-							sqlTypedMapping.getPrecision(),
-							sqlTypedMapping.getScale()
-					)
+			castTarget = new CastTarget(
+					parameter.getJdbcMapping(),
+					sqlTypedMapping.getColumnDefinition(),
+					sqlTypedMapping.getLength(),
+					sqlTypedMapping.getTemporalPrecision() != null
+							? sqlTypedMapping.getTemporalPrecision()
+							: sqlTypedMapping.getPrecision(),
+					sqlTypedMapping.getScale()
 			);
 		}
 		else {
-			arguments.add( new CastTarget( expression.getExpressionType().getSingleJdbcMapping() ) );
+			castTarget = new CastTarget( expression.getExpressionType().getSingleJdbcMapping() );
 		}
-		castFunction().render( this, arguments, this );
+		arguments.add( castTarget );
+		castFunction().render( this, arguments, (ReturnableType<?>) castTarget.getJdbcMapping(), this );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -5168,11 +5824,38 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			appendSql( " from " );
+			renderFromClauseSpaces( fromClause );
+		}
+	}
+
+	protected void renderFromClauseSpaces(FromClause fromClause) {
+		try {
+			clauseStack.push( Clause.FROM );
+			String separator = NO_SEPARATOR;
+			for ( TableGroup root : fromClause.getRoots() ) {
+				separator = renderFromClauseRoot( root, separator );
+			}
+		}
+		finally {
+			clauseStack.pop();
+		}
+	}
+
+	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
+		// No-op. Subclasses have to override this
+	}
+
+	protected void renderFromClauseExcludingDmlTargetReference(UpdateStatement statement) {
+		final FromClause fromClause = statement.getFromClause();
+		if ( hasNonTrivialFromClause( fromClause ) ) {
+			appendSql( " from " );
 			try {
 				clauseStack.push( Clause.FROM );
-				String separator = NO_SEPARATOR;
-				for ( TableGroup root : fromClause.getRoots() ) {
-					separator = renderFromClauseRoot( root, separator );
+				final List<TableGroup> roots = fromClause.getRoots();
+				renderDmlTargetTableGroup( roots.get( 0 ) );
+				for ( int i = 1; i < roots.size(); i++ ) {
+					TableGroup root = roots.get( i );
+					renderFromClauseRoot( root, COMMA_SEPARATOR );
 				}
 			}
 			finally {
@@ -5181,12 +5864,94 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected void renderFromClauseJoiningDmlTargetReference(UpdateStatement statement) {
+		final FromClause fromClause = statement.getFromClause();
+		if ( hasNonTrivialFromClause( fromClause ) ) {
+			visitFromClause( fromClause );
+			final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+			assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+			addAdditionalWherePredicate(
+					// Render the match predicate like `table.ctid=alias.ctid`
+					createRowMatchingPredicate(
+							dmlTargetTableGroup,
+							statement.getTargetTable().getTableExpression(),
+							statement.getTargetTable().getIdentificationVariable()
+					)
+			);
+		}
+	}
+
+	protected Predicate createRowMatchingPredicate(TableGroup dmlTargetTableGroup, String lhsAlias, String rhsAlias) {
+		final String rowIdExpression = dialect.rowId( null );
+		if ( rowIdExpression == null ) {
+			final EntityIdentifierMapping identifierMapping = dmlTargetTableGroup.getModelPart()
+					.asEntityMappingType()
+					.getIdentifierMapping();
+			final int jdbcTypeCount = identifierMapping.getJdbcTypeCount();
+			final List<ColumnReference> targetExpressions = new ArrayList<>( jdbcTypeCount );
+			final List<ColumnReference> sourceExpressions = new ArrayList<>( jdbcTypeCount );
+			identifierMapping.forEachSelectable(
+					0,
+					(selectionIndex, selectableMapping) -> {
+						targetExpressions.add( new ColumnReference(
+								lhsAlias,
+								selectableMapping.getSelectionExpression(),
+								selectableMapping.isFormula(),
+								selectableMapping.getCustomReadExpression(),
+								selectableMapping.getJdbcMapping()
+						) );
+						sourceExpressions.add( new ColumnReference(
+								rhsAlias,
+								selectableMapping.getSelectionExpression(),
+								selectableMapping.isFormula(),
+								selectableMapping.getCustomReadExpression(),
+								selectableMapping.getJdbcMapping()
+						) );
+					}
+			);
+			return new ComparisonPredicate(
+					targetExpressions.size() == 1
+							? targetExpressions.get( 0 )
+							: new SqlTuple( targetExpressions, identifierMapping ),
+					ComparisonOperator.EQUAL,
+					sourceExpressions.size() == 1
+							? sourceExpressions.get( 0 )
+							: new SqlTuple( sourceExpressions, identifierMapping )
+			);
+		}
+		else {
+			return new SelfRenderingPredicate(
+					new SelfRenderingSqlFragmentExpression(
+							lhsAlias + "." + rowIdExpression + "=" + rhsAlias + "." + rowIdExpression
+					)
+			);
+		}
+	}
+
+	protected void renderDmlTargetTableGroup(TableGroup tableGroup) {
+		assert getStatementStack().getCurrent() instanceof UpdateStatement
+				&& ( (UpdateStatement) getStatementStack().getCurrent() ).getTargetTable() == tableGroup.getPrimaryTableReference();
+		appendSql( getDual() );
+		renderTableReferenceJoins( tableGroup );
+		processNestedTableGroupJoins( tableGroup, null );
+		processTableGroupJoins( tableGroup );
+		ModelPartContainer modelPart = tableGroup.getModelPart();
+		if ( modelPart instanceof AbstractEntityPersister ) {
+			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
+			for ( int i = 0; i < querySpaces.length; i++ ) {
+				registerAffectedTable( querySpaces[i] );
+			}
+		}
+	}
+
 	private String renderFromClauseRoot(TableGroup root, String separator) {
-		if ( root instanceof VirtualTableGroup ) {
+		if ( root.isVirtual() ) {
 			for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
+				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );
 				separator = renderFromClauseRoot( tableGroupJoin.getJoinedGroup(), separator );
 			}
 			for ( TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins() ) {
+				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );
 				separator = renderFromClauseRoot( tableGroupJoin.getJoinedGroup(), separator );
 			}
 		}
@@ -5331,7 +6096,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( !joinedGroup.isInitialized() ) {
 				continue;
 			}
-			if ( joinedGroup instanceof VirtualTableGroup ) {
+			if ( joinedGroup.isVirtual() ) {
 				if ( hasNestedTableGroupsToRender( joinedGroup.getNestedTableGroupJoins() ) ) {
 					return true;
 				}
@@ -5441,10 +6206,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );
 		registerAffectedTable( tableReference );
-		final Clause currentClause = clauseStack.getCurrent();
-		if ( rendersTableReferenceAlias( currentClause ) ) {
-			renderTableReferenceIdentificationVariable( tableReference );
-		}
+		renderTableReferenceIdentificationVariable( tableReference );
 		return false;
 	}
 
@@ -5543,23 +6305,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected final void renderTableReferenceIdentificationVariable(TableReference tableReference) {
+	protected void renderTableReferenceIdentificationVariable(TableReference tableReference) {
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		if ( identificationVariable != null ) {
 			append( WHITESPACE );
 			append( tableReference.getIdentificationVariable() );
 		}
-	}
-
-	protected boolean rendersTableReferenceAlias(Clause clause) {
-		// todo (6.0) : For now we just skip the alias rendering in the delete and update clauses
-		//  We need some dialect support if we want to support joins in delete and update statements
-		switch ( clause ) {
-			case DELETE:
-			case UPDATE:
-				return getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS;
-		}
-		return true;
 	}
 
 	protected void registerAffectedTable(NamedTableReference tableReference) {
@@ -5601,7 +6352,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
 
-		if ( joinedGroup instanceof VirtualTableGroup ) {
+		if ( joinedGroup.isVirtual() ) {
 			processNestedTableGroupJoins( joinedGroup, tableGroupJoinCollector );
 			if ( tableGroupJoinCollector != null ) {
 				tableGroupJoinCollector.addAll( joinedGroup.getTableGroupJoins() );
@@ -5690,19 +6441,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( shouldEmulateLateralWithIntersect( statement.getQueryPart() ) ) {
 				final QuerySpec lhsReferencesQuery = new QuerySpec( false );
 				for ( ColumnReference columnReference : columnReferences ) {
-					lhsReferencesQuery.getSelectClause().addSqlSelection(
-							new SqlSelectionImpl(
-									0,
-									columnReference
-							)
-					);
+					lhsReferencesQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( columnReference ) );
 				}
 				final List<QueryPart> queryParts = new ArrayList<>( 2 );
 				queryParts.add( lhsReferencesQuery );
 				queryParts.add( statement.getQueryPart() );
 				return new ExistsPredicate(
 						new SelectStatement(
-								statement.getCteStatements(),
+								statement,
 								new QueryGroup( false, SetOperator.INTERSECT, queryParts ),
 								Collections.emptyList()
 						),
@@ -5740,10 +6486,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				final QuerySpec existsQuery = new QuerySpec( false, 1 );
 				existsQuery.getSelectClause().addSqlSelection(
-						new SqlSelectionImpl(
-								0,
-								new QueryLiteral<>( 1, getIntegerType() )
-						)
+						new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
 				);
 				existsQuery.getFromClause().addRoot( subTableGroup );
 				existsQuery.applyPredicate(
@@ -5756,7 +6499,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 				return new ExistsPredicate(
 					new SelectStatement(
-							statement.getCteStatements(),
+							statement,
 							existsQuery,
 							Collections.emptyList()
 					),
@@ -5792,10 +6535,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			existsQuery.setGroupByClauseExpressions( querySpec.getGroupByClauseExpressions() );
 			existsQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			existsQuery.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl(
-							0,
-							new QueryLiteral<>( 1, getIntegerType() )
-					)
+					new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
 			);
 			existsQuery.applyPredicate(
 					new ComparisonPredicate(
@@ -5807,7 +6547,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			final ExistsPredicate existsPredicate = new ExistsPredicate(
 					new SelectStatement(
-							statement.getCteStatements(),
+							statement,
 							existsQuery,
 							Collections.emptyList()
 					),
@@ -5829,10 +6569,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			countQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			countQuery.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
-							0,
 							new SelfRenderingAggregateFunctionSqlAstExpression(
 									"count",
-									(sqlAppender, sqlAstArguments, walker) -> sqlAppender.append( "count(*)" ),
+									(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAppender.append( "count(*)" ),
 									List.of( Star.INSTANCE ),
 									null,
 									getIntegerType(),
@@ -5934,7 +6673,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							existsPredicate,
 							new BetweenPredicate(
 									new SelectStatement(
-											statement.getCteStatements(),
+											statement,
 											countQuery,
 											Collections.emptyList()
 									),
@@ -6006,7 +6745,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private SelectStatement stripToSelectClause(SelectStatement statement) {
 		return new SelectStatement(
-				statement.getCteStatements(),
+				statement,
 				stripToSelectClause( statement.getQueryPart() ),
 				Collections.emptyList()
 		);
@@ -6076,7 +6815,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin) {
-		// nothing to do... handled within TableGroup#render
+		// nothing to do... handled within TableGroupTableGroup#render
 	}
 
 
@@ -6085,65 +6824,52 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		final String dmlTargetTableAlias = getDmlTargetTableAlias();
-		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
-			final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
-			final String qualifier;
-			if ( qualifierSupport == DmlTargetColumnQualifierSupport.TABLE_ALIAS ) {
-				qualifier = dmlTargetTableAlias;
-			}
-			// Qualify the column reference with the table expression also when in subqueries
-			else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !queryPartStack.isEmpty() ) {
-				qualifier = getCurrentDmlStatement().getTargetTable().getTableExpression();
+		final String qualifier = determineColumnReferenceQualifier( columnReference );
+		if ( columnReference.isColumnExpressionFormula() ) {
+			// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
+			// This is fine for now as this is only temporary anyway until we render aliases for table references
+			final String replacement;
+			if ( qualifier != null ) {
+				replacement = "$1" + qualifier + ".$3";
 			}
 			else {
-				qualifier = null;
+				replacement = "$1$3";
 			}
-			if ( columnReference.isColumnExpressionFormula() ) {
-				// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
-				// This is fine for now as this is only temporary anyway until we render aliases for table references
-				final String replacement;
-				if ( qualifier != null ) {
-					replacement = "$1" + qualifier + ".$3";
-				}
-				else {
-					replacement = "$1$3";
-				}
-				appendSql(
-						columnReference.getColumnExpression()
-								.replaceAll( "(\\b)(" + dmlTargetTableAlias + "\\.)(\\b)", replacement )
-				);
-			}
-			else {
-				columnReference.appendReadExpression( this, qualifier );
-			}
+			appendSql(
+					columnReference.getColumnExpression()
+							.replaceAll( "(\\b)(" + columnReference.getQualifier() + "\\.)(\\b)", replacement )
+			);
 		}
 		else {
-			columnReference.appendReadExpression( this );
+			columnReference.appendReadExpression( this, qualifier );
 		}
 	}
 
 	@Override
 	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
-		final String dmlTargetTableAlias = getDmlTargetTableAlias();
-		final ColumnReference columnReference = aggregateColumnWriteExpression.getColumnReference();
-		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
-			final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
-			final String qualifier;
-			if ( qualifierSupport == DmlTargetColumnQualifierSupport.TABLE_ALIAS ) {
-				qualifier = dmlTargetTableAlias;
-			}
-			// Qualify the column reference with the table expression also when in subqueries
-			else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !queryPartStack.isEmpty() ) {
-				qualifier = getCurrentDmlStatement().getTargetTable().getTableExpression();
-			}
-			else {
-				qualifier = null;
-			}
-			aggregateColumnWriteExpression.appendWriteExpression( this, this, qualifier );
+		aggregateColumnWriteExpression.appendWriteExpression(
+				this,
+				this,
+				determineColumnReferenceQualifier( aggregateColumnWriteExpression.getColumnReference() )
+		);
+	}
+
+	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
+		final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
+		final MutationStatement currentDmlStatement;
+		final String dmlAlias;
+		if ( qualifierSupport == DmlTargetColumnQualifierSupport.TABLE_ALIAS
+				|| ( currentDmlStatement = getCurrentDmlStatement() ) == null
+				|| ( dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable() ) == null
+				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
+			return columnReference.getQualifier();
+		}
+		// Qualify the column reference with the table expression also when in subqueries
+		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !queryPartStack.isEmpty() ) {
+			return getCurrentDmlStatement().getTargetTable().getTableExpression();
 		}
 		else {
-			aggregateColumnWriteExpression.appendWriteExpression( this, this );
+			return null;
 		}
 	}
 
@@ -6178,50 +6904,60 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		if ( castTarget.getSqlType() != null ) {
-			appendSql( castTarget.getSqlType() );
+		appendSql( getCastTypeName( castTarget, sessionFactory.getTypeConfiguration() ) );
+	}
+
+	/**
+	 * @deprecated Use {@link #getSqlTypeName(SqlTypedMapping, TypeConfiguration)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	public static String getSqlTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
+		return getSqlTypeName( castTarget, factory.getTypeConfiguration() );
+	}
+
+	public static String getSqlTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
+		if ( castTarget.getColumnDefinition() != null ) {
+			return castTarget.getColumnDefinition();
 		}
 		else {
-			final SqlExpressible expressionType = (SqlExpressible) castTarget.getExpressionType();
-			if ( expressionType instanceof BasicPluralType<?, ?> ) {
-				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
-				final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) containerType.getJavaTypeDescriptor();
-				final BasicType<?> elementType = containerType.getElementType();
-				final String elementTypeName = sessionFactory.getTypeConfiguration().getDdlTypeRegistry()
-						.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
-						.getCastTypeName(
-								elementType,
-								castTarget.getLength(),
-								castTarget.getPrecision(),
-								castTarget.getScale()
-						);
-				final String arrayTypeName = dialect.getArrayTypeName(
-						javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
-						elementTypeName,
-						null
-				);
-				if ( arrayTypeName != null ) {
-					appendSql( arrayTypeName );
-					return;
-				}
-			}
-			final DdlTypeRegistry ddlTypeRegistry = getSessionFactory().getTypeConfiguration().getDdlTypeRegistry();
-			DdlType ddlType = ddlTypeRegistry
-					.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDdlTypeCode() );
+			final Size castTargetSize = castTarget.toSize();
+			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
+			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
 			if ( ddlType == null ) {
 				// this may happen when selecting a null value like `SELECT null from ...`
 				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
 				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
 			}
 
-			appendSql(
-					ddlType.getCastTypeName(
-							expressionType,
-							castTarget.getLength(),
-							castTarget.getPrecision(),
-							castTarget.getScale()
-					)
-			);
+			return ddlType.getTypeName( castTargetSize, expressionType, ddlTypeRegistry );
+		}
+	}
+
+	/**
+	 * @deprecated Use {@link #getCastTypeName(SqlTypedMapping, TypeConfiguration)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	public static String getCastTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
+		return getCastTypeName( castTarget, factory.getTypeConfiguration() );
+	}
+
+	public static String getCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
+		if ( castTarget.getColumnDefinition() != null ) {
+			return castTarget.getColumnDefinition();
+		}
+		else {
+			final Size castTargetSize = castTarget.toSize();
+			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
+			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
+			if ( ddlType == null ) {
+				// this may happen when selecting a null value like `SELECT null from ...`
+				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
+				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
+			}
+
+			return ddlType.getCastTypeName( castTargetSize, expressionType, ddlTypeRegistry );
 		}
 	}
 
@@ -6324,11 +7060,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitTuple(SqlTuple tuple) {
-		appendSql( OPEN_PARENTHESIS );
+		// A tuple in a values clause of an insert-select statement must be unwrapped,
+		// since the assignment target is also unwrapped to the individual column references
+		final boolean wrap = clauseStack.getCurrent() != Clause.VALUES;
+		if ( wrap ) {
+			appendSql( OPEN_PARENTHESIS );
+		}
 
 		renderCommaSeparated( tuple.getExpressions() );
 
-		appendSql( CLOSE_PARENTHESIS );
+		if ( wrap ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
 	}
 
 	protected final void renderCommaSeparated(Iterable<? extends SqlAstNode> expressions) {
@@ -6625,6 +7368,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitLiteral( queryLiteral );
 	}
 
+	@Override
+	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
+		appendSql( literal.getUnparsedLiteralValue() );
+	}
+
 	private void visitLiteral(Literal literal) {
 		if ( literal.getLiteralValue() == null ) {
 			renderNull( literal );
@@ -6823,7 +7571,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
-			appendSql( "1=0" );
+			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
 			return;
 		}
 		Function<Expression, Expression> itemAccessor = Function.identity();
@@ -7028,12 +7776,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				this.queryPartForRowNumberingClauseDepth = -1;
 				this.needsSelectAliases = false;
 				queryPartStack.push( subQuery );
-				appendSql( "exists (select 1" );
-				visitFromClause( subQuery.getFromClause() );
-
+				appendSql( "exists (" );
 				if ( !subQuery.getGroupByClauseExpressions().isEmpty()
 						|| subQuery.getHavingClauseRestrictions() != null ) {
-					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause
+					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause.
+					// Also, we need to explicitly include the selections to avoid 'invalid HAVING clause' errors
+					visitSelectClause( subQuery.getSelectClause() );
+					visitFromClause( subQuery.getFromClause() );
 					visitWhereClause( subQuery.getWhereClauseRestrictions() );
 					visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
 
@@ -7058,6 +7807,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					// If we have no group by or having clause, we can move the tuple comparison emulation to the WHERE clause
+					appendSql( "select 1" );
+					visitFromClause( subQuery.getFromClause() );
 					appendSql( " where " );
 					clauseStack.push( Clause.WHERE );
 					try {
@@ -7371,11 +8122,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					separator = " and ";
 				}
 			}
+			return;
 		}
-		else {
-			expression.accept( this );
-			appendSql( predicateValue );
-		}
+		expression.accept( this );
+		appendSql( predicateValue );
 	}
 
 	@Override
@@ -7707,13 +8457,32 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
+	 * If the dialect supports using joins in mutation statement subquery
+	 * that could also use columns from the mutation target table
+	 */
+	protected boolean supportsJoinInMutationStatementSubquery() {
+		return true;
+	}
+
+	/**
 	 * Some databases require a bit of syntactic noise when
 	 * there are no tables in the from clause.
 	 *
 	 * @return the SQL equivalent to Oracle's {@code from dual}.
+	 * @deprecated Use {@link #getDual()} instead
 	 */
+	@Deprecated(forRemoval = true)
 	protected String getFromDual() {
-		return " from (values (0)) dual";
+		return " from " + getDual() + " d_";
+	}
+
+	/**
+	 * Returns a table expression that has one row.
+	 *
+	 * @return the SQL equivalent to Oracle's {@code dual}.
+	 */
+	protected String getDual() {
+		return "(values(0))";
 	}
 
 	protected String getFromDualForSelectOnly() {
@@ -7984,6 +8753,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( tableUpdate.getWhereFragment() != null ) {
 				sqlBuffer.append( " and (" ).append( tableUpdate.getWhereFragment() ).append( ")" );
 			}
+
+			if ( tableUpdate.getNumberOfReturningColumns() > 0 ) {
+				visitReturningColumns( tableUpdate::getReturningColumns );
+			}
 		}
 		finally {
 			getCurrentClauseStack().pop();
@@ -8121,6 +8894,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							sqlBuffer.append( " and " );
 						}
 					} );
+				}
+
+				if ( tableDelete.getWhereFragment() != null ) {
+					sqlBuffer.append( " and (" ).append( tableDelete.getWhereFragment() ).append( ")" );
 				}
 			}
 			finally {

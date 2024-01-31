@@ -24,6 +24,7 @@ import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -43,7 +44,8 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlAr
 /**
  * Single-attribute NaturalIdMapping implementation
  */
-public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaType.CoercionContext {
+public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaType.CoercionContext,
+		BasicValuedMapping {
 	private final SingularAttributeMapping attribute;
 	private final SessionFactoryImplementor sessionFactory;
 	private final TypeConfiguration typeConfiguration;
@@ -242,6 +244,11 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping() {
+		return attribute.getSingleJdbcMapping();
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return attribute.forEachJdbcType( offset, action );
 	}
@@ -316,5 +323,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return attribute.hasPartitionedSelectionMapping();
+	}
+
+	@Override
+	public MappingType getMappedType() {
+		return attribute.getMappedType();
 	}
 }

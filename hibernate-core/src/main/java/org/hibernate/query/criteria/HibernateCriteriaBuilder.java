@@ -11,12 +11,21 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.Incubating;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
+import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.sqm.TemporalUnit;
+
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CollectionJoin;
@@ -32,12 +41,6 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
-
-import org.hibernate.Incubating;
-import org.hibernate.query.SortDirection;
-import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.sqm.TemporalUnit;
 
 /**
  * A JPA {@link CriteriaBuilder} is a source of objects which may be composed
@@ -119,6 +122,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaCriteriaInsertValues<T> createCriteriaInsertValues(Class<T> targetEntity);
 
 	<T> JpaCriteriaInsertSelect<T> createCriteriaInsertSelect(Class<T> targetEntity);
+
+	@Incubating
+	JpaValues values(Expression<?>... expressions);
+
+	@Incubating
+	JpaValues values(List<? extends Expression<?>> expressions);
 
 	/**
 	 * Transform the given HQL {@code select} query to an equivalent criteria query.
@@ -386,7 +395,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<N extends Number> JpaExpression<N> abs(Expression<N> x);
 
-
 	@Override
 	<N extends Number> JpaExpression<N> sum(Expression<? extends N> x, Expression<? extends N> y);
 
@@ -434,6 +442,127 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	JpaExpression<Double> sqrt(Expression<? extends Number> x);
+
+	/**
+	 * Add two {@linkplain Duration durations}.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationSum(Expression<Duration> x, Expression<Duration> y);
+
+	/**
+	 * Add two {@linkplain Duration durations}.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationSum(Expression<Duration> x, Duration y);
+
+	/**
+	 * Subtract one {@linkplain Duration duration} from another.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationDiff(Expression<Duration> x, Expression<Duration> y);
+
+	/**
+	 * Subtract one {@linkplain Duration duration} from another.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationDiff(Expression<Duration> x, Duration y);
+
+	/**
+	 * Scale a {@linkplain Duration duration} by a number.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationScaled(Expression<? extends Number> number, Expression<Duration> duration);
+
+	/**
+	 * Scale a {@linkplain Duration duration} by a number.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationScaled(Number number, Expression<Duration> duration);
+
+	/**
+	 * Scale a {@linkplain Duration duration} by a number.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationScaled(Expression<? extends Number> number, Duration duration);
+
+	/**
+	 * A literal {@link Duration}, for example, "five days" or "30 minutes".
+	 * @since 6.3
+	 */
+	@Incubating // layer breaker (leaks SQM type)
+	JpaExpression<Duration> duration(long magnitude, TemporalUnit unit);
+
+	/**
+	 * Convert a {@link Duration} to a numeric magnitude in the given units.
+	 * @param unit a choice of temporal granularity
+	 * @param duration the duration in a "unit-free" form
+	 * @return the magnitude of the duration measured in the given units
+	 * @since 6.3
+	 */
+	@Incubating // layer breaker (leaks SQM type)
+	JpaExpression<Long> durationByUnit(TemporalUnit unit, Expression<Duration> duration);
+
+	/**
+	 * Subtract two dates or two datetimes, returning the duration between the
+	 * two dates or between two datetimes.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<Duration> durationBetween(Expression<T> x, Expression<T> y);
+
+	/**
+	 * Subtract two dates or two datetimes, returning the duration between the
+	 * two dates or between two datetimes.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<Duration> durationBetween(Expression<T> x, T y);
+
+	/**
+	 * Add a duration to a date or datetime, that is, return a later date or
+	 * datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> addDuration(Expression<T> datetime, Expression<Duration> duration);
+
+	/**
+	 * Add a duration to a date or datetime, that is, return a later date or
+	 * datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> addDuration(Expression<T> datetime, Duration duration);
+
+	/**
+	 * Add a duration to a date or datetime, that is, return a later date or
+	 * datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> addDuration(T datetime, Expression<Duration> duration);
+
+	/**
+	 * Subtract a duration to a date or datetime, that is, return an earlier date
+	 * or datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> subtractDuration(Expression<T> datetime, Expression<Duration> duration);
+
+	/**
+	 * Subtract a duration to a date or datetime, that is, return an earlier date
+	 * or datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> subtractDuration(Expression<T> datetime, Duration duration);
+
+	/**
+	 * Subtract a duration to a date or datetime, that is, return an earlier date
+	 * or datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> subtractDuration(T datetime, Expression<Duration> duration);
 
 	@Override
 	JpaExpression<Long> toLong(Expression<? extends Number> number);
@@ -569,8 +698,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
 
 	<T> JpaExpression<T> value(T value);
-
-	<V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection);
 
 	@Override
 	<V, M extends Map<?, V>> Expression<Collection<V>> values(M map);
@@ -2186,4 +2313,1003 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<?>... arguments);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Array functions for array types
+
+	/**
+	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument);
+
+	/**
+	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument);
+
+	/**
+	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument);
+
+	/**
+	 * Create a {@code array_agg} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param argument values to aggregate
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayAgg(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<? extends T> argument);
+
+	/**
+	 * Creates an array literal with the {@code array} constructor function.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayLiteral(T... elements);
+
+	/**
+	 * Determines the length of an array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<Integer> arrayLength(Expression<T[]> arrayExpression);
+
+	/**
+	 * Determines the 1-based position of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, T element);
+
+	/**
+	 * Determines the 1-based position of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, T element);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, T element);
+
+	/**
+	 * Concatenates arrays with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Concatenates arrays with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Concatenates arrays with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayConcat(T[] array1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Appends element to array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	/**
+	 * Appends element to array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, T element);
+
+	/**
+	 * Prepends element to array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayPrepend(Expression<T> elementExpression, Expression<T[]> arrayExpression);
+
+	/**
+	 * Prepends element to array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayPrepend(T element, Expression<T[]> arrayExpression);
+
+	/**
+	 * Accesses the element of an array by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T> arrayGet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression);
+
+	/**
+	 * Accesses the element of an array by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T> arrayGet(Expression<T[]> arrayExpression, Integer index);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression, Expression<T> elementExpression);
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression, T element);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, Expression<T> elementExpression);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, T element);
+
+	/**
+	 * Creates array copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	/**
+	 * Creates array copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, T element);
+
+	/**
+	 * Creates array copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Expression<Integer> indexExpression);
+
+	/**
+	 * Creates array copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Integer index);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Expression<Integer> lowerIndexExpression, Expression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Expression<Integer> lowerIndexExpression, Integer upperIndex);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Expression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Integer upperIndex);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, Expression<T> oldElementExpression, Expression<T> newElementExpression);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, Expression<T> oldElementExpression, T newElement);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, Expression<T> newElementExpression);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, T newElement);
+
+	/**
+	 * Creates array copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Expression<Integer> elementCountExpression);
+
+	/**
+	 * Creates array copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount);
+
+	/**
+	 * Creates array with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);
+
+	/**
+	 * Creates array with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayFill(Expression<T> elementExpression, Integer elementCount);
+
+	/**
+	 * Creates array with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayFill(T element, Expression<Integer> elementCountExpression);
+
+	/**
+	 * Creates array with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<T[]> arrayFill(T element, Integer elementCount);
+
+	/**
+	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
+
+	/**
+	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
+	
+	/**
+	 * Whether an array contains an element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	/**
+	 * Whether an array contains an element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContains(Expression<T[]> arrayExpression, T element);
+
+	/**
+	 * Whether an array contains an element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContains(T[] array, Expression<T> elementExpression);
+
+	/**
+	 * Whether an array contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContainsNullable(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	/**
+	 * Whether an array contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContainsNullable(Expression<T[]> arrayExpression, T element);
+
+	/**
+	 * Whether an array contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression);
+
+	/**
+	 * Whether an array contains another array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array contains another array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray);
+
+	/**
+	 * Whether an array contains another array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array contains another array with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array contains another array with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray);
+
+	/**
+	 * Whether an array contains another array with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Array functions for collection types
+
+	/**
+	 * Creates a basic collection literal with the {@code array} constructor function.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<E>> JpaExpression<C> collectionLiteral(E... elements);
+
+	/**
+	 * Determines the length of a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	JpaExpression<Integer> collectionLength(Expression<? extends Collection<?>> collectionExpression);
+
+	/**
+	 * Determines the 1-based position of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaExpression<Integer> collectionPosition(Expression<? extends Collection<? extends E>> collectionExpression, E element);
+
+	/**
+	 * Determines the 1-based position of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaExpression<Integer> collectionPosition(Expression<? extends Collection<? extends E>> collectionExpression, Expression<E> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<int[]> collectionPositions(Expression<? extends Collection<? super T>> collectionExpression, Expression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<int[]> collectionPositions(Expression<? extends Collection<? super T>> collectionExpression, T element);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<List<Integer>> collectionPositionsList(Expression<? extends Collection<? super T>> collectionExpression, Expression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<List<Integer>> collectionPositionsList(Expression<? extends Collection<? super T>> collectionExpression, T element);
+
+	/**
+	 * Concatenates basic collections with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(Expression<C> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Concatenates basic collections with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(Expression<C> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Concatenates basic collections with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(C collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Appends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionAppend(Expression<C> collectionExpression, Expression<? extends E> elementExpression);
+
+	/**
+	 * Appends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionAppend(Expression<C> collectionExpression, E element);
+
+	/**
+	 * Prepends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionPrepend(Expression<? extends E> elementExpression, Expression<C> collectionExpression);
+
+	/**
+	 * Prepends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionPrepend(E element, Expression<C> collectionExpression);
+
+	/**
+	 * Accesses the element of the basic collection by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Expression<Integer> indexExpression);
+
+	/**
+	 * Accesses the element of the basic collection by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Integer index);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionSet(Expression<C> collectionExpression, Expression<Integer> indexExpression, Expression<? extends E> elementExpression);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionSet(Expression<C> collectionExpression, Expression<Integer> indexExpression, E element);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionSet(Expression<C> collectionExpression, Integer index, Expression<? extends E> elementExpression);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionSet(Expression<C> collectionExpression, Integer index, E element);
+
+	/**
+	 * Creates basic collection copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionRemove(Expression<C> collectionExpression, Expression<? extends E> elementExpression);
+
+	/**
+	 * Creates basic collection copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionRemove(Expression<C> collectionExpression, E element);
+
+	/**
+	 * Creates basic collection copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionRemoveIndex(Expression<C> collectionExpression, Expression<Integer> indexExpression);
+
+	/**
+	 * Creates basic collection copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionRemoveIndex(Expression<C> collectionExpression, Integer index);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionSlice(Expression<C> collectionExpression, Expression<Integer> lowerIndexExpression, Expression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionSlice(Expression<C> collectionExpression, Expression<Integer> lowerIndexExpression, Integer upperIndex);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionSlice(Expression<C> collectionExpression, Integer lowerIndex, Expression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionSlice(Expression<C> collectionExpression, Integer lowerIndex, Integer upperIndex);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(Expression<C> collectionExpression, Expression<? extends E> oldElementExpression, Expression<? extends E> newElementExpression);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(Expression<C> collectionExpression, Expression<? extends E> oldElementExpression, E newElement);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(Expression<C> collectionExpression, E oldElement, Expression<? extends E> newElementExpression);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(Expression<C> collectionExpression, E oldElement, E newElement);
+
+	/**
+	 * Creates basic collection copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionTrim(Expression<C> arrayExpression, Expression<Integer> elementCountExpression);
+
+	/**
+	 * Creates basic collection copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<C extends Collection<?>> JpaExpression<C> collectionTrim(Expression<C> arrayExpression, Integer elementCount);
+
+	/**
+	 * Creates basic collection with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);
+
+	/**
+	 * Creates basic collection with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Integer elementCount);
+
+	/**
+	 * Creates basic collection with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<Collection<T>> collectionFill(T element, Expression<Integer> elementCountExpression);
+
+	/**
+	 * Creates basic collection with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<Collection<T>> collectionFill(T element, Integer elementCount);
+
+	/**
+	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
+
+	/**
+	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<T> JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
+
+	/**
+	 * Whether a basic collection contains an element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
+
+	/**
+	 * Whether a basic collection contains an element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, E element);
+
+	/**
+	 * Whether a basic collection contains an element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContains(Collection<E> collection, Expression<E> elementExpression);
+
+	/**
+	 * Whether a basic collection contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContainsNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
+
+	/**
+	 * Whether a basic collection contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContainsNullable(Expression<? extends Collection<E>> collectionExpression, E element);
+
+	/**
+	 * Whether a basic collection contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression);
+
+	/**
+	 * Whether a basic collection contains another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection contains another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether a basic collection contains another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContainsAll(Collection<E> collection, Expression<? extends Collection<? extends E>> subArrayExpression);
+
+	/**
+	 * Whether a basic collection contains another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection contains another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether a basic collection contains another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionContainsAllNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionOverlaps(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionOverlapsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
 }

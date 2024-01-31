@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +13,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -131,6 +131,9 @@ public interface CollectionPersister extends Restrictable {
 	 * Get the structure used to store data into the collection's {@linkplain #getCacheAccessStrategy() cache region}
 	 */
 	CacheEntryStructure getCacheEntryStructure();
+
+	@Incubating
+	boolean useShallowQueryCacheLayout();
 
 	/**
 	 * Return the element class of an array, or null otherwise
@@ -255,7 +258,7 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * Get the "space" that holds the persistent state
 	 */
-	Serializable[] getCollectionSpaces();
+	String[] getCollectionSpaces();
 
 	/**
 	 * Get the user-visible metadata for the collection (optional operation)

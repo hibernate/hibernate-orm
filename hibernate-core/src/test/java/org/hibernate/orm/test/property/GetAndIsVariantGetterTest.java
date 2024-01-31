@@ -20,6 +20,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.util.ReflectHelper;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,7 +41,7 @@ public class GetAndIsVariantGetterTest {
 
 	@BeforeClass
 	public static void prepare() {
-		ssr = new StandardServiceRegistryBuilder(  ).build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@AfterClass

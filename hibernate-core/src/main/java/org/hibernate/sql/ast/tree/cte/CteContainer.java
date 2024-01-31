@@ -22,4 +22,13 @@ public interface CteContainer {
 	CteStatement getCteStatement(String cteLabel);
 
 	void addCteStatement(CteStatement cteStatement);
+
+	Map<String, CteObject> getCteObjects();
+
+	CteObject getCteObject(String cteObjectName);
+
+	void addCteObject(CteObject cteObject);
+
+
+
 }

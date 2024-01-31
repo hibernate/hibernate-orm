@@ -12,6 +12,8 @@ import java.sql.SQLException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.MariaDBIdentityColumnSupport;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -48,7 +50,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  * @author Gavin King
  */
 public class MariaDBDialect extends MySQLDialect {
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 3 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 4 );
 	private static final DatabaseVersion MYSQL57 = DatabaseVersion.make( 5, 7 );
 
 	public MariaDBDialect() {
@@ -60,7 +62,7 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		super( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 
@@ -178,6 +180,12 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// See https://jira.mariadb.org/browse/MDEV-16991
+		return false;
+	}
+
+	@Override
 	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
 		return InnoDBStorageEngine.INSTANCE;
 	}
@@ -246,6 +254,16 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public boolean supportsInsertReturning() {
 		return getVersion().isSameOrAfter( 10, 5 );
+	}
+
+	@Override
+	public boolean supportsUpdateReturning() {
+		return false;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return MariaDBIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

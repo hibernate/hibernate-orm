@@ -12,7 +12,10 @@ import org.hibernate.HibernateException;
  * Defines the contract for handling of update events generated from a session.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated since {@link org.hibernate.Session#saveOrUpdate} and friends are deprecated
  */
+@Deprecated(since="6")
 public interface SaveOrUpdateEventListener {
 
 	/** 

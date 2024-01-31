@@ -18,6 +18,8 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -38,6 +40,8 @@ import static org.hamcrest.Matchers.equalTo;
  */
 @DomainModel(annotatedClasses = BasicCollectionMappingTests.EntityOfCollections.class)
 @SessionFactory( useCollectingStatementInspector = true )
+// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+@BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class BasicCollectionMappingTests {
 
 	@Test

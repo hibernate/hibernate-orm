@@ -6,8 +6,10 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -224,8 +226,22 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
-		Join join = entityBinder.addJoin( joinTableAnn, this, noDelayInPkColumnCreation );
-		this.joins = entityBinder.getSecondaryTables();
+		final Join join = entityBinder.addJoin( joinTableAnn, this, noDelayInPkColumnCreation );
+		joins = entityBinder.getSecondaryTables();
+		return join;
+	}
+
+	@Override
+	public Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation) {
+		final Join join = entityBinder.createJoin(
+				this,
+				noDelayInPkColumnCreation,
+				false,
+				joinTable.joinColumns(),
+				table.getQualifiedTableName(),
+				table
+		);
+		joins = entityBinder.getSecondaryTables();
 		return join;
 	}
 
@@ -302,7 +318,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			// because the given XClass has a TypeEnvironment based on the type variable assignments of a subclass
 			// and that might result in a wrong property type being used for a property which uses a type variable
 			final XClass actualDeclaringClass = context.getBootstrapContext().getReflectionManager().toXClass( type );
-			for ( XProperty declaredProperty : actualDeclaringClass.getDeclaredProperties( prop.getPropertyAccessorName() ) ) {
+			for ( XProperty declaredProperty : getDeclaredProperties( actualDeclaringClass, prop.getPropertyAccessorName() ) ) {
 				if ( prop.getName().equals( declaredProperty.getName() ) ) {
 					final PropertyData inferredData = new PropertyInferredData(
 							actualDeclaringClass,
@@ -361,14 +377,19 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 							actualProperty.setValue( context.getMetadataCollector().getGenericComponent( componentClass ) );
 						}
 						else {
-							final Iterator<Property> propertyIterator = component.getPropertyIterator();
-							while ( propertyIterator.hasNext() ) {
-								Property property = propertyIterator.next();
-								try {
-									property.getGetter( componentClass );
-								}
-								catch (PropertyNotFoundException e) {
-									propertyIterator.remove();
+							if ( componentClass == Object.class ) {
+								// Object is not a valid component class, but that is what we get when using a type variable
+								component.getProperties().clear();
+							}
+							else {
+								final Iterator<Property> propertyIterator = component.getPropertyIterator();
+								while ( propertyIterator.hasNext() ) {
+									try {
+										propertyIterator.next().getGetter( componentClass );
+									}
+									catch (PropertyNotFoundException e) {
+										propertyIterator.remove();
+									}
 								}
 							}
 						}
@@ -379,6 +400,16 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
+	}
+
+	private static List<XProperty> getDeclaredProperties(XClass declaringClass, String accessType) {
+		final List<XProperty> properties = new ArrayList<>();
+		XClass superclass = declaringClass;
+		while ( superclass != null ) {
+			properties.addAll( superclass.getDeclaredProperties( accessType ) );
+			superclass = superclass.getSuperclass();
+		}
+		return properties;
 	}
 
 	private static String getTypeName(Property property) {

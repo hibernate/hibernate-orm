@@ -13,6 +13,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -23,8 +24,7 @@ public class CompositeNaturalIdMappingTest {
 
 	@Test
 	public void test() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			Metadata meta = new MetadataSources( ssr )

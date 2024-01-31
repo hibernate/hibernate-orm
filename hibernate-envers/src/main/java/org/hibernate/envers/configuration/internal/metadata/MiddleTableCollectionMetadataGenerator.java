@@ -143,7 +143,7 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 					middleEntity,
 					getPrefixedIdAttributes(
 							referencingPrefixRelated,
-							ColumnNameIterator.from( context.getCollection().getKey().getColumnIterator() ),
+							ColumnNameIterator.from( context.getCollection().getKey().getSelectables().iterator() ),
 							referencingIdMapping
 					)
 			);

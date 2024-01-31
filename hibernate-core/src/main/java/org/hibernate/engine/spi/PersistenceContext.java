@@ -10,9 +10,11 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.query.Query;
@@ -20,7 +22,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.spi.LoadContexts;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents the state of "stuff" Hibernate is tracking, including (not exhaustive):
@@ -342,6 +348,23 @@ public interface PersistenceContext {
 	Object proxyFor(Object impl);
 
 	/**
+	 * Return the existing {@linkplain EntityHolder#getProxy() proxy} associated with
+	 * the given {@link EntityHolder}, or the {@linkplain EntityHolder#getEntity() entity}
+	 * if no proxy exists.
+	 */
+	Object proxyFor(EntityHolder holder, EntityPersister persister);
+
+	/**
+	 * Return the existing {@linkplain EntityHolder#getProxy() proxy} associated with
+	 * the given {@link EntityHolder}, or the {@linkplain EntityHolder#getEntity() entity}
+	 * if it contains no proxy.
+	 *
+	 * @deprecated Use {@link #proxyFor(EntityHolder, EntityPersister)} instead.
+	 */
+	@Deprecated( forRemoval = true )
+	Object proxyFor(EntityHolder holder);
+
+	/**
 	 * Cross between {@link #addEntity(EntityKey, Object)} and {@link #addProxy(EntityKey, Object)}
 	 * for use with enhancement-as-proxy
 	 */
@@ -483,10 +506,41 @@ public interface PersistenceContext {
 //	HashSet getNullifiableEntityKeys();
 
 	/**
+	 * Return an existing entity holder for the entity key, possibly creating one if necessary.
+	 * Will claim the entity holder by registering the given entity initializer, if it isn't claimed yet.
+	 *
+	 * @param key The key under which to add an entity
+	 * @param entity The entity instance to add
+	 * @param processingState The processing state which initializes the entity if successfully claimed
+	 * @param initializer The initializer to claim the entity instance
+	 */
+	@Incubating
+	EntityHolder claimEntityHolderIfPossible(
+			EntityKey key,
+			@Nullable Object entity,
+			JdbcValuesSourceProcessingState processingState,
+			EntityInitializer initializer);
+
+	EntityHolder getEntityHolder(EntityKey key);
+
+	boolean containsEntityHolder(EntityKey key);
+
+	EntityHolder removeEntityHolder(EntityKey key);
+
+	@Incubating
+	void postLoad(JdbcValuesSourceProcessingState processingState, Consumer<EntityHolder> loadedConsumer);
+
+	/**
 	 * Doubly internal
 	 */
 	@Internal
 	Map<EntityKey,Object> getEntitiesByKey();
+
+	/**
+	 * Doubly internal
+	 */
+	@Internal
+	Map<EntityKey,EntityHolder> getEntityHoldersByKey();
 
 	/**
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
@@ -699,6 +753,9 @@ public interface PersistenceContext {
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 
 	void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Object generatedId);
+
+	@Internal
+	void replaceEntityEntryRowId(Object entity, Object rowId);
 
 	/**
 	 * Add a child/parent relation to cache for cascading op

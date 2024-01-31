@@ -14,6 +14,7 @@ import java.util.Set;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
@@ -248,12 +249,12 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
-	public RootGraphImplementor<?> getGraph() {
+	public @Nullable RootGraphImplementor<?> getGraph() {
 		return rootGraph;
 	}
 
 	@Override
-	public GraphSemantic getSemantic() {
+	public @Nullable GraphSemantic getSemantic() {
 		return graphSemantic;
 	}
 }

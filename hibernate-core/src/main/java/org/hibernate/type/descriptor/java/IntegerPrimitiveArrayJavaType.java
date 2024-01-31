@@ -168,6 +168,10 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 			}
 			return wrapped;
 		}
+		else if ( value instanceof Integer ) {
+			// Support binding a single element as parameter value
+			return new int[]{ (int) value };
+		}
 
 		throw unknownWrap( value.getClass() );
 	}

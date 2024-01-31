@@ -189,7 +189,7 @@ public class EntityUseJoinedSubclassOptimizationTest {
 									"when t1_1.id is not null then 6 " +
 									"when t1_2.id is not null then 1 " +
 									"when t1_6.id is not null then 4 " +
-									"end!=2",
+									"end<>2",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
 				}

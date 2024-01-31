@@ -145,7 +145,7 @@ public class EntityUseUnionSubclassOptimizationTest {
 									"select id, null as nr, name, null as seats, null as architectName, null as doors, null as familyName, 4 as clazz_ from Vehicle" +
 									") t1_0 " +
 									"where " +
-									"t1_0.clazz_!=2",
+									"t1_0.clazz_<>2",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
 				}

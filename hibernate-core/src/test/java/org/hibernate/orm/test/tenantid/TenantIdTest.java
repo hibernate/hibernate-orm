@@ -8,7 +8,7 @@ package org.hibernate.orm.test.tenantid;
 
 import org.hibernate.HibernateError;
 import org.hibernate.PropertyValueException;
-import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -21,8 +21,9 @@ import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.binder.internal.TenantIdBinder;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.type.descriptor.DateTimeUtils;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
 
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.internal.util.collections.CollectionHelper.toMap;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
@@ -39,6 +41,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.List;
 
 @SessionFactory
 @DomainModel(annotatedClasses = { Account.class, Client.class, Record.class })
@@ -56,13 +60,14 @@ public class TenantIdTest implements SessionFactoryProducer {
         scope.inTransaction( session -> {
             session.createQuery("delete from Account").executeUpdate();
             session.createQuery("delete from Client").executeUpdate();
+            session.createQuery("delete from Record").executeUpdate();
         });
     }
 
     @Override
     public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
         final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-        sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver() {
+        sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<String>() {
             @Override
             public String resolveCurrentTenantIdentifier() {
                 return currentTenant;
@@ -218,6 +223,34 @@ public class TenantIdTest implements SessionFactoryProducer {
             // for cleanup
             currentTenant = "mine";
         }
+    }
+
+
+    @Test
+    public void tenantFilterWithStatelessSession(SessionFactoryScope scope) {
+        currentTenant = "mine";
+        Record myRecord1 = new Record();
+        Record myRecord2 = new Record();
+
+        scope.inTransaction( session -> {
+            session.persist(myRecord1);
+            session.persist(myRecord2);
+        } );
+        scope.inStatelessTransaction( session -> {
+            assertThat( listAllRecordsForTenant( session ) ).hasSize( 2 );
+        } );
+
+        currentTenant = "yours";
+        scope.inStatelessTransaction( session -> {
+            assertThat( listAllRecordsForTenant( session ) ).isEmpty();
+        } );
+    }
+
+    private static List<Record> listAllRecordsForTenant(StatelessSession session) {
+        HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+        JpaCriteriaQuery<Record> criteriaQuery = criteriaBuilder.createQuery( Record.class );
+        JpaRoot<Record> from = criteriaQuery.from( Record.class );
+        return session.createQuery( criteriaQuery ).getResultList();
     }
 
     private static void waitALittle() {

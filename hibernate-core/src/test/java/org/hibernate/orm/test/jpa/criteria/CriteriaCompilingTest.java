@@ -218,9 +218,9 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 			TypedQuery<Order> jpaQuery = session.createQuery( query );
 			Query<?> hibQuery = jpaQuery.unwrap( Query.class );
 
-			ScrollableResults sr = hibQuery.scroll( ScrollMode.FORWARD_ONLY );
+			hibQuery.scroll( ScrollMode.FORWARD_ONLY ).close();
 
-			hibQuery.setCacheMode( CacheMode.IGNORE ).scroll( ScrollMode.FORWARD_ONLY );
+			hibQuery.setCacheMode( CacheMode.IGNORE ).scroll( ScrollMode.FORWARD_ONLY ).close();
 
 			Query<Order> anotherQuery = session.createQuery(
 					"select o from Order o where totalPrice in :totalPrices",

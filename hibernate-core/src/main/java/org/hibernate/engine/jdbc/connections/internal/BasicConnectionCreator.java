@@ -64,30 +64,41 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 		}
 
 		try {
-			if ( isolation != null ) {
-				conn.setTransactionIsolation( isolation );
-			}
-		}
-		catch (SQLException e) {
-			throw convertSqlException( "Unable to set transaction isolation (" + isolation + ")", e );
-		}
-
-		try {
-			if ( conn.getAutoCommit() != autoCommit ) {
-				conn.setAutoCommit( autoCommit );
-			}
-		}
-		catch (SQLException e) {
-			throw convertSqlException( "Unable to set auto-commit (" + autoCommit + ")", e );
-		}
-
-		if ( initSql != null && !initSql.trim().isEmpty() ) {
-			try (Statement s = conn.createStatement()) {
-				s.execute( initSql );
+			try {
+				if ( isolation != null ) {
+					conn.setTransactionIsolation( isolation );
+				}
 			}
 			catch (SQLException e) {
-				throw convertSqlException( "Unable to execute initSql (" + initSql + ")", e );
+				throw convertSqlException( "Unable to set transaction isolation (" + isolation + ")", e );
 			}
+
+			try {
+				if ( conn.getAutoCommit() != autoCommit ) {
+					conn.setAutoCommit( autoCommit );
+				}
+			}
+			catch (SQLException e) {
+				throw convertSqlException( "Unable to set auto-commit (" + autoCommit + ")", e );
+			}
+
+			if ( initSql != null && !initSql.trim().isEmpty() ) {
+				try (Statement s = conn.createStatement()) {
+					s.execute( initSql );
+				}
+				catch (SQLException e) {
+					throw convertSqlException( "Unable to execute initSql (" + initSql + ")", e );
+				}
+			}
+		}
+		catch (RuntimeException | Error e) {
+			try {
+				conn.close();
+			}
+			catch (SQLException ex) {
+				e.addSuppressed( ex );
+			}
+			throw e;
 		}
 
 		return conn;
@@ -116,11 +127,12 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 	);
 
 	protected JDBCException convertSqlException(String message, SQLException e) {
+		final String fullMessage = message + " [" + e.getMessage() + "]";
 		try {
 			// if JdbcServices#getSqlExceptionHelper is available, use it...
 			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 			if ( jdbcServices != null && jdbcServices.getSqlExceptionHelper() != null ) {
-				return jdbcServices.getSqlExceptionHelper().convert( e, message, null );
+				return jdbcServices.getSqlExceptionHelper().convert( e, fullMessage );
 			}
 		}
 		catch (ServiceException se) {
@@ -129,7 +141,7 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 
 		// likely we are still in the process of initializing the ServiceRegistry, so use the simplified
 		// SQLException conversion
-		return simpleConverterAccess.getValue().convert( e, message, null );
+		return simpleConverterAccess.getValue().convert( e, fullMessage, null );
 	}
 
 	protected abstract Connection makeConnection(String url, Properties connectionProps);

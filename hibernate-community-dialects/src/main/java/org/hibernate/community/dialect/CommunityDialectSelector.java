@@ -32,6 +32,8 @@ public class CommunityDialectSelector implements DialectSelector {
 				return Cache71Dialect.class;
 			case "CUBRID":
 				return CUBRIDDialect.class;
+			case "Altibase":
+				return AltibaseDialect.class;
 			case "DerbyTenFive":
 				return DerbyTenFiveDialect.class;
 			case "DerbyTenSix":
@@ -56,18 +58,24 @@ public class CommunityDialectSelector implements DialectSelector {
 				return MariaDB10Dialect.class;
 			case "MariaDB102":
 				return MariaDB102Dialect.class;
+			case "MariaDB103":
+				return MariaDB103Dialect.class;
 			case "MimerSQL":
 				return MimerSQLDialect.class;
 			case "MySQL5":
 				return MySQL5Dialect.class;
 			case "MySQL55":
 				return MySQL55Dialect.class;
+			case "MySQL57":
+				return MySQL57Dialect.class;
 			case "Oracle8i":
 				return Oracle8iDialect.class;
 			case "Oracle9i":
 				return Oracle9iDialect.class;
 			case "Oracle10g":
 				return Oracle10gDialect.class;
+			case "Oracle12c":
+				return Oracle12cDialect.class;
 			case "PostgreSQL81":
 				return PostgreSQL81Dialect.class;
 			case "PostgreSQL82":
@@ -84,12 +92,16 @@ public class CommunityDialectSelector implements DialectSelector {
 				return PostgreSQL94Dialect.class;
 			case "PostgreSQL95":
 				return PostgreSQL95Dialect.class;
+			case "PostgreSQL10":
+				return PostgreSQL10Dialect.class;
 			case "RDMSOS2200":
 				return RDMSOS2200Dialect.class;
 			case "SAPDB":
 				return SAPDBDialect.class;
 			case "SQLServer2005":
 				return SQLServer2005Dialect.class;
+			case "SQLServer2008":
+				return SQLServer2008Dialect.class;
 			case "MaxDB":
 				return MaxDBDialect.class;
 			case "Sybase11":

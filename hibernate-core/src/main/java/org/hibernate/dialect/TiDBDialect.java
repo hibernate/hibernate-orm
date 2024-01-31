@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.time.Duration;
-
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sequence.TiDBSequenceSupport;
@@ -30,16 +28,18 @@ public class TiDBDialect extends MySQLDialect {
 
 	private static final DatabaseVersion VERSION57 = DatabaseVersion.make( 5, 7 );
 
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 5, 4 );
+
 	public TiDBDialect() {
-		this( DatabaseVersion.make(5, 4) );
+		this( MINIMUM_VERSION );
 	}
 
 	public TiDBDialect(DatabaseVersion version) {
-		super(version);
+		super( version );
 	}
 
 	public TiDBDialect(DialectResolutionInfo info) {
-		super(createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ));
+		super( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 
@@ -47,6 +47,11 @@ public class TiDBDialect extends MySQLDialect {
 	public DatabaseVersion getMySQLVersion() {
 		// For simplicity’s sake, configure MySQL 5.7 compatibility
 		return VERSION57;
+	}
+
+	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -105,6 +110,11 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsSkipLocked() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsNoWait() {
 		return true;
 	}
@@ -112,6 +122,16 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public boolean supportsWait() {
 		return true;
+	}
+
+	@Override
+	boolean supportsForShare() {
+		return false;
+	}
+
+	@Override
+	boolean supportsAliasLocks() {
+		return false;
 	}
 
 	@Override
@@ -137,7 +157,7 @@ public class TiDBDialect extends MySQLDialect {
 		}
 
 		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + getLockWaitTimeoutInSeconds( timeout );
+			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout );
 		}
 
 		return getForUpdateString();
@@ -151,11 +171,6 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases ) + " nowait";
-	}
-
-	private static long getLockWaitTimeoutInSeconds(int timeoutInMilliseconds) {
-		Duration duration = Duration.ofMillis( timeoutInMilliseconds );
-		return duration.getSeconds();
 	}
 
 	@Override

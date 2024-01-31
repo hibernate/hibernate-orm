@@ -23,7 +23,7 @@ public class CorrectChild {
 	private CorrectChildId id;
 
 	@ManyToOne
-	@MapsId("parent_id")
+	@MapsId("id")
 	private Parent parent;
 
 	CorrectChild() {

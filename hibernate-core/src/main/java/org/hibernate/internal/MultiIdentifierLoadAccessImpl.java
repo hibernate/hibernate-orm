@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -15,6 +16,7 @@ import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 
@@ -165,6 +167,13 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public <K> List<T> multiLoad(List<K> ids) {
-		return perform( () -> (List<T>) entityPersister.multiLoad( ids.toArray( new Object[ 0 ] ), session, this ) );
+		if ( ids.isEmpty() ) {
+			return Collections.emptyList();
+		}
+		return perform( () -> (List<T>) entityPersister.multiLoad(
+				ids.toArray( LoaderHelper.createTypedArray( ids.get( 0 ).getClass(), ids.size() ) ),
+				session,
+				this
+		) );
 	}
 }

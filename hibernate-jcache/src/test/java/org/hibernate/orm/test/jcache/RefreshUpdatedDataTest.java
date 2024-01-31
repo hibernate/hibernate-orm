@@ -32,6 +32,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.tool.schema.Action;
 
@@ -54,7 +55,7 @@ public class RefreshUpdatedDataTest {
 	@BeforeEach
 	@SuppressWarnings("unused")
 	public void acquireResources() {
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder()
 				.configure( "hibernate-config/hibernate.cfg.xml" );
 
 		if ( H2Dialect.class.equals( DialectContext.getDialect().getClass() ) ) {

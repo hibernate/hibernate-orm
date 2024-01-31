@@ -16,6 +16,7 @@ import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -60,6 +61,14 @@ public abstract class AbstractSqmDmlStatement<E>
 			cteStatements.put( entry.getKey(), entry.getValue().copy( context ) );
 		}
 		return cteStatements;
+	}
+
+	protected void putAllCtes(SqmCteContainer cteContainer) {
+		for ( SqmCteStatement<?> cteStatement : cteContainer.getCteStatements() ) {
+			if ( cteStatements.putIfAbsent( cteStatement.getName(), cteStatement ) != null ) {
+				throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists" );
+			}
+		}
 	}
 
 	@Override

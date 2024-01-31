@@ -15,7 +15,7 @@ import jakarta.persistence.Tuple;
 import org.hibernate.AssertionFailure;
 import org.hibernate.InstantiationException;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
@@ -42,7 +42,6 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.internal.RowTransformerConstructorImpl;
 import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
@@ -53,6 +52,7 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 import static org.hibernate.internal.util.ReflectHelper.isClass;
@@ -69,6 +69,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement<?> sqm;
 	private final DomainParameterXref domainParameterXref;
 	private final RowTransformer<R> rowTransformer;
+	private final SqmInterpreter<Object, ResultsConsumer<?, R>> executeQueryInterpreter;
 	private final SqmInterpreter<List<R>, Void> listInterpreter;
 	private final SqmInterpreter<ScrollableResultsImplementor<R>, ScrollMode> scrollInterpreter;
 
@@ -93,6 +94,34 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		else {
 			uniqueSemantic = ListResultsConsumer.UniqueSemantic.ALLOW;
 		}
+		this.executeQueryInterpreter = (resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
+			final SharedSessionContractImplementor session = executionContext.getSession();
+			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
+			try {
+				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
+						session.getPersistenceContext().getBatchFetchQueue(),
+						sqmInterpretation.selectStatement,
+						JdbcParametersList.empty(),
+						jdbcParameterBindings
+				);
+
+				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
+						jdbcSelect,
+						jdbcParameterBindings,
+						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
+						rowTransformer,
+						null,
+						sql -> executionContext.getSession()
+								.getJdbcCoordinator()
+								.getStatementPreparer()
+								.prepareQueryStatement( sql, false, null ),
+						resultsConsumer
+				);
+			}
+			finally {
+				domainParameterXref.clearExpansions();
+			}
+		};
 		this.listInterpreter = (unused, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
 			final SharedSessionContractImplementor session = executionContext.getSession();
 			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
@@ -105,7 +134,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				);
 
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
-
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 						jdbcSelect,
 						jdbcParameterBindings,
@@ -120,6 +148,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		};
 
 		this.scrollInterpreter = (scrollMode, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
+			final SharedSessionContractImplementor session = executionContext.getSession();
+			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
 			try {
 //				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 //						executionContext.getSession().getPersistenceContext().getBatchFetchQueue(),
@@ -128,15 +158,15 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 //						jdbcParameterBindings
 //				);
 
-				final JdbcSelectExecutor jdbcSelectExecutor = executionContext.getSession()
-						.getFactory()
+				final JdbcSelectExecutor jdbcSelectExecutor = session.getFactory()
 						.getJdbcServices()
 						.getJdbcSelectExecutor();
+				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 				return jdbcSelectExecutor.scroll(
-						sqmInterpretation.getJdbcSelect(),
+						jdbcSelect,
 						scrollMode,
 						jdbcParameterBindings,
-						new SqmJdbcExecutionContextAdapter( executionContext, sqmInterpretation.jdbcSelect ),
+						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
 						rowTransformer
 				);
 			}
@@ -165,6 +195,20 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return new MySqmJdbcExecutionContextAdapter( executionContext, jdbcSelect, subSelectFetchKeyHandler, hql );
 	}
 
+	private static SqmSelection<?> singleSelection(SqmSelectStatement<?> sqm) {
+		final List<SqmSelection<?>> selections = sqm.getQueryPart()
+				.getFirstQuerySpec()
+				.getSelectClause()
+				.getSelections();
+		return selections.size() == 1 ? selections.get( 0 ) : null;
+	}
+
+	private static Class<?> selectionType(SqmSelection<?> selection) {
+		return selection != null && !selection.getSelectableNode().isCompoundSelection() ?
+				selection.getNodeJavaType().getJavaTypeClass()
+				: null;
+	}
+
 	@SuppressWarnings("unchecked")
 	protected static <T> RowTransformer<T> determineRowTransformer(
 			SqmSelectStatement<?> sqm,
@@ -177,37 +221,40 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		else if ( resultType == null ) {
 			return RowTransformerStandardImpl.instance();
 		}
-		else if ( resultType == Object[].class ) {
-			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
-		}
-		else if ( resultType == List.class ) {
-			return (RowTransformer<T>) RowTransformerListImpl.instance();
-		}
 		else {
-			// NOTE : if we get here :
-			// 		1) there is no TupleTransformer specified
-			// 		2) an explicit result-type, other than an array, was specified
-
-			if ( tupleMetadata == null ) {
-				if ( sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections().size() == 1 ) {
-					return RowTransformerSingularReturnImpl.instance();
-				}
-				else {
-					throw new AssertionFailure( "Query defined multiple selections, should have had TupleMetadata" );
-				}
+			final SqmSelection<?> selection = singleSelection( sqm );
+			if ( resultType.isArray() && resultType != selectionType( selection ) ) {
+				return (RowTransformer<T>) RowTransformerArrayImpl.instance();
+			}
+			else if ( resultType == List.class && resultType != selectionType( selection ) ) {
+				return (RowTransformer<T>) RowTransformerListImpl.instance();
 			}
 			else {
-				if ( Tuple.class.equals( resultType ) ) {
-					return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
-				}
-				else if ( Map.class.equals( resultType ) ) {
-					return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
-				}
-				else if ( isClass( resultType ) ) {
-					return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
+				// NOTE : if we get here :
+				// 		1) there is no TupleTransformer specified
+				// 		2) an explicit result-type, other than an array or List, was specified
+
+				if ( tupleMetadata == null ) {
+					if ( selection != null ) {
+						return RowTransformerSingularReturnImpl.instance();
+					}
+					else {
+						throw new AssertionFailure( "Query defined multiple selections, should have had TupleMetadata" );
+					}
 				}
 				else {
-					throw new InstantiationException( "Query result type is not instantiable", resultType );
+					if ( Tuple.class.equals( resultType ) ) {
+						return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
+					}
+					else if ( Map.class.equals( resultType ) ) {
+						return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+					}
+					else if ( isClass( resultType ) ) {
+						return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
+					}
+					else {
+						throw new InstantiationException( "Query result type is not instantiable", resultType );
+					}
 				}
 			}
 		}
@@ -235,6 +282,16 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return new RowTransformerTupleTransformerAdapter<T>(
 				ArrayHelper.toStringArray( aliases ),
 				tupleTransformer
+		);
+	}
+
+	@Override
+	public <T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer) {
+		//noinspection unchecked,rawtypes
+		return withCacheableSqmInterpretation(
+				executionContext,
+				resultsConsumer,
+				(SqmInterpreter<T, ResultsConsumer<T, R>>) (SqmInterpreter) executeQueryInterpreter
 		);
 	}
 
@@ -456,8 +513,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		}
 
 		@Override
-		public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-			subSelectFetchKeyHandler.addKey( entityKey, entry );
+		public void registerLoadingEntityHolder(EntityHolder holder) {
+			subSelectFetchKeyHandler.addKey( holder );
 		}
 
 		@Override

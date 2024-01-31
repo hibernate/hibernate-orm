@@ -18,7 +18,6 @@ import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,9 +49,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
@@ -69,6 +66,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
@@ -106,7 +105,6 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jpa.internal.LegacySpecHelper;
@@ -138,7 +136,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FlushModeType;
@@ -228,6 +225,8 @@ public class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
+		final HibernateMonitoringEvent sessionOpenEvent = getEventManager().beginSessionOpenEvent();
+
 		persistenceContext = createPersistenceContext();
 		actionQueue = createActionQueue();
 
@@ -267,35 +266,19 @@ public class SessionImpl
 			setHibernateFlushMode( getInitialFlushMode() );
 		}
 
-		setUpMultitenancy( factory );
+		setUpMultitenancy( factory, loadQueryInfluencers );
 
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), currentTimeMillis() );
 		}
+
+		getEventManager().completeSessionOpenEvent( sessionOpenEvent, this );
 	}
 
 	private FlushMode getInitialFlushMode() {
 		return properties == null
 				? fastSessionServices.initialSessionFlushMode
 				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
-	}
-
-	private void setUpMultitenancy(SessionFactoryImplementor factory) {
-		if ( factory.getDefinedFilterNames().contains( TenantIdBinder.FILTER_NAME ) ) {
-			final String tenantIdentifier = getTenantIdentifier();
-			if ( tenantIdentifier == null ) {
-				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
-			}
-			else {
-				final CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
-				if ( resolver==null || !resolver.isRoot( tenantIdentifier ) ) {
-					// turn on the filter, unless this is the "root" tenant with access to all partitions
-					loadQueryInfluencers
-							.enableFilter( TenantIdBinder.FILTER_NAME )
-							.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
-				}
-			}
-		}
 	}
 
 	protected StatefulPersistenceContext createPersistenceContext() {
@@ -413,6 +396,9 @@ public class SessionImpl
 			log.tracef( "Closing session [%s]", getSessionIdentifier() );
 		}
 
+		final EventManager eventManager = getEventManager();
+		final HibernateMonitoringEvent sessionClosedEvent = eventManager.beginSessionClosedEvent();
+
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
 		if ( sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ) {
@@ -435,6 +421,8 @@ public class SessionImpl
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.closeSession();
 		}
+
+		eventManager.completeSessionClosedEvent( sessionClosedEvent, this );
 	}
 
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {
@@ -1905,29 +1893,6 @@ public class SessionImpl
 		return loadQueryInfluencers;
 	}
 
-	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public Filter getEnabledFilter(String filterName) {
-		pulseTransactionCoordinator();
-		return loadQueryInfluencers.getEnabledFilter( filterName );
-	}
-
-	@Override
-	public Filter enableFilter(String filterName) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		return loadQueryInfluencers.enableFilter( filterName );
-	}
-
-	@Override
-	public void disableFilter(String filterName) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		loadQueryInfluencers.disableFilter( filterName );
-	}
-
-
 	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -2082,7 +2047,7 @@ public class SessionImpl
 		private SharedSessionBuilderImpl(SessionImpl session) {
 			super( (SessionFactoryImpl) session.getFactory() );
 			this.session = session;
-			super.tenantIdentifier( session.getTenantIdentifier() );
+			super.tenantIdentifier( session.getTenantIdentifierValue() );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2091,6 +2056,12 @@ public class SessionImpl
 
 		@Override
 		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
+			// todo : is this always true?  Or just in the case of sharing JDBC resources?
+			throw new SessionException( "Cannot redefine tenant identifier on child session" );
+		}
+
+		@Override
+		public SharedSessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
 			// todo : is this always true?  Or just in the case of sharing JDBC resources?
 			throw new SessionException( "Cannot redefine tenant identifier on child session" );
 		}

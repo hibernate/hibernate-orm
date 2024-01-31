@@ -93,7 +93,7 @@ public abstract class QueryBinder {
 				.setTimeout( hints.getTimeout() )
 				.setFetchSize( hints.getInteger( HibernateHints.HINT_FETCH_SIZE ) )
 				.setFlushMode( hints.getFlushMode() )
-				.setReadOnly( hints.getBoolean( HibernateHints.HINT_READ_ONLY ) )
+				.setReadOnly( hints.getBooleanWrapper( HibernateHints.HINT_READ_ONLY ) )
 				.setLockOptions( hints.determineLockOptions( namedQuery ) )
 				.setComment( hints.getString( HibernateHints.HINT_COMMENT ) )
 				.build();
@@ -140,7 +140,7 @@ public abstract class QueryBinder {
 				.setTimeout( hints.getTimeout() )
 				.setFetchSize( hints.getInteger( HibernateHints.HINT_FETCH_SIZE ) )
 				.setFlushMode( hints.getFlushMode() )
-				.setReadOnly( hints.getBoolean( HibernateHints.HINT_READ_ONLY ) )
+				.setReadOnly( hints.getBooleanWrapper( HibernateHints.HINT_READ_ONLY ) )
 				.setComment( hints.getString( HibernateHints.HINT_COMMENT ) )
 				.addHints( hints.getHintsMap() );
 

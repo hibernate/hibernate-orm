@@ -137,6 +137,8 @@ public class CompilationStatement extends Statement {
 		List<String> options = new ArrayList<String>();
 		options.add( "-d" );
 		options.add( TestUtil.getOutBaseDir().getAbsolutePath() );
+		options.add( "-processor" );
+		options.add( JPAMetaModelEntityProcessor.class.getName() );
 
 		// pass orm files if specified
 		if ( !xmlMappingFiles.isEmpty() ) {

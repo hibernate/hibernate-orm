@@ -18,7 +18,8 @@ import com.mchange.v2.c3p0.DataSources;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.C3p0Settings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
@@ -31,6 +32,7 @@ import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.c3p0.internal.C3P0MessageLogger.C3P0_LOGGER;
 import static org.hibernate.c3p0.internal.C3P0MessageLogger.C3P0_MSG_LOGGER;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractSetting;
 
 /**
  * A connection provider that uses a C3P0 connection pool. Hibernate will use this by
@@ -41,6 +43,7 @@ import static org.hibernate.c3p0.internal.C3P0MessageLogger.C3P0_MSG_LOGGER;
  */
 public class C3P0ConnectionProvider
 		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
+	private static volatile String HIBERNATE_STYLE_SETTING_PREFIX = C3p0Settings.C3P0_CONFIG_PREFIX + ".";
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for properties with
 	//                     hibernate-specific overrides to detect and warn about conflicting
@@ -104,18 +107,28 @@ public class C3P0ConnectionProvider
 
 	@Override
 	public void configure(Map<String, Object> props) {
-		final String jdbcDriverClass = (String) props.get( Environment.DRIVER );
-		final String jdbcUrl = (String) props.get( Environment.URL );
+		final String jdbcDriverClass = extractSetting(
+				props,
+				JdbcSettings.JAKARTA_JDBC_DRIVER,
+				JdbcSettings.DRIVER,
+				JdbcSettings.JPA_JDBC_DRIVER
+		);
+		final String jdbcUrl = extractSetting(
+				props,
+				JdbcSettings.JAKARTA_JDBC_URL,
+				JdbcSettings.URL,
+				JdbcSettings.JPA_JDBC_URL
+		);
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
 
 		C3P0_MSG_LOGGER.c3p0UsingDriver( jdbcDriverClass, jdbcUrl );
 		C3P0_MSG_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 
-		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
+		autocommit = ConfigurationHelper.getBoolean( JdbcSettings.AUTOCOMMIT, props );
 		C3P0_MSG_LOGGER.autoCommitMode( autocommit );
 
 		if ( jdbcDriverClass == null ) {
-			C3P0_MSG_LOGGER.jdbcDriverNotSpecified( Environment.DRIVER );
+			C3P0_MSG_LOGGER.jdbcDriverNotSpecified();
 		}
 		else {
 			try {
@@ -129,20 +142,20 @@ public class C3P0ConnectionProvider
 		try {
 
 			//swaldman 2004-02-07: modify to allow null values to signify fall through to c3p0 PoolConfig defaults
-			final Integer minPoolSize = ConfigurationHelper.getInteger( Environment.C3P0_MIN_SIZE, props );
-			final Integer maxPoolSize = ConfigurationHelper.getInteger( Environment.C3P0_MAX_SIZE, props );
-			final Integer maxIdleTime = ConfigurationHelper.getInteger( Environment.C3P0_TIMEOUT, props );
-			final Integer maxStatements = ConfigurationHelper.getInteger( Environment.C3P0_MAX_STATEMENTS, props );
-			final Integer acquireIncrement = ConfigurationHelper.getInteger( Environment.C3P0_ACQUIRE_INCREMENT, props );
-			final Integer idleTestPeriod = ConfigurationHelper.getInteger( Environment.C3P0_IDLE_TEST_PERIOD, props );
+			final Integer minPoolSize = ConfigurationHelper.getInteger( C3p0Settings.C3P0_MIN_SIZE, props );
+			final Integer maxPoolSize = ConfigurationHelper.getInteger( C3p0Settings.C3P0_MAX_SIZE, props );
+			final Integer maxIdleTime = ConfigurationHelper.getInteger( C3p0Settings.C3P0_TIMEOUT, props );
+			final Integer maxStatements = ConfigurationHelper.getInteger( C3p0Settings.C3P0_MAX_STATEMENTS, props );
+			final Integer acquireIncrement = ConfigurationHelper.getInteger( C3p0Settings.C3P0_ACQUIRE_INCREMENT, props );
+			final Integer idleTestPeriod = ConfigurationHelper.getInteger( C3p0Settings.C3P0_IDLE_TEST_PERIOD, props );
 
 			final Properties c3props = new Properties();
 
 			// turn hibernate.c3p0.* into c3p0.*, so c3p0
 			// gets a chance to see all hibernate.c3p0.*
 			for ( String key : props.keySet() ) {
-				if ( key.startsWith( "hibernate.c3p0." ) ) {
-					final String newKey = key.substring( 15 );
+				if ( key.startsWith( HIBERNATE_STYLE_SETTING_PREFIX ) ) {
+					final String newKey = key.substring( HIBERNATE_STYLE_SETTING_PREFIX.length() );
 					if ( props.containsKey( newKey ) ) {
 						warnPropertyConflict( key, newKey );
 					}
@@ -150,17 +163,13 @@ public class C3P0ConnectionProvider
 				}
 			}
 
-			setOverwriteProperty( Environment.C3P0_MIN_SIZE, C3P0_STYLE_MIN_POOL_SIZE, props, c3props, minPoolSize );
-			setOverwriteProperty( Environment.C3P0_MAX_SIZE, C3P0_STYLE_MAX_POOL_SIZE, props, c3props, maxPoolSize );
-			setOverwriteProperty( Environment.C3P0_TIMEOUT, C3P0_STYLE_MAX_IDLE_TIME, props, c3props, maxIdleTime );
+			setOverwriteProperty( C3p0Settings.C3P0_MIN_SIZE, C3P0_STYLE_MIN_POOL_SIZE, props, c3props, minPoolSize );
+			setOverwriteProperty( C3p0Settings.C3P0_MAX_SIZE, C3P0_STYLE_MAX_POOL_SIZE, props, c3props, maxPoolSize );
+			setOverwriteProperty( C3p0Settings.C3P0_TIMEOUT, C3P0_STYLE_MAX_IDLE_TIME, props, c3props, maxIdleTime );
+			setOverwriteProperty( C3p0Settings.C3P0_MAX_STATEMENTS, C3P0_STYLE_MAX_STATEMENTS, props, c3props, maxStatements );
+			setOverwriteProperty( C3p0Settings.C3P0_ACQUIRE_INCREMENT, C3P0_STYLE_ACQUIRE_INCREMENT, props, c3props, acquireIncrement );
 			setOverwriteProperty(
-					Environment.C3P0_MAX_STATEMENTS, C3P0_STYLE_MAX_STATEMENTS, props, c3props, maxStatements
-			);
-			setOverwriteProperty(
-					Environment.C3P0_ACQUIRE_INCREMENT, C3P0_STYLE_ACQUIRE_INCREMENT, props, c3props, acquireIncrement
-			);
-			setOverwriteProperty(
-					Environment.C3P0_IDLE_TEST_PERIOD,
+					C3p0Settings.C3P0_IDLE_TEST_PERIOD,
 					C3P0_STYLE_IDLE_CONNECTION_TEST_PERIOD,
 					props,
 					c3props,

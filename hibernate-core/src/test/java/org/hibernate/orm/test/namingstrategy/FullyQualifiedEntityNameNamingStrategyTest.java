@@ -23,6 +23,7 @@ import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 
 	@BeforeAll
 	public void setUp() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( Category.class )
 				.addAnnotatedClass( Item.class )

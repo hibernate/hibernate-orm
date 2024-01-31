@@ -96,13 +96,13 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
     @Override
     public Serializable disassemble(StringWrapper value)
 			throws HibernateException {
-        return deepCopy( value );
+        return value == null ? null : value.getValue().getBytes();
     }
 
     @Override
     public StringWrapper assemble(Serializable cached, Object owner)
 			throws HibernateException {
-        return deepCopy( (StringWrapper) cached );
+        return new StringWrapper( new String( (byte[]) cached ) );
     }
 
     @Override

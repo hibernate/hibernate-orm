@@ -68,6 +68,8 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 
 				TypeDescription declaredOwnerType = findDeclaredType( owner );
 				AnnotatedFieldDescription field = findField( declaredOwnerType, name, desc );
+				// try to discover composite types on the fly to support some testing scenarios
+				enhancementContext.discoverCompositeTypes( declaredOwnerType, typePool );
 
 				if ( ( enhancementContext.isEntityClass( declaredOwnerType.asErasure() )
 						|| enhancementContext.isCompositeClass( declaredOwnerType.asErasure() ) )

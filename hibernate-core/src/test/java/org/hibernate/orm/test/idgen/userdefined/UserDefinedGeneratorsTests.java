@@ -28,6 +28,7 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -63,7 +64,7 @@ public class UserDefinedGeneratorsTests {
 			return (ContainedBean<?>) TestIdentifierGenerator::new;
 		} );
 		
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		ssrb.applySetting( AvailableSettings.BEAN_CONTAINER, beanContainer )
 				.applySetting( AvailableSettings.ALLOW_EXTENSIONS_IN_CDI, "true" );
 

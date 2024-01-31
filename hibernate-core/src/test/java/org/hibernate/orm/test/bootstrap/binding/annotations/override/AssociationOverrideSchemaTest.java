@@ -19,7 +19,7 @@ import org.junit.Test;
 /**
  * @author Lukasz Antoniak
  */
-@RequiresDialect({ H2Dialect.class })
+@RequiresDialect(H2Dialect.class)
 @TestForIssue(jiraKey = "HHH-6662")
 public class AssociationOverrideSchemaTest extends BaseNonConfigCoreFunctionalTestCase {
 	public static final String SCHEMA_NAME = "OTHER_SCHEMA";

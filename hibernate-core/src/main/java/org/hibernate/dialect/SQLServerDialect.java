@@ -49,6 +49,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -84,6 +86,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -117,7 +120,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Gavin King
  */
 public class SQLServerDialect extends AbstractTransactSQLDialect {
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 0 );
+	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 0 );
 
 	/**
 	 * NOTE : 2100 is the documented limit supposedly - but in my testing, sending
@@ -148,7 +151,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
-		return version.isSameOrAfter(11) ? new SqlServerSequenceExporter(this) : null;
+		return new SqlServerSequenceExporter(this);
 	}
 
 	@Override
@@ -314,7 +317,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 						"count_big",
 						"+",
 						"varchar(max)",
-						false
+						true,
+						"varbinary(max)"
 				)
 		);
 
@@ -332,49 +336,48 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.stddevPopSamp_stdevp();
 		functionFactory.varPopSamp_varp();
 
-		if ( getVersion().isSameOrAfter( 11 ) ) {
-			functionContributions.getFunctionRegistry().register(
-					"format",
-					new SQLServerFormatEmulation( functionContributions.getTypeConfiguration() )
-			);
+		functionContributions.getFunctionRegistry().register(
+				"format",
+				new SQLServerFormatEmulation( functionContributions.getTypeConfiguration() )
+		);
 
-			//actually translate() was added in 2017 but
-			//it's not worth adding a new dialect for that!
-			functionFactory.translate();
+		//actually translate() was added in 2017 but
+		//it's not worth adding a new dialect for that!
+		functionFactory.translate();
 
-			functionFactory.median_percentileCont( true );
+		functionFactory.median_percentileCont( true );
 
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
-					.setInvariantType( dateType )
-					.setExactArgumentCount( 3 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
-					.setInvariantType( timeType )
-					.setExactArgumentCount( 5 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
-					.setInvariantType( timestampType )
-					.setExactArgumentCount( 5 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
-					.setInvariantType( timestampType )
-					.setExactArgumentCount( 7 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
-					.setInvariantType( timestampType )
-					.setExactArgumentCount( 8 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
-					.setInvariantType( timestampType )
-					.setExactArgumentCount( 10 )
-					.setParameterTypes(INTEGER)
-					.register();
-		}
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
+				.setInvariantType( dateType )
+				.setExactArgumentCount( 3 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
+				.setInvariantType( timeType )
+				.setExactArgumentCount( 5 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
+				.setInvariantType( timestampType )
+				.setExactArgumentCount( 5 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
+				.setInvariantType( timestampType )
+				.setExactArgumentCount( 7 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
+				.setInvariantType( timestampType )
+				.setExactArgumentCount( 8 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
+				.setInvariantType( timestampType )
+				.setExactArgumentCount( 10 )
+				.setParameterTypes(INTEGER)
+				.register();
+
 		functionFactory.windowFunctions();
 		functionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
@@ -396,25 +399,25 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			switch ( specification ) {
 				case BOTH:
-					return character == ' '
+					return isWhitespace
 							? "trim(?1)"
-							: "trim('" + character + "' from ?1)";
+							: "trim(?2 from ?1)";
 				case LEADING:
-					return character == ' '
+					return isWhitespace
 							? "ltrim(?1)"
-							: "ltrim(?1,'" + character + "')";
+							: "ltrim(?1,?2)";
 				case TRAILING:
-					return character == ' '
+					return isWhitespace
 							? "rtrim(?1)"
-							: "rtrim(?1,'" + character + "')";
+							: "rtrim(?1,?2)";
 			}
 			throw new UnsupportedOperationException( "Unsupported specification: " + specification );
 		}
-		return super.trimPattern( specification, character );
+		return super.trimPattern( specification, isWhitespace );
 	}
 
 	@Override
@@ -485,14 +488,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( getVersion().isSameOrAfter( 11 ) ) {
-			return SQLServer2012LimitHandler.INSTANCE;
-		}
-		else {
-			//this is a stateful class, don't cache
-			//it in the Dialect!
-			return new SQLServer2005LimitHandler();
-		}
+		return SQLServer2012LimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -641,10 +637,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		if ( getVersion().isBefore( 11 ) ) {
-			return NoSequenceSupport.INSTANCE;
-		}
-		else if ( getVersion().isSameOrAfter( 16 ) ) {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
 			return SQLServer16SequenceSupport.INSTANCE;
 		}
 		else {
@@ -654,19 +647,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return getVersion().isBefore( 11 )
-				? super.getQuerySequencesString() //null
-				// The upper-case name should work on both case-sensitive
-				// and case-insensitive collations.
-				: "select * from INFORMATION_SCHEMA.SEQUENCES";
+		// The upper-case name should work on both case-sensitive and case-insensitive collations.
+		return "select * from INFORMATION_SCHEMA.SEQUENCES";
 	}
 
 	@Override
 	public String getQueryHintString(String sql, String hints) {
-		if ( getVersion().isBefore( 11 ) ) {
-			return super.getQueryHintString( sql, hints );
-		}
-
 		final StringBuilder buffer = new StringBuilder(
 				sql.length() + hints.length() + 12
 		);
@@ -713,7 +699,22 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion().isSameOrAfter( 11 );
+		return true;
+	}
+
+	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return new TemplatedViolatedConstraintNameExtractor(
+				sqle -> {
+					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+						case 2627:
+						case 2601:
+							return extractUsingTemplate( "'", "'", sqle.getMessage() );
+						default:
+							return null;
+					}
+				}
+		);
 	}
 
 	@Override
@@ -721,16 +722,28 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 			if ( "HY008".equals( sqlState ) ) {
-				throw new QueryTimeoutException( message, sqlException, sql );
+				return new QueryTimeoutException( message, sqlException, sql );
 			}
 
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			switch ( errorCode ) {
 				case 1222:
-					throw new LockTimeoutException( message, sqlException, sql );
+					return new LockTimeoutException( message, sqlException, sql );
 				case 2627:
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
 				case 2601:
-					throw new ConstraintViolationException( message, sqlException, sql );
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
 				default:
 					return null;
 			}
@@ -1117,5 +1130,15 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			SessionFactoryImplementor factory) {
 		final SQLServerSqlAstTranslator<JdbcOperation> translator = new SQLServerSqlAstTranslator<>( factory, optionalTableUpdate );
 		return translator.createMergeOperation( optionalTableUpdate );
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

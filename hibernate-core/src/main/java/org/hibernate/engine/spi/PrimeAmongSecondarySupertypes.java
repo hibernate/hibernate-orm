@@ -11,6 +11,8 @@ import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * For a full explanation of the purpose of this interface see {@link ManagedTypeHelper}.
  *
@@ -22,46 +24,46 @@ import org.hibernate.proxy.ProxyConfiguration;
 @Internal
 public interface PrimeAmongSecondarySupertypes {
 
-	default ManagedEntity asManagedEntity() {
+	default @Nullable ManagedEntity asManagedEntity() {
 		return null;
 	}
 
-	default PersistentAttributeInterceptable asPersistentAttributeInterceptable() {
+	default @Nullable PersistentAttributeInterceptable asPersistentAttributeInterceptable() {
 		return null;
 	}
 
-	default SelfDirtinessTracker asSelfDirtinessTracker() {
-		return null;
-	}
-
-	//Included for consistency but doesn't seem to be used?
-	default Managed asManaged() {
+	default @Nullable SelfDirtinessTracker asSelfDirtinessTracker() {
 		return null;
 	}
 
 	//Included for consistency but doesn't seem to be used?
-	default ManagedComposite asManagedComposite() {
+	default @Nullable Managed asManaged() {
 		return null;
 	}
 
 	//Included for consistency but doesn't seem to be used?
-	default ManagedMappedSuperclass asManagedMappedSuperclass() {
+	default @Nullable ManagedComposite asManagedComposite() {
 		return null;
 	}
 
-	default CompositeOwner asCompositeOwner() {
+	//Included for consistency but doesn't seem to be used?
+	default @Nullable ManagedMappedSuperclass asManagedMappedSuperclass() {
 		return null;
 	}
 
-	default CompositeTracker asCompositeTracker() {
+	default @Nullable CompositeOwner asCompositeOwner() {
 		return null;
 	}
 
-	default HibernateProxy asHibernateProxy() {
+	default @Nullable CompositeTracker asCompositeTracker() {
 		return null;
 	}
 
-	default ProxyConfiguration asProxyConfiguration() {
+	default @Nullable HibernateProxy asHibernateProxy() {
+		return null;
+	}
+
+	default @Nullable ProxyConfiguration asProxyConfiguration() {
 		return null;
 	}
 

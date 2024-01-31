@@ -14,6 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -31,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class IdClassPropertiesTest {
 	@Test
 	public void testRight() {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
 					.addAnnotatedClass( RightEntity.class );
 			assertDoesNotThrow( () -> metadataSources.buildMetadata() );
@@ -40,7 +41,7 @@ public class IdClassPropertiesTest {
 
 	@Test
 	public void testWrongLess() {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
 					.addAnnotatedClass( WrongEntityLess.class );
 			final AnnotationException thrown = assertThrows( AnnotationException.class, metadataSources::buildMetadata );
@@ -50,7 +51,7 @@ public class IdClassPropertiesTest {
 
 	@Test
 	public void testWrongMore() {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
 					.addAnnotatedClass( WrongEntityMore.class );
 			final AnnotationException thrown = assertThrows( AnnotationException.class, metadataSources::buildMetadata );

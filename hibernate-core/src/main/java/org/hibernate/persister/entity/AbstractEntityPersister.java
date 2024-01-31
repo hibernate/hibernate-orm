@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -44,7 +45,9 @@ import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -78,13 +81,13 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.NaturalIdResolutions;
@@ -102,14 +105,17 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.internal.VersionGeneration;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.internal.GeneratedValuesHelper;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
+import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -147,17 +153,18 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
@@ -179,6 +186,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
@@ -203,9 +212,12 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
+import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
+import org.hibernate.persister.entity.mutation.DeleteCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.MergeCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
@@ -262,13 +274,13 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -307,6 +319,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toObjectArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toTypeArray;
+import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
@@ -412,15 +425,20 @@ public abstract class AbstractEntityPersister
 	private final boolean invalidateCache;
 	private final boolean isLazyPropertiesCacheable;
 	private final boolean useReferenceCacheEntries;
+	private final boolean useShallowQueryCacheLayout;
+	private final boolean storeDiscriminatorInShallowQueryCacheLayout;
 
 	// dynamic filters attached to the class-level
 	private final FilterHelper filterHelper;
 	private volatile Set<String> affectingFetchProfileNames;
 
+	protected List<? extends ModelPart> insertGeneratedProperties;
+	protected List<? extends ModelPart> updateGeneratedProperties;
 	private GeneratedValuesProcessor insertGeneratedValuesProcessor;
 	private GeneratedValuesProcessor updateGeneratedValuesProcessor;
 
-	private InsertGeneratedIdentifierDelegate identityDelegate;
+	private GeneratedValuesMutationDelegate insertDelegate;
+	private GeneratedValuesMutationDelegate updateDelegate;
 	private String identitySelectString;
 
 	private boolean[] tableHasColumns;
@@ -438,6 +456,7 @@ public abstract class AbstractEntityPersister
 	private EntityVersionMapping versionMapping;
 	private EntityRowIdMapping rowIdMapping;
 	private EntityDiscriminatorMapping discriminatorMapping;
+	private SoftDeleteMapping softDeleteMapping;
 
 	private AttributeMappingsList attributeMappings;
 	protected AttributeMappingsMap declaredAttributeMappings = AttributeMappingsMap.builder().build();
@@ -787,6 +806,14 @@ public abstract class AbstractEntityPersister
 		) : null;
 
 		useReferenceCacheEntries = shouldUseReferenceCacheEntries( creationContext.getSessionFactoryOptions() );
+		useShallowQueryCacheLayout = shouldUseShallowCacheLayout(
+				persistentClass.getQueryCacheLayout(),
+				creationContext.getSessionFactoryOptions()
+		);
+		storeDiscriminatorInShallowQueryCacheLayout = shouldStoreDiscriminatorInShallowQueryCacheLayout(
+				persistentClass.getQueryCacheLayout(),
+				creationContext.getSessionFactoryOptions()
+		);
 		cacheEntryHelper = buildCacheEntryHelper( creationContext.getSessionFactoryOptions() );
 		invalidateCache = sessionFactoryOptions.isSecondLevelCacheEnabled()
 				&& canWriteToCache
@@ -831,7 +858,19 @@ public abstract class AbstractEntityPersister
 		return memento;
 	}
 
-	private SingleIdEntityLoader<?> createSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected SingleIdEntityLoader<?> buildSingleIdEntityLoader() {
+		if ( hasNamedQueryLoader() ) {
+			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
+			final NamedQueryMemento memento = getNamedQueryMemento( null );
+			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
+		}
+		return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+	}
+
+	private SingleIdEntityLoader<?> buildSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
@@ -864,7 +903,7 @@ public abstract class AbstractEntityPersister
 		return entityNameByTableNameMap;
 	}
 
-	private MultiIdEntityLoader<Object> buildMultiIdLoader() {
+	protected MultiIdEntityLoader<Object> buildMultiIdLoader() {
 		if ( getIdentifierType() instanceof BasicType
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {
 			return new MultiIdEntityLoaderArrayParam<>( this, factory );
@@ -916,6 +955,29 @@ public abstract class AbstractEntityPersister
 			}
 			return true;
 		}
+	}
+
+	private boolean shouldUseShallowCacheLayout(CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
+		final CacheLayout queryCacheLayout;
+		if ( entityQueryCacheLayout == null ) {
+			queryCacheLayout = options.getQueryCacheLayout();
+		}
+		else {
+			queryCacheLayout = entityQueryCacheLayout;
+		}
+		return queryCacheLayout == CacheLayout.SHALLOW || queryCacheLayout == CacheLayout.SHALLOW_WITH_DISCRIMINATOR
+				|| queryCacheLayout == CacheLayout.AUTO && ( canUseReferenceCacheEntries() || canReadFromCache() );
+	}
+
+	private boolean shouldStoreDiscriminatorInShallowQueryCacheLayout(CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
+		final CacheLayout queryCacheLayout;
+		if ( entityQueryCacheLayout == null ) {
+			queryCacheLayout = options.getQueryCacheLayout();
+		}
+		else {
+			queryCacheLayout = entityQueryCacheLayout;
+		}
+		return queryCacheLayout == CacheLayout.SHALLOW_WITH_DISCRIMINATOR;
 	}
 
 	@Override
@@ -1023,19 +1085,24 @@ public abstract class AbstractEntityPersister
 		return lazyLoadPlanByFetchGroup.get( fetchGroup );
 	}
 
-	@Internal
+	@Override
 	public InsertCoordinator getInsertCoordinator() {
 		return insertCoordinator;
 	}
 
-	@Internal
+	@Override
 	public UpdateCoordinator getUpdateCoordinator() {
 		return updateCoordinator;
 	}
 
-	@Internal
+	@Override
 	public DeleteCoordinator getDeleteCoordinator() {
 		return deleteCoordinator;
+	}
+
+	@Override
+	public UpdateCoordinator getMergeCoordinator() {
+		return mergeCoordinator;
 	}
 
 	public String getVersionSelectString() {
@@ -1170,6 +1237,16 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean useShallowQueryCacheLayout() {
+		return useShallowQueryCacheLayout;
+	}
+
+	@Override
+	public boolean storeDiscriminatorInShallowQueryCacheLayout() {
+		return storeDiscriminatorInShallowQueryCacheLayout;
+	}
+
+	@Override
 	public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
 		if ( this.uniqueKeyEntries == null ) {
 			this.uniqueKeyEntries = initUniqueKeyEntries( this );
@@ -1178,7 +1255,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private static List<UniqueKeyEntry> initUniqueKeyEntries(final AbstractEntityPersister aep) {
-		ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList();
+		final ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList<>();
 		for ( Type propertyType : aep.getPropertyTypes() ) {
 			if ( propertyType instanceof AssociationType ) {
 				final AssociationType associationType = (AssociationType) propertyType;
@@ -1511,7 +1588,7 @@ public abstract class AbstractEntityPersister
 		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() && isLazyPropertiesCacheable() ) {
 			final EntityDataAccess cacheAccess = getCacheAccessStrategy();
 			final Object cacheKey = cacheAccess.generateCacheKey(id, this, session.getFactory(), session.getTenantIdentifier() );
-			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, cacheAccess );
+			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, this, cacheAccess );
 			if ( ce != null ) {
 				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( ce, factory );
 				final Object initializedValue = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
@@ -1791,6 +1868,9 @@ public abstract class AbstractEntityPersister
 		final SelectClause selectClause = rootQuerySpec.getSelectClause();
 		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
 		int i = 0;
+		int columnIndex = 0;
+		final String[] columnAliases = getSubclassColumnAliasClosure();
+		final int columnAliasesSize = columnAliases.length;
 		for ( String identifierAlias : identifierAliases ) {
 			sqlSelections.set(
 					i,
@@ -1799,6 +1879,9 @@ public abstract class AbstractEntityPersister
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierAlias + suffix )
 					)
 			);
+			if ( i < columnAliasesSize && columnAliases[i].equals( identifierAlias ) ) {
+				columnIndex++;
+			}
 			i++;
 		}
 
@@ -1824,9 +1907,7 @@ public abstract class AbstractEntityPersister
 			i++;
 		}
 
-		final String[] columnAliases = getSubclassColumnAliasClosure();
 		final String[] formulaAliases = getSubclassFormulaAliasClosure();
-		int columnIndex = 0;
 		int formulaIndex = 0;
 		for ( ; i < sqlSelections.size(); i++ ) {
 			final SqlSelection sqlSelection = sqlSelections.get( i );
@@ -1869,10 +1950,9 @@ public abstract class AbstractEntityPersister
 			final Fetchable fetchable = fetchableContainer.getFetchable( i );
 			// Ignore plural attributes
 			if ( !( fetchable instanceof PluralAttributeMapping ) ) {
-				final FetchTiming fetchTiming;
-				if ( fetchable instanceof BasicValuedModelPart ) {
+				final FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+				if ( fetchable.asBasicValuedModelPart() != null ) {
 					// Ignore lazy basic columns
-					fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 					if ( fetchTiming == FetchTiming.DELAYED ) {
 						continue;
 					}
@@ -1887,10 +1967,6 @@ public abstract class AbstractEntityPersister
 					if ( !getRootTableName().equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
 						continue;
 					}
-					fetchTiming = FetchTiming.DELAYED;
-				}
-				else {
-					fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 				}
 
 				if ( fetchTiming == null ) {
@@ -1902,7 +1978,7 @@ public abstract class AbstractEntityPersister
 							fetchable,
 							fetchParent.resolveNavigablePath( fetchable ),
 							fetchTiming,
-							true,
+							false,
 							null,
 							creationState
 					);
@@ -1982,8 +2058,10 @@ public abstract class AbstractEntityPersister
 		return select.addRestriction( rootTableKeyColumnNames ).toStatementString();
 	}
 
-	private GeneratedValuesProcessor createGeneratedValuesProcessor(EventType timing) {
-		return new GeneratedValuesProcessor( this, timing, getFactory() );
+	private GeneratedValuesProcessor createGeneratedValuesProcessor(
+			EventType timing,
+			List<AttributeMapping> generatedAttributes) {
+		return new GeneratedValuesProcessor( this, generatedAttributes, timing, getFactory() );
 	}
 
 	@Override
@@ -1992,32 +2070,7 @@ public abstract class AbstractEntityPersister
 			return superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session );
 		}
 
-		if ( !isVersioned() ) {
-			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
-		}
-
-		if ( isVersionGeneratedOnExecution() ) {
-			// the difficulty here is exactly what we update in order to
-			// force the version to be incremented in the db...
-			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
-
-		}
-
-		final EntityVersionMapping versionMapping = getVersionMapping();
-		final Object nextVersion = getVersionJavaType().next(
-				currentVersion,
-				versionMapping.getLength(),
-				versionMapping.getPrecision(),
-				versionMapping.getScale(),
-				session
-		);
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Forcing version increment [" + infoString( this, id, getFactory() ) + "; "
-							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
-							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
-			);
-		}
+		final Object nextVersion = calculateNextVersion( id, currentVersion, session );
 
 		updateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
 
@@ -2055,7 +2108,55 @@ public abstract class AbstractEntityPersister
 		return nextVersion;
 	}
 
-//	private String generateVersionIncrementUpdateString() {
+	@Override
+	public Object forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			boolean batching,
+			SharedSessionContractImplementor session) throws HibernateException {
+		if ( superMappingType != null ) {
+			return superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session );
+		}
+
+		final Object nextVersion = calculateNextVersion( id, currentVersion, session );
+
+		updateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, batching, session );
+		return nextVersion;
+	}
+
+	private Object calculateNextVersion(Object id, Object currentVersion, SharedSessionContractImplementor session) {
+		if ( !isVersioned() ) {
+			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
+		}
+
+		if ( isVersionGeneratedOnExecution() ) {
+			// the difficulty here is exactly what we update in order to
+			// force the version to be incremented in the db...
+			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
+
+		}
+
+		final EntityVersionMapping versionMapping = getVersionMapping();
+		final Object nextVersion = getVersionJavaType().next(
+				currentVersion,
+				versionMapping.getLength(),
+				versionMapping.getTemporalPrecision() != null
+						? versionMapping.getTemporalPrecision()
+						: versionMapping.getPrecision(),
+				versionMapping.getScale(),
+				session
+		);
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace(
+					"Forcing version increment [" + infoString( this, id, getFactory() ) + "; "
+							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
+							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
+			);
+		}
+		return nextVersion;
+	}
+
+	//	private String generateVersionIncrementUpdateString() {
 //		final Update update = new Update( getFactory().getJdbcServices().getDialect() ).setTableName( getTableName( 0 ) );
 //		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 //			update.setComment( "forced version increment" );
@@ -2746,58 +2847,15 @@ public abstract class AbstractEntityPersister
 		return select.toStatementString();
 	}
 
-	/**
-	 * Update an object
-	 */
 	@Override
-	public void update(
-			final Object id,
-			final Object[] values,
-			int[] dirtyAttributeIndexes,
-			final boolean hasDirtyCollection,
-			final Object[] oldValues,
-			final Object oldVersion,
-			final Object object,
-			final Object rowId,
-			final SharedSessionContractImplementor session) throws HibernateException {
-		updateCoordinator.coordinateUpdate(
-				object,
-				id,
-				rowId,
-				values,
-				oldVersion,
-				oldValues,
-				dirtyAttributeIndexes,
-				hasDirtyCollection,
-				session
-		);
-	}
-
-	/**
-	 * Merge an object
-	 */
-	@Override
-	public void merge(
-			final Object id,
-			final Object[] values,
-			int[] dirtyAttributeIndexes,
-			final boolean hasDirtyCollection,
-			final Object[] oldValues,
-			final Object oldVersion,
-			final Object object,
-			final Object rowId,
-			final SharedSessionContractImplementor session) throws HibernateException {
-		mergeCoordinator.coordinateUpdate(
-				object,
-				id,
-				rowId,
-				values,
-				oldVersion,
-				oldValues,
-				dirtyAttributeIndexes,
-				hasDirtyCollection,
-				session
-		);
+	public String getSelectByUniqueKeyString(String[] propertyNames, String[] columnNames) {
+		final SimpleSelect select = new SimpleSelect( getFactory() )
+				.setTableName( getTableName( 0 ) )
+				.addColumns( columnNames );
+		for ( final String propertyName : propertyNames ) {
+			select.addRestriction( getPropertyColumnNames( propertyName ) );
+		}
+		return select.toStatementString();
 	}
 
 	@Internal
@@ -2812,18 +2870,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public InsertGeneratedIdentifierDelegate getIdentityInsertDelegate() {
-		return identityDelegate;
+	public GeneratedValuesMutationDelegate getInsertDelegate() {
+		return insertDelegate;
 	}
 
 	@Override
-	public Object insert(Object[] fields, Object object, SharedSessionContractImplementor session) {
-		return insertCoordinator.coordinateInsert( null, fields, object, session );
-	}
-
-	@Override
-	public void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
-		insertCoordinator.coordinateInsert( id, fields, object, session );
+	public GeneratedValuesMutationDelegate getUpdateDelegate() {
+		return updateDelegate;
 	}
 
 	protected EntityTableMapping[] getTableMappings() {
@@ -2929,7 +2982,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session) {
-		deleteCoordinator.coordinateDelete( object, id, version, session );
+		deleteCoordinator.delete( object, id, version, session );
 	}
 
 	/**
@@ -2951,7 +3004,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final MutationOperationGroup staticInsertGroup = insertCoordinator.getStaticInsertGroup();
+				final MutationOperationGroup staticInsertGroup = insertCoordinator.getStaticMutationOperationGroup();
 				if ( staticInsertGroup != null ) {
 					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticInsertGroup.getOperation( i );
@@ -2963,7 +3016,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final MutationOperationGroup staticUpdateGroup = updateCoordinator.getStaticUpdateGroup();
+				final MutationOperationGroup staticUpdateGroup = updateCoordinator.getStaticMutationOperationGroup();
 				if ( staticUpdateGroup != null ) {
 					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticUpdateGroup.getOperation( i );
@@ -2975,7 +3028,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final MutationOperationGroup staticDeleteGroup = deleteCoordinator.getStaticDeleteGroup();
+				final MutationOperationGroup staticDeleteGroup = deleteCoordinator.getStaticMutationOperationGroup();
 				if ( staticDeleteGroup != null ) {
 					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticDeleteGroup.getOperation( i );
@@ -2990,7 +3043,7 @@ public abstract class AbstractEntityPersister
 
 	public abstract Map<Object, String> getSubclassByDiscriminatorValue();
 
-	protected abstract boolean needsDiscriminator();
+	public abstract boolean needsDiscriminator();
 
 	protected boolean isDiscriminatorFormula() {
 		return false;
@@ -3055,10 +3108,26 @@ public abstract class AbstractEntityPersister
 				getFactory()
 		);
 
-		if ( additionalPredicateCollectorAccess != null && needsDiscriminator() ) {
-			final String alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-			final Predicate discriminatorPredicate = createDiscriminatorPredicate( alias, tableGroup, creationState );
-			additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
+		if ( additionalPredicateCollectorAccess != null ) {
+			if ( needsDiscriminator() ) {
+				final String alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
+				final Predicate discriminatorPredicate = createDiscriminatorPredicate( alias, tableGroup, creationState );
+				additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
+			}
+
+			if ( softDeleteMapping != null ) {
+				final TableReference tableReference = tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
+				final Predicate softDeletePredicate = SoftDeleteHelper.createNonSoftDeletedRestriction(
+						tableReference,
+						softDeleteMapping,
+						creationState.getSqlExpressionResolver()
+				);
+				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );
+				if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
+					// Register entity name usage for the hierarchy root table to avoid pruning
+					creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, getRootEntityName() );
+				}
+			}
 		}
 
 		return tableGroup;
@@ -3071,7 +3140,26 @@ public abstract class AbstractEntityPersister
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
 		if ( needsDiscriminator() ) {
-			predicateConsumer.accept( createDiscriminatorPredicate( alias, tableGroup, creationState ) );
+			assert !creationState.supportsEntityNameUsage() : "Entity name usage should have been used instead";
+			final Map<String, EntityNameUse> entityNameUseMap;
+			final Collection<EntityMappingType> subMappingTypes = getSubMappingTypes();
+			entityNameUseMap = new HashMap<>( 1 + subMappingTypes.size() + ( isInherited() ? 1 : 0 ) );
+			if ( subMappingTypes.isEmpty() ) {
+				entityNameUseMap.put( getEntityName(), EntityNameUse.TREAT );
+			}
+			else {
+				entityNameUseMap.put( getEntityName(), EntityNameUse.TREAT );
+				// We need to register TREAT uses for all subtypes when pruning
+				for ( EntityMappingType subMappingType : subMappingTypes ) {
+					entityNameUseMap.put( subMappingType.getEntityName(), EntityNameUse.TREAT );
+				}
+			}
+			if ( isInherited() ) {
+				// Make sure the table group includes the root table when needed for TREAT
+				tableGroup.resolveTableReference( getRootTableName() );
+				entityNameUseMap.put( getRootEntityName(), EntityNameUse.EXPRESSION );
+			}
+			pruneForSubclasses( tableGroup, entityNameUseMap );
 		}
 	}
 
@@ -3197,21 +3285,26 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( containsNotNull ) {
-			final StringBuilder sb = new StringBuilder();
-			String lhs;
+			final String lhs;
 			if ( isDiscriminatorFormula() ) {
 				lhs = StringHelper.replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, alias );
 			}
 			else {
 				lhs = qualifyConditionally( alias, getDiscriminatorColumnName() );
 			}
-			sb.append( " or " ).append( lhs ).append( " is not in (" );
-			for ( Object discriminatorSQLValue : discriminatorSQLValues ) {
-				if ( !frag.getValues().contains( discriminatorSQLValue ) ) {
-					sb.append( lhs ).append( discriminatorSQLValue );
+			final List<String> actualDiscriminatorSQLValues = new ArrayList<>( discriminatorSQLValues.size() );
+			for ( String value : discriminatorSQLValues ) {
+				if ( !frag.getValues().contains( value ) && !InFragment.NULL.equals( value ) ) {
+					actualDiscriminatorSQLValues.add( value );
 				}
 			}
-			sb.append( ") and " ).append( lhs ).append( " is not null" );
+			final StringBuilder sb = new StringBuilder( 70 + actualDiscriminatorSQLValues.size() * 10 ).append( " or " );
+			if ( !actualDiscriminatorSQLValues.isEmpty() ) {
+				sb.append( lhs ).append( " is not in (" );
+				sb.append( String.join( ",", actualDiscriminatorSQLValues ) );
+				sb.append( ") and " );
+			}
+			sb.append( lhs ).append( " is not null" );
 			frag.getValues().remove( InFragment.NOT_NULL );
 			return frag.toFragmentString() + sb;
 		}
@@ -3250,6 +3343,11 @@ public abstract class AbstractEntityPersister
 			SqlAstCreationState creationState) {
 		applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
 		applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
+	}
+
+	@Override
+	public boolean hasWhereRestrictions() {
+		return sqlWhereStringTemplate != null;
 	}
 
 	@Override
@@ -3321,14 +3419,48 @@ public abstract class AbstractEntityPersister
 		initPropertyPaths( mapping );
 	}
 
+	@Override
+	public void prepareLoaders() {
+		// Hibernate Reactive needs to override the loaders
+		singleIdLoader = buildSingleIdEntityLoader();
+		multiIdLoader = buildMultiIdLoader();
+
+		lazyLoadPlanByFetchGroup = getLazyLoadPlanByFetchGroup();
+
+		logStaticSQL();
+	}
+
 	private void doLateInit() {
+		tableMappings = buildTableMappings();
+
+		final List<AttributeMapping> insertGeneratedAttributes = hasInsertGeneratedProperties() ?
+				GeneratedValuesProcessor.getGeneratedAttributes( this, INSERT )
+				: Collections.emptyList();
+		final List<AttributeMapping> updateGeneratedAttributes = hasUpdateGeneratedProperties() ?
+				GeneratedValuesProcessor.getGeneratedAttributes( this, UPDATE )
+				: Collections.emptyList();
+
+		insertGeneratedProperties = initInsertGeneratedProperties( insertGeneratedAttributes );
+		updateGeneratedProperties = initUpdateGeneratedProperties( updateGeneratedAttributes );
+
 		if ( isIdentifierAssignedByInsert() ) {
 			final OnExecutionGenerator generator = (OnExecutionGenerator) getGenerator();
-			identityDelegate = generator.getGeneratedIdentifierDelegate( this );
+			insertDelegate = generator.getGeneratedIdentifierDelegate( this );
 			identitySelectString = getIdentitySelectString( factory.getJdbcServices().getDialect() );
 		}
+		else {
+			insertDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, INSERT );
+		}
 
-		tableMappings = buildTableMappings();
+		updateDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, UPDATE );
+
+		if ( hasInsertGeneratedProperties() ) {
+			insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT, insertGeneratedAttributes );
+		}
+		if ( hasUpdateGeneratedProperties() ) {
+			updateGeneratedValuesProcessor = createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
+		}
+
 		insertCoordinator = buildInsertCoordinator();
 		updateCoordinator = buildUpdateCoordinator();
 		deleteCoordinator = buildDeleteCoordinator();
@@ -3344,10 +3476,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		//select SQL
-		lazyLoadPlanByFetchGroup = getLazyLoadPlanByFetchGroup();
 		sqlVersionSelectString = generateSelectVersionString();
-
-		logStaticSQL();
 	}
 
 	private EntityTableMapping findTableMapping(String tableName) {
@@ -3379,6 +3508,8 @@ public abstract class AbstractEntityPersister
 		private final Expectation deleteExpectation;
 		private final String customDeleteSql;
 		private final boolean deleteCallable;
+		private final boolean dynamicUpdate;
+		private final boolean dynamicInsert;
 
 		private final List<Integer> attributeIndexes = new ArrayList<>();
 
@@ -3398,7 +3529,9 @@ public abstract class AbstractEntityPersister
 				boolean cascadeDeleteEnabled,
 				Expectation deleteExpectation,
 				String customDeleteSql,
-				boolean deleteCallable) {
+				boolean deleteCallable,
+				boolean dynamicUpdate,
+				boolean dynamicInsert) {
 			this.tableName = tableName;
 			this.relativePosition = relativePosition;
 			this.keyMapping = keyMapping;
@@ -3415,6 +3548,8 @@ public abstract class AbstractEntityPersister
 			this.deleteExpectation = deleteExpectation;
 			this.customDeleteSql = customDeleteSql;
 			this.deleteCallable = deleteCallable;
+			this.dynamicUpdate = dynamicUpdate;
+			this.dynamicInsert = dynamicInsert;
 		}
 
 		private EntityTableMapping build() {
@@ -3435,7 +3570,9 @@ public abstract class AbstractEntityPersister
 					cascadeDeleteEnabled,
 					deleteExpectation,
 					customDeleteSql,
-					deleteCallable
+					deleteCallable,
+					dynamicUpdate,
+					dynamicInsert
 			);
 		}
 	}
@@ -3492,7 +3629,9 @@ public abstract class AbstractEntityPersister
 						isTableCascadeDeleteEnabled( relativePosition ),
 						deleteExpectations[ relativePosition ],
 						customDeleteSql,
-						deleteCallable[ relativePosition ]
+						deleteCallable[ relativePosition ],
+						entityMetamodel.isDynamicUpdate(),
+						entityMetamodel.isDynamicInsert()
 				);
 
 				tableBuilderMap.put( tableExpression, tableMappingBuilder );
@@ -3547,7 +3686,7 @@ public abstract class AbstractEntityPersister
 	protected abstract boolean isIdentifierTable(String tableExpression);
 
 	protected InsertCoordinator buildInsertCoordinator() {
-		return new InsertCoordinator( this, factory );
+		return new InsertCoordinatorStandard( this, factory );
 	}
 
 	protected UpdateCoordinator buildUpdateCoordinator() {
@@ -3575,10 +3714,22 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected DeleteCoordinator buildDeleteCoordinator() {
-		return new DeleteCoordinator( this, factory );
+		if ( softDeleteMapping == null ) {
+			return new DeleteCoordinatorStandard( this, factory );
+		}
+		else {
+			return new DeleteCoordinatorSoft( this, factory );
+		}
 	}
 
 	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+	}
+
+	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+		if ( softDeleteMapping != null ) {
+			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
+			insertBuilder.addValueColumn( softDeleteMapping );
+		}
 	}
 
 	protected String substituteBrackets(String sql) {
@@ -3588,15 +3739,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
-		if ( hasNamedQueryLoader() ) {
-			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
-			final NamedQueryMemento memento = getNamedQueryMemento( null );
-			singleIdLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
-		}
-		else {
-			singleIdLoader = createSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
-		}
-		multiIdLoader = buildMultiIdLoader();
 	}
 
 	/**
@@ -3644,7 +3786,7 @@ public abstract class AbstractEntityPersister
 			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
 			// no subselect fetching for entities for now
 			return isAffectedByInfluencers( influencers )
-					? createSingleIdEntityLoader( influencers )
+					? buildSingleIdEntityLoader( influencers )
 					: getSingleIdLoader();
 		}
 	}
@@ -4033,24 +4175,28 @@ public abstract class AbstractEntityPersister
 			final Object version = getVersion( entity );
 			final Boolean isUnsaved = versionMapping.getUnsavedStrategy().isUnsaved( version );
 			if ( isUnsaved != null ) {
-				if ( isUnsaved  ) {
-					if ( version == null && session.getPersistenceContext().hasLoadContext() ) {
+				if ( isUnsaved ) {
+					final PersistenceContext persistenceContext;
+					if ( version == null && ( persistenceContext = session.getPersistenceContext() ).hasLoadContext()
+							&& !persistenceContext.getLoadContexts().isLoadingFinished() ) {
 						// check if we're currently loading this entity instance, the version
 						// will be null but the entity cannot be considered transient
-						final LoadingEntityEntry loadingEntityEntry = session.getPersistenceContext()
-								.getLoadContexts()
-								.findLoadingEntityEntry( new EntityKey( id, this ) );
-						if ( loadingEntityEntry != null && loadingEntityEntry.getEntityInstance() == entity ) {
+						final EntityHolder holder = persistenceContext
+								.getEntityHolder( new EntityKey( id, this ) );
+						if ( holder != null && holder.isEventuallyInitialized() && holder.getEntity() == entity ) {
 							return false;
 						}
 					}
-					final Boolean unsaved = identifierMapping.getUnsavedStrategy().isUnsaved( id );
-					if ( unsaved != null && !unsaved ) {
-						throw new PropertyValueException(
-								"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
-								getEntityName(),
-								getVersionColumnName()
-						);
+					final Generator identifierGenerator = getGenerator();
+					if ( identifierGenerator != null && !( identifierGenerator instanceof ForeignGenerator ) ) {
+						final Boolean unsaved = identifierMapping.getUnsavedStrategy().isUnsaved( id );
+						if ( unsaved != null && !unsaved ) {
+							throw new PropertyValueException(
+									"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
+									getEntityName(),
+									getVersionColumnName()
+							);
+						}
 					}
 				}
 				return isUnsaved;
@@ -4066,9 +4212,8 @@ public abstract class AbstractEntityPersister
 		// check to see if it is in the second-level cache
 		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() ) {
 			final EntityDataAccess cache = getCacheAccessStrategy();
-			final String tenantId = session.getTenantIdentifier();
-			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), tenantId );
-			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
+			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
+			final Object ce = CacheHelper.fromSharedCache( session, ck, this, getCacheAccessStrategy() );
 			if ( ce != null ) {
 				return false;
 			}
@@ -4581,11 +4726,39 @@ public abstract class AbstractEntityPersister
 			Object id,
 			Object entity,
 			Object[] state,
+			GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( insertGeneratedValuesProcessor == null ) {
 			throw new UnsupportedOperationException( "Entity has no insert-generated properties - `" + getEntityName() + "`" );
 		}
-		insertGeneratedValuesProcessor.processGeneratedValues( entity, id, state, session );
+		insertGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
+	}
+
+	protected List<? extends ModelPart> initInsertGeneratedProperties(List<AttributeMapping> generatedAttributes) {
+		final int originalSize = generatedAttributes.size();
+		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
+		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
+			// todo (7.0) : support non selectable mappings? Component, ToOneAttributeMapping, ...
+			if ( generatedAttribute.asBasicValuedModelPart() != null
+					&& generatedAttribute.getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
+				generatedBasicAttributes.add( generatedAttribute );
+			}
+		}
+
+		final List<ModelPart> identifierList = isIdentifierAssignedByInsert() ?
+				List.of( getIdentifierMapping() ) :
+				Collections.emptyList();
+		if ( originalSize > 0 && generatedBasicAttributes.size() == originalSize ) {
+			return Collections.unmodifiableList( combine( identifierList, generatedBasicAttributes ) );
+		}
+		else  {
+			return identifierList;
+		}
+	}
+
+	@Override
+	public List<? extends ModelPart> getInsertGeneratedProperties() {
+		return insertGeneratedProperties;
 	}
 
 	@Override
@@ -4593,11 +4766,35 @@ public abstract class AbstractEntityPersister
 			Object id,
 			Object entity,
 			Object[] state,
+			GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( updateGeneratedValuesProcessor == null ) {
 			throw new AssertionFailure( "Entity has no update-generated properties - `" + getEntityName() + "`" );
 		}
-		updateGeneratedValuesProcessor.processGeneratedValues( entity, id, state, session );
+		updateGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
+	}
+
+	protected List<? extends ModelPart> initUpdateGeneratedProperties(List<AttributeMapping> generatedAttributes) {
+		final int originalSize = generatedAttributes.size();
+		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
+		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
+			if ( generatedAttribute instanceof SelectableMapping
+					&& ( (SelectableMapping) generatedAttribute ).getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
+				generatedBasicAttributes.add( generatedAttribute );
+			}
+		}
+
+		if ( generatedBasicAttributes.size() == originalSize ) {
+			return Collections.unmodifiableList( generatedBasicAttributes );
+		}
+		else  {
+			return Collections.emptyList();
+		}
+	}
+
+	@Override
+	public List<? extends ModelPart> getUpdateGeneratedProperties() {
+		return updateGeneratedProperties;
 	}
 
 	@Override
@@ -4847,6 +5044,7 @@ public abstract class AbstractEntityPersister
 				naturalIdMapping = superMappingType.getNaturalIdMapping();
 				versionMapping = superMappingType.getVersionMapping();
 				rowIdMapping = superMappingType.getRowIdMapping();
+				softDeleteMapping = superMappingType.getSoftDeleteMapping();
 			}
 			else {
 				prepareMappingModel( creationProcess, bootEntityDescriptor );
@@ -4912,12 +5110,6 @@ public abstract class AbstractEntityPersister
 					visitSubTypeAttributeMappings( builder::add );
 					assert superMappingType != null || builder.assertFetchableIndexes();
 					staticFetchableList = builder.build();
-					if ( hasInsertGeneratedProperties() ) {
-						insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT );
-					}
-					if ( hasUpdateGeneratedProperties() ) {
-						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( UPDATE );
-					}
 					return true;
 				}
 		);
@@ -5032,6 +5224,27 @@ public abstract class AbstractEntityPersister
 		}
 
 		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor, creationProcess );
+		softDeleteMapping = resolveSoftDeleteMapping( this, bootEntityDescriptor, getIdentifierTableName(), creationProcess );
+
+		if ( softDeleteMapping != null ) {
+			if ( bootEntityDescriptor.getRootClass().getCustomSQLDelete() != null ) {
+				throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
+			}
+		}
+	}
+
+	private static SoftDeleteMapping resolveSoftDeleteMapping(
+			AbstractEntityPersister persister,
+			PersistentClass bootEntityDescriptor,
+			String identifierTableName,
+			MappingModelCreationProcess creationProcess) {
+		final RootClass rootClass = bootEntityDescriptor.getRootClass();
+		return SoftDeleteHelper.resolveSoftDeleteMapping(
+				persister,
+				rootClass,
+				identifierTableName,
+				creationProcess.getCreationContext().getJdbcServices().getDialect()
+		);
 	}
 
 	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
@@ -5401,6 +5614,7 @@ public abstract class AbstractEntityPersister
 				column.getLength(),
 				column.getPrecision(),
 				column.getScale(),
+				column.getTemporalPrecision(),
 				basicTypeResolution.getLegacyResolvedBasicType(),
 				entityPersister,
 				creationProcess
@@ -5446,6 +5660,8 @@ public abstract class AbstractEntityPersister
 					column.getLength(),
 					column.getPrecision(),
 					column.getScale(),
+					column.getTemporalPrecision(),
+					column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() ),
 					column.isNullable(),
 					value.isColumnInsertable( 0 ),
 					value.isColumnUpdateable( 0 ),
@@ -5464,6 +5680,8 @@ public abstract class AbstractEntityPersister
 			final Long length;
 			final Integer precision;
 			final Integer scale;
+			final Integer temporalPrecision;
+			final boolean isLob;
 			final boolean nullable;
 
 			if ( value instanceof DependantValue ) {
@@ -5475,7 +5693,9 @@ public abstract class AbstractEntityPersister
 				columnDefinition = column.getSqlType();
 				length = column.getLength();
 				precision = column.getPrecision();
+				temporalPrecision = column.getTemporalPrecision();
 				scale = column.getScale();
+				isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 				nullable = column.isNullable();
 			}
 			else {
@@ -5501,8 +5721,10 @@ public abstract class AbstractEntityPersister
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
+					temporalPrecision = column.getTemporalPrecision();
 					scale = column.getScale();
 					nullable = column.isNullable();
+					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 				}
 				else {
 					final String[] attrColumnFormulaTemplate = propertyColumnFormulaTemplates[ propertyIndex ];
@@ -5513,8 +5735,10 @@ public abstract class AbstractEntityPersister
 					columnDefinition = null;
 					length = null;
 					precision = null;
+					temporalPrecision = null;
 					scale = null;
 					nullable = true;
+					isLob = false;
 				}
 			}
 
@@ -5536,6 +5760,8 @@ public abstract class AbstractEntityPersister
 					length,
 					precision,
 					scale,
+					temporalPrecision,
+					isLob,
 					nullable,
 					value.isColumnInsertable( 0 ),
 					value.isColumnUpdateable( 0 ),
@@ -5751,6 +5977,16 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityDiscriminatorMapping getDiscriminatorMapping() {
 		return discriminatorMapping;
+	}
+
+	@Override
+	public SoftDeleteMapping getSoftDeleteMapping() {
+		return softDeleteMapping;
+	}
+
+	@Override
+	public TableDetails getSoftDeleteTableDetails() {
+		return getIdentifierTableDetails();
 	}
 
 	@Override
@@ -6187,7 +6423,7 @@ public abstract class AbstractEntityPersister
 	@Deprecated(forRemoval = true)
 	@Remove
 	public String[] getSQLDeleteStrings() {
-		return extractSqlStrings( deleteCoordinator.getStaticDeleteGroup() );
+		return extractSqlStrings( deleteCoordinator.getStaticMutationOperationGroup() );
 	}
 
 	private String[] extractSqlStrings(MutationOperationGroup operationGroup) {
@@ -6209,7 +6445,7 @@ public abstract class AbstractEntityPersister
 	@Deprecated(forRemoval = true)
 	@Remove
 	public String[] getSQLUpdateStrings() {
-		return extractSqlStrings( updateCoordinator.getStaticUpdateGroup() );
+		return extractSqlStrings( updateCoordinator.getStaticMutationOperationGroup() );
 	}
 
 	/**
@@ -6265,7 +6501,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Generate the SQL that deletes a row by id (and version)
 	 *
-	 * @deprecated No longer used.  See {@link DeleteCoordinator}
+	 * @deprecated No longer used.  See {@link DeleteCoordinatorStandard}
 	 */
 	@Deprecated(forRemoval = true)
 	@Remove
@@ -6596,5 +6832,9 @@ public abstract class AbstractEntityPersister
 	@Deprecated
 	public String getDiscriminatorAlias() {
 		return DISCRIMINATOR_ALIAS;
+	}
+
+	protected String getSqlWhereStringTableExpression(){
+		return sqlWhereStringTableExpression;
 	}
 }

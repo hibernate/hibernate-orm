@@ -9,7 +9,15 @@
 
 Natural ids represent domain model unique identifiers that have a meaning in the real world too.
 Even if a natural id does not make a good primary key (surrogate keys being usually preferred), it's still useful to tell Hibernate about it.
-As we will see later, Hibernate provides a dedicated, efficient API for loading an entity by its natural id much like it offers for loading by its identifier (PK).
+As we will see later, Hibernate provides a dedicated, efficient API for loading an entity by its natural id much like it offers for loading by identifier (PK).
+
+[IMPORTANT]
+====
+All values used in a natural id must be non-nullable.
+
+For natural id mappings using a to-one association, this precludes the use of not-found
+mappings which effectively define a nullable mapping.
+====
 
 [[naturalid-mapping]]
 ==== Natural Id Mapping

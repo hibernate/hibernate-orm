@@ -33,7 +33,7 @@ public @interface SkipForDialect {
 	 * The dialects against which to skip the test
 	 * @return The dialects
 	 */
-	Class<? extends Dialect>[] value();
+	Class<? extends Dialect> value();
 
 	/**
 	 * Used to indicate if the dialects should be matched strictly (classes equal) or

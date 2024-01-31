@@ -87,9 +87,13 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-465")
-	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class, SQLServerDialect.class },
-			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
-					"For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
+	@RequiresDialect(value = H2Dialect.class,
+			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
+	@RequiresDialect(value = MySQLDialect.class,
+			comment = "For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
+					"MySQL and SQLServer 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
+	@RequiresDialect(value = SQLServerDialect.class,
+			comment = "For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
 					"MySQL and SQLServer 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
 	public void testAnnotationNullsFirstLast() {
 		Session session = openSession();
@@ -148,10 +152,14 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-465")
-	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class, SQLServerDialect.class },
-			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
-					"For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
-					"MySQL and SQL Server 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
+	@RequiresDialect(value = H2Dialect.class,
+			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
+	@RequiresDialect(value = MySQLDialect.class,
+			comment = "For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
+					"MySQL and SQLServer 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
+	@RequiresDialect(value = SQLServerDialect.class,
+			comment = "For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
+					"MySQL and SQLServer 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
 	public void testNullsFirstLastSpawnMultipleColumns() {
 		Session session = openSession();
 
@@ -197,10 +205,14 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-465")
-	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class, SQLServerDialect.class },
-			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
-					"For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
-					"MySQL and SQL Server 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
+	@RequiresDialect(value = H2Dialect.class,
+			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
+	@RequiresDialect(value = MySQLDialect.class,
+			comment = "For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
+					"MySQL and SQLServer 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
+	@RequiresDialect(value = SQLServerDialect.class,
+			comment = "For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
+					"MySQL and SQLServer 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
 	public void testHqlNullsFirstLast() {
 		Session session = openSession();
 
@@ -232,7 +244,8 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-7608" )
-	@RequiresDialect({ H2Dialect.class, OracleDialect.class })
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(OracleDialect.class)
 	public void testOrderByReferencingFormulaColumn() {
 		Session session = openSession();
 
@@ -486,10 +499,14 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-14148" )
-	@RequiresDialect(value = { H2Dialect.class, MySQLDialect.class, SQLServerDialect.class },
-			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression. " +
-					"For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
-					"MySQL and SQL Server 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
+	@RequiresDialect(value = H2Dialect.class,
+			comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
+	@RequiresDialect(value = MySQLDialect.class,
+			comment = "For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
+					"MySQL and SQLServer 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
+	@RequiresDialect(value = SQLServerDialect.class,
+			comment = "For MySQL and SQL Server 2008 testing overridden Dialect#renderOrderByElement(String, String, String, NullPrecedence) method. " +
+					"MySQL and SQLServer 2008 does not support NULLS FIRST / LAST syntax at the moment, so transforming the expression to 'CASE WHEN ...'.")
 	public void testNullPrecedenceWithOrderBySqlFragment() {
 		inTransaction( session -> {
 			final RootGraph<Order> graph = session.createEntityGraph( Order.class );

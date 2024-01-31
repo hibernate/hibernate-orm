@@ -16,7 +16,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-import java.util.UUID;
+
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.getFieldByReflection;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +31,7 @@ public class ExtendedAssociationManagementTest {
     @Test
     public void test() {
         User user = new User();
-        user.login = UUID.randomUUID().toString();
+        user.login = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 
         Customer customer = new Customer();
         customer.user = user;
@@ -41,7 +42,7 @@ public class ExtendedAssociationManagementTest {
         EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
 
         User anotherUser = new User();
-        anotherUser.login = UUID.randomUUID().toString();
+        anotherUser.login = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 
         customer.user = anotherUser;
 

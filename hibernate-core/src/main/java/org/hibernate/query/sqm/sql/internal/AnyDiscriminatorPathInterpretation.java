@@ -17,6 +17,8 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 public class AnyDiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpretation<T> {
 	private final Expression expression;
@@ -45,7 +47,7 @@ public class AnyDiscriminatorPathInterpretation<T> extends AbstractSqmPathInterp
 
 		return new AnyDiscriminatorPathInterpretation<>(
 				sqmPath.getNavigablePath(),
-				mapping,
+				mapping.getDiscriminatorMapping(),
 				tableGroup,
 				expression
 		);

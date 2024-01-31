@@ -8,8 +8,6 @@ package org.hibernate.envers.internal.entities;
 
 import java.util.Objects;
 
-import org.hibernate.type.Type;
-
 /**
  * @author Chris Cranford
  * @author 6.0
@@ -39,6 +37,10 @@ public class RevisionTimestampData extends PropertyData {
 
 	public boolean isTimestampLocalDateTime() {
 		return "LocalDateTime".equals( typeName );
+	}
+
+	public boolean isInstant() {
+		return "instant".equals( typeName );
 	}
 
 	@Override

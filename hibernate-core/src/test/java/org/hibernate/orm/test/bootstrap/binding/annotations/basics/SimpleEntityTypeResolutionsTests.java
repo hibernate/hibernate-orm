@@ -49,7 +49,7 @@ public class SimpleEntityTypeResolutionsTests {
 			assertThat( resolution.getJdbcMapping(), sameInstance( resolution.getLegacyResolvedBasicType() ) );
 		}
 
-		final Iterator<Property> itr = simpleEntityBinding.getPropertyIterator();
+		final Iterator<Property> itr = simpleEntityBinding.getProperties().iterator();
 		while ( itr.hasNext() ) {
 			final Property property = itr.next();
 			final BasicValue propertyValue = (BasicValue) property.getValue();

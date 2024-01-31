@@ -1,36 +1,52 @@
+:shared-attributes-dir: ../shared/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
 = Topical Guides
-:userguide_rel_link: ../../userguide/html_single/Hibernate_User_Guide.html
-:integrationguid_rel_link: ../../integrationguide/html_single/Hibernate_Integration_Guide.html
-:migrationguide_rel_link: ../../migration-guide/migration-guide.html
-:logging_rel_link: ../../logging/logging.html
-:incubating_rel_link: ../../incubating/incubating.txt
-:internal_rel_link: ../../internals/internal.txt
 :toc:
 
 Hibernate documentation is organized into several guides that cover specific topics.  This guide provides links to
-all the guides to give some direction on where to look for information.
+all the documentation to give some direction on where to look for information.
 
-NOTE: This is still very much a work in progress. <<helping,Help>> is definitely welcome!
-
-== User Guides
-* For information on bootstrapping Hibernate
-** For bootstrapping a SessionFactory, see the link:{userguide_rel_link}#bootstrap-native[Native Bootstrapping Guide]
-** For bootstrapping an EntityManagerFactory (Jakarta Persistence) using Hibernate, see the link:{userguide_rel_link}#bootstrap-jpa[Jakarta Persistence Bootstrap Guide]
-** For (semi-deprecated) bootstrapping of a SessionFactory using the legacy Configuration approach, see the link:{userguide_rel_link}#appendix-legacy-bootstrap[Legacy Bootstrap Guide]
-* For information on generated (non-identifier) values, see the <<generated/GeneratedValues.adoc#generated-values-guide,Generated Values Guide>>
-* Others coming soon
+[TIP]
+====
+See the link:{doc-migration-guide-url}[Migration Guide] for details about migration to Hibernate {majorMinorVersion}.
+====
 
 
-== Migration
-* For information on how to migrate to the current Hibernate 6 version check out the link:{migrationguide_rel_link}[Migration Guide]
+[[usage-guides]]
+== Usage Guides
+
+Hibernate publishes multiple usage guides -
+
+link:{doc-quick-start-url}[Quick Start]::
+    Tutorial style guide for quickly getting started with Hibernate.
+link:{doc-introduction-url}[Introduction to Hibernate]::
+    High-level look at the most used Hibernate features.
+link:{doc-query-language-url}[Guide to the Hibernate Query Language]::
+    Discussion of the Hibernate Query Language.
+link:{doc-user-guide-url}[User Guide]::
+    Detailed discussion of all features of Hibernate.  More of a reference manual.
 
 
+[[logging]]
+== Logging
+
+The link:{doc-logging-url}[Logging Guide] discusses logging in Hibernate.
+
+
+[[tooling]]
 == Tooling
-* See the link:{userguide_rel_link}#tooling[Tooling Guide] for information on:
-** Bytecode enhancement
-** Static Metamodel Generation
-** Gradle, Maven, and Ant plugins
-** Schema management (coming soon)
+
+See the link:{doc-user-guide-url}#tooling[Tooling Guide] for information on:
+
+* Bytecode enhancement
+* Static Metamodel Generation
+* Gradle, Maven, and Ant plugins
+* Schema management
 
 
 == Integrator Guides
@@ -38,18 +54,45 @@ NOTE: This is still very much a work in progress. <<helping,Help>> is definitely
 * Others coming soon
 
 
-== Logging
-Check out the link:{logging_rel_link}[Logging Guide] for a list of available Hibernate loggers
+[[support]]
+== Compatibility and Support
+
+Compatibility is defined as ...
+
+Support is defined as ...
+
+By default, all parts of Hibernate are considered supported and follow the general backwards compatibility https://hibernate.org/community/compatibility-policy/[policy].
+Various things influence the levels of support and backwards compatibility to expect in regard to parts of Hibernate.
+
+[[support-internal]]
+=== Internal
+
+Internal parts of Hibernate are simply that - internal implementation details that are not supported for use by applications.
+Use of internal contracts should be avoided as they are not supported and could be removed or changed at any time.
+
+Contracts considered internal are defined in one of 2 ways:
+
+1. The Java class (interface, etc.) is defined under a package named `internal`, either directly or as a sub-package
+2. Through the use of the `@Internal` annotation.
+
+See the definitive set of link:{report-internals-url}[internals].
 
 
-== Miscellaneous
-* For a list of `@Incubating` source elements, see the link:{incubating_rel_link}[incubating] list.
-* For a list of `@Internal` source elements, see the link:{internal_rel_link}[internal] list.
+[[support-incubating]]
+=== Incubating
+
+Incubating contracts are generally new contracts which are still being actively designed, similar to
+"tech preview" features.
+Such contracts are subject to change and should be used with that understanding.
+
+See the definitive set of link:{report-incubating-url}[incubations].
+
+[[support-deprecation]]
+=== Deprecations
+
+1. `@Deprecated`
+2. `@Remove`
+
+See the definitive set of link:{report-deprecation-url}[deprecations].
 
 
-[[helping]]
-== Helping
-
-* Reporting/fixing problems.  Report any typos or inaccurate information to the
-https://hibernate.atlassian.net/browse/HHH[Hibernate ORM Jira] using the +documentation+ component.  Follow the same
-guidelines for contributing fixes and improvements as for contributing source code.

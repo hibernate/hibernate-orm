@@ -18,6 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hibernate.internal.util.ConfigHelper.findAsResource;
@@ -38,6 +39,7 @@ public class CfgFilePropertyTest extends BaseUnitTestCase {
 			try {
 				final Properties props = new Properties();
 				props.setProperty( AvailableSettings.CFG_XML_FILE, "/org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" );
+				ServiceRegistryUtil.applySettings( props );
 
 				Persistence.createEntityManagerFactory( "ExcludeUnlistedClassesTest1", props );
 			}

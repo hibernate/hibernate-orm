@@ -30,17 +30,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator.safeRandomUUID;
 
 @SessionFactory
 @DomainModel( annotatedClasses = { H2JsonListTest.Path.class, H2JsonListTest.PathClob.class } )
-@RequiresDialect( value = H2Dialect.class, majorVersion = 2 )
+@RequiresDialect( value = H2Dialect.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16320" )
 public class H2JsonListTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.persist( new Path( List.of( UUID.randomUUID(), UUID.randomUUID() ) ) );
-			session.persist( new PathClob( List.of( UUID.randomUUID(), UUID.randomUUID() ) ) );
+			session.persist( new Path( List.of( safeRandomUUID(), safeRandomUUID() ) ) );
+			session.persist( new PathClob( List.of( safeRandomUUID(), safeRandomUUID() ) ) );
 		} );
 	}
 

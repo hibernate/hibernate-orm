@@ -13,6 +13,7 @@ import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -38,6 +39,86 @@ public class JoinTableOptimizationTest {
 					statementInspector.assertExecutedCount( 1 );
 					// Assert only the collection table is joined
 					statementInspector.assertNumberOfJoins( 0, 1 );
+				}
+		);
+	}
+
+	@Test
+	public void testInnerJoin(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select p.name from Document d join d.people p" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					Assertions.assertEquals(
+							"select p1_1.name " +
+									"from Document d1_0 " +
+									"join people p1_0 on d1_0.id=p1_0.Document_id " +
+									"join Person p1_1 on p1_1.id=p1_0.people_id",
+							statementInspector.getSqlQueries().get( 0 ),
+							"Nested join was not optimized away"
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testLeftJoin(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select p.name from Document d left join d.people p" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					Assertions.assertEquals(
+							"select p1_1.name " +
+									"from Document d1_0 " +
+									"left join people p1_0 on d1_0.id=p1_0.Document_id " +
+									"left join Person p1_1 on p1_1.id=p1_0.people_id",
+							statementInspector.getSqlQueries().get( 0 ),
+							"Nested join was not optimized away"
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testInnerJoinCustomOnClause(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select p.name from Document d join d.people p on p.id > 1" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					Assertions.assertEquals(
+							"select p1_1.name " +
+									"from Document d1_0 " +
+									"join people p1_0 on d1_0.id=p1_0.Document_id and p1_0.people_id>1 " +
+									"join Person p1_1 on p1_1.id=p1_0.people_id",
+							statementInspector.getSqlQueries().get( 0 ),
+							"Nested join was not optimized away"
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testLeftJoinCustomOnClause(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select p.name from Document d left join d.people p on p.id > 1" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					Assertions.assertEquals(
+							"select p1_1.name " +
+									"from Document d1_0 " +
+									"left join (people p1_0 " +
+									"join Person p1_1 on p1_1.id=p1_0.people_id) on d1_0.id=p1_0.Document_id and p1_0.people_id>1",
+							statementInspector.getSqlQueries().get( 0 ),
+							"Nested join was wrongly optimized away"
+					);
 				}
 		);
 	}

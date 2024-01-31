@@ -31,6 +31,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -106,7 +107,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 				new NamedAuxiliaryDatabaseObject(
 						"PostgreSQL structProcedure",
 						namespace,
-						"create procedure structProcedure(OUT result theStruct) AS $$ begin result.nested.theBinary = bytea '\\x01'; result.nested.theString = 'ABC'; result.nested.theDouble = 0; result.nested.theInt = 0; result.nested.theLocalDateTime = timestamp '2022-12-01 01:00:00'; result.nested.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; end $$ language plpgsql",
+						"create procedure structProcedure(INOUT result theStruct) AS $$ declare nested structType; begin nested.theBinary = bytea '\\x01'; nested.theString = 'ABC'; nested.theDouble = 0; nested.theInt = 0; nested.theLocalDateTime = timestamp '2022-12-01 01:00:00'; nested.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; result.nested = nested; end $$ language plpgsql",
 						"drop procedure structProcedure",
 						Set.of( PostgreSQLDialect.class.getName() )
 				)
@@ -129,7 +130,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 				new NamedAuxiliaryDatabaseObject(
 						"PostgrePlus structProcedure",
 						namespace,
-						"create procedure structProcedure(result OUT theStruct) AS $$ begin result.nested.theBinary = bytea '\\x01'; result.nested.theString = 'ABC'; result.nested.theDouble = 0; result.nested.theInt = 0; result.nested.theLocalDateTime = timestamp '2022-12-01 01:00:00'; result.nested.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; end $$ language plpgsql",
+						"create procedure structProcedure(result INOUT theStruct) AS $$ declare nested structType; begin nested.theBinary = bytea '\\x01'; nested.theString = 'ABC'; nested.theDouble = 0; nested.theInt = 0; nested.theLocalDateTime = timestamp '2022-12-01 01:00:00'; nested.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; result.nested = nested; end $$ language plpgsql",
 						"drop procedure structProcedure",
 						Set.of( PostgresPlusDialect.class.getName() )
 				)
@@ -568,11 +569,19 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 	public void testProcedure() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
+					final Dialect dialect = entityManager.getJdbcServices().getDialect();
+					final ParameterMode parameterMode;
+					if ( dialect instanceof PostgreSQLDialect ) {
+						parameterMode = ParameterMode.INOUT;
+					}
+					else {
+						parameterMode = ParameterMode.OUT;
+					}
 					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structProcedure" );
 					ProcedureParameter<TheStruct> resultParameter = structFunction.registerParameter(
 							"structType",
 							TheStruct.class,
-							ParameterMode.OUT
+							parameterMode
 					);
 					structFunction.setParameter( resultParameter, null );
 					TheStruct result = structFunction.getOutputs().getOutputParameterValue( resultParameter );

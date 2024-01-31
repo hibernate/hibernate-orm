@@ -15,10 +15,10 @@ import jakarta.persistence.EnumType;
  */
 public class EnumTypeMarshalling {
 	public static EnumType fromXml(String name) {
-		return EnumType.valueOf( name );
+		return name == null ? null : EnumType.valueOf( name );
 	}
 
 	public static String toXml(EnumType enumType) {
-		return enumType.name();
+		return enumType == null ? null : enumType.name();
 	}
 }

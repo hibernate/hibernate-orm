@@ -38,7 +38,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
@@ -53,6 +52,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
@@ -122,7 +122,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private Component(Component original) {
 		super( original );
 		this.properties.addAll( original.properties );
-		this.originalPropertyOrder = original.originalPropertyOrder.clone();
+		this.originalPropertyOrder = original.originalPropertyOrder == null ? null : original.originalPropertyOrder.clone();
 		this.componentClassName = original.componentClassName;
 		this.embedded = original.embedded;
 		this.parentProperty = original.parentProperty;
@@ -170,22 +170,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public int getColumnSpan() {
-		return getSelectables().size();
-	}
-
-	@Override @Deprecated @SuppressWarnings("deprecation")
-	public Iterator<Selectable> getColumnIterator() {
-		@SuppressWarnings("unchecked")
-		Iterator<Selectable>[] iters = new Iterator[ getPropertySpan() ];
-		int i = 0;
-		for ( Property property : getProperties() ) {
-			iters[i++] = property.getColumnIterator();
-		}
-		return new JoinedIterator<>( iters );
-	}
-
-	@Override
 	public List<Selectable> getSelectables() {
 		if ( cachedSelectables == null ) {
 			cachedSelectables = properties.stream()
@@ -219,6 +203,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public void setAggregateColumn(AggregateColumn aggregateColumn) {
 		this.aggregateColumn = aggregateColumn;
 		notifyPropertiesAboutAggregateColumn( aggregateColumn, this );
+	}
+
+	@Override
+	public int getColumnSpan() {
+		return getSelectables().size();
 	}
 
 	public List<Column> getAggregatedColumns() {
@@ -283,47 +272,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.structName = structName;
 	}
 
-	protected void checkColumnDuplication() throws MappingException {
-		checkPropertyColumnDuplication( new HashSet<>(), getProperties() );
-	}
-	protected void checkColumnDuplication(java.util.Set<String> distinctColumns, Value value)
-			throws MappingException {
-		if ( value != null ) {
-			for ( Selectable columnOrFormula : value.getSelectables() ) {
-				if ( !columnOrFormula.isFormula() ) {
-					final Column col = (Column) columnOrFormula;
-					if ( !distinctColumns.add( col.getName() ) ) {
-						throw new MappingException(
-								"Column '" + col.getName()
-										+ "' is duplicated in mapping for component '" + getRoleName()
-										+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
-						);
-					}
-				}
-			}
+	@Override
+	public void checkColumnDuplication(Set<String> distinctColumns, String owner) {
+		if ( aggregateColumn == null ) {
+			checkPropertyColumnDuplication( distinctColumns, getProperties(), owner );
 		}
-	}
-
-	protected void checkPropertyColumnDuplication(Set<String> distinctColumns, List<Property> properties)
-			throws MappingException {
-		for ( Property prop : properties ) {
-			Value value = prop.getValue();
-			if ( value instanceof Component ) {
-				Component component = (Component) value;
-				AggregateColumn aggregateColumn = component.getAggregateColumn();
-				if ( aggregateColumn == null ) {
-					checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
-				}
-				else {
-					component.checkColumnDuplication();
-					checkColumnDuplication( distinctColumns, aggregateColumn.getValue() );
-				}
-			}
-			else {
-				if ( prop.isUpdateable() || prop.isInsertable() ) {
-					checkColumnDuplication( distinctColumns, value);
-				}
-			}
+		else {
+			checkPropertyColumnDuplication( new HashSet<>(), getProperties(), "component '" + getRoleName() + "'" );
+			aggregateColumn.getValue().checkColumnDuplication( distinctColumns, owner );
 		}
 	}
 
@@ -385,7 +341,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
 		final Class<CompositeUserType<?>> customTypeClass =
 				bootstrapContext.getClassLoaderAccess().classForName( component.getTypeName() );
-		return getBuildingContext().getBuildingOptions().disallowExtensionsInCdi()
+		return !getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
 				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customTypeClass )
 				: bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class )
 				.getBean( customTypeClass ).getBeanInstance();
@@ -550,6 +506,13 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
 	}
 
+	public boolean matchesAllProperties(String... propertyNames) {
+		return properties.size() == propertyNames.length &&
+				new HashSet<>(properties.stream().map(Property::getName)
+						.collect(toList()))
+						.containsAll(List.of(propertyNames));
+	}
+
 	public boolean hasProperty(String propertyName) {
 		for ( Property prop : properties ) {
 			if ( prop.getName().equals(propertyName) ) {
@@ -615,20 +578,25 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
 				new StandardGenerationContextLocator( rootClass.getEntityName() );
-		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator( locator );
+		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator(
+				locator,
+				getType()
+		);
 
-		for ( Property property : getProperties() ) {
+		final List<Property> properties = getProperties();
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final Property property = properties.get( i );
 			if ( property.getValue().isSimpleValue() ) {
 				final SimpleValue value = (SimpleValue) property.getValue();
 
 				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
 					// skip any 'assigned' generators, they would have been handled by
 					// the StandardGenerationContextLocator
-					Generator subgenerator = value.createGenerator( identifierGeneratorFactory, dialect, rootClass );
 					generator.addGeneratedValuePlan( new ValueGenerationPlan(
-							subgenerator,
-							injector( property, attributeDeclarer ) )
-					);
+							value.createGenerator( identifierGeneratorFactory, dialect, rootClass ),
+							getType().isMutable() ? injector( property, attributeDeclarer ) : null,
+							i
+					) );
 				}
 			}
 		}
@@ -676,18 +644,29 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
 		private final Generator subgenerator;
 		private final Setter injector;
+		private final int propertyIndex;
 
-		public ValueGenerationPlan(Generator subgenerator, Setter injector) {
+		public ValueGenerationPlan(Generator subgenerator, Setter injector, int propertyIndex) {
 			this.subgenerator = subgenerator;
 			this.injector = injector;
+			this.propertyIndex = propertyIndex;
 		}
 
 		@Override
-		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
-			if ( !subgenerator.generatedOnExecution() ) {
-				final Object generatedId = ( (BeforeExecutionGenerator) subgenerator)
+		public Setter getInjector() {
+			return injector;
+		}
+
+		@Override
+		public int getPropertyIndex() {
+			return propertyIndex;
+		}
+
+		@Override
+		public Object execute(SharedSessionContractImplementor session, Object incomingObject) {
+			if ( !subgenerator.generatedOnExecution( incomingObject, session ) ) {
+				return ( (BeforeExecutionGenerator) subgenerator)
 						.generate( session, incomingObject, null, INSERT );
-				injector.set( injectionContext, generatedId );
 			}
 			else {
 				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );

@@ -22,6 +22,8 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 
@@ -30,10 +32,11 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
  */
 public class EmbeddableForeignKeyResultImpl<T>
 		extends AbstractFetchParent
-		implements EmbeddableResultGraphNode, DomainResult<T> {
+		implements EmbeddableResultGraphNode, DomainResult<T>, InitializerProducer<EmbeddableForeignKeyResultImpl<T>> {
 
 	private final String resultVariable;
 	private final FetchParent fetchParent;
+	private final EmbeddableMappingType fetchContainer;
 
 	public EmbeddableForeignKeyResultImpl(
 			NavigablePath navigablePath,
@@ -41,7 +44,8 @@ public class EmbeddableForeignKeyResultImpl<T>
 			String resultVariable,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath );
+		super( navigablePath );
+		this.fetchContainer = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
 		this.fetchParent = fetchParent;
 		resetFetches( creationState.visitFetches( this ) );
@@ -96,28 +100,33 @@ public class EmbeddableForeignKeyResultImpl<T>
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> getReferencedModePart() instanceof NonAggregatedIdentifierMapping
-						? new NonAggregatedIdentifierMappingResultInitializer( this, null, creationState )
-						: new EmbeddableResultInitializer( this, null, creationState )
-		).asEmbeddableInitializer();
-
-		assert initializer != null;
-
 		//noinspection unchecked
-		return new EmbeddableAssembler( initializer );
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parentAccess, this ).asEmbeddableInitializer() );
+	}
+
+	@Override
+	public Initializer createInitializer(
+			EmbeddableForeignKeyResultImpl<T> resultGraphNode,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parentAccess, creationState );
+	}
+
+	@Override
+	public EmbeddableInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		return getReferencedModePart() instanceof NonAggregatedIdentifierMapping
+				? new NonAggregatedIdentifierMappingResultInitializer( this, null, creationState )
+				: new EmbeddableResultInitializer( this, null, creationState );
 	}
 
 	@Override
 	public EmbeddableMappingType getReferencedMappingType() {
-		return (EmbeddableMappingType) getFetchContainer().getPartMappingType();
+		return fetchContainer.getPartMappingType();
 	}
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return fetchContainer;
 	}
 
 	@Override

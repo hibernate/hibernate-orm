@@ -13,10 +13,10 @@ import org.hibernate.annotations.OnDeleteAction;
  */
 public class OnDeleteActionMarshalling {
 	public static OnDeleteAction fromXml(String name) {
-		return OnDeleteAction.fromExternalForm( name );
+		return name == null ? null : OnDeleteAction.fromExternalForm( name );
 	}
 
 	public static String toXml(OnDeleteAction accessType) {
-		return accessType.getAlternativeName();
+		return accessType == null ? null : accessType.getAlternativeName();
 	}
 }

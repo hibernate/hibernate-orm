@@ -519,7 +519,6 @@
         <xsd:annotation>
             <xsd:documentation>
                 See `@org.hibernate.annotations.TenantId`
-                See `@org.hibernate.annotations.TenantId`
             </xsd:documentation>
         </xsd:annotation>
         <xsd:complexContent>
@@ -598,6 +597,8 @@
                 See `@org.hibernate.annotations.Nationalized`
                 See `@org.hibernate.annotations.OptimisticLock`
                 See `@org.hibernate.annotations.AttributeAccessor`
+                See `@org.hibernate.annotations.Type`
+                See `@org.hibernate.annotations.JdbcTypeCode`
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
@@ -614,6 +615,7 @@
             </xsd:choice>
 
             <xsd:element name="generated" minOccurs="0" type="orm:basic-generation-timing-type"/>
+            <xsd:element name="type" type="orm:column-type" minOccurs="0"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -623,6 +625,7 @@
         <!-- hbm: Hibernate's pluggable accessor spi -->
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="jdbc-type-code" type="xsd:int" />
     </xsd:complexType>
 
 
@@ -1058,6 +1061,9 @@
             <xsd:documentation>
                 See `@jakarta.persistence.Id`
                 See `@org.hibernate.annotations.AttributeAccessor`
+                See `@org.hibernate.annotations.Type`
+                See `@org.hibernate.annotations.JdbcTypeCode`
+                See `@org.hibernate.annotations.UuidGenerator`
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
@@ -1068,12 +1074,15 @@
 
             <xsd:element name="table-generator" type="orm:table-generator" minOccurs="0"/>
             <xsd:element name="sequence-generator" type="orm:sequence-generator" minOccurs="0"/>
+            <xsd:element name="uuid-generator" type="orm:uuid-generator" minOccurs="0"/>
 
             <xsd:element name="unsaved-value" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="type" type="orm:column-type" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
+        <xsd:attribute name="jdbc-type-code" type="xsd:int" />
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -2814,5 +2823,43 @@
             <xsd:enumeration value="never"/>
         </xsd:restriction>
     </xsd:simpleType>
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="column-type">
+        <xsd:annotation>
+            <xsd:documentation>
+                See `@org.hibernate.annotations.Type`
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="parameters" minOccurs="0" maxOccurs="unbounded" type="configuration-parameter"/>
+        </xsd:sequence>
+        <xsd:attribute name="value" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <!-- **************************************************** -->
+
+    <xsd:simpleType name="uuid-generator-style">
+        <xsd:annotation>
+            <xsd:documentation>
+                org.hibernate.annotations.UuidGenerator.Style enum values
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="auto"/>
+            <xsd:enumeration value="random"/>
+            <xsd:enumeration value="time"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="uuid-generator">
+        <xsd:annotation>
+            <xsd:documentation>
+                See `@org.hibernate.annotations.UuidGenerator`
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="style" type="orm:uuid-generator-style" use="required"/>
+    </xsd:complexType>
 
 </xsd:schema>

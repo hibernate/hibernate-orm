@@ -48,6 +48,8 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
 import org.junit.Before;
@@ -89,7 +91,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 
 		connection = connectionProvider.getConnection();
 
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 			.applySetting( AvailableSettings.JAKARTA_HBM2DDL_CONNECTION, connection )
 			.build();
 
@@ -143,7 +145,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 
 		Map<String, Object> settings = new HashMap<>(  );
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build();
 

@@ -17,7 +17,7 @@ import org.hibernate.tuple.GenerationTiming;
  */
 public class GenerationTimingMarshalling {
 	public static GenerationTiming fromXml(String name) {
-		return GenerationTiming.parseFromName( name );
+		return name == null ? null : GenerationTiming.parseFromName( name );
 	}
 
 	public static String toXml(GenerationTiming generationTiming) {

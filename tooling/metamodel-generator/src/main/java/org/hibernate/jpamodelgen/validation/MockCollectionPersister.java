@@ -16,8 +16,6 @@ import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.Type;
 
-import java.io.Serializable;
-
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.jpamodelgen.validation.MockSessionFactory.typeConfiguration;
 
@@ -146,8 +144,8 @@ public abstract class MockCollectionPersister implements QueryableCollection {
 	}
 
 	@Override
-	public Serializable[] getCollectionSpaces() {
-		return new Serializable[] {role};
+	public String[] getCollectionSpaces() {
+		return new String[] {role};
 	}
 
 	@Override

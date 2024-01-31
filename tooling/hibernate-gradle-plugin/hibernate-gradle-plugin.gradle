@@ -125,15 +125,22 @@ tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
 }
 
-if ( !gradle.ext.javaToolchainEnabled ) {
+if ( !jdkVersions.explicit ) {
 	tasks.withType( GroovyCompile ) {
-		sourceCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
-		targetCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+		sourceCompatibility = JavaVersion.toVersion( jdkVersions.baseline )
+		targetCompatibility = JavaVersion.toVersion( jdkVersions.baseline )
 	}
 }
 else {
 	logger.warn( "[WARN] Toolchains are not yet supported for Groovy compilation." +
 						 " Using the JDK that runs Gradle for Groovy compilation." )
+}
+
+tasks.named( "javadoc", Javadoc ) {
+	configure( options ) {
+		windowTitle = "Hibernate Javadocs ($project.name)"
+		docTitle = "Hibernate Javadocs ($project.name : $project.version)"
+	}
 }
 
 checkstyle {

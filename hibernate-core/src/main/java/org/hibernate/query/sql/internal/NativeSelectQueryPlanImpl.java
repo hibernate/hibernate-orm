@@ -29,6 +29,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.ResultsConsumer;
 
 /**
  * @author Steve Ebersole
@@ -62,6 +63,47 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	}
 
 	@Override
+	public <T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer) {
+		final List<JdbcParameterBinder> jdbcParameterBinders;
+		final JdbcParameterBindings jdbcParameterBindings;
+
+		final QueryParameterBindings queryParameterBindings = executionContext.getQueryParameterBindings();
+		if ( parameterList == null || parameterList.isEmpty() ) {
+			jdbcParameterBinders = Collections.emptyList();
+			jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
+		}
+		else {
+			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
+			jdbcParameterBindings = new JdbcParameterBindingsImpl(
+					queryParameterBindings,
+					parameterList,
+					jdbcParameterBinders,
+					executionContext.getSession().getFactory()
+			);
+		}
+
+		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
+				sql,
+				jdbcParameterBinders,
+				resultSetMapping,
+				affectedTableNames
+		);
+
+		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().executeQuery(
+				jdbcSelect,
+				jdbcParameterBindings,
+				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
+				null,
+				null,
+				sqlString -> executionContext.getSession()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareQueryStatement( sqlString, false, null ),
+				resultsConsumer
+		);
+	}
+
+	@Override
 	public List<R> performList(DomainQueryExecutionContext executionContext) {
 		final QueryOptions queryOptions = executionContext.getQueryOptions();
 		if ( queryOptions.getEffectiveLimit().getMaxRowsJpa() == 0 ) {
@@ -85,8 +127,6 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			);
 		}
 
-		executionContext.getSession().autoFlushIfRequired( affectedTableNames );
-
 		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
 				sql,
 				jdbcParameterBinders,
@@ -94,6 +134,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				affectedTableNames
 		);
 
+		executionContext.getSession().autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
@@ -136,6 +177,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				affectedTableNames
 		);
 
+		executionContext.getSession().autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().scroll(
 				jdbcSelect,
 				scrollMode,

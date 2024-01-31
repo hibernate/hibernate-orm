@@ -15,6 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -27,7 +28,7 @@ public class NonAggregatedCompositeIdCachingTest extends BaseUnitTestCase {
 	public void testNonAggregatedCompositeId() {
 		// HHH-9913 reports a NPE when bootstrapping a SF with non-aggregated composite identifiers
 		// in org.hibernate.cache.internal.CacheDataDescriptionImpl#decode
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, true )
 				.build();
 
@@ -49,7 +50,7 @@ public class NonAggregatedCompositeIdCachingTest extends BaseUnitTestCase {
 	public void testNonAggregatedCompositeIdWithPkClass() {
 		// HHH-9913 reports a NPE when bootstrapping a SF with non-aggregated composite identifiers
 		// in org.hibernate.cache.internal.CacheDataDescriptionImpl#decode
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			new MetadataSources( ssr )

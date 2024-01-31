@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -84,7 +85,11 @@ public class MultiSingleTableLoadTest {
 			assertTrue( task1A instanceof B );
 			B b = (B) task1A;
 			assertTrue( b.getX() instanceof Y );
-			assertTrue( Hibernate.isInitialized( b.getX() ) );
+			// Previously, we asserted that X was initialized in this case,
+			// but doing that is not very sound, since EAGER initialization may only happen
+			// task1.a were instanceof C. Since that is not the case, no initialization happens
+//			assertTrue( Hibernate.isInitialized( b.getX() ) );
+			assertFalse( Hibernate.isInitialized( b.getX() ) );
 			assertEquals( "y", b.getX().getTheString() );
 
 			assertNotNull( task2 );

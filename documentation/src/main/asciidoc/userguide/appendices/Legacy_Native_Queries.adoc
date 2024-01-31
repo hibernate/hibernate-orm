@@ -1,3 +1,4 @@
+[appendix]
 [[appendix-legacy-native-queries]]
 == Legacy Hibernate Native Queries
 

@@ -24,9 +24,11 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -62,10 +64,10 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.SyntaxException;
-import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -90,6 +92,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.UnknownEntityException;
@@ -98,13 +101,14 @@ import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
 import org.hibernate.query.sqm.internal.SqmQueryPartCreationProcessingStateStandardImpl;
+import org.hibernate.query.sqm.internal.TypecheckUtil;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
+import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -145,6 +149,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
@@ -170,6 +175,8 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
+import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -206,19 +213,23 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.query.sqm.tree.update.SqmAssignment;
+import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
+
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.criteria.Predicate;
@@ -236,7 +247,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.grammars.hql.HqlParser.ELEMENTS;
 import static org.hibernate.grammars.hql.HqlParser.EXCEPT;
-import static org.hibernate.grammars.hql.HqlParser.IDENTIFIER;
 import static org.hibernate.grammars.hql.HqlParser.INDICES;
 import static org.hibernate.grammars.hql.HqlParser.INTERSECT;
 import static org.hibernate.grammars.hql.HqlParser.ListaggFunctionContext;
@@ -244,6 +254,7 @@ import static org.hibernate.grammars.hql.HqlParser.OnOverflowClauseContext;
 import static org.hibernate.grammars.hql.HqlParser.PLUS;
 import static org.hibernate.grammars.hql.HqlParser.UNION;
 import static org.hibernate.internal.util.QuotingHelper.unquoteStringLiteral;
+import static org.hibernate.query.hql.internal.SqmTreeCreationHelper.extractJpaCompliantAlias;
 import static org.hibernate.query.sqm.TemporalUnit.DATE;
 import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_WEEK;
@@ -255,7 +266,6 @@ import static org.hibernate.query.sqm.TemporalUnit.TIMEZONE_HOUR;
 import static org.hibernate.query.sqm.TemporalUnit.TIMEZONE_MINUTE;
 import static org.hibernate.query.sqm.TemporalUnit.WEEK_OF_MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.WEEK_OF_YEAR;
-import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 import static org.hibernate.type.descriptor.DateTimeUtils.DATE_TIME;
 import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
 
@@ -450,11 +460,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmRoot<R> visitTargetEntity(HqlParser.TargetEntityContext dmlTargetContext) {
-		final HqlParser.VariableContext variable = dmlTargetContext.variable();
 		//noinspection unchecked
 		return new SqmRoot<>(
 				(EntityDomainType<R>) visitEntityName( dmlTargetContext.entityName() ),
-				variable == null ? null : applyJpaCompliance( visitVariable( variable ) ),
+				extractAlias( dmlTargetContext.variable() ),
 				false,
 				creationContext.getNodeBuilder()
 		);
@@ -487,8 +496,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			processingStateStack.push( processingState );
 
 			try {
-				queryExpressionContext.accept( this );
-
 				final SqmCreationProcessingState stateFieldsProcessingState = new SqmCreationProcessingStateImpl(
 						insertStatement,
 						this
@@ -506,6 +513,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					processingStateStack.pop();
 				}
 
+				queryExpressionContext.accept( this );
+
+				insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
 				return insertStatement;
 			}
 			finally {
@@ -526,21 +536,43 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			processingState.getPathRegistry().register( root );
 
 			try {
-				final HqlParser.ValuesListContext valuesListContext = ctx.valuesList();
-				for ( int i = 1; i < valuesListContext.getChildCount(); i += 2 ) {
-					final ParseTree values = valuesListContext.getChild( i );
-					final SqmValues sqmValues = new SqmValues();
-					for ( int j = 1; j < values.getChildCount(); j += 2 ) {
-						sqmValues.getExpressions().add( (SqmExpression<?>) values.getChild( j ).accept( this ) );
-					}
-					insertStatement.getValuesList().add( sqmValues );
-				}
-
 				for ( HqlParser.SimplePathContext stateFieldCtx : targetFieldsSpecContext.simplePath() ) {
 					final SqmPath<?> stateField = (SqmPath<?>) visitSimplePath( stateFieldCtx );
 					insertStatement.addInsertTargetStateField( stateField );
 				}
 
+				final ArrayList<SqmValues> valuesList = new ArrayList<>();
+				final HqlParser.ValuesListContext valuesListContext = ctx.valuesList();
+				for ( int i = 1; i < valuesListContext.getChildCount(); i += 2 ) {
+					final ParseTree values = valuesListContext.getChild( i );
+					final ArrayList<SqmExpression<?>> valuesExpressions = new ArrayList<>();
+					final Iterator<SqmPath<?>> iterator = insertStatement.getInsertionTargetPaths().iterator();
+					for ( int j = 1; j < values.getChildCount(); j += 2 ) {
+						final SqmPath<?> targetPath = iterator.next();
+						final Class<?> targetPathJavaType = targetPath.getJavaType();
+						final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
+						final ParseTree valuesContext = values.getChild( j );
+						final HqlParser.ExpressionContext expressionContext;
+						final Map<Class<?>, Enum<?>> possibleEnumValues;
+						final SqmExpression<?> value;
+						if ( isEnum && valuesContext.getChild( 0 ) instanceof HqlParser.ExpressionContext
+								&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) valuesContext.getChild( 0 ) ) ) != null ) {
+							value = resolveEnumShorthandLiteral(
+									expressionContext,
+									possibleEnumValues,
+									targetPathJavaType
+							);
+						}
+						else {
+							value = (SqmExpression<?>) valuesContext.accept( this );
+						}
+						valuesExpressions.add( value );
+					}
+					valuesList.add( new SqmValues( valuesExpressions ) );
+				}
+
+				insertStatement.values( valuesList );
+				insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
 				return insertStatement;
 			}
 			finally {
@@ -550,54 +582,59 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmUpdateStatement<R> visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
-		final boolean versioned = ctx.VERSIONED() != null;
-		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
-		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
-		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
-			throw new SemanticException(
-					String.format(
-							"Target type '%s' in 'update' statement is not an entity",
-							root.getModel().getHibernateEntityName()
-					)
-			);
+	public SqmConflictClause<R> visitConflictClause(HqlParser.ConflictClauseContext ctx) {
+		if ( ctx == null ) {
+			return null;
 		}
+		final SqmCreationProcessingState processingState = processingStateStack.getCurrent();
+		final SqmInsertStatement<R> statement = (SqmInsertStatement<R>) processingState.getProcessingQuery();
+		final SqmConflictClause<R> conflictClause = new SqmConflictClause<>( statement );
+		final HqlParser.ConflictTargetContext conflictTargetContext = ctx.conflictTarget();
+		if ( conflictTargetContext != null ) {
+			final HqlParser.IdentifierContext identifierCtx = conflictTargetContext.identifier();
+			if ( identifierCtx != null ) {
+				conflictClause.conflictOnConstraint( visitIdentifier( identifierCtx ) );
+			}
+			else {
+				final List<SqmPath<?>> constraintAttributes = new ArrayList<>();
+				for ( HqlParser.SimplePathContext pathContext : conflictTargetContext.simplePath() ) {
+					constraintAttributes.add( consumeDomainPath( pathContext ) );
+				}
+				conflictClause.conflictOnConstraintPaths( constraintAttributes );
+			}
+		}
+		final HqlParser.ConflictActionContext conflictActionContext = ctx.conflictAction();
+		final HqlParser.SetClauseContext setClauseContext = conflictActionContext.setClause();
+		if ( setClauseContext != null ) {
+			processingState.getPathRegistry().registerByAliasOnly( conflictClause.getExcludedRoot() );
+			final SqmConflictUpdateAction<R> updateAction = conflictClause.onConflictDoUpdate();
+			for ( HqlParser.AssignmentContext assignmentContext : setClauseContext.assignment() ) {
+				updateAction.addAssignment( visitAssignment( assignmentContext ) );
+			}
+			final SqmPredicate sqmPredicate = visitWhereClause( conflictActionContext.whereClause() );
+			updateAction.where( sqmPredicate );
+		}
+		return conflictClause;
+	}
 
-		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( root, creationContext.getNodeBuilder() );
+	@Override
+	public SqmUpdateStatement<R> visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
+		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( creationContext.getNodeBuilder() );
 		parameterCollector = updateStatement;
 		final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 				updateStatement,
 				this
 		);
 		processingStateStack.push( processingState );
-		processingState.getPathRegistry().register( root );
 
 		try {
-			updateStatement.versioned( versioned );
+			updateStatement.versioned( ctx.VERSIONED() != null );
+			//noinspection unchecked
+			updateStatement.setTarget( (JpaRoot<R>) visitEntityWithJoins( ctx.entityWithJoins() ) );
 			final HqlParser.SetClauseContext setClauseCtx = ctx.setClause();
 			for ( ParseTree subCtx : setClauseCtx.children ) {
 				if ( subCtx instanceof HqlParser.AssignmentContext ) {
-					final HqlParser.AssignmentContext assignmentContext = (HqlParser.AssignmentContext) subCtx;
-					//noinspection unchecked
-					final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( assignmentContext.simplePath() );
-					final Class<?> targetPathJavaType = targetPath.getJavaType();
-					final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
-					final ParseTree rightSide = assignmentContext.getChild( 2 );
-					final HqlParser.ExpressionContext expressionContext;
-					final Map<Class<?>, Enum<?>> possibleEnumValues;
-					final SqmExpression<?> value;
-					if ( isEnum && rightSide.getChild( 0 ) instanceof HqlParser.ExpressionContext
-							&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) rightSide.getChild( 0 ) ) ) != null ) {
-						value = resolveEnumShorthandLiteral(
-								expressionContext,
-								possibleEnumValues,
-								targetPathJavaType
-						);
-					}
-					else {
-						value = (SqmExpression<?>) rightSide.accept( this );
-					}
-					updateStatement.applyAssignment( targetPath, value );
+					updateStatement.applyAssignment( visitAssignment( (HqlParser.AssignmentContext) subCtx ) );
 				}
 			}
 
@@ -614,11 +651,32 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmDeleteStatement<R> visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
-		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
-		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
+	public SqmAssignment<?> visitAssignment(HqlParser.AssignmentContext ctx) {
+		//noinspection unchecked
+		final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( ctx.simplePath() );
+		final Class<?> targetPathJavaType = targetPath.getJavaType();
+		final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
+		final ParseTree rightSide = ctx.getChild( 2 );
+		final HqlParser.ExpressionContext expressionContext;
+		final Map<Class<?>, Enum<?>> possibleEnumValues;
+		final SqmExpression<?> value;
+		if ( isEnum && rightSide.getChild( 0 ) instanceof HqlParser.ExpressionContext
+				&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) rightSide.getChild( 0 ) ) ) != null ) {
+			value = resolveEnumShorthandLiteral(
+					expressionContext,
+					possibleEnumValues,
+					targetPathJavaType
+			);
+		}
+		else {
+			value = (SqmExpression<?>) rightSide.accept( this );
+		}
+		return new SqmAssignment<>( targetPath, value );
+	}
 
-		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( root, SqmQuerySource.HQL, creationContext.getNodeBuilder() );
+	@Override
+	public SqmDeleteStatement<R> visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
+		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( creationContext.getNodeBuilder() );
 
 		parameterCollector = deleteStatement;
 
@@ -627,10 +685,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				this
 		);
 
-		sqmDeleteCreationState.getPathRegistry().register( root );
-
 		processingStateStack.push( sqmDeleteCreationState );
 		try {
+			//noinspection unchecked
+			deleteStatement.setTarget( (JpaRoot<R>) visitEntityWithJoins( ctx.entityWithJoins() ) );
 			final HqlParser.WhereClauseContext whereClauseContext = ctx.whereClause();
 			if ( whereClauseContext != null ) {
 				deleteStatement.applyPredicate( visitWhereClause( whereClauseContext ) );
@@ -1306,9 +1364,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmSelection<?> visitSelection(HqlParser.SelectionContext ctx) {
-		final String resultIdentifier = ctx.variable() == null ? null
-				: applyJpaCompliance( visitVariable( ctx.variable() ) );
 		final SqmSelectableNode<?> selectableNode = visitSelectableNode( ctx );
+		final String resultIdentifier = extractJpaCompliantAlias( ctx.variable(), this );
 
 		final SqmSelection<?> selection = new SqmSelection<>(
 				selectableNode,
@@ -1418,7 +1475,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmDynamicInstantiationArgument<?> visitInstantiationArgument(HqlParser.InstantiationArgumentContext ctx) {
 		final String alias;
 		if ( ctx.getChildCount() > 1 ) {
-			alias = visitVariable( (HqlParser.VariableContext) ctx.getChild( ctx.getChildCount() - 1 ) );
+			alias = extractAlias( (HqlParser.VariableContext) ctx.getChild( ctx.getChildCount() - 1 ) );
 		}
 		else {
 			alias = null;
@@ -1879,16 +1936,34 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmFromClause visitFromClause(HqlParser.FromClauseContext parserFromClause) {
-		final List<HqlParser.EntityWithJoinsContext> joins = parserFromClause.entityWithJoins();
-		final SqmFromClause fromClause = new SqmFromClause( joins.size() );
-		currentQuerySpec().setFromClause( fromClause ); //have to do this here because visitEntityWithJoins() needs it
-		for ( HqlParser.EntityWithJoinsContext join : joins ) {
-			final SqmRoot<?> sqmRoot = visitEntityWithJoins( join );
-			// Correlations are implicitly added to the from clause
-			if ( !( sqmRoot instanceof SqmCorrelation<?, ?> ) ) {
-				fromClause.addRoot( sqmRoot );
+		final List<HqlParser.EntityWithJoinsContext> roots = parserFromClause.entityWithJoins();
+		final SqmFromClause fromClause = new SqmFromClause( roots.size() );
+
+		//have to do this here because visiting the from-elements needs it
+		currentQuerySpec().setFromClause( fromClause );
+
+		if ( creationOptions.useStrictJpaCompliance() && roots.size() > 1 ) {
+			// for multiple roots, JPA says that the secondary roots should be
+			// treated with semantics effectively akin to CROSS joins
+			// (specifically in regard to alias scoping and join ordering).
+			final SqmRoot<?> sqmRoot = visitEntityWithJoins( roots.get( 0 ) );
+			fromClause.addRoot( sqmRoot );
+
+			for ( int i = 1; i < roots.size(); i++ ) {
+				final HqlParser.EntityWithJoinsContext secondaryRoot = roots.get( i );
+				SqmTreeCreationHelper.handleRootAsCrossJoin( secondaryRoot, sqmRoot, this );
 			}
 		}
+		else {
+			for ( HqlParser.EntityWithJoinsContext root : roots ) {
+				final SqmRoot<?> sqmRoot = visitEntityWithJoins( root );
+				// Correlations are implicitly added to the from-clause
+				if ( !( sqmRoot instanceof SqmCorrelation<?, ?> ) ) {
+					fromClause.addRoot( sqmRoot );
+				}
+			}
+		}
+
 		return fromClause;
 	}
 
@@ -1919,7 +1994,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().getHqlEntityReference( name );
 
-		final String alias = applyJpaCompliance( visitVariable( ctx.variable() ) );
+		final String alias = extractAlias( ctx.variable() );
 
 		final SqmCreationProcessingState processingState = processingStateStack.getCurrent();
 		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
@@ -2023,7 +2098,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		final SqmSubQuery<?> subQuery = (SqmSubQuery<?>) ctx.subquery().accept( this );
-		final String alias = applyJpaCompliance( visitVariable( ctx.variable() ) );
+		final String alias = extractAlias( ctx.variable() );
 		final SqmRoot<?> sqmRoot = new SqmDerivedRoot<>( subQuery, alias );
 		processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
 		return sqmRoot;
@@ -2031,62 +2106,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public String visitVariable(HqlParser.VariableContext ctx) {
-		if ( ctx == null ) {
-			return null;
-		}
-		final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
-		if ( lastChild instanceof HqlParser.IdentifierContext ) {
-			final HqlParser.IdentifierContext identifierContext = (HqlParser.IdentifierContext) lastChild;
-			// in this branch, the alias could be a reserved word ("keyword as identifier")
-			// which JPA disallows...
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				final Token identificationVariableToken = identifierContext.getStart();
-				if ( identificationVariableToken.getType() != IDENTIFIER ) {
-					throw new StrictJpaComplianceViolation(
-							String.format(
-									Locale.ROOT,
-									"Strict JPQL compliance was violated : %s [%s]",
-									StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS.description(),
-									identificationVariableToken.getText()
-							),
-							StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS
-					);
-				}
-			}
-			return visitIdentifier( identifierContext );
-		}
-		else {
-			final HqlParser.NakedIdentifierContext identifierContext = (HqlParser.NakedIdentifierContext) lastChild;
-			// in this branch, the alias could be a reserved word ("keyword as identifier")
-			// which JPA disallows...
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				final Token identificationVariableToken = identifierContext.getStart();
-				if ( identificationVariableToken.getType() != IDENTIFIER ) {
-					throw new StrictJpaComplianceViolation(
-							String.format(
-									Locale.ROOT,
-									"Strict JPQL compliance was violated : %s [%s]",
-									StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS.description(),
-									identificationVariableToken.getText()
-							),
-							StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS
-					);
-				}
-			}
-			return visitNakedIdentifier( identifierContext );
-		}
+		return extractAlias( ctx );
 	}
 
-	private String applyJpaCompliance(String text) {
-		if ( text == null ) {
-			return null;
-		}
+	protected String extractAlias(HqlParser.VariableContext ctx) {
+		return SqmTreeCreationHelper.extractAlias( ctx, this );
+	}
 
-		if ( getCreationOptions().useStrictJpaCompliance() ) {
-			return text.toLowerCase( Locale.getDefault() );
-		}
-
-		return text;
+	protected String applyJpaCompliance(String text) {
+		return SqmTreeCreationHelper.applyJpaCompliance( text, this );
 	}
 
 	@Override
@@ -2094,7 +2122,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		throw new UnsupportedOperationException( "Unexpected call to #visitCrossJoin, see #consumeCrossJoin" );
 	}
 
-	private <T> void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot<T> sqmRoot) {
+	protected <T> void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot<T> sqmRoot) {
 		final String name = getEntityName( parserJoin.entityName() );
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
@@ -2105,9 +2133,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a target of 'cross join'" );
 		}
-		final SqmCrossJoin<T> join =
-				new SqmCrossJoin<>( entityDescriptor, visitVariable( parserJoin.variable() ), sqmRoot );
-		
+		final SqmCrossJoin<T> join = new SqmCrossJoin<>(
+				entityDescriptor,
+				extractAlias( parserJoin.variable() ),
+				sqmRoot
+		);
+
 		processingStateStack.getCurrent().getPathRegistry().register( join );
 
 		// CROSS joins are always added to the root
@@ -2122,7 +2153,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	protected <X> void consumeJoin(HqlParser.JoinContext parserJoin, SqmRoot<X> sqmRoot) {
 		final SqmJoinType joinType = getSqmJoinType( parserJoin.joinType() );
 		final HqlParser.JoinTargetContext qualifiedJoinTargetContext = parserJoin.joinTarget();
-		final String alias = visitVariable( getVariable( qualifiedJoinTargetContext ) );
+		final String alias = extractAlias( getVariable( qualifiedJoinTargetContext ) );
 		final boolean fetch = parserJoin.FETCH() != null;
 
 		if ( fetch && processingStateStack.depth() > 1 ) {
@@ -2245,7 +2276,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	 * Deprecated syntax dating back to EJB-QL prior to EJB 3, required by JPA, never documented in Hibernate
 	 */
 	protected void consumeJpaCollectionJoin(HqlParser.JpaCollectionJoinContext ctx, SqmRoot<?> sqmRoot) {
-		final String alias = visitVariable( ctx.variable() );
+		final String alias = extractAlias( ctx.variable() );
 		dotIdentifierConsumerStack.push(
 				// According to JPA spec 4.4.6 this is an inner join
 				new QualifiedJoinPathConsumer( sqmRoot, SqmJoinType.INNER, false, alias, this )
@@ -2468,7 +2499,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				right = r;
 			}
 		}
-		assertComparable( left, right, creationContext.getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				left,
 				comparisonOperator,
@@ -2583,10 +2613,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPredicate visitMemberOfPredicate(HqlParser.MemberOfPredicateContext ctx) {
 		final boolean negated = ctx.NOT() != null;
 		final SqmPath<?> sqmPluralPath = consumeDomainPath( ctx.path() );
-		if ( sqmPluralPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
+		if ( sqmPluralPath instanceof SqmPluralValuedSimplePath ) {
 			return new SqmMemberOfPredicate(
 					(SqmExpression<?>) ctx.expression().accept( this ),
-					sqmPluralPath,
+					(SqmPluralValuedSimplePath<?>) sqmPluralPath,
 					negated,
 					creationContext.getNodeBuilder()
 			);
@@ -2663,7 +2693,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else if ( inListContext instanceof HqlParser.SubqueryInListContext ) {
 			final HqlParser.SubqueryInListContext subQueryOrParamInListContext = (HqlParser.SubqueryInListContext) inListContext;
 			final SqmSubQuery<?> subquery = visitSubquery( subQueryOrParamInListContext.subquery() );
-			assertComparable( testExpression, subquery, creationContext.getNodeBuilder().getSessionFactory() );
 			return new SqmInSubQueryPredicate(
 					testExpression,
 					subquery,
@@ -2888,14 +2917,53 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( ctx.getChildCount() != 3 ) {
 			throw new SyntaxException( "Expecting two operands to the '||' operator" );
 		}
-		return getFunctionDescriptor( "concat" ).generateSqmExpression(
-				asList(
-						(SqmExpression<?>) ctx.expression( 0 ).accept( this ),
-						(SqmExpression<?>) ctx.expression( 1 ).accept( this )
-				),
-				null,
-				creationContext.getQueryEngine()
-		);
+		final SqmExpression<?> lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
+		final SqmExpressible<?> rhsExpressible = rhs.getExpressible();
+		if ( lhsExpressible != null && lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			if ( rhsExpressible == null || rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+				// Both sides are array, so use array_concat
+				return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+			else {
+				// The RHS seems to be of the element type, so use array_append
+				return getFunctionDescriptor( "array_append" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+		}
+		else if ( rhsExpressible != null && rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			if ( lhsExpressible == null ) {
+				// The RHS is an array and the LHS doesn't have a clear type, so use array_concat
+				return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+			else {
+				// The LHS seems to be of the element type, so use array_prepend
+				return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+		}
+		else {
+			return getFunctionDescriptor( "concat" ).generateSqmExpression(
+					asList( lhs, rhs ),
+					null,
+					creationContext.getQueryEngine()
+			);
+		}
 	}
 
 	@Override
@@ -2945,8 +3013,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmExpression<?> left = (SqmExpression<?>) ctx.expression(0).accept(this);
 		final SqmExpression<?> right = (SqmExpression<?>) ctx.expression(1).accept(this);
 		final BinaryArithmeticOperator operator = (BinaryArithmeticOperator) ctx.additiveOperator().accept(this);
-		SqmCriteriaNodeBuilder.assertNumeric( left, operator );
-		SqmCriteriaNodeBuilder.assertNumeric( right, operator );
+		TypecheckUtil.assertOperable( left, right, operator );
 
 		return new SqmBinaryArithmetic<>(
 				operator,
@@ -2966,8 +3033,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmExpression<?> left = (SqmExpression<?>) ctx.expression(0).accept( this );
 		final SqmExpression<?> right = (SqmExpression<?>) ctx.expression(1).accept( this );
 		final BinaryArithmeticOperator operator = (BinaryArithmeticOperator) ctx.multiplicativeOperator().accept( this );
-		SqmCriteriaNodeBuilder.assertNumeric( left, operator );
-		SqmCriteriaNodeBuilder.assertNumeric( right, operator );
+		TypecheckUtil.assertOperable( left, right, operator );
 
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
 			return getFunctionDescriptor("mod").generateSqmExpression(
@@ -3008,7 +3074,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public Object visitFromDurationExpression(HqlParser.FromDurationExpressionContext ctx) {
 		SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept( this );
-
+		TypecheckUtil.assertDuration( expression );
 		return new SqmByUnit(
 				toDurationUnit( (SqmExtractUnit<?>) ctx.datetimeField().accept( this ) ),
 				expression,
@@ -3021,11 +3087,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmUnaryOperation<?> visitUnaryExpression(HqlParser.UnaryExpressionContext ctx) {
 		final SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept(this);
 		final UnaryArithmeticOperator operator = (UnaryArithmeticOperator) ctx.signOperator().accept(this);
-		SqmCriteriaNodeBuilder.assertNumeric( expression, operator );
-		return new SqmUnaryOperation<>(
-				operator,
-				expression
-		);
+		TypecheckUtil.assertNumeric( expression, operator );
+		return new SqmUnaryOperation<>( operator, expression );
 	}
 
 	@Override
@@ -3224,7 +3287,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		switch ( node.getSymbol().getType() ) {
 			case HqlParser.INTEGER_LITERAL:
-				return integerOrLongLiteral( text );
+				return integerLiteral( text );
 			case HqlParser.LONG_LITERAL:
 				return longLiteral( text );
 			case HqlParser.BIG_INTEGER_LITERAL:
@@ -3281,7 +3344,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.JAVA_STRING_LITERAL:
 				return javaStringLiteral( node.getText() );
 			case HqlParser.INTEGER_LITERAL:
-				return integerOrLongLiteral( node.getText() );
+				return integerLiteral( node.getText() );
 			case HqlParser.LONG_LITERAL:
 				return longLiteral( node.getText() );
 			case HqlParser.BIG_INTEGER_LITERAL:
@@ -3621,172 +3684,89 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-	private SqmLiteral<? extends Number> integerOrLongLiteral(String text) {
-		try {
-			final Integer value = Integer.valueOf( text.replace("_", "") );
-			return new SqmLiteral<>(
-					value,
-					resolveExpressibleTypeBasic( Integer.class ),
-					creationContext.getNodeBuilder()
-			);
+	private SqmHqlNumericLiteral<Integer> integerLiteral(String text) {
+		text = text.replace( "_", "" );
+
+		// special handling for octal and hexadecimal literals
+		if ( isHexOrOctal( text ) ) {
+			final int intValue = Integer.decode( text );
+			text = Integer.toString( intValue );
 		}
-		catch (NumberFormatException e) {
-			// This is at least what 5.x did
-			try {
-				final Long value = Long.valueOf( text );
-				return new SqmLiteral<>(
-						value,
-						resolveExpressibleTypeBasic( Long.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-			catch (NumberFormatException e2) {
-				e.addSuppressed( e2 );
-				throw new LiteralNumberFormatException(
-						"Unable to convert sqm literal [" + text + "] to Integer",
-						e
-				);
-			}
-		}
+
+		return new SqmHqlNumericLiteral<>(
+				text,
+				integerDomainType,
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<Integer> integerLiteral(String text) {
-		try {
-			final Integer value = Integer.valueOf( text.replace("_", "") );
-			return new SqmLiteral<>(
-					value,
-					resolveExpressibleTypeBasic( Integer.class ),
-					creationContext.getNodeBuilder()
-			);
+	@SuppressWarnings("RedundantIfStatement")
+	private boolean isHexOrOctal(String text) {
+		if ( text.startsWith( "0x" ) || text.startsWith( "-0x" ) ) {
+			return true;
 		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + text + "] to Integer",
-					e
-			);
+
+		if ( ( text.startsWith( "0" ) && text.length() > 1 )
+				|| ( text.startsWith( "-0" ) && text.length() > 2 ) ) {
+			return true;
 		}
+
+		return false;
 	}
 
-	private SqmLiteral<Long> longLiteral(String text) {
-		final String originalText = text;
-		try {
-			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
-				text = text.substring( 0, text.length() - 1 ).replace("_", "");
-			}
-			final Long value = Long.valueOf( text );
-			return new SqmLiteral<>(
-					value,
-					resolveExpressibleTypeBasic( Long.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + originalText + "] to Long",
-					e
-			);
-		}
+	private SqmHqlNumericLiteral<Long> longLiteral(String text) {
+		assert text.endsWith( "l" ) || text.endsWith( "L" );
+		return new SqmHqlNumericLiteral<>(
+				text.substring( 0, text.length() - 1 ).replace( "_", "" ),
+				resolveExpressibleTypeBasic( Long.class ),
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<? extends Number> hexLiteral(String text) {
-		final String originalText = text;
-		text = text.substring( 2 );
-		try {
-			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
-				text = text.substring( 0, text.length() - 1 );
-				final long value = Long.parseUnsignedLong( text, 16 );
-				return new SqmLiteral<>(
-						value,
-						resolveExpressibleTypeBasic( Long.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-			else {
-				final int value = Integer.parseUnsignedInt( text, 16 );
-				return new SqmLiteral<>(
-						value,
-						resolveExpressibleTypeBasic( Integer.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + originalText + "]",
-					e
-			);
-		}
+	private SqmHqlNumericLiteral<BigInteger> bigIntegerLiteral(String text) {
+		assert text.endsWith( "bi" ) || text.endsWith( "BI" );
+		return new SqmHqlNumericLiteral<>(
+				text.substring( 0, text.length() - 2 ).replace( "_", "" ),
+				resolveExpressibleTypeBasic( BigInteger.class ),
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<BigInteger> bigIntegerLiteral(String text) {
-		final String originalText = text;
-		try {
-			if ( text.endsWith( "bi" ) || text.endsWith( "BI" ) ) {
-				text = text.substring( 0, text.length() - 2 );
-			}
-			return new SqmLiteral<>(
-					new BigInteger( text ),
-					resolveExpressibleTypeBasic( BigInteger.class  ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + originalText + "] to BigInteger",
-					e
-			);
-		}
+	private SqmHqlNumericLiteral<? extends Number> floatLiteral(String text) {
+		assert text.endsWith( "f" ) || text.endsWith( "F" );
+		return new SqmHqlNumericLiteral<>(
+				text.substring( 0, text.length() - 1 ).replace( "_", "" ),
+				resolveExpressibleTypeBasic( Float.class ),
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<Float> floatLiteral(String text) {
-		try {
-			return new SqmLiteral<>(
-					Float.valueOf( text ),
-					resolveExpressibleTypeBasic( Float.class ),
-					creationContext.getNodeBuilder()
-			);
+	private SqmHqlNumericLiteral<Double> doubleLiteral(String text) {
+		if ( text.endsWith( "d" ) || text.endsWith( "D" ) ) {
+			text = text.substring( 0, text.length() - 1 );
 		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + text + "] to Float",
-					e
-			);
-		}
+		return new SqmHqlNumericLiteral<>(
+				text.replace( "_", "" ),
+				resolveExpressibleTypeBasic( Double.class ),
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<Double> doubleLiteral(String text) {
-		try {
-			return new SqmLiteral<>(
-					Double.valueOf( text ),
-					resolveExpressibleTypeBasic( Double.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + text + "] to Double",
-					e
-			);
-		}
+	private SqmHqlNumericLiteral<BigDecimal> bigDecimalLiteral(String text) {
+		assert text.endsWith( "bd" ) || text.endsWith( "BD" );
+		return new SqmHqlNumericLiteral<>(
+				text.substring( 0, text.length() - 2 ).replace( "_", "" ),
+				resolveExpressibleTypeBasic( BigDecimal.class ),
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<BigDecimal> bigDecimalLiteral(String text) {
-		final String originalText = text;
-		try {
-			if ( text.endsWith( "bd" ) || text.endsWith( "BD" ) ) {
-				text = text.substring( 0, text.length() - 2 );
-			}
-			return new SqmLiteral<>(
-					new BigDecimal( text ),
-					resolveExpressibleTypeBasic( BigDecimal.class ),
-					creationContext.getNodeBuilder()
-			);
+	private SqmHqlNumericLiteral<? extends Number> hexLiteral(String text) {
+		if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
+			return longLiteral( text );
 		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + originalText + "] to BigDecimal",
-					e
-			);
+		else {
+			return integerLiteral( text );
 		}
 	}
 
@@ -3849,6 +3829,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( existingParameter == null ) {
 			parameterCollector.addParameter( parameter );
 			return parameter;
+		}
+		else if ( existingParameter.allowMultiValuedBinding() && !parameter.allowMultiValuedBinding() ) {
+			existingParameter.disallowMultiValuedBinding();
 		}
 		//noinspection unchecked
 		return (T) existingParameter;
@@ -4799,7 +4782,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmExpression<?> visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
 		final SqmExpression<?> source = (SqmExpression<?>) ctx.expression().accept( this );
 		final SqmTrimSpecification trimSpec = visitTrimSpecification( ctx.trimSpecification() );;
-		final SqmLiteral<Character> trimChar = visitTrimCharacter( ctx.trimCharacter() );
+		final SqmExpression<Character> trimChar = visitTrimCharacter( ctx.trimCharacter() );
 
 		return getFunctionDescriptor("trim").generateSqmExpression(
 				asList(
@@ -4833,15 +4816,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmLiteral<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
-		final String trimCharText = ctx != null
-				? unquoteStringLiteral( ctx.getText() )
-				: " "; // JPA says space is the default
-
-		if ( trimCharText.length() != 1 ) {
-			throw new SemanticException( "Trim character for trim() function must be single character, found '" + trimCharText + "'" );
+	public SqmExpression<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
+		final String trimCharText;
+		if ( ctx == null ) {
+			// JPA says space is the default
+			trimCharText = " ";
 		}
-
+		else {
+			final ParseTree child = ctx.getChild( 0 );
+			if ( child instanceof HqlParser.ParameterContext ) {
+				//noinspection unchecked
+				return (SqmExpression<Character>) child.accept( this );
+			}
+			else {
+				trimCharText = unquoteStringLiteral( ctx.getText() );
+				if ( trimCharText.length() != 1 ) {
+					throw new SemanticException( "Trim character for trim() function must be single character, found '" + trimCharText + "'" );
+				}
+			}
+		}
 		return new SqmLiteral<>(
 				trimCharText.charAt( 0 ),
 				resolveExpressibleTypeBasic( Character.class ),

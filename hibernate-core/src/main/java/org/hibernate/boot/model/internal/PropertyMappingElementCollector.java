@@ -17,6 +17,7 @@ import org.hibernate.boot.jaxb.mapping.JaxbBasic;
 import org.hibernate.boot.jaxb.mapping.JaxbElementCollection;
 import org.hibernate.boot.jaxb.mapping.JaxbEmbedded;
 import org.hibernate.boot.jaxb.mapping.JaxbEmbeddedId;
+import org.hibernate.boot.jaxb.mapping.JaxbEntity;
 import org.hibernate.boot.jaxb.mapping.JaxbId;
 import org.hibernate.boot.jaxb.mapping.JaxbManyToMany;
 import org.hibernate.boot.jaxb.mapping.JaxbManyToOne;
@@ -29,10 +30,12 @@ import org.hibernate.boot.jaxb.mapping.JaxbPostUpdate;
 import org.hibernate.boot.jaxb.mapping.JaxbPrePersist;
 import org.hibernate.boot.jaxb.mapping.JaxbPreRemove;
 import org.hibernate.boot.jaxb.mapping.JaxbPreUpdate;
+import org.hibernate.boot.jaxb.mapping.JaxbTenantId;
 import org.hibernate.boot.jaxb.mapping.JaxbTransient;
 import org.hibernate.boot.jaxb.mapping.JaxbVersion;
 import org.hibernate.boot.jaxb.mapping.LifecycleCallback;
 import org.hibernate.boot.jaxb.mapping.LifecycleCallbackContainer;
+import org.hibernate.boot.jaxb.mapping.ManagedType;
 import org.hibernate.boot.jaxb.mapping.PersistentAttribute;
 
 
@@ -119,6 +122,13 @@ public final class PropertyMappingElementCollector {
 		preUpdate = collectIfMatching( preUpdate, container.getPreUpdate(), LIFECYCLE_CALLBACK_NAME );
 		postUpdate = collectIfMatching( postUpdate, container.getPostUpdate(), LIFECYCLE_CALLBACK_NAME );
 		postLoad = collectIfMatching( postLoad, container.getPostLoad(), LIFECYCLE_CALLBACK_NAME );
+	}
+
+	public void collectTenantIdIfMatching(ManagedType managedType) {
+		if ( managedType instanceof JaxbEntity ) {
+			JaxbTenantId tenantId = ( (JaxbEntity) managedType ).getTenantId();
+			basic = collectIfMatching( basic, tenantId, PERSISTENT_ATTRIBUTE_NAME );
+		}
 	}
 
 	private <T> List<T> collectIfMatching(List<T> collected, List<T> candidates,

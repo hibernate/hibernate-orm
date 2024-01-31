@@ -13,6 +13,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -49,6 +50,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private final String concatOperator;
 	private final String concatArgumentCastType;
 	private final boolean castDistinctStringConcat;
+	private final String distinctArgumentCastType;
 
 	public CountFunction(
 			Dialect dialect,
@@ -79,7 +81,8 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				"count",
 				concatOperator,
 				concatArgumentCastType,
-				castDistinctStringConcat
+				castDistinctStringConcat,
+				concatArgumentCastType
 		);
 	}
 
@@ -91,6 +94,27 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			String concatOperator,
 			String concatArgumentCastType,
 			boolean castDistinctStringConcat) {
+		this(
+				dialect,
+				typeConfiguration,
+				defaultArgumentRenderingMode,
+				countFunctionName,
+				concatOperator,
+				concatArgumentCastType,
+				castDistinctStringConcat,
+				concatArgumentCastType
+		);
+	}
+
+	public CountFunction(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqlAstNodeRenderingMode defaultArgumentRenderingMode,
+			String countFunctionName,
+			String concatOperator,
+			String concatArgumentCastType,
+			boolean castDistinctStringConcat,
+			String distinctArgumentCastType) {
 		super(
 				"count",
 				FunctionKind.AGGREGATE,
@@ -106,11 +130,16 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		this.concatOperator = concatOperator;
 		this.concatArgumentCastType = concatArgumentCastType;
 		this.castDistinctStringConcat = castDistinctStringConcat;
+		this.distinctArgumentCastType = distinctArgumentCastType;
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, null, walker );
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
+		render( sqlAppender, sqlAstArguments, null, returnType, walker );
 	}
 
 	@Override
@@ -118,6 +147,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
 		final SqlAstNode arg = sqlAstArguments.get( 0 );
@@ -183,15 +213,15 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 							sqlAppender.appendSql( "''" );
 						}
 						sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
-						chr.render( sqlAppender, chrArguments, translator );
+						chr.render( sqlAppender, chrArguments, returnType, translator );
 						sqlAppender.appendSql( "),'')," );
-						chr.render( sqlAppender, chrArguments, translator );
+						chr.render( sqlAppender, chrArguments, returnType, translator );
 						sqlAppender.appendSql( concatOperator );
 						sqlAppender.appendSql( "'" );
 						sqlAppender.appendSql( argumentNumber );
 						sqlAppender.appendSql( "')" );
 						sqlAppender.appendSql( concatOperator );
-						chr.render( sqlAppender, chrArguments, translator );
+						chr.render( sqlAppender, chrArguments, returnType, translator );
 						sqlAppender.appendSql( concatOperator );
 						sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
 						needsConcat = renderCastedArgument( sqlAppender, translator, expressions.get( i ) );
@@ -202,16 +232,16 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 						sqlAppender.appendSql( "''" );
 					}
 					sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
-					chr.render( sqlAppender, chrArguments, translator );
+					chr.render( sqlAppender, chrArguments, returnType, translator );
 					sqlAppender.appendSql( "),'')," );
-					chr.render( sqlAppender, chrArguments, translator );
+					chr.render( sqlAppender, chrArguments, returnType, translator );
 					sqlAppender.appendSql( concatOperator );
 					sqlAppender.appendSql( "'" );
 					sqlAppender.appendSql( argumentNumber );
 					sqlAppender.appendSql( "')" );
 					if ( castDistinctStringConcat ) {
 						sqlAppender.appendSql( " as " );
-						sqlAppender.appendSql( concatArgumentCastType );
+						sqlAppender.appendSql( distinctArgumentCastType );
 						sqlAppender.appendSql( ')' );
 					}
 					if ( caseWrapper ) {

@@ -18,6 +18,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -425,12 +426,6 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return super.trimPattern(specification, character)
-				.replace("replace", "str_replace");
-	}
-
-	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		throw new UnsupportedOperationException( "format() function not supported on Sybase");
 	}
@@ -472,5 +467,15 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
 		// Only the jTDS driver supports named parameters properly
 		return driverKind == SybaseDriverKind.JTDS && super.supportsNamedParameters( databaseMetaData );
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

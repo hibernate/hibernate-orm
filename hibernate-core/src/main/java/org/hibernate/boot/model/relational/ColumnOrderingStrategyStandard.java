@@ -8,6 +8,7 @@ package org.hibernate.boot.model.relational;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -17,7 +18,9 @@ import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
+import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedType;
 
 import static java.lang.Math.log;
@@ -45,6 +48,15 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 
 	@Override
 	public List<Column> orderConstraintColumns(Constraint constraint, Metadata metadata) {
+		// We try to find uniqueKey constraint containing only primary key.
+		//	This uniqueKey then orders primaryKey columns. Otherwise, order as usual.
+		if ( constraint instanceof PrimaryKey ) {
+			UniqueKey uniqueKey = ((PrimaryKey) constraint).getOrderingUniqueKey();
+			if ( uniqueKey != null ) {
+				return uniqueKey.getColumns();
+			}
+		}
+
 		return orderColumns( constraint.getColumns(), metadata );
 	}
 

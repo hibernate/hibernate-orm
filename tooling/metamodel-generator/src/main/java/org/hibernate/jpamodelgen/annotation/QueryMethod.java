@@ -9,12 +9,9 @@ package org.hibernate.jpamodelgen.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.query.Order;
-import org.hibernate.query.Page;
 
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -203,14 +200,6 @@ public class QueryMethod extends AbstractQueryMethod {
 			type.append('>');
 		}
 		return type;
-	}
-
-	private List<String> parameterTypes() {
-		return paramTypes.stream()
-				.map(paramType -> isOrderParam(paramType) && paramType.endsWith("[]")
-						? paramType.substring(0, paramType.length() - 2) + "..."
-						: paramType)
-				.collect(toList());
 	}
 
 	private void comment(StringBuilder declaration) {

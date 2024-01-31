@@ -29,7 +29,6 @@ import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -74,7 +73,6 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -84,6 +82,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.jandex.IndexView;
@@ -316,6 +315,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	public void contributeType(CompositeUserType<?> type) {
+		options.compositeUserTypes.add( type );
+	}
+
+	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return bootstrapContext.getTypeConfiguration();
 	}
@@ -428,12 +432,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		bootstrapContext.addAttributeConverterDescriptor(
 				new InstanceBasedConverterDescriptor( attributeConverter, autoApply, bootstrapContext.getClassmateContext() )
 		);
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
-		this.options.idGenerationTypeInterpreter.addInterpreterDelegate( interpreter );
 		return this;
 	}
 
@@ -597,6 +595,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private BootstrapContext bootstrapContext;
 
 		private final ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
+		private final ArrayList<CompositeUserType<?>> compositeUserTypes = new ArrayList<>();
 
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
@@ -612,8 +611,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean specjProprietarySyntaxEnabled;
 		private boolean noConstraintByDefault;
 		private final ArrayList<MetadataSourceType> sourceProcessOrdering;
-
-		private final IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
 		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
@@ -886,6 +883,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		public List<CompositeUserType<?>> getCompositeUserTypes() {
+			return compositeUserTypes;
+		}
+
+		@Override
 		public TypeConfiguration getTypeConfiguration() {
 			return bootstrapContext.getTypeConfiguration();
 		}
@@ -918,11 +920,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean isMultiTenancyEnabled() {
 			return multiTenancyEnabled;
-		}
-
-		@Override
-		public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
-			return idGenerationTypeInterpreter;
 		}
 
 		@Override
@@ -971,7 +968,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public boolean disallowExtensionsInCdi() {
+		public boolean isAllowExtensionsInCdi() {
 			return allowExtensionsInCdi;
 		}
 

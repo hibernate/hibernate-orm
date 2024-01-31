@@ -168,6 +168,10 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 			}
 			return wrapped;
 		}
+		else if ( value instanceof Boolean ) {
+			// Support binding a single element as parameter value
+			return new boolean[]{ (boolean) value };
+		}
 
 		throw unknownWrap( value.getClass() );
 	}

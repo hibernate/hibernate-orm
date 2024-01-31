@@ -10,11 +10,11 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.DialectSpecificSettings;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;
@@ -26,10 +26,10 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -45,6 +45,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_ANSI_NULL;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
@@ -92,7 +93,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	public SybaseASEDialect(DialectResolutionInfo info) {
 		super(info);
-		ansiNull = isAnsiNull( info.getDatabaseMetadata() );
+		ansiNull = isAnsiNull( info );
 	}
 
 	@Override
@@ -163,7 +164,8 @@ public class SybaseASEDialect extends SybaseDialect {
 		return 16_384;
 	}
 
-	private static boolean isAnsiNull(DatabaseMetaData databaseMetaData) {
+	private static boolean isAnsiNull(DialectResolutionInfo info) {
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
 				final ResultSet rs = s.executeQuery( "SELECT @@options" );
@@ -177,7 +179,8 @@ public class SybaseASEDialect extends SybaseDialect {
 				// Ignore
 			}
 		}
-		return false;
+		// default to the dialect-specific configuration setting
+		return ConfigurationHelper.getBoolean( SYBASE_ANSI_NULL, info.getConfigurationValues(), false );
 	}
 
 	@Override
@@ -630,28 +633,17 @@ public class SybaseASEDialect extends SybaseDialect {
 				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 				if ( sqlState != null ) {
 					switch ( sqlState ) {
-						// UNIQUE VIOLATION
 						case "S1000":
-							if ( 2601 == errorCode ) {
-								return extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
-							}
-							break;
 						case "23000":
-							if ( 546 == errorCode ) {
-								// Foreign key violation
-								return extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
+							switch ( errorCode ) {
+								case 2601:
+									// UNIQUE VIOLATION
+									return extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
+								case 546:
+									// Foreign key violation
+									return extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
 							}
 							break;
-	//					// FOREIGN KEY VIOLATION
-	//					case 23503:
-	//						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
-	//					// NOT NULL VIOLATION
-	//					case 23502:
-	//						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
-	//					// TODO: RESTRICT VIOLATION
-	//					case 23001:
-	//						return null;
-						// ALL OTHER
 					}
 				}
 				return null;
@@ -666,32 +658,46 @@ public class SybaseASEDialect extends SybaseDialect {
 				switch ( sqlState ) {
 					case "JZ0TO":
 					case "JZ006":
-						throw new LockTimeoutException( message, sqlException, sql );
+						return new LockTimeoutException( message, sqlException, sql );
 					case "S1000":
+					case "23000":
 						switch ( errorCode ) {
 							case 515:
 								// Attempt to insert NULL value into column; column does not allow nulls.
+								return new ConstraintViolationException(
+										message,
+										sqlException,
+										sql,
+										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+								);
+							case 546:
+								// Foreign key violation
+								return new ConstraintViolationException(
+										message,
+										sqlException,
+										sql,
+										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+								);
 							case 2601:
 								// Unique constraint violation
-								final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
-										sqlException );
-								return new ConstraintViolationException( message, sqlException, sql, constraintName );
+								return new ConstraintViolationException(
+										message,
+										sqlException,
+										sql,
+										ConstraintViolationException.ConstraintKind.UNIQUE,
+										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+								);
 						}
 						break;
 					case "ZZZZZ":
 						if ( 515 == errorCode ) {
 							// Attempt to insert NULL value into column; column does not allow nulls.
-							final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
-									sqlException );
-							return new ConstraintViolationException( message, sqlException, sql, constraintName );
-						}
-						break;
-					case "23000":
-						if ( 546 == errorCode ) {
-							// Foreign key violation
-							final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
-									sqlException );
-							return new ConstraintViolationException( message, sqlException, sql, constraintName );
+							return new ConstraintViolationException(
+									message,
+									sqlException,
+									sql,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+							);
 						}
 						break;
 				}

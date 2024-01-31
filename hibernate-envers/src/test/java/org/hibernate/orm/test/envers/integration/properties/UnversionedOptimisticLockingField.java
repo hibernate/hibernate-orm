@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.envers.integration.properties;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Map;
 import jakarta.persistence.EntityManager;
 
@@ -17,6 +16,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -76,10 +76,8 @@ public class UnversionedOptimisticLockingField extends BaseEnversJPAFunctionalTe
 	@Test
 	public void testMapping() {
 		PersistentClass pc = metadata().getEntityBinding( UnversionedOptimisticLockingFieldEntity.class.getName() + "_AUD" );
-		Iterator pi = pc.getPropertyIterator();
-		while ( pi.hasNext() ) {
-			Property p = (Property) pi.next();
-			assert !"optLocking".equals( p.getName() );
+		for ( Property p : pc.getProperties() ) {
+			Assert.assertNotEquals( "optLocking", p.getName() );
 		}
 	}
 }

@@ -14,8 +14,11 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 /**
@@ -92,15 +95,19 @@ public class MutationStatementPreparerImpl implements MutationStatementPreparer 
 			try {
 				final PreparedStatement preparedStatement;
 				//noinspection deprecation
-				final JdbcObserver observer = jdbcCoordinator.getJdbcSessionOwner()
+				final JdbcSessionOwner jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
+				final JdbcObserver observer = jdbcSessionOwner
 						.getJdbcSessionContext()
 						.getObserver();
+				final EventManager eventManager = jdbcSessionOwner.getEventManager();
+				final HibernateMonitoringEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
 				try {
 					observer.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
+					eventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
 					observer.jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );

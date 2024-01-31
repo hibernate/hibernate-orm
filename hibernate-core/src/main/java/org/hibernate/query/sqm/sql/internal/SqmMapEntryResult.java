@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import java.util.BitSet;
 import java.util.Map;
 
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -70,4 +71,9 @@ public class SqmMapEntryResult<K, V, R extends Map.Entry<K, V>> implements Domai
 		return javaType;
 	}
 
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		keyResult.collectValueIndexesToCache( valueIndexes );
+		valueResult.collectValueIndexesToCache( valueIndexes );
+	}
 }

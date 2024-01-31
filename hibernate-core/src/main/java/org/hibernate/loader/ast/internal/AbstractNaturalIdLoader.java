@@ -118,7 +118,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 						new SqlAliasBaseManager(),
 						new SimpleFromClauseAccessImpl(),
 						lockOptions,
-						AbstractNaturalIdLoader::visitFetches,
+						(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 						true,
 						new LoadQueryInfluencers( sessionFactory ),
 						sessionFactory
@@ -303,7 +303,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 						null,
 						creationState
 				),
-				AbstractNaturalIdLoader::visitFetches,
+				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				(statsEnabled) -> {
 //					entityDescriptor().getPreLoadListener().startingLoad( entityDescriptor, naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
 					return statsEnabled ? System.nanoTime() : -1L;
@@ -388,27 +388,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		}
 	}
 
-	private static ImmutableFetchList visitFetches(
-			FetchParent fetchParent,
-			LoaderSqlAstCreationState creationState) {
-		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
-		final int size = fetchableContainer.getNumberOfFetchables();
-		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchableContainer );
-		for ( int i = 0; i < size; i++ ) {
-			final Fetchable fetchable = fetchableContainer.getFetchable( i );
-			final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
-			final Fetch fetch = fetchParent.generateFetchableFetch(
-					fetchable,
-					navigablePath,
-					fetchable.getMappedFetchOptions().getTiming(),
-					true,
-					null,
-					creationState
-			);
-			fetches.add( fetch );
-		}
-		return fetches.build();
-	}
 
 	private static class NaturalIdLoaderWithOptionsExecutionContext extends BaseExecutionContext {
 		private final Callback callback;

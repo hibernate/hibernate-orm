@@ -12,6 +12,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationException;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -23,7 +24,7 @@ import static org.junit.Assert.fail;
 public class CfgXmlParsingTest extends BaseUnitTestCase {
 	@Test
 	public void testCfgXmlWithSchemaLocation() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.configure( "org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" )
 				.build();
 		try {
@@ -40,7 +41,7 @@ public class CfgXmlParsingTest extends BaseUnitTestCase {
 
 	@Test(expected = ConfigurationException.class )
 	public void testCfgXmlWithBadNamespaceAndSchemaLocation() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.configure( "org/hibernate/orm/test/boot/cfgXml/badnamespace.cfg.xml" )
 				.build();
 		StandardServiceRegistryBuilder.destroy( ssr );

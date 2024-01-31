@@ -41,7 +41,7 @@ import static org.hamcrest.Matchers.nullValue;
 @SessionFactory
 public class EntityHidingTests {
 	@Test
-	@NotImplementedYet( reason = "Contributed entity hiding is not yet implemented", strict = false )
+	@NotImplementedYet( reason = "Contributed entity hiding is not yet implemented" )
 	public void testModel(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();

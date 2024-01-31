@@ -85,12 +85,13 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 			hibernateQuery.setCacheable( false );
 
 			List<OrderLine> lines = new ArrayList<>();
-			ScrollableResults scrollableResults = hibernateQuery.scroll();
-			scrollableResults.last();
-			int rows = scrollableResults.getRowNumber() + 1;
-			scrollableResults.beforeFirst();
-			while ( scrollableResults.next() ) {
-				lines.add( (OrderLine) scrollableResults.get(  ) );
+			try (ScrollableResults scrollableResults = hibernateQuery.scroll()) {
+				scrollableResults.last();
+				int rows = scrollableResults.getRowNumber() + 1;
+				scrollableResults.beforeFirst();
+				while ( scrollableResults.next() ) {
+					lines.add( (OrderLine) scrollableResults.get() );
+				}
 			}
 			assertNotNull( lines );
 			assertEquals( "Expected one order line", 1, lines.size() );

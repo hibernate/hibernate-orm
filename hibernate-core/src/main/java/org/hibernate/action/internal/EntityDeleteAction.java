@@ -128,7 +128,7 @@ public class EntityDeleteAction extends EntityAction {
 		final Object ck = lockCacheItem();
 
 		if ( !isCascadeDeleteEnabled && !veto ) {
-			persister.delete( id, version, instance, session );
+			persister.getDeleteCoordinator().delete( instance, id, version, session );
 		}
 
 		if ( isInstanceLoaded() ) {
@@ -172,8 +172,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 		entry.postDelete();
 		final EntityKey key = entry.getEntityKey();
-		persistenceContext.removeEntity( key );
-		persistenceContext.removeProxy( key );
+		persistenceContext.removeEntityHolder( key );
 		removeCacheItem( ck );
 		persistenceContext.getNaturalIdResolutions().removeSharedResolution( id, naturalIdValues, persister );
 		postDelete();

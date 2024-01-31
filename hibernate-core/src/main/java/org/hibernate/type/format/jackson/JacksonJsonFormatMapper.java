@@ -23,7 +23,7 @@ public final class JacksonJsonFormatMapper implements FormatMapper {
 	private final ObjectMapper objectMapper;
 
 	public JacksonJsonFormatMapper() {
-		this(new ObjectMapper());
+		this(new ObjectMapper().findAndRegisterModules());
 	}
 
 	public JacksonJsonFormatMapper(ObjectMapper objectMapper) {

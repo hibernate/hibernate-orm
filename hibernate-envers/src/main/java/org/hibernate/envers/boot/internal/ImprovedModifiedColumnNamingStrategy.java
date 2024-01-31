@@ -42,7 +42,7 @@ public class ImprovedModifiedColumnNamingStrategy extends LegacyModifiedColumnNa
 
 		if ( basicType || toOneType ) {
 			if ( value.getColumnSpan() == 1 ) {
-				Selectable selectable = value.getColumnIterator().next();
+				Selectable selectable = value.getSelectables().get( 0 );
 				if ( selectable instanceof Column ) {
 					// This should not be applied for formulas
 					final String columnName;

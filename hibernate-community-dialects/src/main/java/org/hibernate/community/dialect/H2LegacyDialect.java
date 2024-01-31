@@ -78,6 +78,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -117,6 +118,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * A legacy {@linkplain Dialect SQL dialect} for H2.
  *
  * @author Thomas Mueller
+ * @author Jürgen Kreitler
  */
 public class H2LegacyDialect extends Dialect {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2LegacyDialect.class );
@@ -146,7 +148,7 @@ public class H2LegacyDialect extends Dialect {
 		// https://github.com/h2database/h2database/commit/b2cdf84e0b84eb8a482fa7dccdccc1ab95241440
 		limitHandler = version.isSameOrAfter( 1, 4, 195 )
 				? OffsetFetchLimitHandler.INSTANCE
-				: LimitOffsetLimitHandler.INSTANCE;
+				: LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE;
 
 		if ( version.isBefore( 1, 2, 139 ) ) {
 			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
@@ -262,6 +264,7 @@ public class H2LegacyDialect extends Dialect {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 			}
 		}
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -289,6 +292,7 @@ public class H2LegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
 		}
+		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
 	}
 
 	@Override
@@ -366,10 +370,29 @@ public class H2LegacyDialect extends Dialect {
 		functionFactory.rownum();
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			functionFactory.windowFunctions();
+			functionFactory.inverseDistributionOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates();
 			if ( getVersion().isSameOrAfter( 2 ) ) {
 				functionFactory.listagg( null );
-				functionFactory.inverseDistributionOrderedSetAggregates();
-				functionFactory.hypotheticalOrderedSetAggregates();
+				functionFactory.array();
+				functionFactory.arrayAggregate();
+				functionFactory.arrayPosition_h2( getMaximumArraySize() );
+				functionFactory.arrayPositions_h2( getMaximumArraySize() );
+				functionFactory.arrayLength_cardinality();
+				functionFactory.arrayConcat_operator();
+				functionFactory.arrayPrepend_operator();
+				functionFactory.arrayAppend_operator();
+				functionFactory.arrayContains_h2( getMaximumArraySize() );
+				functionFactory.arrayOverlaps_h2( getMaximumArraySize() );
+				functionFactory.arrayGet_h2();
+				functionFactory.arraySet_h2( getMaximumArraySize() );
+				functionFactory.arrayRemove_h2( getMaximumArraySize() );
+				functionFactory.arrayRemoveIndex_h2( getMaximumArraySize() );
+				functionFactory.arraySlice();
+				functionFactory.arrayReplace_h2( getMaximumArraySize() );
+				functionFactory.arrayTrim_trim_array();
+				functionFactory.arrayFill_h2();
+				functionFactory.arrayToString_h2( getMaximumArraySize() );
 			}
 			else {
 				// Use group_concat until 2.x as listagg was buggy
@@ -379,6 +402,16 @@ public class H2LegacyDialect extends Dialect {
 		else {
 			functionFactory.listagg_groupConcat();
 		}
+	}
+
+	/**
+	 * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+	 * due to https://github.com/h2database/h2database/issues/1815.
+	 * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
+	 * but requires that {@code system_range} is fed with a "maximum array size".
+	 */
+	protected int getMaximumArraySize() {
+		return 1000;
 	}
 
 	@Override
@@ -747,8 +780,19 @@ public class H2LegacyDialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String constraintName;
 
 			switch (errorCode) {
+				case 23505:
+					// Unique constraint violation
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							constraintName
+					);
 				case 40001:
 					// DEADLOCK DETECTED
 					return new LockAcquisitionException(message, sqlException, sql);
@@ -757,7 +801,7 @@ public class H2LegacyDialect extends Dialect {
 					return new PessimisticLockException(message, sqlException, sql);
 				case 90006:
 					// NULL not allowed for column [90006-145]
-					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
 					return new ConstraintViolationException(message, sqlException, sql, constraintName);
 				case 57014:
 					return new QueryTimeoutException( message, sqlException, sql );
@@ -893,6 +937,18 @@ public class H2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		return type.append( ')' ).toString();
+	}
+
+	@Override
 	public String getDisableConstraintsStatement() {
 		return "set referential_integrity false";
 	}
@@ -910,5 +966,10 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	public int rowIdSqlType() {
 		return BIGINT;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 }

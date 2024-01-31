@@ -16,6 +16,7 @@ import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCustomSql;
 
 /**
  * A generator which produces a new value by actually going ahead and writing a row to the
@@ -116,16 +117,21 @@ public interface OnExecutionGenerator extends Generator {
 	 */
 	@Incubating
 	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
-		Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
-		if ( dialect.supportsInsertReturningGeneratedKeys() ) {
-			return new GetGeneratedKeysDelegate( persister, dialect, false );
+		final Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
+		if ( dialect.supportsInsertReturningGeneratedKeys()
+				&& persister.getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
+			return new GetGeneratedKeysDelegate( persister, false, EventType.INSERT );
 		}
-		else if ( dialect.supportsInsertReturning() ) {
-			return new InsertReturningDelegate( persister, dialect );
+		else if ( dialect.supportsInsertReturning() && noCustomSql( persister, EventType.INSERT ) ) {
+			return new InsertReturningDelegate( persister, EventType.INSERT );
 		}
 		else {
 			// let's just hope the entity has a @NaturalId!
-			return new UniqueKeySelectingDelegate( persister, dialect, getUniqueKeyPropertyNames( persister ) );
+			return new UniqueKeySelectingDelegate(
+					persister,
+					getUniqueKeyPropertyNames( persister ),
+					EventType.INSERT
+			);
 		}
 	}
 

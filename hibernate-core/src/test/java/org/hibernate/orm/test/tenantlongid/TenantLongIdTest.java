@@ -49,10 +49,10 @@ public class TenantLongIdTest implements SessionFactoryProducer {
     @Override
     public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
         final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-        sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver() {
+        sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<Long>() {
             @Override
-            public String resolveCurrentTenantIdentifier() {
-                return currentTenant.toString();
+            public Long resolveCurrentTenantIdentifier() {
+                return currentTenant;
             }
             @Override
             public boolean validateExistingCurrentSessions() {

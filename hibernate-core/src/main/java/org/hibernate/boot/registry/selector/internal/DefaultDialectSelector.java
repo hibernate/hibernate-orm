@@ -21,19 +21,15 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HANARowStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.MariaDB103Dialect;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MySQL57Dialect;
 import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQL10Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServer2016Dialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -75,6 +71,8 @@ public class DefaultDialectSelector implements DialectSelector {
 				return findCommunityDialect( name );
 			case "H2":
 				return H2Dialect.class;
+			case "HANA":
+				return HANADialect.class;
 			case "HANACloudColumnStore":
 				return HANACloudColumnStoreDialect.class;
 			case "HANAColumnStore":
@@ -88,16 +86,14 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "MariaDB53":
 			case "MariaDB10":
 			case "MariaDB102":
-				return findCommunityDialect( name );
 			case "MariaDB103":
-				return MariaDB103Dialect.class;
+				return findCommunityDialect( name );
 			case "MySQL":
 				return MySQLDialect.class;
 			case "MySQL5":
 			case "MySQL55":
-				return findCommunityDialect( name );
 			case "MySQL57":
-				return MySQL57Dialect.class;
+				return findCommunityDialect( name );
 			case "MySQL8":
 				return MySQL8Dialect.class;
 			case "Oracle":
@@ -105,9 +101,8 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "Oracle8i":
 			case "Oracle9i":
 			case "Oracle10g":
-				return findCommunityDialect( name );
 			case "Oracle12c":
-				return Oracle12cDialect.class;
+				return findCommunityDialect( name );
 			case "PostgresPlus":
 				return PostgresPlusDialect.class;
 			case "PostgreSQL":
@@ -120,17 +115,15 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "PostgreSQL93":
 			case "PostgreSQL94":
 			case "PostgreSQL95":
-				return findCommunityDialect( name );
 			case "PostgreSQL10":
-				return PostgreSQL10Dialect.class;
+				return findCommunityDialect( name );
 			case "Spanner":
 				return SpannerDialect.class;
 			case "SQLServer":
 				return SQLServerDialect.class;
 			case "SQLServer2005":
-				return findCommunityDialect( name );
 			case "SQLServer2008":
-				return SQLServer2008Dialect.class;
+				return findCommunityDialect( name );
 			case "SQLServer2012":
 				return SQLServer2012Dialect.class;
 			case "SQLServer2016":

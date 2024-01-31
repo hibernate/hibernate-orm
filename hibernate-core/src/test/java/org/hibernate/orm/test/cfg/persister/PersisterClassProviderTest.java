@@ -15,6 +15,7 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -30,7 +31,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
-		ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		ServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.build();
 		//no exception as the GoofyPersisterClassProvider is not set
@@ -43,7 +44,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 
-		serviceRegistry = new StandardServiceRegistryBuilder()
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
 				.build();
@@ -70,7 +71,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Portal.class );
 		cfg.addAnnotatedClass( Window.class );
-		serviceRegistry = new StandardServiceRegistryBuilder()
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
 				.build();
@@ -93,7 +94,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
         cfg = new Configuration();
 		cfg.addAnnotatedClass( Tree.class );
 		cfg.addAnnotatedClass( Palmtree.class );
-		serviceRegistry = new StandardServiceRegistryBuilder()
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
 				.build();

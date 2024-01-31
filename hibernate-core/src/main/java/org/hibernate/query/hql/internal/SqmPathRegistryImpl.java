@@ -19,7 +19,6 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -28,8 +27,10 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
@@ -70,26 +71,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		if ( sqmPath instanceof SqmFrom<?, ?> ) {
 			final SqmFrom<?, ?> sqmFrom = (SqmFrom<?, ?>) sqmPath;
 
-			final String alias = sqmPath.getExplicitAlias();
-			if ( alias != null ) {
-				final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
-						? alias.toLowerCase( Locale.getDefault() )
-						: alias;
-
-				final SqmFrom<?, ?> previousFrom = sqmFromByAlias.put( aliasToUse, sqmFrom );
-
-				if ( previousFrom != null ) {
-					throw new AliasCollisionException(
-							String.format(
-									Locale.ENGLISH,
-									"Alias [%s] used for multiple from-clause elements : %s, %s",
-									alias,
-									previousFrom,
-									sqmPath
-							)
-					);
-				}
-			}
+			registerByAliasOnly( sqmFrom );
 
 			final SqmFrom<?, ?> previousFromByPath = sqmFromByPath.put( sqmPath.getNavigablePath(), sqmFrom );
 
@@ -118,6 +100,81 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 							sqmPath.getNavigablePath(),
 							previousPath,
 							sqmPath
+					)
+			);
+		}
+	}
+
+	@Override
+	public void registerByAliasOnly(SqmFrom<?, ?> sqmFrom) {
+		final String alias = sqmFrom.getExplicitAlias();
+		if ( alias != null ) {
+			final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
+					? alias.toLowerCase( Locale.getDefault() )
+					: alias;
+
+			final SqmFrom<?, ?> previousFrom = sqmFromByAlias.put( aliasToUse, sqmFrom );
+
+			if ( previousFrom != null ) {
+				throw new AliasCollisionException(
+						String.format(
+								Locale.ENGLISH,
+								"Alias [%s] used for multiple from-clause elements : %s, %s",
+								alias,
+								previousFrom,
+								sqmFrom
+						)
+				);
+			}
+		}
+	}
+
+	@Override
+	public <E> void replace(SqmEntityJoin<E> sqmJoin, SqmRoot<E> sqmRoot) {
+		final String alias = sqmJoin.getExplicitAlias();
+		if ( alias != null ) {
+			final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
+					? alias.toLowerCase( Locale.getDefault() )
+					: alias;
+
+			final SqmFrom<?, ?> previousFrom = sqmFromByAlias.put( aliasToUse, sqmJoin );
+			if ( previousFrom != null && !( previousFrom instanceof SqmRoot ) ) {
+				throw new AliasCollisionException(
+						String.format(
+								Locale.ENGLISH,
+								"Alias [%s] used for multiple from-clause elements : %s, %s",
+								alias,
+								previousFrom,
+								sqmJoin
+						)
+				);
+			}
+		}
+
+		final SqmFrom<?, ?> previousFromByPath = sqmFromByPath.put( sqmJoin.getNavigablePath(), sqmJoin );
+		if ( previousFromByPath != null && !( previousFromByPath instanceof SqmRoot ) ) {
+			// this should never happen
+			throw new ParsingException(
+					String.format(
+							Locale.ROOT,
+							"Registration for SqmFrom [%s] overrode previous registration: %s -> %s",
+							sqmJoin.getNavigablePath(),
+							previousFromByPath,
+							sqmJoin
+					)
+			);
+		}
+
+		final SqmPath<?> previousPath = sqmPathByPath.put( sqmJoin.getNavigablePath(), sqmJoin );
+		if ( previousPath instanceof SqmFrom && !( previousPath instanceof SqmRoot ) ) {
+			// this should never happen
+			throw new ParsingException(
+					String.format(
+							Locale.ROOT,
+							"Registration for path [%s] overrode previous registration: %s -> %s",
+							sqmJoin.getNavigablePath(),
+							previousPath,
+							sqmJoin
 					)
 			);
 		}

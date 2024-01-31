@@ -7,8 +7,11 @@
 package org.hibernate.engine.jdbc.dialect.spi;
 
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.engine.config.spi.ConfigurationService;
 
 import java.sql.DatabaseMetaData;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Exposes information about the database and JDBC driver that can be used in resolving the appropriate Dialect
@@ -86,5 +89,14 @@ public interface DialectResolutionInfo extends DatabaseVersion {
 	 */
 	default DatabaseMetaData getDatabaseMetadata() {
 		return null;
+	}
+
+	/**
+	 * Obtain access to the complete {@link ConfigurationService#getSettings() map of config settings}.
+	 *
+	 * @return The immutable map of config settings.
+	 */
+	default Map<String, Object> getConfigurationValues() {
+		return Collections.emptyMap();
 	}
 }

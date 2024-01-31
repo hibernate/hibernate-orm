@@ -290,7 +290,7 @@ the sub-type Class.
 Hibernate allows the creation of Jakarta Persistence fetch/load graphs by parsing a textual representation
 of the graph.  Generally speaking, the textual representation of a graph is a comma-separated
 list of attribute names, optionally including any sub-graph specifications.
-`org.hibernate.graph.EntityGraphParser` is the starting point for such parsing operations.
+`org.hibernate.graph.GraphParser` is the starting point for such parsing operations.
 
 [NOTE]
 ====

@@ -65,16 +65,16 @@ public class NonStrictReadWriteCacheTest {
 		);
 	}
 
-    @Test
-    public void testCache(EntityManagerFactoryScope scope) {
-        scope.inTransaction( entityManager -> {
+	@Test
+	public void testCache(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
-            entityManager.persist(person);
+			entityManager.persist(person);
 			Phone home = new Phone("123-456-7890");
 			Phone office = new Phone("098-765-4321");
 			person.addPhone(home);
 			person.addPhone(office);
-        });
+		});
 		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			person.getPhones().size();
@@ -88,21 +88,21 @@ public class NonStrictReadWriteCacheTest {
 		});
 		scope.inTransaction( entityManager -> {
 			log.info("Load from cache");
-            entityManager.find(Person.class, 1L).getPhones().size();
-        });
-    }
+			entityManager.find(Person.class, 1L).getPhones().size();
+		});
+	}
 
 
-    @Entity(name = "Person")
+	@Entity(name = "Person")
 	@Cacheable
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    public static class Person {
+	@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	public static class Person {
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.AUTO)
-        private Long id;
+		@Id
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		private Long id;
 
-        private String name;
+		private String name;
 
 		//tag::caching-collection-mapping-example[]
 		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
@@ -110,26 +110,26 @@ public class NonStrictReadWriteCacheTest {
 		private List<Phone> phones = new ArrayList<>();
 		//end::caching-collection-mapping-example[]
 
-        @Version
-        private int version;
+		@Version
+		private int version;
 
-        public Person() {}
+		public Person() {}
 
-        public Person(String name) {
-            this.name = name;
-        }
+		public Person(String name) {
+			this.name = name;
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
 		public List<Phone> getPhones() {
 			return phones;

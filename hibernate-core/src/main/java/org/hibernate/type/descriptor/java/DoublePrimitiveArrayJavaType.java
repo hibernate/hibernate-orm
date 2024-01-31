@@ -168,6 +168,10 @@ public class DoublePrimitiveArrayJavaType extends AbstractArrayJavaType<double[]
 			}
 			return wrapped;
 		}
+		else if ( value instanceof Double ) {
+			// Support binding a single element as parameter value
+			return new double[]{ (double) value };
+		}
 
 		throw unknownWrap( value.getClass() );
 	}

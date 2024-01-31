@@ -7,6 +7,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,7 +22,7 @@ public class MappedSuperClassIdPropertyBasicAttributeOverrideTest {
 
 	@Test
 	public void test() {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 
 			MetadataSources metadataSources = new MetadataSources( ssr );
 			metadataSources.addAnnotatedClasses( MappedSuperClassWithUuidAsBasic.class );

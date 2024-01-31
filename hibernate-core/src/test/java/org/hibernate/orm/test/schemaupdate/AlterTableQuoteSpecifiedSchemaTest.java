@@ -31,6 +31,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,7 +96,7 @@ public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteS
 		File output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
 
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
 				.build();
 
@@ -127,7 +128,7 @@ public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteS
 			fail( e.getMessage() );
 		}
 
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
 				.build();
 		try {

@@ -537,6 +537,11 @@ public abstract class AbstractSelectionQuery<R>
 
 	protected abstract ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode);
 
+	@Override
+	public Stream<R> getResultStream() {
+		return stream();
+	}
+
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	@Override
 	public Stream stream() {

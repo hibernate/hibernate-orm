@@ -45,15 +45,9 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state == State.INITIALIZED ) {
+		if ( state != State.KEY_RESOLVED ) {
 			return;
 		}
-		resolveKey( rowProcessingState, referencedModelPart, parentAccess );
-
-		if ( entityKey == null ) {
-			return;
-		}
-
 		state = State.INITIALIZED;
 		initializedEntityInstance = getExistingInitializedInstance( rowProcessingState );
 		if ( initializedEntityInstance == null ) {

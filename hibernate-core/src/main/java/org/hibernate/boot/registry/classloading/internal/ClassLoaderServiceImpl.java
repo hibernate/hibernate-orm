@@ -41,7 +41,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private static final String CLASS_PATH_SCHEME = "classpath://";
 
-	private final ConcurrentMap<Class, AggregatedServiceLoader<?>> serviceLoaders = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Class<?>, AggregatedServiceLoader<?>> serviceLoaders = new ConcurrentHashMap<>();
 	private volatile AggregatedClassLoader aggregatedClassLoader;
 
 	/**
@@ -110,7 +110,10 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			providedClassLoaders.addAll( classLoaders );
 		}
 
-		return new ClassLoaderServiceImpl( providedClassLoaders,TcclLookupPrecedence.AFTER );
+		return new ClassLoaderServiceImpl(
+				providedClassLoaders,
+				TcclLookupPrecedence.from( configValues, TcclLookupPrecedence.AFTER )
+		);
 	}
 
 	@Override
@@ -119,10 +122,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		try {
 			return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
 		}
-		catch (Exception e) {
-			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
-		}
-		catch (LinkageError e) {
+		catch (Exception | LinkageError e) {
 			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
 		}
 	}

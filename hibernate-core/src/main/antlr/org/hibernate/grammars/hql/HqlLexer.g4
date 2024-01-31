@@ -62,9 +62,9 @@ INTEGER_LITERAL : INTEGER_NUMBER ('_' INTEGER_NUMBER)*;
 
 LONG_LITERAL : INTEGER_NUMBER  ('_' INTEGER_NUMBER)* LONG_SUFFIX;
 
-FLOAT_LITERAL : FLOATING_POINT_NUMBER FLOAT_SUFFIX?;
+FLOAT_LITERAL : FLOATING_POINT_NUMBER FLOAT_SUFFIX;
 
-DOUBLE_LITERAL : FLOATING_POINT_NUMBER DOUBLE_SUFFIX;
+DOUBLE_LITERAL : FLOATING_POINT_NUMBER DOUBLE_SUFFIX?;
 
 BIG_INTEGER_LITERAL : INTEGER_NUMBER BIG_INTEGER_SUFFIX;
 
@@ -158,6 +158,8 @@ BY					: [bB] [yY];
 CASE				: [cC] [aA] [sS] [eE];
 CAST				: [cC] [aA] [sS] [tT];
 COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
+CONFLICT			: [cC] [oO] [nN] [fF] [lL] [iI] [cC] [tT];
+CONSTRAINT			: [cC] [oO] [nN] [sS] [tT] [rR] [aA] [iI] [nN] [tT];
 COUNT				: [cC] [oO] [uU] [nN] [tT];
 CROSS				: [cC] [rR] [oO] [sS] [sS];
 CUBE				: [cC] [uU] [bB] [eE];
@@ -175,6 +177,7 @@ DELETE				: [dD] [eE] [lL] [eE] [tT] [eE];
 DEPTH	 			: [dD] [eE] [pP] [tT] [hH];
 DESC				: [dD] [eE] [sS] [cC];
 DISTINCT			: [dD] [iI] [sS] [tT] [iI] [nN] [cC] [tT];
+DO					: [dD] [oO];
 ELEMENT				: [eE] [lL] [eE] [mM] [eE] [nN] [tT];
 ELEMENTS			: [eE] [lL] [eE] [mM] [eE] [nN] [tT] [sS];
 ELSE				: [eE] [lL] [sS] [eE];
@@ -246,6 +249,7 @@ NEW					: [nN] [eE] [wW];
 NEXT				: [nN] [eE] [xX] [tT];
 NO					: [nN] [oO];
 NOT					: [nN] [oO] [tT];
+NOTHING				: [nN] [oO] [tT] [hH] [iI] [nN] [gG];
 NULLS				: [nN] [uU] [lL] [lL] [sS];
 OBJECT				: [oO] [bB] [jJ] [eE] [cC] [tT];
 OF					: [oO] [fF];

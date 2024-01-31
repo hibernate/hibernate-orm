@@ -164,11 +164,11 @@ public class NaturalIdEqualsHashCodeEntityTest extends BaseEntityManagerFunction
 			if (this == o) {
 				return true;
 			}
-			if (o == null || getClass() != o.getClass()) {
+			if (!(o instanceof Book)) {
 				return false;
 			}
 			Book book = (Book) o;
-			return Objects.equals(isbn, book.isbn);
+			return Objects.equals(isbn, book.getIsbn());
 		}
 
 		@Override

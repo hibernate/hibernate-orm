@@ -7,9 +7,11 @@
 package org.hibernate.jpamodelgen.util;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -120,43 +122,57 @@ public final class TypeUtils {
 	}
 
 	public static String extractClosestRealTypeAsString(TypeMirror type, Context context) {
-		final TypeMirror mirror = extractClosestRealType( type, context );
+		final TypeMirror mirror = extractClosestRealType( type, context, new HashSet<>() );
 		return mirror == null ? "?" : mirror.toString();
 	}
 
-	private static @Nullable TypeMirror lowerBound(TypeMirror bound) {
-		return bound.getKind() == TypeKind.NULL ? null : bound;
+	private static @Nullable TypeMirror lowerBound(@Nullable TypeMirror bound) {
+		return bound == null || bound.getKind() == TypeKind.NULL ? null : bound;
 	}
 
-	private static @Nullable TypeMirror upperBound(TypeMirror bound) {
-		return bound.getKind() == TypeKind.DECLARED && bound.toString().equals("java.lang.Object") ? null : bound;
+	private static @Nullable TypeMirror upperBound(@Nullable TypeMirror bound) {
+		return bound == null || (bound.getKind() == TypeKind.DECLARED && bound.toString().equals("java.lang.Object")) ? null : bound;
 	}
 
-	@SuppressWarnings("nullness")
-	public static TypeMirror extractClosestRealType(TypeMirror type, Context context) {
+	public static @Nullable TypeMirror extractClosestRealType(TypeMirror type, Context context, Set<TypeVariable> beingVisited) {
 		if ( type == null ) {
 			return null;
 		}
 		switch ( type.getKind() ) {
 			case TYPEVAR:
 				final TypeVariable typeVariable = (TypeVariable) type;
-				return context.getTypeUtils().getWildcardType(
-						upperBound( extractClosestRealType( typeVariable.getUpperBound(), context ) ),
-						lowerBound( extractClosestRealType( typeVariable.getLowerBound(), context ) )
-				);
+				if ( !beingVisited.add( typeVariable ) ) {
+					// A self-referential type variable has to be represented as plain wildcard `?`
+					return context.getTypeUtils().getWildcardType( null, null );
+				}
+				else {
+					final WildcardType wildcardType = context.getTypeUtils().getWildcardType(
+							upperBound( extractClosestRealType( typeVariable.getUpperBound(), context, beingVisited ) ),
+							lowerBound( extractClosestRealType( typeVariable.getLowerBound(), context, beingVisited ) )
+					);
+					beingVisited.remove( typeVariable );
+					return wildcardType;
+				}
 			case WILDCARD:
 				final WildcardType wildcardType = (WildcardType) type;
 				return context.getTypeUtils().getWildcardType(
-						extractClosestRealType( wildcardType.getExtendsBound(), context ),
-						extractClosestRealType( wildcardType.getSuperBound(), context )
+						extractClosestRealType( wildcardType.getExtendsBound(), context, beingVisited ),
+						extractClosestRealType( wildcardType.getSuperBound(), context, beingVisited )
 				);
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) type;
 				final TypeElement typeElement = (TypeElement) declaredType.asElement();
-				return context.getTypeUtils().getDeclaredType( typeElement,
+				return context.getTypeUtils().getDeclaredType(
+						typeElement,
 						declaredType.getTypeArguments().stream()
-							.map( arg -> extractClosestRealType( arg, context ) )
-								.toArray( TypeMirror[]::new ) );
+								.map( new Function<TypeMirror, TypeMirror>() {
+											@Override
+											public @Nullable TypeMirror apply(TypeMirror arg) {
+												return extractClosestRealType( arg, context, beingVisited );
+											}
+										} )
+								.toArray( TypeMirror[]::new )
+				);
 			default:
 				return context.getTypeUtils().erasure( type );
 		}

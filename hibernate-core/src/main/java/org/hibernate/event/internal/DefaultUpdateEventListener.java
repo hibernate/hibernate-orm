@@ -16,8 +16,12 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * An event handler for update() events
+ *
  * @author Gavin King
+ *
+ * @deprecated since {@link org.hibernate.Session#update} is deprecated
  */
+@Deprecated(since="6")
 public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener {
 
 	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {

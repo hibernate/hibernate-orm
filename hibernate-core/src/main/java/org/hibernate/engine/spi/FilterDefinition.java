@@ -13,6 +13,8 @@ import java.util.Set;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Represents the definition of a {@link org.hibernate.Filter filter}.
  * This information includes the {@linkplain #filterName name} of the
@@ -36,7 +38,7 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(String name, String defaultCondition, Map<String, JdbcMapping> explicitParamJaMappings) {
+	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		if ( explicitParamJaMappings != null ) {
@@ -59,7 +61,9 @@ public class FilterDefinition implements Serializable {
 	 * @return The parameters named by this configuration.
 	 */
 	public Set<String> getParameterNames() {
-		return explicitParamJaMappings.keySet();
+		// local variable instantiated for checkerframework nullness inference reasons
+		Set<String> keys = explicitParamJaMappings.keySet();
+		return keys;
 	}
 
 	/**
@@ -69,7 +73,7 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The type of the named parameter.
 	 */
-	public JdbcMapping getParameterJdbcMapping(String parameterName) {
+	public @Nullable JdbcMapping getParameterJdbcMapping(String parameterName) {
 		return explicitParamJaMappings.get( parameterName );
 	}
 

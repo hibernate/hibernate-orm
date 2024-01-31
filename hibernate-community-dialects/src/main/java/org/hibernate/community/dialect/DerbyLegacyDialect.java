@@ -15,6 +15,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -34,12 +35,16 @@ import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -185,23 +190,55 @@ public class DerbyLegacyDialect extends Dialect {
 		int varcharDdlTypeCapacity = 32_672;
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARBINARY, columnType( LONG32VARBINARY ), columnType( VARBINARY ), this )
+				CapacityDependentDdlType.builder(
+								VARBINARY,
+								isLob( LONG32VARBINARY )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARBINARY ),
+								columnType( VARBINARY ),
+								this
+						)
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARBINARY ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), columnType( VARCHAR ), this )
+				CapacityDependentDdlType.builder(
+								VARCHAR,
+								isLob( LONG32VARCHAR )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARCHAR ),
+								columnType( VARCHAR ),
+								this
+						)
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32VARCHAR ), columnType( NVARCHAR ), this )
+				CapacityDependentDdlType.builder(
+								NVARCHAR,
+								isLob( LONG32NVARCHAR )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARCHAR ),
+								columnType( NVARCHAR ),
+								this
+						)
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( NVARCHAR ) )
 						.build()
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, columnType( LONG32VARBINARY ), columnType( VARBINARY ), this )
+				CapacityDependentDdlType.builder(
+								BINARY,
+								isLob( LONG32VARBINARY )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARBINARY ),
+								columnType( VARBINARY ),
+								this
+						)
 						.withTypeCapacity( 254, "char($l) for bit data" )
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARBINARY ) )
 						.build()
@@ -209,13 +246,29 @@ public class DerbyLegacyDialect extends Dialect {
 
 		// This is the maximum size for the CHAR datatype on Derby
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( CHAR, columnType( LONG32VARCHAR ), columnType( CHAR ), this )
+				CapacityDependentDdlType.builder(
+								CHAR,
+								isLob( LONG32VARCHAR )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARCHAR ),
+								columnType( CHAR ),
+								this
+						)
 						.withTypeCapacity( 254, columnType( CHAR ) )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NCHAR, columnType( LONG32NVARCHAR ), columnType( NCHAR ), this )
+				CapacityDependentDdlType.builder(
+								NCHAR,
+								isLob( LONG32NVARCHAR )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32NVARCHAR ),
+								columnType( NCHAR ),
+								this
+						)
 						.withTypeCapacity( 254, columnType( NCHAR ) )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
 						.build()
@@ -266,13 +319,18 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public int getDefaultTimestampPrecision() {
+		return 9;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
 		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
-
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final DdlTypeRegistry ddlTypeRegistry = functionContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
@@ -283,8 +341,8 @@ public class DerbyLegacyDialect extends Dialect {
 						functionContributions.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
 						"||",
-						functionContributions.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
-								.getCastTypeName( stringType, null, null, null ),
+						ddlTypeRegistry.getDescriptor( VARCHAR )
+								.getCastTypeName( Size.nil(), stringType, ddlTypeRegistry ),
 						true
 				)
 		);
@@ -658,16 +716,44 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return new TemplatedViolatedConstraintNameExtractor( sqle -> {
+			final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+			if ( sqlState != null ) {
+				switch ( sqlState ) {
+					case "23505":
+						return TemplatedViolatedConstraintNameExtractor.extractUsingTemplate(
+								"'", "'",
+								sqle.getMessage()
+						);
+				}
+			}
+			return null;
+		} );
+	}
+
+	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 //				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String constraintName;
 
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
+					case "23505":
+						// Unique constraint violation
+						constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
+						return new ConstraintViolationException(
+								message,
+								sqlException,
+								sql,
+								ConstraintViolationException.ConstraintKind.UNIQUE,
+								constraintName
+						);
 					case "40XL1":
 					case "40XL2":
-						throw new LockTimeoutException( message, sqlException, sql );
+						return new LockTimeoutException( message, sqlException, sql );
 				}
 			}
 			return null;
@@ -974,5 +1060,10 @@ public class DerbyLegacyDialect extends Dialect {
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 }

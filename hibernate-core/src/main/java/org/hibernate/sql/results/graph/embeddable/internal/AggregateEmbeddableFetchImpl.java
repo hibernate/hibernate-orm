@@ -28,6 +28,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
@@ -40,12 +41,14 @@ import org.hibernate.type.spi.TypeConfiguration;
  * uses {@link org.hibernate.sql.results.graph.DomainResultCreationState#visitNestedFetches(FetchParent)}
  * for creating the fetches for the attributes of the embeddable.
  */
-public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements EmbeddableResultGraphNode, Fetch {
+public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
+		implements EmbeddableResultGraphNode, Fetch, InitializerProducer<AggregateEmbeddableFetchImpl> {
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
 	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
 	private final SqlSelection aggregateSelection;
+	private final EmbeddableMappingType fetchContainer;
 
 	public AggregateEmbeddableFetchImpl(
 			NavigablePath navigablePath,
@@ -54,7 +57,8 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 			FetchTiming fetchTiming,
 			boolean hasTableGroup,
 			DomainResultCreationState creationState) {
-		super( embeddedPartDescriptor.getEmbeddableTypeDescriptor(), navigablePath );
+		super( navigablePath );
+		this.fetchContainer = embeddedPartDescriptor.getEmbeddableTypeDescriptor();
 
 		this.fetchParent = fetchParent;
 		this.fetchTiming = fetchTiming;
@@ -84,7 +88,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		final SelectableMapping selectableMapping = embeddedPartDescriptor.getEmbeddableTypeDescriptor().getAggregateMapping();
+		final SelectableMapping selectableMapping = fetchContainer.getAggregateMapping();
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
 		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext()
 				.getSessionFactory()
@@ -115,7 +119,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return fetchContainer;
 	}
 
 	@Override
@@ -153,19 +157,29 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> new AggregateEmbeddableFetchInitializer(
-						parentAccess,
-						this,
-						creationState,
-						aggregateSelection
-				)
-		).asEmbeddableInitializer();
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parentAccess, this ).asEmbeddableInitializer() );
+	}
 
-		assert initializer != null;
+	@Override
+	public EmbeddableInitializer createInitializer(
+			AggregateEmbeddableFetchImpl resultGraphNode,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parentAccess, creationState );
+	}
 
-		return new EmbeddableAssembler( initializer );
+	@Override
+	public EmbeddableInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		return new AggregateEmbeddableFetchInitializer(
+				parentAccess,
+				this,
+				creationState,
+				aggregateSelection
+		);
+	}
+
+	@Override
+	public FetchParent asFetchParent() {
+		return this;
 	}
 }

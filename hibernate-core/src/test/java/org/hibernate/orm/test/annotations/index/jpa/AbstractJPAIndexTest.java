@@ -79,7 +79,7 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 	public void testSecondaryTableIndex(){
 		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
 
-		Join join = (Join)entity.getJoinIterator().next();
+		Join join = entity.getJoins().get( 0 );
 		Iterator<Index> itr = join.getTable().getIndexes().values().iterator();
 		assertTrue( itr.hasNext() );
 		Index index = itr.next();

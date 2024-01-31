@@ -53,7 +53,7 @@ public class SqmCreationHelper {
 			);
 		}
 		NavigablePath navigablePath = lhs.getNavigablePath();
-		if ( lhs.getReferencedPathSource() instanceof PluralPersistentAttribute<?, ?, ?>
+		if ( lhs.getResolvedModel() instanceof PluralPersistentAttribute<?, ?, ?>
 				&& CollectionPart.Nature.fromName( subNavigable ) == null ) {
 			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}

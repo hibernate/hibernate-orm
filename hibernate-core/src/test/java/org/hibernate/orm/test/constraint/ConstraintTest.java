@@ -50,17 +50,17 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-7797" )
 	public void testUniqueConstraints() {
 		Column column = (Column) metadata().getEntityBinding( DataPoint.class.getName() )
-				.getProperty( "foo1" ).getColumnIterator().next();
+				.getProperty( "foo1" ).getSelectables().get( 0 );
 		assertFalse( column.isNullable() );
 		assertTrue( column.isUnique() );
 
 		column = (Column) metadata().getEntityBinding( DataPoint.class.getName() )
-				.getProperty( "foo2" ).getColumnIterator().next();
+				.getProperty( "foo2" ).getSelectables().get( 0 );
 		assertTrue( column.isNullable() );
 		assertTrue( column.isUnique() );
 
 		column = (Column) metadata().getEntityBinding( DataPoint.class.getName() )
-				.getProperty( "id" ).getColumnIterator().next();
+				.getProperty( "id" ).getSelectables().get( 0 );
 		assertFalse( column.isNullable() );
 		assertTrue( column.isUnique() );
 	}

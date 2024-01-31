@@ -9,9 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +17,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -29,9 +27,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
-import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
-import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
@@ -47,6 +43,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
+import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 import static org.hibernate.sql.Template.collectColumnNames;
 
 /**
@@ -124,6 +121,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	private OptimisticLockStyle optimisticLockStyle;
 
 	private boolean isCached;
+	private CacheLayout queryCacheLayout;
 
 	public PersistentClass(MetadataBuildingContext buildingContext) {
 		this.metadataBuildingContext = buildingContext;
@@ -259,24 +257,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return new JoinedList<>( subclassLists );
 	}
 
-	/**
-	 * Iterate over subclasses in a special 'order', most derived subclasses first.
-	 *
-	 * @deprecated use {@link #getSubclasses()}
-	 */
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<Subclass> getSubclassIterator() {
-		@SuppressWarnings("unchecked")
-		final Iterator<Subclass>[] iterators = new Iterator[subclasses.size() + 1];
-		final Iterator<Subclass> iterator = subclasses.iterator();
-		int i = 0;
-		while ( iterator.hasNext() ) {
-			iterators[i++] = iterator.next().getSubclassIterator();
-		}
-		iterators[i] = subclasses.iterator();
-		return new JoinedIterator<>( iterators );
-	}
-
 	public List<PersistentClass> getSubclassClosure() {
 		final ArrayList<List<PersistentClass>> lists = new ArrayList<>();
 		lists.add( List.of( this ) );
@@ -284,16 +264,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			lists.add( subclass.getSubclassClosure() );
 		}
 		return new JoinedList<>( lists );
-	}
-
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<PersistentClass> getSubclassClosureIterator() {
-		final ArrayList<Iterator<PersistentClass>> iterators = new ArrayList<>();
-		iterators.add( new SingletonIterator<>( this ) );
-		for ( Subclass subclass : getSubclasses() ) {
-			iterators.add( subclass.getSubclassClosureIterator() );
-		}
-		return new JoinedIterator<>( iterators );
 	}
 
 	public Table getIdentityTable() {
@@ -356,7 +326,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	/**
 	 * @deprecated Use {@link #isCached} instead
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public boolean isCachingExplicitlyRequested() {
 		return isCached();
 	}
@@ -364,9 +334,17 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	/**
 	 * @deprecated Use {@link #setCached} instead
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public void setCachingExplicitlyRequested(boolean cached) {
 		setCached( cached );
+	}
+
+	public CacheLayout getQueryCacheLayout() {
+		return queryCacheLayout;
+	}
+
+	public void setQueryCacheLayout(CacheLayout queryCacheLayout) {
+		this.queryCacheLayout = queryCacheLayout;
 	}
 
 	public abstract String getCacheConcurrencyStrategy();
@@ -381,18 +359,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public abstract List<Property> getPropertyClosure();
 
-	@Deprecated(since = "6.0") @Remove
-	public abstract Iterator<Property> getPropertyClosureIterator();
-
 	public abstract List<Table> getTableClosure();
 
-	@Deprecated(since = "6.0") @Remove
-	public abstract Iterator<Table> getTableClosureIterator();
-
 	public abstract List<KeyValue> getKeyClosure();
-
-	@Deprecated(since = "6.0") @Remove
-	public abstract Iterator<KeyValue> getKeyClosureIterator();
 
 	protected void addSubclassProperty(Property prop) {
 		subclassProperties.add( prop );
@@ -406,17 +375,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		subclassTables.add( subclassTable );
 	}
 
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<Property> getSubclassPropertyClosureIterator() {
-		final ArrayList<Iterator<Property>> iters = new ArrayList<>();
-		iters.add( getPropertyClosureIterator() );
-		iters.add( subclassProperties.iterator() );
-		for (Join join : subclassJoins) {
-			iters.add( join.getPropertyIterator() );
-		}
-		return new JoinedIterator<>( iters );
-	}
-
 	public List<Property> getSubclassPropertyClosure() {
 		final ArrayList<List<Property>> lists = new ArrayList<>();
 		lists.add( getPropertyClosure() );
@@ -427,22 +385,12 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return new JoinedList<>( lists );
 	}
 
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<Join> getSubclassJoinClosureIterator() {
-		return new JoinedIterator<>( getJoinClosureIterator(), subclassJoins.iterator() );
-	}
-
 	public List<Join> getSubclassJoinClosure() {
 		return new JoinedList<>( getJoinClosure(), subclassJoins );
 	}
 
 	public List<Table> getSubclassTableClosure() {
 		return new JoinedList<>( getTableClosure(), subclassTables );
-	}
-
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<Table> getSubclassTableClosureIterator() {
-		return new JoinedIterator<>( getTableClosureIterator(), subclassTables.iterator() );
 	}
 
 	public boolean isClassOrSuperclassJoin(Join join) {
@@ -486,9 +434,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		final Table table = getTable();
 		final PrimaryKey pk = new PrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
-		table.setPrimaryKey( pk );
-
 		pk.addColumns( getKey() );
+
+		table.setPrimaryKey( pk );
 	}
 
 	public abstract String getWhere();
@@ -507,23 +455,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public void setSelectBeforeUpdate(boolean selectBeforeUpdate) {
 		this.selectBeforeUpdate = selectBeforeUpdate;
-	}
-
-	/**
-	 * Build an iterator of properties which may be referenced in association mappings.
-	 * <p>
-	 * Includes properties defined in superclasses of the mapping inheritance.
-	 * Includes all properties defined as part of a join.
-	 *
-	 * @see #getReferencedProperty for a discussion of "referenceable"
-	 *
-	 * @return The referenceable property iterator.
-	 *
-	 * @deprecated use {@link #getReferenceableProperties()}
-	 */
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<Property> getReferenceablePropertyIterator() {
-		return getPropertyClosureIterator();
 	}
 
 	/**
@@ -645,7 +576,10 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		}
 	}
 
-	@Deprecated(since = "6.2")
+	/**
+	 * @deprecated This will be removed with no replacement.
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
 	public Property getSubclassProperty(String propertyName) throws MappingException {
 		final Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null
@@ -796,16 +730,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return joins;
 	}
 
-	@Deprecated(since = "6.0")
-	public Iterator<Join> getJoinIterator() {
-		return joins.iterator();
-	}
-
-	@Deprecated(since = "6.0")
-	public Iterator<Join> getJoinClosureIterator() {
-		return joins.iterator();
-	}
-
 	public void addJoin(Join join) {
 		if ( !joins.contains(join) ) {
 			joins.add( join );
@@ -837,42 +761,17 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	/**
-	 * Build an iterator over the properties defined on this class. The returned
-	 * iterator only accounts for "normal" properties (i.e. non-identifier
-	 * properties).
-	 * <p>
-	 * Differs from {@link #getUnjoinedPropertyIterator} in that the returned iterator
-	 * will include properties defined as part of a join.
-	 * <p>
-	 * Differs from {@link #getReferenceablePropertyIterator} in that the properties
-	 * defined in superclasses of the mapping inheritance are not included.
-	 *
-	 * @return An iterator over the "normal" properties.
-	 *
-	 * @deprecated use {@link #getProperties()}
-	 */
-	@Deprecated(since = "6.0")
-	public Iterator<Property> getPropertyIterator() {
-		final ArrayList<Iterator<Property>> iterators = new ArrayList<>();
-		iterators.add( properties.iterator() );
-		for ( Join join : joins ) {
-			iterators.add( join.getPropertyIterator() );
-		}
-		return new JoinedIterator<>( iterators );
-	}
-
-	/**
 	 * Build a list of the properties defined on this class. The returned
 	 * iterator only accounts for "normal" properties (i.e. non-identifier
 	 * properties).
 	 * <p>
-	 * Differs from {@link #getUnjoinedProperties} in that the returned iterator
+	 * Differs from {@link #getUnjoinedProperties} in that the returned list
 	 * will include properties defined as part of a join.
 	 * <p>
 	 * Differs from {@link #getReferenceableProperties} in that the properties
 	 * defined in superclasses of the mapping inheritance are not included.
 	 *
-	 * @return An iterator over the "normal" properties.
+	 * @return A list over the "normal" properties.
 	 */
 	public List<Property> getProperties() {
 		final ArrayList<List<Property>> list = new ArrayList<>();
@@ -881,20 +780,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			list.add( join.getProperties() );
 		}
 		return new JoinedList<>( list );
-	}
-
-	/**
-	 * Build an iterator over the properties defined on this class <b>which
-	 * are not defined as part of a join</b>.  As with {@link #getPropertyIterator},
-	 * the returned iterator only accounts for non-identifier properties.
-	 *
-	 * @return An iterator over the non-joined "normal" properties.
-	 *
-	 * @deprecated use {@link #getUnjoinedProperties()}
-	 */
-	@Deprecated(since = "6.0")
-	public Iterator<Property> getUnjoinedPropertyIterator() {
-		return properties.iterator();
 	}
 
 	/**
@@ -1042,76 +927,29 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.isAbstract = isAbstract;
 	}
 
-	protected void checkColumnDuplication(Set<String> distinctColumns, Value value)
-			throws MappingException {
-		if ( value != null ) {
-			for ( Selectable columnOrFormula : value.getSelectables() ) {
-				if ( !columnOrFormula.isFormula() ) {
-					final Column col = (Column) columnOrFormula;
-					if ( !distinctColumns.add( col.getName() ) ) {
-						throw new MappingException(
-								"Column '" + col.getName()
-										+ "' is duplicated in mapping for entity '" + getEntityName()
-										+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
-						);
-					}
-				}
-			}
-		}
-	}
-
-	protected void checkPropertyColumnDuplication(Set<String> distinctColumns, List<Property> properties)
-			throws MappingException {
-		for ( Property prop : properties ) {
-			final Value value = prop.getValue();
-			if ( value instanceof Component ) {
-				final Component component = (Component) value;
-				final AggregateColumn aggregateColumn = component.getAggregateColumn();
-				if ( aggregateColumn == null ) {
-					checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
-				}
-				else {
-					component.checkColumnDuplication();
-					checkColumnDuplication( distinctColumns, aggregateColumn.getValue() );
-				}
-			}
-			else {
-				if ( prop.isUpdateable() || prop.isInsertable() ) {
-					checkColumnDuplication( distinctColumns, value);
-				}
-			}
-		}
-	}
-
-	@Deprecated(since = "6.0")
-	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
-		return getUnjoinedPropertyIterator();
-	}
-
 	protected List<Property> getNonDuplicatedProperties() {
 		return getUnjoinedProperties();
 	}
 
-	@Deprecated(since = "6.0")
-	protected Iterator<Selectable> getDiscriminatorColumnIterator() {
-		return Collections.emptyIterator();
-	}
-
 	protected void checkColumnDuplication() {
+		final String owner = "entity '" + getEntityName() + "'";
 		final HashSet<String> cols = new HashSet<>();
 		if ( getIdentifierMapper() == null ) {
 			//an identifier mapper => getKey will be included in the getNonDuplicatedPropertyIterator()
 			//and checked later, so it needs to be excluded
-			checkColumnDuplication( cols, getKey() );
+			getKey().checkColumnDuplication( cols, owner );
 		}
-		if ( isDiscriminatorInsertable() ) {
-			checkColumnDuplication( cols, getDiscriminator() );
+		if ( isDiscriminatorInsertable() && getDiscriminator() != null ) {
+			getDiscriminator().checkColumnDuplication( cols, owner );
 		}
-		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties() );
+		if ( getRootClass().getSoftDeleteColumn() != null ) {
+			getRootClass().getSoftDeleteColumn().getValue().checkColumnDuplication( cols, owner );
+		}
+		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties(), owner );
 		for ( Join join : getJoins() ) {
 			cols.clear();
-			checkColumnDuplication( cols, join.getKey() );
-			checkPropertyColumnDuplication( cols, join.getProperties() );
+			join.getKey().checkColumnDuplication( cols, owner );
+			checkPropertyColumnDuplication( cols, join.getProperties(), owner );
 		}
 	}
 
@@ -1216,9 +1054,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	private boolean determineIfNaturalIdDefined() {
-		final Iterator<Property> props = getRootClass().getPropertyIterator();
-		while ( props.hasNext() ) {
-			if ( props.next().isNaturalIdentifier() ) {
+		final List<Property> props = getRootClass().getProperties();
+		for ( Property p : props ) {
+			if ( p.isNaturalIdentifier() ) {
 				return true;
 			}
 		}
@@ -1233,16 +1071,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			lists.add( join.getDeclaredProperties() );
 		}
 		return new JoinedList<>( lists );
-	}
-
-	@Deprecated(since = "6.0")
-	public Iterator<Property> getDeclaredPropertyIterator() {
-		final ArrayList<Iterator<Property>> iterators = new ArrayList<>();
-		iterators.add( declaredProperties.iterator() );
-		for ( Join join : joins ) {
-			iterators.add( join.getDeclaredPropertyIterator() );
-		}
-		return new JoinedIterator<>( iterators );
 	}
 
 	public void addMappedSuperclassProperty(Property p) {

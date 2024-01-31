@@ -321,8 +321,8 @@ public class IdTest {
 		Column idCol = (Column) scope.getMetadataImplementor().getEntityBinding( Ball.class.getName() )
 				.getIdentifierProperty()
 				.getValue()
-				.getColumnIterator()
-				.next();
+				.getSelectables()
+				.get( 0 );
 		assertEquals( "ball_id", idCol.getName() );
 	}
 

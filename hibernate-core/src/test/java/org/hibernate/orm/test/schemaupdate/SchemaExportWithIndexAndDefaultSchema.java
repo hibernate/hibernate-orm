@@ -24,6 +24,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +52,7 @@ public class SchemaExportWithIndexAndDefaultSchema {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = new StandardServiceRegistryBuilder()
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" )
 				.applySetting( Environment.DEFAULT_SCHEMA, "public" )
 				.build();

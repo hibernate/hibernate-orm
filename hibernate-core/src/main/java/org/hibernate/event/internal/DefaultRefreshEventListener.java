@@ -9,7 +9,8 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.PersistentObjectException;
+import org.hibernate.NonUniqueObjectException;
+import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -32,6 +33,8 @@ import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -61,7 +64,40 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
 		if ( persistenceContext.reassociateIfUninitializedProxy( object ) ) {
-			if ( isTransient( event, source, object ) ) {
+			final boolean isTransient = isTransient( event, source, object );
+			// If refreshAlready is not empty then the refresh is the result of a
+			// cascade refresh and the refresh of the parent will take care of initializing the lazy
+			// entity and setting the correct lock on it, this is needed only when the refresh is called directly on a lazy entity
+			if ( refreshedAlready.isEmpty() ) {
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+				final EntityPersister persister;
+				if ( lazyInitializer != null ) {
+					persister = source.getEntityPersister( lazyInitializer.getEntityName(), object );
+				}
+				else if ( !isTransient ) {
+					final EntityEntry entry = persistenceContext.getEntry( object );
+					persister = entry.getPersister();
+				}
+				else {
+					persister = source.getEntityPersister( source.guessEntityName( object ), object );
+				}
+
+				refresh(
+						event,
+						null,
+						source,
+						persister,
+						lazyInitializer,
+						null,
+						persister.getIdentifier( object, event.getSession() ),
+						persistenceContext
+				);
+				if ( lazyInitializer != null ) {
+					refreshedAlready.add( lazyInitializer.getImplementation() );
+				}
+			}
+
+			if ( isTransient ) {
 				source.setReadOnly( object, source.isDefaultReadOnly() );
 			}
 		}
@@ -92,6 +128,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			//refresh() does not pass an entityName
 			persister = source.getEntityPersister( event.getEntityName(), object );
 			id = persister.getIdentifier( object, event.getSession() );
+			if ( id == null ) {
+				throw new TransientObjectException( "transient instance passed to refresh");
+			}
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Refreshing transient {0}",
@@ -99,10 +138,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				);
 			}
 			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
-				throw new PersistentObjectException(
-						"attempted to refresh transient instance when persistent instance was already associated with the Session: "
-								+ infoString( persister, id, source.getFactory() )
-				);
+				throw new NonUniqueObjectException( id, persister.getEntityName() );
 			}
 		}
 		else {
@@ -143,9 +179,22 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		evictEntity( object, persister, id, source );
 		evictCachedCollections( persister, id, source );
 
+		refresh( event, object, source, persister, null, entry, id, persistenceContext );
+	}
+
+	private static void refresh(
+			RefreshEvent event,
+			Object object,
+			EventSource source,
+			EntityPersister persister,
+			LazyInitializer lazyInitializer,
+			EntityEntry entry,
+			Object id,
+			PersistenceContext persistenceContext) {
+
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
 				CascadingFetchProfile.REFRESH,
-				() -> doRefresh( event, source, object, entry, persister, id, persistenceContext )
+				() -> doRefresh( event, source, object, entry, persister, lazyInitializer, id, persistenceContext )
 		);
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 	}
@@ -178,6 +227,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			Object object,
 			EntityEntry entry,
 			EntityPersister persister,
+			LazyInitializer lazyInitializer,
 			Object id,
 			PersistenceContext persistenceContext) {
 		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
@@ -227,17 +277,30 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				persistenceContext.getEntry( result ).setLockMode( postRefreshLockMode );
 			}
 
-			// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
-			// If it was transient, then set it to the default for the source.
-			if ( !persister.isMutable() ) {
-				// this is probably redundant; it should already be read-only
-				source.setReadOnly( result, true );
-			}
-			else {
-				source.setReadOnly( result, entry == null ? source.isDefaultReadOnly() : entry.isReadOnly() );
-			}
+			source.setReadOnly( result, isReadOnly( entry, persister, lazyInitializer, source ) );
 		}
 		return result;
+	}
+
+	private static boolean isReadOnly(
+			EntityEntry entry,
+			EntityPersister persister,
+			LazyInitializer lazyInitializer,
+			EventSource source) {
+		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
+		// If it was transient, then set it to the default for the source.
+		if ( !persister.isMutable() ) {
+			return true;
+		}
+		else if ( entry != null ) {
+			return entry.isReadOnly();
+		}
+		else if ( lazyInitializer != null ) {
+			return lazyInitializer.isReadOnly();
+		}
+		else {
+			return source.isDefaultReadOnly();
+		}
 	}
 
 	private static void evictCachedCollections(EntityPersister persister, Object id, EventSource source) {

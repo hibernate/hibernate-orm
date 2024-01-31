@@ -14,6 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class BidirectionalOneToOneWithIdClassesUnownedAssociationTest {
 	@Test
 	public void test() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			new MetadataSources( ssr ).addAnnotatedClass( Price.class )
 					.addAnnotatedClass( Product.class )

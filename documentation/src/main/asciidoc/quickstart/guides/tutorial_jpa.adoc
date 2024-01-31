@@ -55,15 +55,16 @@ In Java(TM) SE environments the persistence provider (Hibernate) is required to 
 
 ----
 <1> A `persistence.xml` file should provide a unique name for each _persistence unit_ it declares.
-Applications use this name to reference the configuration when obtaining an `EntityManagerFactory`.
+Applications use this name to reference the configuration when obtaining an `EntityManagerFactory` as we will see shortly.
 <2> The `<class/>` element registers our annotated entity class.
 <3> The settings specified as `<properties/>` elements were already discussed in <<hibernate-gsg-tutorial-annotations-config>>.
 Here JPA-standard property names are used where possible.
 
 [NOTE]
+====
 Configuration properties prefixed with the legacy Java EE namespace `javax.persistence` are still
-recognized, but the Jakarta EE namespace `jakarta.persistence` is now preferred.
-
+recognized, but the Jakarta EE namespace `jakarta.persistence` should be preferred.
+====
 
 [[hibernate-gsg-tutorial-jpa-entity]]
 === The annotated entity Java class
@@ -77,14 +78,14 @@ The previous tutorials used Hibernate native APIs.
 This tutorial uses the standard Jakarta Persistence APIs.
 
 [[hibernate-gsg-tutorial-jpa-test-setUp]]
-.Obtaining the jakarta.persistence.EntityManagerFactory
+.Obtaining the JPA EntityManagerFactory
 [source, java]
 ----
 protected void setUp() {
-    sessionFactory = Persistence.createEntityManagerFactory("org.hibernate.tutorial.jpa");   <1>
+    entityManagerFactory = Persistence.createEntityManagerFactory("org.hibernate.tutorial.jpa");   <1>
 }
 ----
-<1> Notice again that the persistence unit name is `org.hibernate.tutorial.jpa`, which matches <<hibernate-gsg-tutorial-jpa-config-pu>>.
+<1> Notice again that the persistence unit name is `org.hibernate.tutorial.jpa`, which matches the name from our <<hibernate-gsg-tutorial-jpa-config-pu,persistence.xml>>.
 
 
 The code to persist and query entities is almost identical to <<hibernate-gsg-tutorial-basic-test-saving>>.
@@ -114,7 +115,7 @@ void inTransaction(Consumer<EntityManager> work) {
 ----
 
 [TIP]
-If you use JPA in Java SE, you'll need to copy/paste this function into your project.
+If you use JPA in Java SE, you'll need to copy/paste this function into your project.  Alternatively you could unwrap the `EntityManagerFactory` as a `SessionFactory`.
 
 [[hibernate-gsg-tutorial-jpa-further]]
 === Take it further!
@@ -122,3 +123,5 @@ If you use JPA in Java SE, you'll need to copy/paste this function into your pro
 .Practice Exercises
 - [ ] Learn how to use CDI to inject a container-managed `EntityManager` in Quarkus.
   See https://quarkus.io/guides/hibernate-orm[the Quarkus website] for instructions.
+
+// force the break

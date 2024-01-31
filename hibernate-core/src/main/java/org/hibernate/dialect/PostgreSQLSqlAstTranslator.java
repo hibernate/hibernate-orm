@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -17,6 +18,10 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
@@ -24,7 +29,10 @@ import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.type.SqlTypes;
 
@@ -58,6 +66,55 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 		appendSql( "default values" );
 	}
 
+	@Override
+	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
+		visitInsertStatement( sqlAst );
+
+		return new JdbcOperationQueryInsertImpl(
+				getSql(),
+				getParameterBinders(),
+				getAffectedTableNames(),
+				null
+		);
+	}
+
+	@Override
+	protected void renderTableReferenceIdentificationVariable(TableReference tableReference) {
+		final String identificationVariable = tableReference.getIdentificationVariable();
+		if ( identificationVariable != null ) {
+			final Clause currentClause = getClauseStack().getCurrent();
+			if ( currentClause == Clause.INSERT ) {
+				// PostgreSQL requires the "as" keyword for inserts
+				appendSql( " as " );
+			}
+			else {
+				append( WHITESPACE );
+			}
+			append( tableReference.getIdentificationVariable() );
+		}
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		final Statement currentStatement = getStatementStack().getCurrent();
+		if ( !( currentStatement instanceof UpdateStatement )
+				|| !hasNonTrivialFromClause( ( (UpdateStatement) currentStatement ).getFromClause() ) ) {
+			// For UPDATE statements we render a full FROM clause and a join condition to match target table rows,
+			// but for that to work, we have to omit the alias for the target table reference here
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
+		renderFromClauseJoiningDmlTargetReference( statement );
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		visitStandardConflictClause( conflictClause );
+	}
 
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
@@ -125,12 +182,10 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 
 	@Override
 	protected void renderMaterializationHint(CteMaterialization materialization) {
-		if ( getDialect().getVersion().isSameOrAfter( 12 ) ) {
-			if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
-				appendSql( "not " );
-			}
-			appendSql( "materialized " );
+		if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
+			appendSql( "not " );
 		}
+		appendSql( "materialized " );
 	}
 
 	@Override
@@ -145,12 +200,12 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 
 	@Override
 	public boolean supportsFilterClause() {
-		return getDialect().getVersion().isSameOrAfter( 9, 4 );
+		return true;
 	}
 
 	@Override
 	protected String getForUpdate() {
-		return getDialect().getVersion().isSameOrAfter( 9, 3 ) ? " for no key update" : " for update";
+		return " for no key update";
 	}
 
 	@Override
@@ -228,29 +283,14 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 		// We render an empty group instead of literals as some DBs don't support grouping by literals
 		// Note that integer literals, which refer to select item positions, are handled in #visitGroupByClause
 		if ( expression instanceof Literal ) {
-			if ( getDialect().getVersion().isSameOrAfter( 9, 5 ) ) {
-				appendSql( "()" );
-			}
-			else {
-				appendSql( "(select 1" );
-				appendSql( getFromDualForSelectOnly() );
-				appendSql( ')' );
-			}
+			appendSql( "()" );
 		}
 		else if ( expression instanceof Summarization ) {
 			Summarization summarization = (Summarization) expression;
-			if ( getDialect().getVersion().isSameOrAfter( 9, 5 ) ) {
-				appendSql( summarization.getKind().sqlText() );
-				appendSql( OPEN_PARENTHESIS );
-				renderCommaSeparated( summarization.getGroupings() );
-				appendSql( CLOSE_PARENTHESIS );
-			}
-			else {
-				// This could theoretically be emulated by rendering all grouping variations of the query and
-				// connect them via union all but that's probably pretty inefficient and would have to happen
-				// on the query spec level
-				throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
-			}
+			appendSql( summarization.getKind().sqlText() );
+			appendSql( OPEN_PARENTHESIS );
+			renderCommaSeparated( summarization.getGroupings() );
+			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
 			expression.accept( this );

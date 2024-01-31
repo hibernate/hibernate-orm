@@ -61,7 +61,7 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	public MariaDBLegacyDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		super( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 
@@ -177,6 +177,12 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	@Override
 	public boolean supportsColumnCheck() {
 		return getVersion().isSameOrAfter( 10, 2 );
+	}
+
+	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// See https://jira.mariadb.org/browse/MDEV-16991
+		return false;
 	}
 
 	@Override

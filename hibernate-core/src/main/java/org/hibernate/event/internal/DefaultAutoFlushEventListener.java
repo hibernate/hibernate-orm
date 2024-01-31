@@ -13,6 +13,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -37,6 +39,8 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		final SessionEventListenerManager eventListenerManager = source.getEventListenerManager();
+		final EventManager eventManager = source.getEventManager();
+		final HibernateMonitoringEvent partialFlushEvent = eventManager.beginPartialFlushEvent();
 		try {
 			eventListenerManager.partialFlushStart();
 
@@ -52,11 +56,16 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 
 					// note: performExecutions() clears all collectionXxxxtion
 					// collections (the collection actions) in the session
-					performExecutions( source );
-					postFlush( source );
+					final HibernateMonitoringEvent flushEvent = eventManager.beginFlushEvent();
+					try {
+						performExecutions( source );
+						postFlush( source );
 
-					postPostFlush( source );
-
+						postPostFlush( source );
+					}
+					finally {
+						eventManager.completeFlushEvent( flushEvent, event, true );
+					}
 					final StatisticsImplementor statistics = source.getFactory().getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {
 						statistics.flush();
@@ -70,6 +79,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			}
 		}
 		finally {
+			eventManager.completePartialFlushEvent( partialFlushEvent, event );
 			eventListenerManager.partialFlushEnd(
 					event.getNumberOfEntitiesProcessed(),
 					event.getNumberOfEntitiesProcessed()

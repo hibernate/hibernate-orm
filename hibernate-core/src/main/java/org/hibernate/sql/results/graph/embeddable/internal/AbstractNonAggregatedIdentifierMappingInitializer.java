@@ -6,12 +6,11 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.List;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -35,7 +34,8 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
@@ -158,9 +158,7 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 				return;
 			case INITIAL:
 				// If we don't have an id class and this is a find by id lookup, we just use that instance
-				if ( !hasIdClass && processingState.getEntityId() != null
-						&& navigablePath.getParent().getParent() == null
-						&& navigablePath instanceof EntityIdentifierNavigablePath ) {
+				if ( isFindByIdLookup( processingState ) ) {
 					compositeInstance = processingState.getEntityId();
 					state = State.INJECTED;
 					return;
@@ -216,6 +214,12 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 		}
 	}
 
+	private boolean isFindByIdLookup(RowProcessingState processingState) {
+		return !hasIdClass && processingState.getEntityId() != null
+				&& navigablePath.getParent().getParent() == null
+				&& navigablePath instanceof EntityIdentifierNavigablePath;
+	}
+
 	private void extractRowState(RowProcessingState processingState) {
 		state = State.NULL;
 		for ( int i = 0; i < assemblers.length; i++ ) {
@@ -257,6 +261,15 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 	}
 
 	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		if ( !isFindByIdLookup( rowProcessingState ) ) {
+			for ( final DomainResultAssembler<?> assembler : assemblers ) {
+				assembler.resolveState( rowProcessingState );
+			}
+		}
+	}
+
+	@Override
 	public Object[] getValues() {
 		return state == State.NULL ? null : idClassState;
 	}
@@ -277,6 +290,21 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 		state = State.INITIAL;
 
 		clearResolutionListeners();
+	}
+
+	@Override
+	public boolean isPartOfKey() {
+		return true;
+	}
+
+	@Override
+	public @Nullable FetchParentAccess getOwningParent() {
+		return fetchParentAccess;
+	}
+
+	@Override
+	public @Nullable EntityMappingType getOwnedModelPartDeclaringType() {
+		return embedded.findContainingEntityMapping();
 	}
 
 	@Override

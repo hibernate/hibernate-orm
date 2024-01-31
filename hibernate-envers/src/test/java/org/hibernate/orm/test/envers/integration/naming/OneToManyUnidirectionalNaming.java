@@ -95,7 +95,7 @@ public class OneToManyUnidirectionalNaming extends BaseEnversJPAFunctionalTestCa
 	@Test
 	public void testJoinColumnName() {
 		Iterator<Column> columns =
-				metadata().getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getColumnIterator();
+				metadata().getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getColumns().iterator();
 
 		boolean id1Found = false;
 		boolean id2Found = false;

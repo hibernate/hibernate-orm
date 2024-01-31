@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Transaction;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.Leg.Frequency;
 import org.hibernate.query.Query;
@@ -772,7 +772,7 @@ public class EmbeddedTest {
 		scope.inTransaction(
 				session -> {
 					Book b = new Book();
-					b.setIsbn( UUID.randomUUID().toString() );
+					b.setIsbn( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 					b.setSummary( new Summary() );
 					b = (Book) session.merge( b );
 				}

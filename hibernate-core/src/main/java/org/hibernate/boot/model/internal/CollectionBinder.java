@@ -22,6 +22,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
@@ -63,6 +64,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Persister;
+import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -71,6 +73,7 @@ import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Synchronize;
@@ -94,6 +97,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -110,6 +114,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -170,6 +175,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
+import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.source.internal.hbm.ModelBinder.useEntityWhereClauseForCollections;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
@@ -210,6 +216,7 @@ public abstract class CollectionBinder {
 	private String cascadeStrategy;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
+	private CacheLayout queryCacheLayout;
 	private boolean oneToMany;
 	protected IndexColumn indexColumn;
 	protected OnDeleteAction onDeleteAction;
@@ -284,6 +291,7 @@ public abstract class CollectionBinder {
 		collectionBinder.setNaturalSort( property.getAnnotation( SortNatural.class ) );
 		collectionBinder.setComparatorSort( property.getAnnotation( SortComparator.class ) );
 		collectionBinder.setCache( property.getAnnotation( Cache.class ) );
+		collectionBinder.setQueryCacheLayout( property.getAnnotation( QueryCacheLayout.class ) );
 		collectionBinder.setPropertyHolder(propertyHolder);
 
 		collectionBinder.setNotFoundAction( notFoundAction( propertyHolder, inferredData, property, manyToManyAnn ) );
@@ -413,21 +421,41 @@ public abstract class CollectionBinder {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			XProperty property,
-			OneToMany oneToManyAnn,
-			ManyToMany manyToManyAnn,
-			ElementCollection elementCollectionAnn) {
-		if ( ( oneToManyAnn != null || manyToManyAnn != null || elementCollectionAnn != null )
-				&& isToManyAssociationWithinEmbeddableCollection(propertyHolder) ) {
-			String ann = oneToManyAnn != null ? "'@OneToMany'" : manyToManyAnn !=null ? "'@ManyToMany'" : "'@ElementCollection'";
-			throw new AnnotationException( "Property '" + getPath(propertyHolder, inferredData) +
-					"' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a " + ann );
+			OneToMany oneToMany,
+			ManyToMany manyToMany,
+			ElementCollection elementCollection) {
+		if ( ( oneToMany != null || manyToMany != null || elementCollection != null )
+				&& isToManyAssociationWithinEmbeddableCollection( propertyHolder ) ) {
+			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData ) +
+					"' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a "
+					+ annotationName( oneToMany, manyToMany, elementCollection ));
+		}
+
+		if ( oneToMany != null && property.isAnnotationPresent( SoftDelete.class ) ) {
+			throw new UnsupportedMappingException(
+					"@SoftDelete cannot be applied to @OneToMany - " +
+							property.getDeclaringClass().getName() + "." + property.getName()
+			);
 		}
 
 		if ( property.isAnnotationPresent( OrderColumn.class )
-				&& manyToManyAnn != null && !manyToManyAnn.mappedBy().isEmpty() ) {
-			throw new AnnotationException("Collection '" + getPath(propertyHolder, inferredData) +
+				&& manyToMany != null && !manyToMany.mappedBy().isEmpty() ) {
+			throw new AnnotationException("Collection '" + getPath( propertyHolder, inferredData ) +
 					"' is the unowned side of a bidirectional '@ManyToMany' and may not have an '@OrderColumn'");
 		}
+
+		if ( manyToMany != null || elementCollection != null ) {
+			if ( property.isAnnotationPresent( JoinColumn.class ) || property.isAnnotationPresent( JoinColumns.class ) ) {
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+						+ "' is a " + annotationName( oneToMany, manyToMany, elementCollection )
+						+ " and is directly annotated '@JoinColumn'"
+						+ " (specify '@JoinColumn' inside '@JoinTable' or '@CollectionTable')" );
+			}
+		}
+	}
+
+	private static String annotationName(OneToMany oneToMany, ManyToMany manyToMany, ElementCollection elementCollection) {
+		return oneToMany != null ? "'@OneToMany'" : manyToMany != null ? "'@ManyToMany'" : "'@ElementCollection'";
 	}
 
 	private static IndexColumn getIndexColumn(
@@ -546,6 +574,7 @@ public abstract class CollectionBinder {
 		if ( property.isAnnotationPresent( jakarta.persistence.Column.class ) ) {
 			return buildColumnFromAnnotation(
 					property.getAnnotation( jakarta.persistence.Column.class ),
+					null,
 //					comment,
 					nullability,
 					propertyHolder,
@@ -568,6 +597,7 @@ public abstract class CollectionBinder {
 		else if ( property.isAnnotationPresent( Columns.class ) ) {
 			return buildColumnsFromAnnotations(
 					property.getAnnotation( Columns.class ).columns(),
+					null,
 //					comment,
 					nullability,
 					propertyHolder,
@@ -578,6 +608,7 @@ public abstract class CollectionBinder {
 		}
 		else {
 			return buildColumnFromNoAnnotation(
+					null,
 //					comment,
 					nullability,
 					propertyHolder,
@@ -857,7 +888,7 @@ public abstract class CollectionBinder {
 			Map<String,String> parameters,
 			MetadataBuildingContext buildingContext) {
 		final boolean hasParameters = CollectionHelper.isNotEmpty( parameters );
-		if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !buildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			// if deferred container access is enabled, we locally create the user-type
 			return MappingHelper.createLocalUserCollectionTypeBean( role, implementation, hasParameters, parameters );
 		}
@@ -1224,6 +1255,7 @@ public abstract class CollectionBinder {
 			collection.setCacheConcurrencyStrategy( cacheConcurrencyStrategy );
 			collection.setCacheRegionName( cacheRegionName );
 		}
+		collection.setQueryCacheLayout( queryCacheLayout );
 	}
 
 	private void bindExplicitTypes() {
@@ -1287,6 +1319,7 @@ public abstract class CollectionBinder {
 		binder.setProperty( property );
 		binder.setInsertable( insertable );
 		binder.setUpdatable( updatable );
+		binder.setBuildingContext( buildingContext );
 		Property prop = binder.makeProperty();
 		//we don't care about the join stuffs because the column is on the association table.
 		if ( !declaringClassSet ) {
@@ -1910,6 +1943,10 @@ public abstract class CollectionBinder {
 		}
 	}
 
+	public void setQueryCacheLayout(QueryCacheLayout queryCacheLayout) {
+		this.queryCacheLayout = queryCacheLayout == null ? null : queryCacheLayout.layout();
+	}
+
 	public void setOneToMany(boolean oneToMany) {
 		this.oneToMany = oneToMany;
 	}
@@ -2154,6 +2191,7 @@ public abstract class CollectionBinder {
 		}
 
 		checkFilterConditions( collection );
+		checkConsistentColumnMutability( collection );
 	}
 
 	private void handleElementCollection(XClass elementType, String hqlOrderBy) {
@@ -2431,9 +2469,7 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private void handleOwnedManyToMany(
-			PersistentClass collectionEntity,
-			boolean isCollectionOfEntities) {
+	private void handleOwnedManyToMany(PersistentClass collectionEntity, boolean isCollectionOfEntities) {
 		//TODO: only for implicit columns?
 		//FIXME NamingStrategy
 		final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
@@ -2460,9 +2496,10 @@ public abstract class CollectionBinder {
 		tableBinder.setJPA2ElementCollection(
 				!isCollectionOfEntities && property.isAnnotationPresent( ElementCollection.class )
 		);
-		Table collectionTable = tableBinder.bind();
+		final Table collectionTable = tableBinder.bind();
 		collection.setCollectionTable( collectionTable );
 		handleCheckConstraints( collectionTable );
+		processSoftDeletes();
 	}
 
 	private void handleCheckConstraints(Table collectionTable) {
@@ -2486,6 +2523,31 @@ public abstract class CollectionBinder {
 		collectionTable.addCheck( name.isEmpty()
 				? new CheckConstraint( constraint )
 				: new CheckConstraint( name, constraint ) );
+	}
+
+	private void processSoftDeletes() {
+		assert collection.getCollectionTable() != null;
+
+		final SoftDelete softDelete = extractSoftDelete( property, propertyHolder, buildingContext );
+		if ( softDelete == null ) {
+			return;
+		}
+
+		SoftDeleteHelper.bindSoftDeleteIndicator(
+				softDelete,
+				collection,
+				collection.getCollectionTable(),
+				buildingContext
+		);
+	}
+
+	private static SoftDelete extractSoftDelete(XProperty property, PropertyHolder propertyHolder, MetadataBuildingContext context) {
+		final SoftDelete fromProperty = property.getAnnotation( SoftDelete.class );
+		if ( fromProperty != null ) {
+			return fromProperty;
+		}
+
+		return extractFromPackage( SoftDelete.class, property.getDeclaringClass(), context );
 	}
 
 	private void handleUnownedManyToMany(
@@ -2516,6 +2578,7 @@ public abstract class CollectionBinder {
 				// this is a ToOne with a @JoinTable or a regular property
 				: otherSidePropertyValue.getTable();
 		collection.setCollectionTable( table );
+		processSoftDeletes();
 
 		if ( property.isAnnotationPresent( Checks.class )
 				|| property.isAnnotationPresent( Check.class ) ) {
@@ -2613,6 +2676,34 @@ public abstract class CollectionBinder {
 					"@ManyToMany or @ElementCollection defining filter or where without join fetching "
 							+ "not valid within collection using join fetching[" + collection.getRole() + "]"
 			);
+		}
+	}
+
+	private static void checkConsistentColumnMutability(Collection collection) {
+		checkConsistentColumnMutability( collection.getRole(), collection.getKey() );
+		checkConsistentColumnMutability( collection.getRole(), collection.getElement() );
+	}
+
+	private static void checkConsistentColumnMutability(String collectionRole, Value value) {
+		Boolean readOnly = null;
+		for ( int i = 0; i < value.getColumnSpan(); i++ ) {
+			final boolean insertable = value.isColumnInsertable( i );
+			if ( insertable != value.isColumnUpdateable( i ) ) {
+				throw new AnnotationException(
+						"Join column '" + value.getColumns().get( i ).getName() + "' on collection property '"
+								+ collectionRole + "' must be defined with the same insertable and updatable attributes"
+				);
+			}
+			if ( readOnly == null ) {
+				readOnly = insertable;
+			}
+			else if ( readOnly != insertable && !value.getColumns().get( i ).isFormula() ) {
+				// We also assert that all join columns have the same mutability (except formulas)
+				throw new AnnotationException(
+						"All join columns on collection '" + collectionRole + "' should have" +
+								" the same insertable and updatable setting"
+				);
+			}
 		}
 	}
 

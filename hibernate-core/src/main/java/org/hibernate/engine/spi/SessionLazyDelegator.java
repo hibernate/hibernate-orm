@@ -40,6 +40,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.stat.SessionStatistics;
 
@@ -51,6 +52,7 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * This helper class allows decorating a Session instance, while the
@@ -594,6 +596,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public Object getTenantIdentifierValue() {
+		return this.lazySession.get().getTenantIdentifierValue();
+	}
+
+	@Override
 	public void close() throws HibernateException {
 		this.lazySession.get().close();
 	}
@@ -768,6 +775,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
+		return this.lazySession.get().createMutationQuery( insertSelect );
+	}
+
+	@Override
 	public MutationQuery createNativeMutationQuery(String sqlString) {
 		return this.lazySession.get().createNativeMutationQuery( sqlString );
 	}
@@ -809,22 +821,22 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey) {
 		return this.lazySession.get().find( entityClass, primaryKey );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
 		return this.lazySession.get().find( entityClass, primaryKey, properties );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
 		return this.lazySession.get().find( entityClass, primaryKey, lockMode );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
 		return this.lazySession.get().find( entityClass, primaryKey, lockMode, properties );
 	}
 

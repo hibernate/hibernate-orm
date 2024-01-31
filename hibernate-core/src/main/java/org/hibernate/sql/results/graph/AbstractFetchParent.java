@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph;
 
+import java.util.BitSet;
+
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -15,15 +17,13 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public abstract class AbstractFetchParent implements FetchParent {
-	private final FetchableContainer fetchContainer;
 	private final NavigablePath navigablePath;
 
 	private ImmutableFetchList fetches = ImmutableFetchList.EMPTY;
 	private boolean hasJoinFetches;
 	private boolean containsCollectionFetches;
 
-	public AbstractFetchParent(FetchableContainer fetchContainer, NavigablePath navigablePath) {
-		this.fetchContainer = fetchContainer;
+	public AbstractFetchParent(NavigablePath navigablePath) {
 		this.navigablePath = navigablePath;
 	}
 
@@ -38,9 +38,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 		this.containsCollectionFetches = newFetches.containsCollectionFetches();
 	}
 
-	public FetchableContainer getFetchContainer() {
-		return fetchContainer;
-	}
+	public abstract FetchableContainer getFetchContainer();
 
 	@Override
 	public NavigablePath getNavigablePath() {
@@ -49,12 +47,12 @@ public abstract class AbstractFetchParent implements FetchParent {
 
 	@Override
 	public JavaType<?> getResultJavaType() {
-		return fetchContainer.getJavaType();
+		return getFetchContainer().getJavaType();
 	}
 
 	@Override
 	public FetchableContainer getReferencedMappingContainer() {
-		return fetchContainer;
+		return getFetchContainer();
 	}
 
 	@Override
@@ -78,5 +76,9 @@ public abstract class AbstractFetchParent implements FetchParent {
 	@Override
 	public boolean containsCollectionFetches() {
 		return containsCollectionFetches;
+	}
+
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		FetchParent.super.collectValueIndexesToCache( valueIndexes );
 	}
 }

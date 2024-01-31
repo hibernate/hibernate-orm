@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentSet;
@@ -14,9 +15,15 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -31,11 +38,22 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 			PluralAttributeMapping setDescriptor,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler<?> collectionKeyAssembler,
-			DomainResultAssembler<?> collectionValueKeyAssembler,
-			DomainResultAssembler<?> elementAssembler) {
-		super( navigablePath, setDescriptor, parentAccess, lockMode, collectionKeyAssembler, collectionValueKeyAssembler );
-		this.elementAssembler = elementAssembler;
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			Fetch elementFetch,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState) {
+		super(
+				navigablePath,
+				setDescriptor,
+				parentAccess,
+				lockMode,
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer,
+				creationState
+		);
+		this.elementAssembler = elementFetch.createAssembler( this, creationState );
 	}
 
 	@Override
@@ -44,7 +62,12 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	public PersistentSet<?> getCollectionInstance() {
+	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
+		consumer.accept( elementAssembler );
+	}
+
+	@Override
+	public @Nullable PersistentSet<?> getCollectionInstance() {
 		return (PersistentSet<?>) super.getCollectionInstance();
 	}
 
@@ -53,7 +76,24 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 			CollectionKey collectionKey,
 			List<Object> loadingState,
 			RowProcessingState rowProcessingState) {
-		loadingState.add( elementAssembler.assemble( rowProcessingState ) );
+		final Object element = elementAssembler.assemble( rowProcessingState );
+		if ( element == null ) {
+			// If element is null, then NotFoundAction must be IGNORE
+			return;
+		}
+		loadingState.add( element );
+	}
+
+	@Override
+	protected void initializeSubInstancesFromParent(RowProcessingState rowProcessingState) {
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final PersistentSet<?> set = getCollectionInstance();
+			assert set != null;
+			for ( Object element : set ) {
+				initializer.initializeInstanceFromParent( element, rowProcessingState );
+			}
+		}
 	}
 
 	@Override

@@ -39,6 +39,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
@@ -147,7 +148,7 @@ public class EmbeddableBinder {
 	static boolean isEmbedded(XProperty property, XClass returnedClass) {
 		return property.isAnnotationPresent( Embedded.class )
 			|| property.isAnnotationPresent( EmbeddedId.class )
-			|| returnedClass.isAnnotationPresent( Embeddable.class );
+			|| returnedClass.isAnnotationPresent( Embeddable.class ) && !property.isAnnotationPresent( Convert.class );
 	}
 
 	private static Component bindEmbeddable(
@@ -193,7 +194,7 @@ public class EmbeddableBinder {
 					entityBinder,
 					isComponentEmbedded,
 					isIdentifierMapper,
-					false,
+					context.getMetadataCollector().isInSecondPass(),
 					customInstantiatorImpl,
 					compositeUserTypeClass,
 					annotatedColumns,
@@ -386,8 +387,16 @@ public class EmbeddableBinder {
 			);
 
 			final XProperty property = propertyAnnotatedElement.getProperty();
-			if ( isGeneratedId( property ) ) {
-				processGeneratedId( context, component, property );
+			if ( property.isAnnotationPresent( GeneratedValue.class ) ) {
+				if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
+					processGeneratedId( context, component, property );
+				}
+				else {
+					throw new AnnotationException(
+							"Property '" + property.getName() + "' of '"
+									+ getPath( propertyHolder, inferredData )
+									+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
+				}
 			}
 		}
 
@@ -408,7 +417,7 @@ public class EmbeddableBinder {
 	private static CompositeUserType<?> compositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			MetadataBuildingContext context) {
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !context.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
 		}
 
@@ -464,11 +473,6 @@ public class EmbeddableBinder {
 		else {
 			return null;
 		}
-	}
-
-	private static boolean isGeneratedId(XProperty property) {
-		return property.isAnnotationPresent( GeneratedValue.class )
-			&& property.isAnnotationPresent( Id.class );
 	}
 
 	private static void processCompositeUserType(Component component, CompositeUserType<?> compositeUserType) {

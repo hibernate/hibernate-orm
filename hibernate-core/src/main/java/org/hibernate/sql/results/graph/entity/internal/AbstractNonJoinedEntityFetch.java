@@ -6,30 +6,47 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import java.util.BitSet;
+
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
-import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractNonJoinedEntityFetch implements EntityFetch {
+public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
+		InitializerProducer<AbstractNonJoinedEntityFetch> {
 	private final NavigablePath navigablePath;
-	private final EntityValuedFetchable fetchedModelPart;
+	private final ToOneAttributeMapping fetchedModelPart;
 	private final FetchParent fetchParent;
+	private final DomainResult<?> keyResult;
+	private final boolean selectByUniqueKey;
 
 	public AbstractNonJoinedEntityFetch(
 			NavigablePath navigablePath,
-			EntityValuedFetchable fetchedModelPart,
-			FetchParent fetchParent) {
+			ToOneAttributeMapping fetchedModelPart,
+			FetchParent fetchParent,
+			DomainResult<?> keyResult,
+			boolean selectByUniqueKey) {
 		this.navigablePath = navigablePath;
 		this.fetchedModelPart = fetchedModelPart;
 		this.fetchParent = fetchParent;
+		this.keyResult = keyResult;
+		this.selectByUniqueKey = selectByUniqueKey;
 	}
 
 	@Override
@@ -38,12 +55,12 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch {
 	}
 
 	@Override
-	public EntityValuedFetchable getFetchedMapping() {
+	public ToOneAttributeMapping getFetchedMapping() {
 		return fetchedModelPart;
 	}
 
 	@Override
-	public EntityValuedFetchable getEntityValuedModelPart() {
+	public ToOneAttributeMapping getEntityValuedModelPart() {
 		return fetchedModelPart;
 	}
 
@@ -73,7 +90,52 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch {
 	}
 
 	@Override
+	public boolean hasTableGroup() {
+		return false;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		if ( keyResult != null ) {
+			keyResult.collectValueIndexesToCache( valueIndexes );
+		}
+	}
+
+	@Override
 	public EntityMappingType getReferencedMappingType() {
 		return fetchedModelPart.getEntityMappingType();
+	}
+
+	public DomainResult<?> getKeyResult() {
+		return keyResult;
+	}
+
+	public boolean isSelectByUniqueKey() {
+		return selectByUniqueKey;
+	}
+
+	@Override
+	public DomainResultAssembler<?> createAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		final EntityInitializer entityInitializer = creationState.resolveInitializer( this, parentAccess, this )
+				.asEntityInitializer();
+		assert entityInitializer != null;
+		return buildEntityAssembler( entityInitializer );
+	}
+
+	@Override
+	public EntityInitializer createInitializer(
+			AbstractNonJoinedEntityFetch resultGraphNode,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parentAccess, creationState );
+	}
+
+	@Override
+	public abstract EntityInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState);
+
+	protected EntityAssembler buildEntityAssembler(EntityInitializer entityInitializer) {
+		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 }

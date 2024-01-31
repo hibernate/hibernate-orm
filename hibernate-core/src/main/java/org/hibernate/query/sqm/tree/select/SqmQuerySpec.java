@@ -15,7 +15,6 @@ import java.util.Set;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
@@ -23,18 +22,17 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaQueryStructure;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
-import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromClauseContainer;
@@ -47,6 +45,7 @@ import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * Defines the commonality between a root query and a subquery.
@@ -489,7 +488,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 
 		for ( SqmRoot<?> root : roots ) {
-			validateFetchOwners( selectedFromSet, root );
+			validateFetchOwners( selectedFromSet, root, root );
+			for ( SqmFrom<?, ?> sqmTreat : root.getSqmTreats() ) {
+				validateFetchOwners( selectedFromSet, root, sqmTreat );
+			}
 		}
 	}
 
@@ -516,6 +518,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) path.getLhs() );
 			}
 		}
+		else if ( selectableNode instanceof SqmEmbeddedValuedSimplePath<?> ) {
+			final SqmEmbeddedValuedSimplePath<?> path = (SqmEmbeddedValuedSimplePath<?>) selectableNode;
+			assertEmbeddableCollections( path.getNavigablePath(), (EmbeddableDomainType<?>) path.getSqmType() );
+		}
 	}
 
 	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> sqmFrom) {
@@ -531,8 +537,8 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner) {
-		for ( SqmJoin<?, ?> sqmJoin : owner.getSqmJoins() ) {
+	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmFrom<?, ?> joinContainer) {
+		for ( SqmJoin<?, ?> sqmJoin : joinContainer.getSqmJoins() ) {
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
 				if ( attributeJoin.isFetched() ) {
@@ -541,20 +547,44 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 					continue;
 				}
 			}
-			validateFetchOwners( selectedFromSet, sqmJoin );
-		}
-		for ( SqmFrom<?, ?> sqmTreat : owner.getSqmTreats() ) {
-			validateFetchOwners( selectedFromSet, sqmTreat );
+			for ( SqmFrom<?, ?> sqmTreat : sqmJoin.getSqmTreats() ) {
+				if ( sqmTreat instanceof SqmAttributeJoin<?, ?> ) {
+					final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmTreat;
+					if ( attributeJoin.isFetched() ) {
+						assertFetchOwner( selectedFromSet, owner, attributeJoin );
+						// Only need to check the first level
+						continue;
+					}
+				}
+				validateFetchOwners( selectedFromSet, sqmJoin, sqmTreat );
+			}
+			validateFetchOwners( selectedFromSet, sqmJoin, sqmJoin );
 		}
 	}
 
-	private void assertFetchOwner(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmJoin<?, ?> sqmJoin) {
+	private void assertFetchOwner(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmJoin<?, ?> fetchJoin) {
 		if ( !selectedFromSet.contains( owner ) ) {
 			throw new SemanticException(
 					"Query specified join fetching, but the owner " +
 							"of the fetched association was not present in the select list " +
-							"[" + sqmJoin.asLoggableText() + "]"
+							"[" + fetchJoin.asLoggableText() + "]"
 			);
+		}
+	}
+
+	private void assertEmbeddableCollections(NavigablePath navigablePath, EmbeddableDomainType<?> embeddableType) {
+		if ( !embeddableType.getPluralAttributes().isEmpty() ) {
+			throw new SemanticException( String.format(
+					"Explicit selection of an embeddable containing associated collections is not supported: %s",
+					navigablePath
+			) );
+		}
+		else {
+			for ( SingularAttribute<?, ?> attribute : embeddableType.getSingularAttributes() ) {
+				if ( attribute.getType() instanceof EmbeddableDomainType<?> ) {
+					assertEmbeddableCollections( navigablePath, (EmbeddableDomainType<?>) attribute.getType() );
+				}
+			}
 		}
 	}
 
@@ -573,29 +603,8 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 		}
 		if ( fromClause != null ) {
-			sb.append( " from " );
-			String separator = "";
-			for ( SqmRoot<?> root : fromClause.getRoots() ) {
-				sb.append( separator );
-				if ( root.isCorrelated() ) {
-					if ( root.containsOnlyInnerJoins() ) {
-						appendJoins( root, root.getCorrelationParent().resolveAlias(), sb );
-					}
-					else {
-						sb.append( root.getCorrelationParent().resolveAlias() );
-						sb.append( ' ' ).append( root.resolveAlias() );
-						appendJoins( root, sb );
-						appendTreatJoins( root, sb );
-					}
-				}
-				else {
-					sb.append( root.getEntityName() );
-					sb.append( ' ' ).append( root.resolveAlias() );
-					appendJoins( root, sb );
-					appendTreatJoins( root, sb );
-				}
-				separator = ", ";
-			}
+			sb.append( " from" );
+			fromClause.appendHqlString( sb );
 		}
 		if ( whereClause != null && whereClause.getPredicate() != null ) {
 			sb.append( " where " );
@@ -615,84 +624,6 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 
 		super.appendHqlString( sb );
-	}
-
-	private void appendJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb) {
-		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
-			switch ( sqmJoin.getSqmJoinType() ) {
-				case LEFT:
-					sb.append( " left join " );
-					break;
-				case RIGHT:
-					sb.append( " right join " );
-					break;
-				case INNER:
-					sb.append( " join " );
-					break;
-				case FULL:
-					sb.append( " full join " );
-					break;
-				case CROSS:
-					sb.append( " cross join " );
-					break;
-			}
-			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
-				if ( sqmFrom instanceof SqmTreatedPath<?, ?> ) {
-					final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmFrom;
-					sb.append( "treat(" );
-					sb.append( treatedPath.getWrappedPath().resolveAlias() );
-					sb.append( " as " ).append( treatedPath.getTreatTarget().getName() ).append( ')' );
-				}
-				else {
-					sb.append( sqmFrom.resolveAlias() );
-				}
-				sb.append( '.' ).append( ( attributeJoin ).getAttribute().getName() );
-				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
-				if ( attributeJoin.getJoinPredicate() != null ) {
-					sb.append( " on " );
-					attributeJoin.getJoinPredicate().appendHqlString( sb );
-				}
-				appendJoins( sqmJoin, sb );
-			}
-			else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
-				sb.append( ( (SqmCrossJoin<?>) sqmJoin ).getEntityName() );
-				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
-				appendJoins( sqmJoin, sb );
-			}
-			else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
-				final SqmEntityJoin<?> sqmEntityJoin = (SqmEntityJoin<?>) sqmJoin;
-				sb.append( ( sqmEntityJoin ).getEntityName() );
-				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
-				if ( sqmEntityJoin.getJoinPredicate() != null ) {
-					sb.append( " on " );
-					sqmEntityJoin.getJoinPredicate().appendHqlString( sb );
-				}
-				appendJoins( sqmJoin, sb );
-			}
-			else {
-				throw new UnsupportedOperationException( "Unsupported join: " + sqmJoin );
-			}
-		}
-	}
-
-	private void appendJoins(SqmFrom<?, ?> sqmFrom, String correlationPrefix, StringBuilder sb) {
-		String separator = "";
-		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
-			assert sqmJoin instanceof SqmAttributeJoin<?, ?>;
-			sb.append( separator );
-			sb.append( correlationPrefix ).append( '.' );
-			sb.append( ( (SqmAttributeJoin<?, ?>) sqmJoin ).getAttribute().getName() );
-			sb.append( ' ' ).append( sqmJoin.resolveAlias() );
-			appendJoins( sqmJoin, sb );
-			separator = ", ";
-		}
-	}
-
-	private void appendTreatJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb) {
-		for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
-			appendJoins( sqmTreat, sb );
-		}
 	}
 
 	public boolean groupByClauseContains(NavigablePath path) {

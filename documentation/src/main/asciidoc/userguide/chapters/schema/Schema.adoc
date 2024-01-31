@@ -1,5 +1,5 @@
 [[schema-generation]]
-== Schema generation
+== Schema Generation
 :root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-schemagen: {core-project-dir}/src/test/java/org/hibernate/orm/test/schema
@@ -82,7 +82,7 @@ Considering the following HBM mapping:
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-schemagen}/SchemaGenerationTest.hbm.xml[]
+include::{example-dir-schemagen-resources}/org/hibernate/orm/test/schema/SchemaGenerationTest.hbm.xml[]
 ----
 ====
 
@@ -210,6 +210,8 @@ The second INSERT statement fails because of the unique constraint violation.
 === Columns index
 
 The {jpaJavadocUrlPrefix}Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
+
+TIP: Creating unique index containing all primary key columns will result in ordering primary key columns specified by `columnList`
 
 Considering the following entity mapping. Hibernate generates the index when creating the database schema:
 

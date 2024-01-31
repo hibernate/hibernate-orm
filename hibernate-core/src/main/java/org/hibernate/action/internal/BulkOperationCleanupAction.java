@@ -46,7 +46,7 @@ import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
  */
 public class BulkOperationCleanupAction implements Executable, Serializable {
 
-	private final Serializable[] affectedTableSpaces;
+	private final String[] affectedTableSpaces;
 
 	private final Set<EntityCleanup> entityCleanups = new HashSet<>();
 	private final Set<CollectionCleanup> collectionCleanups = new HashSet<>();
@@ -211,7 +211,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	}
 
 	@Override
-	public Serializable[] getPropertySpaces() {
+	public String[] getPropertySpaces() {
 		return affectedTableSpaces;
 	}
 

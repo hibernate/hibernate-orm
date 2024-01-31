@@ -8,16 +8,19 @@ package org.hibernate.boot.model.process.spi;
 
 import java.io.InputStream;
 import java.sql.Types;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -31,7 +34,6 @@ import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -50,6 +52,7 @@ import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -77,6 +80,7 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
@@ -589,7 +593,7 @@ public class MetadataBuildingProcess {
 	private static void handleTypes(
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
-			ConverterRegistry converterRegistry) {
+			InFlightMetadataCollector metadataCollector) {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService(ClassLoaderService.class);
 
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
@@ -603,7 +607,12 @@ public class MetadataBuildingProcess {
 
 			@Override
 			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
-				converterRegistry.addAttributeConverter( converterClass );
+				metadataCollector.getConverterRegistry().addAttributeConverter( converterClass );
+			}
+
+			@Override
+			public void contributeType(CompositeUserType<?> type) {
+				options.getCompositeUserTypes().add( type );
 			}
 		};
 
@@ -627,9 +636,7 @@ public class MetadataBuildingProcess {
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
 		// Capture the dialect configured JdbcTypes so that we can detect if a TypeContributor overwrote them,
 		// which has precedence over the fallback and preferred type registrations
-		final JdbcType dialectUuidDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.UUID );
 		final JdbcType dialectArrayDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY );
-		final JdbcType dialectIntervalDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.INTERVAL_SECOND );
 
 		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
@@ -640,10 +647,14 @@ public class MetadataBuildingProcess {
 		final int preferredSqlTypeCodeForUuid = getPreferredSqlTypeCodeForUuid( serviceRegistry );
 		if ( preferredSqlTypeCodeForUuid != SqlTypes.UUID ) {
 			adaptToPreferredSqlTypeCode(
+					typeConfiguration,
 					jdbcTypeRegistry,
-					dialectUuidDescriptor,
-					SqlTypes.UUID,
-					preferredSqlTypeCodeForUuid
+					preferredSqlTypeCodeForUuid,
+					UUID.class,
+					StandardBasicTypes.UUID.getName(),
+					"org.hibernate.type.PostgresUUIDType",
+					"uuid",
+					"pg-uuid"
 			);
 		}
 		else {
@@ -666,10 +677,12 @@ public class MetadataBuildingProcess {
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {
 			adaptToPreferredSqlTypeCode(
+					typeConfiguration,
 					jdbcTypeRegistry,
-					dialectIntervalDescriptor,
-					SqlTypes.INTERVAL_SECOND,
-					preferredSqlTypeCodeForDuration
+					preferredSqlTypeCodeForDuration,
+					Duration.class,
+					StandardBasicTypes.DURATION.getName(),
+					"org.hibernate.type.DurationType"
 			);
 		}
 		else {
@@ -703,6 +716,13 @@ public class MetadataBuildingProcess {
 
 		// add explicit application registered types
 		typeConfiguration.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
+		for ( CompositeUserType<?> compositeUserType : options.getCompositeUserTypes() ) {
+			//noinspection unchecked
+			metadataCollector.registerCompositeUserType(
+					compositeUserType.returnedClass(),
+					(Class<? extends CompositeUserType<?>>) compositeUserType.getClass()
+			);
+		}
 
 		final JdbcType timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );
 		if ( timestampWithTimeZoneOverride != null ) {
@@ -714,7 +734,15 @@ public class MetadataBuildingProcess {
 		}
 		final int preferredSqlTypeCodeForInstant = getPreferredSqlTypeCodeForInstant( serviceRegistry );
 		if ( preferredSqlTypeCodeForInstant != SqlTypes.TIMESTAMP_UTC ) {
-			adaptToPreferredSqlTypeCodeForInstant( typeConfiguration, jdbcTypeRegistry, preferredSqlTypeCodeForInstant );
+			adaptToPreferredSqlTypeCode(
+					typeConfiguration,
+					jdbcTypeRegistry,
+					preferredSqlTypeCodeForInstant,
+					Instant.class,
+					StandardBasicTypes.INSTANT.getName(),
+					"org.hibernate.type.InstantType",
+					"instant"
+			);
 		}
 	}
 
@@ -732,23 +760,24 @@ public class MetadataBuildingProcess {
 		// else warning?
 	}
 
-	private static void adaptToPreferredSqlTypeCodeForInstant(
+	private static void adaptToPreferredSqlTypeCode(
 			TypeConfiguration typeConfiguration,
 			JdbcTypeRegistry jdbcTypeRegistry,
-			int preferredSqlTypeCodeForInstant) {
+			int preferredSqlTypeCode,
+			Class<?> javaType,
+			String name,
+			String... additionalKeys) {
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<?> instantType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.getDescriptor( Instant.class ),
-				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForInstant ),
-				"instant"
+		final BasicType<?> basicType = new NamedBasicTypeImpl<>(
+				javaTypeRegistry.getDescriptor( javaType ),
+				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCode ),
+				name
 		);
-		basicTypeRegistry.register(
-				instantType,
-				"org.hibernate.type.InstantType",
-				Instant.class.getSimpleName(),
-				Instant.class.getName()
-		);
+		final String[] keys = Arrays.copyOf( additionalKeys, additionalKeys.length + 2 );
+		keys[additionalKeys.length] = javaType.getSimpleName();
+		keys[additionalKeys.length + 1] = javaType.getName();
+		basicTypeRegistry.register( basicType, keys );
 	}
 
 	private static void adaptTimeTypesToDefaultTimeZoneStorage(

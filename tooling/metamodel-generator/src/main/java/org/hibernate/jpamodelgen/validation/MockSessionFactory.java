@@ -384,8 +384,18 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return null;
+	}
+
+	@Override
+	public JavaType<Object> getTenantIdentifierJavaType() {
+		return null;
+	}
+
+	@Override
+	public boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return MetadataBuildingContext.super.isPreferJavaTimeJdbcTypesEnabled();
 	}
 
 	@Override
@@ -427,7 +437,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public NativeQueryInterpreter getNativeQueryInterpreter() {
-		return new NativeQueryInterpreterStandardImpl();
+		return new NativeQueryInterpreterStandardImpl( this.getNativeJdbcParametersIgnored() );
 	}
 
 	@Override

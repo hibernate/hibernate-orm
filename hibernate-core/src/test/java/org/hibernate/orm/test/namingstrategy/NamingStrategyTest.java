@@ -47,7 +47,7 @@ public class NamingStrategyTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	public void testDatabaseColumnNames() {
 		PersistentClass classMapping = getMetadata().getEntityBinding( Customers.class.getName() );
-		Column stateColumn = (Column) classMapping.getProperty( "specified_column" ).getColumnIterator().next();
+		Column stateColumn = (Column) classMapping.getProperty( "specified_column" ).getSelectables().get( 0 );
 		assertEquals( "CN_specified_column", stateColumn.getName() );
 	}
 
@@ -55,9 +55,9 @@ public class NamingStrategyTest extends BaseSessionFactoryFunctionalTest {
 	@TestForIssue(jiraKey = "HHH-5848")
 	public void testDatabaseTableNames() {
 		PersistentClass classMapping = getMetadata().getEntityBinding( Item.class.getName() );
-		Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getColumnIterator().next();
+		Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getSelectables().get( 0 );
 		assertEquals( "TAB_ITEMS_SEC", secTabColumn.getValue().getTable().getName() );
-		Column tabColumn = (Column) classMapping.getProperty( "price" ).getColumnIterator().next();
+		Column tabColumn = (Column) classMapping.getProperty( "price" ).getSelectables().get( 0 );
 		assertEquals( "TAB_ITEMS", tabColumn.getValue().getTable().getName() );
 	}
 }

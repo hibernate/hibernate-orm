@@ -7,7 +7,6 @@
 package org.hibernate.envers.boot.model;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmKeyType;
@@ -70,9 +69,9 @@ public class Join implements AttributeContainer, Bindable<JaxbHbmSecondaryTableT
 	}
 
 	public void addKeyColumnsFromValue(Value value) {
-		final Iterator<Selectable> iterator = value.getColumnIterator();
-		while ( iterator.hasNext() ) {
-			keyColumns.add( Column.from( iterator.next() ) );
+		final List<Selectable> selectables = value.getSelectables();
+		for ( Selectable s : selectables ) {
+			keyColumns.add( Column.from( s ) );
 		}
 	}
 

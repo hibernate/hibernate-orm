@@ -246,6 +246,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				fetchedPath,
 				fetchedAttribute,
 				collectionTableGroup,
+				true,
 				fetchParent,
 				creationState
 		);

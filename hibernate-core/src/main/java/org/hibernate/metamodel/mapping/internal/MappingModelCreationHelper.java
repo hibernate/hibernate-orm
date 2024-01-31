@@ -101,7 +101,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_DEBUG_ENABLED;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -195,6 +195,8 @@ public class MappingModelCreationHelper {
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer temporalPrecision,
+			boolean isLob,
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
@@ -244,6 +246,8 @@ public class MappingModelCreationHelper {
 				length,
 				precision,
 				scale,
+				temporalPrecision,
+				isLob,
 				nullable,
 				insertable,
 				updateable,
@@ -513,7 +517,8 @@ public class MappingModelCreationHelper {
 						index.isColumnUpdateable( 0 ),
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
 						collectionDescriptor,
@@ -566,7 +571,8 @@ public class MappingModelCreationHelper {
 						index.isColumnUpdateable( 0 ),
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
 						collectionDescriptor,
@@ -675,7 +681,8 @@ public class MappingModelCreationHelper {
 				style,
 				cascadeStyle,
 				declaringType,
-				collectionDescriptor
+				collectionDescriptor,
+				creationProcess
 		) );
 
 		creationProcess.registerInitializationCallback(
@@ -763,9 +770,8 @@ public class MappingModelCreationHelper {
 
 		if ( keyType instanceof BasicType ) {
 			assert bootValueMappingKey.getColumnSpan() == 1;
-			assert fkTargetPart instanceof BasicValuedModelPart;
 
-			final BasicValuedModelPart simpleFkTargetPart = (BasicValuedModelPart) fkTargetPart;
+			final BasicValuedModelPart simpleFkTargetPart = castNonNull( fkTargetPart.asBasicValuedModelPart() );
 
 			final String keyTableExpression = collectionTableName;//getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess );
 			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
@@ -777,7 +783,8 @@ public class MappingModelCreationHelper {
 					bootValueMappingKey.isColumnUpdateable( 0 ),
 					false,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 
 			final SimpleForeignKeyDescriptor keyDescriptor = new SimpleForeignKeyDescriptor(
@@ -914,9 +921,9 @@ public class MappingModelCreationHelper {
 			fkTarget = referencedEntityDescriptor.findByPath( bootValueMapping.getReferencedPropertyName() );
 		}
 
-		if ( fkTarget instanceof BasicValuedModelPart ) {
-			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
-			final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
+		final BasicValuedModelPart simpleFkTarget = fkTarget.asBasicValuedModelPart();
+		if ( simpleFkTarget != null ) {
+			final Iterator<Selectable> columnIterator = bootValueMapping.getSelectables().iterator();
 			final Table table = bootValueMapping.getTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
 			final PropertyAccess declaringKeyPropertyAccess;
@@ -953,7 +960,8 @@ public class MappingModelCreationHelper {
 						value.isColumnUpdateable( i ),
 						((SimpleValue) value).isPartitionKey(),
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				i++;
 			}
@@ -968,7 +976,8 @@ public class MappingModelCreationHelper {
 						value.isColumnUpdateable( 0 ),
 						((SimpleValue) value).isPartitionKey(),
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 			}
 
@@ -1115,7 +1124,8 @@ public class MappingModelCreationHelper {
 					insertable,
 					updateable,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 		}
 		else {
@@ -1139,7 +1149,8 @@ public class MappingModelCreationHelper {
 					insertable,
 					updateable,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 		}
 		if ( inverse ) {
@@ -1319,7 +1330,8 @@ public class MappingModelCreationHelper {
 					updatable,
 					false,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
@@ -1416,7 +1428,8 @@ public class MappingModelCreationHelper {
 					basicElement.isPartitionKey(),
 					true, // element collection does not support null elements
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
@@ -1584,8 +1597,7 @@ public class MappingModelCreationHelper {
 			return new SqlTuple( columnReferences, modelPart );
 		}
 		else {
-			assert modelPart instanceof BasicValuedModelPart;
-			final BasicValuedModelPart basicPart = (BasicValuedModelPart) modelPart;
+			final BasicValuedModelPart basicPart = castNonNull( modelPart.asBasicValuedModelPart() );
 			final String qualifier;
 			if ( tableGroup == null ) {
 				qualifier = basicPart.getContainingTableExpression();
@@ -1710,7 +1722,7 @@ public class MappingModelCreationHelper {
 					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
 				if ( lazy ) {
-					if ( MAPPING_MODEL_CREATION_DEBUG_ENABLED ) {
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isDebugEnabled() ) {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 								"Forcing FetchTiming.IMMEDIATE for to-one association : %s.%s",
 								declaringType.getNavigableRole(),

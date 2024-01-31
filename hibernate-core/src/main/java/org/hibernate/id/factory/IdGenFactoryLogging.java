@@ -20,7 +20,4 @@ import org.jboss.logging.Logger;
 public interface IdGenFactoryLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".idgen.factory";
 	Logger ID_GEN_FAC_LOGGER = Logger.getLogger( LOGGER_NAME );
-
-	boolean IS_TRACE_ENABLE = ID_GEN_FAC_LOGGER.isTraceEnabled();
-	boolean IS_DEBUG_ENABLE = ID_GEN_FAC_LOGGER.isDebugEnabled();
 }

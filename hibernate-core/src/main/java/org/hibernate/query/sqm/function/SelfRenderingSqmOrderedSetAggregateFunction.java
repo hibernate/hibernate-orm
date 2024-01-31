@@ -35,6 +35,10 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 
 	private final SqmOrderByClause withinGroup;
 
+	/**
+	 * @deprecated Use {@link #SelfRenderingSqmOrderedSetAggregateFunction(SqmFunctionDescriptor, FunctionRenderer, List, SqmPredicate, SqmOrderByClause, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, NodeBuilder, String)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public SelfRenderingSqmOrderedSetAggregateFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderingSupport renderingSupport,
@@ -60,6 +64,31 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		this.withinGroup = withinGroupClause;
 	}
 
+	public SelfRenderingSqmOrderedSetAggregateFunction(
+			SqmFunctionDescriptor descriptor,
+			FunctionRenderer renderer,
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			SqmOrderByClause withinGroupClause,
+			ReturnableType<T> impliedResultType,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver,
+			NodeBuilder nodeBuilder,
+			String name) {
+		super(
+				descriptor,
+				renderer,
+				arguments,
+				filter,
+				impliedResultType,
+				argumentsValidator,
+				returnTypeResolver,
+				nodeBuilder,
+				name
+		);
+		this.withinGroup = withinGroupClause;
+	}
+
 	@Override
 	public SelfRenderingSqmOrderedSetAggregateFunction<T> copy(SqmCopyContext context) {
 		final SelfRenderingSqmOrderedSetAggregateFunction<T> existing = context.getCopy( this );
@@ -74,7 +103,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 				this,
 				new SelfRenderingSqmOrderedSetAggregateFunction<>(
 						getFunctionDescriptor(),
-						getRenderingSupport(),
+						getFunctionRenderer(),
 						arguments,
 						getFilter() == null ? null : getFilter().copy( context ),
 						withinGroup == null ? null : withinGroup.copy( context ),
@@ -91,9 +120,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 
 	@Override
 	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
-		final ReturnableType<?> resultType = resolveResultType(
-				walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-		);
+		final ReturnableType<?> resultType = resolveResultType( walker );
 
 		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 		ArgumentsValidator argumentsValidator = getArgumentsValidator();
@@ -122,7 +149,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		}
 		return new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
 				getFunctionName(),
-				getRenderingSupport(),
+				getFunctionRenderer(),
 				arguments,
 				getFilter() == null ? null : walker.visitNestedTopLevelPredicate( getFilter() ),
 				withinGroup,

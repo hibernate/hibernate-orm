@@ -113,6 +113,21 @@ public enum CommunityDatabase {
 		}
 	},
 
+	ALTIBASE {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new AltibaseDialect( info );
+		}
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return "Altibase".equalsIgnoreCase( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "Altibase.jdbc.driver.AltibaseDriver";
+		}
+	},
+
 	MIMER {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {

@@ -17,14 +17,13 @@ import java.util.function.Consumer;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -155,30 +154,18 @@ public class StoredProcedureTest {
 
 
 	private void createProcedures(EntityManagerFactory emf, Consumer<Statement> consumer) {
-		final JdbcConnectionAccess connectionAccess = emf.unwrap( SessionFactoryImplementor.class ).getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getBootstrapJdbcConnectionAccess();
-		try (Connection conn = connectionAccess.obtainConnection()) {
-			conn.setAutoCommit( false );
+		try {
+			TransactionUtil.doWithJDBC(
+					emf.unwrap( SessionFactoryImplementor.class ).getServiceRegistry(),
+					connection -> {
+						connection.setAutoCommit( false );
 
-			try (Statement statement = conn.createStatement()) {
-
-				consumer.accept( statement );
-			}
-			finally {
-				try {
-					conn.commit();
-				}
-				catch (SQLException e) {
-					System.out.println( "Unable to commit transaction after creating creating procedures" );
-				}
-
-				try {
-					connectionAccess.releaseConnection( conn );
-				}
-				catch (SQLException ignore) {
-				}
-			}
+						try (Statement statement = connection.createStatement()) {
+							consumer.accept( statement );
+						}
+						connection.commit();
+					}
+			);
 		}
 		catch (SQLException e) {
 			throw new RuntimeException( "Unable to create stored procedures", e );

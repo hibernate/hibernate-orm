@@ -8,20 +8,11 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.ReturnableType;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.function.FunctionRenderingSupport;
-import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
-import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
@@ -49,6 +40,7 @@ public class DB2FormatEmulation extends FormatFunction {
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression datetime = (Expression) arguments.get( 0 );
 		sqlAppender.appendSql( "varchar_format(" );

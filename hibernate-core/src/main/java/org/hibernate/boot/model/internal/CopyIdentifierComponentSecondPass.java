@@ -12,8 +12,6 @@ import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.MutableInteger;
@@ -69,26 +67,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		final PersistentClass referencedPersistentClass = persistentClasses.get( referencedEntityName );
-		if ( referencedPersistentClass == null ) {
-			// TODO: much better error message if this is something that can really happen!
-			throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'");
-		}
-		final KeyValue identifier = referencedPersistentClass.getIdentifier();
-		if ( !(identifier instanceof Component) ) {
-			// The entity with the @MapsId annotation has a composite
-			// id type, but the referenced entity has a basic-typed id.
-			// Therefore, the @MapsId annotation should have specified
-			// a property of the composite id that has the foreign key
-			throw new AnnotationException(
-					"Missing 'value' in '@MapsId' annotation of association '" + propertyName
-							+ "' of entity '" + component.getOwner().getEntityName()
-							+ "' with composite identifier type"
-							+ " ('@MapsId' must specify a property of the '@EmbeddedId' class which has the foreign key of '"
-							+ referencedEntityName + "')"
-			);
-		}
-
-		final Component referencedComponent = (Component) identifier;
+		final Component referencedComponent = getReferencedComponent( referencedPersistentClass );
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
@@ -113,7 +92,6 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			final Property property;
 			if ( referencedProperty.isComposite() ) {
 				property = createComponentProperty(
-						referencedPersistentClass,
 						isExplicitReference,
 						columnByReferencedName,
 						index,
@@ -133,8 +111,29 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		}
 	}
 
+	private Component getReferencedComponent(PersistentClass referencedPersistentClass) {
+		if ( referencedPersistentClass == null ) {
+			// TODO: much better error message if this is something that can really happen!
+			throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'");
+		}
+		final KeyValue identifier = referencedPersistentClass.getIdentifier();
+		if ( !(identifier instanceof Component) ) {
+			// The entity with the @MapsId annotation has a composite
+			// id type, but the referenced entity has a basic-typed id.
+			// Therefore, the @MapsId annotation should have specified
+			// a property of the composite id that has the foreign key
+			throw new AnnotationException(
+					"Missing 'value' in '@MapsId' annotation of association '" + propertyName
+							+ "' of entity '" + component.getOwner().getEntityName()
+							+ "' with composite identifier type"
+							+ " ('@MapsId' must specify a property of the '@EmbeddedId' class which has the foreign key of '"
+							+ referencedEntityName + "')"
+			);
+		}
+		return (Component) identifier;
+	}
+
 	private Property createComponentProperty(
-			PersistentClass referencedPersistentClass,
 			boolean isExplicitReference,
 			Map<String, AnnotatedJoinColumn> columnByReferencedName,
 			MutableInteger index,
@@ -156,12 +155,21 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 
 		for ( Property referencedComponentProperty : referencedValue.getProperties() ) {
 			if ( referencedComponentProperty.isComposite() ) {
-				Property componentProperty = createComponentProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
-				value.addProperty( componentProperty );
+				value.addProperty( createComponentProperty(
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedComponentProperty
+				) );
 			}
 			else {
-				Property componentProperty = createSimpleProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
-				value.addProperty( componentProperty );
+				value.addProperty( createSimpleProperty(
+						referencedValue.getOwner(),
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedComponentProperty
+				) );
 			}
 		}
 
@@ -228,10 +236,11 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 						: joinColumn.getName();
 
 				final Database database = buildingContext.getMetadataCollector().getDatabase();
-				final PhysicalNamingStrategy physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
-				final Identifier explicitName = database.toIdentifier( columnName );
-				final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName( explicitName, database.getJdbcEnvironment() );
-				value.addColumn( new Column( physicalName.render( database.getDialect() ) ) );
+				final String physicalName =
+						buildingContext.getBuildingOptions().getPhysicalNamingStrategy()
+								.toPhysicalColumnName( database.toIdentifier( columnName ), database.getJdbcEnvironment() )
+								.render( database.getDialect() );
+				value.addColumn( new Column( physicalName ) );
 				if ( joinColumn != null ) {
 					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );
 					joinColumn.linkWithValue( value );
@@ -243,7 +252,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	}
 
 	private void applyComponentColumnSizeValueToJoinColumn(Column column, AnnotatedJoinColumn joinColumn) {
-		Column mappingColumn = joinColumn.getMappingColumn();
+		final Column mappingColumn = joinColumn.getMappingColumn();
 		mappingColumn.setLength( column.getLength() );
 		mappingColumn.setPrecision( column.getPrecision() );
 		mappingColumn.setScale( column.getScale() );

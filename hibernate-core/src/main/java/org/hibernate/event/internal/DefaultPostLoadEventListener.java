@@ -51,7 +51,7 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 		switch ( entry.getLockMode() ) {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				final Object nextVersion = entry.getPersister()
-						.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
+						.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
 				entry.forceLocked( entity, nextVersion );
 				break;
 			case OPTIMISTIC_FORCE_INCREMENT:

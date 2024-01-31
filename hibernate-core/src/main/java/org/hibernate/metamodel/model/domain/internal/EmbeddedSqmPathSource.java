@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -47,7 +48,9 @@ public class EmbeddedSqmPathSource<J>
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		return new SqmEmbeddedValuedSimplePath<>(
-				PathHelper.append( lhs, this, intermediatePathSource ),
+				pathModel instanceof SqmJoinable<?, ?>
+						? ( (SqmJoinable<?, ?>) pathModel ).createNavigablePath( lhs, null )
+						: PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,
 				lhs,
 				lhs.nodeBuilder()

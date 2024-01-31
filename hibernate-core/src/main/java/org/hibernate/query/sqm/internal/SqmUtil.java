@@ -29,7 +29,9 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
@@ -42,7 +44,9 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -50,11 +54,15 @@ import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -64,6 +72,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
@@ -116,6 +126,37 @@ public class SqmUtil {
 				hqlString,
 				null
 		);
+	}
+
+	/**
+	 * Utility that returns {@code true} if the specified {@link SqmPath sqmPath} should be
+	 * dereferenced using the target table mapping, i.e. when the path's lhs is an explicit join.
+	 */
+	public static boolean needsTargetTableMapping(SqmPath<?> sqmPath, ModelPartContainer modelPartContainer) {
+		return modelPartContainer.getPartMappingType() != modelPartContainer
+				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
+				&& modelPartContainer.getPartMappingType() instanceof ManagedMappingType;
+	}
+
+	/**
+	 * Utility that returns {@code false} when the provided {@link SqmPath sqmPath} is
+	 * a join that cannot be dereferenced through the foreign key on the associated table,
+	 * i.e. a join that's neither {@linkplain SqmJoinType#INNER} nor {@linkplain SqmJoinType#LEFT}
+	 * or one that has an explicit on clause predicate.
+	 */
+	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath) {
+		if ( sqmPath instanceof SqmJoin<?, ?> ) {
+			final SqmJoin<?, ?> sqmJoin = (SqmJoin<?, ?>) sqmPath;
+			switch ( sqmJoin.getSqmJoinType() ) {
+				case INNER:
+				case LEFT:
+					return !( sqmJoin instanceof SqmQualifiedJoin<?, ?>)
+							|| ( (SqmQualifiedJoin<?, ?>) sqmJoin ).getJoinPredicate() == null;
+				default:
+					return false;
+			}
+		}
+		return false;
 	}
 
 	public static Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> generateJdbcParamsXref(
@@ -439,12 +480,19 @@ public class SqmUtil {
 			List<SqmParameter<?>> sqmParameters,
 			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SessionFactoryImplementor sessionFactory) {
-		if ( binding.getBindType() instanceof Bindable ) {
-			return (Bindable) binding.getBindType();
+
+		{
+			final Bindable tryOne = asBindable( binding.getBindType() );
+			if ( tryOne != null ) {
+				return tryOne;
+			}
 		}
 
-		if ( parameter.getHibernateType() instanceof Bindable ) {
-			return (Bindable) parameter.getHibernateType();
+		{
+			final Bindable tryTwo = asBindable( parameter.getHibernateType() );
+			if ( tryTwo != null ) {
+				return tryTwo;
+			}
 		}
 
 		if ( binding.getType() != null ) {
@@ -463,6 +511,35 @@ public class SqmUtil {
 
 		// assume we have (or can create) a mapping for the parameter's Java type
 		return typeConfiguration.standardBasicTypeForJavaType( parameter.getParameterType() );
+	}
+
+	/**
+	 * Utility to mitigate issues related to type pollution.
+	 * Returns the passes object after casting it to Bindable,
+	 * if the type is compatible.
+	 * If it's not, null will be returned.
+	 * @param o any object instance
+	 * @return a reference to the same object o, but of type Bindable if possible, or null.
+	 */
+	private static Bindable asBindable(final Object o) {
+		if ( o == null ) {
+			return null;
+		}
+		//There's a high chance that we're dealing with a BasicTypeImpl, or a subclass of it.
+		else if ( o instanceof BasicTypeImpl ) {
+			return (BasicTypeImpl) o;
+		}
+		//Alternatively, chances are good that we're dealing with an ConvertedBasicTypeImpl.
+		else if ( o instanceof ConvertedBasicTypeImpl ) {
+			return (ConvertedBasicTypeImpl) o;
+		}
+		else {
+			//Eventually fallback to the standard check for completeness:
+			if ( o instanceof Bindable ) {
+				return (Bindable) o;
+			}
+			return null;
+		}
 	}
 
 	public static SqmStatement.ParameterResolutions resolveParameters(SqmStatement<?> statement) {

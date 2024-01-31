@@ -8,6 +8,7 @@ package org.hibernate.boot.archive.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Serializable;
 
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 
@@ -16,7 +17,7 @@ import org.hibernate.boot.archive.spi.InputStreamAccess;
  *
  * @author Steve Ebersole
  */
-public class ByteArrayInputStreamAccess implements InputStreamAccess {
+public class ByteArrayInputStreamAccess implements InputStreamAccess, Serializable {
 	private final String name;
 	private final byte[] bytes;
 

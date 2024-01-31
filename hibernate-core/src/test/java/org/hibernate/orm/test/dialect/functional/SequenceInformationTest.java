@@ -30,6 +30,7 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
@@ -49,7 +50,7 @@ public class SequenceInformationTest extends
 
 	@Override
 	public EntityManagerFactory produceEntityManagerFactory() {
-		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( Product.class )
 				.addAnnotatedClass( Vehicle.class )

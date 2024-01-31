@@ -10,13 +10,14 @@ import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.tool.schema.spi.Exporter;
+
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * An {@link Exporter} for {@linkplain Index indexes}.
@@ -37,45 +38,50 @@ public class StandardIndexExporter implements Exporter<Index> {
 
 	@Override
 	public String[] getSqlCreateStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-		final String tableName = context.format( index.getTable().getQualifiedTableName() );
+		final StringBuilder createIndex = new StringBuilder()
+				.append( dialect.getCreateIndexString( index.isUnique() ) )
+				.append( " " )
+				.append( indexName( index, context, metadata ) )
+				.append( " on " )
+				.append( context.format( index.getTable().getQualifiedTableName() ) )
+				.append( " (" );
+		appendColumnList( index, createIndex );
+		createIndex.append( ")" );
+		return new String[] { createIndex.toString() };
+	}
 
-		final String indexNameForCreation;
+	private String indexName(Index index, SqlStringGenerationContext context, Metadata metadata) {
 		if ( dialect.qualifyIndexName() ) {
-			indexNameForCreation = context.format(
+			final QualifiedTableName qualifiedTableName = index.getTable().getQualifiedTableName();
+			return context.format(
 					new QualifiedNameImpl(
-							index.getTable().getQualifiedTableName().getCatalogName(),
-							index.getTable().getQualifiedTableName().getSchemaName(),
-							jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getQuotedName( dialect ) )
+							qualifiedTableName.getCatalogName(),
+							qualifiedTableName.getSchemaName(),
+							metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper()
+									.toIdentifier( index.getQuotedName( dialect ) )
 					)
 			);
 		}
 		else {
-			indexNameForCreation = index.getName();
+			return index.getName();
 		}
-		final StringBuilder buf = new StringBuilder()
-				.append( "create index " )
-				.append( indexNameForCreation )
-				.append( " on " )
-				.append( tableName )
-				.append( " (" );
+	}
 
+	private void appendColumnList(Index index, StringBuilder createIndex) {
 		boolean first = true;
-		final Map<Column, String> columnOrderMap = index.getColumnOrderMap();
-		for ( Column column : index.getColumns() ) {
+		final Map<Selectable, String> columnOrderMap = index.getSelectableOrderMap();
+		for ( Selectable column : index.getSelectables() ) {
 			if ( first ) {
 				first = false;
 			}
 			else {
-				buf.append( ", " );
+				createIndex.append( ", " );
 			}
-			buf.append( ( column.getQuotedName( dialect ) ) );
+			createIndex.append( column.getText( dialect ) );
 			if ( columnOrderMap.containsKey( column ) ) {
-				buf.append( " " ).append( columnOrderMap.get( column ) );
+				createIndex.append( " " ).append( columnOrderMap.get( column ) );
 			}
 		}
-		buf.append( ")" );
-		return new String[] { buf.toString() };
 	}
 
 	@Override
@@ -87,7 +93,7 @@ public class StandardIndexExporter implements Exporter<Index> {
 		final String tableName = context.format( index.getTable().getQualifiedTableName() );
 
 		final String indexNameForCreation = dialect.qualifyIndexName()
-				? StringHelper.qualify( tableName, index.getName() )
+				? qualify( tableName, index.getName() )
 				: index.getName();
 
 		return new String[] { "drop index " + indexNameForCreation };

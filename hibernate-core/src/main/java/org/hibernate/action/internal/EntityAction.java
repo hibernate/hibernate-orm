@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
@@ -136,7 +134,7 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public final Serializable[] getPropertySpaces() {
+	public final String[] getPropertySpaces() {
 		return persister.getPropertySpaces();
 	}
 

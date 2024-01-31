@@ -6,11 +6,12 @@
  */
 package org.hibernate.sql.results.jdbc.internal;
 
+import java.util.BitSet;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.results.ResultsLogger;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -21,52 +22,46 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * @author Steve Ebersole
  */
 public class JdbcValuesCacheHit extends AbstractJdbcValues {
-	private static final Object[][] NO_DATA = new Object[0][];
-
-	private Object[][] cachedData;
+	private List<?> cachedResults;
 	private final int numberOfRows;
 	private final JdbcValuesMapping resolvedMapping;
+	private final int[] valueIndexesToCacheIndexes;
+	private final int offset;
 	private int position = -1;
 
-	public JdbcValuesCacheHit(Object[][] cachedData, JdbcValuesMapping resolvedMapping) {
-		this.cachedData = cachedData;
-		this.numberOfRows = cachedData.length;
-		this.resolvedMapping = resolvedMapping;
-	}
-
 	public JdbcValuesCacheHit(List<?> cachedResults, JdbcValuesMapping resolvedMapping) {
-		this( extractData( cachedResults ), resolvedMapping );
-	}
+		this.cachedResults = cachedResults;
+		this.offset = !cachedResults.isEmpty() && cachedResults.get( 0 ) instanceof JdbcValuesMetadata ? 1 : 0;
+		this.numberOfRows = cachedResults.size() - offset;
+		this.resolvedMapping = resolvedMapping;
 
-	private static Object[][] extractData(List<?> cachedResults) {
-		if ( CollectionHelper.isEmpty( cachedResults ) ) {
-			return NO_DATA;
+		final BitSet valueIndexesToCache = new BitSet();
+		for ( DomainResult<?> domainResult : resolvedMapping.getDomainResults() ) {
+			domainResult.collectValueIndexesToCache( valueIndexesToCache );
 		}
-
-		final Object[][] data;
-		if ( cachedResults.get( 0 ) instanceof JdbcValuesMetadata ) {
-			final int end = cachedResults.size() - 1;
-			data = new Object[end][];
-			for ( int i = 0; i < end; i++ ) {
-				final Object[] row = (Object[]) cachedResults.get( i + 1 );
-				data[i] = row;
-			}
+		if ( valueIndexesToCache.nextClearBit( 0 ) == -1 ) {
+			this.valueIndexesToCacheIndexes = null;
 		}
 		else {
-			data = new Object[cachedResults.size()][];
-			for ( int i = 0; i < cachedResults.size(); i++ ) {
-				final Object[] row = (Object[]) cachedResults.get( i );
-				data[i] = row;
+			final int[] valueIndexesToCacheIndexes = new int[valueIndexesToCache.length()];
+			int cacheIndex = 0;
+			for ( int i = 0; i < valueIndexesToCacheIndexes.length; i++ ) {
+				if ( valueIndexesToCache.get( i ) ) {
+					valueIndexesToCacheIndexes[i] = cacheIndex++;
+				}
+				else {
+					valueIndexesToCacheIndexes[i] = -1;
+				}
 			}
-		}
 
-		return data;
+			this.valueIndexesToCacheIndexes = valueIndexesToCacheIndexes;
+		}
 	}
 
 	@Override
 	protected boolean processNext(RowProcessingState rowProcessingState) {
 		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-				"JdbcValuesCacheHit#processNext : position = %i; numberOfRows = %i",
+				"JdbcValuesCacheHit#processNext : position = %d; numberOfRows = %d",
 				position,
 				numberOfRows
 		);
@@ -87,7 +82,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	@Override
 	protected boolean processPrevious(RowProcessingState rowProcessingState) {
 		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-				"JdbcValuesCacheHit#processPrevious : position = %i; numberOfRows = %i",
+				"JdbcValuesCacheHit#processPrevious : position = %d; numberOfRows = %d",
 				position, numberOfRows
 		);
 
@@ -107,7 +102,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	@Override
 	protected boolean processScroll(int numberOfRows, RowProcessingState rowProcessingState) {
 		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-				"JdbcValuesCacheHit#processScroll(%i) : position = %i; numberOfRows = %i",
+				"JdbcValuesCacheHit#processScroll(%d) : position = %d; numberOfRows = %d",
 				numberOfRows, position, this.numberOfRows
 		);
 
@@ -132,7 +127,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	@Override
 	protected boolean processPosition(int position, RowProcessingState rowProcessingState) {
 		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-				"JdbcValuesCacheHit#processPosition(%i) : position = %i; numberOfRows = %i",
+				"JdbcValuesCacheHit#processPosition(%d) : position = %d; numberOfRows = %d",
 				position, this.position, this.numberOfRows
 		);
 
@@ -143,7 +138,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 			// we need to subtract it from `numberOfRows`
 			final int newPosition = numberOfRows + position;
 			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
-					"Translated negative absolute position `%i` into `%i` based on `%i` number of rows",
+					"Translated negative absolute position `%d` into `%d` based on `%d` number of rows",
 					position,
 					newPosition,
 					numberOfRows
@@ -153,7 +148,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 		if ( position > numberOfRows ) {
 			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
-					"Absolute position `%i` exceeded number of rows `%i`",
+					"Absolute position `%d` exceeded number of rows `%d`",
 					position,
 					numberOfRows
 			);
@@ -223,19 +218,21 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	}
 
 	@Override
-	public Object[] getCurrentRowValuesArray() {
-		if ( position >= numberOfRows ) {
-			return null;
-		}
-		return cachedData[position];
-	}
-
-	@Override
 	public Object getCurrentRowValue(int valueIndex) {
 		if ( position >= numberOfRows ) {
 			return null;
 		}
-		return cachedData[position][valueIndex];
+		final Object row = cachedResults.get( position + offset );
+		if ( valueIndexesToCacheIndexes == null ) {
+			return ( (Object[]) row )[valueIndex];
+		}
+		else if ( row.getClass() != Object[].class ) {
+			assert valueIndexesToCacheIndexes[valueIndex] == 0;
+			return row;
+		}
+		else {
+			return ( (Object[]) row )[valueIndexesToCacheIndexes[valueIndex]];
+		}
 	}
 
 	@Override
@@ -244,7 +241,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	public void finishUp(SharedSessionContractImplementor session) {
-		cachedData = null;
+		cachedResults = null;
 	}
 
 	@Override

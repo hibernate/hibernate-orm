@@ -15,6 +15,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
 import org.jboss.logging.Logger;
@@ -31,16 +32,15 @@ public abstract class PersistentTableStrategy {
 
 	public static final String SHORT_NAME = "persistent";
 
-	public static final String CREATE_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.create_tables";
+	public static final String CREATE_ID_TABLES = "hibernate.query.mutation_strategy.persistent.create_tables";
 
-	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.drop_tables";
+	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.persistent.drop_tables";
 
-	public static final String SCHEMA = "hibernate.hql.bulk_id_strategy.persistent.schema";
+	public static final String SCHEMA = "hibernate.query.mutation_strategy.persistent.schema";
 
-	public static final String CATALOG = "hibernate.hql.bulk_id_strategy.persistent.catalog";
+	public static final String CATALOG = "hibernate.query.mutation_strategy.persistent.catalog";
 
 	private final TemporaryTable temporaryTable;
-
 	private final SessionFactoryImplementor sessionFactory;
 
 	private boolean prepared;
@@ -56,6 +56,10 @@ public abstract class PersistentTableStrategy {
 		if ( sessionFactory.getJdbcServices().getDialect().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
 			throw new IllegalArgumentException( "Persistent ID tables cannot use AfterUseAction.DROP : " + temporaryTable.getTableExpression() );
 		}
+	}
+
+	public EntityMappingType getEntityDescriptor() {
+		return getTemporaryTable().getEntityDescriptor();
 	}
 
 	public void prepare(

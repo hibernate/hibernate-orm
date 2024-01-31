@@ -27,7 +27,7 @@ import org.junit.Test;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@RequiresDialect({H2Dialect.class})
+@RequiresDialect(H2Dialect.class)
 public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
 	private static final String SCHEMA_NAME = "ENVERS_AUDIT";
 	private Integer steId = null;

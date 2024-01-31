@@ -25,7 +25,8 @@ import static org.junit.Assert.assertNull;
  *
  * @author Steve Ebersole
  */
-@RequiresDialect({SQLServerDialect.class,SybaseDialect.class})
+@RequiresDialect(SQLServerDialect.class)
+@RequiresDialect(SybaseDialect.class)
 public class TextTest extends BaseCoreFunctionalTestCase {
 
 	@Override

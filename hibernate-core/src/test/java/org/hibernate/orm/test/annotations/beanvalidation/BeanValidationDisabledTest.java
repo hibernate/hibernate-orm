@@ -45,7 +45,7 @@ public class BeanValidationDisabledTest extends BaseNonConfigCoreFunctionalTestC
 	@Test
 	public void testDDLDisabled() {
 		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
-		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
+		Column countryColumn = (Column) classMapping.getProperty( "country" ).getSelectables().get( 0 );
 		assertTrue( "DDL constraints are applied", countryColumn.isNullable() );
 	}
 

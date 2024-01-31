@@ -21,6 +21,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -50,8 +51,10 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		return stdIndicators.getTypeConfiguration().getJdbcTypeRegistry()
-				.getDescriptor( stdIndicators.getDefaultZonedTimestampSqlType() );
+		if ( stdIndicators.isPreferJavaTimeJdbcTypesEnabled() ) {
+			return stdIndicators.getJdbcType( SqlTypes.ZONED_DATE_TIME );
+		}
+		return stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
 	@Override @SuppressWarnings("unchecked")

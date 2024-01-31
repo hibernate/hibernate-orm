@@ -6,20 +6,18 @@
  */
 package org.hibernate.sql.results.graph.embeddable;
 
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -33,6 +31,8 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
@@ -44,6 +44,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private final NavigablePath navigablePath;
 	private final EmbeddableValuedModelPart embedded;
 	private final FetchParentAccess fetchParentAccess;
+	private final FetchParentAccess owningParent;
+	private final EntityMappingType ownedModelPartDeclaringType;
 	private final boolean isPartOfKey;
 	private final boolean createEmptyCompositesEnabled;
 	private final SessionFactoryImplementor sessionFactory;
@@ -58,41 +60,23 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	public AbstractEmbeddableInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
-			FetchParentAccess fetchParentAccess,
+			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		this.navigablePath = resultDescriptor.getNavigablePath();
 		this.embedded = resultDescriptor.getReferencedMappingContainer();
-		this.fetchParentAccess = fetchParentAccess;
+		this.fetchParentAccess = parentAccess;
 
 		final EmbeddableMappingType embeddableTypeDescriptor = embedded.getEmbeddableTypeDescriptor();
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		this.rowState = new Object[ size ];
 
-		this.isPartOfKey = isPartOfKey( embedded, navigablePath );
+		this.isPartOfKey = embedded.isEntityIdentifierMapping() || Initializer.isPartOfKey( navigablePath, parentAccess );
+		this.owningParent = FetchParentAccess.determineOwningParent( parentAccess );
+		this.ownedModelPartDeclaringType = FetchParentAccess.determineOwnedModelPartDeclaringType( embedded, parentAccess, owningParent );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
 		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
-
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		this.assemblers = createAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
-	}
-
-	private static boolean isPartOfKey(EmbeddableValuedModelPart modelPart, NavigablePath navigablePath) {
-		return modelPart.isEntityIdentifierMapping()
-				|| isPartOfKey( navigablePath )
-				|| modelPart.getNavigableRole() != null && isPartOfKey( modelPart.getNavigableRole() );
-	}
-
-	private static boolean isPartOfKey(NavigablePath navigablePath) {
-		return ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
-				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
-				|| navigablePath instanceof EntityIdentifierNavigablePath
-				|| navigablePath.getParent().getParent() != null && isPartOfKey( navigablePath.getParent() );
-	}
-
-	private static boolean isPartOfKey(NavigableRole navigableRole) {
-		final NavigableRole parent = navigableRole.getParent();
-		return parent != null
-				&& ( parent.getLocalName().equals( EntityIdentifierMapping.ID_ROLE_NAME ) || isPartOfKey( parent ) );
 	}
 
 	protected DomainResultAssembler<?>[] createAssemblers(
@@ -124,6 +108,16 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		return fetchParentAccess;
 	}
 
+	@Override
+	public @Nullable FetchParentAccess getOwningParent() {
+		return owningParent;
+	}
+
+	@Override
+	public @Nullable EntityMappingType getOwnedModelPartDeclaringType() {
+		return ownedModelPartDeclaringType;
+	}
+
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
@@ -134,8 +128,13 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	}
 
 	@Override
+	public boolean isPartOfKey() {
+		return isPartOfKey;
+	}
+
+	@Override
 	public FetchParentAccess findFirstEntityDescriptorAccess() {
-		if ( fetchParentAccess == null ) {
+		if ( fetchParentAccess == null || embedded instanceof CollectionPart ) {
 			return null;
 		}
 		return fetchParentAccess.findFirstEntityDescriptorAccess();
@@ -187,7 +186,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			case NULL:
 				return;
 			case INITIAL:
-				state = determinInitialState();
+				state = determinInitialState( processingState );
 				if ( state != State.INITIAL ) {
 					return;
 				}
@@ -204,15 +203,14 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				notifyResolutionListeners( compositeInstance );
 			case EXTRACTED:
 				if ( embedded.getParentInjectionAttributePropertyAccess() != null || embedded instanceof VirtualModelPart ) {
-					handleParentInjection( wrappedProcessingState );
+					handleParentInjection();
 
 					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( compositeInstance );
 					// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
 					// and the compositeInstance == entity, so we have to inject the row state into the entity when it finishes resolution
 					if ( lazyInitializer != null ) {
-						final Initializer parentInitializer = wrappedProcessingState.resolveInitializer( navigablePath.getParent() );
-						if ( parentInitializer != this ) {
-							( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
+						if ( fetchParentAccess != null ) {
+							fetchParentAccess.registerResolutionListener( entity -> {
 								embedded.getEmbeddableTypeDescriptor().setValues( entity, rowState );
 								state = State.INJECTED;
 							} );
@@ -226,7 +224,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 							//		interprets that as the values are not known or were all null.
 							final Object target = embedded.getEmbeddableTypeDescriptor().getRepresentationStrategy()
 									.getInstantiator()
-									.instantiate( this, sessionFactory);
+									.instantiate( this, sessionFactory );
 							state = State.INJECTED;
 							lazyInitializer.setImplementation( target );
 						}
@@ -241,6 +239,24 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				}
 			case INJECTED:
 				// Nothing to do
+		}
+	}
+
+	@Override
+	public void initializeInstanceFromParent(Object parentInstance, RowProcessingState rowProcessingState) {
+		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
+		final Object instance = attributeMapping != null
+				? attributeMapping.getValue( parentInstance )
+				: parentInstance;
+		compositeInstance = instance;
+		state = State.INJECTED;
+		if ( instance != null ) {
+			for ( DomainResultAssembler<?> assembler : assemblers ) {
+				final Initializer initializer = assembler.getInitializer();
+				if ( initializer != null ) {
+					initializer.initializeInstanceFromParent( instance, rowProcessingState );
+				}
+			}
 		}
 	}
 
@@ -270,37 +286,15 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		);
 	}
 
-	private State determinInitialState(){
-		final EntityInitializer entityInitializer = getOwningEntityInitializer();
-		if ( entityInitializer != null ) {
-			if ( entityInitializer.getParentKey() == null ) {
-				// parent instance is null;
-				return State.NULL;
-			}
-			else if ( entityInitializer.isEntityInitialized() ) {
-				// parent instance has been initialized, we do not need to inject the state
-				return State.INJECTED;
-			}
+	private State determinInitialState(RowProcessingState rowProcessingState) {
+		if ( isPartOfKey || isResultInitializer() ) {
+			assert !isParentShallowCached();
+			return State.INITIAL;
+		}
+		if ( isParentShallowCached() || shouldSkipInitializer( rowProcessingState ) ) {
+			return State.NULL;
 		}
 		return State.INITIAL;
-	}
-
-	private EntityInitializer getOwningEntityInitializer() {
-		if ( isPartOfKey ) {
-			return null;
-		}
-		FetchParentAccess parentAccess = fetchParentAccess;
-
-		while ( parentAccess != null && parentAccess.isEmbeddableInitializer() ) {
-			assert !( parentAccess.getInitializedPart() instanceof CompositeIdentifierMapping )
-					: "isPartOfKey should have been true in this case";
-			parentAccess = parentAccess.getFetchParentAccess();
-		}
-		if ( parentAccess == null ) {
-			return null;
-		}
-		final EntityInitializer entityInitializer = parentAccess.asEntityInitializer();
-		return entityInitializer;
 	}
 
 	private void extractRowState(RowProcessingState processingState) {
@@ -329,6 +323,15 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		state = stateAllNull ? State.NULL : State.EXTRACTED;
+	}
+
+	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		if ( determinInitialState( rowProcessingState ) == State.INITIAL ) {
+			for ( final DomainResultAssembler<?> assembler : assemblers ) {
+				assembler.resolveState( rowProcessingState );
+			}
+		}
 	}
 
 	private Object createCompositeInstance(NavigablePath navigablePath, SessionFactoryImplementor sessionFactory) {
@@ -366,14 +369,14 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		return fetchParentAccess.getInitializedInstance();
 	}
 
-	private void handleParentInjection(RowProcessingState processingState) {
+	private void handleParentInjection() {
 		final PropertyAccess parentInjectionAccess = embedded.getParentInjectionAttributePropertyAccess();
 		if ( parentInjectionAccess == null ) {
 			// embeddable defined no parent injection
 			return;
 		}
 
-		Initializer parentInitializer = determineParentInitializer( processingState );
+		final Initializer parentInitializer = determineParentInjectionInitializer();
 		final Object parent = determineParentInstance( parentInitializer );
 		if ( parent == null ) {
 			EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
@@ -391,54 +394,41 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		);
 
 
-		final HibernateProxy proxy;
-		if ( fetchParentAccess != null
-				&& ( proxy = ManagedTypeHelper.asHibernateProxyOrNull( parent ) ) != null ) {
-			assert parentInitializer != null;
-			assert parentInitializer instanceof EntityInitializer;
-			parentInitializer.asEntityInitializer().registerResolutionListener(
-					o ->
-							parentInjectionAccess.getSetter()
-									.set(
-											compositeInstance,
-											proxy.getHibernateLazyInitializer().getImplementation()
-									)
+		final Setter setter = parentInjectionAccess.getSetter();
+		assert setter != null;
+
+		final EntityInitializer entityInitializer;
+		if ( ( entityInitializer = findFirstEntityInitializer( parentInitializer ) ) != null ) {
+			entityInitializer.registerResolutionListener(
+					o -> setter.set( compositeInstance, o )
 			);
 		}
 		else {
-			parentInjectionAccess.getSetter().set( compositeInstance, parent );
+			setter.set( compositeInstance, parent );
 		}
 	}
 
-	private Initializer determineParentInitializer(RowProcessingState processingState){
-		// use `fetchParentAccess` if it is available - it is more efficient
-		// and the correct way to do it.
-
-		// NOTE: indicates that we are initializing a DomainResult as opposed to a Fetch
-		// todo (6.0) - this^^ does not work atm when the embeddable is the key or
-		//  element of a collection because it passes in null as the fetch-parent-access.
-		//  it should really pass the collection-initializer as the fetch-parent,
-		//  or at least the fetch-parent of the collection could get passed.
-		if ( fetchParentAccess != null ) {
-			// the embeddable being initialized is a fetch, so use the fetchParentAccess
-			// to get the parent reference
-			//
-			// at the moment, this uses the legacy behavior of injecting the "first
-			// containing entity" as the parent.  however,
-			// todo (6.x) - allow injection of containing composite as parent if
-			//  	it is the direct parent
-
-			return fetchParentAccess.findFirstEntityDescriptorAccess();
+	private @Nullable EntityInitializer findFirstEntityInitializer(Initializer initializer) {
+		final EntityInitializer entityInitializer = initializer.asEntityInitializer();
+		if ( entityInitializer != null ) {
+			return entityInitializer;
 		}
+		assert initializer.isCollectionInitializer();
+		return ( (CollectionInitializer) initializer ).findFirstEntityInitializer();
+	}
 
-		// Otherwise, fallback to determining the parent-initializer by path
-		//		todo (6.0) - this is the part that should be "subsumed" based on the
-		//			comment above
-
-		final NavigablePath parentPath = navigablePath.getParent();
-		assert parentPath != null;
-
-		return processingState.resolveInitializer( parentPath );
+	private Initializer determineParentInjectionInitializer() {
+		// Try to find the first non-embeddable fetch parent access
+		// todo (6.x) - allow injection of containing composite as parent if
+		//  	it is the direct parent
+		FetchParentAccess parentAccess = fetchParentAccess;
+		while ( parentAccess != null ) {
+			if ( !parentAccess.isEmbeddableInitializer() ) {
+				return parentAccess;
+			}
+			parentAccess = parentAccess.getFetchParentAccess();
+		}
+		throw new UnsupportedOperationException( "Injection of parent instance into embeddable result is not possible" );
 	}
 
 	private Object determineParentInstance(Initializer parentInitializer) {
@@ -456,6 +446,22 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		throw new UnsupportedOperationException( "The Embeddable: " + navigablePath + " parent initializer is neither an instance of an EntityInitializer nor of a CollectionInitializer" );
+	}
+
+	@Override
+	public void markShallowCached() {
+		assert !isPartOfKey;
+		super.markShallowCached();
+		markSubInitializersAsShallowCached();
+	}
+
+	private void markSubInitializersAsShallowCached() {
+		for ( DomainResultAssembler<?> assembler : assemblers ) {
+			final Initializer initializer = assembler.getInitializer();
+			if ( initializer != null ) {
+				initializer.markShallowCached();
+			}
+		};
 	}
 
 	@Override

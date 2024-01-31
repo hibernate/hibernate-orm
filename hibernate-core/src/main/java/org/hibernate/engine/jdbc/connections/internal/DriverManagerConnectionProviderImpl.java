@@ -13,6 +13,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -291,11 +292,19 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
+	protected int getOpenConnections() {
+		return state.pool.allConnections.size() - state.pool.availableConnections.size();
+	}
+
 	protected void validateConnectionsReturned() {
-		int allocationCount = state.pool.allConnections.size() - state.pool.availableConnections.size();
+		int allocationCount = getOpenConnections();
 		if ( allocationCount != 0 ) {
 			CONNECTIONS_MESSAGE_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections");
 		}
+	}
+
+	protected void validateConnections(ConnectionValidator validator) {
+		state.validateConnections( validator );
 	}
 
 	// destroy the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -462,33 +471,26 @@ public class DriverManagerConnectionProviderImpl
 		public void close() throws SQLException {
 			try {
 				int allocationCount = allConnections.size() - availableConnections.size();
-				if(allocationCount > 0) {
+				if (allocationCount > 0) {
 					CONNECTIONS_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections upon shutting down pool " + getUrl());
 				}
 			}
 			finally {
-				for ( Connection connection : allConnections ) {
-					connection.close();
-				}
+				removeConnections( Integer.MAX_VALUE );
 			}
 		}
 
 		public int size() {
-			return availableConnections.size();
+			return allConnections.size();
 		}
 
 		protected void removeConnections(int numberToBeRemoved) {
 			for ( int i = 0; i < numberToBeRemoved; i++ ) {
-				Connection connection = availableConnections.poll();
-				try {
-					if ( connection != null ) {
-						connection.close();
-					}
-					allConnections.remove( connection );
+				final Connection connection = availableConnections.poll();
+				if ( connection == null ) {
+					break;
 				}
-				catch (SQLException e) {
-					CONNECTIONS_MESSAGE_LOGGER.unableToCloseConnection( e );
-				}
+				closeConnection( connection, null );
 			}
 		}
 
@@ -656,6 +658,42 @@ public class DriverManagerConnectionProviderImpl
 			}
 			finally {
 				statelock.readLock().unlock();
+			}
+		}
+
+		public void validateConnections(ConnectionValidator validator) {
+			if ( !active ) {
+				return;
+			}
+			statelock.writeLock().lock();
+			try {
+				RuntimeException ex = null;
+				for ( Iterator<Connection> iterator = pool.allConnections.iterator(); iterator.hasNext(); ) {
+					final Connection connection = iterator.next();
+					SQLException e = null;
+					boolean isValid = false;
+					try {
+						isValid = validator.isValid( connection );
+					}
+					catch (SQLException sqlException) {
+						e = sqlException;
+					}
+					if ( !isValid ) {
+						pool.closeConnection( connection, e );
+						if ( ex == null ) {
+							ex = new RuntimeException( e );
+						}
+						else if ( e != null ) {
+							ex.addSuppressed( e );
+						}
+					}
+				}
+				if ( ex != null ) {
+					throw ex;
+				}
+			}
+			finally {
+				statelock.writeLock().unlock();
 			}
 		}
 	}

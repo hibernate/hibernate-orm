@@ -72,7 +72,7 @@ public interface FetchList extends Iterable<Fetch> {
 			if ( fetch instanceof EagerCollectionFetch ) {
 				return true;
 			}
-			else if ( fetch instanceof FetchParent && ( (FetchParent) fetch ).containsCollectionFetches() ) {
+			else if ( fetch.asFetchParent() != null && fetch.asFetchParent().containsCollectionFetches() ) {
 				return true;
 			}
 		}

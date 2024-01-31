@@ -11,7 +11,6 @@ import java.util.Objects;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -47,6 +46,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	private final Expression sqlExpression;
 	private final JavaType<?> jdbcJavaType;
 	private final boolean virtual;
+	private transient ValueExtractor valueExtractor;
 
 	public SqlSelectionImpl(Expression sqlExpression) {
 		this( 0, -1, null, sqlExpression, false );
@@ -66,12 +66,44 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 			JavaType<?> jdbcJavaType,
 			Expression sqlExpression,
 			boolean virtual) {
+		this(
+				jdbcPosition,
+				valuesArrayPosition,
+				sqlExpression,
+				jdbcJavaType,
+				virtual,
+				null
+		);
+	}
+
+	protected SqlSelectionImpl(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			Expression sqlExpression,
+			JavaType<?> jdbcJavaType,
+			boolean virtual,
+			ValueExtractor valueExtractor) {
 		this.jdbcPosition = jdbcPosition;
 		this.valuesArrayPosition = valuesArrayPosition;
-		this.jdbcJavaType = jdbcJavaType;
 		this.sqlExpression = sqlExpression;
+		this.jdbcJavaType = jdbcJavaType;
 		this.virtual = virtual;
+		this.valueExtractor = valueExtractor;
 	}
+
+	private static ValueExtractor determineValueExtractor(Expression sqlExpression, JavaType<?> jdbcJavaType) {
+		final JdbcMappingContainer expressionType = sqlExpression.getExpressionType();
+		final JdbcMapping jdbcMapping = expressionType == null
+				? JavaObjectType.INSTANCE
+				: expressionType.getSingleJdbcMapping();
+		if ( jdbcJavaType == null || jdbcMapping.getMappedJavaType() == jdbcJavaType ) {
+			return jdbcMapping.getJdbcValueExtractor();
+		}
+		else {
+			return jdbcMapping.getJdbcType().getExtractor( jdbcJavaType );
+		}
+	}
+
 
 	@Override
 	public Expression getExpression() {
@@ -80,11 +112,11 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 
 	@Override
 	public ValueExtractor getJdbcValueExtractor() {
-		final JdbcMapping jdbcMapping = ( (SqlExpressible) sqlExpression.getExpressionType() ).getJdbcMapping();
-		if ( jdbcJavaType == null || jdbcMapping.getMappedJavaType() == jdbcJavaType ) {
-			return jdbcMapping.getJdbcValueExtractor();
+		ValueExtractor extractor = valueExtractor;
+		if ( extractor == null ) {
+			valueExtractor = extractor = determineValueExtractor( sqlExpression, jdbcJavaType );
 		}
-		return jdbcMapping.getJdbcType().getExtractor( jdbcJavaType );
+		return extractor;
 	}
 
 	@Override

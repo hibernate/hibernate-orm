@@ -18,7 +18,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -29,7 +28,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  *
  * @author Gavin King
  */
-public class RootClass extends PersistentClass implements TableOwner {
+public class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RootClass.class );
 
 	@Deprecated(since = "6.2") @Remove
@@ -59,6 +58,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private int nextSubclassId;
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
+	private Column softDeleteColumn;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -131,29 +131,14 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return this;
 	}
 
-	@Override @Deprecated
-	public Iterator<Property> getPropertyClosureIterator() {
-		return getPropertyIterator();
-	}
-
 	@Override
 	public List<Property> getPropertyClosure() {
 		return getProperties();
 	}
 
-	@Override @Deprecated
-	public Iterator<Table> getTableClosureIterator() {
-		return new SingletonIterator<>( getTable() );
-	}
-
 	@Override
 	public List<Table> getTableClosure() {
 		return List.of( getTable() );
-	}
-
-	@Override @Deprecated
-	public Iterator<KeyValue> getKeyClosureIterator() {
-		return new SingletonIterator<>( getKey() );
 	}
 
 	@Override
@@ -415,6 +400,16 @@ public class RootClass extends PersistentClass implements TableOwner {
 			}
 		}
 		return tables;
+	}
+
+	@Override
+	public void enableSoftDelete(Column indicatorColumn) {
+		this.softDeleteColumn = indicatorColumn;
+	}
+
+	@Override
+	public Column getSoftDeleteColumn() {
+		return softDeleteColumn;
 	}
 
 	@Override

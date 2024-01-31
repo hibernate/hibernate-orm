@@ -15,10 +15,10 @@ import jakarta.persistence.FetchType;
  */
 public class FetchTypeMarshalling {
 	public static FetchType fromXml(String name) {
-		return FetchType.valueOf( name );
+		return name == null ? null : FetchType.valueOf( name );
 	}
 
 	public static String toXml(FetchType fetchType) {
-		return fetchType.name();
+		return fetchType == null ? null : fetchType.name();
 	}
 }

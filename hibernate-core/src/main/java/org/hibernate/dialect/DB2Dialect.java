@@ -11,6 +11,13 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
@@ -28,6 +35,7 @@ import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.DB2FormatEmulation;
 import org.hibernate.dialect.function.DB2PositionFunction;
 import org.hibernate.dialect.function.DB2SubstringFunction;
+import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
@@ -37,12 +45,16 @@ import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -69,15 +81,24 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
+import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
+import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -86,6 +107,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -249,7 +271,8 @@ public class DB2Dialect extends Dialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final DdlTypeRegistry ddlTypeRegistry = functionContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
@@ -351,14 +374,13 @@ public class DB2Dialect extends Dialect {
 						functionContributions.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
 						"||",
-						functionContributions.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
+						ddlTypeRegistry.getDescriptor( VARCHAR )
 								.getCastTypeName(
+										Size.nil(),
 										functionContributions.getTypeConfiguration()
 												.getBasicTypeRegistry()
 												.resolve( StandardBasicTypes.STRING ),
-										null,
-										null,
-										null
+										ddlTypeRegistry
 								),
 						true
 				)
@@ -385,6 +407,13 @@ public class DB2Dialect extends Dialect {
 				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.STRING)
 				.setArgumentListSignature("(STRING string, STRING pattern)")
 				.register();
+
+		//trim() requires trim characters to be constant literals
+		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
+				this,
+				functionContributions.getTypeConfiguration(),
+				SqlAstNodeRenderingMode.INLINE_PARAMETERS
+		) );
 
 		functionFactory.windowFunctions();
 		functionFactory.listagg( null );
@@ -876,6 +905,12 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// DB2 does truncation
+		return false;
+	}
+
+	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
 		return false;
 	}
@@ -947,6 +982,49 @@ public class DB2Dialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		typeContributions.contributeJdbcType( new InstantJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, Instant.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new LocalDateTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, LocalDateTime.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new LocalDateJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, LocalDate.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new LocalTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, LocalTime.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new OffsetDateTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, OffsetDateTime.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new OffsetTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, OffsetTime.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new ZonedDateTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, ZonedDateTime.class );
+			}
+		} );
 	}
 
 	@Override
@@ -973,13 +1051,34 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return new TemplatedViolatedConstraintNameExtractor(
+				sqle -> {
+					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+						case -803:
+							return extractUsingTemplate( "SQLERRMC=1;", ",", sqle.getMessage() );
+						default:
+							return null;
+					}
+				}
+		);
+	}
+
+	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-
-			if ( -952 == errorCode && "57014".equals( sqlState ) ) {
-				throw new LockTimeoutException( message, sqlException, sql );
+			switch ( errorCode ) {
+				case -952:
+					return new LockTimeoutException( message, sqlException, sql );
+				case -803:
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
 			}
 			return null;
 		};
@@ -1027,6 +1126,11 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsInsertReturning() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsInsertReturningRowId() {
+		return false;
 	}
 
 	@Override
@@ -1170,5 +1274,15 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public int rowIdSqlType() {
 		return VARBINARY;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return getDB2Version().isSameOrAfter( 11 );
 	}
 }

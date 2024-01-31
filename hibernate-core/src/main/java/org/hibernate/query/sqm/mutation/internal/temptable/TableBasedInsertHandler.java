@@ -46,6 +46,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -134,20 +135,11 @@ public class TableBasedInsertHandler implements InsertHandler {
 
 		final TableGroup insertingTableGroup = converterDelegate.getMutatingTableGroup();
 
-		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
-		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
-			parameterResolutions = Collections.emptyMap();
-		}
-		else {
-			parameterResolutions = new IdentityHashMap<>();
-		}
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the insertion target using our special converter, collecting
 		// information about the target paths
 
 		final List<Assignment> targetPathColumns = new ArrayList<>();
-		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions = new LinkedHashMap<>();
 		final NamedTableReference entityTableReference = new NamedTableReference(
 				entityTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
@@ -162,14 +154,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 				},
 				sqmInsertStatement,
 				entityDescriptor,
-				insertingTableGroup,
-				(sqmParameter, mappingType, jdbcParameters) -> {
-					parameterResolutions.computeIfAbsent(
-							sqmParameter,
-							k -> new ArrayList<>( 1 )
-					).add( jdbcParameters );
-					paramTypeResolutions.put( sqmParameter, mappingType );
-				}
+				insertingTableGroup
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -306,6 +291,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 			}
 			insertStatement.setValuesList( valuesList );
 		}
+		final ConflictClause conflictClause = converterDelegate.visitConflictClause( sqmInsertStatement.getConflictClause() );
 		converterDelegate.pruneTableGroupJoins();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -329,9 +315,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 				tableReferenceByAlias,
 				targetPathColumns,
 				insertStatement,
-				parameterResolutions,
+				conflictClause,
 				sessionUidParameter,
-				paramTypeResolutions,
 				executionContext
 		);
 	}
@@ -350,9 +335,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			InsertSelectStatement insertStatement,
-			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
+			ConflictClause conflictClause,
 			JdbcParameter sessionUidParameter,
-			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		return new InsertExecutionDelegate(
 				sqmInsertStatement,
@@ -365,9 +349,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 				tableReferenceByAlias,
 				assignments,
 				insertStatement,
-				parameterResolutions,
+				conflictClause,
 				sessionUidParameter,
-				paramTypeResolutions,
 				executionContext
 		);
 	}

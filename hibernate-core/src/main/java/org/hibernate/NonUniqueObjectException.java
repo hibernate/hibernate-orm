@@ -11,7 +11,7 @@ import org.hibernate.pretty.MessageHelper;
 /**
  * This exception is thrown when an operation would break session-scoped identity.
  * This occurs if the user tries to associate two different instances of the same
- * Java class with a particular identifier, in the scope of a single Session.
+ * Java class with a particular identifier, in the scope of a single {@link Session}.
  *
  * @author Gavin King
  */

@@ -9,6 +9,7 @@ package org.hibernate.dialect.function;
 import java.util.List;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -31,6 +32,7 @@ public class SQLServerFormatEmulation extends FormatFunction {
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression datetime = (Expression) arguments.get(0);
 

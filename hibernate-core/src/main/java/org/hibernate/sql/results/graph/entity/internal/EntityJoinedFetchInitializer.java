@@ -7,17 +7,17 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.FetchNotFoundException;
+import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
@@ -31,8 +31,6 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 	private static final String CONCRETE_NAME = EntityJoinedFetchInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<?> keyAssembler;
-	private final EntityValuedFetchable referencedFetchable;
-	private final boolean isEnhancedForLazyLoading;
 	private final NotFoundAction notFoundAction;
 
 	public EntityJoinedFetchInitializer(
@@ -42,8 +40,10 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 			LockMode lockMode,
 			NotFoundAction notFoundAction,
 			DomainResult<?> keyResult,
+			DomainResult<Object> rowIdResult,
 			Fetch identifierFetch,
 			Fetch discriminatorFetch,
+			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		super(
 				resultDescriptor,
@@ -51,75 +51,65 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 				lockMode,
 				identifierFetch,
 				discriminatorFetch,
-				null,
+				rowIdResult,
+				parentAccess,
 				creationState
 		);
-		this.referencedFetchable = referencedFetchable;
+		assert getInitializedPart() == referencedFetchable;
 		this.notFoundAction = notFoundAction;
 
 		this.keyAssembler = keyResult == null ? null : keyResult.createResultAssembler( this, creationState );
-
-		if ( getConcreteDescriptor() != null ) {
-			this.isEnhancedForLazyLoading = getConcreteDescriptor()
-					.getBytecodeEnhancementMetadata()
-					.isEnhancedForLazyLoading();
-		}
-		else {
-			this.isEnhancedForLazyLoading = false;
-		}
 	}
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
-		if ( shouldSkipResolveInstance( rowProcessingState ) ) {
-			missing = true;
-			return;
+		if ( isParentShallowCached() ) {
+			state = State.MISSING;
 		}
+		else if ( state == State.UNINITIALIZED ) {
+			if ( shouldSkipInitializer( rowProcessingState ) ) {
+				state = State.MISSING;
+				return;
+			}
 
-		super.resolveKey( rowProcessingState );
+			super.resolveKey( rowProcessingState );
 
-		// super processes the foreign-key target column.  here we
-		// need to also look at the foreign-key value column to check
-		// for a dangling foreign-key
+			// super processes the foreign-key target column.  here we
+			// need to also look at the foreign-key value column to check
+			// for a dangling foreign-key
 
-		if ( keyAssembler != null ) {
-			final Object fkKeyValue = keyAssembler.assemble( rowProcessingState );
-			if ( fkKeyValue != null ) {
-				if ( isMissing() ) {
-					if ( notFoundAction != NotFoundAction.IGNORE ) {
-						throw new FetchNotFoundException(
-								referencedFetchable.getEntityMappingType().getEntityName(),
-								fkKeyValue
-						);
-					}
-					else {
-						EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
-								"Ignoring dangling foreign-key due to `@NotFound(IGNORE); association will be null - %s",
-								getNavigablePath()
-						);
+			if ( keyAssembler != null ) {
+				final Object fkKeyValue = keyAssembler.assemble( rowProcessingState );
+				if ( fkKeyValue != null ) {
+					if ( state == State.MISSING ) {
+						if ( notFoundAction != NotFoundAction.IGNORE ) {
+							throw new FetchNotFoundException(
+									getEntityDescriptor().getEntityName(),
+									fkKeyValue
+							);
+						}
+						else {
+							EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
+									"Ignoring dangling foreign-key due to `@NotFound(IGNORE); association will be null - %s",
+									getNavigablePath()
+							);
+						}
 					}
 				}
 			}
 		}
 	}
 
-
-
 	@Override
-	protected Object getProxy(PersistenceContext persistenceContext) {
-		ModelPart referencedModelPart = getInitializedPart();
-		if ( referencedModelPart instanceof ToOneAttributeMapping ) {
-			final boolean unwrapProxy = ( (ToOneAttributeMapping) referencedModelPart ).isUnwrapProxy() && isEnhancedForLazyLoading;
-			if ( unwrapProxy ) {
-				return null;
-			}
-		}
-		return super.getProxy( persistenceContext );
-	}
-
-	@Override
-	protected void registerLoadingEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState, Object instance) {
-		// we want the EntityResultInitializer to take care of the instance
+	public void initializeInstanceFromParent(Object parentInstance, RowProcessingState rowProcessingState) {
+		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
+		final Object instance = attributeMapping != null
+				? attributeMapping.getValue( parentInstance )
+				: parentInstance;
+		setEntityInstance( instance );
+		setEntityInstanceForNotify( Hibernate.unproxy( instance ) );
+		state = State.INITIALIZED;
+		initializeSubInstancesFromParent( rowProcessingState );
 	}
 
 	@Override
@@ -128,7 +118,7 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 	}
 
 	@Override
-	protected boolean isEntityReturn() {
+	public boolean isResultInitializer() {
 		return false;
 	}
 

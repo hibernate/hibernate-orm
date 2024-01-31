@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -228,6 +229,23 @@ public interface AuditReader {
 	 * @throws IllegalArgumentException If <code>date</code> is <code>null</code>.
 	 */	
 	Number getRevisionNumberForDate(LocalDateTime date) throws IllegalStateException,
+			RevisionDoesNotExistException, IllegalArgumentException;
+
+	/**
+	 * Gets the revision number, that corresponds to the given date. More precisely, returns
+	 * the number of the highest revision, which was created on or before the given date. So:
+	 * <code>getRevisionDate(getRevisionNumberForDate(date)) &lt;= date</code> and
+	 * <code>getRevisionDate(getRevisionNumberForDate(date)+1) > date</code>.
+	 *
+	 * @param date Date for which to get the revision.
+	 *
+	 * @return Revision number corresponding to the given date.
+	 *
+	 * @throws IllegalStateException If the associated entity manager is closed.
+	 * @throws RevisionDoesNotExistException If the given date is before the first revision.
+	 * @throws IllegalArgumentException If <code>date</code> is <code>null</code>.
+	 */
+	Number getRevisionNumberForDate(Instant date) throws IllegalStateException,
 			RevisionDoesNotExistException, IllegalArgumentException;
 
 	/**

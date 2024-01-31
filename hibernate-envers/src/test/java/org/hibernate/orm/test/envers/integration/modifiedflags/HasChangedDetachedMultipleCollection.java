@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.EntityManager;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionEntity;
@@ -29,7 +30,9 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue(jiraKey = "HHH-7437")
 @SkipForDialect(value = OracleDialect.class,
-				comment = "Oracle does not support identity key generation")
+		comment = "Oracle does not support identity key generation")
+@SkipForDialect(value = AltibaseDialect.class,
+		comment = "Altibase does not support identity key generation")
 public class HasChangedDetachedMultipleCollection extends AbstractModifiedFlagsEntityTest {
 	private Long mce1Id = null;
 	private Long mce2Id = null;

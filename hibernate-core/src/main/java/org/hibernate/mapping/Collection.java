@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -41,7 +42,7 @@ import org.hibernate.usertype.UserCollectionType;
  *
  * @author Gavin King
  */
-public abstract class Collection implements Fetchable, Value, Filterable {
+public abstract class Collection implements Fetchable, Value, Filterable, SoftDeletable {
 
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
@@ -60,6 +61,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private boolean subselectLoadable;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
+	private CacheLayout queryCacheLayout;
 	private String orderBy;
 	private String where;
 	private String manyToManyWhere;
@@ -98,6 +100,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private String customSQLDeleteAll;
 	private boolean customDeleteAllCallable;
 	private ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
+
+	private Column softDeleteColumn;
 
 	private String loaderName;
 
@@ -392,52 +396,19 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		checkColumnDuplication();
 	}
 
-	private void checkColumnDuplication(java.util.Set<String> distinctColumns, Value value)
-			throws MappingException {
-		final boolean[] insertability = value.getColumnInsertability();
-		final boolean[] updatability = value.getColumnUpdateability();
-		int i = 0;
-		for ( Selectable selectable : value.getSelectables() ) {
-			// exclude formulas and columns that are not insertable or updatable
-			// since these values can be repeated (HHH-5393)
-			if ( !selectable.isFormula() && ( insertability[i] || updatability[i] ) ) {
-				Column col = (Column) selectable;
-				if ( !distinctColumns.add( col.getName() ) ) {
-					throw new MappingException(
-							"Repeated column in mapping for collection: "
-									+ getRole()
-									+ " column: "
-									+ col.getName()
-					);
-				}
-			}
-			i++;
-		}
-	}
-
 	private void checkColumnDuplication() throws MappingException {
+		final String owner = "collection '" + getReferencedPropertyName() + "'";
 		final HashSet<String> cols = new HashSet<>();
-		checkColumnDuplication( cols, getKey() );
+		getKey().checkColumnDuplication( cols, owner );
 		if ( isIndexed() ) {
-			checkColumnDuplication(
-					cols,
-					( (IndexedCollection) this ).getIndex()
-			);
+			( (IndexedCollection) this ).getIndex().checkColumnDuplication( cols, owner );
 		}
 		if ( isIdentified() ) {
-			checkColumnDuplication(
-					cols,
-					( (IdentifierCollection) this ).getIdentifier()
-			);
+			( (IdentifierCollection) this ).getIdentifier().checkColumnDuplication( cols, owner );
 		}
 		if ( !isOneToMany() ) {
-			checkColumnDuplication( cols, getElement() );
+			getElement().checkColumnDuplication( cols, owner );
 		}
-	}
-
-	@Deprecated
-	public Iterator<Selectable> getColumnIterator() {
-		return Collections.emptyIterator();
 	}
 
 	@Override
@@ -597,6 +568,14 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public void setCacheRegionName(String cacheRegionName) {
 		this.cacheRegionName = StringHelper.nullIfEmpty( cacheRegionName );
+	}
+
+	public CacheLayout getQueryCacheLayout() {
+		return queryCacheLayout;
+	}
+
+	public void setQueryCacheLayout(CacheLayout queryCacheLayout) {
+		this.queryCacheLayout = queryCacheLayout;
 	}
 
 
@@ -859,5 +838,15 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	@Override
 	public boolean isColumnUpdateable(int index) {
 		return false;
+	}
+
+	@Override
+	public void enableSoftDelete(Column indicatorColumn) {
+		this.softDeleteColumn = indicatorColumn;
+	}
+
+	@Override
+	public Column getSoftDeleteColumn() {
+		return softDeleteColumn;
 	}
 }

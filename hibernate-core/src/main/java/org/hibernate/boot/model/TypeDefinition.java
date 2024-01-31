@@ -300,7 +300,7 @@ public class TypeDefinition implements Serializable {
 			String name,
 			Class<T> typeImplementorClass,
 			BeanInstanceProducer instanceProducer) {
-		if ( buildingOptions.disallowExtensionsInCdi() ) {
+		if ( !buildingOptions.isAllowExtensionsInCdi() ) {
 			return name != null
 					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
 					: instanceProducer.produceBeanInstance( typeImplementorClass );

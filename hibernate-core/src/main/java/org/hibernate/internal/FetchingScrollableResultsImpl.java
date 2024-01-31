@@ -8,6 +8,7 @@ package org.hibernate.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -15,6 +16,7 @@ import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
@@ -29,6 +31,8 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	private int currentPosition;
 	private Integer maxPosition;
+	private boolean beforeFirst;
+	private boolean afterLast;
 
 	public FetchingScrollableResultsImpl(
 			JdbcValues jdbcValues,
@@ -49,6 +53,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		resultInitializer = extractResultInitializer( rowReader );
 
 		this.maxPosition = jdbcValuesSourceProcessingState.getQueryOptions().getEffectiveLimit().getMaxRows();
+		beforeFirst = true;
 	}
 
 	private static <R> EntityInitializer extractResultInitializer(RowReader<R> rowReader) {
@@ -63,23 +68,30 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public boolean next() {
-		if ( maxPosition != null && maxPosition <= currentPosition ) {
-			currentRow = null;
+		if ( afterLast || isResultSetEmpty() ) {
+			return false;
+		}
+		else if ( maxPosition != null && maxPosition <= currentPosition ) {
 			currentPosition = maxPosition + 1;
-			return false;
-		}
-
-		if ( isResultSetEmpty() ) {
 			currentRow = null;
-			currentPosition = 0;
+			afterLast = true;
+			beforeFirst = false;
 			return false;
 		}
+		else if ( beforeFirst ) {
+			if ( !getRowProcessingState().next() ) {
+				currentPosition = 0;
+				beforeFirst = false;
+				return false;
+			}
+		}
 
-		boolean afterLast = prepareCurrentRow();
+		boolean last = prepareCurrentRow();
 
+		beforeFirst = false;
 		currentPosition++;
 
-		if ( afterLast ) {
+		if ( last ) {
 			if ( maxPosition == null ) {
 				// we just hit the last position
 				maxPosition = currentPosition;
@@ -94,15 +106,12 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public boolean previous() {
-		if ( currentPosition <= 1 ) {
-			currentPosition = 0;
-			currentRow = null;
+		if ( beforeFirst || isResultSetEmpty() ) {
 			return false;
 		}
-
-		if ( getRowProcessingState().isFirst() ) {
-			// don't even bother trying to read any further
-			currentRow = null;
+		else if ( currentPosition == 1 ) {
+			beforeFirst();
+			return false;
 		}
 		else {
 			EntityKey keyToRead = null;
@@ -115,7 +124,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			// In the latter scenario, the previous logical row
 			// really is the last logical row.
 			//
-			if ( getRowProcessingState().isAfterLast() && maxPosition != null && currentPosition > maxPosition ) {
+			if ( afterLast ) {
 				// position cursor to the last row
 				getRowProcessingState().last();
 				keyToRead = getEntityKey();
@@ -165,6 +174,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			prepareCurrentRow();
 		}
 
+		afterLast = false;
 		currentPosition--;
 
 		afterScrollOperation();
@@ -227,13 +237,13 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		}
 		else {
 			final RowProcessingStateStandardImpl rowProcessingState = getRowProcessingState();
-			if ( isResultSetEmpty() || rowProcessingState.isAfterLast() ) {
+			if ( isResultSetEmpty() || afterLast ) {
 				// should not be able to reach last without maxPosition being set
 				// unless there are no results
 				return false;
 			}
 
-			while ( !rowProcessingState.isAfterLast() ) {
+			while ( !afterLast ) {
 				more = next();
 			}
 		}
@@ -256,6 +266,8 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	@Override
 	public void beforeFirst() {
 		getRowProcessingState().beforeFirst();
+		beforeFirst = true;
+		afterLast = false;
 		currentRow = null;
 		currentPosition = 0;
 	}
@@ -299,48 +311,56 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	}
 
 	private boolean prepareCurrentRow() {
-		if ( getRowProcessingState().isBeforeFirst() ) {
-			getRowProcessingState().next();
-		}
-
+		final RowProcessingStateStandardImpl rowProcessingState = getRowProcessingState();
 		final RowReader<R> rowReader = getRowReader();
 
-		boolean afterLast = false;
+		boolean last = false;
 		boolean resultProcessed = false;
 
 		final EntityKey entityKey = getEntityKey();
+		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
+		final LoadContexts loadContexts = persistenceContext.getLoadContexts();
 
-		currentRow = rowReader.readRow( getRowProcessingState(), getProcessingOptions() );
+		loadContexts.register( getJdbcValuesSourceProcessingState() );
+		persistenceContext.beforeLoad();
+		try {
+			currentRow = rowReader.readRow( rowProcessingState, getProcessingOptions() );
 
-		getRowProcessingState().finishRowProcessing();
+			rowProcessingState.finishRowProcessing( true );
 
-		while ( !resultProcessed ) {
-			if ( getRowProcessingState().next() ) {
-				final EntityKey entityKey2 = getEntityKey();
-				if ( !entityKey.equals( entityKey2 ) ) {
-					resultInitializer.finishUpRow( getRowProcessingState() );
-					resultProcessed = true;
-					afterLast = false;
+			while ( !resultProcessed ) {
+				if ( rowProcessingState.next() ) {
+					final EntityKey entityKey2 = getEntityKey();
+					if ( !entityKey.equals( entityKey2 ) ) {
+						resultInitializer.finishUpRow( rowProcessingState );
+						resultProcessed = true;
+						last = false;
+					}
+					else {
+						rowReader.readRow( rowProcessingState, getProcessingOptions() );
+						rowProcessingState.finishRowProcessing( false );
+					}
 				}
 				else {
-					rowReader.readRow( getRowProcessingState(), getProcessingOptions() );
-					getRowProcessingState().finishRowProcessing();
+					last = true;
+					resultProcessed = true;
 				}
-			}
-			else {
-				afterLast = true;
-				resultProcessed = true;
-			}
 
+			}
+			getJdbcValuesSourceProcessingState().finishUp( false );
 		}
-		getJdbcValuesSourceProcessingState().finishUp();
-		getRowProcessingState().getSession().getPersistenceContext().initializeNonLazyCollections();
-		return afterLast;
+		finally {
+			persistenceContext.afterLoad();
+			loadContexts.deregister( getJdbcValuesSourceProcessingState() );
+		}
+		persistenceContext.initializeNonLazyCollections();
+		afterScrollOperation();
+		return last;
 	}
 
 
 	private boolean isResultSetEmpty() {
-		return currentPosition == 0 && !getRowProcessingState().isBeforeFirst() && !getRowProcessingState().isAfterLast();
+		return currentPosition == 0 && !beforeFirst && !afterLast;
 	}
 
 	private EntityKey getEntityKey() {
@@ -349,5 +369,4 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		resultInitializer.finishUpRow( getRowProcessingState() );
 		return entityKey;
 	}
-
 }

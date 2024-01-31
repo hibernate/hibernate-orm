@@ -77,6 +77,11 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	}
 
 	@Override
+	public void addLiteralRestriction(String columnName, String sqlLiteralText, JdbcMapping jdbcMapping) {
+		keyRestrictionBindings.addRestriction( columnName, sqlLiteralText, jdbcMapping );
+	}
+
+	@Override
 	public void setWhere(String fragment) {
 		throw new UnsupportedOperationException();
 	}

@@ -8,6 +8,7 @@
 package org.hibernate.envers.test.integration.reventity;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.mapping.Selectable;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
@@ -37,14 +38,14 @@ public class LongRevEntityInheritanceChildAuditing extends BaseEnversJPAFunction
 	public void testChildRevColumnType() {
 		// Hibernate now sorts columns that are part of the key and therefore this test needs to test
 		// for the existence of the specific key column rather than the expectation that is exists at
-		// a specific order in the iterator.
-		Iterator<Selectable> childEntityKeyColumnsIterator = metadata()
+		// a specific order.
+		List<Selectable> childEntityKeyColumns = metadata()
 				.getEntityBinding( ChildEntity.class.getName() + "_AUD" )
 				.getKey()
-				.getColumnIterator();
+				.getSelectables();
 
 		final String revisionColumnName = getConfiguration().getRevisionFieldName();
-		Column column = getColumnFromIteratorByName( childEntityKeyColumnsIterator, revisionColumnName );
+		Column column = getColumnFromIteratorByName( childEntityKeyColumns, revisionColumnName );
 		assertNotNull( column );
 		assertEquals( column.getSqlType(), "int" );
 	}

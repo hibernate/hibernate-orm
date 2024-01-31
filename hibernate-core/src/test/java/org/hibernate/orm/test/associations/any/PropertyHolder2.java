@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 
 //tag::associations-any-def-example[]
 @Entity
-@Table(name = "property_holder")
+@Table(name = "property_holder2")
 public class PropertyHolder2 {
 
     @Id

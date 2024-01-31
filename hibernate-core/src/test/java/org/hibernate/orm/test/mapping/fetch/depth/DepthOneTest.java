@@ -61,6 +61,9 @@ public class DepthOneTest {
 				session -> {
 					Agency agency = new Agency( 1, "Test Agency" );
 
+					AgencyDetail agencyDetail = new AgencyDetail( 1, "abc" );
+					agency.setAgencyDetail( agencyDetail );
+					session.persist( agencyDetail );
 					session.persist( agency );
 					Group group = new Group( 1, "Test Group 1" );
 
@@ -84,8 +87,24 @@ public class DepthOneTest {
 				session -> {
 					Agency agency = session.get( Agency.class, 1 );
 					assertThat( agency ).isNotNull();
+					assertThat( agency.getAgencyDetail() ).isNotNull();
+
+					Set<Group> groups = agency.getGroups();
+					assertThat( groups.size() ).isEqualTo( 1 );
+
+					Group group = groups.iterator().next();
+					assertThat( group.getAgency() ).isNotNull();
+					assertThat( group.getAgency() ).isSameAs( agency );
+
+					Set<User> users = group.getUsers();
+					assertThat( users.size() ).isEqualTo( 8 );
+					for ( User user : users ) {
+						assertThat( user.getAgency() ).isNotNull();
+						assertThat( user.getAgency() ).isSameAs( agency );
+					}
+
 					List<String> executedQueries = statementInspector.getSqlQueries();
-					assertThat( executedQueries.size() ).isEqualTo( 5 );
+					assertThat( executedQueries.size() ).isEqualTo( 4 );
 
 					assertThat( executedQueries.get( 0 ).toLowerCase() ).isEqualTo(
 							"select a1_0.agency_id,ad1_0.agency_id,ad1_0.agency_detail,a1_0.agency_txt from agency_table a1_0 left join agency_detail_table ad1_0 on ad1_0.agency_id=a1_0.agency_id where a1_0.agency_id=?"
@@ -101,10 +120,6 @@ public class DepthOneTest {
 
 					assertThat( executedQueries.get( 3 ).toLowerCase() ).isEqualTo(
 							"select u1_0.group_id,u1_1.user_id,a1_0.agency_id,a1_0.agency_txt,u1_1.user_name from group_user u1_0 join user_table u1_1 on u1_1.user_id=u1_0.user_id left join agency_table a1_0 on a1_0.agency_id=u1_1.agency_id where u1_0.group_id=?"
-					);
-
-					assertThat( executedQueries.get( 4 ).toLowerCase() ).isEqualTo(
-							"select ad1_0.agency_id,ad1_0.agency_detail from agency_detail_table ad1_0 where ad1_0.agency_id=?"
 					);
 				}
 		);
@@ -211,6 +226,14 @@ public class DepthOneTest {
 
 		private Integer agencyId = null;
 		private String agencyDetail = null;
+
+		public AgencyDetail() {
+		}
+
+		public AgencyDetail(Integer agencyId, String agencyDetail) {
+			this.agencyId = agencyId;
+			this.agencyDetail = agencyDetail;
+		}
 
 		@Id
 		@Column(name = "AGENCY_ID")

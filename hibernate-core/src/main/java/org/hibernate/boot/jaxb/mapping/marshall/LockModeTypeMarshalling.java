@@ -15,10 +15,10 @@ import jakarta.persistence.LockModeType;
  */
 public class LockModeTypeMarshalling {
 	public static LockModeType fromXml(String name) {
-		return LockModeType.valueOf( name );
+		return name == null ? null : LockModeType.valueOf( name );
 	}
 
 	public static String toXml(LockModeType lockModeType) {
-		return lockModeType.name();
+		return lockModeType == null ? null : lockModeType.name();
 	}
 }

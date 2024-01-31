@@ -36,12 +36,15 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
@@ -59,15 +62,21 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
+import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
+import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
+import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
@@ -443,9 +452,16 @@ public class BinderHelper {
 		// which are mapped to that column. (There might be multiple such
 		// properties for each column.)
 		if ( columnOwner instanceof PersistentClass ) {
-			PersistentClass persistentClass = (PersistentClass) columnOwner;
+			final PersistentClass persistentClass = (PersistentClass) columnOwner;
+			// Process ToOne associations after Components, Basic and Id properties
+			final List<Property> toOneProperties = new ArrayList<>();
 			for ( Property property : persistentClass.getReferenceableProperties() ) {
-				matchColumnsByProperty( property, columnsToProperty );
+				if ( property.getValue() instanceof ToOne ) {
+					toOneProperties.add( property );
+				}
+				else {
+					matchColumnsByProperty( property, columnsToProperty );
+				}
 			}
 			if ( persistentClass.hasIdentifierProperty() ) {
 				matchColumnsByProperty( persistentClass.getIdentifierProperty(), columnsToProperty );
@@ -456,6 +472,9 @@ public class BinderHelper {
 				for ( Property p : key.getProperties() ) {
 					matchColumnsByProperty( p, columnsToProperty );
 				}
+			}
+			for ( Property property : toOneProperties ) {
+				matchColumnsByProperty( property, columnsToProperty );
 			}
 		}
 		else {
@@ -756,6 +775,7 @@ public class BinderHelper {
 		final AnnotatedColumns discriminatorColumns = buildColumnOrFormulaFromAnnotation(
 				discriminatorColumn,
 				discriminatorFormula,
+				null,
 //				null,
 				nullability,
 				propertyHolder,
@@ -814,13 +834,13 @@ public class BinderHelper {
 	private static void processAnyDiscriminatorValues(
 			XProperty property,
 			Consumer<AnyDiscriminatorValue> consumer) {
-		final AnyDiscriminatorValue valueAnn = property.getAnnotation( AnyDiscriminatorValue.class );
+		final AnyDiscriminatorValue valueAnn = findAnnotation( property, AnyDiscriminatorValue.class );
 		if ( valueAnn != null ) {
 			consumer.accept( valueAnn );
 			return;
 		}
 
-		final AnyDiscriminatorValues valuesAnn = property.getAnnotation( AnyDiscriminatorValues.class );
+		final AnyDiscriminatorValues valuesAnn = findAnnotation( property, AnyDiscriminatorValues.class );
 		if ( valuesAnn != null ) {
 			for ( AnyDiscriminatorValue discriminatorValue : valuesAnn.value() ) {
 				consumer.accept( discriminatorValue );
@@ -1119,4 +1139,52 @@ public class BinderHelper {
 		return false;
 	}
 
+	public static boolean noConstraint(ForeignKey foreignKey, boolean noConstraintByDefault) {
+		if ( foreignKey == null ) {
+			return false;
+		}
+		else {
+			final ConstraintMode mode = foreignKey.value();
+			return mode == NO_CONSTRAINT
+					|| mode == PROVIDER_DEFAULT && noConstraintByDefault;
+		}
+	}
+
+	/**
+	 * Extract an annotation from the package-info for the package the given class is defined in
+	 *
+	 * @param annotationType The type of annotation to return
+	 * @param xClass The class in the package
+	 * @param context The processing context
+	 *
+	 * @return The annotation or {@code null}
+	 */
+	public static <A extends Annotation> A extractFromPackage(
+			Class<A> annotationType,
+			XClass xClass,
+			MetadataBuildingContext context) {
+
+// todo (soft-delete) : or if we want caching of this per package
+//  +
+//				final SoftDelete fromPackage = context.getMetadataCollector().resolvePackageAnnotation( packageName, SoftDelete.class );
+//  +
+//		where context.getMetadataCollector() can cache some of this - either the annotations themselves
+//		or even just the XPackage resolutions
+
+		final String declaringClassName = xClass.getName();
+		final String packageName = qualifier( declaringClassName );
+		if ( isNotEmpty( packageName ) ) {
+			final ClassLoaderService classLoaderService = context.getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ClassLoaderService.class );
+			assert classLoaderService != null;
+			final Package declaringClassPackage = classLoaderService.packageForNameOrNull( packageName );
+			if ( declaringClassPackage != null ) {
+				// will be null when there is no `package-info.class`
+				final XPackage xPackage = context.getBootstrapContext().getReflectionManager().toXPackage( declaringClassPackage );
+				return xPackage.getAnnotation( annotationType );
+			}
+		}
+		return null;
+	}
 }

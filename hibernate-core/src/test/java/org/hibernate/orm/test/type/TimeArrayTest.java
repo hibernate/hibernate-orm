@@ -8,7 +8,9 @@ package org.hibernate.orm.test.type;
 
 import java.sql.Time;
 import java.time.LocalTime;
+import java.util.Map;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -44,6 +46,14 @@ public class TimeArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{ TableWithTimeArrays.class };
+	}
+
+	@Override
+	protected void addSettings(Map<String, Object> settings) {
+		// Make sure this stuff runs on a dedicated connection pool,
+		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		// because the JDBC connection or database session caches something that should have been invalidated
+		settings.put( AvailableSettings.CONNECTION_PROVIDER, "" );
 	}
 
 	private LocalTime time1;

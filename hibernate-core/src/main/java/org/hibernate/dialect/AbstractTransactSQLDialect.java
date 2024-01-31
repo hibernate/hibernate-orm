@@ -166,28 +166,32 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return replaceLtrimRtrim(specification, character);
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return replaceLtrimRtrim( specification, isWhitespace );
 	}
 
+	/**
+	 * @deprecated Use {@link #replaceLtrimRtrim(TrimSpec, boolean)} instead.
+	 */
+	@Deprecated( forRemoval = true )
 	public static String replaceLtrimRtrim(TrimSpec specification, char character) {
-		boolean blank = character == ' ';
+		return replaceLtrimRtrim( specification, character == ' ' );
+	}
+
+	public static String replaceLtrimRtrim(TrimSpec specification, boolean isWhitespace) {
 		switch ( specification ) {
 			case LEADING:
-				return blank
+				return isWhitespace
 						? "ltrim(?1)"
-						: "replace(replace(ltrim(replace(replace(?1,' ','#%#%'),'@',' ')),' ','@'),'#%#%',' ')"
-								.replace('@', character);
+						: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)+1)";
 			case TRAILING:
-				return blank
+				return isWhitespace
 						? "rtrim(?1)"
-						: "replace(replace(rtrim(replace(replace(?1,' ','#%#%'),'@',' ')),' ','@'),'#%#%',' ')"
-								.replace('@', character);
+						: "substring(?1,1,len(?1+'x')-1-patindex('%[^'+?2+']%',reverse(?1))+1)";
 			default:
-				return blank
+				return isWhitespace
 						? "ltrim(rtrim(?1))"
-						: "replace(replace(ltrim(rtrim(replace(replace(?1,' ','#%#%'),'@',' '))),' ','@'),'#%#%',' ')"
-								.replace('@', character);
+						: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
 		}
 	}
 

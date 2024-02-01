@@ -18,6 +18,7 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.DoubleJdbcType;
+import org.hibernate.type.descriptor.jdbc.DurationJdbcType;
 import org.hibernate.type.descriptor.jdbc.FloatJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -66,6 +67,7 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( TimestampWithTimeZoneJdbcType.INSTANCE );
 		target.addDescriptor( TimeJdbcType.INSTANCE );
 		target.addDescriptor( TimeWithTimeZoneJdbcType.INSTANCE );
+		target.addDescriptor( DurationJdbcType.INSTANCE );
 
 		target.addDescriptor( BinaryJdbcType.INSTANCE );
 		target.addDescriptor( VarbinaryJdbcType.INSTANCE );

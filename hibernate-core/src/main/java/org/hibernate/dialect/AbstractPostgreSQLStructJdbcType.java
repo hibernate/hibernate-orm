@@ -776,6 +776,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 			case SqlTypes.DOUBLE:
 			case SqlTypes.DECIMAL:
 			case SqlTypes.NUMERIC:
+			case SqlTypes.DURATION:
 				jdbcJavaType.appendEncodedString(
 						appender,
 						jdbcJavaType.unwrap(

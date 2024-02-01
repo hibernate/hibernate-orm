@@ -498,6 +498,14 @@ public class SqlTypes {
 	 */
 	public static final int TIME_UTC = 3007;
 
+	/**
+	 * A type code representing a "virtual mapping" of {@linkplain java.time.Duration}.
+	 *
+	 * @see Types#NUMERIC
+	 * @see org.hibernate.type.descriptor.jdbc.DurationJdbcType
+	 */
+	public static final int DURATION = 3015;
+
 	// Interval types
 
 	/**
@@ -777,6 +785,13 @@ public class SqlTypes {
 	 */
 	public static boolean isIntervalType(int typeCode) {
 		return typeCode == INTERVAL_SECOND;
+	}
+
+	/**
+	 * Does the given typecode represent a {@code duration} type?
+	 */
+	public static boolean isDurationType(int typeCode) {
+		return typeCode == DURATION;
 	}
 
 	/**

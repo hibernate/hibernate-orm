@@ -7,26 +7,17 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardListSemantics;
 import org.hibernate.collection.internal.StandardMapSemantics;
-import org.hibernate.collection.internal.StandardOrderedMapSemantics;
-import org.hibernate.collection.internal.StandardOrderedSetSemantics;
 import org.hibernate.collection.internal.StandardSetSemantics;
 import org.hibernate.collection.internal.StandardSortedMapSemantics;
 import org.hibernate.collection.internal.StandardSortedSetSemantics;
@@ -171,17 +162,10 @@ public class JavaTypeBaseline {
 		target.addBaselineDescriptor( new CollectionJavaType( Collection.class, StandardBagSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaType( Object[].class, StandardArraySemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaType( List.class, StandardListSemantics.INSTANCE ) );
-		target.addBaselineDescriptor( new CollectionJavaType( ArrayList.class, StandardListSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaType( Set.class, StandardSetSemantics.INSTANCE ) );
-		target.addBaselineDescriptor( new CollectionJavaType( HashSet.class, StandardSetSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaType( SortedSet.class, StandardSortedSetSemantics.INSTANCE ) );
-		target.addBaselineDescriptor( new CollectionJavaType( TreeSet.class, StandardOrderedSetSemantics.INSTANCE ) );
-		target.addBaselineDescriptor( new CollectionJavaType( LinkedHashSet.class, StandardOrderedSetSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaType( Map.class, StandardMapSemantics.INSTANCE ) );
-		target.addBaselineDescriptor( new CollectionJavaType( HashMap.class, StandardMapSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaType( SortedMap.class, StandardSortedMapSemantics.INSTANCE ) );
-		target.addBaselineDescriptor( new CollectionJavaType( TreeMap.class, StandardSortedMapSemantics.INSTANCE ) );
-		target.addBaselineDescriptor( new CollectionJavaType( LinkedHashMap.class, StandardOrderedMapSemantics.INSTANCE ) );
 	}
 
 	private static void primePrimitive(BaselineTarget target, JavaType<?> descriptor) {

@@ -546,7 +546,7 @@ public final class ConfigurationHelper {
 			return explicitSetting;
 		}
 
-		return SqlTypes.NUMERIC;
+		return SqlTypes.DURATION;
 	}
 
 	@Incubating

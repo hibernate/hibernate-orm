@@ -564,6 +564,7 @@ public class XmlHelper {
 			case SqlTypes.DOUBLE:
 			case SqlTypes.DECIMAL:
 			case SqlTypes.NUMERIC:
+			case SqlTypes.DURATION:
 				jdbcJavaType.appendEncodedString(
 						appender,
 						jdbcJavaType.unwrap(

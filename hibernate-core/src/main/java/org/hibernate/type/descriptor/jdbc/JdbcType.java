@@ -287,6 +287,12 @@ public interface JdbcType extends Serializable {
 		return isIntervalType( getDdlTypeCode() );
 	}
 
+	default boolean isDuration() {
+		final int ddlTypeCode = getDefaultSqlTypeCode();
+		return isDurationType( ddlTypeCode )
+				|| isIntervalType( ddlTypeCode );
+	}
+
 	default CastType getCastType() {
 		return getCastType( getDdlTypeCode() );
 	}

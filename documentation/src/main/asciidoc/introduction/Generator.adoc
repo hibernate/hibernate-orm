@@ -516,7 +516,7 @@ This lets us declare which associations of `Book` should be pre-fetched by annot
 [[paging-and-ordering]]
 === Paging and ordering
 
-Optionally, a query method may have additional "magic" parameters which do not map to query parameters:
+Optionally, a query method--or a finder method which returns multiple results--may have additional "magic" parameters which do not map to query parameters:
 
 [cols="19,~,32m"]
 |===
@@ -537,7 +537,8 @@ Thus, if we redefine our earlier query method as follows:
 ----
 interface Queries {
     @HQL("from Book where title like :title and type = :type")
-    List<Book> findBooksByTitleAndType(String title, Page page, Order<? super Book>... order);
+    List<Book> findBooksByTitleAndType(String title, Type type,
+                                       Page page, Order<? super Book>... order);
 }
 ----
 
@@ -550,6 +551,19 @@ List<Book> books =
                 Page.page(RESULTS_PER_PAGE, page), Order.asc(Book_.isbn));
 ----
 
+Alternatively, we could have written this query method as a finder method:
+
+[source,java]
+----
+interface Queries {
+    @Find
+    List<Book> getBooksByTitle(String title, Type type,
+                               Page page, Order<? super Book>... order);
+}
+----
+
+This gives some dynamic control over query execution, but what if would like direct control over the `Query` object?
+Well, let's talk about the return type.
 
 [[return-types]]
 === Query and finder method return types

@@ -23,13 +23,13 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * For example:
  * <pre>
  * public interface Books {
- *     &#64;HQL("from Book where isbn = :isbn")
+ *     &#64;HQL("where isbn = :isbn")
  *     Book findBookByIsbn(String isbn);
  *
- *     &#64;HQL("from Book where title like ?1 order by title offset ?3 fetch first ?2 rows only")
+ *     &#64;HQL("where title like ?1 order by title offset ?3 fetch first ?2 rows only")
  *     List&lt;Book&gt; findBooksByTitleWithPagination(String title, int max, int start);
  *
- *     &#64;HQL("from Book where title like ?1")
+ *     &#64;HQL("where title like ?1")
  *     TypedQuery&lt;Book&gt; createBooksByTitleQuery(String title);
  * }
  * </pre>
@@ -110,6 +110,12 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *     (varargs) where {@code E} is the entity type returned by the
  *     query.
  * </ul>
+ * <p>
+ * For example:
+ * <pre>
+ * &#64;HQL("where title like :title)
+ * List&lt;Book&gt; findBooksByTitleWithPagination(String title, Page page, Order&lt;Book&gt; order);
+ * </pre>
  * <p>
  * Queries specified using this annotation are always validated by
  * the Metamodel Generator, and so it isn't necessary to specify the

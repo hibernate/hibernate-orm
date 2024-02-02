@@ -254,7 +254,8 @@ public class QueryMethod extends AbstractQueryMethod {
 		else {
 			return stem + "_"
 					+ paramTypes.stream()
-							.filter(name -> !isPageParam(name) && !isOrderParam(name))
+							.filter(type -> !isPageParam(type) && !isOrderParam(type)
+									&& !isSessionParameter(type))
 							.map(StringHelper::unqualify)
 							.reduce((x,y) -> x + '_' + y)
 							.orElse("");

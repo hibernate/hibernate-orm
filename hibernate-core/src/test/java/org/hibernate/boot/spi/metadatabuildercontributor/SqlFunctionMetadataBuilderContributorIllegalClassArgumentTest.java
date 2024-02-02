@@ -35,7 +35,13 @@ public class SqlFunctionMetadataBuilderContributorIllegalClassArgumentTest
 			fail("Should throw exception!");
 		}
 		catch (ClassCastException e) {
-			assertTrue( e.getMessage().contains( "cannot be cast to" ) );
+			final String javaVendor = System.getProperty("java.vendor");
+
+			if (javaVendor != null && javaVendor.startsWith("IBM")) {
+				assertTrue( e.getMessage().contains( "incompatible with" ) );
+			} else {
+				assertTrue( e.getMessage().contains( "cannot be cast to" ) );
+			}
 			assertTrue( e.getMessage().contains( "org.hibernate.boot.spi.MetadataBuilderContributor" ) );
 		}
 	}

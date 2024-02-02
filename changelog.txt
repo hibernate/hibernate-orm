@@ -3,6 +3,48 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.3.Final (February 02, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32243
+
+** Bug
+    * [HHH-17690] - Joins with Predicates using Criteria API in combination with EntityGraph poducing additional joins.
+    * [HHH-17689] - Cache SQL statement for unique key lookup
+    * [HHH-17687] - AttributeConverter, query does not use converter to convert 'null' fields
+    * [HHH-17686] - Join with inheritance subtype association doesn't trigger auto-flush
+    * [HHH-17683] - hibernate-jpamodelgen generates wrong constructor for metamodel of entities whose methods contain a `static EntityManager getEntityManager()`
+    * [HHH-17681] - Restore AbstractSqmSelfRenderingFunctionDescriptor backwards compatibility
+    * [HHH-17679] - Unnecessary entity name usage leads to collection element join
+    * [HHH-17677] - COALESCE usage in SQL is broken when giving NULL as second parameter
+    * [HHH-17674] - NullPointerException thrown when loading entity previously evicted and proxied
+    * [HHH-17670] - NPE in FromClause#findTableGroup
+    * [HHH-17668] - NullPointerException when refreshing bytecode-enhanced entity from second-level cache
+    * [HHH-17667] - Delete by type query with @DiscriminatorColumn generates SQL with a missing join
+    * [HHH-17666] - Datetime truncation fails when argument is a converted property
+    * [HHH-17665] - java.lang.ClassCastException in some cases when loading child entities, mapped as joined-subclass.
+    * [HHH-17653] - Error in generating schema when @Generator annotation is applied to a non id embeddable property 
+    * [HHH-17644] - Mapping of generic types in single table inheritance depends on lexicographical order of parent and child classnames
+    * [HHH-17643] - Allow uninitialized proxy serialization even when a SessionFactory is not available
+    * [HHH-17634] - Merging a new entity having a @GeneratedValue id should not set the generated id to the original entity
+    * [HHH-17629] - Criteria and Entity graph generates same join clause twice
+    * [HHH-17605] - NativeQuery - Multiple entities of same type are translated into the same single object
+    * [HHH-17598] - Criteria multiselect doesn't work properly for array types other than Object[]
+    * [HHH-17594] - "Could not set value of type" for @EmbeddedId that uses a @DiscriminatorValue as Key
+    * [HHH-17587] - Setting to null a property from a @SecondaryTable and @DynamicUpdate deletes the whole entry from database
+    * [HHH-17550] - NO_CONSTRAINT not honored by InheritanceType.JOINED
+    * [HHH-17526] - During eager batch fetching, real exceptions swallowed by exception in finally
+    * [HHH-17461] - Add explicit @SoftDelete column duplication validation
+    * [HHH-17420] - JoinColumn throws an `occurs out of order` AnnotationException
+    * [HHH-17326] - deprecated lazyLoading no longer working
+    * [HHH-17320] - A basic attribute of type TreeMap causes a JdbcTypeRecommendationException
+    * [HHH-17113] - Incorrect SQL generated on DiscriminatorColumn when combined with bidirectional relation and @DiscriminatorOptions(force = true)
+    * [HHH-16960] - OneToOne lazy loading fails when fetch graph is involved
+
+** Improvement
+    * [HHH-17319] - Use Oracle GraalVM for Atlas builds
+
+
 Changes in 6.4.2.Final (January 18, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

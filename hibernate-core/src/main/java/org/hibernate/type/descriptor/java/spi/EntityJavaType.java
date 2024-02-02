@@ -6,13 +6,15 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
-import org.hibernate.Hibernate;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.IncomparableComparator;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Uses object identity for {@code equals}/{@code hashCode} as we ensure that internally.
@@ -44,7 +46,15 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 
 	@Override
 	public boolean isInstance(Object value) {
-		return getJavaTypeClass().isAssignableFrom( Hibernate.getClassLazy( value ) );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( value );
+		final Class<T> javaTypeClass = getJavaTypeClass();
+		if ( lazyInitializer != null ) {
+			return javaTypeClass.isAssignableFrom( lazyInitializer.getPersistentClass() )
+					|| javaTypeClass.isAssignableFrom( lazyInitializer.getImplementationClass() );
+		}
+		else {
+			return javaTypeClass.isAssignableFrom( value.getClass() );
+		}
 	}
 
 	@Override

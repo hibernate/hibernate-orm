@@ -9,6 +9,8 @@ package org.hibernate.orm.test.annotations.basic;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -26,6 +28,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
+// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+@BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class SetAsBasicTest {
 
 	@Test

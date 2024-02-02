@@ -47,6 +47,14 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *     encode no semantics.
  * </ul>
  * <p>
+ * It's even possible to query by a field of an embedded object:
+ * <pre>
+ * &#064;Find
+ * List&lt;Book&gt; publishedBooks(String publisher$name);
+ * </pre>
+ * Here, {@code publisher$name} refers to the field {@code name} of
+ * the {@code Book}'s {@code Publisher}.
+ * <p>
  * The Metamodel Generator automatically creates an "implementation"
  * of every finder method in the static metamodel class {@code Books_}.
  * The generated method may be called according to the following
@@ -133,6 +141,12 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *     (varargs) where {@code E} is the entity type returned by the
  *     query.
  * </ul>
+ * <p>
+ * For example:
+ * <pre>
+ * &#064;Find
+ * List&lt;Book&gt; getBooksWithTitle(String title, List&lt;Order&lt;Book&gt;&gt; order);
+ * </pre>
  *
  * @see HQL
  * @see SQL

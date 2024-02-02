@@ -88,28 +88,37 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				.append("{@link ")
 				.append(annotationMetaEntity.importType(entity))
 				.append("} by ");
-		int paramCount = paramNames.size();
-		for (int i = 0; i < paramCount; i++) {
-			String param = paramNames.get(i);
-			if ( i>0 ) {
-				if ( i + 1 == paramCount) {
-					declaration
-							.append(paramCount>2 ? ", and " : " and "); //Oxford comma
+		long paramCount = paramTypes.stream()
+				.filter(type -> !isOrderParam(type) && !isPageParam(type)
+						&& !isSessionParameter(type))
+				.count();
+		int count = 0;
+		for (int i = 0; i < paramTypes.size(); i++) {
+			String type = paramTypes.get(i);
+			if ( !isPageParam(type) && !isOrderParam(type)
+					&& !isSessionParameter(type) ) {
+				if ( count>0 ) {
+					if ( count + 1 == paramCount) {
+						declaration
+								.append(paramCount>2 ? ", and " : " and "); //Oxford comma
+					}
+					else {
+						declaration
+								.append(", ");
+					}
 				}
-				else {
-					declaration
-							.append(", ");
-				}
+				count++;
+				final String path = paramNames.get(i)
+						.replace('$', '.');
+				declaration
+						.append("{@link ")
+						.append(annotationMetaEntity.importType(entity))
+						.append('#')
+						.append(qualifier(path))
+						.append(' ')
+						.append(path)
+						.append("}");
 			}
-			final String path = param.replace('$', '.');
-			declaration
-					.append("{@link ")
-					.append(annotationMetaEntity.importType(entity))
-					.append('#')
-					.append(qualifier(path))
-					.append(' ')
-					.append(path)
-					.append("}");
 		}
 		declaration
 				.append('.')

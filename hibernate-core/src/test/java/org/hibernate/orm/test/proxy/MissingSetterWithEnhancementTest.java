@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
@@ -64,7 +63,8 @@ public class MissingSetterWithEnhancementTest {
 		}
 		catch (MappingException e) {
 			assertEquals(
-					"Could not locate setter method for property [" + EntityWithMissingSetter.class.getName() + "#name]",
+					"Could not locate setter method for property 'name' of class '"
+							+ EntityWithMissingSetter.class.getName() + "'",
 					e.getMessage()
 			);
 		}

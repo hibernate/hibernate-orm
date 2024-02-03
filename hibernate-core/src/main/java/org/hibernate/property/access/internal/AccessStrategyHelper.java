@@ -152,12 +152,11 @@ public class AccessStrategyHelper {
 			throw new MappingException(
 					String.format(
 							Locale.ROOT,
-							"In trying to locate getter for property [%s], Class [%s] defined " +
-									"both a `get` [%s] and `is` [%s] variant",
-							propertyName,
+							"Class '%s' declares both 'get' [%s] and 'is' [%s] variants of getter for property '%s'",
 							containerClass.getName(),
 							method.toString(),
-							isMethodVariant.toString()
+							isMethodVariant,
+							propertyName
 					)
 			);
 		}

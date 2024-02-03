@@ -485,9 +485,9 @@ public final class ReflectHelper {
 			throw new PropertyNotFoundException(
 					String.format(
 							Locale.ROOT,
-							"Could not locate getter method for property [%s#%s]",
-							containerClass.getName(),
-							propertyName
+							"Could not locate getter method for property '%s' of class '%s'",
+							propertyName,
+							containerClass.getName()
 					)
 			);
 		}
@@ -608,12 +608,11 @@ public final class ReflectHelper {
 			throw new MappingException(
 					String.format(
 							Locale.ROOT,
-							"In trying to locate getter for property [%s], Class [%s] defined " +
-									"both a `get` [%s] and `is` [%s] variant",
-							propertyName,
+							"Class '%s' declares both 'get' [%s] and 'is' [%s] variants of getter for property '%s'",
 							containerClass.getName(),
-							getMethod.toString(),
-							isMethod.toString()
+							getMethod,
+							isMethod,
+							propertyName
 					)
 			);
 		}
@@ -731,9 +730,9 @@ public final class ReflectHelper {
 			throw new PropertyNotFoundException(
 					String.format(
 							Locale.ROOT,
-							"Could not locate setter method for property [%s#%s]",
-							containerClass.getName(),
-							propertyName
+							"Could not locate setter method for property '%s' of class '%s'",
+							propertyName,
+							containerClass.getName()
 					)
 			);
 		}

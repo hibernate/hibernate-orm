@@ -47,6 +47,14 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *     encode no semantics.
  * </ul>
  * <p>
+ * It's even possible to query by a field of an embedded object:
+ * <pre>
+ * &#064;Find
+ * List&lt;Book&gt; publishedBooks(String publisher$name);
+ * </pre>
+ * Here, {@code publisher$name} refers to the field {@code name} of
+ * the {@code Book}'s {@code Publisher}.
+ * <p>
  * The Metamodel Generator automatically creates an "implementation"
  * of every finder method in the static metamodel class {@code Books_}.
  * The generated method may be called according to the following
@@ -91,7 +99,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * or one of the following types:
  * <ul>
  * <li>{@link java.util.List java.util.List&lt;E&gt;},
- * <li>{@code io.smallrye.mutiny.Uni&lt;E&gt;}, when used with Hibernate Reactive,
+ * <li>{@code io.smallrye.mutiny.Uni<E>}, when used with Hibernate Reactive,
  * <li>{@link org.hibernate.query.Query org.hibernate.query.Query&lt;E&gt;},
  * <li>{@link org.hibernate.query.SelectionQuery org.hibernate.query.SelectionQuery&lt;E&gt;},
  * <li>{@link jakarta.persistence.Query jakarta.persistence.Query&lt;E&gt;}, or
@@ -123,7 +131,22 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <p>
  * As an exception, the method may have at most one parameter of
  * type {@code EntityManager}, {@code Session},
- * {@code StatelessSession}, or {@code Mutiny.Session}.
+ * {@code StatelessSession}, or {@code Mutiny.Session}. Furthermore,
+ * if the finder method returns multiple results, that is, if its
+ * return type is {@code List}, then it may also have:
+ * <ul>
+ * <li>a parameter with type {@code Page}, and/or
+ * <li>a parameter with type {@code Order<? super E>},
+ *     {@code List<Order<? super E>>}, or {@code Order<? super E>...}
+ *     (varargs) where {@code E} is the entity type returned by the
+ *     query.
+ * </ul>
+ * <p>
+ * For example:
+ * <pre>
+ * &#064;Find
+ * List&lt;Book&gt; getBooksWithTitle(String title, List&lt;Order&lt;Book&gt;&gt; order);
+ * </pre>
  *
  * @see HQL
  * @see SQL

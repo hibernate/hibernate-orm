@@ -302,7 +302,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void findSessionGetter(TypeElement type) {
-		if ( !containsAnnotation( type, Constants.ENTITY ) ) {
+		if ( !containsAnnotation( type, Constants.ENTITY )
+				&& !containsAnnotation( type, Constants.MAPPED_SUPERCLASS )
+				&& !containsAnnotation( type, Constants.EMBEDDABLE ) ) {
 			for ( ExecutableElement method : methodsIn( type.getEnclosedElements() ) ) {
 				if ( isSessionGetter( method ) ) {
 					dao = true;
@@ -543,6 +545,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					createCriteriaFinder( method, returnType, containerType, entity );
 				}
 				else {
+					for ( VariableElement parameter : method.getParameters() ) {
+						final String type = parameter.asType().toString();
+						if ( isPageParam(type) ) {
+							context.message( parameter, "pagination would have no effect", Diagnostic.Kind.ERROR);
+						}
+						else if ( isOrderParam(type) ) {
+							context.message( parameter, "ordering would have no effect", Diagnostic.Kind.ERROR);
+						}
+					}
 					final long parameterCount =
 							method.getParameters().stream()
 									.filter(AnnotationMetaEntity::isFinderParameterMappingToAttribute)
@@ -568,8 +579,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void createCriteriaFinder(
 			ExecutableElement method, TypeMirror returnType, @Nullable TypeElement containerType, TypeElement entity) {
 		final String methodName = method.getSimpleName().toString();
-		final List<String> paramNames = parameterNames(method);
-		final List<String> paramTypes = parameterTypes(method);
+		final List<String> paramNames = parameterNames( method );
+		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
 		for ( VariableElement param : method.getParameters() ) {
@@ -681,8 +692,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				method.getParameters().stream()
 						.filter(AnnotationMetaEntity::isFinderParameterMappingToAttribute)
 						.findFirst().orElseThrow();
-		final List<String> paramNames = parameterNames(method);
-		final List<String> paramTypes = parameterTypes(method);
+		final List<String> paramNames = parameterNames( method );
+		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final FieldType fieldType = validateFinderParameter( entity, parameter );
 		if ( fieldType != null ) {

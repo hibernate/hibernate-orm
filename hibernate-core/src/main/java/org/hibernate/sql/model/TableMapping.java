@@ -81,16 +81,33 @@ public interface TableMapping extends TableDetails {
 		private final Expectation expectation;
 		private final String customSql;
 		private final boolean callable;
+		private final boolean dynamicMutation;
 
 		public MutationDetails(
 				MutationType mutationType,
 				Expectation expectation,
 				String customSql,
 				boolean callable) {
+			this(
+					mutationType,
+					expectation,
+					customSql,
+					callable,
+					false
+			);
+		}
+
+		public MutationDetails(
+				MutationType mutationType,
+				Expectation expectation,
+				String customSql,
+				boolean callable,
+				boolean dynamicMutation) {
 			this.mutationType = mutationType;
 			this.expectation = expectation;
 			this.customSql = customSql;
 			this.callable = callable;
+			this.dynamicMutation = dynamicMutation;
 		}
 
 		/**
@@ -122,5 +139,10 @@ public interface TableMapping extends TableDetails {
 		public boolean isCallable() {
 			return callable;
 		}
+
+		public boolean isDynamicMutation() {
+			return dynamicMutation;
+		}
 	}
+
 }

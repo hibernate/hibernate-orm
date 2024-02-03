@@ -12,6 +12,6 @@
  * They are not part of the public API of Hibernate, and are not meant to
  * be used directly by typical programs which use Hibernate for persistence.
  *
- * @see org.hibernate.collection
+ * @see org.hibernate.collection.spi
  */
 package org.hibernate.proxy;

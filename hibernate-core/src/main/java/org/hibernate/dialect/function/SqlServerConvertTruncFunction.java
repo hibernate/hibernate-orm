@@ -20,7 +20,8 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Custom {@link TruncFunction} for SQL Server versions < 16 which uses the custom {@link DateTruncConvertEmulation}
+ * Custom {@link TruncFunction} for SQL Server versions before 16,
+ * which uses the custom {@link DateTruncConvertEmulation}
  *
  * @author Marco Belladelli
  */

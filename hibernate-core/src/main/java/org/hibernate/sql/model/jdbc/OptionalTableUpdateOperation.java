@@ -127,7 +127,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			ValuesAnalysis incomingValuesAnalysis,
 			SharedSessionContractImplementor session) {
 		final UpdateValuesAnalysis valuesAnalysis = (UpdateValuesAnalysis) incomingValuesAnalysis;
-		if ( !valuesAnalysis.getTablesNeedingUpdate().contains( tableMapping ) ) {
+		if ( !valuesAnalysis.getTablesNeedingUpdate().contains( tableMapping )
+				&& !valuesAnalysis.getTablesNeedingDynamicUpdate().contains( tableMapping ) ) {
 			return;
 		}
 

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -258,7 +259,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		addEndRevisionNullRestriction( configuration, qb.getRootParameters() );
 
-		final List<Object> l = qb.toQuery( session ).setLockOptions( LockOptions.UPGRADE ).list();
+		final List<Object> l = qb.toQuery( session ).setHibernateFlushMode(FlushMode.MANUAL).setLockOptions( LockOptions.UPGRADE ).list();
 
 		// Update the last revision if one exists.
 		// HHH-5967: with collections, the same element can be added and removed multiple times. So even if it's an

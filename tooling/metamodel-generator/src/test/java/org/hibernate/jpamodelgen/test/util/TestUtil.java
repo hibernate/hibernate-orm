@@ -6,11 +6,18 @@
  */
 package org.hibernate.jpamodelgen.test.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -18,14 +25,14 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.metamodel.ListAttribute;
-import jakarta.persistence.metamodel.SetAttribute;
 import javax.tools.Diagnostic;
 
 import org.jboss.logging.Logger;
 
-import static org.junit.Assert.*;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.SetAttribute;
 
 /**
  * @author Hardy Ferentschik
@@ -57,6 +64,10 @@ public class TestUtil {
 		assertNotNull( "Class parameter cannot be null", clazz );
 		File sourceFile = getMetaModelSourceFileFor( clazz );
 		assertFalse( "There should be no source file: " + sourceFile.getName(), sourceFile.exists() );
+	}
+
+	public static void assertAbsenceOfNonDefaultConstructorInMetamodelFor(Class<?> clazz, String errorString) {
+		assertFalse(buildErrorString( errorString, clazz ), hasNonDefaultConstructorInMetamodelFor( clazz ) );
 	}
 
 	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
@@ -92,16 +103,21 @@ public class TestUtil {
 		assertTrue( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
 	}
 
-	public static void assertPresenceOfMethodInMetamodelFor(Class<?> clazz, String fieldName, String errorString, Class<?>... params) {
+	public static void assertPresenceOfMethodInMetamodelFor(Class<?> clazz, String fieldName, String errorString,
+			Class<?>... params) {
 		assertTrue( buildErrorString( errorString, clazz ), hasMethodInMetamodelFor( clazz, fieldName, params ) );
 	}
 
 	public static void assertPresenceOfNameFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
 		assertTrue( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
-		assertEquals(buildErrorString(errorString, clazz), getFieldFromMetamodelFor(clazz, fieldName).getType(), String.class);
+		assertEquals(
+				buildErrorString( errorString, clazz ), getFieldFromMetamodelFor( clazz, fieldName ).getType(),
+				String.class
+		);
 	}
 
-	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
+	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType,
+			String errorString) {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
 		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );
 		ParameterizedType type = (ParameterizedType) field.getGenericType();
@@ -117,7 +133,8 @@ public class TestUtil {
 		);
 	}
 
-	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Type expectedType, String errorString) {
+	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Type expectedType,
+			String errorString) {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
 		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );
 		ParameterizedType type = (ParameterizedType) field.getGenericType();
@@ -129,15 +146,18 @@ public class TestUtil {
 		);
 	}
 
-	public static void assertSetAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
+	public static void assertSetAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType,
+			String errorString) {
 		assertCollectionAttributeTypeInMetaModelFor( clazz, fieldName, SetAttribute.class, expectedType, errorString );
 	}
 
-	public static void assertListAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
+	public static void assertListAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType,
+			String errorString) {
 		assertCollectionAttributeTypeInMetaModelFor( clazz, fieldName, ListAttribute.class, expectedType, errorString );
 	}
 
-	public static void assertMapAttributesInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedMapKey, Class<?> expectedMapValue, String errorString) {
+	public static void assertMapAttributesInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedMapKey,
+			Class<?> expectedMapValue, String errorString) {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
 		assertNotNull( field );
 		ParameterizedType type = (ParameterizedType) field.getGenericType();
@@ -180,7 +200,8 @@ public class TestUtil {
 			getMetamodelClassFor( clazz );
 			fail();
 		}
-		catch (AssertionError ae) {}
+		catch (AssertionError ae) {
+		}
 	}
 
 	/**
@@ -216,7 +237,7 @@ public class TestUtil {
 			URLClassLoader classLoader = new URLClassLoader( urls, TestUtil.class.getClassLoader() );
 			return classLoader.loadClass( metaModelClassName );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			fail( metaModelClassName + " was not generated." );
 		}
 		// keep the compiler happy
@@ -240,11 +261,11 @@ public class TestUtil {
 			try {
 				String line;
 				/*
-						* readLine is a bit quirky :
-						* it returns the content of a line MINUS the newline.
-						* it returns null only for the END of the stream.
-						* it returns an empty String if two newlines appear in a row.
-						*/
+				 * readLine is a bit quirky :
+				 * it returns the content of a line MINUS the newline.
+				 * it returns null only for the END of the stream.
+				 * it returns an empty String if two newlines appear in a row.
+				 */
 				while ( ( line = input.readLine() ) != null ) {
 					contents.append( line );
 					contents.append( System.lineSeparator() );
@@ -254,7 +275,7 @@ public class TestUtil {
 				input.close();
 			}
 		}
-		catch ( IOException ex ) {
+		catch (IOException ex) {
 			ex.printStackTrace();
 		}
 
@@ -266,12 +287,17 @@ public class TestUtil {
 		log.info( getMetaModelSourceAsString( clazz ) );
 	}
 
+	public static Constructor<?>[] getConstructorsFromMetamodelFor(Class<?> entityClass) {
+		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
+		return metaModelClass.getConstructors();
+	}
+
 	public static Field getFieldFromMetamodelFor(Class<?> entityClass, String fieldName) {
 		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
 		try {
 			return metaModelClass.getDeclaredField( fieldName );
 		}
-		catch ( NoSuchFieldException e ) {
+		catch (NoSuchFieldException e) {
 			return null;
 		}
 	}
@@ -281,13 +307,18 @@ public class TestUtil {
 		try {
 			return metaModelClass.getDeclaredMethod( methodName, params );
 		}
-		catch ( NoSuchMethodException e ) {
+		catch (NoSuchMethodException e) {
 			return null;
 		}
 	}
 
 	public static String fcnToPath(String fcn) {
 		return fcn.replace( PACKAGE_SEPARATOR, RESOURCE_SEPARATOR );
+	}
+
+	private static boolean hasNonDefaultConstructorInMetamodelFor(Class<?> clazz) {
+		return Arrays.stream( getConstructorsFromMetamodelFor( clazz ) )
+				.anyMatch( constructor -> constructor.getParameterCount() > 0 );
 	}
 
 	private static boolean hasFieldInMetamodelFor(Class<?> clazz, String fieldName) {

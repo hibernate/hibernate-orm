@@ -6314,7 +6314,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void registerAffectedTable(NamedTableReference tableReference) {
-		registerAffectedTable( tableReference.getTableExpression() );
+		tableReference.applyAffectedTableNames( this::registerAffectedTable );
 	}
 
 	protected void registerAffectedTable(String tableExpression) {

@@ -51,8 +51,9 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *     </li>
  * </ul>
  *
- * See also {@link org.hibernate.event.spi.EventSource} which extends this interface
- * provides a bridge to the event generation features of {@link org.hibernate.event}.
+ * See also {@link org.hibernate.event.spi.EventSource} which extends this interface,
+ * providing a bridge to the event generation features of {@link org.hibernate.event.spi
+ * org.hibernate.event}.
  *
  * @author Gavin King
  * @author Steve Ebersole

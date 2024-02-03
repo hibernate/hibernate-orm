@@ -131,7 +131,7 @@ public interface QuerySettings {
 	 * By default, this is set to false, i.e. native queries will be checked for ordinal placeholders.
 	 * <p>
 	 *
-	 * @see SessionFactoryOptions#getIgnoreNativeJdbcParameters()
+	 * @see SessionFactoryOptions#getNativeJdbcParametersIgnored()
 	 */
 	String NATIVE_IGNORE_JDBC_PARAMETERS = "hibernate.query.native.ignore_jdbc_parameters";
 

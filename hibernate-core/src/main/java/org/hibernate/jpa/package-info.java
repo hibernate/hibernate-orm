@@ -34,8 +34,9 @@
  *     {@linkplain org.hibernate.jpa.boot.spi.Bootstrap bootstrap} the JPA
  *     provider, and interfaces which may be implemented to contribute extensions
  *     during of the bootstrap process.
- * <li>The package {@link org.hibernate.jpa.event} implements support for JPA
- *     {@linkplain jakarta.persistence.EntityListeners event listeners}.
+ * <li>The package {@link org.hibernate.jpa.event.spi org.hibernate.jpa.event}
+ *     implements support for JPA {@linkplain jakarta.persistence.EntityListeners
+ *     event listeners}.
  * <li>The package {@link org.hibernate.jpa.spi} provides SPIs for managing cases
  *     where Hibernate intentionally violates the JPA specification by default
  *     (something Hibernate only does when it has a really good reason to do so).

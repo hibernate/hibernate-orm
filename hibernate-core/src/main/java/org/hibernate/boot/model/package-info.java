@@ -9,7 +9,7 @@
  * This package defines the boot-time metamodel, which is an interpretation
  * of the domain model (entity classes, embeddable classes, and attributes)
  * and the mapping of these "domain model parts" to the database. It is
- * {@linkplain org.hibernate.boot.model.process built incrementally} from
+ * {@linkplain org.hibernate.boot.model.process.spi built incrementally} from
  * {@linkplain org.hibernate.annotations annotations} and XML-based mappings.
  * <p>
  * The interfaces {@link org.hibernate.boot.model.TypeContributor} and

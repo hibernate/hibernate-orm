@@ -25,6 +25,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -61,7 +62,7 @@ public class GetAndIsVariantGetterTest {
 			fail( "Expecting a failure" );
 		}
 		catch (MappingException e) {
-			assertThat( e.getMessage(), startsWith( "In trying to locate getter for property [id]" ) );
+			assertThat( e.getMessage(), endsWith( "variants of getter for property 'id'" ) );
 		}
 	}
 

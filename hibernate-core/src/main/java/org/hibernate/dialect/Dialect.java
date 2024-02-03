@@ -4732,27 +4732,36 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * The default length for a LOB column, if LOB columns have a length in
-	 * this dialect.
+	 * This is the default length for a generated column of type
+	 * {@link SqlTypes#BLOB BLOB} or {@link SqlTypes#CLOB CLOB}
+	 * mapped to {@link Blob} or {@link Clob}, if LOB columns
+	 * have a length in this dialect.
 	 *
 	 * @return {@value Size#DEFAULT_LOB_LENGTH} by default
 	 *
 	 * @see Length#LOB_DEFAULT
+	 * @see org.hibernate.type.descriptor.java.BlobJavaType
+	 * @see org.hibernate.type.descriptor.java.ClobJavaType
 	 */
 	public long getDefaultLobLength() {
 		return Size.DEFAULT_LOB_LENGTH;
 	}
 
 	/**
-	 * This is the default precision for a generated
-	 * column mapped to a {@link java.math.BigInteger}
-	 * or {@link java.math.BigDecimal}.
+	 * This is the default precision for a generated column of
+	 * exact numeric type {@link SqlTypes#DECIMAL DECIMAL} or
+	 * {@link SqlTypes#NUMERIC NUMERIC} mapped to a
+	 * {@link java.math.BigInteger} or
+	 * {@link java.math.BigDecimal}.
 	 * <p>
 	 * Usually returns the maximum precision of the
 	 * database, except when there is no such maximum
 	 * precision, or the maximum precision is very high.
 	 *
 	 * @return the default precision, in decimal digits
+	 *
+	 * @see org.hibernate.type.descriptor.java.BigDecimalJavaType
+	 * @see org.hibernate.type.descriptor.java.BigIntegerJavaType
 	 */
 	public int getDefaultDecimalPrecision() {
 		//this is the maximum for Oracle, SQL Server,
@@ -4762,14 +4771,20 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * This is the default precision for a generated
-	 * column mapped to a {@link Timestamp} or
-	 * {@link java.time.LocalDateTime}.
+	 * This is the default precision for a generated column of
+	 * type {@link SqlTypes#TIMESTAMP TIMESTAMP} mapped to a
+	 * {@link Timestamp} or {@link java.time.LocalDateTime}.
 	 * <p>
 	 * Usually 6 (microseconds) or 3 (milliseconds).
 	 *
 	 * @return the default precision, in decimal digits,
 	 *         of the fractional seconds field
+	 *
+	 * @see org.hibernate.type.descriptor.java.JdbcTimestampJavaType
+	 * @see org.hibernate.type.descriptor.java.LocalDateTimeJavaType
+	 * @see org.hibernate.type.descriptor.java.OffsetDateTimeJavaType
+	 * @see org.hibernate.type.descriptor.java.ZonedDateTimeJavaType
+	 * @see org.hibernate.type.descriptor.java.InstantJavaType
 	 */
 	public int getDefaultTimestampPrecision() {
 		//milliseconds or microseconds is the maximum
@@ -4777,6 +4792,23 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		//precision, with the exception of DB2 which
 		//accepts up to 12 digits!
 		return 6; //microseconds!
+	}
+
+	/**
+	 * This is the default scale for a generated column of type
+	 * {@link SqlTypes#INTERVAL_SECOND INTERVAL SECOND} mapped
+	 * to a {@link Duration}.
+	 * <p>
+	 * Usually 9 (nanoseconds) or 6 (microseconds).
+	 *
+	 * @return the default scale, in decimal digits,
+	 *         of the fractional seconds field
+	 *
+	 * @see org.hibernate.type.descriptor.java.DurationJavaType
+	 */
+	public int getDefaultIntervalSecondScale(){
+		// The default scale necessary is 9 i.e. nanosecond resolution
+		return 9;
 	}
 
 	/**
@@ -5477,16 +5509,4 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return FunctionalDependencyAnalysisSupportImpl.NONE;
 	}
 
-	/**
-	 * Resolves the default scale for a {@link SqlTypes.INTERVAL_SECOND} type code for the given column
-	 * <p>
-	 * Usually 9 (nanosecond) or 6 (microseconds).
-	 *
-	 * @return the default scale, in decimal digits,
-	 *         of the fractional seconds field
-	 */
-	public int getDefaultIntervalSecondScale(){
-		// The default scale necessary is 9 i.e. nanosecond resolution
-		return 9;
-	}
 }

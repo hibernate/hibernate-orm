@@ -41,7 +41,7 @@ public interface CollectionInitializerProducer {
 	 * @param collectionValueKeyAssembler allows creation of a
 	 *        {@link org.hibernate.sql.results.graph.DomainResult} for
 	 *        either side of the collection foreign key
-	 * @deprecated Use {@link #produceInitializer(NavigablePath, PluralAttributeMapping, FetchParentAccess, LockMode, DomainResult, DomainResult, AssemblerCreationState)} instead
+	 * @deprecated Use {@link #produceInitializer(NavigablePath, PluralAttributeMapping, FetchParentAccess, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState)} instead
 	 */
 	@Deprecated(forRemoval = true)
 	CollectionInitializer produceInitializer(

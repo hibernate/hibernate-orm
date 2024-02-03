@@ -26,9 +26,6 @@ public interface ResultSetReturn {
 
 	/**
 	 * Extract the {@link ResultSet} from the {@link PreparedStatement}.
-	 * <p>
-	 * If client passes {@link CallableStatement} reference, this method calls {@link #extract(CallableStatement)}
-	 * internally.  Otherwise, {@link PreparedStatement#executeQuery()} is called.
 	 *
 	 * @param statement The {@link PreparedStatement} from which to extract the {@link ResultSet}
 	 *

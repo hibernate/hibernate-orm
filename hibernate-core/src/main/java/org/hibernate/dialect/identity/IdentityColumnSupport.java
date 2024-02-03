@@ -132,7 +132,7 @@ public interface IdentityColumnSupport {
 	 *
 	 * @return the dialect specific GetGeneratedKeys delegate
 	 *
-	 * @deprecated Use {@link #buildGetGeneratedKeysDelegate(EntityPersister, Dialect)} instead.
+	 * @deprecated Use {@link #buildGetGeneratedKeysDelegate(EntityPersister)} instead.
 	 */
 	@Deprecated( forRemoval = true, since = "6.5" )
 	default GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
@@ -142,12 +142,12 @@ public interface IdentityColumnSupport {
 	}
 
 	/**
-	 * The Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
+	 * The delegate for dealing with {@code IDENTITY} columns using
+	 * {@link java.sql.PreparedStatement#getGeneratedKeys}.
 	 *
 	 * @param persister The persister
-	 * @param dialect The dialect against which to generate the delegate
 	 *
-	 * @return the dialect specific GetGeneratedKeys delegate
+	 * @return the dialect-specific {@link GetGeneratedKeysDelegate}
 	 */
 	GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(EntityPersister persister);
 }

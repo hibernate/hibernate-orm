@@ -7,22 +7,12 @@
 package org.hibernate.boot.model.source.spi;
 
 /**
- * Describes source information about the key of a persistent map.  At high
- * level this is broken down further into 2 categories:<ul>
- *     <li>{@link PluralAttributeMapKeySourceEntityAttribute}</li>
- *     <li>
- *         <ul>
- *             <li>{@link PluralAttributeMapKeySourceBasic}</li>
- *             <li>{@link PluralAttributeMapKeySourceEmbedded}</li>
- *             <li>{@link PluralAttributeMapKeyManyToManySource}</li>
- *         </ul>
- *     </li>
- * </ul>
- * <p>
- * {@link PluralAttributeMapKeySourceEntityAttribute} is only relevant from
- * annotations when using {@link jakarta.persistence.MapKey}.
+ * Describes source information about the key of a persistent map.
  *
  * @author Steve Ebersole
+ *
+ * @see PluralAttributeMapKeyManyToManySource
+ * @see PluralAttributeMapKeyManyToAnySource
  */
 public interface PluralAttributeMapKeySource extends PluralAttributeIndexSource {
 	enum Nature {
@@ -35,14 +25,17 @@ public interface PluralAttributeMapKeySource extends PluralAttributeIndexSource 
 	Nature getMapKeyNature();
 
 	/**
-	 * Is this plural attribute index source for an attribute of the referenced entity
-	 * (relevant only for one-to-many and many-to-many associations)?
-	 *
+	 * Is this plural attribute index source for an attribute of the referenced
+	 * entity (relevant only for one-to-many and many-to-many associations)?
+	 * <p>
 	 * If this method returns {@code true}, then this object can safely
-	 * be cast to {@link PluralAttributeMapKeySourceEntityAttribute}.
+	 * be cast to {@link PluralAttributeMapKeyManyToManySource}.
 	 *
-	 * @return true, if this plural attribute index source for an attribute of the referenced
-	 * entity; false, otherwise.
+	 * @return true, if this plural attribute index source for an attribute of
+	 *         the referenced entity; false, otherwise.
+	 *
+	 * @deprecated no longer used, so this should be removed
 	 */
+	@Deprecated(since = "6.4")
 	boolean isReferencedEntityAttribute();
 }

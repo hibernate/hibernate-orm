@@ -59,8 +59,8 @@ public class MapIssueTest {
 				s -> {
 					s.createQuery( "select c from MapOwner as o join o.contents c join c.relationship r where r.id is not null" ).list();
 					statementInspector.assertExecutedCount( 1 );
-					// Assert 3 joins, collection table, collection element and relationship
-					statementInspector.assertNumberOfJoins( 0, 3 );
+					// Assert 2 joins, collection table, collection element
+					statementInspector.assertNumberOfJoins( 0, 2 );
 				}
 		);
 	}

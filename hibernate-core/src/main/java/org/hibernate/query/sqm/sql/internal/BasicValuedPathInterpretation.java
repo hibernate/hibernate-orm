@@ -25,6 +25,9 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -35,10 +38,12 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.query.sqm.internal.SqmUtil.isFkOptimizationAllowed;
 import static org.hibernate.query.sqm.internal.SqmUtil.needsTargetTableMapping;
 
 /**
  * @author Steve Ebersole
+ * @author Yanming Zhou
  */
 public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements Assignable,  DomainResultProducer<T> {
 	/**
@@ -83,7 +88,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		}
 
 		final ModelPart modelPart;
-		if ( needsTargetTableMapping( sqmPath, modelPartContainer ) ) {
+		if ( !isFkOptimizationAllowedForState( sqmPath.getLhs(), sqlAstCreationState ) && needsTargetTableMapping( sqmPath, modelPartContainer ) ) {
 			// We have to make sure we render the column of the target table
 			modelPart = ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
 					sqmPath.getReferencedPathSource().getPathName(),
@@ -138,6 +143,29 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		}
 
 		return new BasicValuedPathInterpretation<>( columnReference, sqmPath.getNavigablePath(), mapping, tableGroup );
+	}
+
+	private static boolean isFkOptimizationAllowedForState(SqmPath<?> sqmPath, SqmToSqlAstConverter sqlAstCreationState) {
+		boolean isFkOptimizationAllowed = isFkOptimizationAllowed( sqmPath );
+		if ( isFkOptimizationAllowed ) {
+			if ( sqlAstCreationState.getCurrentSqmQueryPart() instanceof SqmQuerySpec<?> ) {
+				final SqmQuerySpec<?> spec = (SqmQuerySpec<?>) sqlAstCreationState.getCurrentSqmQueryPart();
+				final SqmOrderByClause orderByClause = spec.getOrderByClause();
+				if ( orderByClause != null && !orderByClause.getSortSpecifications().isEmpty() ) {
+					final SqmSelectClause selectClause = spec.getSelectClause();
+					if ( selectClause != null && selectClause.isDistinct() ) {
+						// DISTINCT query requires sorted column in SELECT list
+						isFkOptimizationAllowed = false;
+					}
+					if ( !spec.getGroupByClauseExpressions().isEmpty() ) {
+						// PostgreSQL requires sorted column appear in the GROUP BY clause or be used in an aggregate function
+						isFkOptimizationAllowed = false;
+					}
+				}
+
+			}
+		}
+		return isFkOptimizationAllowed;
 	}
 
 	private final ColumnReference columnReference;

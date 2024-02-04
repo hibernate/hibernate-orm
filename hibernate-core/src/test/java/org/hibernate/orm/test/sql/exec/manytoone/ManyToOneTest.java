@@ -9,14 +9,16 @@ package org.hibernate.orm.test.sql.exec.manytoone;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.stat.spi.StatisticsImplementor;
-
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -34,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
+ * @author Yanming Zhou
  */
 @DomainModel(
 		annotatedClasses = {
@@ -300,6 +303,23 @@ public class ManyToOneTest {
 				session -> {
 					assertThat( session.get( OtherEntity.class, 2 ), nullValue() );
 					assertThat( session.get( SimpleEntity.class, 1 ), notNullValue() );
+				}
+		);
+	}
+
+	@Test
+	public void testFkOptimizationWithLeftJoin(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				session -> {
+					CriteriaBuilder cb = session.getCriteriaBuilder();
+					CriteriaQuery<OtherEntity> cq = cb.createQuery( OtherEntity.class );
+					Root<OtherEntity> root = cq.from( OtherEntity.class );
+					cq.select(root).where( cb.equal( root.join("simpleEntity", JoinType.LEFT ).get( "id" ), 1 ) );
+					assertThat( session.createQuery( cq ).getResultList().size(), is(1) );
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 				}
 		);
 	}

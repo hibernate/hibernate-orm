@@ -153,7 +153,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 					statementInspector.assertExecutedCount( 2 );
 					// The join to the target table PARENT for Male#parent is added since it's explicitly joined in HQL
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 3 );
 					assertThat( son.getParent(), CoreMatchers.notNullValue() );
 

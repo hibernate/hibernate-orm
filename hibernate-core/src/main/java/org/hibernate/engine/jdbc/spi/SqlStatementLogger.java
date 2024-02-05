@@ -145,8 +145,20 @@ public class SqlStatementLogger implements Service {
 	 * @param statement SQL statement.
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
-	public void logSlowQuery(Statement statement, long startTimeNanos, JdbcSessionContext context) {
-		logSlowQuery( statement::toString, startTimeNanos, context );
+	public void logSlowQuery(final Statement statement, final long startTimeNanos, final JdbcSessionContext context) {
+		if ( logSlowQuery < 1 ) {
+			return;
+		}
+		if ( startTimeNanos <= 0 ) {
+			throw new IllegalArgumentException( "startTimeNanos [" + startTimeNanos + "] should be greater than 0" );
+		}
+
+		final long queryExecutionMillis = elapsedFrom( startTimeNanos );
+
+		if ( queryExecutionMillis > logSlowQuery ) {
+			final String sql = statement.toString();
+			logSlowQueryInternal( context, queryExecutionMillis, sql );
+		}
 	}
 
 	/**
@@ -155,17 +167,7 @@ public class SqlStatementLogger implements Service {
 	 * @param sql The SQL query.
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
-	@AllowSysOut
-	public void logSlowQuery(String sql, long startTimeNanos, JdbcSessionContext context) {
-		logSlowQuery( sql::toString, startTimeNanos, context );
-	}
-
-	/**
-	 * @param sqlSupplier Supplier to generate The SQL query.
-	 * @param startTimeNanos Start time in nanoseconds.
-	 */
-	@AllowSysOut
-	private void logSlowQuery(Supplier<String> sqlSupplier, long startTimeNanos, JdbcSessionContext context) {
+	public void logSlowQuery(final String sql, final long startTimeNanos, final JdbcSessionContext context) {
 		if ( logSlowQuery < 1 ) {
 			return;
 		}
@@ -173,21 +175,30 @@ public class SqlStatementLogger implements Service {
 			throw new IllegalArgumentException( "startTimeNanos [" + startTimeNanos + "] should be greater than 0" );
 		}
 
-		long queryExecutionMillis = TimeUnit.NANOSECONDS.toMillis( System.nanoTime() - startTimeNanos );
+		final long queryExecutionMillis = elapsedFrom( startTimeNanos );
 
 		if ( queryExecutionMillis > logSlowQuery ) {
-			final String sql = sqlSupplier.get();
-			final String logData = "Slow query took " + queryExecutionMillis + " milliseconds [" + sql + "]";
-			LOG_SLOW.info( logData );
-			if ( logToStdout ) {
-				System.out.println( logData );
-			}
-			if ( context != null ) {
-				final StatisticsImplementor statisticsImplementor = context.getStatistics();
-				if ( statisticsImplementor != null && statisticsImplementor.isStatisticsEnabled() ) {
-					statisticsImplementor.slowQuery( sql, queryExecutionMillis );
-				}
+			logSlowQueryInternal( context, queryExecutionMillis, sql );
+		}
+	}
+
+	private static long elapsedFrom(final long startTimeNanos) {
+		return TimeUnit.NANOSECONDS.toMillis( System.nanoTime() - startTimeNanos );
+	}
+
+	@AllowSysOut
+	private void logSlowQueryInternal(final JdbcSessionContext context, final long queryExecutionMillis, final String sql) {
+		final String logData = "Slow query took " + queryExecutionMillis + " milliseconds [" + sql + "]";
+		LOG_SLOW.info( logData );
+		if ( logToStdout ) {
+			System.out.println( logData );
+		}
+		if ( context != null ) {
+			final StatisticsImplementor statisticsImplementor = context.getStatistics();
+			if ( statisticsImplementor != null && statisticsImplementor.isStatisticsEnabled() ) {
+				statisticsImplementor.slowQuery( sql, queryExecutionMillis );
 			}
 		}
 	}
+
 }

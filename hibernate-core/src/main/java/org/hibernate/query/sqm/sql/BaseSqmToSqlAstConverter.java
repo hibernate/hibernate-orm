@@ -6,12 +6,14 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
@@ -519,6 +521,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 	private final MappingMetamodel domainModel;
+
+	private NationalizedIndicators nationalizedIndicators;
 
 	public BaseSqmToSqlAstConverter(
 			SqlAstCreationContext creationContext,
@@ -6311,9 +6315,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitCastTarget(SqmCastTarget<?> target) {
 		BasicValuedMapping targetType = (BasicValuedMapping) target.getType();
 		if ( targetType instanceof BasicType ) {
+			BasicType basicTargetType = (BasicType) targetType;
 			targetType = InferredBasicValueResolver.resolveSqlTypeIndicators(
-					this,
-					(BasicType) targetType,
+					basicTargetType.getJdbcType().isNationalized()
+							? getNationalizedIndicators()
+							: this,
+					basicTargetType,
 					target.getNodeJavaType()
 			);
 		}
@@ -8731,6 +8738,127 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			 */
 		return creationContext.getMaximumFetchDepth() == null
 				&& ( entityGraphTraversalState != null || getLoadQueryInfluencers().hasEnabledFetchProfiles() );
+	}
+
+	private NationalizedIndicators getNationalizedIndicators() {
+		if ( nationalizedIndicators == null ) {
+			nationalizedIndicators = new NationalizedIndicators( this );
+		}
+		return nationalizedIndicators;
+	}
+
+	private static class NationalizedIndicators implements JdbcTypeIndicators {
+
+		private final JdbcTypeIndicators wrappedIndicator;
+
+		private NationalizedIndicators(JdbcTypeIndicators wrappedIndicator) {
+			this.wrappedIndicator = wrappedIndicator;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return wrappedIndicator.getTypeConfiguration();
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return wrappedIndicator.getDialect();
+		}
+
+		@Override
+		public boolean isNationalized() {
+			return true;
+		}
+
+		@Override
+		public boolean isLob() {
+			return wrappedIndicator.isLob();
+		}
+
+		@Override
+		public EnumType getEnumeratedType() {
+			return wrappedIndicator.getEnumeratedType();
+		}
+
+		@Override
+		public TemporalType getTemporalPrecision() {
+			return wrappedIndicator.getTemporalPrecision();
+		}
+
+		@Override
+		public boolean isPreferJavaTimeJdbcTypesEnabled() {
+			return wrappedIndicator.isPreferJavaTimeJdbcTypesEnabled();
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return wrappedIndicator.getPreferredSqlTypeCodeForBoolean();
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForDuration() {
+			return wrappedIndicator.getPreferredSqlTypeCodeForDuration();
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForUuid() {
+			return wrappedIndicator.getPreferredSqlTypeCodeForUuid();
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForInstant() {
+			return wrappedIndicator.getPreferredSqlTypeCodeForInstant();
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForArray() {
+			return wrappedIndicator.getPreferredSqlTypeCodeForArray();
+		}
+
+		@Override
+		public long getColumnLength() {
+			return wrappedIndicator.getColumnLength();
+		}
+
+		@Override
+		public int getColumnPrecision() {
+			return wrappedIndicator.getColumnPrecision();
+		}
+
+		@Override
+		public int getColumnScale() {
+			return wrappedIndicator.getColumnScale();
+		}
+
+		@Override
+		public Integer getExplicitJdbcTypeCode() {
+			return wrappedIndicator.getExplicitJdbcTypeCode();
+		}
+
+		@Override
+		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+			return wrappedIndicator.getDefaultTimeZoneStorageStrategy();
+		}
+
+		@Override
+		public JdbcType getJdbcType(int jdbcTypeCode) {
+			return wrappedIndicator.getJdbcType( jdbcTypeCode );
+		}
+
+		@Override
+		public int resolveJdbcTypeCode(int jdbcTypeCode) {
+			return wrappedIndicator.resolveJdbcTypeCode( jdbcTypeCode );
+		}
+
+		@Override
+		public int getDefaultZonedTimeSqlType() {
+			return wrappedIndicator.getDefaultZonedTimeSqlType();
+		}
+
+		@Override
+		public int getDefaultZonedTimestampSqlType() {
+			return wrappedIndicator.getDefaultZonedTimestampSqlType();
+		}
 	}
 
 }

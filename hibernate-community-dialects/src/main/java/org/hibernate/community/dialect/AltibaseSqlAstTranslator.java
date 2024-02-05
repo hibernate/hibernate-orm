@@ -10,25 +10,32 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -142,6 +149,63 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	protected void renderMergeUpdateClause(List<Assignment> assignments, Predicate wherePredicate) {
+		// In Altibase, where condition in merge can be placed next to the set clause."
+		appendSql( " then update" );
+		renderSetClause( assignments );
+		visitWhereClause( wherePredicate );
+	}
+
+	@Override
+	protected void renderDeleteClause(DeleteStatement statement) {
+		appendSql( "delete" );
+		final Stack<Clause> clauseStack = getClauseStack();
+		try {
+			clauseStack.push( Clause.DELETE );
+			renderTableReferenceIdentificationVariable( statement.getTargetTable() );
+			if ( statement.getFromClause().getRoots().isEmpty() ) {
+				appendSql( " from " );
+				renderDmlTargetTableExpression( statement.getTargetTable() );
+			}
+			else {
+				visitFromClause( statement.getFromClause() );
+			}
+		}
+		finally {
+			clauseStack.pop();
+		}
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderUpdateClause(UpdateStatement updateStatement) {
+		if ( updateStatement.getFromClause().getRoots().isEmpty() ) {
+			super.renderUpdateClause( updateStatement );
+		}
+		else {
+			appendSql( "update " );
+			renderFromClauseSpaces( updateStatement.getFromClause() );
+		}
+	}
+
+	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
 		emulateQueryPartTableReferenceColumnAliasing( tableReference );
 	}
@@ -169,6 +233,11 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected boolean supportsWithClauseInSubquery() {
 		return false;
+	}
+
+	@Override
+	protected boolean supportsJoinsInDelete() {
+		return true;
 	}
 
 	@Override

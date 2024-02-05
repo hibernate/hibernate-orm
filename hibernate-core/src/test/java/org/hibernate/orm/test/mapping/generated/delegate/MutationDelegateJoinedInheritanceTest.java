@@ -19,7 +19,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationType;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
@@ -40,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Marco Belladelli
  */
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @DomainModel( annotatedClasses = {
 		MutationDelegateJoinedInheritanceTest.BaseEntity.class,
 		MutationDelegateJoinedInheritanceTest.ChildEntity.class,

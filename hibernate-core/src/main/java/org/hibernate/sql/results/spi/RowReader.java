@@ -8,13 +8,11 @@ package org.hibernate.sql.results.spi;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.internal.InitializersList;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -65,13 +63,6 @@ public interface RowReader<R> {
 	 * Called at the end of processing all rows
 	 */
 	void finishUp(JdbcValuesSourceProcessingState context);
-
-	/**
-	 * Not used - to be removed?
-	 * @deprecated to be removed
-	 */
-	@Deprecated
-	RowReaderMemento toMemento(SessionFactoryImplementor factory);
 
 	/**
 	 * The initializers associated with this reader.

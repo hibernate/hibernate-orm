@@ -96,6 +96,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 				&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
 	}
 
+	@Override
 	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		// Use join instead because Altibase does not support cross apply
 		appendSql( WHITESPACE );
@@ -159,6 +160,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 	}
 
+	@Override
 	protected void renderMergeUpdateClause(List<Assignment> assignments, Predicate wherePredicate) {
 		// In Altibase, where condition in merge can be placed next to the set clause."
 		appendSql( " then update" );

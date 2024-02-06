@@ -37,7 +37,7 @@ public class SqlFunctionMetadataBuilderContributorIllegalClassArgumentTest
 		catch (ClassCastException e) {
 			final String javaVendor = System.getProperty("java.vendor");
 
-			if (javaVendor != null && javaVendor.startsWith("IBM")) {
+			if (javaVendor != null && (javaVendor.startsWith("IBM") || javaVendor.startsWith("AdoptOpenJDK") || javaVendor.startsWith("Eclipse OpenJ9"))) {
 				assertTrue( e.getMessage().contains( "incompatible with" ) );
 			} else {
 				assertTrue( e.getMessage().contains( "cannot be cast to" ) );

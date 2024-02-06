@@ -7734,7 +7734,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else if ( ( rhsTuple = SqlTupleContainer.getSqlTuple( comparisonPredicate.getRightHandExpression() ) ) != null ) {
 			final Expression lhsExpression = comparisonPredicate.getLeftHandExpression();
 
-			if ( lhsExpression instanceof SelectStatement && ( (SelectStatement) lhsExpression ).getQueryPart() instanceof QueryGroup ) {
+			if ( lhsExpression instanceof SqlTupleContainer
+					|| lhsExpression instanceof SelectStatement && ( (SelectStatement) lhsExpression ).getQueryPart() instanceof QueryGroup ) {
 				if ( rhsTuple.getExpressions().size() == 1 ) {
 					// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 					renderComparison(

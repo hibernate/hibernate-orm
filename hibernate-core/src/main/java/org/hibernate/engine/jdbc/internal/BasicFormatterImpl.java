@@ -279,6 +279,7 @@ public class BasicFormatterImpl implements Formatter {
 		private void endCase() {
 			afterBeginBeforeEnd = false;
 			decrementIndent();
+			decrementIndent();
 			logical();
 		}
 

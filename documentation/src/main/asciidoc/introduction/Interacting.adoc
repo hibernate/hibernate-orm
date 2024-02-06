@@ -207,6 +207,13 @@ In a container environment, the container itself is usually responsible for mana
 In Java EE or Quarkus, you'll probably indicate the boundaries of the transaction using the `@Transactional` annotation.
 ****
 
+JPA doesn't have a standard way to set the transaction timeout, but Hibernate does:
+
+[source,java]
+----
+session.getTransaction().setTimeout(30); // 30 seconds
+----
+
 [[persistence-operations]]
 === Operations on the persistence context
 

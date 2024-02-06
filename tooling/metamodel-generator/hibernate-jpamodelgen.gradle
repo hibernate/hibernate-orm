@@ -61,12 +61,6 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
         javaLauncher = javaToolchains.launcherFor {
             languageVersion = jdkVersions.test.launcher
         }
-
-        if ( jdkVersions.test.launcher.asInt() >= 19 ) {
-            logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
-                                 " Setting 'net.bytebuddy.experimental=true'." )
-            systemProperty 'net.bytebuddy.experimental', true
-        }
     }
 } else {
     sourceSets {

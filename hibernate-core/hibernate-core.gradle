@@ -299,12 +299,6 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
         useJUnitPlatform()
         testClassesDirs = sourceSets.testJava17.output.classesDirs
         classpath = sourceSets.testJava17.runtimeClasspath
-
-        if ( jdkVersions.test.launcher.asInt() >= 19 ) {
-            logger.warn( "The version of Java bytecode that will be tested is not supported by Byte Buddy by default. " +
-                                 " Setting 'net.bytebuddy.experimental=true'." )
-            systemProperty 'net.bytebuddy.experimental', true
-        }
     }
 
     testClasses.dependsOn compileTestJava17Java

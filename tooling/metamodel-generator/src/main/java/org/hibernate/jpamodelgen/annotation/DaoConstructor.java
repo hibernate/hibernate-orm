@@ -17,7 +17,8 @@ public class DaoConstructor implements MetaAttribute {
 	private final Metamodel annotationMetaEntity;
 	private final String constructorName;
 	private final String methodName;
-	private final String returnTypeName;
+	private final String sessionTypeName;
+	private final String sessionVariableName;
 	private final boolean addInjectAnnotation;
 	private final boolean addNonnullAnnotation;
 
@@ -25,13 +26,15 @@ public class DaoConstructor implements MetaAttribute {
 			Metamodel annotationMetaEntity,
 			String constructorName,
 			String methodName,
-			String returnTypeName,
+			String sessionTypeName,
+			String sessionVariableName,
 			boolean addInjectAnnotation,
 			boolean addNonnullAnnotation) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.constructorName = constructorName;
 		this.methodName = methodName;
-		this.returnTypeName = returnTypeName;
+		this.sessionTypeName = sessionTypeName;
+		this.sessionVariableName = sessionVariableName;
 		this.addInjectAnnotation = addInjectAnnotation;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 	}
@@ -53,8 +56,10 @@ public class DaoConstructor implements MetaAttribute {
 				.append("\nprivate final ");
 		notNull( declaration );
 		declaration
-				.append(annotationMetaEntity.importType(returnTypeName))
-				.append(" entityManager;")
+				.append(annotationMetaEntity.importType(sessionTypeName))
+				.append(" ")
+				.append(sessionVariableName)
+				.append(";")
 				.append("\n");
 		inject( declaration );
 		declaration
@@ -63,19 +68,27 @@ public class DaoConstructor implements MetaAttribute {
 				.append("(");
 		notNull( declaration );
 		declaration
-				.append(annotationMetaEntity.importType(returnTypeName))
-				.append(" entityManager) {")
-				.append("\n\tthis.entityManager = entityManager;")
+				.append(annotationMetaEntity.importType(sessionTypeName))
+				.append(" ")
+				.append(sessionVariableName)
+				.append(") {")
+				.append("\n\tthis.")
+				.append(sessionVariableName)
+				.append(" = ")
+				.append(sessionVariableName)
+				.append(";")
 				.append("\n}")
 				.append("\n\n")
 				.append("public ");
 		notNull( declaration );
 		declaration
-				.append(annotationMetaEntity.importType(returnTypeName))
+				.append(annotationMetaEntity.importType(sessionTypeName))
 				.append(" ")
 				.append(methodName)
 				.append("() {")
-				.append("\n\treturn entityManager;")
+				.append("\n\treturn ")
+				.append(sessionVariableName)
+				.append(";")
 				.append("\n}");
 		return declaration.toString();
 	}

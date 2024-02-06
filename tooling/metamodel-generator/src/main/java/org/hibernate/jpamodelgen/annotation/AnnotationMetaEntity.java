@@ -58,6 +58,9 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_SESSION;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_STATELESS_SESSION;
+import static org.hibernate.jpamodelgen.util.Constants.MUTINY_SESSION;
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
@@ -342,6 +345,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						typeName,
 						name,
 						sessionType,
+						getSessionVariableName(sessionType),
 						context.addInjectAnnotation(),
 						context.addNonnullAnnotation()
 				)
@@ -429,7 +433,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					|| determineAnnotationSpecifiedAccessType( memberOfClass ) != null )
 			&& !containsAnnotation( memberOfClass, Constants.TRANSIENT )
 			&& !memberOfClass.getModifiers().contains( Modifier.TRANSIENT )
-			&& !memberOfClass.getModifiers().contains( Modifier.STATIC );
+			&& !memberOfClass.getModifiers().contains( Modifier.STATIC )
+			&& !( memberOfClass.getKind() == ElementKind.METHOD
+				&& isSessionGetter( (ExecutableElement) memberOfClass ) );
 	}
 
 	private void addQueryMethods(List<ExecutableElement> queryMethods) {
@@ -621,7 +627,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return new String[] { type, name };
 			}
 		}
-		return new String[] { sessionType, "entityManager" };
+		return new String[] { getSessionType(), getSessionVariableName() };
+	}
+
+	@Override
+	protected String getSessionVariableName() {
+		return getSessionVariableName(sessionType);
+	}
+
+	private static String getSessionVariableName(String sessionType) {
+		switch (sessionType) {
+			case HIB_SESSION:
+			case HIB_STATELESS_SESSION:
+			case MUTINY_SESSION:
+				return "session";
+			default:
+				return "entityManager";
+		}
 	}
 
 	private static List<String> enabledFetchProfiles(ExecutableElement method) {

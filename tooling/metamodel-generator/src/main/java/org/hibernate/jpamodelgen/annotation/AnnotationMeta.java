@@ -112,6 +112,7 @@ public abstract class AnnotationMeta implements Metamodel {
 										name.substring(1),
 										belongsToDao(),
 										getSessionType(),
+										getSessionVariableName(),
 										getContext().addNonnullAnnotation()
 								)
 						);
@@ -160,6 +161,10 @@ public abstract class AnnotationMeta implements Metamodel {
 				}
 			}
 		});
+	}
+
+	protected String getSessionVariableName() {
+		return "entityManager";
 	}
 
 	abstract boolean belongsToDao();

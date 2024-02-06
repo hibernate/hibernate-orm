@@ -33,6 +33,7 @@ class NamedQueryMethod implements MetaAttribute {
 	private final String name;
 	private final boolean belongsToDao;
 	private final boolean reactive;
+	private final String sessionVariableName;
 	private final boolean addNonnullAnnotation;
 
 	public NamedQueryMethod(
@@ -41,12 +42,14 @@ class NamedQueryMethod implements MetaAttribute {
 			String name,
 			boolean belongsToDao,
 			@Nullable String sessionType,
+			String sessionVariableName,
 			boolean addNonnullAnnotation) {
 		this.annotationMeta = annotationMeta;
 		this.select = select;
 		this.name = name;
 		this.belongsToDao = belongsToDao;
 		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
+		this.sessionVariableName = sessionVariableName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 	}
 
@@ -71,7 +74,9 @@ class NamedQueryMethod implements MetaAttribute {
 		parameters( sortedParameters, declaration );
 		declaration
 				.append(" {")
-				.append("\n\treturn entityManager.createNamedQuery(")
+				.append("\n\treturn ")
+				.append(sessionVariableName)
+				.append(".createNamedQuery(")
 				.append(fieldName())
 				.append(")");
 		for ( SqmParameter<?> param : sortedParameters ) {
@@ -159,7 +164,8 @@ class NamedQueryMethod implements MetaAttribute {
 			notNull( declaration );
 			declaration
 					.append(annotationMeta.importType(Constants.ENTITY_MANAGER))
-					.append(" entityManager");
+					.append(" ")
+					.append(sessionVariableName);
 		}
 		int i = 0;
 		for ( SqmParameter<?> param : sortedParameters) {

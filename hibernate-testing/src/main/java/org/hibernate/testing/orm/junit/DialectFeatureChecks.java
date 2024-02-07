@@ -678,4 +678,11 @@ abstract public class DialectFeatureChecks {
 			return dialect.getPreferredSqlTypeCodeForArray() != SqlTypes.VARBINARY;
 		}
 	}
+
+	public static class SupportsCaseInsensitiveLike implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsCaseInsensitiveLike();
+		}
+	}
 }

@@ -74,6 +74,9 @@ public interface Dao {
     @HQL("delete from Book")
     int deleteBooks();
 
+    @HQL("delete from Book book where book.isbn=:isbn")
+    boolean deleteBook(String isbn);
+
     @HQL("select count(*), count(*)>1 from Book")
     Object[] funnyQueryReturningArray();
 

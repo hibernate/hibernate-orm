@@ -181,6 +181,18 @@ public class ParameterParserTest {
         assertTrue(recognizer.getNamedParameters().contains("pxyz"));
         assertEquals( 2, recognizer.getNamedParameters().size() );
     }
+
+	@Test
+	public void testParseNamedParameterEndWithSemicolon() {
+		ExtendedParameterRecognizer recognizer = createRecognizer();
+		NATIVE_QUERY_INTERPRETER.recognizeParameters("from Stock s where s.stockCode = :stockCode and s.xyz = :pxyz;", recognizer);
+		recognizer.complete();
+		recognizer.validate();
+
+		assertTrue(recognizer.getNamedParameters().contains("stockCode"));
+		assertTrue(recognizer.getNamedParameters().contains("pxyz"));
+		assertEquals( 2, recognizer.getNamedParameters().size() );
+	}
     
     @Test
     public void testParseJPAPositionalParameter() {

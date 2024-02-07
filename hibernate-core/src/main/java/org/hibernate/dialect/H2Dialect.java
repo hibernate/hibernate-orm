@@ -982,4 +982,15 @@ public class H2Dialect extends Dialect {
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
+
+	@Override
+	public String getCaseInsensitiveLike() {
+		return "ilike";
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike(){
+		return true;
+	}
+
 }

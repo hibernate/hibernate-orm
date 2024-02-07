@@ -88,8 +88,8 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * </ul>
  * <p>
  * For an {@code insert}, {@code update}, or {@code delete} query,
- * the return type of the annotated method must be {@code int} or
- * {@code void}.
+ * the return type of the annotated method must be {@code int},
+ * {@code boolean}, or {@code void}.
  * <p>
  * The method parameters must match the parameters of the HQL query,
  * either by name or by position:
@@ -125,6 +125,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * @see Find
  *
  * @author Gavin King
+ * @author Yanming Zhou
  * @since 6.3
  */
 @Target(METHOD)

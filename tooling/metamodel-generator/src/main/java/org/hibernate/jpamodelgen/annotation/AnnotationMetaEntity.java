@@ -976,7 +976,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( value != null ) {
 			final Object query = value.getValue();
 			if ( query instanceof String ) {
-				final String hql = (String) query;
+				final String queryString = (String) query;
 				final List<String> paramNames = parameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
 				final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
@@ -984,12 +984,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						new QueryMethod(
 								this,
 								method.getSimpleName().toString(),
-								hql,
+								queryString,
 								returnType == null ? null : returnType.toString(),
 								containerType == null ? null : containerType.getQualifiedName().toString(),
 								paramNames,
 								paramTypes,
-								isInsertUpdateDelete( hql ),
+								isInsertUpdateDelete( queryString ),
 								isNative,
 								dao,
 								sessionType[0],
@@ -999,14 +999,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
 
 				if ( isNative ) {
-					validateSql( method, mirror, hql, paramNames, value );
+					validateSql( method, mirror, queryString, paramNames, value );
 				}
 				else {
-					validateHql( method, returnType, mirror, value, hql, paramNames, paramTypes );
+					validateHql( method, returnType, mirror, value, queryString, paramNames, paramTypes );
 				}
 
 				// now check that the query has a parameter for every method parameter
-				checkParameters( method, paramNames, paramTypes, mirror, value, hql );
+				checkParameters( method, paramNames, paramTypes, mirror, value, queryString );
 			}
 		}
 	}
@@ -1120,11 +1120,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void validateSql(
 			ExecutableElement method,
 			AnnotationMirror mirror,
-			String hql,
+			String sql,
 			List<String> paramNames,
 			AnnotationValue value) {
 		// for SQL queries check that there is a method parameter for every query parameter
-		ParameterParser.parse(hql, new ParameterRecognizer() {
+		ParameterParser.parse(sql, new ParameterRecognizer() {
 			int ordinalCount = 0;
 			@Override
 			public void ordinalParameter(int sourcePosition) {

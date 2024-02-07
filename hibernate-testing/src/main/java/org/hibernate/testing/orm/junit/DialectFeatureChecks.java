@@ -684,4 +684,11 @@ abstract public class DialectFeatureChecks {
 			return !( dialect instanceof DerbyDialect );
 		}
 	}
+
+	public static class SupportsCaseInsensitiveLike implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsCaseInsensitiveLike();
+		}
+	}
 }

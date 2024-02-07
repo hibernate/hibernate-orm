@@ -44,6 +44,8 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sql.internal.ParameterParser;
+import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -995,10 +997,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						);
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
 
-				if ( !isNative ) {
+				if ( isNative ) {
+					validateSql( method, mirror, hql, paramNames, value );
+				}
+				else {
 					validateHql( method, returnType, mirror, value, hql, paramNames, paramTypes );
 				}
-				//TODO: for SQL queries check that there is a method parameter for every query parameter
 
 				// now check that the query has a parameter for every method parameter
 				checkParameters( method, paramNames, paramTypes, mirror, value, hql );
@@ -1109,6 +1113,52 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR);
 			}
 		}
+	}
+
+	private void validateSql(
+			ExecutableElement method,
+			AnnotationMirror mirror,
+			String hql,
+			List<String> paramNames,
+			AnnotationValue value) {
+		// for SQL queries check that there is a method parameter for every query parameter
+		ParameterParser.parse(hql, new ParameterRecognizer() {
+			int ordinalCount = 0;
+			@Override
+			public void ordinalParameter(int sourcePosition) {
+				ordinalCount++;
+				if ( ordinalCount > paramNames.size() ) {
+					context.message(method, mirror, value,
+							"missing method parameter for query parameter " + ordinalCount
+									+ " (add a parameter to '" + method.getSimpleName() + "')",
+							Diagnostic.Kind.ERROR );
+				}
+			}
+
+			@Override
+			public void namedParameter(String name, int sourcePosition) {
+				if ( !paramNames.contains(name) ) {
+					context.message(method, mirror, value,
+							"missing method parameter for query parameter :" + name
+									+ " (add a parameter '" + name + "' to '" + method.getSimpleName() + "')",
+							Diagnostic.Kind.ERROR );
+				}
+			}
+
+			@Override
+			public void jpaPositionalParameter(int label, int sourcePosition) {
+				if ( label > paramNames.size() ) {
+					context.message(method, mirror, value,
+							"missing method parameter for query parameter ?" + label
+									+ " (add a parameter to '" + method.getSimpleName() + "')",
+							Diagnostic.Kind.ERROR );
+				}
+			}
+
+			@Override
+			public void other(char character) {
+			}
+		});
 	}
 
 	private static boolean checkConstructorReturn(DeclaredType returnType, JpaSelection<?> selection) {

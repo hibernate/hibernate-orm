@@ -81,6 +81,7 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValueRef;
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  * @author Gavin King
+ * @author Yanming Zhou
  */
 public class AnnotationMetaEntity extends AnnotationMeta {
 
@@ -1049,9 +1050,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			AnnotationValue value) {
 		if ( returnType == null
 				|| returnType.getKind() != TypeKind.VOID
+				&& returnType.getKind() != TypeKind.BOOLEAN
 				&& returnType.getKind() != TypeKind.INT ) {
 			context.message( method, mirror, value,
-					"return type of mutation query method must be 'int' or 'void'",
+					"return type of mutation query method must be 'int', 'boolean', or 'void'",
 					Diagnostic.Kind.ERROR );
 		}
 	}

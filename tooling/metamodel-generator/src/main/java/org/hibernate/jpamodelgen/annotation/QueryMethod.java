@@ -16,6 +16,7 @@ import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFr
 
 /**
  * @author Gavin King
+ * @author Yanming Zhou
  */
 public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
@@ -116,8 +117,11 @@ public class QueryMethod extends AbstractQueryMethod {
 		if ( isUpdate ) {
 			declaration
 					.append("\n\t\t\t.executeUpdate()");
+			if ( "boolean".equals(returnTypeName) ) {
+				declaration.append(" > 0");
+			}
 		}
-		else if ( containerTypeName == null) {
+		else if ( containerTypeName == null ) {
 			declaration
 					.append("\n\t\t\t.getSingleResult()");
 		}

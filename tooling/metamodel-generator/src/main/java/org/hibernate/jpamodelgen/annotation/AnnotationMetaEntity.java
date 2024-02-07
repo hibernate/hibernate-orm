@@ -26,6 +26,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
 import javax.tools.Diagnostic;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -41,6 +42,7 @@ import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
 import org.hibernate.jpamodelgen.validation.Validation;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.Order;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
@@ -592,9 +594,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
-		for ( VariableElement param : method.getParameters() ) {
-			if ( isFinderParameterMappingToAttribute( param ) ) {
-				validateFinderParameter( entity, param );
+		for ( VariableElement parameter : method.getParameters() ) {
+			if ( isFinderParameterMappingToAttribute( parameter ) ) {
+				validateFinderParameter( entity, parameter );
+			}
+			else {
+				final TypeMirror parameterType = parameter.asType();
+				if ( isOrderParam( parameterType.toString() ) ) {
+					final TypeMirror typeArgument = getTypeArgument( parameterType );
+					if ( typeArgument == null ) {
+						context.message( parameter, "missing type of order (should be 'Order<? super "
+								+ entity.getSimpleName() + ">')", Diagnostic.Kind.ERROR );
+					}
+					else if ( !context.getTypeUtils().isSameType( typeArgument, entity.asType() ) ) {
+						context.message( parameter, "mismatched type of order (should be 'Order<? super "
+								+ entity.getSimpleName() + ">')", Diagnostic.Kind.ERROR);
+					}
+				}
 			}
 		}
 		putMember( methodKey,
@@ -613,6 +629,38 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						context.addNonnullAnnotation()
 				)
 		);
+	}
+
+	private static @Nullable TypeMirror getTypeArgument(TypeMirror parameterType) {
+		switch ( parameterType.getKind() ) {
+			case ARRAY:
+				final ArrayType arrayType = (ArrayType) parameterType;
+				return getTypeArgument( arrayType.getComponentType() );
+			case DECLARED:
+				final DeclaredType type = (DeclaredType) parameterType;
+				if ( parameterType.toString().startsWith( List.class.getName() ) ) {
+					for (TypeMirror arg : type.getTypeArguments()) {
+						return getTypeArgument( arg );
+					}
+				}
+				else if ( parameterType.toString().startsWith( Order.class.getName() ) ) {
+					for ( TypeMirror arg : type.getTypeArguments() ) {
+						switch ( arg.getKind() ) {
+							case WILDCARD:
+								return ((WildcardType) arg).getSuperBound();
+							case ARRAY:
+							case DECLARED:
+							case TYPEVAR:
+								return arg;
+							default:
+								return null;
+						}
+					}
+				}
+				return null;
+			default:
+				return null;
+		}
 	}
 
 	private static boolean isFinderParameterMappingToAttribute(VariableElement param) {
@@ -1006,7 +1054,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 
 				// now check that the query has a parameter for every method parameter
-				checkParameters( method, paramNames, paramTypes, mirror, value, queryString );
+				checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString );
 			}
 		}
 	}
@@ -1375,6 +1423,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void checkParameters(
 			ExecutableElement method,
+			@Nullable TypeMirror returnType,
 			List<String> paramNames, List<String> paramTypes,
 			AnnotationMirror mirror,
 			AnnotationValue value,
@@ -1387,6 +1436,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						"missing query parameter for '" + param
 								+ "' (no parameter named :" + param + " or ?" + i + ")",
 						Diagnostic.Kind.ERROR );
+			}
+		}
+		if ( returnType != null ) {
+			for ( VariableElement parameter : method.getParameters() ) {
+				final TypeMirror parameterType = parameter.asType();
+				final TypeMirror typeArgument = getTypeArgument( parameterType );
+				if ( isOrderParam( parameterType.toString() ) ) {
+					if ( typeArgument == null ) {
+						context.message( parameter, "missing type of order (should be 'Order<? super "
+								+ returnType + ">')", Diagnostic.Kind.ERROR );
+					}
+					else if ( !context.getTypeUtils().isSameType(typeArgument, returnType) ) {
+						context.message( parameter, "mismatched type of order (should be 'Order<? super "
+								+ returnType + ">')", Diagnostic.Kind.ERROR );
+					}
+				}
 			}
 		}
 	}

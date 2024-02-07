@@ -70,13 +70,13 @@ public class JsonHelper {
 				toString( attributeMapping.getMappedType(), values[i], options, appender );
 			}
 			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+				if ( values[i] == null ) {
+					// Skipping the update of the separator is on purpose
+					continue;
+				}
 				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
 				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
 				if ( aggregateMapping == null ) {
-					if ( values[i] == null ) {
-						// Skipping the update of the separator is on purpose
-						continue;
-					}
 					toString(
 							mappingType,
 							options,

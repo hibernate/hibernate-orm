@@ -935,4 +935,15 @@ public class H2Dialect extends Dialect {
 			return "?" + position;
 		}
 	}
+
+	@Override
+	public String getCaseInsensitiveLike() {
+		return "ilike";
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike(){
+		return true;
+	}
+
 }

@@ -940,4 +940,19 @@ public class H2LegacyDialect extends Dialect {
 	public int rowIdSqlType() {
 		return BIGINT;
 	}
+
+	@Override
+	public String getCaseInsensitiveLike() {
+		if ( getVersion().isSameOrAfter( 1, 4, 194 ) ) {
+			return "ilike";
+		}
+		else {
+			return super.getCaseInsensitiveLike();
+		}
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike() {
+		return getVersion().isSameOrAfter( 1, 4, 194 );
+	}
 }

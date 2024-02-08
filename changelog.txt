@@ -3,6 +3,25 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.4.Final (February 08, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32259
+
+** Bug
+    * [HHH-17705] - NullPointerException during enhancement when using the default BytecodeProvider in Wildfly
+    * [HHH-17704] - Query using detached Proxy as parameter fails with LazyInitializationException
+    * [HHH-17693] - Cannot use 'like' operand when an AttributeConverter is used to convert the attribute in a String
+    * [HHH-17688] - Mutation statements using delegates do not consistently release statements
+    * [HHH-17662] - Memory leak in type registry
+    * [HHH-16974] - IllegalStateException Unsupported tuple comparison combination
+    * [HHH-16454] - PostgreSQL ILIKE Keyword is considered a column name when deducing alias injection points
+
+** Task
+    * [HHH-17713] - Upgrade ByteBuddy to 1.14.11
+    * [HHH-17708] - Fix formatting/anchor in documentation of @Struct
+
+
 Changes in 6.4.3.Final (February 02, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

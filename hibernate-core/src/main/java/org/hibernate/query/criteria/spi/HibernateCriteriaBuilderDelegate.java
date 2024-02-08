@@ -440,6 +440,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaExpression<Long> count() {
+		return criteriaBuilder.count();
+	}
+
+	@Override
 	public JpaExpression<Long> countDistinct(Expression<?> x) {
 		return criteriaBuilder.countDistinct( x );
 	}
@@ -2435,7 +2440,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> arrayToString(
+	public JpaExpression<String> arrayToString(
 			Expression<? extends Object[]> arrayExpression,
 			Expression<String> separatorExpression) {
 		return criteriaBuilder.arrayToString( arrayExpression, separatorExpression );
@@ -2443,7 +2448,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator) {
+	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator) {
 		return criteriaBuilder.arrayToString( arrayExpression, separator );
 	}
 

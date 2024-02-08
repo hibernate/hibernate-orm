@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.NullPrecedence;
@@ -32,7 +31,6 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
-import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -240,10 +238,10 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmExpression<T[]> arrayFill(T element, Integer elementCount);
 
 	@Override
-	<T> SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
 
 	@Override
-	<T> SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
 
 	@Override
 	<T> SqmPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression);
@@ -595,6 +593,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	@Override
 	SqmExpression<Long> countDistinct(Expression<?> x);
+
+	@Override
+	SqmExpression<Long> count();
 
 	@Override
 	<N extends Number> SqmExpression<N> neg(Expression<N> x);

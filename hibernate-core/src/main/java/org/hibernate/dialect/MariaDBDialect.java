@@ -186,11 +186,6 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return InnoDBStorageEngine.INSTANCE;
-	}
-
-	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return true;
 	}

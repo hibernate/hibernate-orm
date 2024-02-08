@@ -35,7 +35,6 @@ import java.util.Locale;
 import static java.sql.Types.ARRAY;
 import static java.util.Collections.emptySet;
 import static org.hibernate.internal.util.StringHelper.truncate;
-import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * Descriptor for {@link Types#ARRAY ARRAY} handling.
@@ -113,13 +112,13 @@ public class OracleNestedTableJdbcType implements JdbcType {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setArray( index, getArray( value, containerJavaType, options ) );
+				st.setArray( index, getArray( value, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final java.sql.Array arr = getArray( value, containerJavaType, options );
+				final java.sql.Array arr = getArray( value, options );
 				try {
 					st.setObject( name, arr, ARRAY );
 				}
@@ -128,7 +127,7 @@ public class OracleNestedTableJdbcType implements JdbcType {
 				}
 			}
 
-			private java.sql.Array getArray(X value, BasicPluralJavaType<X> containerJavaType, WrapperOptions options)
+			private java.sql.Array getArray(X value, WrapperOptions options)
 					throws SQLException {
 				//noinspection unchecked
 				final Class<Object[]> arrayClass = (Class<Object[]>) Array.newInstance(

@@ -229,11 +229,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		return true;
-	}
-
-	@Override
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
 		// Intersect emulation requires nested correlation when no simple query grouping is possible
 		// and the query has an offset/fetch clause, so we have to disable the emulation in this case,

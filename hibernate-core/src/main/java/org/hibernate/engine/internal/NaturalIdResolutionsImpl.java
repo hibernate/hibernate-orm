@@ -268,7 +268,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 		switch ( source ) {
 			case LOAD: {
-				if ( CacheHelper.fromSharedCache( s, cacheKey, cacheAccess ) != null ) {
+				if (cacheAccess.contains(cacheKey)) {
 					// prevent identical re-cachings
 					return;
 				}

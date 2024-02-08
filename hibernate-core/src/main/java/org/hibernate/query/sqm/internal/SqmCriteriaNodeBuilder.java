@@ -44,7 +44,6 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -77,7 +76,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
@@ -121,6 +119,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
+import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
@@ -182,7 +181,6 @@ import jakarta.persistence.metamodel.Bindable;
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
-import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
  * Acts as a JPA {@link jakarta.persistence.criteria.CriteriaBuilder} by
@@ -850,6 +848,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmExpression<Long> countDistinct(Expression<?> argument) {
 		return getFunctionDescriptor( "count" ).generateSqmExpression(
 				new SqmDistinct<>( (SqmExpression<?>) argument, this ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<Long> count() {
+		return getFunctionDescriptor( "count" ).generateSqmExpression(
+				new SqmStar( this ),
 				null,
 				queryEngine
 		);
@@ -4280,7 +4287,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmExpression<String> arrayToString(
+	public SqmExpression<String> arrayToString(
 			Expression<? extends Object[]> arrayExpression,
 			Expression<String> separatorExpression) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
@@ -4291,7 +4298,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmExpression<String> arrayToString(
+	public SqmExpression<String> arrayToString(
 			Expression<? extends Object[]> arrayExpression,
 			String separator) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(

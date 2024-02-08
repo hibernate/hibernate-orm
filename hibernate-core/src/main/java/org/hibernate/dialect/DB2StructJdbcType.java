@@ -31,7 +31,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * To support UDTs, we require that a transform exists for the UDT that serializes from SQL to XML
  * and deserializes to SQL from UDT. This means that from the JDBC perspective, this is an XML type,
  * but the database models it internally as UDT.
- *
+ * <p>
  * The {@link org.hibernate.dialect.aggregate.DB2AggregateSupport} generates the functions and transforms for this
  * process automatically, but note that all of this is only used for functions and native queries.
  * By default, we select individual struct parts to avoid the encoding/decoding.

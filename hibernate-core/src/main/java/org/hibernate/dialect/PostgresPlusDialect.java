@@ -7,7 +7,6 @@
 package org.hibernate.dialect;
 
 import java.sql.CallableStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -99,12 +98,6 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		statement.registerOutParameter( col, Types.REF );
 		col++;
 		return col;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
-		ps.execute();
-		return (ResultSet) ps.getObject( 1 );
 	}
 
 	@Override

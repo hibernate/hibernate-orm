@@ -144,16 +144,6 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsLateral() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRecursiveCTE() {
-		return true;
-	}
-
-	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final StringBuilder pattern = new StringBuilder();
 		pattern.append("add_");

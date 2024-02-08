@@ -370,11 +370,6 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return " for update";
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
 		return OffsetFetchLimitHandler.INSTANCE;
 	}

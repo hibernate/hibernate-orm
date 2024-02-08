@@ -84,7 +84,7 @@ class CockroachDialectQueryHints {
 		StringBuilder buffer = new StringBuilder();
 		int start = 0;
 		while ( m.find() ) {
-			buffer.append( query.substring( start, m.start() ) );
+			buffer.append(query, start, m.start());
 
 			if ( m.group( 1 ) == null ) {
 				buffer.append( " inner" );

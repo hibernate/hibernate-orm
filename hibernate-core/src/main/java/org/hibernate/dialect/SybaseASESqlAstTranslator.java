@@ -27,7 +27,6 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -89,19 +88,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			else {
 				visitFromClause( statement.getFromClause() );
 			}
-		}
-		finally {
-			clauseStack.pop();
-		}
-	}
-
-	@Override
-	protected void renderUpdateClause(UpdateStatement updateStatement) {
-		appendSql( "update " );
-		final Stack<Clause> clauseStack = getClauseStack();
-		try {
-			clauseStack.push( Clause.UPDATE );
-			renderDmlTargetTableExpression( updateStatement.getTargetTable() );
 		}
 		finally {
 			clauseStack.pop();

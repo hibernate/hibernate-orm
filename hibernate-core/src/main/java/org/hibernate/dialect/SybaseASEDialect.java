@@ -14,7 +14,6 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.DialectSpecificSettings;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;

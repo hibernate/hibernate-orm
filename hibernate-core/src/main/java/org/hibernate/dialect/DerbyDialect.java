@@ -407,7 +407,7 @@ public class DerbyDialect extends Dialect {
 	 * no functions at all for calendaring, but we can
 	 * emulate the most basic functionality of extract()
 	 * using the functions it does have.
-	 *
+	 * <p>
 	 * The only supported {@link TemporalUnit}s are:
 	 * {@link TemporalUnit#YEAR},
 	 * {@link TemporalUnit#MONTH}
@@ -557,11 +557,6 @@ public class DerbyDialect extends Dialect {
 	public boolean supportsCommentOn() {
 		//HHH-4531
 		return false;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.NONE;
 	}
 
 	@Override

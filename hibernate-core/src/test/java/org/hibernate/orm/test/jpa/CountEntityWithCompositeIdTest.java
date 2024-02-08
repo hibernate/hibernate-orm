@@ -10,6 +10,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,15 @@ public class CountEntityWithCompositeIdTest {
                     CriteriaQuery<Long> cq = cb.createQuery(Long.class);
                     Root<EntityWithCompositeId> r = cq.from(EntityWithCompositeId.class);
                     cq.multiselect(cb.count(r));
+                    assertThat(entityManager.createQuery(cq).getSingleResult().intValue(), is(0));
+                }
+        );
+        scope.inTransaction(
+                entityManager -> {
+                    HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
+                    CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+                    cq.from(EntityWithCompositeId.class);
+                    cq.select(cb.count());
                     assertThat(entityManager.createQuery(cq).getSingleResult().intValue(), is(0));
                 }
         );

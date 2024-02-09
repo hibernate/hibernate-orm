@@ -57,7 +57,8 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String name,
 			SqmCteStatement<X> cteStatement,
 			SqmSelectQuery<X> selectStatement) {
-		final SqmSelectableNode<?>[] sqmSelectableNodes = selectStatement.getQuerySpec()
+		final SqmSelectableNode<?>[] sqmSelectableNodes = selectStatement.getQueryPart()
+				.getFirstQuerySpec()
 				.getSelectClause()
 				.getSelectionItems()
 				.toArray( SqmSelectableNode[]::new );

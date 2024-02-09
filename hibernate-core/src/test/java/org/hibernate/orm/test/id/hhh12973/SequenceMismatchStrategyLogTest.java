@@ -102,6 +102,11 @@ public class SequenceMismatchStrategyLogTest extends EntityManagerFactoryBasedFu
 		assertTrue( triggerable.wasTriggered() );
 	}
 
+	@Override
+	protected boolean exportSchema() {
+		return false;
+	}
+
 	@Test
 	public void test() {
 		produceEntityManagerFactory();

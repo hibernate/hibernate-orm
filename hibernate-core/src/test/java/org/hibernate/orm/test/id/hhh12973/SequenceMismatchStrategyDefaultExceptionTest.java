@@ -81,6 +81,11 @@ public class SequenceMismatchStrategyDefaultExceptionTest extends EntityManagerF
 		options.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 	}
 
+	@Override
+	protected boolean exportSchema() {
+		return false;
+	}
+
 	@Test
 	public void test() {
 		produceEntityManagerFactory();

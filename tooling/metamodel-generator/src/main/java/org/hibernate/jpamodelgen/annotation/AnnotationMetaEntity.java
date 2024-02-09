@@ -1308,8 +1308,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			ExecutableElement method, AnnotationMirror mirror, AnnotationValue value) {
 		final SqmExpressible<?> expressible = param.getExpressible();
 		final String queryParamType = expressible == null ? "unknown" : expressible.getTypeName(); //getTypeName() can return "unknown"
-		if ( param.getName() != null ) {
-			final String name = param.getName();
+		final String queryParameterName = param.getName();
+		if ( queryParameterName != null ) {
+			final StringTokenizer tokens = new StringTokenizer(queryParameterName, "$" );
+			final String name = tokens.nextToken();
 			int index = paramNames.indexOf( name );
 			if ( index < 0 ) {
 				context.message( method, mirror, value,
@@ -1317,11 +1319,33 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						+ " (add a parameter '" + queryParamType + ' ' + name + "' to '" + method.getSimpleName() + "')",
 						Diagnostic.Kind.ERROR );
 			}
-			else if ( !isLegalAssignment( paramTypes.get(index), queryParamType ) ) {
-				context.message( method, mirror, value,
-						"parameter matching query parameter :" + name + " has the wrong type"
-								+ " (change the method parameter type to '" + queryParamType + "')",
-						Diagnostic.Kind.ERROR );
+			else {
+				TypeMirror type = method.getParameters().get(index).asType();
+				loop: while ( tokens.hasMoreTokens() ) {
+					final String token = tokens.nextToken();
+					if ( type.getKind() == TypeKind.DECLARED ) {
+						final Element dte = ((DeclaredType) type).asElement();
+						if ( dte.getKind().isClass() || dte.getKind().isInterface() ) {
+							for ( Element member : dte.getEnclosedElements() ) {
+								if ( member.getSimpleName().contentEquals(token) ) {
+									type = member.asType();
+									continue loop;
+								}
+							}
+						}
+					}
+					context.message( method, mirror, value,
+							"type '" + type + "' has no member named '" + token + "' matching query parameter :"
+									+ queryParameterName,
+							Diagnostic.Kind.ERROR );
+					return;
+				}
+				if ( !isLegalAssignment( type.toString(), queryParamType ) ) {
+					context.message( method, mirror, value,
+							"parameter matching query parameter :" + name + " has the wrong type"
+									+ " (change the method parameter type to '" + queryParamType + "')",
+							Diagnostic.Kind.ERROR );
+				}
 			}
 		}
 		else if ( param.getPosition() != null ) {

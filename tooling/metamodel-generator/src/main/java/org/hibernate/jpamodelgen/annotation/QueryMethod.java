@@ -11,6 +11,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpamodelgen.util.Constants;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
@@ -175,13 +177,19 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append(")");
 	}
 
-	private static void setNamedParameter(StringBuilder declaration, String paramName) {
-		declaration
-				.append("\n\t\t\t.setParameter(\"")
-				.append(paramName)
-				.append("\", ")
-				.append(paramName)
-				.append(")");
+	private void setNamedParameter(StringBuilder declaration, String paramName) {
+		final Matcher matcher =
+				Pattern.compile(":" + paramName + "(\\$\\w+)*")
+						.matcher(queryString);
+		while ( matcher.find() ) {
+			final String queryParameterName = matcher.group().substring(1);
+			declaration
+					.append("\n\t\t\t.setParameter(\"")
+					.append(queryParameterName)
+					.append("\", ")
+					.append(queryParameterName.replace('$', '.'))
+					.append(")");
+		}
 	}
 
 	private StringBuilder returnType() {

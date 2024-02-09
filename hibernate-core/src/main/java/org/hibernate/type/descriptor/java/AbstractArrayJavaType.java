@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.lang.reflect.Array;
 
+import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.descriptor.converter.internal.ArrayConverter;
@@ -16,6 +17,7 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicArrayType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -38,6 +40,12 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
+		if ( componentJavaType instanceof UnknownBasicJavaType) {
+			throw new MappingException("Basic array has element type '"
+					+ componentJavaType.getTypeName()
+					+ "' which is not a known basic type"
+					+ " (attribute is not annotated '@ElementCollection', '@OneToMany', or '@ManyToMany')");
+		}
 		// Always determine the recommended type to make sure this is a valid basic java type
 		return indicators.getTypeConfiguration().getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
 				indicators.getPreferredSqlTypeCodeForArray(),

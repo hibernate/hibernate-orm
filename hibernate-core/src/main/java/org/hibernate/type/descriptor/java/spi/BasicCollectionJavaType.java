@@ -16,6 +16,7 @@ import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.dialect.Dialect;
@@ -66,6 +67,12 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
+		if ( componentJavaType instanceof UnknownBasicJavaType ) {
+			throw new MappingException("Basic collection has element type '"
+					+ componentJavaType.getTypeName()
+					+ "' which is not a known basic type"
+					+ " (attribute is not annotated '@ElementCollection', '@OneToMany', or '@ManyToMany')");
+		}
 		// Always determine the recommended type to make sure this is a valid basic java type
 		// (even though we only use this inside the if block, we want it to throw here if something wrong)
 		return indicators.getTypeConfiguration().getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
@@ -92,31 +99,31 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			BasicType<E> elementType,
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators stdIndicators) {
-		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
+		final JavaType<E> elementJavaType = elementType.getJavaTypeDescriptor();
+		final Class<?> elementJavaTypeClass = elementJavaType.getJavaTypeClass();
 		if ( elementType instanceof BasicPluralType<?, ?>
 				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
 			return null;
 		}
 		final BasicCollectionJavaType<C, E> collectionJavaType;
-		if ( componentJavaType == elementType.getJavaTypeDescriptor() ) {
+		if ( componentJavaType == elementJavaType) {
 			collectionJavaType = this;
 		}
 		else {
 			collectionJavaType = new BasicCollectionJavaType<>(
 					(ParameterizedType) getJavaType(),
-					elementType.getJavaTypeDescriptor(),
+					elementJavaType,
 					semantics
 			);
 			// Register the collection type as that will be resolved in the next step
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( collectionJavaType );
 		}
 		final BasicValueConverter<E, ?> valueConverter = elementType.getValueConverter();
+		final int arrayTypeCode = stdIndicators.getPreferredSqlTypeCodeForArray();
+		final JdbcType arrayJdbcType =
+				typeConfiguration.getJdbcTypeRegistry()
+						.resolveTypeConstructorDescriptor( arrayTypeCode, elementType, columnTypeInformation );
 		if ( valueConverter == null ) {
-			final JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
-					stdIndicators.getPreferredSqlTypeCodeForArray(),
-					elementType,
-					columnTypeInformation
-			);
 			return typeConfiguration.getBasicTypeRegistry().resolve(
 					collectionJavaType,
 					arrayJdbcType,
@@ -124,17 +131,15 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			);
 		}
 		else {
-			final JavaType<Object> relationalJavaType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
-					Array.newInstance( valueConverter.getRelationalJavaType().getJavaTypeClass(), 0 ).getClass()
-			);
+			final Class<?> arrayClass =
+					Array.newInstance( valueConverter.getRelationalJavaType().getJavaTypeClass(), 0 )
+							.getClass();
+			final JavaType<Object> relationalJavaType =
+					typeConfiguration.getJavaTypeRegistry().resolveDescriptor( arrayClass );
 			//noinspection unchecked,rawtypes
 			return new ConvertedBasicCollectionType(
 					elementType,
-					typeConfiguration.getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
-							stdIndicators.getPreferredSqlTypeCodeForArray(),
-							elementType,
-							columnTypeInformation
-					),
+					arrayJdbcType,
 					collectionJavaType,
 					new CollectionConverter( valueConverter, collectionJavaType, relationalJavaType )
 			);

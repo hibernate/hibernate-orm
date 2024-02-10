@@ -9,7 +9,6 @@ package org.hibernate.cfg;
 import java.util.Calendar;
 
 import org.hibernate.Incubating;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.query.Query;

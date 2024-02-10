@@ -15,8 +15,6 @@ import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.Internal;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;

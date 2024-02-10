@@ -965,14 +965,29 @@ public class Configuration {
 		}
 	}
 
+	/**
+	 * @deprecated use {@link #addSqlFunction(String, SqmFunctionDescriptor)}
+	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public Map<String,SqmFunctionDescriptor> getSqlFunctions() {
+		if ( customFunctionDescriptors == null ) {
+			customFunctionDescriptors = new HashMap<>();
+		}
 		return customFunctionDescriptors;
 	}
 
 	/**
-	 * Adds a {@linkplain SqmFunctionDescriptor SQL function descriptor} to this configuration.
+	 * Adds a {@linkplain SqmFunctionDescriptor function descriptor} to
+	 * this configuration.
+	 *
+	 * @apiNote For historical reasons, this method is misnamed.
+	 *          The function descriptor actually describes a function
+	 *          available in HQL, and it may or may not map directly
+	 *          to a function defined in SQL.
 	 *
 	 * @return {@code this} for method chaining
+	 *
+	 * @see SqmFunctionDescriptor
 	 */
 	public Configuration addSqlFunction(String functionName, SqmFunctionDescriptor function) {
 		if ( customFunctionDescriptors == null ) {

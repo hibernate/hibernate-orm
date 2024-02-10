@@ -15,11 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.Internal;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;

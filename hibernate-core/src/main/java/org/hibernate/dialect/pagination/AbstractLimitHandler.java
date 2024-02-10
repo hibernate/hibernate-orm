@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.Limit;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
 
@@ -21,6 +23,7 @@ import static java.util.regex.Pattern.compile;
  * Default implementation of {@link LimitHandler} interface. 
  *
  * @author Lukasz Antoniak
+ * @author François Vanhille
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
 
@@ -338,8 +341,9 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	protected String insertBeforeForUpdate(String limitOffsetClause, String sqlStatement) {
 		Matcher forUpdateMatcher = getForUpdatePattern().matcher( sqlStatement );
 		if ( forUpdateMatcher.find() ) {
+			final int offset = findInsertOffset( sqlStatement, forUpdateMatcher );
 			return new StringBuilder( sqlStatement )
-					.insert( forUpdateMatcher.start(), limitOffsetClause )
+					.insert( offset, limitOffsetClause )
 					.toString();
 		}
 		else {
@@ -347,4 +351,33 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		}
 	}
 
+	private int findInsertOffset(@NonNull final String sqlStatement, @NonNull final Matcher forUpdateMatcher) {
+		final int offset;
+		final String group = forUpdateMatcher.group();
+		if ( group != null && END_PATTERN.matcher( group ).matches() ) {
+			offset = getLastInsertPositionOffset( sqlStatement, forUpdateMatcher );
+		}
+		else {
+			offset = forUpdateMatcher.start();
+		}
+		return offset;
+	}
+
+	private int getLastInsertPositionOffset(@NonNull final String sqlStatement, @NonNull final Matcher forUpdateMatcher) {
+		final int offset;
+		final int lastSCIndex = sqlStatement.lastIndexOf( ';' );
+		if ( lastSCIndex != -1 ) {
+			if ( lastSCIndex == sqlStatement.length() - 1 ) {
+				offset = lastSCIndex;
+			}
+			else {
+				final String s = sqlStatement.substring( lastSCIndex + 1 );
+				offset = s.isBlank() ? lastSCIndex : sqlStatement.length();
+			}
+		}
+		else {
+			offset = forUpdateMatcher.regionEnd();
+		}
+		return offset;
+	}
 }

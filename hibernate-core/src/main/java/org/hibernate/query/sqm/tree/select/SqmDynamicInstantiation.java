@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +23,14 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.CLASS;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.LIST;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.MAP;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isConstructorCompatible;
 
 /**
  * Represents a dynamic instantiation ({@code select new XYZ(...) ...}) as part of the SQM.
@@ -109,6 +113,30 @@ public class SqmDynamicInstantiation<T>
 		super( sqmExpressible, criteriaBuilder );
 		this.instantiationTarget = instantiationTarget;
 		this.arguments = arguments;
+	}
+
+	public boolean checkInstantiation(TypeConfiguration typeConfiguration) {
+		if ( getInstantiationTarget().getNature() == CLASS) {
+			if ( getArguments().stream().allMatch(arg -> arg.getAlias() != null ) ) {
+				// it's probably a bean injection-type instantiator, don't check it now
+				return true;
+			}
+			else {
+				final List<Class<?>> argTypes =
+						getArguments().stream()
+								.map(arg -> arg.getNodeJavaType().getJavaTypeClass())
+								.collect(toList());
+				for ( Constructor<?> constructor : getJavaType().getDeclaredConstructors() ) {
+					if ( isConstructorCompatible( constructor, argTypes, typeConfiguration ) ) {
+						return true;
+					}
+				}
+				return false;
+			}
+		}
+		else {
+			return true;
+		}
 	}
 
 	@Override

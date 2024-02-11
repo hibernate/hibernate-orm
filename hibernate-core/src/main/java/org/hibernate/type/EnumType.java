@@ -115,7 +115,7 @@ public class EnumType<T extends Enum<T>>
 		if ( parameters.containsKey( ENUM ) ) {
 			final String enumClassName = (String) parameters.get( ENUM );
 			try {
-				enumClass = ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
+				enumClass = (Class<T>) ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
 			}
 			catch ( ClassNotFoundException exception ) {
 				throw new HibernateException("Enum class not found: " + enumClassName, exception);

@@ -84,7 +84,7 @@ public class Validation {
 			int errorOffset,
 			HqlParser.StatementContext statementContext) {
 		try {
-			return createSemanticQueryBuilder( returnType, factory ).visitStatement( statementContext );
+			return createSemanticQueryBuilder( returnType, hql, factory ).visitStatement( statementContext );
 		}
 		catch ( JdbcTypeRecommendationException ignored ) {
 			// just squash these for now
@@ -100,15 +100,15 @@ public class Validation {
 	}
 
 	private static SemanticQueryBuilder<?> createSemanticQueryBuilder(
-			@Nullable TypeMirror returnType, SessionFactoryImplementor factory) {
+			@Nullable TypeMirror returnType, String hql, SessionFactoryImplementor factory) {
 		if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			if ( isEntity( typeElement ) ) {
-				return new SemanticQueryBuilder<>( getEntityName( typeElement ), () -> false, factory );
+				return new SemanticQueryBuilder<>( getEntityName( typeElement ), () -> false, factory, hql );
 			}
 		}
-		return new SemanticQueryBuilder<>( Object[].class, () -> false, factory );
+		return new SemanticQueryBuilder<>( Object[].class, () -> false, factory, hql );
 	}
 
 	private static HqlParser.StatementContext parseAndCheckSyntax(String hql, Handler handler) {

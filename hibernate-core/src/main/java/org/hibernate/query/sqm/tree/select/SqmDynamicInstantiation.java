@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import static org.hibernate.query.sqm.DynamicInstantiationNature.CLASS;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.LIST;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.MAP;
 import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isConstructorCompatible;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isInjectionCompatible;
 
 /**
  * Represents a dynamic instantiation ({@code select new XYZ(...) ...}) as part of the SQM.
@@ -122,26 +122,33 @@ public class SqmDynamicInstantiation<T>
 				// where Class objects not available during build
 				return true;
 			}
-			if ( getArguments().stream().allMatch(arg -> arg.getAlias() != null ) ) {
-				// it's probably a bean injection-type instantiator, don't check it now
-				return true;
+			final List<Class<?>> argTypes = argumentTypes();
+			if ( isFullyAliased() ) {
+				final List<String> aliases =
+						getArguments().stream()
+								.map(SqmDynamicInstantiationArgument::getAlias)
+								.collect(toList());
+				return isInjectionCompatible( getJavaType(), aliases, argTypes )
+					|| isConstructorCompatible( getJavaType(), argTypes, typeConfiguration );
 			}
 			else {
-				final List<Class<?>> argTypes =
-						getArguments().stream()
-								.map(arg -> arg.getNodeJavaType().getJavaTypeClass())
-								.collect(toList());
-				for ( Constructor<?> constructor : getJavaType().getDeclaredConstructors() ) {
-					if ( isConstructorCompatible( constructor, argTypes, typeConfiguration ) ) {
-						return true;
-					}
-				}
-				return false;
+				return isConstructorCompatible( getJavaType(), argTypes, typeConfiguration );
 			}
 		}
 		else {
+			// TODO: is there anything we need to check for list/map instantiation?
 			return true;
 		}
+	}
+
+	private List<Class<?>> argumentTypes() {
+		return getArguments().stream()
+				.map(arg -> arg.getNodeJavaType().getJavaTypeClass())
+				.collect(toList());
+	}
+
+	public boolean isFullyAliased() {
+		return getArguments().stream().allMatch( arg -> arg.getAlias() != null );
 	}
 
 	@Override
@@ -322,10 +329,5 @@ public class SqmDynamicInstantiation<T>
 		final List<SqmSelectableNode<?>> list = new ArrayList<>();
 		visitSubSelectableNodes( list::add );
 		return list;
-	}
-
-	@Override
-	public boolean isCompoundSelection() {
-		return false;
 	}
 }

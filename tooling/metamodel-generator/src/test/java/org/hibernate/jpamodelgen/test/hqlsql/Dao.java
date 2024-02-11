@@ -47,4 +47,8 @@ public interface Dao {
 
     @HQL("from Book book join fetch book.publisher where book.title like :titlePattern")
     List<Book> booksWithPublisherByTitle(String titlePattern, Page page, Order<? super Book> order);
+
+    @HQL("select new org.hibernate.jpamodelgen.test.hqlsql.Dto(title, pages) from Book")
+    List<Dto> dtoQuery();
+
 }

@@ -51,4 +51,7 @@ public interface Dao {
     @HQL("select new org.hibernate.jpamodelgen.test.hqlsql.Dto(title, pages) from Book")
     List<Dto> dtoQuery();
 
+    @HQL("select title, pages from Book")
+    List<Dto> dtoQuery2();
+
 }

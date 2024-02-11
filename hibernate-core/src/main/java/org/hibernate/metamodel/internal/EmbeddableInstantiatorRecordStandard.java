@@ -25,7 +25,7 @@ public class EmbeddableInstantiatorRecordStandard extends AbstractPojoInstantiat
 		super( javaType );
 
 		final Class<?>[] componentTypes = ReflectHelper.getRecordComponentTypes( javaType );
-		this.constructor = ReflectHelper.getConstructor( javaType, componentTypes );
+		this.constructor = ReflectHelper.getConstructorOrNull( javaType, componentTypes );
 	}
 
 	@Override

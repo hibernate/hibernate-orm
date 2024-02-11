@@ -83,7 +83,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 			}
 			try {
 				@SuppressWarnings("unchecked")
-				Class<T> classForName = ReflectHelper.classForName(className);
+				Class<T> classForName = (Class<T>) ReflectHelper.classForName(className);
 				setJavaTypeDescriptor( new SerializableJavaType<>(classForName) );
 			}
 			catch ( ClassNotFoundException e ) {

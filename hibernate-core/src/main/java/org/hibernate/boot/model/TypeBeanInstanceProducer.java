@@ -9,13 +9,12 @@ package org.hibernate.boot.model;
 import org.hibernate.InstantiationException;
 import org.hibernate.Internal;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.spi.TypeBootstrapContext;
 
 import java.lang.reflect.Constructor;
 import java.util.Map;
-
-import static org.hibernate.internal.util.ReflectHelper.getConstructor;
 
 /**
  * {@link BeanInstanceProducer} implementation for building beans related to custom types.
@@ -33,7 +32,7 @@ public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBoots
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
 		final Constructor<B> bootstrapContextAwareConstructor =
-				getConstructor( beanType, TypeBootstrapContext.class );
+				ReflectHelper.getConstructorOrNull( beanType, TypeBootstrapContext.class );
 		if ( bootstrapContextAwareConstructor != null ) {
 			try {
 				return bootstrapContextAwareConstructor.newInstance( this );
@@ -43,7 +42,7 @@ public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBoots
 			}
 		}
 		else {
-			final Constructor<B> constructor = getConstructor( beanType );
+			final Constructor<B> constructor = ReflectHelper.getConstructorOrNull( beanType );
 			if ( constructor != null ) {
 				try {
 					return constructor.newInstance();

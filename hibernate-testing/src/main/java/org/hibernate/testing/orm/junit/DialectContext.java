@@ -10,7 +10,6 @@ import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -42,7 +41,7 @@ public final class DialectContext {
 		final Constructor<? extends Dialect> constructor;
 		try {
 			@SuppressWarnings("unchecked")
-			final Class<? extends Dialect> dialectClass = ReflectHelper.classForName( dialectName );
+			final Class<? extends Dialect> dialectClass = (Class<? extends Dialect>) ReflectHelper.classForName( dialectName );
 			constructor = dialectClass.getConstructor( DialectResolutionInfo.class );
 		}
 		catch (ClassNotFoundException cnfe) {

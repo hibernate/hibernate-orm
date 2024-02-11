@@ -5,6 +5,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import org.hibernate.annotations.NaturalId;
 
+import java.math.BigDecimal;
+
 @Entity
 public class Book {
     @Id String isbn;
@@ -12,4 +14,6 @@ public class Book {
     String text;
     @NaturalId String authorName;
     @ManyToOne Publisher publisher;
+    BigDecimal price;
+    int pages;
 }

@@ -53,7 +53,7 @@ public class InstantiationHelper {
 				return true;
 			}
 		}
-		return findField(targetJavaType, alias, argType) != null;
+		return findField( targetJavaType, alias, argType ) != null;
 	}
 
 	public static boolean isConstructorCompatible(Class<?> javaClass, List<Class<?>> argTypes, TypeConfiguration typeConfiguration) {
@@ -74,11 +74,11 @@ public class InstantiationHelper {
 			for (int i = 0; i < argumentTypes.size(); i++ ) {
 				final Type parameterType = genericParameterTypes[i];
 				final Class<?> argumentType = argumentTypes.get( i );
-				final Class<?> argType = parameterType instanceof Class<?>
+				final Class<?> type = parameterType instanceof Class<?>
 						? (Class<?>) parameterType
 						: typeConfiguration.getJavaTypeRegistry().resolveDescriptor( parameterType ).getJavaTypeClass();
 
-                if ( !areAssignmentCompatible( argType, argumentType ) ) {
+                if ( !areAssignmentCompatible( type, argumentType ) ) {
 					if ( log.isDebugEnabled() ) {
 						log.debugf(
 								"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
@@ -116,7 +116,7 @@ public class InstantiationHelper {
 	}
 
 	static boolean propertyMatches(String alias, Class<?> argType, PropertyDescriptor propertyDescriptor) {
-		return alias.equals(propertyDescriptor.getName())
+		return alias.equals( propertyDescriptor.getName() )
 			&& propertyDescriptor.getWriteMethod() != null
 			&& areAssignmentCompatible( propertyDescriptor.getWriteMethod().getParameterTypes()[0], argType );
 	}

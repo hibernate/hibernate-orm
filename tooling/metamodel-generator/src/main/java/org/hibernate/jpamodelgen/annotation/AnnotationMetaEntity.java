@@ -1260,8 +1260,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean parameterMatches(VariableElement parameter, JpaSelection<?> item) {
-		final Class<?> itemType = item.getJavaType();
-		final TypeMirror parameterType = parameter.asType();
+		return parameterMatches( parameter.asType(), item.getJavaType() );
+	}
+
+	private static boolean parameterMatches(TypeMirror parameterType, Class<?> itemType) {
 		final TypeKind kind = parameterType.getKind();
 		final String itemTypeName = itemType.getName();
 		if ( kind == TypeKind.DECLARED ) {
@@ -1270,7 +1272,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return paramTypeElement.getQualifiedName().contentEquals(itemTypeName);
 		}
 		else if ( kind.isPrimitive() ) {
-			return parameterType.toString().equals(itemTypeName);
+			switch ( kind ) {
+				case SHORT:
+					return itemType.equals(Short.class);
+				case INT:
+					return itemType.equals(Integer.class);
+				case LONG:
+					return itemType.equals(Long.class);
+				case BOOLEAN:
+					return itemType.equals(Boolean.class);
+				case FLOAT:
+					return itemType.equals(Float.class);
+				case DOUBLE:
+					return itemType.equals(Double.class);
+				case CHAR:
+					return itemType.equals(Character.class);
+				case BYTE:
+					return itemType.equals(Byte.class);
+				default:
+					return false;
+			}
+		}
+		else if ( kind == TypeKind.ARRAY ) {
+			return itemType.isArray()
+				&& parameterMatches( ((ArrayType) parameterType).getComponentType(), itemType.getComponentType() );
 		}
 		else {
 			return false;

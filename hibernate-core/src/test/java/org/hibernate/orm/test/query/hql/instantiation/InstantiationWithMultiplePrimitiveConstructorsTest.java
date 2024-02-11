@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.query.hql.instantiation;
 
 import org.hibernate.annotations.Imported;
-import org.hibernate.query.sqm.sql.internal.InstantiationException;
+import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -86,8 +86,7 @@ public class InstantiationWithMultiplePrimitiveConstructorsTest {
 				fail( "Long assignment to int should not be allowed" );
 			}
 			catch (Exception e) {
-				assertThat( e ).isInstanceOf( InstantiationException.class );
-				assertThat( e.getMessage() ).contains( "Cannot set field 'value'" );
+				assertThat( e.getCause() ).isInstanceOf( SemanticException.class );
 			}
 		} );
 	}

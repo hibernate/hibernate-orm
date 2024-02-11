@@ -1495,7 +1495,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final HqlParser.VariableContext variable = ctx.variable();
 		final String alias = variable == null ? null : extractAlias( variable );
 
-        final SqmSelectableNode<?> argExpression =
+		final SqmSelectableNode<?> argExpression =
 				(SqmSelectableNode<?>) ctx.instantiationArgumentExpression().accept( this );
 
 		final SqmDynamicInstantiationArgument<?> argument = new SqmDynamicInstantiationArgument<>(

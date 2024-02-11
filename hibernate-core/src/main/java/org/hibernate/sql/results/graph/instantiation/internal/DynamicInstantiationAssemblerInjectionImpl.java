@@ -92,7 +92,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			result = constructor.newInstance();
 		}
 		catch ( NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException
-			   | java.lang.InstantiationException e ) {
+				| java.lang.InstantiationException e ) {
 			throw new InstantiationException( "Error instantiating class '"
 					+ target.getJavaType().getTypeName() + "' using default constructor: " + e.getMessage(), e );
 		}

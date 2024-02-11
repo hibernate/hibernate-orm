@@ -164,6 +164,6 @@ public class Compatibility {
 		assert isFloatingTypePrimitive( to );
 		assert from.isPrimitive();
 
-        return to == float.class ? from == float.class : isFloatingTypePrimitive( from );
+		return to == float.class ? from == float.class : isFloatingTypePrimitive( from );
 	}
 }

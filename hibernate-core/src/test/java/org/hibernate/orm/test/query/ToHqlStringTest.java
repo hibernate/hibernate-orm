@@ -138,6 +138,11 @@ public class ToHqlStringTest {
 		public Integer id;
 
 		public String name;
+
+		public TestDto(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
 	}
 
 	@Entity(name = "TestEntity")

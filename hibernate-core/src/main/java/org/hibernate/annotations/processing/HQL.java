@@ -29,6 +29,9 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *     &#64;HQL("where title like ?1 order by title offset ?3 fetch first ?2 rows only")
  *     List&lt;Book&gt; findBooksByTitleWithPagination(String title, int max, int start);
  *
+ *     &#64;HQL("select isbn, title, author.name from Book order by isbn")
+ *     List&lt;BookSummary&gt; summarizeBooksWithPagination(Page page);
+ *
  *     &#64;HQL("where title like ?1")
  *     TypedQuery&lt;Book&gt; createBooksByTitleQuery(String title);
  * }
@@ -78,8 +81,12 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * For a {@code select} query, the return type of an annotated method
  * must be:
  * <ul>
- * <li>an entity type,
- * <li>{@link java.util.List},
+ * <li>an entity type, or {@link java.util.List List&lt;E&gt;} where
+ *     {@code E} is an entity type,
+ * <li>a record type or JavaBean class with a constructor signature
+ *     matching the types in the query {@code select} list, or
+ *     {@link java.util.List List&lt;R&gt;} where {@code R} is such
+ *     a type,
  * <li>{@code io.smallrye.mutiny.Uni}, when used with Hibernate Reactive,
  * <li>{@link org.hibernate.query.Query},
  * <li>{@link org.hibernate.query.SelectionQuery},
@@ -120,6 +127,14 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * Queries specified using this annotation are always validated by
  * the Metamodel Generator, and so it isn't necessary to specify the
  * {@link CheckHQL} annotation.
+ *
+ * @apiNote Instantiations with {@code select new} are not currently
+ *          type-checked at build time, and so use of this syntax is
+ *          not recommended. Nor, however, is this syntax necessary.
+ *          Hibernate is able to automatically match the elements of
+ *          the {@code select} list with a constructor of the method
+ *          return type, which is much less verbose and just as type
+ *          safe.
  *
  * @see SQL
  * @see Find

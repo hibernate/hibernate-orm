@@ -143,7 +143,7 @@ public class SqmDynamicInstantiation<T>
 
 	private List<Class<?>> argumentTypes() {
 		return getArguments().stream()
-				.map(arg -> arg.getNodeJavaType().getJavaTypeClass())
+				.map(arg -> arg.getNodeJavaType() == null ? Void.class : arg.getNodeJavaType().getJavaTypeClass())
 				.collect(toList());
 	}
 

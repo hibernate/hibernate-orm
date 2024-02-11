@@ -1466,9 +1466,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		if ( !dynamicInstantiation.checkInstantiation( creationContext.getTypeConfiguration() ) ) {
-			throw new SemanticException( "No matching constructor for type '"
-					+ dynamicInstantiation.getJavaType().getSimpleName() + "'",
-					query );
+			final String typeName = dynamicInstantiation.getJavaType().getSimpleName();
+			if ( dynamicInstantiation.isFullyAliased() ) {
+				throw new SemanticException( "Missing constructor or attributes for injection into type '" + typeName + "'", query );
+			}
+			else {
+				throw new SemanticException( "Missing constructor for type '" + typeName  + "'", query );
+			}
 		}
 
 		return dynamicInstantiation;

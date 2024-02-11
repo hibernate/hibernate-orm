@@ -116,7 +116,12 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	public boolean checkInstantiation(TypeConfiguration typeConfiguration) {
-		if ( getInstantiationTarget().getNature() == CLASS) {
+		if ( getInstantiationTarget().getNature() == CLASS ) {
+			if ( getJavaType().isArray() ) {
+				// hack to accommodate the needs of jpamodelgen
+				// where Class objects not available during build
+				return true;
+			}
 			if ( getArguments().stream().allMatch(arg -> arg.getAlias() != null ) ) {
 				// it's probably a bean injection-type instantiator, don't check it now
 				return true;

@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph.instantiation.internal;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -23,10 +22,11 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.query.sqm.tree.expression.Compatibility.areAssignmentCompatible;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isConstructorCompatible;
 
 /**
  * @author Steve Ebersole
@@ -150,77 +150,57 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 					new DynamicInstantiationAssemblerMapImpl( (JavaType<Map<?,?>>) javaType, argumentReaders );
 		}
 		else {
-			// find a constructor matching argument types
-			constructor_loop:
-			for ( Constructor<?> constructor : javaType.getJavaTypeClass().getDeclaredConstructors() ) {
-				final Type[] genericParameterTypes = constructor.getGenericParameterTypes();
-				if ( genericParameterTypes.length == argumentReaders.size() ) {
-					for ( int i = 0; i < argumentReaders.size(); i++ ) {
-						final Type parameterType = genericParameterTypes[i];
-						final ArgumentReader<?> argumentReader = argumentReaders.get( i );
-						final boolean assignmentCompatible;
-						if ( parameterType instanceof Class<?> ) {
-							assignmentCompatible = areAssignmentCompatible(
-									(Class<?>) parameterType,
-									argumentReader.getAssembledJavaType().getJavaTypeClass()
-							);
-						}
-						else {
-							final JavaType<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
-									.getMappingMetamodel()
-									.getTypeConfiguration()
-									.getJavaTypeRegistry()
-									.resolveDescriptor( parameterType );
-							assignmentCompatible = areAssignmentCompatible(
-									argumentTypeDescriptor,
-									argumentReader.getAssembledJavaType()
-							);
-						}
-
-						if ( !assignmentCompatible ) {
-							if ( log.isDebugEnabled() ) {
-								log.debugf(
-										"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
-										i,
-										argumentReader.getAssembledJavaType().getTypeName(),
-										parameterType.getTypeName()
-								);
-							}
-							continue constructor_loop;
-						}
-					}
-
-					constructor.setAccessible( true );
-					//noinspection rawtypes
-					return new DynamicInstantiationAssemblerConstructorImpl( constructor, javaType, argumentReaders );
-				}
-			}
-
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
-						"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
-						javaType.getJavaType().getTypeName()
-				);
-			}
-
-			if ( ! areAllArgumentsAliased ) {
-				throw new IllegalStateException(
-						"Cannot instantiate class '" + javaType.getJavaType().getTypeName() + "'"
-								+ " (it has no constructor with signature " + signature()
-								+ ", and not every argument has an alias)"
-				);
-			}
-			if ( !duplicatedAliases.isEmpty() ) {
-				throw new IllegalStateException(
-						"Cannot instantiate class '" + javaType.getJavaType().getTypeName() + "'"
-								+ " (it has no constructor with signature " + signature()
-								+ ", and has arguments with duplicate aliases ["
-								+ StringHelper.join( ",", duplicatedAliases ) + "])"
-				);
-			}
-
-			return new DynamicInstantiationAssemblerInjectionImpl<>( javaType, argumentReaders );
+			return assembler( areAllArgumentsAliased, duplicatedAliases, argumentReaders, creationState );
 		}
+	}
+
+	private DomainResultAssembler<R> assembler(
+			boolean areAllArgumentsAliased,
+			List<String> duplicatedAliases,
+			List<ArgumentReader<?>> argumentReaders,
+			AssemblerCreationState creationState) {
+		final List<Class<?>> argumentTypes =
+				argumentReaders.stream()
+						.map(reader -> reader.getAssembledJavaType().getJavaTypeClass())
+						.collect(toList());
+		final TypeConfiguration typeConfiguration =
+				creationState.getSqlAstCreationContext()
+						.getMappingMetamodel()
+						.getTypeConfiguration();
+		// find a constructor matching argument types
+		for ( Constructor<?> constructor : javaType.getJavaTypeClass().getDeclaredConstructors() ) {
+			if ( isConstructorCompatible( constructor, argumentTypes, typeConfiguration ) ) {
+				constructor.setAccessible( true );
+				@SuppressWarnings("unchecked")
+				final Constructor<R> construct = (Constructor<R>) constructor;
+				return new DynamicInstantiationAssemblerConstructorImpl<>( construct, javaType, argumentReaders );
+			}
+		}
+
+		if ( log.isDebugEnabled() ) {
+			log.debugf(
+					"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
+					javaType.getJavaType().getTypeName()
+			);
+		}
+
+		if ( !areAllArgumentsAliased) {
+			throw new IllegalStateException(
+					"Cannot instantiate class '" + javaType.getJavaType().getTypeName() + "'"
+							+ " (it has no constructor with signature " + signature()
+							+ ", and not every argument has an alias)"
+			);
+		}
+		if ( !duplicatedAliases.isEmpty() ) {
+			throw new IllegalStateException(
+					"Cannot instantiate class '" + javaType.getJavaType().getTypeName() + "'"
+							+ " (it has no constructor with signature " + signature()
+							+ ", and has arguments with duplicate aliases ["
+							+ StringHelper.join( ",", duplicatedAliases) + "])"
+			);
+		}
+
+		return new DynamicInstantiationAssemblerInjectionImpl<>( javaType, argumentReaders );
 	}
 
 	private List<String> signature() {

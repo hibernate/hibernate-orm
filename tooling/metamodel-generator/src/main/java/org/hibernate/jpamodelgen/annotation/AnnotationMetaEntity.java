@@ -27,6 +27,7 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -1028,6 +1029,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final List<String> paramNames = parameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
 				final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
+				if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
+					if ( !((DeclaredType) returnType).getTypeArguments().isEmpty() ) {
+						context.message( method, mirror, value,
+								"query result type may not be a generic type"
+										+ " (change '" + returnType +
+										"' to '" + context.getTypeUtils().erasure( returnType ) + "')",
+								Diagnostic.Kind.ERROR );
+					}
+				}
 				final QueryMethod attribute =
 						new QueryMethod(
 								this,
@@ -1150,7 +1160,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				try {
 					final Class<?> javaResultType = selection.getJavaType();
 					final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
-					returnTypeCorrect = context.getTypeUtils().isAssignable( returnType,  typeElement.asType() );
+					final Types types = context.getTypeUtils();
+					returnTypeCorrect = types.isAssignable( returnType,  types.erasure( typeElement.asType() ) );
 				}
 				catch (Exception e) {
 					//ignore

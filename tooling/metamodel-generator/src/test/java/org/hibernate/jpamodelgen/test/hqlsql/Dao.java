@@ -9,6 +9,7 @@ import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
 
 import java.util.List;
+import java.util.Map;
 
 public interface Dao {
 
@@ -48,10 +49,19 @@ public interface Dao {
     @HQL("from Book book join fetch book.publisher where book.title like :titlePattern")
     List<Book> booksWithPublisherByTitle(String titlePattern, Page page, Order<? super Book> order);
 
-    @HQL("select new org.hibernate.jpamodelgen.test.hqlsql.Dto(title, pages) from Book")
+    @HQL("select title, pages from Book")
     List<Dto> dtoQuery();
 
-    @HQL("select title, pages from Book")
+    @HQL("select new org.hibernate.jpamodelgen.test.hqlsql.Dto(title, pages) from Book")
+    List<Dto> dtoQuery1();
+
+    @HQL("select new Dto(title, pages) from Book")
     List<Dto> dtoQuery2();
+
+    @HQL("select new map(title as title, pages as pages) from Book")
+    List<Map> dtoQuery3();
+
+    @HQL("select new list(title, pages) from Book")
+    List<List> dtoQuery4();
 
 }

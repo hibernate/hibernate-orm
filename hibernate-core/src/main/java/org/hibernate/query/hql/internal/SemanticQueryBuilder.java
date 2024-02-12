@@ -318,6 +318,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private final Class<R> expectedResultType;
+	private final String expectedResultTypeName;
+	private final String expectedResultTypeShortName;
 	private final String expectedResultEntity;
 	private final SqmCreationOptions creationOptions;
 	private final SqmCreationContext creationContext;
@@ -347,24 +349,53 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			SqmCreationOptions creationOptions,
 			SqmCreationContext creationContext,
 			String query) {
-		this( expectedResultType, null, creationOptions, creationContext, query );
+		this( expectedResultType,
+				expectedResultType == null ? null : expectedResultType.getTypeName(),
+				expectedResultType == null ? null : expectedResultType.getSimpleName(),
+				null, creationOptions, creationContext, query );
 	}
 
 	public SemanticQueryBuilder(
+			String expectedResultTypeName,
+			String expectedResultTypeShortName,
 			String expectedResultEntity,
 			SqmCreationOptions creationOptions,
 			SqmCreationContext creationContext,
 			String query) {
-		this( null, expectedResultEntity, creationOptions, creationContext, query );
+		this( null,
+				expectedResultTypeName,
+				expectedResultTypeShortName,
+				expectedResultEntity,
+				creationOptions, creationContext,
+				query );
+	}
+
+	public SemanticQueryBuilder(
+			String expectedResultTypeName,
+			String expectedResultTypeShortName,
+			Class<R> expectedResultType,
+			SqmCreationOptions creationOptions,
+			SqmCreationContext creationContext,
+			String query) {
+		this( expectedResultType,
+				expectedResultTypeName,
+				expectedResultTypeShortName,
+				null,
+				creationOptions, creationContext,
+				query );
 	}
 
 	private SemanticQueryBuilder(
 			Class<R> expectedResultType,
+			String expectedResultTypeName,
+			String expectedResultTypeShortName,
 			String expectedResultEntity,
 			SqmCreationOptions creationOptions,
 			SqmCreationContext creationContext,
 			String query) {
 		this.expectedResultType = expectedResultType;
+		this.expectedResultTypeName = expectedResultTypeName;
+		this.expectedResultTypeShortName = expectedResultTypeShortName;
 		this.expectedResultEntity = expectedResultEntity;
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
@@ -1272,7 +1303,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final EntityDomainType<R> entityDescriptor = jpaMetamodel.findEntityType( expectedResultType );
 			if ( entityDescriptor == null ) {
 				throw new SemanticException( "Query has no 'from' clause, and the result type '"
-						+ expectedResultType.getSimpleName() + "' is not an entity type", query );
+						+ expectedResultTypeShortName + "' is not an entity type", query );
 			}
 			return entityDescriptor;
 		}
@@ -1427,8 +1458,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final ParseTree instantiationTarget = ctx.instantiationTarget().getChild( 0 );
 		if ( instantiationTarget instanceof HqlParser.SimplePathContext ) {
 			String className = instantiationTarget.getText();
-			if ( expectedResultType!=null && expectedResultType.getSimpleName().equals( className ) ) {
-				className = expectedResultType.getName();
+			if ( expectedResultTypeName != null && expectedResultTypeShortName.equals( className ) ) {
+				className = expectedResultTypeName;
 			}
 			try {
 				dynamicInstantiation = SqmDynamicInstantiation.forClassInstantiation(

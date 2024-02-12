@@ -121,13 +121,15 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	private String importTypes(String originalArgList) {
-		String[] args = originalArgList.split(",");
+		int index = originalArgList.indexOf( ',' );
 		StringBuilder argList = new StringBuilder();
-		for ( String arg : args ) {
-			if ( argList.length() > 0 ) {
-				argList.append(',');
-			}
-			argList.append( importType( arg ) );
+		if ( index < 0 ) {
+			argList.append( importType( originalArgList ) );
+		}
+		else {
+			argList.append( importType( originalArgList.substring( 0, index ) ) );
+			argList.append(',');
+			argList.append( importType( originalArgList.substring( index + 1 ) ) );
 		}
 		return argList.toString();
 	}

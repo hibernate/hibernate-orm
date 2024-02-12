@@ -104,11 +104,15 @@ public class Validation {
 		if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			if ( isEntity( typeElement ) ) {
-				return new SemanticQueryBuilder<>( getEntityName( typeElement ), () -> false, factory, hql );
-			}
+			final String typeName = typeElement.getQualifiedName().toString();
+			final String shortName = typeElement.getSimpleName().toString();
+			return isEntity( typeElement )
+					? new SemanticQueryBuilder<>( typeName, shortName, getEntityName(typeElement), () -> false, factory, hql )
+					: new SemanticQueryBuilder<>( typeName, shortName, Object[].class, () -> false, factory, hql );
 		}
-		return new SemanticQueryBuilder<>( Object[].class, () -> false, factory, hql );
+		else {
+			return new SemanticQueryBuilder<>( Object[].class, () -> false, factory, hql );
+		}
 	}
 
 	private static HqlParser.StatementContext parseAndCheckSyntax(String hql, Handler handler) {

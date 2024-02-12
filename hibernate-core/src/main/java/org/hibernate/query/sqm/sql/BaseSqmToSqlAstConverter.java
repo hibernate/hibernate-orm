@@ -3174,15 +3174,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// The AND junction allows to create an intersection of entity name lists of all sub-predicates
 		final EntityMappingType mappingType = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
 		final AbstractEntityPersister persister = (AbstractEntityPersister) mappingType.getEntityPersister();
+		// Avoid resolving subclass tables for persisters with physical discriminators as we won't need them
+		if ( persister.getDiscriminatorMapping().hasPhysicalColumn() ) {
+			return;
+		}
 		if ( getCurrentClauseStack().getCurrent() != Clause.WHERE && getCurrentClauseStack().getCurrent() != Clause.HAVING ) {
 			// Where and having clauses are handled specially with EntityNameUse.FILTER and pruning
 			registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, persister.getEntityName(), true );
 		}
 		else {
-			// Avoid resolving subclass tables for persisters with physical discriminators as we won't need them
-			if ( persister.getDiscriminatorMapping().hasPhysicalColumn() ) {
-				return;
-			}
 			final int subclassTableSpan = persister.getSubclassTableSpan();
 			for ( int i = 0; i < subclassTableSpan; i++ ) {
 				tableGroup.resolveTableReference( null, persister.getSubclassTableName( i ) );

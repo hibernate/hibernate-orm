@@ -8,9 +8,6 @@ package org.hibernate.orm.test.mapping.basic;
 
 import java.sql.Types;
 import java.time.ZoneOffset;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -19,9 +16,15 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -57,6 +60,28 @@ public class ZoneOffsetMappingTests {
 		);
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17726" )
+	public void testUpdateQuery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new EntityWithZoneOffset(
+				1,
+				ZoneOffset.from( ZoneOffset.MIN )
+		) ) );
+		scope.inTransaction( session -> {
+			final ZoneOffset zoneOffset = ZoneOffset.from( ZoneOffset.UTC );
+			session.createMutationQuery( "update EntityWithZoneOffset e set e.zoneOffset = :zoneOffset" )
+					.setParameter( "zoneOffset", zoneOffset )
+					.executeUpdate();
+			final EntityWithZoneOffset entity = session.find( EntityWithZoneOffset.class, 1 );
+			assertThat( entity.zoneOffset, equalTo( zoneOffset ) );
+		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.createMutationQuery( "delete EntityWithZoneOffset" ).executeUpdate() );
+	}
+	
 	@Entity(name = "EntityWithZoneOffset")
 	@Table(name = "EntityWithZoneOffset")
 	public static class EntityWithZoneOffset {

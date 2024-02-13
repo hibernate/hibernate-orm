@@ -47,11 +47,12 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 		if ( value == null ) {
 			return null;
 		}
-
+		if ( ZoneId.class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) toString( value );
 		}
-
 		throw unknownUnwrap( type );
 	}
 
@@ -60,11 +61,12 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 		if ( value == null ) {
 			return null;
 		}
-
+		if ( value instanceof ZoneId ) {
+			return (ZoneId) value;
+		}
 		if ( value instanceof String ) {
 			return fromString( (String) value );
 		}
-
 		throw unknownWrap( value.getClass() );
 	}
 

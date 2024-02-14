@@ -709,7 +709,7 @@ disable_userland_proxy() {
 
 oracle_atps() {
   echo "Managing Oracle Autonomous Database..."
-  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous&hostname=`hostname`" -H 'accept: application/json')
+  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous2&hostname=`hostname`" -H 'accept: application/json')
   export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   export PASSWORD=$(echo $INFO | jq -r '.database' | jq -r '.password')

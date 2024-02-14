@@ -33,9 +33,9 @@ import org.hibernate.sql.ordering.antlr.TranslationContext;
  */
 public final class Template {
 
-	private static final Set<String> KEYWORDS = new HashSet<String>();
-	private static final Set<String> BEFORE_TABLE_KEYWORDS = new HashSet<String>();
-	private static final Set<String> FUNCTION_KEYWORDS = new HashSet<String>();
+	private static final Set<String> KEYWORDS = new HashSet<>();
+	private static final Set<String> BEFORE_TABLE_KEYWORDS = new HashSet<>();
+	private static final Set<String> FUNCTION_KEYWORDS = new HashSet<>();
 	static {
 		KEYWORDS.add("and");
 		KEYWORDS.add("or");
@@ -156,8 +156,13 @@ public final class Template {
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
+		String token = null;
+		String previousToken = null;
 		while ( hasMore ) {
-			String token = nextToken;
+			if ( token != null ) {
+				previousToken = token;
+			}
+			token = nextToken;
 			String lcToken = token.toLowerCase(Locale.ROOT);
 			hasMore = tokens.hasMoreTokens();
 			nextToken = hasMore ? tokens.nextToken() : null;
@@ -193,7 +198,11 @@ public final class Template {
 					isOpenQuote = false;
 				}
 
-				if ( isOpenQuote ) {
+				if ( isOpenQuote
+						&& !inFromClause
+						&&
+						( previousToken == null ||
+								previousToken != null && previousToken.charAt( previousToken.length() - 1 ) != '.' ) ) {
 					result.append( placeholder ).append( '.' );
 				}
 			}
@@ -301,8 +310,9 @@ public final class Template {
 			else if ( isNamedParameter(token) ) {
 				result.append(token);
 			}
-			else if ( isIdentifier(token)
-					&& !isFunctionOrKeyword(lcToken, nextToken, dialect , functionRegistry) ) {
+			else if ( isIdentifier( token )
+					&& !isFunctionOrKeyword( lcToken, nextToken, dialect, functionRegistry )
+					&& !inFromClause ) {
 				result.append(placeholder)
 						.append('.')
 						.append( dialect.quote(token) );

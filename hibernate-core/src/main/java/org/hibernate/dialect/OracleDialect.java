@@ -248,6 +248,9 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
+		if ( getVersion().isSameOrAfter( DatabaseVersion.make(23) ) ) {
+			return super.getPreferredSqlTypeCodeForBoolean();
+		}
 		return Types.BIT;
 	}
 
@@ -679,13 +682,16 @@ public class OracleDialect extends Dialect {
 		pattern.append( unit.conversionFactor( toUnit, this ) );
 	}
 
-	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
-				// still, after all these years...
-				return "number(1,0)";
-
+				if ( getVersion().isSameOrAfter( DatabaseVersion.make(23) ) ) {
+					return super.columnType( sqlTypeCode );
+				}
+				else {
+					// Before 23c, no Boolean support
+					return "number(1,0)";
+				}
 			case TINYINT:
 				return "number(3,0)";
 			case SMALLINT:
@@ -871,8 +877,11 @@ public class OracleDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-
-		typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
+		if ( getVersion().isSame( DatabaseVersion.make(21) ) ||
+			getVersion().isBefore( DatabaseVersion.make(21) )) {
+			// starting 23c we support Boolean type natively
+			typeContributions.contributeJdbcType(OracleBooleanJdbcType.INSTANCE);
+		}
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcType( OracleJdbcHelper.getStructJdbcType( serviceRegistry ) );

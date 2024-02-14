@@ -208,7 +208,12 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				createMetaModelClasses();
 			}
 			catch (Exception e) {
-				context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel: " + e.getMessage() );
+				final Throwable cause = e.getCause();
+				final String message =
+						cause != null && cause != e
+								? e.getMessage() + " caused by " + cause.getMessage()
+								: e.getMessage();
+				context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel: " + message );
 			}
 		}
 		return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;

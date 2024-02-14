@@ -528,6 +528,7 @@ Note that even when you've identified a natural key, we still recommend the use 
 A _basic_ attribute of an entity is a field or property which maps to a single column of the associated database table.
 The JPA specification defines a quite limited set of basic types:
 
+[[basic-type-list]]
 .JPA-standard basic attribute types
 [%breakable,cols="30,^14,~"]
 |====
@@ -1390,6 +1391,10 @@ class Event {
 ----
 
 The `@Array` annotation is optional, but it's important to limit the amount of storage space the database allocates to the `ARRAY` column.
+By writing `@Array(length=7)` here, we specified that DDL should be generated with the column type `TINYINT ARRAY[7]`.
+
+Just for fun, we used an enumerated type in the code above, but the array element time may be almost any <<basic-type-list,basic type>>.
+For example, the Java array types `String[]`, `UUID[]`, `double[]`, `BigDecimal[]`, `LocalDate[]`, and `OffsetDateTime[]` are all allowed, mapping to the SQL types `VARCHAR(n) ARRAY`, `UUID ARRAY`, `FLOAT(53) ARRAY`, `NUMERIC(p,s) ARRAY`, `DATE ARRAY`, and `TIMESTAMP(p) WITH TIME ZONE ARRAY`, respectively.
 
 [WARNING]
 // .Not every database has an `ARRAY` type

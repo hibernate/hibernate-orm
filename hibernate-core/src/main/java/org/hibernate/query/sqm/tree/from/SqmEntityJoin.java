@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmQualifiedJoin;
 import org.hibernate.spi.NavigablePath;

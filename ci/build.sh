@@ -30,7 +30,7 @@ elif [ "$RDBMS" == "oracle_atps_tls" ]; then
   goal="-Pdb=oracle_cloud_autonomous_tls -DrunID=$RUNID -DdbHost=$HOST -DdbService=$SERVICE"
 elif [ "$RDBMS" == "oracle_atps" ]; then
   echo "Managing Oracle Autonomous Database..."
-  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous&hostname=`hostname`" -H 'accept: application/json')
+  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous2&hostname=`hostname`" -H 'accept: application/json')
   export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   # I have no idea why, but these tests don't seem to work on CI...

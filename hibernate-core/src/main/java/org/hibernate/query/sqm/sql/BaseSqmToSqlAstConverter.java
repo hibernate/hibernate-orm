@@ -3100,8 +3100,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 		);
 
-		// Resolve the table reference for all types which we register an entity name use for
-		if ( actualTableGroup.isInitialized() ) {
+		// Resolve the table reference for all types which we register an entity name use for.
+		// Also, force table group initialization for treats when needed to ensure correct cardinality
+		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
+		if ( actualTableGroup.isInitialized() || ( useKind == EntityNameUse.UseKind.TREAT && actualTableGroup.canUseInnerJoins()
+				&& !( (EntityMappingType) actualTableGroup.getModelPart().getPartMappingType() ).isTypeOrSuperType( persister ) ) ) {
 			actualTableGroup.resolveTableReference( null, persister.getTableName() );
 		}
 
@@ -3118,7 +3121,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// If we encounter a treat or projection use, we also want register the use for all subtypes.
 		// We do this here to not have to expand entity name uses during pruning later on
-		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
 		if ( useKind == EntityNameUse.UseKind.TREAT ) {
 			for ( EntityMappingType subType : persister.getSubMappingTypes() ) {
 				entityNameUses.compute(

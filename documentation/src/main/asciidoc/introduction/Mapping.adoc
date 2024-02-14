@@ -517,6 +517,27 @@ class Book {
 
 Again, the `foreignKey` member is optional.
 
+[TIP]
+====
+For mapping a `@OneToOne` association <<one-to-one-pk,to a primary key>> with `@MapsId`, Hibernate lets us use either `@JoinColumn` or `@PrimaryKeyJoinColumn`.
+[source,java]
+----
+@Entity
+class Author {
+    @Id
+    Long id;
+
+    @OneToOne(optional=false, fetch=LAZY)
+    @MapsId
+    @PrimaryKeyJoinColumn(name="personId")
+    Person author;
+
+    ...
+}
+----
+Arguably, the use of `@PrimaryKeyJoinColumn` is clearer.
+====
+
 [[primary-key-column-mappings]]
 === Mapping primary key joins between tables
 

@@ -16,6 +16,7 @@ import java.util.function.Function;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -27,6 +28,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
@@ -105,6 +107,23 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		}
 	}
 
+	private static String fromPath(SqmFrom<?, ?> sqmFrom, boolean first) {
+		//TODO: the qualified path, but not using getFullPath() which has cruft
+		final String path = sqmFrom.getNavigablePath().getLocalName();
+		final String alias = sqmFrom.getExplicitAlias();
+		final String keyword;
+		if ( sqmFrom instanceof SqmRoot && first ) {
+			keyword = "from ";
+		}
+		else if ( sqmFrom instanceof SqmJoin ) {
+			keyword = first ? "join " : " join ";
+		}
+		else {
+			keyword = first ? "" : ", ";
+		}
+		return keyword + (alias == null ? path : path + " as " + alias);
+	}
+
 	@Override
 	public void registerByAliasOnly(SqmFrom<?, ?> sqmFrom) {
 		final String alias = sqmFrom.getExplicitAlias();
@@ -119,10 +138,10 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				throw new AliasCollisionException(
 						String.format(
 								Locale.ENGLISH,
-								"Alias [%s] used for multiple from-clause elements : %s, %s",
+								"Duplicate identification variable '%s' in 'from' clause [%s%s]",
 								alias,
-								previousFrom,
-								sqmFrom
+								fromPath( previousFrom, true ),
+								fromPath( sqmFrom, false )
 						)
 				);
 			}
@@ -142,10 +161,10 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				throw new AliasCollisionException(
 						String.format(
 								Locale.ENGLISH,
-								"Alias [%s] used for multiple from-clause elements : %s, %s",
+								"Duplicate identification variable '%s' in 'join' clause [%s%s]",
 								alias,
-								previousFrom,
-								sqmJoin
+								fromPath( previousFrom, true ),
+								fromPath( sqmJoin, false )
 						)
 				);
 			}
@@ -248,7 +267,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			final SqmFrom<?, ?> fromElement = entry.getValue();
 			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
 				if ( found != null ) {
-					throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + navigableName );
+					throw new SemanticException( "Ambiguous unqualified attribute reference '" + navigableName +
+							"' (qualify the attribute reference by an identification variable)" );
 				}
 				found = fromElement;
 			}
@@ -379,7 +399,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			throw new AliasCollisionException(
 					String.format(
 							Locale.ENGLISH,
-							"Alias [%s] is already used in same select clause [position=%s]",
+							"Duplicate alias '%s' at position %s in 'select' clause",
 							alias,
 							position
 					)

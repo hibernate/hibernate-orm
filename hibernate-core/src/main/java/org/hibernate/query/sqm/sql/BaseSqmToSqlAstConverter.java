@@ -3086,12 +3086,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 		);
 
-		// Resolve the table reference for all types which we register an entity name use for
-		if ( actualTableGroup.isInitialized() ) {
+		// Resolve the table reference for all types which we register an entity name use for.
+		// Also, force table group initialization for treats when needed to ensure correct cardinality
+		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
+		if ( actualTableGroup.isInitialized() || ( useKind == EntityNameUse.UseKind.TREAT && actualTableGroup.canUseInnerJoins()
+				&& !( (EntityMappingType) actualTableGroup.getModelPart().getPartMappingType() ).isTypeOrSuperType( persister ) ) ) {
 			actualTableGroup.resolveTableReference( null, persister.getTableName() );
 		}
 
-		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
 		if ( projection ) {
 			EntityMappingType superMappingType = persister;
 			while ( ( superMappingType = superMappingType.getSuperMappingType() ) != null ) {
@@ -3102,20 +3104,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 			}
 		}
-		if ( useKind == EntityNameUse.UseKind.TREAT || useKind == EntityNameUse.UseKind.PROJECTION ) {
-			// If we encounter a treat use, we also want register the use for all subtypes.
-			// We do this here to not have to expand entity name uses during pruning later on
+
+		// If we encounter a treat or projection use, we also want register the use for all subtypes.
+		// We do this here to not have to expand entity name uses during pruning later on
+		if ( useKind == EntityNameUse.UseKind.TREAT ) {
 			for ( EntityMappingType subType : persister.getSubMappingTypes() ) {
 				entityNameUses.compute(
 						subType.getEntityName(),
 						(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 				);
-				if ( useKind == EntityNameUse.UseKind.PROJECTION ) {
-					actualTableGroup.resolveTableReference(
-							null,
-							subType.getEntityPersister().getMappedTableDetails().getTableName()
-					);
-				}
+			}
+		}
+		else if ( useKind == EntityNameUse.UseKind.PROJECTION ) {
+			for ( EntityMappingType subType : persister.getSubMappingTypes() ) {
+				entityNameUses.compute(
+						subType.getEntityName(),
+						(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
+				);
 			}
 		}
 	}

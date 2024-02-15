@@ -72,4 +72,10 @@ public interface QueryEngineOptions {
 	JpaCompliance getJpaCompliance();
 
 	ValueHandlingMode getCriteriaValueHandlingMode();
+
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
+	 */
+	boolean isPortableIntegerDivisionEnabled();
+
 }

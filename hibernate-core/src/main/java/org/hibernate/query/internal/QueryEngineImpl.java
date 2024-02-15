@@ -172,7 +172,7 @@ public class QueryEngineImpl implements QueryEngine {
 
 	private static List<FunctionContributor> sortedFunctionContributors(ServiceRegistry serviceRegistry) {
 		Collection<FunctionContributor> functionContributors =
-				serviceRegistry.getService(ClassLoaderService.class)
+				serviceRegistry.requireService(ClassLoaderService.class)
 						.loadJavaServices(FunctionContributor.class);
 		List<FunctionContributor> contributors = new ArrayList<>( functionContributors );
 		contributors.sort(

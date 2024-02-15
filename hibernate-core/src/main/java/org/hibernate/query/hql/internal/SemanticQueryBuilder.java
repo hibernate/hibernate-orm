@@ -888,7 +888,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private void applyCycleClause(JpaCteCriteria<?> cteDefinition, HqlParser.CycleClauseContext ctx) {
-		final HqlParser.CteAttributesContext attributesContext = (HqlParser.CteAttributesContext) ctx.getChild( 1 );
+		final HqlParser.CteAttributesContext attributesContext = ctx.cteAttributes();
 		final String cycleMarkAttributeName = visitIdentifier( (HqlParser.IdentifierContext) ctx.getChild( 3 ) );
 		final List<JpaCteCriteriaAttribute> cycleAttributes = new ArrayList<>( ( attributesContext.getChildCount() + 1 ) >> 1 );
 		final List<ParseTree> children = attributesContext.children;
@@ -948,14 +948,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			kind = CteSearchClauseKind.DEPTH_FIRST;
 		}
-		final String searchAttributeName = visitIdentifier( (HqlParser.IdentifierContext) ctx.getChild( ctx.getChildCount() - 1 ) );
-		final HqlParser.SearchSpecificationsContext searchCtx = (HqlParser.SearchSpecificationsContext) ctx.getChild( 4 );
+		final String searchAttributeName = visitIdentifier( ctx.identifier() );
+		final HqlParser.SearchSpecificationsContext searchCtx = ctx.searchSpecifications();
 		final List<JpaSearchOrder> searchOrders = new ArrayList<>( ( searchCtx.getChildCount() + 1 ) >> 1 );
 		final List<ParseTree> children = searchCtx.children;
 		final JpaCteCriteriaType<?> type = cteDefinition.getType();
 		for ( int i = 0; i < children.size(); i += 2 ) {
 			final HqlParser.SearchSpecificationContext specCtx = (HqlParser.SearchSpecificationContext) children.get( i );
-			final String attributeName = visitIdentifier( (HqlParser.IdentifierContext) specCtx.getChild( 0 ) );
+			final String attributeName = visitIdentifier( specCtx.identifier() );
 			final JpaCteCriteriaAttribute attribute = type.getAttribute( attributeName );
 			if ( attribute == null ) {
 				throw new SemanticException(
@@ -972,7 +972,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			int index = 1;
 			if ( index < specCtx.getChildCount() ) {
 				if ( specCtx.getChild( index ) instanceof HqlParser.SortDirectionContext ) {
-					final HqlParser.SortDirectionContext sortCtx = (HqlParser.SortDirectionContext) specCtx.getChild( index );
+					final HqlParser.SortDirectionContext sortCtx = specCtx.sortDirection();
 					switch ( ( (TerminalNode) sortCtx.getChild( 0 ) ).getSymbol().getType() ) {
 						case HqlParser.ASC:
 							sortOrder = SortDirection.ASCENDING;
@@ -986,7 +986,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					index++;
 				}
 				if ( index < specCtx.getChildCount() ) {
-					final HqlParser.NullsPrecedenceContext nullsPrecedenceContext = (HqlParser.NullsPrecedenceContext) specCtx.getChild( index );
+					final HqlParser.NullsPrecedenceContext nullsPrecedenceContext = specCtx.nullsPrecedence();
 					switch ( ( (TerminalNode) nullsPrecedenceContext.getChild( 1 ) ).getSymbol().getType() ) {
 						case HqlParser.FIRST:
 							nullPrecedence = NullPrecedence.FIRST;
@@ -999,13 +999,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					}
 				}
 			}
-			searchOrders.add(
-					creationContext.getNodeBuilder().search(
-							attribute,
-							sortOrder,
-							nullPrecedence
-					)
-			);
+			searchOrders.add( creationContext.getNodeBuilder().search( attribute, sortOrder, nullPrecedence ) );
 		}
 		cteDefinition.search( kind, searchAttributeName, searchOrders );
 	}
@@ -1023,7 +1017,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmQueryPart<?> visitQueryOrderExpression(HqlParser.QueryOrderExpressionContext ctx) {
 		final SqmQuerySpec<?> sqmQuerySpec = currentQuerySpec();
 		final SqmFromClause fromClause = buildInferredFromClause(null);
-		sqmQuerySpec.setFromClause(fromClause);
+		sqmQuerySpec.setFromClause( fromClause );
 		sqmQuerySpec.setSelectClause( buildInferredSelectClause( fromClause ) );
 		visitQueryOrder( sqmQuerySpec, ctx.queryOrder() );
 		return sqmQuerySpec;
@@ -3050,7 +3044,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.ASTERISK:
 				return BinaryArithmeticOperator.MULTIPLY;
 			case HqlParser.SLASH:
-				return BinaryArithmeticOperator.DIVIDE;
+				return this.creationOptions.isPortableIntegerDivisionEnabled()
+						? BinaryArithmeticOperator.DIVIDE_PORTABLE
+						: BinaryArithmeticOperator.DIVIDE;
 			case HqlParser.PERCENT_OP:
 				return BinaryArithmeticOperator.MODULO;
 			default:

@@ -9,7 +9,6 @@ package org.hibernate.dialect.function;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.ReturnableType;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -27,6 +26,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE;
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
 
 /**
  * Used in place of {@link TimestampaddFunction} for databases which don't
@@ -110,11 +112,10 @@ public class IntegralTimestampaddFunction
 				? magnitude
 				: new BinaryArithmeticExpression(
 						magnitude,
-						conversionFactor.charAt(0) == '*'
-								? BinaryArithmeticOperator.MULTIPLY
-								: BinaryArithmeticOperator.DIVIDE,
+						conversionFactor.charAt(0) == '*' ? MULTIPLY : DIVIDE,
 						new QueryLiteral<>(
-								expressionType.getExpressibleJavaType().fromString( conversionFactor.substring(1) ),
+								expressionType.getExpressibleJavaType()
+										.fromString( conversionFactor.substring(1) ),
 								expressionType
 						),
 						expressionType

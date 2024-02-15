@@ -85,6 +85,25 @@ public enum BinaryArithmeticOperator {
 		}
 	},
 
+	/**
+	 * "Portable" division, that is, true integer division when the
+	 * operands are integers.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isPortableIntegerDivisionEnabled()
+	 */
+	DIVIDE_PORTABLE {
+		@Override
+		public String toLoggableText(String lhs, String rhs) {
+			return standardToLoggableText( lhs, this, rhs );
+		}
+
+		@Override
+		public char getOperatorSqlText() {
+			return '/';
+		}
+	},
+
 	;
 
 	public abstract String toLoggableText(String lhs, String rhs);

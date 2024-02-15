@@ -23,4 +23,9 @@ public class SqmCreationOptionsStandard implements SqmCreationOptions {
 	public boolean useStrictJpaCompliance() {
 		return queryEngineOptions.getJpaCompliance().isJpaQueryComplianceEnabled();
 	}
+
+	@Override
+	public boolean isPortableIntegerDivisionEnabled() {
+		return queryEngineOptions.isPortableIntegerDivisionEnabled();
+	}
 }

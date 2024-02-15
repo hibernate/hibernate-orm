@@ -129,6 +129,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SUBSELECT_FETCH;
 import static org.hibernate.cfg.CacheSettings.QUERY_CACHE_LAYOUT;
+import static org.hibernate.cfg.QuerySettings.PORTABLE_INTEGER_DIVISION;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -269,6 +270,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private final boolean failOnPaginationOverCollectionFetchEnabled;
 	private final boolean inClauseParameterPaddingEnabled;
+
+	private final boolean portableIntegerDivisionEnabled;
 
 	private final int queryStatisticsMaxSize;
 
@@ -591,8 +594,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.defaultCatalog = getString( DEFAULT_CATALOG, configurationSettings );
 		this.defaultSchema = getString( DEFAULT_SCHEMA, configurationSettings );
 
-		this.inClauseParameterPaddingEnabled =  getBoolean(
+		this.inClauseParameterPaddingEnabled = getBoolean(
 				IN_CLAUSE_PARAMETER_PADDING,
+				configurationSettings
+		);
+
+		this.portableIntegerDivisionEnabled = getBoolean(
+				PORTABLE_INTEGER_DIVISION,
 				configurationSettings
 		);
 
@@ -1211,6 +1219,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean inClauseParameterPaddingEnabled() {
 		return this.inClauseParameterPaddingEnabled;
+	}
+
+	@Override
+	public boolean isPortableIntegerDivisionEnabled() {
+		return portableIntegerDivisionEnabled;
 	}
 
 	@Override

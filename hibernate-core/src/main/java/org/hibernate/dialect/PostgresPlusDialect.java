@@ -17,6 +17,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
@@ -113,5 +119,24 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		// Postgres Plus does not support full merge semantics -
 		// https://www.enterprisedb.com/docs/migrating/oracle/oracle_epas_comparison/notable_differences/
 		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new PostgreSQLSqlAstTranslator<>( sessionFactory, statement ) {
+					@Override
+					public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+						if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+							appendSql( "floor" );
+						}
+						super.visitBinaryArithmeticExpression(arithmeticExpression);
+					}
+				};
+			}
+		};
 	}
 }

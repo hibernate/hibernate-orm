@@ -86,6 +86,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
+import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -478,7 +479,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public HqlTranslator getHqlTranslator() {
-		return new StandardHqlTranslator(MockSessionFactory.this, () -> false);
+		return new StandardHqlTranslator(MockSessionFactory.this, new SqmCreationOptions() {});
 	}
 
 	@Override

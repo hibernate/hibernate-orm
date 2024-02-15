@@ -264,8 +264,7 @@ public class DefaultMergeEventListener
 				copyValues[i] = subtype.deepCopy( propertyValues[i], sessionFactory );
 			}
 		}
-		compositeType.setPropertyValues( idCopy, copyValues );
-		return idCopy;
+		return compositeType.replacePropertyValues( idCopy, copyValues, session );
 	}
 
 	protected void entityIsPersistent(MergeEvent event, MergeContext copyCache) {

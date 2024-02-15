@@ -19,6 +19,7 @@ import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
 import org.hibernate.query.hql.internal.SemanticQueryBuilder;
+import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.sqm.TerminalPathException;
@@ -99,6 +100,9 @@ public class Validation {
 		return null;
 	}
 
+	private static final SqmCreationOptions CREATION_OPTIONS = new SqmCreationOptions() {
+	};
+
 	private static SemanticQueryBuilder<?> createSemanticQueryBuilder(
 			@Nullable TypeMirror returnType, String hql, SessionFactoryImplementor factory) {
 		if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
@@ -107,11 +111,11 @@ public class Validation {
 			final String typeName = typeElement.getQualifiedName().toString();
 			final String shortName = typeElement.getSimpleName().toString();
 			return isEntity( typeElement )
-					? new SemanticQueryBuilder<>( typeName, shortName, getEntityName(typeElement), () -> false, factory, hql )
-					: new SemanticQueryBuilder<>( typeName, shortName, Object[].class, () -> false, factory, hql );
+					? new SemanticQueryBuilder<>( typeName, shortName, getEntityName(typeElement), CREATION_OPTIONS, factory, hql )
+					: new SemanticQueryBuilder<>( typeName, shortName, Object[].class, CREATION_OPTIONS, factory, hql );
 		}
 		else {
-			return new SemanticQueryBuilder<>( Object[].class, () -> false, factory, hql );
+			return new SemanticQueryBuilder<>( Object[].class, CREATION_OPTIONS, factory, hql );
 		}
 	}
 

@@ -50,7 +50,6 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -64,7 +63,6 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
-import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -81,7 +79,6 @@ import org.hibernate.query.sqm.function.MultipatternSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
@@ -227,6 +224,7 @@ import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
@@ -1316,6 +1314,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitInsertSource( statement );
 		visitConflictClause( statement.getConflictClause() );
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected boolean isIntegerDivisionEmulationRequired(BinaryArithmeticExpression expression) {
+		return expression.getOperator() == DIVIDE_PORTABLE
+			&& jdbcType( expression.getLeftHandOperand() ).isInteger()
+			&& jdbcType( expression.getRightHandOperand() ).isInteger();
+	}
+
+	private JdbcType jdbcType(Expression expression) {
+		return expression.getExpressionType().getSingleJdbcMapping().getJdbcType();
 	}
 
 	protected void visitInsertSource(InsertSelectStatement statement) {
@@ -7149,8 +7157,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
-		final EntityMappingType entityMapping = expression.getEntityTypeDescriptor();
-		appendSql( entityMapping.getDiscriminatorSQLValue() );
+		appendSql( expression.getEntityTypeDescriptor().getDiscriminatorSQLValue() );
 	}
 
 	@Override

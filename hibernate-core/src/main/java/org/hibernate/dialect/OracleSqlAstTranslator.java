@@ -23,6 +23,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
@@ -585,6 +586,14 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		else {
 			expression.accept( this );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			appendSql( "floor" );
+		}
+		super.visitBinaryArithmeticExpression(arithmeticExpression);
 	}
 
 	@Override

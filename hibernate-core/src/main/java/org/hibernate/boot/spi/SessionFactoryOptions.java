@@ -272,7 +272,18 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 		return null;
 	}
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#IN_CLAUSE_PARAMETER_PADDING
+	 */
 	default boolean inClauseParameterPaddingEnabled() {
+		return false;
+	}
+
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
+	 */
+	@Override
+	default boolean isPortableIntegerDivisionEnabled() {
 		return false;
 	}
 

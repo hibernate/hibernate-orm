@@ -17,6 +17,7 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -49,6 +50,20 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 		this.dialect = (MariaDBDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			appendSql( OPEN_PARENTHESIS );
+			arithmeticExpression.getLeftHandOperand().accept( this );
+			appendSql( " div " );
+			arithmeticExpression.getRightHandOperand().accept( this );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.visitBinaryArithmeticExpression(arithmeticExpression);
+		}
 	}
 
 	@Override

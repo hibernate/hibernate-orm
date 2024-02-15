@@ -29,7 +29,6 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -40,6 +39,7 @@ import static org.hibernate.query.sqm.BinaryArithmeticOperator.*;
 import static org.hibernate.query.sqm.TemporalUnit.*;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
+import static org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME;
 
 /**
  * ANSI SQL-inspired {@code extract()} function, where the date/time fields
@@ -96,7 +96,7 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 			case OFFSET:
 				if ( compositeTemporal ) {
 					final SqmPath<Object> offsetPath = ( (SqmPath<?>) originalExpression ).get(
-							AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME
+							ZONE_OFFSET_NAME
 					);
 					return new SelfRenderingSqmFunction<>(
 							this,

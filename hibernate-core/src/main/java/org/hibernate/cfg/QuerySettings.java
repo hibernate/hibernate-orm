@@ -19,6 +19,14 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  */
 public interface QuerySettings {
 	/**
+	 * Specifies that division of two integers should produce an integer on all
+	 * databases. By default, integer division in HQL can produce a non-integer
+	 * on Oracle, MySQL, or MariaDB.
+	 *
+	 * @since 6.5
+	 */
+	String PORTABLE_INTEGER_DIVISION = "hibernate.query.hql.portable_integer_division";
+	/**
 	 * Specifies a {@link org.hibernate.query.hql.HqlTranslator} to use for HQL query
 	 * translation.
 	 */

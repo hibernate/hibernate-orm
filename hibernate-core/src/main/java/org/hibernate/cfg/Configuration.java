@@ -28,6 +28,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributor;
@@ -95,7 +96,17 @@ import static java.util.Collections.emptyList;
  *     // set a configuration property
  *     .setProperty(AvailableSettings.DATASOURCE,
  *                  "java:comp/env/jdbc/test")
- *     .getSessionFactory();
+ *     .buildSessionFactory();
+ * </pre>
+ * <p>
+ * Alternatively, a {@code Configuration} may scan archives or directories
+ * for annotated classes and XML mappings.
+ * <pre>
+ * SessionFactory factory = new Configuration()
+ *     .setRootArchiveUrl(new URL("file://...")
+ *     .setProperty(AvailableSettings.DATASOURCE,
+ *                  "java:comp/env/jdbc/test")
+ *     .buildSessionFactory();
  * </pre>
  * <p>
  * In addition, there are convenience methods for adding
@@ -148,6 +159,9 @@ public class Configuration {
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorsByClass;
 	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
+
+	private URL rootArchiveUrl;
+	private final List<URL> archiveUrls = new ArrayList<>();
 
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
@@ -707,6 +721,35 @@ public class Configuration {
 		return this;
 	}
 
+	/**
+	 * Specify the root archive for class scanning.
+	 */
+	public Configuration setRootArchiveUrl(URL rootArchiveUrl) {
+		this.rootArchiveUrl = rootArchiveUrl;
+		return this;
+	}
+
+	/**
+	 * The root archive for class scanning.
+	 */
+	public URL getRootArchiveUrl() {
+		return rootArchiveUrl;
+	}
+
+	/**
+	 * Specify an additional archive for class scanning.
+	 */
+	public Configuration addArchiveUrl(URL url) {
+		archiveUrls.add(url);
+		return this;
+	}
+
+	/**
+	 * The additional archives for class scanning.
+	 */
+	public List<URL> getArchiveUrls() {
+		return archiveUrls;
+	}
 
 	// SessionFactory building ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -905,6 +948,30 @@ public class Configuration {
 
 		if ( attributeConverterDescriptorsByClass != null ) {
 			attributeConverterDescriptorsByClass.values().forEach( metadataBuilder::applyAttributeConverter );
+		}
+
+		if ( rootArchiveUrl!=null || !archiveUrls.isEmpty() ) {
+			metadataBuilder.applyScanEnvironment( new ScanEnvironment() {
+				@Override
+				public URL getRootUrl() {
+					return rootArchiveUrl;
+				}
+
+				@Override
+				public List<URL> getNonRootUrls() {
+					return archiveUrls;
+				}
+
+				@Override
+				public List<String> getExplicitlyListedClassNames() {
+					return emptyList();
+				}
+
+				@Override
+				public List<String> getExplicitlyListedMappingFiles() {
+					return emptyList();
+				}
+			} );
 		}
 
 		final Metadata metadata = metadataBuilder.build();

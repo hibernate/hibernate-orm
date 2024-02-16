@@ -31,8 +31,7 @@ public final class Helper {
 	}
 
 	public static boolean allowExtensionsInCdi(ServiceRegistry serviceRegistry) {
-		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
-		return configService.getSetting(
+		return serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.ALLOW_EXTENSIONS_IN_CDI,
 				StandardConverters.BOOLEAN,
 				false

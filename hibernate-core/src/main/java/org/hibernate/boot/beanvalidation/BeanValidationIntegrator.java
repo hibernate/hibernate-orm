@@ -90,7 +90,7 @@ public class BeanValidationIntegrator implements Integrator {
 			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory) {
 		ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
-		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
 		Object modeSetting = cfgService.getSettings().get( JAKARTA_MODE_PROPERTY );
 		if ( modeSetting == null ) {
@@ -105,7 +105,7 @@ public class BeanValidationIntegrator implements Integrator {
 			return;
 		}
 
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 
 		// see if the Bean Validation API is available on the classpath
 		if ( isBeanValidationApiAvailable( classLoaderService ) ) {

@@ -253,9 +253,8 @@ public class Any extends SimpleValue {
 		final JdbcServices jdbcServices = buildingContext
 				.getBootstrapContext()
 				.getServiceRegistry()
-				.getService( JdbcServices.class );
-
-		return column.getQuotedName( jdbcServices .getDialect() );
+				.requireService( JdbcServices.class );
+		return column.getQuotedName( jdbcServices.getDialect() );
 	}
 
 	public void setDiscriminator(BasicValue discriminatorDescriptor) {

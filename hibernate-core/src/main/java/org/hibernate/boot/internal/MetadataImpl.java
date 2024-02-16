@@ -58,7 +58,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
@@ -166,10 +165,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderService factoryBuilderService = metadataBuildingOptions.getServiceRegistry().getService( SessionFactoryBuilderService.class );
+		final SessionFactoryBuilderService factoryBuilderService = metadataBuildingOptions.getServiceRegistry().requireService( SessionFactoryBuilderService.class );
 		final SessionFactoryBuilderImplementor defaultBuilder = factoryBuilderService.createSessionFactoryBuilder( this, bootstrapContext );
 
-		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class );
 		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( SessionFactoryBuilderFactory.class );
 
 		SessionFactoryBuilder builder = null;
@@ -464,7 +463,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private boolean shouldOrderTableColumns() {
 		final ConfigurationService configurationService = metadataBuildingOptions.getServiceRegistry()
-				.getService( ConfigurationService.class );
+				.requireService( ConfigurationService.class );
 		final Set<SchemaManagementToolCoordinator.ActionGrouping> groupings = SchemaManagementToolCoordinator.ActionGrouping.interpret(
 				this,
 				configurationService.getSettings()
@@ -515,9 +514,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		assert sessionFactoryServiceRegistry != null;
 
-		final EventListenerRegistry eventListenerRegistry = sessionFactoryServiceRegistry.getService( EventListenerRegistry.class );
-		final ConfigurationService cfgService = sessionFactoryServiceRegistry.getService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
+		final EventListenerRegistry eventListenerRegistry = sessionFactoryServiceRegistry.requireService( EventListenerRegistry.class );
+		final ConfigurationService cfgService = sessionFactoryServiceRegistry.requireService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.requireService( ClassLoaderService.class );
 
 		for ( Map.Entry<String,Object> entry : cfgService.getSettings().entrySet() ) {
 			final String propertyName = entry.getKey();

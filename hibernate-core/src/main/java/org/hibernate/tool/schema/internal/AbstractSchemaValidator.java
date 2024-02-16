@@ -57,7 +57,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			ExecutionOptions options,
 			ContributableMatcher contributableInclusionFilter) {
 		SqlStringGenerationContext context = SqlStringGenerationContextImpl.fromConfigurationMap(
-				tool.getServiceRegistry().getService( JdbcEnvironment.class ),
+				tool.getServiceRegistry().requireService( JdbcEnvironment.class ),
 				metadata.getDatabase(),
 				options.getConfigurationValues()
 		);

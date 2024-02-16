@@ -66,9 +66,10 @@ public class GlobalTemporaryTableStrategy {
 
 		prepared = true;
 
-		final ConfigurationService configService = mappingModelCreationProcess.getCreationContext()
-				.getBootstrapContext()
-				.getServiceRegistry().getService( ConfigurationService.class );
+		final ConfigurationService configService =
+				mappingModelCreationProcess.getCreationContext()
+						.getBootstrapContext().getServiceRegistry()
+						.requireService( ConfigurationService.class );
 		boolean createIdTables = configService.getSetting(
 				CREATE_ID_TABLES,
 				StandardConverters.BOOLEAN,

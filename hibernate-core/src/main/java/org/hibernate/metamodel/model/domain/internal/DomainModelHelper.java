@@ -46,7 +46,7 @@ public class DomainModelHelper {
 		// it could still be a mapped-superclass
 		try {
 			final Class<?> javaType = jpaMetamodel.getServiceRegistry()
-					.getService( ClassLoaderService.class )
+					.requireService( ClassLoaderService.class )
 					.classForName( subTypeName );
 			return (ManagedDomainType<S>) jpaMetamodel.managedType( javaType );
 		}

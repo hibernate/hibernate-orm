@@ -218,7 +218,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				try {
 					final Class<?> namedClass = creationContext
 							.getServiceRegistry()
-							.getService( ClassLoaderService.class )
+							.requireService( ClassLoaderService.class )
 							.classForName( prefix );
 					if ( namedClass != null ) {
 						final JavaTypeRegistry javaTypeRegistry = creationContext.getJpaMetamodel()

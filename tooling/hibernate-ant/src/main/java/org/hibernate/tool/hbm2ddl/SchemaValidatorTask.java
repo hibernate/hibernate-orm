@@ -194,7 +194,7 @@ public class SchemaValidatorTask extends MatchingTask {
 	}
 
 	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		if ( implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy(
 					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, implicitNamingStrategy )

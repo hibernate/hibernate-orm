@@ -394,8 +394,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(ServiceRegistryImplementor registry) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
-			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
-			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
+			return new ConnectionProviderJdbcConnectionAccess( registry.requireService( ConnectionProvider.class ) );
 		}
 		else {
 			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider =
@@ -406,8 +405,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	public static JdbcConnectionAccess buildBootstrapJdbcConnectionAccess(ServiceRegistryImplementor registry) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
-			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
-			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
+			return new ConnectionProviderJdbcConnectionAccess( registry.requireService( ConnectionProvider.class ) );
 		}
 		else {
 			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider =

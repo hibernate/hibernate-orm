@@ -86,7 +86,7 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 		return new QualifiedSequenceName(
 				catalogName,
 				schemaName,
-				serviceRegistry.getService( JdbcEnvironment.class )
+				serviceRegistry.requireService( JdbcEnvironment.class )
 						.getIdentifierHelper()
 						.toIdentifier( implicitName )
 		);
@@ -137,8 +137,9 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 			return new QualifiedNameParser.NameParts(
 					catalogName,
 					schemaName,
-					serviceRegistry.getService( JdbcEnvironment.class )
-							.getIdentifierHelper().toIdentifier( tableName )
+					serviceRegistry.requireService( JdbcEnvironment.class )
+							.getIdentifierHelper()
+							.toIdentifier( tableName )
 			);
 		}
 	}

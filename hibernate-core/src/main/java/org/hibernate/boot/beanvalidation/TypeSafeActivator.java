@@ -106,8 +106,8 @@ class TypeSafeActivator {
 			return;
 		}
 
-		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService = activationContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ConfigurationService cfgService = activationContext.getServiceRegistry().requireService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = activationContext.getServiceRegistry().requireService( ClassLoaderService.class );
 
 		// de-activate not-null tracking at the core level when Bean Validation is present unless the user explicitly
 		// asks for it
@@ -122,7 +122,7 @@ class TypeSafeActivator {
 		);
 
 		final EventListenerRegistry listenerRegistry = activationContext.getServiceRegistry()
-				.getService( EventListenerRegistry.class );
+				.requireService( EventListenerRegistry.class );
 
 		listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
 
@@ -134,7 +134,7 @@ class TypeSafeActivator {
 	}
 
 	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext activationContext) {
-		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
+		final ConfigurationService cfgService = activationContext.getServiceRegistry().requireService( ConfigurationService.class );
 		if ( !cfgService.getSetting( BeanValidationIntegrator.APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true  ) ) {
 			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
 			return;
@@ -149,7 +149,7 @@ class TypeSafeActivator {
 				factory,
 				activationContext.getMetadata().getEntityBindings(),
 				cfgService.getSettings(),
-				activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect(),
+				activationContext.getServiceRegistry().requireService( JdbcServices.class ).getDialect(),
 				new ClassLoaderAccessImpl(
 						null,
 						activationContext.getServiceRegistry().getService( ClassLoaderService.class )
@@ -473,7 +473,7 @@ class TypeSafeActivator {
 		}
 
 		// 2 - look in ConfigurationService
-		factory = resolveProvidedFactory( activationContext.getServiceRegistry().getService( ConfigurationService.class ) );
+		factory = resolveProvidedFactory( activationContext.getServiceRegistry().requireService( ConfigurationService.class ) );
 		if ( factory != null ) {
 			return factory;
 		}

@@ -50,11 +50,12 @@ public class DialectResolverInitiator implements StandardServiceInitiator<Dialec
 			Map<?,?> configurationValues) {
 		final String resolverImplNames = (String) configurationValues.get( AvailableSettings.DIALECT_RESOLVERS );
 
-		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 		if ( StringHelper.isNotEmpty( resolverImplNames ) ) {
 			for ( String resolverImplName : StringHelper.split( ", \n\r\f\t", resolverImplNames ) ) {
 				try {
-					DialectResolver dialectResolver = (DialectResolver) classLoaderService.classForName(resolverImplName).newInstance();
+					final DialectResolver dialectResolver = (DialectResolver)
+							classLoaderService.classForName( resolverImplName ).newInstance();
 					resolverSet.addResolver( dialectResolver );
 				}
 				catch (HibernateException e) {

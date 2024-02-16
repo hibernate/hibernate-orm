@@ -18,7 +18,6 @@ import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Configurable;
@@ -64,7 +63,7 @@ public abstract class AbstractJtaPlatform
 	}
 
 	protected JndiService jndiService() {
-		return NullnessUtil.castNonNull( serviceRegistry().getService( JndiService.class ) );
+		return serviceRegistry().requireService( JndiService.class );
 	}
 
 	protected abstract TransactionManager locateTransactionManager();

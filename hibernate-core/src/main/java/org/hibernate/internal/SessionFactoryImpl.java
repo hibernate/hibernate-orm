@@ -229,7 +229,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		name = getSessionFactoryName( options, serviceRegistry );
 		uuid = options.getUuid();
 
-		jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
 		settings = getSettings( options, serviceRegistry );
 		maskOutSensitiveInformation( settings );
@@ -489,7 +489,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			SessionFactoryImplementor self) {
 		return options
 				.getServiceRegistry()
-				.getService( SessionFactoryServiceRegistryFactory.class )
+				.requireService( SessionFactoryServiceRegistryFactory.class )
 				// it is not great how we pass in an instance to
 				// an incompletely-initialized instance here:
 				.buildServiceRegistry( self, options );
@@ -507,7 +507,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	private void integrate(MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext, IntegratorObserver integratorObserver) {
-		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+		for ( Integrator integrator : serviceRegistry.requireService( IntegratorService.class ).getIntegrators() ) {
 			integrator.integrate(bootMetamodel, bootstrapContext, this );
 			integratorObserver.integrators.add( integrator );
 		}
@@ -527,7 +527,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 
 	private static Map<String, Object> getSettings(SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
-		final Map<String, Object> settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
+		final Map<String, Object> settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
 		final Map<String,Object> result = new HashMap<>( settings );
 		if ( !settings.containsKey( JPA_VALIDATION_FACTORY ) && !settings.containsKey( JAKARTA_VALIDATION_FACTORY ) ) {
 			final Object reference = options.getValidatorFactoryReference();
@@ -540,11 +540,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	private static String getSessionFactoryName(SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
-		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 		final String sessionFactoryName = options.getSessionFactoryName();
-		return sessionFactoryName == null && cfgXmlAccessService.getAggregatedConfig() != null
-				? cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName()
-				: sessionFactoryName;
+		if ( sessionFactoryName == null ) {
+			final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.requireService( CfgXmlAccessService.class );
+			if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
+				return cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
+			}
+		}
+		return sessionFactoryName;
 	}
 
 	private SessionBuilderImpl createDefaultSessionOpenOptionsIfPossible() {
@@ -792,7 +795,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		// JPA requires that we throw IllegalStateException in cases where:
 		//		1) the PersistenceUnitTransactionType (TransactionCoordinator) is non-JTA
 		//		2) an explicit SynchronizationType is specified
-		if ( !getServiceRegistry().getService( TransactionCoordinatorBuilder.class ).isJta() ) {
+		if ( !getServiceRegistry().requireService( TransactionCoordinatorBuilder.class ).isJta() ) {
 			throw new IllegalStateException(
 					"Illegal attempt to specify a SynchronizationType when building an EntityManager from an " +
 							"EntityManagerFactory defined as RESOURCE_LOCAL (as opposed to JTA)"
@@ -978,10 +981,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		try {
 			final ProcedureCallImplementor<?> unwrapped = query.unwrap( ProcedureCallImplementor.class );
 			if ( unwrapped != null ) {
-				namedObjectRepository.registerCallableQueryMemento(
-						name,
-						unwrapped.toMemento( name )
-				);
+				namedObjectRepository.registerCallableQueryMemento( name, unwrapped.toMemento( name ) );
 				return;
 			}
 		}
@@ -1076,7 +1076,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	public StatisticsImplementor getStatistics() {
 		if ( statistics == null ) {
-			statistics = serviceRegistry.getService( StatisticsImplementor.class );
+			statistics = serviceRegistry.requireService( StatisticsImplementor.class );
 		}
 		return statistics;
 	}
@@ -1114,7 +1114,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	private boolean canAccessTransactionManager() {
 		try {
-			return serviceRegistry.getService( JtaPlatform.class ).retrieveTransactionManager() != null;
+			return serviceRegistry.requireService( JtaPlatform.class ).retrieveTransactionManager() != null;
 		}
 		catch ( Exception e ) {
 			return false;
@@ -1151,7 +1151,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			default:
 				try {
 					return (CurrentSessionContext)
-							serviceRegistry.getService( ClassLoaderService.class )
+							serviceRegistry.requireService( ClassLoaderService.class )
 									.classForName( sessionContextType )
 									.getConstructor( new Class[]{ SessionFactoryImplementor.class } )
 									.newInstance( this );
@@ -1247,8 +1247,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		private Object tenantIdentifier;
 		private TimeZone jdbcTimeZone;
 		private boolean explicitNoInterceptor;
-		private int defaultBatchFetchSize;
-		private boolean subselectFetchEnabled;
+		private final int defaultBatchFetchSize;
+		private final boolean subselectFetchEnabled;
 
 		// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
 		// (Need a fresh build for each Session as the listener instances can't be reused across sessions)

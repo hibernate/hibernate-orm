@@ -83,7 +83,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 
 		final Object setting = configurationValues.get( AvailableSettings.CACHE_REGION_FACTORY );
 
-		final StrategySelector selector = registry.getService( StrategySelector.class );
+		final StrategySelector selector = registry.requireService( StrategySelector.class );
 		final Collection<Class<? extends RegionFactory>> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
 
 		if ( setting == null && implementors.size() != 1 ) {
@@ -93,7 +93,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			}
 		}
 
-		final RegionFactory regionFactory = registry.getService( StrategySelector.class ).resolveStrategy(
+		final RegionFactory regionFactory = registry.requireService( StrategySelector.class ).resolveStrategy(
 				RegionFactory.class,
 				setting,
 				(RegionFactory) null,

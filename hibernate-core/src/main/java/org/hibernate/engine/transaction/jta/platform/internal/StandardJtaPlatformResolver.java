@@ -28,7 +28,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 
 	@Override
 	public JtaPlatform resolveJtaPlatform(Map configurationValues, ServiceRegistryImplementor registry) {
-		final ClassLoaderService classLoaderService = NullnessUtil.castNonNull( registry.getService( ClassLoaderService.class ) );
+		final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 
 		// Initially look for a JtaPlatformProvider
 		for ( JtaPlatformProvider provider : classLoaderService.loadJavaServices( JtaPlatformProvider.class ) ) {

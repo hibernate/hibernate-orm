@@ -92,7 +92,7 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 				sqlString,
 				resultSetMappingName,
 				isNotEmpty( resultSetMappingClassName )
-						? factory.getServiceRegistry().getService( ClassLoaderService.class )
+						? factory.getServiceRegistry().requireService( ClassLoaderService.class )
 								.classForName( resultSetMappingClassName )
 						: null,
 				querySpaces,

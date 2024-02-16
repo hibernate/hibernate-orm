@@ -44,13 +44,13 @@ public class JdbcCallRefCursorExtractorImpl implements JdbcCallRefCursorExtracto
 		if ( useNamed ) {
 			return session.getFactory()
 					.getServiceRegistry()
-					.getService( RefCursorSupport.class )
+					.requireService( RefCursorSupport.class )
 					.getResultSet( callableStatement, jdbcParameterName );
 		}
 		else {
 			return session.getFactory()
 					.getServiceRegistry()
-					.getService( RefCursorSupport.class )
+					.requireService( RefCursorSupport.class )
 					.getResultSet( callableStatement, jdbcParameterPosition );
 		}
 	}

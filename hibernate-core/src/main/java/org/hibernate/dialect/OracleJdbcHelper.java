@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 public class OracleJdbcHelper {
 
 	public static boolean isUsable(ServiceRegistry serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
 			classLoaderService.classForName( "oracle.jdbc.OracleConnection" );
 			return true;
@@ -47,7 +47,7 @@ public class OracleJdbcHelper {
 	}
 
 	private static <X> X create(ServiceRegistry serviceRegistry, String className) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
 			return classLoaderService.<X>classForName( className ).getConstructor().newInstance();
 		}

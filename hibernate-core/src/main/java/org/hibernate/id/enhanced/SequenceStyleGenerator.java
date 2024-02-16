@@ -191,7 +191,7 @@ public class SequenceStyleGenerator
 
 	@Override
 	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		this.identifierType = type;
@@ -245,7 +245,7 @@ public class SequenceStyleGenerator
 			boolean physicalSequence,
 			OptimizerDescriptor optimizationStrategy,
 			ServiceRegistry serviceRegistry) {
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
 				SequenceMismatchStrategy::interpret,
@@ -343,7 +343,7 @@ public class SequenceStyleGenerator
 			Identifier schema,
 			Properties params,
 			ServiceRegistry serviceRegistry) {
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 
 		final String namingStrategySetting = coalesceSuppliedValues(
 				() -> {
@@ -354,7 +354,7 @@ public class SequenceStyleGenerator
 					return localSetting;
 				},
 				() -> {
-					final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+					final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
 					if ( globalSetting != null ) {
 						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );

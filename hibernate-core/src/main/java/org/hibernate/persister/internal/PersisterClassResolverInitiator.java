@@ -50,6 +50,6 @@ public class PersisterClassResolverInitiator implements StandardServiceInitiator
 	}
 
 	private Class<? extends PersisterClassResolver> locate(ServiceRegistryImplementor registry, String className) {
-		return registry.getService( ClassLoaderService.class ).classForName( className );
+		return registry.requireService( ClassLoaderService.class ).classForName( className );
 	}
 }

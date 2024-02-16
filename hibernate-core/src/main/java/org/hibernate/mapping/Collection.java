@@ -225,7 +225,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 			try {
 				final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
 						.getServiceRegistry()
-						.getService( ClassLoaderService.class );
+						.requireService( ClassLoaderService.class );
 				setComparator( (Comparator<?>) classLoaderService.classForName( comparatorClassName ).getConstructor().newInstance() );
 			}
 			catch (Exception e) {

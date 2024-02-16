@@ -6087,15 +6087,11 @@ public abstract class AbstractEntityPersister
 											Locale.ROOT,
 											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes '%s' and '%s'",
 											name,
-											getJavaType().getJavaType().getTypeName(),
+											getJavaType().getTypeName(),
 											attribute.asAttributeMapping().getDeclaringType()
-													.getJavaType()
-													.getJavaType()
-													.getTypeName(),
+													.getJavaType().getTypeName(),
 											subDefinedAttribute.asAttributeMapping().getDeclaringType()
-													.getJavaType()
-													.getJavaType()
-													.getTypeName()
+													.getJavaType().getTypeName()
 									)
 							);
 						}

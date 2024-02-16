@@ -51,7 +51,7 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 			IdentifiableDomainType<? super J> superType,
 			JpaMetamodelImplementor jpaMetamodel) {
 		this(
-				javaType.getJavaType().getTypeName(),
+				javaType.getTypeName(),
 				mappedSuperclass.getDeclaredIdentifierMapper() != null
 						|| superType != null && superType.hasIdClass(),
 				mappedSuperclass.hasIdentifierProperty(),

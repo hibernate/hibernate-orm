@@ -100,7 +100,7 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
+		switch ( javaType.getTypeName() ) {
 			case "byte":
 			case "java.lang.Byte":
 			case "short":

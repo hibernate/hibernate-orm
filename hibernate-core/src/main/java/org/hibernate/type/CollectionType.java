@@ -217,7 +217,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	@Override
 	public String getName() {
-		return getReturnedClass().getName() + '(' + getRole() + ')';
+		return getReturnedClassName() + '(' + getRole() + ')';
 	}
 
 	/**

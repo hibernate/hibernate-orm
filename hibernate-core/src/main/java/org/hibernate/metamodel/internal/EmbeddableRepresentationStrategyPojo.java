@@ -153,7 +153,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 					String.format(
 							Locale.ROOT,
 							"Could not resolve PropertyAccess for attribute `%s#%s`",
-							getEmbeddableJavaType().getJavaType().getTypeName(),
+							getEmbeddableJavaType().getTypeName(),
 							bootAttributeDescriptor.getName()
 					)
 			);

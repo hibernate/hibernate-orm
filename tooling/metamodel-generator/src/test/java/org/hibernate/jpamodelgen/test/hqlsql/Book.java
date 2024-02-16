@@ -6,6 +6,7 @@ import jakarta.persistence.ManyToOne;
 import org.hibernate.annotations.NaturalId;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 public class Book {
@@ -16,4 +17,5 @@ public class Book {
     @ManyToOne Publisher publisher;
     BigDecimal price;
     int pages;
+    LocalDate publicationDate;
 }

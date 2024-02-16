@@ -663,7 +663,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			}
 		}
 		throw new PropertyNotFoundException(
-				"Could not resolve attribute '" + name + "' of '" + getReturnedClass().getName() + "'"
+				"Could not resolve attribute '" + name + "' of '" + getReturnedClassName() + "'"
 					+ " (must be one of '" + StringHelper.join("', '", names) + "')"
 		);
 	}

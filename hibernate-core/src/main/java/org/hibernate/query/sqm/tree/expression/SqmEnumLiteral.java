@@ -100,7 +100,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 				String.format(
 						Locale.ROOT,
 						"Static enum reference [%s#%s] cannot be de-referenced",
-						referencedEnumTypeDescriptor.getJavaType().getTypeName(),
+						referencedEnumTypeDescriptor.getTypeName(),
 						enumValueName
 				)
 		);
@@ -115,7 +115,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 				String.format(
 						Locale.ROOT,
 						"Static enum reference [%s#%s] cannot be de-referenced",
-						referencedEnumTypeDescriptor.getJavaType().getTypeName(),
+						referencedEnumTypeDescriptor.getTypeName(),
 						enumValueName
 				)
 		);

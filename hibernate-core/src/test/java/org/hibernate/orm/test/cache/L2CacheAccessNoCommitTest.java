@@ -13,9 +13,9 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProviderSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 						settingName = AvailableSettings.CONNECTION_PROVIDER,
 						provider = PreparedStatementSpyConnectionProviderSettingProvider.class)
 		},
+		integrationSettings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, value = "true"),
 		generateStatistics = true
 )
 @JiraKey( value = "HHH-14867" )
@@ -66,7 +67,6 @@ public class L2CacheAccessNoCommitTest {
 	}
 
 	@Test
-	@FailureExpected
 	public void test(EntityManagerFactoryScope scope) {
 		final PreparedStatementSpyConnectionProvider connectionProvider =
 				(PreparedStatementSpyConnectionProvider) scope.getEntityManagerFactory().getProperties()

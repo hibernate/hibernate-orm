@@ -22,6 +22,10 @@ public final class TestingJtaBootstrap {
 	public static void prepare(Map<String,Object> configValues) {
 		configValues.put( AvailableSettings.JTA_PLATFORM, TestingJtaPlatformImpl.INSTANCE );
 		configValues.put( AvailableSettings.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
+		configValues.put(
+				AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
+				Boolean.TRUE
+		);
 		configValues.put( "javax.persistence.transactionType", "JTA" );
 	}
 
@@ -29,6 +33,10 @@ public final class TestingJtaBootstrap {
 		registryBuilder.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 		registryBuilder.applySetting( AvailableSettings.JTA_PLATFORM, TestingJtaPlatformImpl.INSTANCE );
 		registryBuilder.applySetting( AvailableSettings.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
+		registryBuilder.applySetting(
+				AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
+				Boolean.TRUE
+		);
 		registryBuilder.applySetting( "javax.persistence.transactionType", "JTA" );
 	}
 

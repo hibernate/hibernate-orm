@@ -405,8 +405,8 @@ public class QuerySqmImpl<R>
 //				throw new SemanticException(
 //						String.format(
 //								"Expected insert attribute type [%s] did not match Query selection type [%s] at selection index [%d]",
-//								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getJavaType().getTypeName(),
-//								expression.getNodeJavaType().getJavaType().getTypeName(),
+//								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getTypeName(),
+//								expression.getNodeJavaType().getTypeName(),
 //								i
 //						),
 //						hqlString,

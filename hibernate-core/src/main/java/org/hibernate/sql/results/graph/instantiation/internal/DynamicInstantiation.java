@@ -90,7 +90,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 
 	@Override
 	public String toString() {
-		return "DynamicInstantiation(" + getTargetJavaType().getJavaType().getTypeName() + ")";
+		return "DynamicInstantiation(" + getTargetJavaType().getTypeName() + ")";
 	}
 
 	@Override

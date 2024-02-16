@@ -265,6 +265,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 
 		@Override
+		public String getReturnedClassName() {
+			return type.getQualifiedName().toString();
+		}
+
+		@Override
 		public boolean isComponentType() {
 			return true;
 		}
@@ -803,11 +808,10 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	//						}
 							else if (type instanceof BasicType) {
 								String className;
-								//sadly there is no way to get the classname
-								//from a Hibernate Type without trying to load
-								//the class!
+								//TODO: custom impl of getReturnedClassName()
+								//      for many more Hibernate types!
 								try {
-									className = type.getReturnedClass().getName();
+									className = type.getReturnedClassName();
 								}
 								catch (Exception e) {
 									continue;

@@ -91,7 +91,7 @@ public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
 			valueTransformer = UUIDJavaType.ToBytesTransformer.INSTANCE;
 		}
 		else {
-			throw new HibernateException( "Unanticipated return type [" + type.getReturnedClass().getName() + "] for UUID conversion" );
+			throw new HibernateException( "Unanticipated return type [" + type.getReturnedClassName() + "] for UUID conversion" );
 		}
 	}
 

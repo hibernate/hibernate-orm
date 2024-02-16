@@ -772,11 +772,11 @@ public abstract class SimpleValue implements KeyValue {
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 		return new ConvertedBasicTypeImpl<>(
 				TYPE_NAME_PREFIX
-						+ jpaAttributeConverter.getConverterJavaType().getJavaType().getTypeName(),
+						+ jpaAttributeConverter.getConverterJavaType().getTypeName(),
 				String.format(
 						"BasicType adapter for AttributeConverter<%s,%s>",
-						domainJavaType.getJavaType().getTypeName(),
-						relationalJavaType.getJavaType().getTypeName()
+						domainJavaType.getTypeName(),
+						relationalJavaType.getTypeName()
 				),
 				metadata.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode ),
 				jpaAttributeConverter

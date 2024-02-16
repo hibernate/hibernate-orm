@@ -180,20 +180,20 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
 					"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
-					javaType.getJavaType().getTypeName()
+					javaType.getTypeName()
 			);
 		}
 
 		if ( !areAllArgumentsAliased) {
 			throw new IllegalStateException(
-					"Cannot instantiate class '" + javaType.getJavaType().getTypeName() + "'"
+					"Cannot instantiate class '" + javaType.getTypeName() + "'"
 							+ " (it has no constructor with signature " + signature()
 							+ ", and not every argument has an alias)"
 			);
 		}
 		if ( !duplicatedAliases.isEmpty() ) {
 			throw new IllegalStateException(
-					"Cannot instantiate class '" + javaType.getJavaType().getTypeName() + "'"
+					"Cannot instantiate class '" + javaType.getTypeName() + "'"
 							+ " (it has no constructor with signature " + signature()
 							+ ", and has arguments with duplicate aliases ["
 							+ StringHelper.join( ",", duplicatedAliases) + "])"
@@ -205,7 +205,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 
 	private List<String> signature() {
 		return argumentResults.stream()
-				.map( adt -> adt.getResultJavaType().getJavaType().getTypeName() )
+				.map( adt -> adt.getResultJavaType().getTypeName() )
 				.collect( toList() );
 	}
 }

@@ -330,7 +330,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 					String.format(
 							Locale.ROOT,
 							"Could not resolve PropertyAccess for attribute `%s#%s`",
-							mappedJtd.getJavaType().getTypeName(),
+							mappedJtd.getTypeName(),
 							bootAttributeDescriptor.getName()
 					)
 			);

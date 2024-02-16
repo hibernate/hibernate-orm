@@ -43,7 +43,7 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		throw new JdbcTypeRecommendationException(
-				"Could not determine recommended JdbcType for Java type '" + getJavaType().getTypeName() + "'"
+				"Could not determine recommended JdbcType for Java type '" + getTypeName() + "'"
 		);
 	}
 
@@ -76,7 +76,7 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 			return (X) getFormatMapper( typeConfiguration ).toString( value, this, options );
 		}
 		throw new UnsupportedOperationException(
-				"Unwrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Unwrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
@@ -90,7 +90,7 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 			return getFormatMapper( typeConfiguration ).fromString( (String) value, this, options );
 		}
 		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Wrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 

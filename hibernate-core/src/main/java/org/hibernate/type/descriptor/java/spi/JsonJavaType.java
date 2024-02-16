@@ -38,6 +38,6 @@ public class JsonJavaType<T> extends FormatMapperBasedJavaType<T> {
 
 	@Override
 	public String toString() {
-		return "JsonJavaType(" + getJavaType().getTypeName() + ")";
+		return "JsonJavaType(" + getTypeName() + ")";
 	}
 }

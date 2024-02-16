@@ -28,7 +28,7 @@ public class StandardBasicTypeTemplate<J> extends AbstractSingleColumnStandardBa
 		super( jdbcType, javaType );
 		this.registrationKeys = registrationKeys;
 
-		this.name = javaType.getJavaType() == null ? "(map-mode)" : javaType.getJavaType().getTypeName()
+		this.name = javaType.getJavaType() == null ? "(map-mode)" : javaType.getTypeName()
 				+ " -> " + jdbcType.getDefaultSqlTypeCode();
 	}
 

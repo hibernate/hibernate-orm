@@ -963,6 +963,15 @@ public class OracleDialect extends Dialect {
 		return getVersion().isSameOrAfter( 23 ) ? SelectItemReferenceStrategy.ALIAS : SelectItemReferenceStrategy.EXPRESSION;
 	}
 
+	@Override
+	public boolean supportsValuesList() {
+		return getVersion().isSameOrAfter( 23 );
+	}
+	@Override
+	public boolean supportsValuesListForInsert() {
+		return getVersion().isSameOrAfter( 23 );
+	}
+
 	// features which remain constant across 8i, 9i, and 10g ~~~~~~~~~~~~~~~~~~
 
 	@Override

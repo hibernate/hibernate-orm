@@ -323,7 +323,15 @@ When both operands of a binary numeric operator have the same type, the result t
 
 [WARNING]
 ====
-Thus, `3/2` performs integer division and evaluates to `1`.
+By default, the semantics of integer division depend on the database:
+
+- On most databases, division of an integer by an integer evaluates to an integer, just like in Java.
+  Thus, `3/2` evaluates to `1`.
+- But on some databases, including Oracle, MySQL, and MariaDB, integer division may result in a non-integral value.
+  So `3/2` evaluates to `1.5` on these databases.
+
+This default behavior may be changed using configuration property `hibernate.query.hql.portable_integer_division`.
+Setting this property to `true` instructs Hibernate to produce SQL that emulates Java-style integer division (that is, `3/2 = 1`) on platforms where that is not the native semantics.
 ====
 
 When the operands are of different type, one of the operands is implicitly converted to _wider_ type, with wideness given, in decreasing order, by the list below:

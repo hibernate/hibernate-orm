@@ -83,7 +83,12 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	public void commit() {
 		try {
 			log.trace( "Preparing to commit transaction via JDBC Connection.commit()" );
-			getConnectionForTransactionManagement().commit();
+			if ( isPhysicallyConnected() ) {
+				getConnectionForTransactionManagement().commit();
+			}
+			else {
+				errorIfClosed();
+			}
 			status = TransactionStatus.COMMITTED;
 			log.trace( "Transaction committed via JDBC Connection.commit()" );
 		}
@@ -118,7 +123,12 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	public void rollback() {
 		try {
 			log.trace( "Preparing to rollback transaction via JDBC Connection.rollback()" );
-			getConnectionForTransactionManagement().rollback();
+			if ( isPhysicallyConnected() ) {
+				getConnectionForTransactionManagement().rollback();
+			}
+			else {
+				errorIfClosed();
+			}
 			status = TransactionStatus.ROLLED_BACK;
 			log.trace( "Transaction rolled-back via JDBC Connection.rollback()" );
 		}

@@ -403,11 +403,8 @@ public class Property implements Serializable, MetaAttributable {
 				? RepresentationMode.MAP
 				: RepresentationMode.POJO;
 
-		return resolveServiceRegistry().getService( PropertyAccessStrategyResolver.class ).resolvePropertyAccessStrategy(
-				clazz,
-				accessName,
-				representationMode
-		);
+		return resolveServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
+				.resolvePropertyAccessStrategy( clazz, accessName, representationMode );
 	}
 
 	protected ServiceRegistry resolveServiceRegistry() {

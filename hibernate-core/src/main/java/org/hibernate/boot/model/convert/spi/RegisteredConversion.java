@@ -152,9 +152,8 @@ public class RegisteredConversion {
 		@SuppressWarnings("unchecked")
 		@Override
 		public JpaAttributeConverter<?, ?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-			final ManagedBean<? extends AttributeConverter<?, ?>> converterBean = context
-					.getManagedBeanRegistry()
-					.getBean( converterType );
+			final ManagedBean<? extends AttributeConverter<?, ?>> converterBean =
+					context.getManagedBeanRegistry().getBean( converterType );
 
 			final TypeConfiguration typeConfiguration = context.getTypeConfiguration();
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();

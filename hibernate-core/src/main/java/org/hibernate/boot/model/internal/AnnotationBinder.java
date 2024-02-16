@@ -813,9 +813,10 @@ public final class AnnotationBinder {
 			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
 		}
 
-		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
-		return beanRegistry.getBean(javaTypeClass).getBeanInstance();
+		return context.getBootstrapContext().getServiceRegistry()
+				.requireService( ManagedBeanRegistry.class )
+				.getBean( javaTypeClass )
+				.getBeanInstance();
 	}
 
 	public static void bindFetchProfilesForClass(XClass annotatedClass, MetadataBuildingContext context) {

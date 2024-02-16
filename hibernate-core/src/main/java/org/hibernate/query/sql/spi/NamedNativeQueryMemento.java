@@ -139,7 +139,7 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 					queryString,
 					resultSetMappingName,
 					sessionFactory.getServiceRegistry()
-							.getService( ClassLoaderService.class )
+							.requireService( ClassLoaderService.class )
 							.classForName( resultSetMappingClassName ),
 					querySpaces,
 					cacheable,

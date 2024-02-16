@@ -138,7 +138,9 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			identifierPropertyAccess = makePropertyAccess( identifierProperty );
 		}
 
-		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getServiceRegistry().getService( BytecodeProvider.class );
+		final BytecodeProvider bytecodeProvider =
+				creationContext.getBootstrapContext().getServiceRegistry()
+						.requireService( BytecodeProvider.class );
 
 		final EntityMetamodel entityMetamodel = runtimeDescriptor.getEntityMetamodel();
 		ProxyFactory proxyFactory = null;

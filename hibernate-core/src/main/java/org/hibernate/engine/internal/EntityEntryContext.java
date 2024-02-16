@@ -525,7 +525,7 @@ public class EntityEntryContext {
 		final String entityEntryClassName = new String( entityEntryClassNameArr );
 		final Class<?> entityEntryClass =
 				rtn.getSession().getFactory().getServiceRegistry()
-						.getService( ClassLoaderService.class )
+						.requireService( ClassLoaderService.class )
 						.classForName( entityEntryClassName );
 
 		try {

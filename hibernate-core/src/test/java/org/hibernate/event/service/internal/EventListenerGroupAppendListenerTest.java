@@ -63,10 +63,11 @@ public class EventListenerGroupAppendListenerTest extends BaseSessionFactoryFunc
 			DuplicationStrategy duplicationStrategy,
 			DefaultMergeEventListener mergeEventListener) {
 		inTransaction( session -> {
-			ServiceRegistryImplementor serviceRegistry = sessionFactory().getServiceRegistry();
-			EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 
-			EventListenerGroup<MergeEventListener> group = listenerRegistry.getEventListenerGroup( EventType.MERGE );
+            EventListenerGroup<MergeEventListener> group =
+					sessionFactory().getServiceRegistry()
+							.requireService( EventListenerRegistry.class )
+							.getEventListenerGroup( EventType.MERGE );
 			if ( duplicationStrategy != null ) {
 				group.addDuplicationStrategy( duplicationStrategy );
 			}

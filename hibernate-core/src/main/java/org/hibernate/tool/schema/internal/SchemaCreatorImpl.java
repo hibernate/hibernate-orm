@@ -719,9 +719,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	public List<String> generateCreationCommands(Metadata metadata, final boolean manageNamespaces) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
 
-		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
-				.getServiceRegistry();
-		final Dialect dialect = serviceRegistry.getService( JdbcEnvironment.class ).getDialect();
+		final MetadataImplementor metadataImplementor = (MetadataImplementor) metadata;
+		final Dialect dialect =
+				metadataImplementor.getMetadataBuildingOptions()
+						.getServiceRegistry()
+						.requireService( JdbcEnvironment.class )
+						.getDialect();
 
 		final ExecutionOptions options = new ExecutionOptions() {
 			@Override
@@ -764,7 +767,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		doCreation(
 				metadata,
 				serviceRegistry,
-				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
 				manageNamespaces,
 				targets
 		);
@@ -782,7 +785,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			GenerationTarget... targets) {
 		doCreation(
 				metadata,
-				serviceRegistry.getService( JdbcEnvironment.class ).getDialect(),
+				serviceRegistry.requireService( JdbcEnvironment.class ).getDialect(),
 				new ExecutionOptions() {
 					@Override
 					public boolean shouldManageNamespaces() {

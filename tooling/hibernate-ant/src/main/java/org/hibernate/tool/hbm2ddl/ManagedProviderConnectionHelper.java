@@ -37,7 +37,7 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 
 	public void prepare(boolean needsAutoCommit) throws SQLException {
 		serviceRegistry = createServiceRegistry( cfgProperties );
-		connection = serviceRegistry.getService( ConnectionProvider.class ).getConnection();
+		connection = serviceRegistry.requireService( ConnectionProvider.class ).getConnection();
 		if ( needsAutoCommit && ! connection.getAutoCommit() ) {
 			connection.commit();
 			connection.setAutoCommit( true );
@@ -66,12 +66,12 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 	private void releaseConnection() throws SQLException {
 		if ( connection != null ) {
 			try {
-				serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper().logAndClearWarnings(
-						connection );
+				serviceRegistry.requireService( JdbcEnvironment.class ).getSqlExceptionHelper()
+						.logAndClearWarnings( connection );
 			}
 			finally {
 				try {
-					serviceRegistry.getService( ConnectionProvider.class ).closeConnection( connection );
+					serviceRegistry.requireService( ConnectionProvider.class ).closeConnection( connection );
 				}
 				finally {
 					connection = null;

@@ -519,7 +519,7 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(StandardServiceRegistry serviceRegistry) {
-		final Integer typeCode = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer typeCode = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -529,7 +529,7 @@ public final class ConfigurationHelper {
 		}
 
 		// default to the Dialect answer
-		return serviceRegistry.getService( JdbcServices.class )
+		return serviceRegistry.requireService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
 				.getPreferredSqlTypeCodeForBoolean();
@@ -537,7 +537,7 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForDuration(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_DURATION_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -551,7 +551,7 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForUuid(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_UUID_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -565,7 +565,7 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForInstant(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_INSTANT_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -580,7 +580,7 @@ public final class ConfigurationHelper {
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForArray(StandardServiceRegistry serviceRegistry) {
 		// default to the Dialect answer
-		return serviceRegistry.getService( JdbcServices.class )
+		return serviceRegistry.requireService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
 				.getPreferredSqlTypeCodeForArray();

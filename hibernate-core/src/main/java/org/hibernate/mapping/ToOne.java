@@ -92,7 +92,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		if ( referencedEntityName == null ) {
 			final ClassLoaderService cls = getMetadata().getMetadataBuildingOptions()
 					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
+					.requireService( ClassLoaderService.class );
 			referencedEntityName = ReflectHelper.reflectedPropertyClass( className, propertyName, cls ).getName();
 		}
 	}

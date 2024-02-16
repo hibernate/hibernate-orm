@@ -86,7 +86,7 @@ public interface MetadataBuildingContext {
 	}
 
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ServiceRegistry serviceRegistry) {
-		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.getService( ConfigurationService.class ) );
+		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
 	}
 
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {

@@ -543,7 +543,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private ManagedBeanRegistry getManagedBeanRegistry() {
 		return buildingContext.getBootstrapContext()
 				.getServiceRegistry()
-				.getService(ManagedBeanRegistry.class);
+				.requireService(ManagedBeanRegistry.class);
 	}
 
 	private void prepareMapKey(
@@ -667,10 +667,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		implicitJavaTypeAccess = typeConfiguration -> Integer.class;
 
 		final boolean useDeferredBeanContainerAccess = !buildingContext.getBuildingOptions().isAllowExtensionsInCdi();
-		final ManagedBeanRegistry beanRegistry = buildingContext
-				.getBootstrapContext()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
+		final ManagedBeanRegistry beanRegistry =
+				buildingContext.getBootstrapContext().getServiceRegistry()
+						.requireService( ManagedBeanRegistry.class );
 
 		explicitJavaTypeAccess = (typeConfiguration) -> {
 			final ListIndexJavaType javaTypeAnn = findAnnotation( listAttribute, ListIndexJavaType.class );

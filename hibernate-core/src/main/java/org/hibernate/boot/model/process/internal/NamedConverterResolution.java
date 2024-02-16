@@ -66,7 +66,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 
 		final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
 				context.getBootstrapContext().getServiceRegistry()
-						.getService( ClassLoaderService.class )
+						.requireService( ClassLoaderService.class )
 						.classForName( converterClassName ),
 				context.getBootstrapContext().getClassmateContext()
 		);

@@ -661,7 +661,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	@Override
 	public ManagedBeanRegistry getManagedBeanRegistry() {
-		return getServiceRegistry().getService( ManagedBeanRegistry.class );
+		return getServiceRegistry().requireService( ManagedBeanRegistry.class );
 	}
 
 	private Resolution<?> converterResolution(JavaType<?> javaType, ConverterDescriptor attributeConverterDescriptor) {
@@ -803,7 +803,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			MetadataBuildingContext context) {
 
 		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final ManagedBeanRegistry managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+		final ManagedBeanRegistry managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 
 		final JpaAttributeConverterCreationContext converterCreationContext = new JpaAttributeConverterCreationContext() {

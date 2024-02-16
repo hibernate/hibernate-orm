@@ -793,7 +793,7 @@ public abstract class AbstractCollectionPersister
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
-					.getService( BatchLoaderFactory.class )
+					.requireService( BatchLoaderFactory.class )
 					.createCollectionBatchLoader( batchSize, loadQueryInfluencers, attributeMapping, factory );
 		}
 		else {

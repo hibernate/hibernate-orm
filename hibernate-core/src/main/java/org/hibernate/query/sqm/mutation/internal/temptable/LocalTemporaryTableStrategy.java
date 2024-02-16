@@ -39,9 +39,10 @@ public class LocalTemporaryTableStrategy {
 	public void prepare(
 			MappingModelCreationProcess mappingModelCreationProcess,
 			JdbcConnectionAccess connectionAccess) {
-		final ConfigurationService configService = mappingModelCreationProcess.getCreationContext()
-				.getBootstrapContext()
-				.getServiceRegistry().getService( ConfigurationService.class );
+		final ConfigurationService configService =
+				mappingModelCreationProcess.getCreationContext()
+						.getBootstrapContext().getServiceRegistry()
+						.requireService( ConfigurationService.class );
 		this.dropIdTables = configService.getSetting(
 				DROP_ID_TABLES,
 				StandardConverters.BOOLEAN,

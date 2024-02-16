@@ -359,7 +359,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 				try {
 					final Class<?> javaTypeClass =
-							scope.getServiceRegistry().getService( ClassLoaderService.class )
+							scope.getServiceRegistry().requireService( ClassLoaderService.class )
 									.classForName( name );
 					final JavaType<?> jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
 					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
@@ -550,7 +550,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			final String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
 			if ( factoryName == null ) {
 				final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
-						.getService( CfgXmlAccessService.class );
+						.requireService( CfgXmlAccessService.class );
 				if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
 					return cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
 				}
@@ -849,8 +849,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return (MutabilityPlan) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( planClass );
 		}
 
-		final ManagedBean<? extends MutabilityPlan<?>> planBean = scope.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
+		final ManagedBean<? extends MutabilityPlan<?>> planBean =
+				scope.getServiceRegistry().requireService( ManagedBeanRegistry.class )
 						.getBean( planClass );
 		return (MutabilityPlan<J>) planBean.getBeanInstance();
 	}

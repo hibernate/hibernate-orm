@@ -494,7 +494,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			ContributableMatcher inclusionFilter,
 			SourceDescriptor sourceDescriptor) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
-		final Dialect dialect = tool.getServiceRegistry().getService( JdbcEnvironment.class ).getDialect();
+		final Dialect dialect = tool.getServiceRegistry().requireService( JdbcEnvironment.class ).getDialect();
 		doDrop( metadata, options, inclusionFilter, dialect, sourceDescriptor, target );
 		return new DelayedDropActionImpl( target.commands, tool.getCustomDatabaseGenerationTarget() );
 	}
@@ -509,7 +509,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		doDrop(
 				metadata,
 				serviceRegistry,
-				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
 				manageNamespaces,
 				targets
 		);
@@ -528,7 +528,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( settings );
 			targets = new GenerationTarget[] {
 				new GenerationTargetToDatabase(
-						serviceRegistry.getService( TransactionCoordinatorBuilder.class )
+						serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
 								.buildDdlTransactionIsolator( jdbcContext ),
 						true
 				)
@@ -559,7 +559,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 					}
 				},
 				(contributed) -> true,
-				serviceRegistry.getService( JdbcEnvironment.class ).getDialect(),
+				serviceRegistry.requireService( JdbcEnvironment.class ).getDialect(),
 				new SourceDescriptor() {
 					@Override
 					public SourceType getSourceType() {
@@ -611,7 +611,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 			if ( target == null ) {
 				target = new GenerationTargetToDatabase(
-						serviceRegistry.getService( TransactionCoordinatorBuilder.class )
+						serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
 								.buildDdlTransactionIsolator( jdbcContext ),
 						true
 				);
@@ -643,7 +643,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 			public JdbcContextDelayedDropImpl(ServiceRegistry serviceRegistry) {
 				this.serviceRegistry = serviceRegistry;
-				this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
+				this.jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 				this.jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
 				if ( jdbcConnectionAccess == null ) {
 					// todo : log or error?

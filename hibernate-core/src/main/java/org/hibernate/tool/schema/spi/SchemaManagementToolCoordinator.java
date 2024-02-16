@@ -116,7 +116,7 @@ public class SchemaManagementToolCoordinator {
 
 
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
-		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
 		final boolean haltOnError = configService.getSetting(
 				AvailableSettings.HBM2DDL_HALT_ON_ERROR,

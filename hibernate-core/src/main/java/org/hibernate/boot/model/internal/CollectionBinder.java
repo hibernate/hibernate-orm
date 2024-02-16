@@ -893,10 +893,10 @@ public abstract class CollectionBinder {
 			return MappingHelper.createLocalUserCollectionTypeBean( role, implementation, hasParameters, parameters );
 		}
 
-		final ManagedBeanRegistry beanRegistry = buildingContext.getBuildingOptions()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
-		final ManagedBean<? extends UserCollectionType> managedBean = beanRegistry.getBean( implementation );
+		final ManagedBean<? extends UserCollectionType> managedBean =
+				buildingContext.getBuildingOptions().getServiceRegistry()
+						.requireService( ManagedBeanRegistry.class )
+						.getBean( implementation );
 
 		if ( hasParameters ) {
 			if ( ParameterizedType.class.isAssignableFrom( managedBean.getBeanClass() ) ) {

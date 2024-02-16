@@ -68,8 +68,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	public AbstractInformationExtractorImpl(ExtractionContext extractionContext) {
 		this.extractionContext = extractionContext;
 
-		ConfigurationService configService = extractionContext.getServiceRegistry()
-				.getService( ConfigurationService.class );
+		ConfigurationService configService =
+				extractionContext.getServiceRegistry().requireService( ConfigurationService.class );
 
 		useJdbcMetadataDefaultsSetting = configService.getSetting(
 				"hibernate.temp.use_jdbc_metadata_defaults",

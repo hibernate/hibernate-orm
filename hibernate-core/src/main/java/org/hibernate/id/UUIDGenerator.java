@@ -60,8 +60,9 @@ public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
 			final String strategyClassName = parameters.getProperty( UUID_GEN_STRATEGY_CLASS );
 			if ( strategyClassName != null ) {
 				try {
-					final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-					final Class<?> strategyClass = cls.classForName( strategyClassName );
+					final Class<?> strategyClass =
+							serviceRegistry.requireService( ClassLoaderService.class )
+									.classForName( strategyClassName );
 					try {
 						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
 					}

@@ -333,6 +333,25 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					localCopy.firstParameterBindings = null;
 					cacheableSqmInterpretation = localCopy;
 				}
+				else {
+					// If the translation depends on parameter bindings or it isn't compatible with the current query options,
+					// we have to rebuild the JdbcSelect, which is still better than having to translate from SQM to SQL AST again
+					if ( localCopy.jdbcSelect.dependsOnParameterBindings() ) {
+						jdbcParameterBindings = createJdbcParameterBindings( localCopy, executionContext );
+					}
+					// If the translation depends on the limit or lock options, we have to rebuild the JdbcSelect
+					// We could avoid this by putting the lock options into the cache key
+					if ( !localCopy.jdbcSelect.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
+						localCopy = buildCacheableSqmInterpretation(
+								sqm,
+								domainParameterXref,
+								executionContext
+						);
+						jdbcParameterBindings = localCopy.firstParameterBindings;
+						localCopy.firstParameterBindings = null;
+						cacheableSqmInterpretation = localCopy;
+					}
+				}
 			}
 		}
 		else {

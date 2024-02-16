@@ -66,6 +66,8 @@ public class DisableDiscardPersistenceContextOnCloseTest {
 
 					try {
 						entityManager.getTransaction().begin();
+						// Force connection acquisition
+						entityManager.createQuery( "select 1" ).getResultList();
 						entityManager.persist( wallet );
 						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
 						entityManager.close();

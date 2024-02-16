@@ -44,6 +44,8 @@ public class ConnectionsReleaseAutoCommitTest {
 		connectionProvider.clear();
 
 		scope.inTransaction( entityManager -> {
+			// Force connection acquisition
+			entityManager.createQuery( "select 1" ).getResultList();
 			assertEquals( 1, connectionProvider.getTotalOpenedConnectionCount() );
 			Thing thing = new Thing();
 			thing.setId( 1 );

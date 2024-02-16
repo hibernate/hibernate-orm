@@ -38,6 +38,10 @@ public class ServiceRegistryUtil {
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()
 			);
+			builder.applySetting(
+					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
+					Boolean.TRUE
+			);
 		}
 		return builder;
 	}
@@ -48,6 +52,10 @@ public class ServiceRegistryUtil {
 			( (Map<Object, Object>) properties ).put(
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+			( (Map<Object, Object>) properties ).put(
+					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
+					Boolean.TRUE
 			);
 		}
 	}

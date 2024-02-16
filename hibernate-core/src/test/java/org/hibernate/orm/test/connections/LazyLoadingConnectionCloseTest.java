@@ -61,6 +61,7 @@ public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFun
 		);
 
 		options.put( AvailableSettings.AUTOCOMMIT, "false" );
+		options.put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, "false" );
 
 		connectionProvider = new ConnectionCheckingConnectionProvider();
 		options.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );

@@ -196,7 +196,7 @@ public final class FastSessionServices {
 		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 
 		// Pre-compute all iterators on Event listeners:
-		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		final EventListenerRegistry eventListenerRegistry = serviceRegistry.requireService( EventListenerRegistry.class );
 		this.eventListenerGroup_AUTO_FLUSH = listeners( eventListenerRegistry, EventType.AUTO_FLUSH );
 		this.eventListenerGroup_CLEAR = listeners( eventListenerRegistry, EventType.CLEAR );
 		this.eventListenerGroup_DELETE = listeners( eventListenerRegistry, EventType.DELETE );
@@ -250,9 +250,9 @@ public final class FastSessionServices {
 				? null
 				: serviceRegistry.getService( ConnectionProvider.class );
 		this.multiTenantConnectionProvider = requiresMultiTenantConnectionProvider
-				? serviceRegistry.getService( MultiTenantConnectionProvider.class )
+				? serviceRegistry.requireService( MultiTenantConnectionProvider.class )
 				: null;
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		this.transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
 		this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		this.entityCopyObserverFactory = serviceRegistry.getService( EntityCopyObserverFactory.class );

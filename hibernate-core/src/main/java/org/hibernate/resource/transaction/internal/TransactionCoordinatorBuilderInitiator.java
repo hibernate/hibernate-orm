@@ -32,7 +32,7 @@ public class TransactionCoordinatorBuilderInitiator implements StandardServiceIn
 
 	@Override
 	public TransactionCoordinatorBuilder initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		return registry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+		return registry.requireService( StrategySelector.class ).resolveDefaultableStrategy(
 				TransactionCoordinatorBuilder.class,
 				determineStrategySelection( configurationValues ),
 				JdbcResourceLocalTransactionCoordinatorBuilderImpl.INSTANCE

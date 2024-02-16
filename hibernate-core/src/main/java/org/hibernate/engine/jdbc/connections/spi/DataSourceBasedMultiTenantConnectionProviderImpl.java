@@ -71,9 +71,9 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		final Object dataSourceConfigValue = serviceRegistry.getService( ConfigurationService.class )
-				.getSettings()
-				.get( AvailableSettings.DATASOURCE );
+		final Object dataSourceConfigValue =
+				serviceRegistry.requireService( ConfigurationService.class )
+						.getSettings().get( AvailableSettings.DATASOURCE );
 		if ( !(dataSourceConfigValue instanceof String) ) {
 			throw new HibernateException( "Improper set up of DataSourceBasedMultiTenantConnectionProviderImpl" );
 		}
@@ -97,7 +97,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 		}
 		else if ( namedObject instanceof Context ) {
 			this.baseJndiNamespace = jndiName;
-			this.tenantIdentifierForAny = (T) serviceRegistry.getService( ConfigurationService.class )
+			this.tenantIdentifierForAny = (T) serviceRegistry.requireService( ConfigurationService.class )
 					.getSettings()
 					.get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
 			if ( tenantIdentifierForAny == null ) {

@@ -69,7 +69,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 			}
 			else {
 				final String className = configValue.toString();
-				final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+				final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 				try {
 					implClass = classLoaderService.classForName( className );
 				}

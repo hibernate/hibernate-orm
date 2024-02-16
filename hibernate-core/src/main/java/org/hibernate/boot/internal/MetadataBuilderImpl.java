@@ -143,17 +143,17 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		for ( MetadataSourcesContributor contributor :
 				sources.getServiceRegistry()
-						.getService( ClassLoaderService.class )
+						.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataSourcesContributor.class ) ) {
 			contributor.contribute( sources );
 		}
 
 		// todo : not so sure this is needed anymore.
 		//		these should be set during the StandardServiceRegistryBuilder.configure call
-		applyCfgXmlValues( serviceRegistry.getService( CfgXmlAccessService.class ) );
+		applyCfgXmlValues( serviceRegistry.requireService( CfgXmlAccessService.class ) );
 
 		for ( MetadataBuilderInitializer contributor :
-				serviceRegistry.getService( ClassLoaderService.class )
+				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataBuilderInitializer.class ) ) {
 			contributor.contribute( this, serviceRegistry );
 		}
@@ -437,7 +437,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataImplementor build() {
-		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.getService( CfgXmlAccessService.class );
+		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.requireService( CfgXmlAccessService.class );
 		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
 			if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {
 				for ( MappingReference mappingReference : cfgXmlAccessService.getAggregatedConfig().getMappingReferences() ) {
@@ -468,7 +468,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private CollectionClassification implicitListClassification;
 
 		public MappingDefaultsImpl(StandardServiceRegistry serviceRegistry) {
-			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
 			// AvailableSettings.DEFAULT_SCHEMA and AvailableSettings.DEFAULT_CATALOG
 			// are taken into account later, at runtime, when rendering table/sequence names.
@@ -620,8 +620,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.serviceRegistry = serviceRegistry;
 			this.identifierGeneratorFactory = serviceRegistry.getService( IdentifierGeneratorFactory.class );
 
-			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+			final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
@@ -704,7 +704,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					// by default, see if the defined RegionFactory (if one) defines a default
 					serviceRegistry.getService( RegionFactory.class ) == null
 							? null
-							: serviceRegistry.getService( RegionFactory.class ).getDefaultAccessType()
+							: serviceRegistry.requireService( RegionFactory.class ).getDefaultAccessType()
 			);
 
 			this.specjProprietarySyntaxEnabled = configService.getSetting(
@@ -821,7 +821,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public TimeZoneSupport getTimeZoneSupport() {
 			try {
-				return serviceRegistry.getService( JdbcServices.class )
+				return serviceRegistry.requireService( JdbcServices.class )
 						.getDialect()
 						.getTimeZoneSupport();
 			}
@@ -1021,7 +1021,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		);
 
 		if ( setting == WrapperArrayHandling.PICK ) {
-			final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+			final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
 			if ( dialect.supportsStandardArrays()
 					&& ( dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY
 						|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {

@@ -1174,10 +1174,9 @@ public class BinderHelper {
 		final String declaringClassName = xClass.getName();
 		final String packageName = qualifier( declaringClassName );
 		if ( isNotEmpty( packageName ) ) {
-			final ClassLoaderService classLoaderService = context.getBootstrapContext()
-					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
-			assert classLoaderService != null;
+			final ClassLoaderService classLoaderService =
+					context.getBootstrapContext().getServiceRegistry()
+							.requireService( ClassLoaderService.class );
 			final Package declaringClassPackage = classLoaderService.packageForNameOrNull( packageName );
 			if ( declaringClassPackage != null ) {
 				// will be null when there is no `package-info.class`

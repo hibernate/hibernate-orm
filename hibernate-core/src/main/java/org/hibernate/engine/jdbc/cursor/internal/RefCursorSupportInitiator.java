@@ -26,15 +26,11 @@ public class RefCursorSupportInitiator implements StandardServiceInitiator<RefCu
 
 	@Override
 	public RefCursorSupport initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		final JdbcServices jdbcServices = registry.getService( JdbcServices.class );
-		assert jdbcServices != null;
+		final JdbcServices jdbcServices = registry.requireService( JdbcServices.class );
 		final boolean supportsRefCursors = useRefCursorSupport( jdbcServices );
-		if ( supportsRefCursors ) {
-			return new StandardRefCursorSupport( jdbcServices );
-		}
-		else {
-			return new FallbackRefCursorSupport( jdbcServices );
-		}
+		return supportsRefCursors
+				? new StandardRefCursorSupport( jdbcServices )
+				: new FallbackRefCursorSupport (jdbcServices );
 	}
 
 	private boolean useRefCursorSupport(JdbcServices jdbcServices) {

@@ -12,7 +12,6 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceBinding;
@@ -80,7 +79,8 @@ public class SessionFactoryServiceRegistryImpl
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
 		if ( serviceBinding.getService() instanceof Configurable ) {
-			( (Configurable) serviceBinding.getService() ).configure( NullnessUtil.castNonNull( getService( ConfigurationService.class ) ).getSettings() );
+			( (Configurable) serviceBinding.getService() )
+					.configure( requireService( ConfigurationService.class ).getSettings() );
 		}
 	}
 

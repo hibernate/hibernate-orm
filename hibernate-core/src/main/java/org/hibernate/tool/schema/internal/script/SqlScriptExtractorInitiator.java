@@ -47,7 +47,7 @@ public class SqlScriptExtractorInitiator implements StandardServiceInitiator<Sql
 			return MultiLineSqlScriptExtractor.INSTANCE;
 		}
 
-		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 		return instantiateExplicitCommandExtractor( explicitSettingName, classLoaderService );
 	}
 

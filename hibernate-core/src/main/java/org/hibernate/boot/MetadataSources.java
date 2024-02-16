@@ -171,7 +171,7 @@ public class MetadataSources implements Serializable {
 	private MetadataBuilder getCustomBuilderOrDefault(MetadataBuilderImpl defaultBuilder) {
 
 		Collection<MetadataBuilderFactory> discoveredBuilderFactories =
-				serviceRegistry.getService( ClassLoaderService.class )
+				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataBuilderFactory.class );
 
 		MetadataBuilder builder = null;

@@ -365,7 +365,7 @@ public class NativeQueryImpl<R>
 						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
 
 						session.getFactory().getServiceRegistry()
-								.getService( NativeQueryInterpreter.class )
+								.requireService( NativeQueryInterpreter.class )
 								.recognizeParameters( sqlString, parameterRecognizer );
 
 						return new ParameterInterpretationImpl( parameterRecognizer );

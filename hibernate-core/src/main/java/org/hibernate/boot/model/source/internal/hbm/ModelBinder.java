@@ -210,7 +210,7 @@ public class ModelBinder {
 		final Object explicitSetting = buildingContext
 				.getBuildingOptions()
 				.getServiceRegistry()
-				.getService( ConfigurationService.class )
+				.requireService( ConfigurationService.class )
 				.getSettings()
 				.get( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
 		if ( explicitSetting != null ) {
@@ -2627,7 +2627,7 @@ public class ModelBinder {
 						else {
 							compositeUserType = (CompositeUserType<?>) sourceDocument.getBootstrapContext()
 									.getServiceRegistry()
-									.getService( ManagedBeanRegistry.class )
+									.requireService( ManagedBeanRegistry.class )
 									.getBean( componentClass )
 									.getBeanInstance();
 						}

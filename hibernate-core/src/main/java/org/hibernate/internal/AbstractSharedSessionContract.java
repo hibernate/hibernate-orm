@@ -1570,7 +1570,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
 
 		transactionCoordinator = factory.getServiceRegistry()
-				.getService( TransactionCoordinatorBuilder.class )
+				.requireService( TransactionCoordinatorBuilder.class )
 				.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );

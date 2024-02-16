@@ -51,6 +51,6 @@ public class PersisterFactoryInitiator implements StandardServiceInitiator<Persi
 	}
 
 	private Class<? extends PersisterFactory> locate(ServiceRegistryImplementor registry, String className) {
-		return registry.getService( ClassLoaderService.class ).classForName( className );
+		return registry.requireService( ClassLoaderService.class ).classForName( className );
 	}
 }

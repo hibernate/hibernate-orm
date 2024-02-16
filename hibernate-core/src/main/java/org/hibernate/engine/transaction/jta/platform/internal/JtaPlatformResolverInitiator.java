@@ -28,8 +28,9 @@ public class JtaPlatformResolverInitiator implements StandardServiceInitiator<Jt
 	@Override
 	public JtaPlatformResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object setting = configurationValues.get( AvailableSettings.JTA_PLATFORM_RESOLVER );
-		final JtaPlatformResolver resolver = NullnessUtil.castNonNull( registry.getService( StrategySelector.class ) )
-				.resolveStrategy( JtaPlatformResolver.class, setting );
+		final JtaPlatformResolver resolver =
+				registry.requireService( StrategySelector.class )
+						.resolveStrategy( JtaPlatformResolver.class, setting );
 		if ( resolver == null ) {
 			log.debugf( "No JtaPlatformResolver was specified, using default [%s]", StandardJtaPlatformResolver.class.getName() );
 			return StandardJtaPlatformResolver.INSTANCE;

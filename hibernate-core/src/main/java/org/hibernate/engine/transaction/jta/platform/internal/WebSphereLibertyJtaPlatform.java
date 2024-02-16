@@ -24,7 +24,6 @@ import org.hibernate.internal.util.NullnessUtil;
  * @author Andrew Guibert
  * @author Nathan Rauh
  */
-@SuppressWarnings("serial")
 public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 	
 	public static final String TMF_CLASS_NAME = "com.ibm.tx.jta.TransactionManagerFactory";
@@ -34,10 +33,10 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
-			final Class<?> TransactionManagerFactory = NullnessUtil.castNonNull( serviceRegistry()
-					.getService( ClassLoaderService.class ) )
-					.classForName( TMF_CLASS_NAME );
-			return (TransactionManager) TransactionManagerFactory.getMethod("getTransactionManager").invoke(null);
+			return (TransactionManager) serviceRegistry().requireService( ClassLoaderService.class )
+					.classForName( TMF_CLASS_NAME )
+					.getMethod("getTransactionManager")
+					.invoke(null);
 		}
 		catch ( Exception e ) {
 			throw new JtaPlatformException( "Could not obtain WebSphere Liberty transaction manager instance", e );

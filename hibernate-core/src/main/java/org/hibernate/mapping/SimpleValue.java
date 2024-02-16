@@ -300,7 +300,7 @@ public abstract class SimpleValue implements KeyValue {
 			final ClassLoaderService cls = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
+					.requireService( ClassLoaderService.class );
 			try {
 				final Class<? extends AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
 				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
@@ -658,7 +658,7 @@ public abstract class SimpleValue implements KeyValue {
 				getMetadata()
 						.getMetadataBuildingOptions()
 						.getServiceRegistry()
-						.getService(ClassLoaderService.class)
+						.requireService( ClassLoaderService.class )
 		);
 	}
 
@@ -702,7 +702,7 @@ public abstract class SimpleValue implements KeyValue {
 						return getMetadata()
 								.getMetadataBuildingOptions()
 								.getServiceRegistry()
-								.getService( ManagedBeanRegistry.class );
+								.requireService( ManagedBeanRegistry.class );
 					}
 
 					@Override
@@ -935,7 +935,7 @@ public abstract class SimpleValue implements KeyValue {
 			final ClassLoaderService classLoaderService = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
+					.requireService( ClassLoaderService.class );
 			typeParameters.put(
 					DynamicParameterizedType.PARAMETER_TYPE,
 					new ParameterTypeImpl(
@@ -980,7 +980,7 @@ public abstract class SimpleValue implements KeyValue {
 			final ClassLoaderService classLoaderService = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
+					.requireService( ClassLoaderService.class );
 
 			return new ParameterTypeImpl(
 					classLoaderService.classForTypeName(typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)),

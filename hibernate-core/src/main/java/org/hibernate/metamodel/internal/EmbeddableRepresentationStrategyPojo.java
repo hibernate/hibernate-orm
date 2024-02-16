@@ -101,7 +101,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 					bootDescriptor.getComponentClass(),
 					runtimeDescriptorAccess,
 					creationContext.getServiceRegistry()
-							.getService( ProxyFactoryFactory.class )
+							.requireService( ProxyFactoryFactory.class )
 							.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
 			);
 		}
@@ -181,12 +181,10 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 			propertyAccessMap.put( property.getName(), getPropertyAccesses()[i] );
 			i++;
 		}
-		final BytecodeProvider bytecodeProvider = creationContext.getServiceRegistry().getService( BytecodeProvider.class );
 
-		return bytecodeProvider.getReflectionOptimizer(
-				bootDescriptor.getComponentClass(),
-				propertyAccessMap
-		);
+		return creationContext.getServiceRegistry()
+				.requireService( BytecodeProvider.class )
+				.getReflectionOptimizer( bootDescriptor.getComponentClass(), propertyAccessMap );
 	}
 
 	@Override

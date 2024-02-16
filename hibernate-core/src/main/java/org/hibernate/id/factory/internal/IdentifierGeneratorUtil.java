@@ -50,7 +50,7 @@ public class IdentifierGeneratorUtil {
 		// default initial value and allocation size per-JPA defaults
 		params.setProperty( OptimizableGenerator.INITIAL_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
 		final ConfigurationService cs = simpleValue.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-				.getService( ConfigurationService.class );
+				.requireService( ConfigurationService.class );
 
 		final String idNamingStrategy = cs.getSetting(
 				AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,

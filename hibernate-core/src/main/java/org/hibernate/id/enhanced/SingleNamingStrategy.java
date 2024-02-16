@@ -36,12 +36,13 @@ public class SingleNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
 		return new QualifiedSequenceName(
 				catalogName,
 				schemaName,
-				jdbcEnvironment.getIdentifierHelper().toIdentifier( DEF_SEQUENCE )
+				serviceRegistry.requireService( JdbcEnvironment.class )
+						.getIdentifierHelper()
+						.toIdentifier( DEF_SEQUENCE )
 		);
 	}
 
@@ -50,11 +51,12 @@ public class SingleNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		return new QualifiedNameParser.NameParts(
 				catalogName,
 				schemaName,
-				jdbcEnvironment.getIdentifierHelper().toIdentifier( DEF_TABLE )
+				serviceRegistry.requireService( JdbcEnvironment.class )
+						.getIdentifierHelper()
+						.toIdentifier( DEF_TABLE )
 		);
 	}
 }

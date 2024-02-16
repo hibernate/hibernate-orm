@@ -124,7 +124,7 @@ public class EventEngine {
 
 		final Collection<EventEngineContributor> discoveredContributors =
 				sessionFactory.getServiceRegistry()
-						.getService( ClassLoaderService.class )
+						.requireService( ClassLoaderService.class )
 						.loadJavaServices( EventEngineContributor.class );
 		if ( CollectionHelper.isNotEmpty( discoveredContributors ) ) {
 			for ( EventEngineContributor contributor : discoveredContributors ) {

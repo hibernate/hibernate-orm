@@ -176,7 +176,8 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 					contributableInclusionFilter, targets );
 		}
 
-		final SqlScriptCommandExtractor commandExtractor = tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
+		final SqlScriptCommandExtractor commandExtractor =
+				tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		applyImportSources( options, commandExtractor, format, dialect, targets );
 	}

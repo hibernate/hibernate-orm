@@ -280,12 +280,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.serviceRegistry = serviceRegistry;
 		this.jpaBootstrap = context.isJpaBootstrap();
 
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-
-		assert jdbcServices != null;
-		assert configurationService != null;
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final JdbcServices jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
 		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
 
@@ -650,7 +647,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					try {
 						if ( dialectConstructor != null ) {
 							return dialectConstructor.newInstance(
-									serviceRegistry.getService( JdbcServices.class ).getDialect()
+									serviceRegistry.requireService( JdbcServices.class ).getDialect()
 							);
 						}
 						else if ( emptyConstructor != null ) {
@@ -699,7 +696,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					try {
 						if ( dialectConstructor != null ) {
 							return dialectConstructor.newInstance(
-									serviceRegistry.getService( JdbcServices.class ).getDialect()
+									serviceRegistry.requireService( JdbcServices.class ).getDialect()
 							);
 						}
 						else if ( emptyConstructor != null ) {
@@ -732,8 +729,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				new Callable<>() {
 					@Override
 					public HqlTranslator call() throws Exception {
-						final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-						return (HqlTranslator) classLoaderService.classForName( producerName ).newInstance();
+						return (HqlTranslator) serviceRegistry.requireService( ClassLoaderService.class )
+								.classForName( producerName ).newInstance();
 					}
 				}
 		);
@@ -812,8 +809,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			return specifiedHandlingMode;
 		}
 
-		final TransactionCoordinatorBuilder transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
-		return transactionCoordinatorBuilder.getDefaultConnectionHandlingMode();
+		return serviceRegistry.requireService( TransactionCoordinatorBuilder.class ).getDefaultConnectionHandlingMode();
 	}
 
 	private static FormatMapper determineJsonFormatMapper(Object setting, StrategySelector strategySelector) {

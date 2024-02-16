@@ -40,7 +40,7 @@ public class CdiBeanContainerBuilder {
 	public static BeanContainer fromBeanManagerReference(
 			Object beanManagerRef,
 			ServiceRegistry serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		final Class<?> beanManagerClass = ManagedBeanRegistryInitiator.cdiBeanManagerClass( classLoaderService );
 		final Class<?> extendedBeanManagerClass = getHibernateClass( BEAN_MANAGER_EXTENSION_FQN );
 
@@ -54,7 +54,7 @@ public class CdiBeanContainerBuilder {
 		else {
 			ctorArgType = beanManagerClass;
 
-			final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+			final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 			final boolean delayAccessToCdi = cfgService.getSetting( AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN, false );
 			if ( delayAccessToCdi ) {
 				containerClass = getHibernateClass( CONTAINER_FQN_DELAYED );

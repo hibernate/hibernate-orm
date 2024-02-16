@@ -74,7 +74,7 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 		return new QualifiedSequenceName(
 				catalogName,
 				schemaName,
-				serviceRegistry.getService( JdbcEnvironment.class )
+				serviceRegistry.requireService( JdbcEnvironment.class )
 						.getIdentifierHelper()
 						.toIdentifier( sequenceName )
 		);
@@ -110,11 +110,12 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			return QualifiedNameParser.INSTANCE.parse( implicitName );
 		}
 
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		return new QualifiedNameParser.NameParts(
 				catalogName,
 				schemaName,
-				jdbcEnvironment.getIdentifierHelper().toIdentifier( implicitName )
+				serviceRegistry.requireService( JdbcEnvironment.class )
+						.getIdentifierHelper()
+						.toIdentifier( implicitName )
 		);
 	}
 

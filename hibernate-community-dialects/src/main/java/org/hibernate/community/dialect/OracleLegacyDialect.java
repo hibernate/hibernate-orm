@@ -841,7 +841,7 @@ public class OracleLegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			// account for Oracle's deprecated support for LONGVARBINARY
 			// prefer BLOB, unless the user explicitly opts out
-			boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+			boolean preferLong = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 					PREFER_LONG_RAW,
 					StandardConverters.BOOLEAN,
 					false

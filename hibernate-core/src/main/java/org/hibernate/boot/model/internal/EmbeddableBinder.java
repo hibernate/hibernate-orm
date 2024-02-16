@@ -423,7 +423,7 @@ public class EmbeddableBinder {
 
 		return context.getBootstrapContext()
 				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class )
+				.requireService( ManagedBeanRegistry.class )
 				.getBean( compositeUserTypeClass )
 				.getBeanInstance();
 	}

@@ -691,7 +691,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private JtaPlatform getJtaPlatform() {
-		return getFactory().getServiceRegistry().getService( JtaPlatform.class );
+		return getFactory().getServiceRegistry().requireService( JtaPlatform.class );
 	}
 
 	private LockMode getNullSafeLockMode(LockMode lockMode) {

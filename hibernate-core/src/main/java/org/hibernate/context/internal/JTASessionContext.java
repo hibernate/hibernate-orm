@@ -63,7 +63,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 
 	@Override
 	public Session currentSession() throws HibernateException {
-		final JtaPlatform jtaPlatform = factory().getServiceRegistry().getService( JtaPlatform.class );
+		final JtaPlatform jtaPlatform = factory().getServiceRegistry().requireService( JtaPlatform.class );
 		final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
 		if ( transactionManager == null ) {
 			throw new HibernateException( "No TransactionManagerLookup specified" );

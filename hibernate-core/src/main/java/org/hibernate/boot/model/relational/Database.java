@@ -66,7 +66,7 @@ public class Database {
 	}
 
 	private static Dialect determineDialect(MetadataBuildingOptions buildingOptions) {
-		final Dialect dialect = buildingOptions.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		final Dialect dialect = buildingOptions.getServiceRegistry().requireService( JdbcServices.class ).getDialect();
 		if ( dialect != null ) {
 			return dialect;
 		}

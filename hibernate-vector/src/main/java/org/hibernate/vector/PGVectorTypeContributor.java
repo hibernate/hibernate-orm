@@ -35,7 +35,7 @@ public class PGVectorTypeContributor implements TypeContributor {
 
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
 		if ( dialect instanceof PostgreSQLDialect ) {
 			final TypeConfiguration typeConfiguration = typeContributions.getTypeConfiguration();
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();

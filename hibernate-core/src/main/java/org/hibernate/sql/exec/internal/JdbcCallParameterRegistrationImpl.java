@@ -103,12 +103,12 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 			SharedSessionContractImplementor session) {
 		if ( name != null ) {
 			session.getFactory().getServiceRegistry()
-					.getService( RefCursorSupport.class )
+					.requireService( RefCursorSupport.class )
 					.registerRefCursorParameter( callableStatement, name );
 		}
 		else {
 			session.getFactory().getServiceRegistry()
-					.getService( RefCursorSupport.class )
+					.requireService( RefCursorSupport.class )
 					.registerRefCursorParameter( callableStatement, jdbcParameterPositionStart );
 		}
 

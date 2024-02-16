@@ -207,7 +207,7 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		if ( serviceRegistry != null ) {
-			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+			final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 			final Class<Driver> driverClass = classLoaderService.classForName( driverClassName );
 			try {
 				return driverClass.newInstance();
@@ -232,8 +232,9 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		if ( serviceRegistry != null ) {
-			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-			final Class<ConnectionCreatorFactory> factoryClass = classLoaderService.classForName( connectionCreatorFactoryClassName );
+			final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+			final Class<ConnectionCreatorFactory> factoryClass =
+					classLoaderService.classForName( connectionCreatorFactoryClassName );
 			try {
 				return factoryClass.newInstance();
 			}

@@ -48,7 +48,7 @@ public class ConfigLoader {
 	}
 
 	public LoadedConfig loadConfigXmlResource(String cfgXmlResourceName) {
-		final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( cfgXmlResourceName );
+		final InputStream stream = bootstrapServiceRegistry.requireService( ClassLoaderService.class ).locateResourceStream( cfgXmlResourceName );
 		if ( stream == null ) {
 			throw new ConfigurationException( "Could not locate cfg.xml resource [" + cfgXmlResourceName + "]" );
 		}
@@ -113,7 +113,7 @@ public class ConfigLoader {
 	}
 
 	public Properties loadProperties(String resourceName) {
-		final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
+		final InputStream stream = bootstrapServiceRegistry.requireService( ClassLoaderService.class ).locateResourceStream( resourceName );
 
 		if ( stream == null ) {
 			throw new ConfigurationException( "Unable to apply settings from properties file [" + resourceName + "]" );

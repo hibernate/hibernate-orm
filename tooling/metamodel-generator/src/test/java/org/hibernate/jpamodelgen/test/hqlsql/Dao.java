@@ -40,6 +40,9 @@ public interface Dao {
     @HQL("from Book where isbn = :isbn")
     Book findByIsbn(String isbn);
 
+    @HQL("order by isbn asc, publicationDate desc")
+    List<Book> allBooks();
+
     @SQL("select * from Book where isbn = :isbn")
     Book findByIsbnNative(String isbn);
 
@@ -64,4 +67,6 @@ public interface Dao {
     @HQL("select new list(title, pages) from Book")
     List<List> dtoQuery4();
 
+    @HQL("from Publisher where address = :address")
+    List<Publisher> publisherAt(Address address);
 }

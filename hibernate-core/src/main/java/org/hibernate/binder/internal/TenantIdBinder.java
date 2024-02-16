@@ -66,9 +66,9 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			if ( !parameterJtd.getJavaTypeClass().equals( tenantIdTypeJtd.getJavaTypeClass() ) ) {
 				throw new MappingException(
 						"all @TenantId fields must have the same type: "
-								+ parameterJtd.getJavaType().getTypeName()
+								+ parameterJtd.getTypeName()
 								+ " differs from "
-								+ tenantIdTypeJtd.getJavaType().getTypeName()
+								+ tenantIdTypeJtd.getTypeName()
 				);
 			}
 		}

@@ -782,11 +782,11 @@ public final class AnnotationBinder {
 				new JpaAttributeConverterImpl( bean, converterJtd, domainJtd, relationalJtd );
 		return new ConvertedBasicTypeImpl<>(
 				ConverterDescriptor.TYPE_NAME_PREFIX
-						+ valueConverter.getConverterJavaType().getJavaType().getTypeName(),
+						+ valueConverter.getConverterJavaType().getTypeName(),
 				String.format(
 						"BasicType adapter for AttributeConverter<%s,%s>",
-						domainJtd.getJavaType().getTypeName(),
-						relationalJtd.getJavaType().getTypeName()
+						domainJtd.getTypeName(),
+						relationalJtd.getTypeName()
 				),
 				relationalJtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() ),
 				valueConverter

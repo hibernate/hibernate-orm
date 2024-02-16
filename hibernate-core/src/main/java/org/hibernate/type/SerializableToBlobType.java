@@ -133,7 +133,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	@Override
 	public String[] getRegistrationKeys() {
 		return registerUnderJavaType()
-				? new String[] { getName(), javaType.getJavaType().getTypeName() }
+				? new String[] { getName(), javaType.getTypeName() }
 				: new String[] { getName() };
 	}
 

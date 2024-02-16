@@ -7,4 +7,5 @@ import jakarta.persistence.Id;
 public class Publisher {
     @Id Long id;
     String name;
+    Address address;
 }

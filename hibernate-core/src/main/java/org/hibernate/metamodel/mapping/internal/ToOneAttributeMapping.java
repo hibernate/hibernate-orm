@@ -592,7 +592,7 @@ public class ToOneAttributeMapping
 				final Collection collection = (Collection) value;
 				if ( propertyPath.equals( collection.getMappedByProperty() )
 						&& collection.getElement().getType().getName()
-						.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
+						.equals( declaringType.getJavaType().getTypeName() ) ) {
 					return parentSelectablePath == null
 							? SelectablePath.parse( property.getName() )
 							: parentSelectablePath.append( property.getName() );
@@ -627,7 +627,7 @@ public class ToOneAttributeMapping
 				if (declaringTableGroupProducer.getNavigableRole().getLocalName().equals( oneToOne.getReferencedEntityName() )
 				&& propertyPath.equals( oneToOne.getMappedByProperty() )
 						&& oneToOne.getReferencedEntityName()
-						.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
+						.equals( declaringType.getJavaType().getTypeName() ) ) {
 					return parentSelectablePath == null
 									? SelectablePath.parse( property.getName() )
 									: parentSelectablePath.append( property.getName() );
@@ -1466,13 +1466,13 @@ public class ToOneAttributeMapping
 
 				where leve2Child is of type DerivedLevel2 while level2Parent of type Level2
 
-				for this reason we need the check entityMappingType.isSubclassEntityName( partMappingType.getMappedJavaType().getJavaType().getTypeName() )
+				for this reason we need the check entityMappingType.isSubclassEntityName( partMappingType.getMappedJavaType().getTypeName() )
 				to be sure that the referencedNavigablePath corresponds to leve2Child
 
 		 */
 		while ( !( partMappingType instanceof EntityMappingType )
 				|| ( partMappingType != entityMappingType
-				&& !entityMappingType.getEntityPersister().isSubclassEntityName( partMappingType.getMappedJavaType().getJavaType().getTypeName() )
+				&& !entityMappingType.getEntityPersister().isSubclassEntityName( partMappingType.getMappedJavaType().getTypeName() )
 				&& !( (EntityMappingType) partMappingType ).getEntityPersister().isSubclassEntityName( entityMappingType.getEntityName() ) ) ) {
 			referencedNavigablePath = referencedNavigablePath.getParent();
 			if ( referencedNavigablePath == null ) {

@@ -38,6 +38,6 @@ public class XmlJavaType<T> extends FormatMapperBasedJavaType<T> {
 
 	@Override
 	public String toString() {
-		return "XmlJavaType(" + getJavaType().getTypeName() + ")";
+		return "XmlJavaType(" + getTypeName() + ")";
 	}
 }

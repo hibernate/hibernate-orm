@@ -15,7 +15,6 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.metamodel.SingularAttribute;
-import jakarta.persistence.metamodel.Type;
 
 /**
  * Implementation of {@link jakarta.persistence.metamodel.EmbeddableType}.
@@ -33,7 +32,7 @@ public class EmbeddableTypeImpl<J>
 			JavaType<J> javaType,
 			boolean isDynamic,
 			JpaMetamodelImplementor domainMetamodel) {
-		super( javaType.getJavaType().getTypeName(), javaType, null, domainMetamodel );
+		super( javaType.getTypeName(), javaType, null, domainMetamodel );
 		this.isDynamic = isDynamic;
 	}
 

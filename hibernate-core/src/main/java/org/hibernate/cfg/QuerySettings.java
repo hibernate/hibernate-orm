@@ -98,8 +98,9 @@ public interface QuerySettings {
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
 	/**
-	 * Specifies the default {@linkplain NullPrecedence precedence of null values} in the HQL
-	 * {@code ORDER BY} clause, either {@code none}, {@code first}, or {@code last}.
+	 * Specifies the default {@linkplain NullPrecedence precedence of null values} in the
+	 * HQL {@code ORDER BY} clause, either {@code none}, {@code first}, or {@code last},
+	 * or an instance of {@link NullPrecedence}.
 	 * <p>
 	 * The default is {@code none}.
 	 *

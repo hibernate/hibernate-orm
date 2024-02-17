@@ -191,10 +191,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			}
 		}
 		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
-		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
-		configuration.getProperties().put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
-		configuration.getProperties().put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		configuration.getProperties().put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
+		configuration.setProperty( Environment.DIALECT, getDialect().getClass() );
+		configuration.getProperties().put( PersistentTableStrategy.DROP_ID_TABLES, true );
+		configuration.getProperties().put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, true );
+		configuration.getProperties().put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, true );
 		ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );
 		return configuration;
 	}

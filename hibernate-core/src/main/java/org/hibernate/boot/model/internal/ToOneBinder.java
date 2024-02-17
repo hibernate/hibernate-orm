@@ -36,7 +36,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
@@ -49,8 +48,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
 
-import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
-import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
@@ -114,7 +111,7 @@ public class ToOneBinder {
 				getCascadeStrategy( manyToOne.cascade(), hibernateCascade, false, forcePersist ),
 				joinColumns,
 				joinTable,
-				!isMandatory( manyToOne.optional(), property, notFoundAction ),
+				manyToOne.optional(),
 				notFoundAction,
 				onDelete == null ? null : onDelete.action(),
 				getTargetEntity( inferredData, context ),
@@ -167,6 +164,8 @@ public class ToOneBinder {
 			PropertyBinder propertyBinder,
 			MetadataBuildingContext context) {
 
+		boolean mandatory = isMandatory( optional, inferredData.getProperty(), notFoundAction );
+
 		if ( joinTable != null && !isEmpty( joinTable.name() ) ) {
 			final Join join = propertyHolder.addJoin( joinTable, false );
 			// TODO: if notFoundAction!=null should we call join.disableForeignKeyCreation() ?
@@ -199,7 +198,7 @@ public class ToOneBinder {
 		value.setNotFoundAction( notFoundAction );
 		value.setOnDeleteAction( onDeleteAction );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
-		if ( !optional ) {
+		if ( mandatory ) {
 			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
 				column.setNullable( false );
 			}
@@ -243,7 +242,7 @@ public class ToOneBinder {
 		processManyToOneProperty(
 				cascadeStrategy,
 				joinColumns,
-				optional,
+				!mandatory,
 				inferredData,
 				isIdentifierMapper,
 				propertyBinder,
@@ -485,7 +484,7 @@ public class ToOneBinder {
 				getCascadeStrategy( oneToOne.cascade(), hibernateCascade, oneToOne.orphanRemoval(), forcePersist ),
 				joinColumns,
 				joinTable,
-				!isMandatory( oneToOne.optional(), property, notFoundAction ),
+				oneToOne.optional(),
 				getFetchMode( oneToOne.fetch() ),
 				notFoundAction,
 				onDelete == null ? null : onDelete.action(),
@@ -534,7 +533,7 @@ public class ToOneBinder {
 					targetEntity,
 					notFoundAction,
 					cascadeOnDelete,
-					optional,
+					false,
 					cascadeStrategy,
 					joinColumns,
 					context
@@ -551,7 +550,8 @@ public class ToOneBinder {
 			bindManyToOne(
 					cascadeStrategy,
 					joinColumns,
-					joinTable, optional,
+					joinTable,
+					optional,
 					notFoundAction,
 					cascadeOnDelete,
 					targetEntity,

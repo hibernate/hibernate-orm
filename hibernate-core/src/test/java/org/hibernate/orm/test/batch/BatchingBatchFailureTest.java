@@ -42,9 +42,9 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		// explicitly enable batching
-		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, "5" );
+		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, 5 );
 		// and disable in-vm nullability checking (so we can force in-db not-null constraint violations)
-		configuration.setProperty( AvailableSettings.CHECK_NULLABILITY, "false" );
+		configuration.setProperty( AvailableSettings.CHECK_NULLABILITY, false );
 	}
 
 	@Test

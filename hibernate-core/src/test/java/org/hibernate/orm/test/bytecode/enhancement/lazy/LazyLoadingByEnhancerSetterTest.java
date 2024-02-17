@@ -49,8 +49,8 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
 
     @Override
     protected void configure(Configuration configuration) {
-        configuration.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
-        configuration.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+        configuration.setProperty( Environment.USE_SECOND_LEVEL_CACHE, false );
+        configuration.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, true );
     }
 
     @Before

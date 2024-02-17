@@ -54,7 +54,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	@Before

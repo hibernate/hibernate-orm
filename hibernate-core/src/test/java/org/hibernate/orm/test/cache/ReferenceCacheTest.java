@@ -33,8 +33,8 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, "true" );
-		configuration.setProperty( AvailableSettings.USE_QUERY_CACHE, "true" );
+		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, true );
+		configuration.setProperty( AvailableSettings.USE_QUERY_CACHE, true );
 	}
 
 	@Override

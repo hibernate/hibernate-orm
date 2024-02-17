@@ -28,7 +28,7 @@ public class OneToOneOwnerByContainedEagerCyclesTest extends BaseCoreFunctionalT
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.MAX_FETCH_DEPTH, "2" );
+		configuration.setProperty( AvailableSettings.MAX_FETCH_DEPTH, 2 );
 	}
 
 	@Test

@@ -41,8 +41,8 @@ public class EnhancedProxyCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
 	}
 
 	@Override

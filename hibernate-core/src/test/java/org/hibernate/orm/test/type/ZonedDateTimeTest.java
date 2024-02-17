@@ -48,7 +48,7 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure(configuration);
-		configuration.setProperty( AvailableSettings.TIMEZONE_DEFAULT_STORAGE, TimeZoneStorageType.NORMALIZE.toString() );
+		configuration.setProperty( AvailableSettings.TIMEZONE_DEFAULT_STORAGE, TimeZoneStorageType.NORMALIZE );
 	}
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {

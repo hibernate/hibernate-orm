@@ -63,9 +63,9 @@ public class TransactionalConcurrencyCollectionCacheEvictionTest extends BaseCor
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, "true" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
+		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, true );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, false );
 	}
 
 	@Override

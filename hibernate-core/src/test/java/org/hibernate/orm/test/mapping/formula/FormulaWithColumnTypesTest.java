@@ -41,10 +41,7 @@ public class FormulaWithColumnTypesTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty(
-				Environment.DIALECT,
-				ExtendedDialect.class.getName()
-		);
+		configuration.setProperty( Environment.DIALECT, ExtendedDialect.class );
 	}
 
 	@Test

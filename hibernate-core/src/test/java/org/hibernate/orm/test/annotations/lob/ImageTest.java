@@ -35,7 +35,7 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.WRAPPER_ARRAY_HANDLING, WrapperArrayHandling.ALLOW.name() );
+		configuration.setProperty( AvailableSettings.WRAPPER_ARRAY_HANDLING, WrapperArrayHandling.ALLOW );
 	}
 
 	@Test

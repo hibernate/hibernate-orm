@@ -51,7 +51,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" ); // problem on HSQLDB (go figure)
+		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, 0 ); // problem on HSQLDB (go figure)
 	}
 
 	@Test

@@ -9,6 +9,7 @@ package org.hibernate.orm.test.annotations.beanvalidation;
 import java.math.BigDecimal;
 import jakarta.validation.ConstraintViolationException;
 
+import org.hibernate.boot.beanvalidation.ValidationMode;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -17,6 +18,7 @@ import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -45,7 +47,7 @@ public class BeanValidationAutoTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( "jakarta.persistence.validation.mode", "AUTO" );
+		cfg.setProperty( JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
 	}
 
 	@Override

@@ -353,8 +353,8 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
 	}
 
 

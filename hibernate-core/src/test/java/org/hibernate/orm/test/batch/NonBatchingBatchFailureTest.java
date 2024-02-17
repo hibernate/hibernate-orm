@@ -41,9 +41,9 @@ public class NonBatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		// explicitly disable batching
-		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, "-1" );
+		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, -1 );
 		// and disable in-vm nullability checking (so we can force in-db not-null constraint violations)
-		configuration.setProperty( AvailableSettings.CHECK_NULLABILITY, "false" );
+		configuration.setProperty( AvailableSettings.CHECK_NULLABILITY, false );
 	}
 
 	@Test

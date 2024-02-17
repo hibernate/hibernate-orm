@@ -13,6 +13,7 @@ import jakarta.validation.MessageInterpolator;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 
+import org.hibernate.boot.beanvalidation.ValidationMode;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -20,6 +21,8 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_FACTORY;
+import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -69,7 +72,7 @@ public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCas
 		final jakarta.validation.Configuration<?> configuration = Validation.byDefaultProvider().configure();
 		configuration.messageInterpolator( messageInterpolator );
 		ValidatorFactory vf = configuration.buildValidatorFactory();
-		cfg.getProperties().put( "jakarta.persistence.validation.factory", vf );
-		cfg.setProperty( "jakarta.persistence.validation.mode", "AUTO" );
+		cfg.getProperties().put( JAKARTA_VALIDATION_FACTORY, vf );
+		cfg.setProperty( JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
 	}
 }

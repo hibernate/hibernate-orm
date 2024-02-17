@@ -38,7 +38,7 @@ public abstract class AbstractMutationStrategyIdTest extends BaseCoreFunctionalT
 		if ( multiTableBulkIdStrategyClass != null ) {
 			configuration.setProperty(
 					AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
-					multiTableBulkIdStrategyClass.getName()
+					multiTableBulkIdStrategyClass
 			);
 		}
 	}

@@ -18,6 +18,7 @@ import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.tool.schema.Action;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -48,7 +49,7 @@ public class ProxySerializationNoSessionFactoryTest extends BaseUnitTestCase {
 
 	private void executeTest(boolean initializeProxy) {
 		final Configuration cfg = new Configuration()
-				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+				.setProperty( AvailableSettings.HBM2DDL_AUTO, Action.ACTION_CREATE_THEN_DROP )
 				.addAnnotatedClass( SimpleEntity.class )
 				.addAnnotatedClass( ChildEntity.class );
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );

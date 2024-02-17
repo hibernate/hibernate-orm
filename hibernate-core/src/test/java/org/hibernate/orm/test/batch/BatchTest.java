@@ -39,7 +39,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "20" );
+		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, 20 );
 	}
 
 	@Test

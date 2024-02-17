@@ -29,7 +29,7 @@ public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
-		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	@Override

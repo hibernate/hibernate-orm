@@ -43,7 +43,7 @@ public class BatchEntityOneToManyTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
 	}
 
 	@Before

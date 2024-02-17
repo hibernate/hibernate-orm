@@ -6,7 +6,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import jakarta.persistence.SharedCacheMode;
 import org.hibernate.Session;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
@@ -22,6 +24,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.tool.schema.Action;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,11 +38,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CacheKeySerializationTest {
    private SessionFactoryImplementor getSessionFactory(String cacheKeysFactory) {
       Configuration configuration = new Configuration()
-            .setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true")
-            .setProperty(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName())
-            .setProperty(Environment.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "transactional")
-            .setProperty("javax.persistence.sharedCache.mode", "ALL")
-            .setProperty(Environment.HBM2DDL_AUTO, "create-drop");
+            .setProperty(Environment.USE_SECOND_LEVEL_CACHE, true)
+            .setProperty(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class)
+            .setProperty(Environment.DEFAULT_CACHE_CONCURRENCY_STRATEGY, CacheConcurrencyStrategy.TRANSACTIONAL)
+            .setProperty(Environment.JPA_SHARED_CACHE_MODE, SharedCacheMode.ALL)
+            .setProperty(Environment.HBM2DDL_AUTO, Action.ACTION_CREATE_THEN_DROP);
       ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );
       if (cacheKeysFactory != null) {
          configuration.setProperty(Environment.CACHE_KEYS_FACTORY, cacheKeysFactory);

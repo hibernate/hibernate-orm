@@ -51,7 +51,7 @@ public class BatchingInheritanceDeleteTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, "25" );
+		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, 25 );
 	}
 
 	@Test

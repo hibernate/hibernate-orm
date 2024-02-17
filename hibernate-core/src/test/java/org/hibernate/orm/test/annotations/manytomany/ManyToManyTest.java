@@ -47,7 +47,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		configuration.setProperty( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 //		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 	}
 

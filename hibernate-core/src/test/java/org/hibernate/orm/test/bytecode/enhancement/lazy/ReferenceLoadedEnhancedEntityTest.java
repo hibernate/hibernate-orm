@@ -45,7 +45,7 @@ public class ReferenceLoadedEnhancedEntityTest extends BaseCoreFunctionalTestCas
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "10" );
+		configuration.setProperty( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, 10 );
 	}
 
 	@Test

@@ -26,7 +26,7 @@ import org.junit.Test;
 public class TestClearBatchFetchQueueAfterFlush extends BaseCoreFunctionalTestCase {
 
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.DEFAULT_BATCH_FETCH_SIZE, "10" );
+		cfg.setProperty( Environment.DEFAULT_BATCH_FETCH_SIZE, 10 );
 	}
 
 	@Test

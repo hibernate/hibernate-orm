@@ -46,7 +46,7 @@ public class HHH9965Test extends BaseCoreFunctionalTestCase {
     @Override
     protected void configure(Configuration cfg) {
         super.configure(cfg);
-        cfg.setProperty( Environment.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, "true");
+        cfg.setProperty( Environment.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, true );
     }
 
     @Override

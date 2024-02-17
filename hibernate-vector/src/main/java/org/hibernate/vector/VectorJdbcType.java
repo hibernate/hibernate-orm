@@ -68,7 +68,7 @@ public class VectorJdbcType extends ArrayJdbcType {
 			}
 
 			private float[] getFloatArray(String string) {
-				if ( string.length() == 2 ) {
+				if ( string == null || string.length() == 2 ) {
 					return EMPTY;
 				}
 				final BitSet commaPositions = new BitSet();

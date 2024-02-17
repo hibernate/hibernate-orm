@@ -129,6 +129,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SUBSELECT_FETCH;
 import static org.hibernate.cfg.CacheSettings.QUERY_CACHE_LAYOUT;
+import static org.hibernate.cfg.QuerySettings.DEFAULT_NULL_ORDERING;
 import static org.hibernate.cfg.QuerySettings.PORTABLE_INTEGER_DIVISION;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -377,10 +378,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, configurationSettings, -1 );
 		this.subselectFetchEnabled = getBoolean( USE_SUBSELECT_FETCH, configurationSettings );
 		this.maximumFetchDepth = getInteger( MAX_FETCH_DEPTH, configurationSettings );
-		final String defaultNullPrecedence = getString(
-				AvailableSettings.DEFAULT_NULL_ORDERING, configurationSettings, "none", "first", "last"
-		);
-		this.defaultNullPrecedence = NullPrecedence.parse( defaultNullPrecedence );
+
+		final Object defaultNullPrecedence = configurationSettings.get( DEFAULT_NULL_ORDERING );
+		if ( defaultNullPrecedence instanceof NullPrecedence ) {
+			this.defaultNullPrecedence = (NullPrecedence) defaultNullPrecedence;
+		}
+		else if ( defaultNullPrecedence instanceof String ) {
+			this.defaultNullPrecedence = NullPrecedence.parse( (String) defaultNullPrecedence );
+		}
+		else if ( defaultNullPrecedence != null ) {
+			throw new IllegalArgumentException( "Configuration property " + DEFAULT_NULL_ORDERING
+					+ " value [" + defaultNullPrecedence + "] is not supported" );
+		}
+
 		this.orderUpdatesEnabled = getBoolean( ORDER_UPDATES, configurationSettings );
 		this.orderInsertsEnabled = getBoolean( ORDER_INSERTS, configurationSettings );
 
@@ -558,7 +568,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			this.jdbcTimeZone = TimeZone.getTimeZone( ZoneId.of((String) jdbcTimeZoneValue) );
 		}
 		else if ( jdbcTimeZoneValue != null ) {
-			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported" );
+			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE
+					+ " value [" + jdbcTimeZoneValue + "] is not supported" );
 		}
 
 		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(

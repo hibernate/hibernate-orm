@@ -2390,16 +2390,20 @@ public abstract class CollectionBinder {
 		else {
 			final JoinTable joinTableAnn = property.getAnnotation( JoinTable.class );
 			if ( joinTableAnn != null ) {
-				String foreignKeyName = joinTableAnn.inverseForeignKey().name();
-				String foreignKeyDefinition = joinTableAnn.inverseForeignKey().foreignKeyDefinition();
-				if ( joinTableAnn.inverseJoinColumns().length != 0 ) {
-					final JoinColumn joinColumnAnn = joinTableAnn.inverseJoinColumns()[0];
-					if ( foreignKeyName.isEmpty() ) {
-						foreignKeyName = joinColumnAnn.foreignKey().name();
-						foreignKeyDefinition = joinColumnAnn.foreignKey().foreignKeyDefinition();
-					}
+				final String foreignKeyName;
+				final String foreignKeyDefinition;
+				final ForeignKey inverseForeignKey = joinTableAnn.inverseForeignKey();
+				final JoinColumn[] inverseJoinColumns = joinTableAnn.inverseJoinColumns();
+				if ( inverseForeignKey.name().isEmpty() && inverseJoinColumns.length > 0 ) {
+					final ForeignKey foreignKey = inverseJoinColumns[0].foreignKey();
+					foreignKeyName = foreignKey.name();
+					foreignKeyDefinition = foreignKey.foreignKeyDefinition();
 				}
-				final ConstraintMode constraintMode = joinTableAnn.inverseForeignKey().value();
+				else {
+					foreignKeyName = inverseForeignKey.name();
+					foreignKeyDefinition = inverseForeignKey.foreignKeyDefinition();
+				}
+				final ConstraintMode constraintMode = inverseForeignKey.value();
 				if ( constraintMode == NO_CONSTRAINT
 						|| constraintMode == PROVIDER_DEFAULT
 								&& buildingContext.getBuildingOptions().isNoConstraintByDefault() ) {

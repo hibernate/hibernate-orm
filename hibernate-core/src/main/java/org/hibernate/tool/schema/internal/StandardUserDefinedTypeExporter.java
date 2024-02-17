@@ -60,10 +60,9 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 					buf.append( ", " );
 				}
 
-				String colName = col.getQuotedName( dialect );
-				buf.append( colName );
-
-				buf.append( ' ' ).append( col.getSqlType( metadata ) );
+				buf.append( col.getQuotedName( dialect ) )
+					.append( ' ' )
+					.append( col.getSqlType( metadata ) );
 			}
 
 			buf.append( ')' );

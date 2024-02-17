@@ -241,7 +241,6 @@ package org.hibernate.example;
 
 import org.hibernate.cfg.Configuration;
 
-import static java.lang.Boolean.TRUE;
 import static java.lang.System.out;
 import static org.hibernate.cfg.AvailableSettings.*;
 

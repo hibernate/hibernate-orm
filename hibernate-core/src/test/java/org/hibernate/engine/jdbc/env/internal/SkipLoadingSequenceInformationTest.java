@@ -34,8 +34,8 @@ public class SkipLoadingSequenceInformationTest extends BaseCoreFunctionalTestCa
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, SequenceMismatchStrategy.NONE.name() );
-		configuration.setProperty( Environment.DIALECT, VetoingDialect.class.getName() );
+		configuration.setProperty( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, SequenceMismatchStrategy.NONE );
+		configuration.setProperty( Environment.DIALECT, VetoingDialect.class );
 	}
 
 	@Entity(name="seqentity")

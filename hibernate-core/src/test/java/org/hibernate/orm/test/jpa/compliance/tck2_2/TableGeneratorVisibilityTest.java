@@ -28,7 +28,7 @@ public class TableGeneratorVisibilityTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, "true" );
+		configuration.setProperty( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, true );
 	}
 
 	@Override

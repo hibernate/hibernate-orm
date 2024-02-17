@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.CacheSettings.USE_QUERY_CACHE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -379,6 +380,6 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration cfg) {
-		cfg.setProperty( "hibernate.cache.use_query_cache", "true" );
+		cfg.setProperty( USE_QUERY_CACHE, true );
 	}
 }

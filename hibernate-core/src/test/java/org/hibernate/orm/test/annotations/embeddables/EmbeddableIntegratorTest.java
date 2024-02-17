@@ -15,6 +15,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -41,7 +42,7 @@ public class EmbeddableIntegratorTest {
 	@Test
 	public void testWithoutIntegrator() {
 		final Configuration cfg = new Configuration().addAnnotatedClass( Investor.class )
-				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" );
+				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session sess = sf.openSession();
@@ -76,7 +77,7 @@ public class EmbeddableIntegratorTest {
 	public void testWithTypeContributor() {
 		final Configuration cfg = new Configuration().addAnnotatedClass( Investor.class )
 				.registerTypeContributor( new InvestorTypeContributor() )
-				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" );
+				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try (SessionFactory sf = cfg.buildSessionFactory(); Session sess = sf.openSession()) {
 			try {

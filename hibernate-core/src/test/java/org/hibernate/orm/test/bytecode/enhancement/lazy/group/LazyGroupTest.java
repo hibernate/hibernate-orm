@@ -59,8 +59,8 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
 
     @Override
     protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
+        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
         sqlInterceptor = new SQLStatementInterceptor( configuration );
     }
 

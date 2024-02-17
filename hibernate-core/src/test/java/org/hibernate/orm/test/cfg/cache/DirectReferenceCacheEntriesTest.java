@@ -34,7 +34,7 @@ public class DirectReferenceCacheEntriesTest extends BaseCoreFunctionalTestCase 
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, "true" );
+		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, true );
 	}
 
 	@Before

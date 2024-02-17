@@ -53,8 +53,8 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 			cfg.setProperty( Environment.URL, "jdbc:h2:mem:db-mvcc;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
 		}
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
 	}
 
 	@Test

@@ -63,8 +63,8 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, false );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
 	private void createData() {

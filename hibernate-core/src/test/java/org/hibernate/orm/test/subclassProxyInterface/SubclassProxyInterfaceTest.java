@@ -22,7 +22,7 @@ public class SubclassProxyInterfaceTest {
 	@Test
 	public void testSubclassProxyInterfaces() {
         final Configuration cfg = new Configuration()
-				.setProperty( Environment.DIALECT, H2Dialect.class.getName() )
+				.setProperty( Environment.DIALECT, H2Dialect.class )
 				.addClass( Person.class );
 		try (ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ) ) {
 			cfg.buildSessionFactory( serviceRegistry ).close();

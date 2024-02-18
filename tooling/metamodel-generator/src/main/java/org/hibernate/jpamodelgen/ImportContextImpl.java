@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.hibernate.jpamodelgen.model.ImportContext;
 
@@ -23,8 +21,6 @@ import org.hibernate.jpamodelgen.model.ImportContext;
  * @author Emmanuel Bernard
  */
 public class ImportContextImpl implements ImportContext {
-
-	private static final Pattern P_IMPORT = Pattern.compile( "(\\?\\s+\\w+\\s+)(.+)" );
 
 	private final Set<String> imports = new TreeSet<>();
 	private final Set<String> staticImports = new TreeSet<>();
@@ -78,10 +74,26 @@ public class ImportContextImpl implements ImportContext {
 			}
 		}
 		else if ( result.startsWith( "?" ) ) {
-			final Matcher m = P_IMPORT.matcher( result );
-			if ( m.matches() ) {
-				preamble = m.group( 1 );
-				result = Objects.requireNonNullElse( m.group( 2 ), "" );
+			int index = 1;
+			while ( index < result.length() && Character.isWhitespace( result.charAt( index ) ) ) {
+				index++;
+			}
+			if ( index < result.length() ) {
+				int nextIndex = -1;
+				if ( result.substring( index ).startsWith( "extends" ) ) {
+					nextIndex = index + 7;
+				}
+				else if ( result.substring( index ).startsWith( "super" ) ) {
+					nextIndex = index + 5;
+				}
+				if ( nextIndex > 0 && nextIndex < result.length() && Character.isWhitespace( result.charAt( nextIndex ) ) ) {
+					index = nextIndex;
+					while ( Character.isWhitespace( result.charAt( index ) ) ) {
+						index++;
+					}
+					preamble = result.substring( 0, index );
+					result = importType( result.substring( index ) );
+				}
 			}
 		}
 

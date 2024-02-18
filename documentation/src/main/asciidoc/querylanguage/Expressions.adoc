@@ -172,8 +172,32 @@ Literal values of a Java enumerated type may be written without needing to speci
 ----
 from Book where status <> OUT_OF_PRINT
 ----
+[source, hql]
+----
+from Book where type in (BOOK, MAGAZINE)
+----
+[source, hql]
+----
+update Book set status = OUT_OF_PRINT
+----
 
-Here, the enum class is inferred from the type of the expression on the left of the comparison operator.
+In the examples above, the enum class is inferred from the type of the expression on the left of the comparison, assignment operator, or
+`in` predicate.
+
+[[enum-case-example]]
+[source, hql]
+----
+from Book
+order by
+    case type
+    when BOOK then 1
+    when MAGAZINE then 2
+    when JOURNAL then 3
+    else 4
+    end
+----
+
+In this example the enum class is inferred from the type of the `case` expression.
 
 [[java-constants]]
 ==== Java constants

@@ -95,7 +95,7 @@ import static java.util.Collections.emptyList;
  *     // set a configuration property
  *     .setProperty(AvailableSettings.DATASOURCE,
  *                  "java:comp/env/jdbc/test")
- *     .getSessionFactory();
+ *     .buildSessionFactory();
  * </pre>
  * <p>
  * In addition, there are convenience methods for adding

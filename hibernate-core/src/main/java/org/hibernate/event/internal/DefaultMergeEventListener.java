@@ -242,6 +242,9 @@ public class DefaultMergeEventListener
 			MergeContext mergeContext) {
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
 		final Object idCopy = compositeType.deepCopy( id, sessionFactory );
+		if ( !compositeType.isMutable() ) {
+			return idCopy;
+		}
 		final Type[] subtypes = compositeType.getSubtypes();
 		final Object[] propertyValues = compositeType.getPropertyValues( id );
 		final Object[] copyValues = compositeType.getPropertyValues( idCopy );

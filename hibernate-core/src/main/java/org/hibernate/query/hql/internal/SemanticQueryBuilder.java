@@ -3205,18 +3205,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public SqmCaseSimple<?, ?> visitSimpleCaseList(HqlParser.SimpleCaseListContext ctx) {
 		final int size = ctx.simpleCaseWhen().size();
-		final SqmCaseSimple caseExpression = new SqmCaseSimple<>(
-				(SqmExpression<?>) ctx.expressionOrPredicate().accept( this ),
-				size,
-				creationContext.getNodeBuilder()
-		);
+		final SqmExpression<?> expression = (SqmExpression<?>) ctx.expressionOrPredicate().accept(this);
+		final SqmCaseSimple caseExpression = new SqmCaseSimple<>( expression, size, creationContext.getNodeBuilder() );
 
 		for ( int i = 0; i < size; i++ ) {
 			final HqlParser.SimpleCaseWhenContext simpleCaseWhenContext = ctx.simpleCaseWhen( i );
-			caseExpression.when(
-					(SqmExpression<?>) simpleCaseWhenContext.expression().accept( this ),
-					(SqmExpression<?>) simpleCaseWhenContext.expressionOrPredicate().accept( this )
-			);
+			final HqlParser.ExpressionContext testExpression = simpleCaseWhenContext.expression();
+			final SqmExpression<?> test;
+			final Map<Class<?>, Enum<?>> possibleEnumValues;
+			if ( ( possibleEnumValues = getPossibleEnumValues( testExpression ) ) != null ) {
+				test = resolveEnumShorthandLiteral( testExpression, possibleEnumValues, expression.getJavaType() );
+			}
+			else {
+				test = (SqmExpression<?>) testExpression.accept( this );
+			}
+			final SqmExpression<?> result =
+					(SqmExpression<?>) simpleCaseWhenContext.expressionOrPredicate().accept(this);
+			caseExpression.when( test, result );
 		}
 
 		final HqlParser.CaseOtherwiseContext caseOtherwiseContext = ctx.caseOtherwise();

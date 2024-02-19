@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.toolchains;
 
+import org.gradle.StartParameter;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.artifacts.VersionCatalog;
@@ -17,6 +18,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.jetbrains.annotations.NotNull;
 
 import static org.hibernate.orm.toolchains.JdkVersionConfig.MAIN_JDK_VERSION;
+import static org.hibernate.orm.toolchains.JdkVersionConfig.TEST_JDK_LAUNCHER_ARGS;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.TEST_JDK_VERSION;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.createVersionConfig;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.extractVersion;
@@ -39,13 +41,17 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 //		maxSupportedJdkVersion = getJavaLanguageVersion( jdkVersions, "maxSupportedBytecode" );
 		baselineJdkVersion = JavaLanguageVersion.of( "11" );
 		maxSupportedJdkVersion = JavaLanguageVersion.of( "17" );
+		final StartParameter startParameters = settings.getGradle().getStartParameter();
+		final Object testLauncherArgsObject = startParameters.getProjectProperties().get( TEST_JDK_LAUNCHER_ARGS );
+		final String testLauncherArgs = testLauncherArgsObject == null ? null : testLauncherArgsObject.toString();
 
 		final JdkVersionConfig jdkVersionConfig = createVersionConfig(
 				explicitMainVersion,
 				explicitTestVersion,
 				gradleJdkVersion,
 				baselineJdkVersion,
-				maxSupportedJdkVersion
+				maxSupportedJdkVersion,
+				testLauncherArgs
 		);
 
 		settings.getGradle().getExtensions().add( JdkVersionConfig.DSL_NAME, jdkVersionConfig );

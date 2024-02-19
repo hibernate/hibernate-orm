@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -60,9 +61,13 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		functionFactory.rownumRowid();
 		functionFactory.sysdate();
 		functionFactory.systimestamp();
-
-//		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
-
+		
+		functionFactory.bitand();
+		functionFactory.bitor();
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(bitor(?1,?2)-bitand(?1,?2))" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
 	}
 
 	@Override

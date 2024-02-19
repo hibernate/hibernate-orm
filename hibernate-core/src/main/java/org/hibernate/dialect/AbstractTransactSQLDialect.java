@@ -150,6 +150,8 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		functionFactory.datepartDatename();
 		functionFactory.lastDay_eomonth();
 
+		functionFactory.bitandorxornot_operator();
+
 		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
 		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
 		functionContributions.getFunctionRegistry().register( "str", new TransactSQLStrFunction( functionContributions.getTypeConfiguration() ) );

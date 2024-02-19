@@ -9,6 +9,7 @@ package org.hibernate.boot.model.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.Entity;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -36,7 +37,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
@@ -49,8 +49,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
 
-import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
-import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
@@ -229,6 +227,7 @@ public class ToOneBinder {
 				value,
 				joinColumns,
 				unique,
+				isTargetAnnotatedEntity( targetEntity, property, context ),
 				propertyHolder.getPersistentClass(),
 				fullPath,
 				context
@@ -252,6 +251,11 @@ public class ToOneBinder {
 				hasSpecjManyToOne,
 				propertyName
 		);
+	}
+
+	static boolean isTargetAnnotatedEntity(XClass targetEntity, XProperty property, MetadataBuildingContext context) {
+		final XClass target = isDefault( targetEntity, context ) ? property.getType() : targetEntity;
+		return target.isAnnotationPresent( Entity.class );
 	}
 
 	private static boolean handleSpecjSyntax(
@@ -490,6 +494,7 @@ public class ToOneBinder {
 				notFoundAction,
 				onDelete == null ? null : onDelete.action(),
 				getTargetEntity( inferredData, context ),
+				property,
 				propertyHolder,
 				inferredData,
 				nullIfEmpty( oneToOne.mappedBy() ),
@@ -510,6 +515,7 @@ public class ToOneBinder {
 			NotFoundAction notFoundAction,
 			OnDeleteAction cascadeOnDelete,
 			XClass targetEntity,
+			XProperty annotatedProperty,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			String mappedBy,
@@ -528,10 +534,10 @@ public class ToOneBinder {
 			final OneToOneSecondPass secondPass = new OneToOneSecondPass(
 					mappedBy,
 					propertyHolder.getEntityName(),
-					propertyName,
 					propertyHolder,
 					inferredData,
-					targetEntity,
+					getReferenceEntityName( inferredData, targetEntity, context ),
+					isTargetAnnotatedEntity( targetEntity, annotatedProperty, context ),
 					notFoundAction,
 					cascadeOnDelete,
 					optional,

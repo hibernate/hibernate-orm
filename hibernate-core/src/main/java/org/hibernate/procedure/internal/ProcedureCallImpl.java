@@ -943,7 +943,7 @@ public class ProcedureCallImpl<R>
 		try {
 			final Output rtn = outputs().getCurrent();
 			if ( !(rtn instanceof ResultSetOutput) ) {
-				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
+				throw new IllegalStateException( "Current CallableStatement was not a ResultSet, but getResultList was called" );
 			}
 
 			//noinspection unchecked
@@ -965,13 +965,18 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public long getResultCount() {
+		throw new UnsupportedOperationException( "getResultCount() not implemented for ProcedureCall/StoredProcedureQuery" );
+	}
+
+	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
+		throw new UnsupportedOperationException( "scroll() is not implemented for ProcedureCall/StoredProcedureQuery" );
 	}
 
 	@Override
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
+		throw new UnsupportedOperationException( "scroll() is not implemented for ProcedureCall/StoredProcedureQuery" );
 	}
 
 	@Override

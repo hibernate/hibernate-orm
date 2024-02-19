@@ -111,6 +111,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
+import org.hibernate.sql.results.spi.SingleResultConsumer;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -131,6 +132,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
 import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatement;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
+import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -490,6 +492,20 @@ public class QuerySqmImpl<R>
 		}
 	}
 
+	@Override
+	public long getResultCount() {
+		verifySelect();
+		final DelegatingDomainQueryExecutionContext context = new DelegatingDomainQueryExecutionContext(this) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return QueryOptions.NONE;
+			}
+		};
+		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
+		return buildConcreteSelectQueryPlan( sqmStatement.createCountQuery(), Long.class, null, getQueryOptions() )
+				.executeQuery( context, new SingleResultConsumer<>() );
+	}
+
 	protected List<R> doList() {
 		verifySelect();
 
@@ -613,39 +629,40 @@ public class QuerySqmImpl<R>
 	}
 
 	private SelectQueryPlan<R> buildSelectQueryPlan() {
-		final SqmSelectStatement<R>[] concreteSqmStatements = QuerySplitter.split(
-				(SqmSelectStatement<R>) getSqmStatement(),
-				getSession().getFactory()
-		);
+		final SqmSelectStatement<R>[] concreteSqmStatements =
+				QuerySplitter.split( (SqmSelectStatement<R>) getSqmStatement() );
 
 		if ( concreteSqmStatements.length > 1 ) {
 			return buildAggregatedSelectQueryPlan( concreteSqmStatements );
 		}
 		else {
-			return buildConcreteSelectQueryPlan( concreteSqmStatements[0], getResultType(), getQueryOptions() );
+			return buildConcreteSelectQueryPlan( concreteSqmStatements[0] );
 		}
 	}
 
-	private SelectQueryPlan<R> buildAggregatedSelectQueryPlan(SqmSelectStatement<?>[] concreteSqmStatements) {
-		//noinspection unchecked
+	private SelectQueryPlan<R> buildAggregatedSelectQueryPlan(SqmSelectStatement<R>[] concreteSqmStatements) {
+		@SuppressWarnings("unchecked")
 		final SelectQueryPlan<R>[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
-
 		// todo (6.0) : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
-
 		for ( int i = 0, x = concreteSqmStatements.length; i < x; i++ ) {
-			aggregatedQueryPlans[i] = buildConcreteSelectQueryPlan(
-					concreteSqmStatements[i],
-					getResultType(),
-					getQueryOptions()
-			);
+			aggregatedQueryPlans[i] = buildConcreteSelectQueryPlan( concreteSqmStatements[i] );
 		}
-
 		return new AggregatedSelectQueryPlanImpl<>( aggregatedQueryPlans );
 	}
 
+	private SelectQueryPlan<R> buildConcreteSelectQueryPlan(SqmSelectStatement<R> concreteSqmStatement) {
+		return buildConcreteSelectQueryPlan(
+				concreteSqmStatement,
+				getResultType(),
+				tupleMetadata,
+				getQueryOptions()
+		);
+	}
+
 	private <T> SelectQueryPlan<T> buildConcreteSelectQueryPlan(
-			SqmSelectStatement<?> concreteSqmStatement,
+			SqmSelectStatement<T> concreteSqmStatement,
 			Class<T> resultType,
+			TupleMetadata tupleMetadata,
 			QueryOptions queryOptions) {
 		return new ConcreteSqmSelectQueryPlan<>(
 				concreteSqmStatement,
@@ -742,11 +759,8 @@ public class QuerySqmImpl<R>
 	}
 
 	private NonSelectQueryPlan buildDeleteQueryPlan() {
-		final SqmDeleteStatement<R>[] concreteSqmStatements = QuerySplitter.split(
-				(SqmDeleteStatement<R>) getSqmStatement(),
-				getSessionFactory()
-		);
-
+		final SqmDeleteStatement<R>[] concreteSqmStatements =
+				QuerySplitter.split( (SqmDeleteStatement<R>) getSqmStatement() );
 		return concreteSqmStatements.length > 1
 				? buildAggregatedDeleteQueryPlan( concreteSqmStatements )
 				: buildConcreteDeleteQueryPlan( concreteSqmStatements[0] );
@@ -948,7 +962,7 @@ public class QuerySqmImpl<R>
 	@Override
 	public Query<R> setOrder(List<Order<? super R>> orderList) {
 		if ( sqm instanceof SqmSelectStatement ) {
-			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
+			sqm = sqm.copy( noParamCopyContext() );
 			final SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
 			select.orderBy( orderList.stream().map( order -> sortSpecification( select, order ) )
 					.collect( toList() ) );
@@ -965,7 +979,7 @@ public class QuerySqmImpl<R>
 	@Override
 	public Query<R> setOrder(Order<? super R> order) {
 		if ( sqm instanceof SqmSelectStatement ) {
-			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
+			sqm = sqm.copy( noParamCopyContext() );
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
 			select.orderBy( sortSpecification( select, order ) );
 			// TODO: when the QueryInterpretationCache can handle caching criteria queries,

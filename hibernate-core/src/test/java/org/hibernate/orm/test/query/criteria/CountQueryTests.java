@@ -66,7 +66,7 @@ public class CountQueryTests {
 							"select e from Contact e join fetch e.alternativeContact",
 							Contact.class
 					) );
-					verifyCollectionCount( session, cb.createQuery(
+					verifyCount( session, cb.createQuery(
 							"select e from Contact e left join fetch e.addresses",
 							Contact.class
 					) );
@@ -230,19 +230,6 @@ public class CountQueryTests {
 		final List<?> resultList = session.createQuery( query ).getResultList();
 		final Long count = session.createQuery( query.createCountQuery() ).getSingleResult();
 		assertEquals( resultList.size(), count.intValue() );
-	}
-
-	private <T> void verifyCollectionCount(SessionImplementor session, JpaCriteriaQuery<Contact> query) {
-		final List<Contact> resultList = session.createQuery( query ).getResultList();
-		final Long count = session.createQuery( query.createCountQuery() ).getSingleResult();
-		int ormSize = 0;
-		for ( Contact contact : resultList ) {
-			ormSize++;
-			ormSize += Math.max( contact.getAddresses().size() - 1, 0 );
-			ormSize += Math.max( contact.getPhoneNumbers().size() - 1, 0 );
-		}
-
-		assertEquals( ormSize, count.intValue() );
 	}
 
 	@AfterEach

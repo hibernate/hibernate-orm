@@ -767,7 +767,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		delayedAfterCompletion();
 
 		try {
-			final HqlInterpretation interpretation = interpretHql( hql, resultType );
+			final HqlInterpretation<R> interpretation = interpretHql( hql, resultType );
 			checkSelectionQuery( hql, interpretation );
 			return createSelectionQuery( hql, resultType, interpretation );
 		}
@@ -777,7 +777,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	private <R> SelectionQuery<R> createSelectionQuery(String hql, Class<R> resultType, HqlInterpretation interpretation) {
+	private <R> SelectionQuery<R> createSelectionQuery(String hql, Class<R> resultType, HqlInterpretation<R> interpretation) {
 		final SqmSelectionQueryImpl<R> query = new SqmSelectionQueryImpl<>( hql, interpretation, resultType, this );
 		if ( resultType != null ) {
 			checkResultType( resultType, query );
@@ -787,7 +787,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	protected <R> HqlInterpretation interpretHql(String hql, Class<R> resultType) {
+	protected <R> HqlInterpretation<R> interpretHql(String hql, Class<R> resultType) {
 		final QueryEngine queryEngine = getFactory().getQueryEngine();
 		return queryEngine.getInterpretationCache()
 				.resolveHqlInterpretation(
@@ -797,7 +797,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				);
 	}
 
-	protected static void checkSelectionQuery(String hql, HqlInterpretation hqlInterpretation) {
+	protected static void checkSelectionQuery(String hql, HqlInterpretation<?> hqlInterpretation) {
 		if ( !( hqlInterpretation.getSqmStatement() instanceof SqmSelectStatement ) ) {
 			throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hql + "`", hql);
 		}
@@ -840,7 +840,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		delayedAfterCompletion();
 
 		try {
-			final HqlInterpretation interpretation = interpretHql( queryString, expectedResultType );
+			final HqlInterpretation<T> interpretation = interpretHql( queryString, expectedResultType );
 			final QuerySqmImpl<T> query = new QuerySqmImpl<>( queryString, interpretation, expectedResultType, this );
 			applyQuerySettingsAndHints( query );
 			query.setComment( queryString );

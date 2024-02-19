@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 
+import jakarta.persistence.Entity;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -97,7 +98,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -2556,8 +2556,8 @@ public abstract class CollectionBinder {
 			boolean isCollectionOfEntities) {
 
 		if ( !isCollectionOfEntities) {
-			throw new AnnotationException( "Association '" + safeCollectionRole()
-							+ "' targets the type '" + elementType.getName() + "' which is not an '@Entity' type" );
+			throw new AnnotationException( "Association '" + safeCollectionRole() + "'"
+					+ targetEntityMessage( elementType ) );
 		}
 
 		joinColumns.setManyToManyOwnerSideEntityName( collectionEntity.getEntityName() );
@@ -2594,8 +2594,8 @@ public abstract class CollectionBinder {
 
 		if ( !isCollectionOfEntities) {
 			if ( property.isAnnotationPresent( ManyToMany.class ) || property.isAnnotationPresent( OneToMany.class ) ) {
-				throw new AnnotationException( "Association '" + safeCollectionRole()
-						+ "' targets the type '" + elementType.getName() + "' which is not an '@Entity' type" );
+				throw new AnnotationException( "Association '" + safeCollectionRole() + "'"
+						+ targetEntityMessage( elementType ) );
 			}
 			else if (isManyToAny) {
 				if ( propertyHolder.getJoinTable( property ) == null ) {
@@ -2607,11 +2607,18 @@ public abstract class CollectionBinder {
 				final JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
 				if ( joinTableAnn != null && joinTableAnn.inverseJoinColumns().length > 0 ) {
 					throw new AnnotationException( "Association '" + safeCollectionRole()
-							+ " has a '@JoinTable' with 'inverseJoinColumns' and targets the type '"
-							+ elementType.getName() + "' which is not an '@Entity' type" );
+							+ " has a '@JoinTable' with 'inverseJoinColumns' and"
+							+ targetEntityMessage( elementType ) );
 				}
 			}
 		}
+	}
+
+	static String targetEntityMessage(XClass elementType) {
+		final String problem = elementType.isAnnotationPresent( Entity.class )
+				? " which does not belong to the same persistence unit"
+				: " which is not an '@Entity' type";
+		return " targets the type '" + elementType.getName() + "'" + problem;
 	}
 
 	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(

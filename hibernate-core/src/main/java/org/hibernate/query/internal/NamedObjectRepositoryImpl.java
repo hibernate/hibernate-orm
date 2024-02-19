@@ -249,7 +249,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 				interpretationCache.resolveHqlInterpretation(
 						queryString,
 						null,
-						s -> queryEngine.getHqlTranslator().translate( queryString, null )
+						queryEngine.getHqlTranslator()
 				);
 			}
 			catch ( QueryException e ) {

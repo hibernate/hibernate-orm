@@ -167,13 +167,10 @@ public class QuerySqmImpl<R>
 
 		final QueryEngine queryEngine = session.getFactory().getQueryEngine();
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
-		final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
-				hql,
-				expectedResultType,
-				(s) -> queryEngine.getHqlTranslator().translate( hql, expectedResultType )
-		);
+		final HqlInterpretation<R> hqlInterpretation =
+				interpretationCache.resolveHqlInterpretation( hql, expectedResultType, queryEngine.getHqlTranslator() );
 
-		this.sqm = (SqmStatement<R>) hqlInterpretation.getSqmStatement();
+		this.sqm = hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
@@ -200,17 +197,16 @@ public class QuerySqmImpl<R>
 	/**
 	 * Form used for HQL queries
 	 */
-	@SuppressWarnings("unchecked")
 	public QuerySqmImpl(
 			String hql,
-			HqlInterpretation hqlInterpretation,
+			HqlInterpretation<R> hqlInterpretation,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = hql;
 		this.resultType = resultType;
 
-		this.sqm = (SqmStatement<R>) hqlInterpretation.getSqmStatement();
+		this.sqm = hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
@@ -897,7 +893,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer transformer) {
+	public SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer) {
 		applyResultListTransformer( transformer );
 		return this;
 	}
@@ -1248,7 +1244,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> setProperties(Map bean) {
+	public SqmQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean) {
 		super.setProperties( bean );
 		return this;
 	}
@@ -1362,7 +1358,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> setParameterList(String name, Collection values) {
+	public SqmQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( name, values );
 		return this;
 	}

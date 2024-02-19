@@ -101,13 +101,12 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 
 	public SqmSelectionQueryImpl(
 			String hql,
-			HqlInterpretation hqlInterpretation,
+			HqlInterpretation<R> hqlInterpretation,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = hql;
 
-		//noinspection unchecked
 		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
@@ -166,14 +165,10 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 
 		final QueryEngine queryEngine = session.getFactory().getQueryEngine();
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
-		final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
-				hql,
-				resultType,
-				(s) -> queryEngine.getHqlTranslator().translate( hql, resultType )
-		);
+		final HqlInterpretation<R> hqlInterpretation =
+				interpretationCache.resolveHqlInterpretation( hql, resultType, queryEngine.getHqlTranslator() );
 
 		SqmUtil.verifyIsSelectStatement( hqlInterpretation.getSqmStatement(), hql );
-		//noinspection unchecked
 		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();

@@ -40,7 +40,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	 */
 	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;
 
-	private final BoundedConcurrentHashMap<Object, HqlInterpretation> hqlInterpretationCache;
+	private final BoundedConcurrentHashMap<Object, HqlInterpretation<?>> hqlInterpretationCache;
 	private final BoundedConcurrentHashMap<String, ParameterInterpretation> nativeQueryParamCache;
 	private final Supplier<StatisticsImplementor> statisticsSupplier;
 
@@ -100,69 +100,49 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	}
 
 	@Override
-	public HqlInterpretation resolveHqlInterpretation(
+	public <R> HqlInterpretation<R> resolveHqlInterpretation(
 			String queryString,
-			Class<?> expectedResultType,
-			Function<String, SqmStatement<?>> creator) {
-		return resolveHqlInterpretation( queryString, expectedResultType, new HqlTranslator() {
-			@Override
-			public <R> SqmStatement<R> translate(String hql, Class<R> expectedResultType) {
-				//noinspection unchecked
-				return (SqmStatement<R>) creator.apply( hql );
-			}
-		} );
-	}
-
-	@Override
-	public HqlInterpretation resolveHqlInterpretation(
-			String queryString,
-			Class<?> expectedResultType,
+			Class<R> expectedResultType,
 			HqlTranslator translator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
 		final StatisticsImplementor statistics = statisticsSupplier.get();
 
-		final Object cacheKey;
-		if ( expectedResultType != null ) {
-			cacheKey = new HqlInterpretationCacheKey( queryString, expectedResultType );
-		}
-		else {
-			cacheKey = queryString;
-		}
-		final HqlInterpretation existing = hqlInterpretationCache.get( cacheKey );
+		final Object cacheKey = expectedResultType != null
+				? new HqlInterpretationCacheKey( queryString, expectedResultType )
+				: queryString;
+
+		final HqlInterpretation<?> existing = hqlInterpretationCache.get( cacheKey );
 		if ( existing != null ) {
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.queryPlanCacheHit( queryString );
 			}
-			return existing;
+			return (HqlInterpretation<R>) existing;
 		}
 		else if ( expectedResultType != null ) {
-			final HqlInterpretation existingQueryOnly = hqlInterpretationCache.get( queryString );
+			final HqlInterpretation<?> existingQueryOnly = hqlInterpretationCache.get( queryString );
 			if ( existingQueryOnly != null ) {
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.queryPlanCacheHit( queryString );
 				}
-				return existingQueryOnly;
+				return (HqlInterpretation<R>) existingQueryOnly;
 			}
 		}
-		final HqlInterpretation hqlInterpretation = createHqlInterpretation(
-				queryString,
-				expectedResultType,
-				translator,
-				statistics
-		);
+
+		final HqlInterpretation<R> hqlInterpretation =
+				createHqlInterpretation( queryString, expectedResultType, translator, statistics );
 		hqlInterpretationCache.put( cacheKey, hqlInterpretation );
 		return hqlInterpretation;
 	}
 
-	protected static HqlInterpretation createHqlInterpretation(
+	protected static <R> HqlInterpretation<R> createHqlInterpretation(
 			String queryString,
-			Class<?> expectedResultType,
+			Class<R> expectedResultType,
 			HqlTranslator translator,
 			StatisticsImplementor statistics) {
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = stats ? System.nanoTime() : 0L;
 
-		final SqmStatement<?> sqmStatement = translator.translate( queryString, expectedResultType );
+		final SqmStatement<R> sqmStatement = translator.translate( queryString, expectedResultType );
 		final ParameterMetadataImplementor parameterMetadata;
 		final DomainParameterXref domainParameterXref;
 
@@ -181,7 +161,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			statistics.queryCompiled( queryString, microseconds );
 		}
 
-		return new SimpleHqlInterpretationImpl( sqmStatement, parameterMetadata, domainParameterXref );
+		return new SimpleHqlInterpretationImpl<>( sqmStatement, parameterMetadata, domainParameterXref );
 	}
 
 	@Override

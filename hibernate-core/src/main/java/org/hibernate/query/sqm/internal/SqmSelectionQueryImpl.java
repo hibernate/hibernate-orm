@@ -66,6 +66,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ResultsConsumer;
+import org.hibernate.sql.results.spi.SingleResultConsumer;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.stream.Collectors.toList;
@@ -131,7 +132,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 			else {
 				final SqmSelection<?> selection = selections.get(0);
 				if ( selection!=null ) {
-					JavaType<?> javaType = selection.getNodeJavaType();
+					final JavaType<?> javaType = selection.getNodeJavaType();
 					if ( javaType != null) {
 						return javaType.getJavaTypeClass();
 					}
@@ -317,6 +318,18 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 		resetCallback();
 	}
 
+	@Override
+	public long getResultCount() {
+		final DelegatingDomainQueryExecutionContext context = new DelegatingDomainQueryExecutionContext(this) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return QueryOptions.NONE;
+			}
+		};
+		return buildConcreteQueryPlan( getSqmStatement().createCountQuery(), Long.class, null, getQueryOptions() )
+				.executeQuery( context, new SingleResultConsumer<>() );
+	}
+
 	protected List<R> doList() {
 		final SqmSelectStatement<?> sqmStatement = getSqmStatement();
 		final boolean containsCollectionFetches = sqmStatement.containsCollectionFetches();
@@ -413,17 +426,13 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	}
 
 	private SelectQueryPlan<R> buildQueryPlan() {
-		final SqmSelectStatement<?>[] concreteSqmStatements = QuerySplitter.split(
-				(SqmSelectStatement<?>) getSqmStatement(),
-				getSession().getFactory()
-		);
-
+		final SqmSelectStatement<R>[] concreteSqmStatements = QuerySplitter.split( getSqmStatement() );
 		return concreteSqmStatements.length > 1
 				? buildAggregatedQueryPlan( concreteSqmStatements )
 				: buildConcreteQueryPlan( concreteSqmStatements[0], getQueryOptions() );
 	}
 
-	private SelectQueryPlan<R> buildAggregatedQueryPlan(SqmSelectStatement<?>[] concreteSqmStatements) {
+	private SelectQueryPlan<R> buildAggregatedQueryPlan(SqmSelectStatement<R>[] concreteSqmStatements) {
 		//noinspection unchecked
 		final SelectQueryPlan<R>[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
 		// todo (6.0) : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
@@ -434,7 +443,15 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	}
 
 	private SelectQueryPlan<R> buildConcreteQueryPlan(
-			SqmSelectStatement<?> concreteSqmStatement,
+			SqmSelectStatement<R> concreteSqmStatement,
+			QueryOptions queryOptions) {
+		return buildConcreteQueryPlan( concreteSqmStatement, expectedResultType, tupleMetadata, queryOptions);
+	}
+
+	private <T> ConcreteSqmSelectQueryPlan<T> buildConcreteQueryPlan(
+			SqmSelectStatement<T> concreteSqmStatement,
+			Class<T> expectedResultType,
+			TupleMetadata tupleMetadata,
 			QueryOptions queryOptions) {
 		return new ConcreteSqmSelectQueryPlan<>(
 				concreteSqmStatement,
@@ -445,7 +462,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 				queryOptions
 		);
 	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -4,16 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.math;
+package org.hibernate.orm.test.hql.bitwise;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * @author Brett Meyer
  */
-public class MathEntity {
-	
+@Entity
+public class IntEntity {
+
+	@Id @GeneratedValue
 	private Long id;
 
-	private int value;
+	private int intValue;
 
 	public Long getId() {
 		return id;
@@ -23,12 +29,12 @@ public class MathEntity {
 		this.id = id;
 	}
 
-	public int getValue() {
-		return value;
+	public int getIntValue() {
+		return intValue;
 	}
 
-	public void setValue(int value) {
-		this.value = value;
+	public void setIntValue(int value) {
+		this.intValue = value;
 	}
 
 }

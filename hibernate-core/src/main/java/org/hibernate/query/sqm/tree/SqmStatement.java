@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.tree;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import org.hibernate.query.criteria.JpaQueryableCriteria;
 import org.hibernate.query.sqm.SqmQuerySource;

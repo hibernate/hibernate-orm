@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.hibernate.Internal;
 import org.hibernate.Remove;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaFetch;
@@ -37,6 +38,9 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 
 	boolean isFetched();
 
+	@Internal
+	void clearFetched();
+
 	@Override
 	SqmPredicate getJoinPredicate();
 
@@ -64,5 +68,4 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	@Deprecated
 	@Remove
 	SqmAttributeJoin makeCopy( SqmCreationProcessingState creationProcessingState );
-
 }

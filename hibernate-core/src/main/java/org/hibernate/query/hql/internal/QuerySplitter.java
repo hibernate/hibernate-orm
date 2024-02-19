@@ -8,15 +8,12 @@ package org.hibernate.query.hql.internal;
 
 import java.util.Set;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.internal.SimpleSqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
@@ -31,20 +28,21 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
  */
 public class QuerySplitter {
 
-	public static <R> SqmSelectStatement<R>[] split(
-			SqmSelectStatement<R> statement,
-			SessionFactoryImplementor sessionFactory) {
+	public static <R> SqmSelectStatement<R>[] split(SqmSelectStatement<R> statement) {
 		// We only allow unmapped polymorphism in a very restricted way.  Specifically,
 		// the unmapped polymorphic reference can only be a root and can be the only
 		// root.  Use that restriction to locate the unmapped polymorphic reference
 		final SqmRoot<?> unmappedPolymorphicReference = findUnmappedPolymorphicReference( statement.getQueryPart() );
 
 		if ( unmappedPolymorphicReference == null ) {
-			return new SqmSelectStatement[] { statement };
+			@SuppressWarnings("unchecked")
+			SqmSelectStatement<R>[] sqmSelectStatement = new SqmSelectStatement[] { statement };
+			return sqmSelectStatement;
 		}
 
 		final SqmPolymorphicRootDescriptor<?> unmappedPolymorphicDescriptor = (SqmPolymorphicRootDescriptor<?>) unmappedPolymorphicReference.getReferencedPathSource();
 		final Set<EntityDomainType<?>> implementors = unmappedPolymorphicDescriptor.getImplementors();
+		@SuppressWarnings("unchecked")
 		final SqmSelectStatement<R>[] expanded = new SqmSelectStatement[ implementors.size() ];
 
 		int i = 0;
@@ -97,20 +95,21 @@ public class QuerySplitter {
 		return (S) statement.copy( context );
 	}
 
-	public static <R> SqmDeleteStatement<R>[] split(
-			SqmDeleteStatement<R> statement,
-			SessionFactoryImplementor sessionFactory) {
+	public static <R> SqmDeleteStatement<R>[] split(SqmDeleteStatement<R> statement) {
 		// We only allow unmapped polymorphism in a very restricted way.  Specifically,
 		// the unmapped polymorphic reference can only be a root and can be the only
 		// root.  Use that restriction to locate the unmapped polymorphic reference
 		final SqmRoot<?> unmappedPolymorphicReference = findUnmappedPolymorphicReference( statement );
 
 		if ( unmappedPolymorphicReference == null ) {
-			return new SqmDeleteStatement[] { statement };
+			@SuppressWarnings("unchecked")
+			SqmDeleteStatement<R>[] sqmDeleteStatement = new SqmDeleteStatement[] { statement };
+			return sqmDeleteStatement;
 		}
 
 		final SqmPolymorphicRootDescriptor<?> unmappedPolymorphicDescriptor = (SqmPolymorphicRootDescriptor<?>) unmappedPolymorphicReference.getReferencedPathSource();
 		final Set<EntityDomainType<?>> implementors = unmappedPolymorphicDescriptor.getImplementors();
+		@SuppressWarnings("unchecked")
 		final SqmDeleteStatement<R>[] expanded = new SqmDeleteStatement[ implementors.size() ];
 
 		int i = 0;
@@ -125,6 +124,8 @@ public class QuerySplitter {
 		if ( queryPart.getTarget().getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			return queryPart.getTarget();
 		}
-		return null;
+		else {
+			return null;
+		}
 	}
 }

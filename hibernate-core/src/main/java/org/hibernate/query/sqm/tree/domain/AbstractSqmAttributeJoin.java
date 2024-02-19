@@ -33,7 +33,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		extends AbstractSqmQualifiedJoin<O,T>
 		implements SqmAttributeJoin<O,T> {
 
-	private final boolean fetched;
+	private boolean fetched;
 
 	public AbstractSqmAttributeJoin(
 			SqmFrom<?,O> lhs,
@@ -84,8 +84,14 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		return getJavaTypeDescriptor();
 	}
 
+	@Override
 	public boolean isFetched() {
 		return fetched;
+	}
+
+	@Override
+	public void clearFetched() {
+		fetched = false;
 	}
 
 	@Override

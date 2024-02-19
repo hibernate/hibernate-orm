@@ -207,6 +207,19 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	Optional<R> uniqueResultOptional();
 
+	/**
+	 * Determine the size of the query result list that would be
+	 * returned by calling {@link #getResultList()} with no
+	 * {@linkplain #getFirstResult() offset} or
+	 * {@linkplain #getMaxResults() limit} applied to the query.
+	 *
+	 * @return the size of the list that would be returned
+	 *
+	 * @since 6.5
+	 */
+	@Incubating
+	long getResultCount();
+
 	SelectionQuery<R> setHint(String hintName, Object value);
 
 	/**

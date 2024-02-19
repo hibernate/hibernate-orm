@@ -441,8 +441,7 @@ public class EmbeddableBinder {
 		addElementsOfClass( classElements, container, context);
 		//add elements of the embeddable's mapped superclasses
 		XClass superClass = annotatedClass.getSuperclass();
-		while ( superClass != null && ( superClass.isAnnotationPresent( MappedSuperclass.class )
-				|| ( isIdClass && !Object.class.getName().equals( superClass.getName() ) ) ) ) {
+		while ( isValidSuperclass( superClass, isIdClass ) ) {
 			//FIXME: proper support of type variables incl var resolved at upper levels
 			final PropertyContainer superContainer =
 					new PropertyContainer( superClass, annotatedClass, propertyAccessor );
@@ -450,6 +449,17 @@ public class EmbeddableBinder {
 			superClass = superClass.getSuperclass();
 		}
 		return classElements;
+	}
+
+	private static boolean isValidSuperclass(XClass superClass, boolean isIdClass) {
+		if ( superClass == null ) {
+			return false;
+		}
+
+		return superClass.isAnnotationPresent( MappedSuperclass.class )
+				|| ( isIdClass
+				&& !superClass.getName().equals( Object.class.getName() )
+				&& !superClass.getName().equals( "java.lang.Record" ) );
 	}
 
 	private static List<PropertyData> collectBaseClassElements(

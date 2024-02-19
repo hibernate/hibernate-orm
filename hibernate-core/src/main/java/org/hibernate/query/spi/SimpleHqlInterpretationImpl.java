@@ -12,13 +12,13 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 /**
  * @author Steve Ebersole
  */
-public class SimpleHqlInterpretationImpl implements HqlInterpretation {
-	private final SqmStatement<?> sqmStatement;
+public class SimpleHqlInterpretationImpl<R> implements HqlInterpretation<R> {
+	private final SqmStatement<R> sqmStatement;
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
 
 	public SimpleHqlInterpretationImpl(
-			SqmStatement<?> sqmStatement,
+			SqmStatement<R> sqmStatement,
 			ParameterMetadataImplementor parameterMetadata,
 			DomainParameterXref domainParameterXref) {
 		this.sqmStatement = sqmStatement;
@@ -27,7 +27,7 @@ public class SimpleHqlInterpretationImpl implements HqlInterpretation {
 	}
 
 	@Override
-	public SqmStatement<?> getSqmStatement() {
+	public SqmStatement<R> getSqmStatement() {
 		return sqmStatement;
 	}
 

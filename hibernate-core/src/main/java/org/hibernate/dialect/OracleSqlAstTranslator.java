@@ -223,7 +223,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 	@Override
 	protected void visitValuesList(List<Values> valuesList) {
-		if ( valuesList.size() < 2 ) {
+		if ( getDialect().getVersion().isSameOrAfter( 23 ) || valuesList.size() < 2 ) {
 			visitValuesListStandard( valuesList );
 		}
 		else {

@@ -30,7 +30,7 @@ import java.sql.Timestamp;
 import java.util.EnumSet;
 
 import static java.sql.Types.TIMESTAMP;
-import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
+import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 
 /**
  * Value generation strategy using the query {@link Dialect#getCurrentTimestampSelectString()}.
@@ -74,7 +74,7 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 	 */
 	@Override
 	public EnumSet<EventType> getEventTypes() {
-		return INSERT_ONLY;
+		return INSERT_AND_UPDATE;
 	}
 
 	@Override

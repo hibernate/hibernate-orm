@@ -34,11 +34,13 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	private final boolean unique;
 	private final String path;
 	private final String entityClassName;
+	private final boolean annotatedEntity;
 
 	public ToOneFkSecondPass(
 			ToOne value,
 			AnnotatedJoinColumns columns,
 			boolean unique,
+			boolean annotatedEntity,
 			PersistentClass persistentClass,
 			String path,
 			MetadataBuildingContext buildingContext) {
@@ -48,6 +50,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		this.unique = unique;
 		this.entityClassName = persistentClass.getClassName();
 		this.path = entityClassName != null ? path.substring( entityClassName.length() + 1 ) : path;
+		this.annotatedEntity = annotatedEntity;
 	}
 
 	@Override
@@ -95,13 +98,17 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	@Override
 	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( value instanceof ManyToOne ) {
-			//TODO: move this validation logic to a separate ManyToOnSecondPass
+			//TODO: move this validation logic to a separate ManyToOneSecondPass
 			//      for consistency with how this is handled for OneToOnes
 			final ManyToOne manyToOne = (ManyToOne) value;
-			final PersistentClass targetEntity = persistentClasses.get( manyToOne.getReferencedEntityName() );
+			final String targetEntityName = manyToOne.getReferencedEntityName();
+			final PersistentClass targetEntity = persistentClasses.get( targetEntityName );
 			if ( targetEntity == null ) {
+				final String problem = annotatedEntity
+						? " which does not belong to the same persistence unit"
+						: " which is not an '@Entity' type";
 				throw new AnnotationException( "Association '" + qualify( entityClassName, path )
-						+ "' targets an unknown entity named '" + manyToOne.getReferencedEntityName() + "'" );
+						+ "' targets the type '" + targetEntityName + "'" + problem );
 			}
 			manyToOne.setPropertyName( path );
 			createSyntheticPropertyReference(

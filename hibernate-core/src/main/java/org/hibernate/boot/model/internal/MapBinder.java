@@ -246,8 +246,8 @@ public class MapBinder extends CollectionBinder {
 			String mapKeyPropertyName) {
 		final PersistentClass associatedClass = persistentClasses.get( elementType.getName() );
 		if ( associatedClass == null ) {
-			throw new AnnotationException( "Association '" + safeCollectionRole()
-					+ "' targets the type '" + elementType.getName() + "' which is not an '@Entity' type" );
+			throw new AnnotationException( "Association '" + safeCollectionRole() + "'"
+					+ targetEntityMessage( elementType ) );
 		}
 		final Property mapProperty = findPropertyByName( associatedClass, mapKeyPropertyName );
 		if ( mapProperty == null ) {

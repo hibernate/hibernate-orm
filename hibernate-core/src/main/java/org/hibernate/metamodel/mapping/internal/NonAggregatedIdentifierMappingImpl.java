@@ -231,10 +231,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			if ( lazyInitializer != null ) {
 				return lazyInitializer.getIdentifier();
 			}
-			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
-					null,
-					sessionFactory
-			);
 			final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
@@ -268,8 +264,10 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					propertyValues[i] = o;
 				}
 			}
-			identifierValueMapper.setValues( id, propertyValues );
-			return id;
+			return identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
+					() -> propertyValues,
+					sessionFactory
+			);
 		}
 		else {
 			return entity;

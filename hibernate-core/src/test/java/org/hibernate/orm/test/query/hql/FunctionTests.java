@@ -2002,7 +2002,7 @@ public class FunctionTests {
 				session -> {
 					session.createQuery("select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e", Object[].class)
 							.list();
-					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e", Date.class)
+					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e", String.class)
 							.list();
 
 					assertThat(
@@ -2019,7 +2019,7 @@ public class FunctionTests {
 	public void testFormatTime(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e", Date.class)
+					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e", String.class)
 							.list();
 					assertThat(
 							session.createQuery("select format(theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics where id=123", String.class).getResultList().get(0),

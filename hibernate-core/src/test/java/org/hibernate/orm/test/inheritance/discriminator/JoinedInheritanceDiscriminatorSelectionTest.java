@@ -88,14 +88,14 @@ public class JoinedInheritanceDiscriminatorSelectionTest {
 		scope.inTransaction( session -> {
 			assertThat( session.createQuery(
 					"select p.class from ParentEntity p",
-					String.class
+					Class.class
 			).getResultList() ).hasSize( 4 );
 			inspector.assertNumberOfJoins( 0, 0 );
 			inspector.clear();
 
 			assertThat( session.createQuery(
 					"select type(p) from ParentEntity p",
-					String.class
+					Class.class
 			).getResultList() ).hasSize( 4 );
 			inspector.assertNumberOfJoins( 0, 0 );
 		} );

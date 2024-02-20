@@ -39,7 +39,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -89,6 +88,8 @@ import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.QueryHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
+import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
+import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
 
 /**
  * @author Steve Ebersole
@@ -108,24 +109,24 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	protected TupleMetadata buildTupleMetadata(SqmStatement<?> statement, Class<R> resultType) {
-		if ( isInstantiableWithoutMetadata( resultType ) ) {
-			// no need to build metadata for instantiating tuples
-			return null;
-		}
-		else {
+		if ( statement instanceof SqmSelectStatement<?> ) {
 			final SqmSelectStatement<?> select = (SqmSelectStatement<?>) statement;
 			final List<SqmSelection<?>> selections =
 					select.getQueryPart().getFirstQuerySpec().getSelectClause()
 							.getSelections();
-			if ( Tuple.class.equals( resultType ) || selections.size() > 1 ) {
-				return getTupleMetadata( selections );
-			}
-			else {
-				// only one element in select list,
-				// we don't support instantiation
-				return null;
-			}
+			return isTupleMetadataRequired( resultType, selections.get(0) )
+					? getTupleMetadata( selections )
+					: null;
 		}
+		else {
+			return null;
+		}
+	}
+
+	private static <R> boolean isTupleMetadataRequired(Class<R> resultType, SqmSelection<?> selection) {
+		return isHqlTuple( selection )
+			|| !isInstantiableWithoutMetadata( resultType )
+				&& !isSelectionAssignableToResultType( selection, resultType );
 	}
 
 	private TupleMetadata getTupleMetadata(List<SqmSelection<?>> selections) {
@@ -430,9 +431,6 @@ public abstract class AbstractSelectionQuery<R>
 		}
 		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
-		}
-		catch (TypeMismatchException e) {
-			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
 			throw getSession().getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );

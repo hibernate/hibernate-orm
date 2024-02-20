@@ -61,22 +61,22 @@ public class ConvertedAttributesTypecheckTest {
 	@Test
 	public void testUnaryExpressionOnConvertedNumber(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final String result = session.createQuery(
-					"select -convertedNumber from TestEntity",
-					String.class
+			session.createQuery(
+					"from TestEntity where -convertedNumber = -123",
+					TestEntity.class
 			).getSingleResult();
-			assertThat( result ).isEqualTo( "-123" );
 		} );
 	}
 
 	@Test
 	public void testFromDurationExpressionOnConvertedDuration(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final String result = session.createQuery(
-					"select convertedDuration by day from TestEntity",
-					String.class
-			).getSingleResult();
-			assertThat( Long.parseLong( result ) ).isEqualTo( Duration.ofDays( 3 ).toMillis() );
+			session.createQuery(
+					"from TestEntity where convertedDuration by day = ?1",
+							TestEntity.class
+			)
+			.setParameter( 1, Duration.ofDays( 3 ).toNanos() )
+			.getSingleResult();
 		} );
 	}
 

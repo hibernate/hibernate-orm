@@ -15,7 +15,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -44,15 +43,13 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	// Dummy value to associate with an Object in the backing Map when we use it as a set:
 	private static final Object PRESENT = new Object();
 
-	//Used instead of Collections.EMPTY_SET to avoid polymorphic calls on xref;
-	//Also, uses an HashMap as it were an HashSet, as technically we just need the Set semantics
-	//but in this case the overhead of HashSet is not negligible.
-	private static final HashMap<ResultSet,Object> EMPTY = new HashMap<>( 1, 0.2f );
+	private static final LikelySingletonMap<ResultSet,Object> EMPTY = new LikelySingletonMap<>();
 
 	private final JdbcObserver jdbcObserver;
 
-	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
-	private HashMap<ResultSet,Object> unassociatedResultSets;
+	// Custom datastructure to optimise for this particular use case:
+	private final LikelySingletonMap<Statement, LikelySingletonMap<ResultSet,Object>> xref = new LikelySingletonMap<>();
+	private LikelySingletonMap<ResultSet,Object> unassociatedResultSets;
 
 	private ArrayList<Blob> blobs;
 	private ArrayList<Clob> clobs;
@@ -81,10 +78,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void register(Statement statement, boolean cancelable) {
 		log.tracef( "Registering statement [%s]", statement );
 
-		HashMap<ResultSet,Object> previousValue = xref.putIfAbsent( statement, EMPTY );
-		if ( previousValue != null ) {
-			throw new HibernateException( "JDBC Statement already registered" );
-		}
+		xref.putFailOnExisting( statement, EMPTY, "JDBC Statement already registered" );
 
 		if ( cancelable ) {
 			lastQuery = statement;
@@ -95,7 +89,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void release(Statement statement) {
 		log.tracev( "Releasing statement [{0}]", statement );
 
-		final HashMap<ResultSet,Object> resultSets = xref.remove( statement );
+		final LikelySingletonMap<ResultSet, Object> resultSets = xref.remove( statement );
 		if ( resultSets != null ) {
 			closeAll( resultSets );
 		}
@@ -125,7 +119,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			final HashMap<ResultSet,Object> resultSets = xref.get( statement );
+			final LikelySingletonMap<ResultSet, Object> resultSets = xref.get( statement );
 			if ( resultSets == null ) {
 				log.unregisteredStatement();
 			}
@@ -152,7 +146,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		close( resultSet );
 	}
 
-	private static void closeAll(final HashMap<ResultSet,Object> resultSets) {
+	private static void closeAll(final LikelySingletonMap<ResultSet,Object> resultSets) {
 		if ( resultSets == null ) {
 			return;
 		}
@@ -160,7 +154,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		resultSets.clear();
 	}
 
-	private static void releaseXref(final Statement s, final HashMap<ResultSet, Object> r) {
+	private static void releaseXref(final Statement s, final LikelySingletonMap<ResultSet, Object> r) {
 		closeAll( r );
 		close( s );
 	}
@@ -229,7 +223,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			HashMap<ResultSet,Object> resultSets = xref.get( statement );
+			LikelySingletonMap<ResultSet, Object> resultSets = xref.get( statement );
 
 			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
 			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
@@ -238,14 +232,14 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 
 			if ( resultSets == null || resultSets == EMPTY ) {
-				resultSets = new HashMap<>();
+				resultSets = new LikelySingletonMap<>();
 				xref.put( statement, resultSets );
 			}
 			resultSets.put( resultSet, PRESENT );
 		}
 		else {
 			if ( unassociatedResultSets == null ) {
-				this.unassociatedResultSets = new HashMap<ResultSet,Object>();
+				this.unassociatedResultSets = new LikelySingletonMap<>();
 			}
 			unassociatedResultSets.put( resultSet, PRESENT );
 		}
@@ -382,4 +376,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	private boolean hasRegistered(final ArrayList resource) {
 		return resource != null && !resource.isEmpty();
 	}
+
+	private boolean hasRegistered(final LikelySingletonMap resource) {
+		return resource != null && ! resource.isEmpty();
+	}
+
 }

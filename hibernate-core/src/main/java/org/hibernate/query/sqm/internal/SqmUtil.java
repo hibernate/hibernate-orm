@@ -52,12 +52,14 @@ import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationException;
@@ -69,6 +71,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -599,6 +602,26 @@ public class SqmUtil {
 				throw new IllegalQueryOperationException("Query has multiple items in the select list");
 			}
 		}
+	}
+
+	public static boolean isSelectionAssignableToResultType(SqmSelection<?> selection, Class<?> expectedResultType) {
+		if ( expectedResultType == null
+				|| selection != null && selection.getSelectableNode() instanceof SqmParameter ) {
+			return true;
+		}
+		else if ( selection == null
+				|| !isHqlTuple( selection ) && selection.getSelectableNode().isCompoundSelection() ) {
+			return false;
+		}
+		else {
+			final JavaType<?> nodeJavaType = selection.getNodeJavaType();
+			return nodeJavaType != null
+				&& expectedResultType.isAssignableFrom( nodeJavaType.getJavaTypeClass() );
+		}
+	}
+
+	public static boolean isHqlTuple(SqmSelection<?> selection) {
+		return selection != null && selection.getSelectableNode() instanceof SqmTuple;
 	}
 
 	private static class CriteriaParameterCollector {

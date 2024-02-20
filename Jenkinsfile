@@ -122,7 +122,7 @@ stage('Build') {
 					}
 					if ( buildEnv.testJdkLauncherArgs ) {
 						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-								" -Ptest.jdk.launcher.args=${buildEnv.testJdkLauncherArgs}"
+								" -Ptest.jdk.launcher.args='${buildEnv.testJdkLauncherArgs}'"
 					}
 					state[buildEnv.tag]['containerName'] = null;
 					stage('Checkout') {

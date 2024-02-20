@@ -887,14 +887,16 @@ public class BinderHelper {
 					.toXClass( propertyHolder.getPersistentClass().getMappedClass() );
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		if ( propertyHolder.isInIdClass() ) {
-			final PropertyData propertyData = metadataCollector.getPropertyAnnotatedWithIdAndToOne( mappedClass, propertyName );
-			return propertyData == null && buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled()
-					? metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, propertyName )
-					: propertyData;
+			final PropertyData data = metadataCollector.getPropertyAnnotatedWithIdAndToOne( mappedClass, propertyName );
+			if ( data != null ) {
+				return data;
+			}
+			// TODO: is this branch even necessary?
+			else if ( buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
+				return metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, propertyName );
+			}
 		}
-		else {
-			return metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, isId ? "" : propertyName );
-		}
+		return metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, isId ? "" : propertyName );
 	}
 
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){

@@ -92,4 +92,13 @@ public interface JdbcEnvironment extends Service {
 	 * @return The LobCreator builder.
 	 */
 	LobCreatorBuilder getLobCreatorBuilder();
+
+	/**
+	 * Retrieve the transaction isolation level ANSI/ISO standard SQL 92
+	 *
+	 * @return the transaction isolation level
+	 */
+	int getTransactionIsolation();
+
+
 }

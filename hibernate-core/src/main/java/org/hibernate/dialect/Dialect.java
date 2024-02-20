@@ -983,6 +983,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <li> <code>greatest(arg0, arg1, ...)</code>
 	 * <li> <code>degrees(arg)</code>
 	 * <li> <code>radians(arg)</code>
+	 * <li> <code>bitand(arg1, arg1)</code>
+	 * <li> <code>bitor(arg1, arg1)</code>
+	 * <li> <code>bitxor(arg1, arg1)</code>
 	 * </ul>
 	 *
 	 * <ul>
@@ -1050,7 +1053,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		functionFactory.math();
 		functionFactory.round();
-
 
 		//trig functions supported on almost every database
 

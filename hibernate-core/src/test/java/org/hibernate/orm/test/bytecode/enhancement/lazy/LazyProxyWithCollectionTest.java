@@ -9,18 +9,9 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
-import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.LoadEvent;
-import org.hibernate.event.spi.LoadEventListener;
-
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.Jira;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,12 +26,13 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Christian Beikov
  */
-@TestForIssue( jiraKey = "HHH-14619" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-14619" )
 @RunWith( BytecodeEnhancerRunner.class )
 public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
 
@@ -82,6 +74,28 @@ public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
             child.children = new HashSet<>();
             // Class cast exception occurs during auto-flush
             em.find( Parent.class, parent.getId() );
+        } );
+    }
+
+    @Test
+    @Jira( "https://hibernate.atlassian.net/browse/HHH-17750" )
+    public void testMerge() {
+        final Child child = doInJPA( this::sessionFactory, em -> {
+            return em.find( Child.class, childId );
+        } );
+
+        final Parent parent = doInJPA( this::sessionFactory, em -> {
+            Parent p = new Parent();
+            p.setChild( child );
+            return em.merge( p );
+        } );
+
+        doInJPA( this::sessionFactory, em -> {
+            em.merge( parent );
+        } );
+
+        doInJPA( this::sessionFactory, em -> {
+            assertThat( em.find( Parent.class, parent.getId() ).getChild().getId() ).isEqualTo( child.getId() );
         } );
     }
 

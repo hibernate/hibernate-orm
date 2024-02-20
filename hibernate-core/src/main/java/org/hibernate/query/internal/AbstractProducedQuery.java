@@ -1663,10 +1663,16 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	public R getSingleResult() {
 		try {
 			final List<R> list = list();
-			if ( list.size() == 0 ) {
-				throw new NoResultException( "No entity found for query" );
+			switch ( list.size() ) {
+				case 0:
+					throw new NoResultException( "No entity found for query" );
+
+				case 1:
+					return list.get( 0 );
+
+				default:
+					throw new NonUniqueResultException( list.size() );
 			}
-			return uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e, getLockOptions() );

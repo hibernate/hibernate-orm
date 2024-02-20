@@ -7,14 +7,24 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.compare.CalendarComparator;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -98,6 +108,12 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) value;
 		}
+		if ( Temporal.class.isAssignableFrom( type ) ) {
+			Temporal temporal = DateTimeUtils.calendarToTemporal( value, type.asSubclass( Temporal.class ) );
+			if ( temporal != null ) {
+				return (X) temporal;
+			}
+		}
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
 			return (X) new java.sql.Date( value.getTimeInMillis() );
 		}
@@ -117,8 +133,15 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Calendar) {
+		if ( value instanceof Calendar ) {
 			return (Calendar) value;
+		}
+		if ( value instanceof Temporal ) {
+			Temporal temporal = (Temporal) value;
+			Calendar cal = DateTimeUtils.temporalToCalendar(temporal);
+			if ( cal != null ) {
+				return cal;
+			}
 		}
 
 		if ( !(value instanceof Date)) {

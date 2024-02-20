@@ -26,7 +26,6 @@ import org.gradle.jvm.toolchain.JavaToolchainSpec;
 import org.jetbrains.annotations.NotNull;
 
 import static org.hibernate.orm.toolchains.JdkVersionConfig.MAIN_JDK_VERSION;
-import static org.hibernate.orm.toolchains.JdkVersionConfig.TEST_JDK_LAUNCHER_ARGS;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.TEST_JDK_VERSION;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.createVersionConfig;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.extractVersion;
@@ -52,16 +51,13 @@ public class JdkVersionPlugin implements Plugin<Project> {
 		final VersionCatalog jdkVersions = versionCatalogs.named( "jdks" );
 		final JavaLanguageVersion baselineJdkVersion = getJavaLanguageVersion( jdkVersions, "baseline" );
 		final JavaLanguageVersion maxSupportedJdkVersion = getJavaLanguageVersion( jdkVersions, "maxSupportedBytecode" );
-		final Object testLauncherArgsObject = project.getProperties().get( TEST_JDK_LAUNCHER_ARGS );
-		final String testLauncherArgs = testLauncherArgsObject == null ? null : testLauncherArgsObject.toString();
 
 		final JdkVersionConfig jdkVersionConfig = createVersionConfig(
 				explicitMainVersion,
 				explicitTestVersion,
 				gradleJdkVersion,
 				baselineJdkVersion,
-				maxSupportedJdkVersion,
-				testLauncherArgs
+				maxSupportedJdkVersion
 		);
 
 		project.getExtensions().add( JdkVersionConfig.DSL_NAME, jdkVersionConfig );

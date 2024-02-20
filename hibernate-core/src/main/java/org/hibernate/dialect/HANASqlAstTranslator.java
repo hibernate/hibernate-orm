@@ -18,6 +18,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
@@ -46,6 +47,20 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	public HANASqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			appendSql( "cast(" );
+			arithmeticExpression.getLeftHandOperand().accept( this );
+			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+			arithmeticExpression.getRightHandOperand().accept( this );
+			appendSql( " as int)" );
+		}
+		else {
+			super.visitBinaryArithmeticExpression( arithmeticExpression );
+		}
 	}
 
 	@SuppressWarnings("removal")

@@ -130,7 +130,7 @@ public final class ClassWriter {
 	}
 
 	private static void printClassDeclaration(Metamodel entity, PrintWriter pw, Context context) {
-		pw.print( entity.isImplementation() ? "public class " : "public abstract class " );
+		pw.print( entity.isConcrete() ? "public class " : "public abstract class " );
 		pw.print( entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
 
 		String superClassName = findMappedSuperClass( entity, context );

@@ -85,6 +85,23 @@ public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
         } );
     }
 
+    @Test
+    public void testMerge() {
+        Child child = doInJPA( this::sessionFactory, em -> {
+            return em.find( Child.class, childId );
+        } );
+
+        Parent parent = doInJPA( this::sessionFactory, em -> {
+            Parent p = new Parent();
+            p.setChild( child );
+            return em.merge( p );
+        } );
+
+        doInJPA( this::sessionFactory, em -> {
+            em.merge( parent );
+        } );
+    }
+
     // --- //
 
     @Entity

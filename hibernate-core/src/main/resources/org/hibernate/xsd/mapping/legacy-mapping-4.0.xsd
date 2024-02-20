@@ -1485,6 +1485,7 @@
         <xs:attribute name="id-type" use="required" type="xs:string"/>
         <xs:attribute name="meta-type" type="xs:string"/>
         <!--- default: Hibernate.CLASS -->
+        <xs:attribute name="lazy" default="false" type="xs:boolean"/>
     </xs:complexType>
 
 

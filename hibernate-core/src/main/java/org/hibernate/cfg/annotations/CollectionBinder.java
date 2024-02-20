@@ -729,7 +729,7 @@ public abstract class CollectionBinder {
 			fetchType = elementCollection.fetch();
 		}
 		else if ( manyToAny != null ) {
-			fetchType = FetchType.LAZY;
+			fetchType = manyToAny.fetch();
 		}
 		else {
 			throw new AssertionFailure(

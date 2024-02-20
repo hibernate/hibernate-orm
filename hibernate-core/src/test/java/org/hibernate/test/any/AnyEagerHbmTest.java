@@ -43,6 +43,27 @@ public class AnyEagerHbmTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Alex", result.getSomeProperty().asString() );
 	}
 
+	@Test
+	public void testManyToAnyFetchEager() {
+		doInHibernate( this::sessionFactory, s -> {
+			org.hibernate.test.annotations.any.PropertySet set = new org.hibernate.test.annotations.any.PropertySet( "string" );
+			Property property = new StringProperty( "name", "Alex" );
+			set.addGeneralProperty( property );
+			s.save( set );
+		} );
+
+		org.hibernate.test.annotations.any.PropertySet result = doInHibernate( this::sessionFactory, s -> {
+			return s.createQuery( "select s from PropertySet s where name = :name", org.hibernate.test.annotations.any.PropertySet.class )
+					.setParameter( "name", "string" )
+					.getSingleResult();
+		} );
+
+		assertNotNull( result );
+		assertNotNull( result.getGeneralProperties() );
+		assertEquals( 1, result.getGeneralProperties().size() );
+		assertEquals( "Alex", result.getGeneralProperties().get( 0 ).asString() );
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {

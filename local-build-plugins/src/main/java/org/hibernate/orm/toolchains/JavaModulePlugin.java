@@ -81,11 +81,6 @@ public class JavaModulePlugin implements Plugin<Project> {
 							javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestLauncherVersion() );
 						} )
 				);
-
-				final String launcherArgs = jdkVersionsConfig.getTest().getLauncherArgs();
-				if ( launcherArgs != null ) {
-					testTask.jvmArgs( (Object[]) launcherArgs.split( " " ) );
-				}
 			}
 		}
 	}

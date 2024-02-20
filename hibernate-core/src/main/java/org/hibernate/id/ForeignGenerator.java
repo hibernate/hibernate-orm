@@ -87,11 +87,10 @@ public class ForeignGenerator implements IdentifierGenerator, StandardGenerator 
 
 	@Override
 	public Object generate(SharedSessionContractImplementor sessionImplementor, Object object) {
-		final EntityPersister entityDescriptor = sessionImplementor.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
-		Object associatedObject = entityDescriptor.getPropertyValue( object, propertyName );
+		final EntityPersister entityDescriptor =
+				sessionImplementor.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
+		final Object associatedObject = entityDescriptor.getPropertyValue( object, propertyName );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(
 					"attempted to assign id from null one-to-one property [" + getRole() + "]"
@@ -111,7 +110,7 @@ public class ForeignGenerator implements IdentifierGenerator, StandardGenerator 
 		}
 
 		Object id;
-		String associatedEntityName = foreignValueSourceType.getAssociatedEntityName();
+		final String associatedEntityName = foreignValueSourceType.getAssociatedEntityName();
 		try {
 			id = getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedObject, sessionImplementor );
 		}
@@ -133,7 +132,8 @@ public class ForeignGenerator implements IdentifierGenerator, StandardGenerator 
 			}
 		}
 
-		if ( sessionImplementor.isSessionImplementor() && sessionImplementor.asSessionImplementor().contains( entityName, object ) ) {
+		if ( sessionImplementor.isSessionImplementor()
+				&& sessionImplementor.asSessionImplementor().contains( entityName, object ) ) {
 			//abort the save (the object is already saved by a circular cascade)
 			return SHORT_CIRCUIT_INDICATOR;
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");

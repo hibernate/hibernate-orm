@@ -30,7 +30,6 @@ public class JdkVersionConfig {
 	public static final String DSL_NAME = "jdkVersions";
 	public static final String MAIN_JDK_VERSION = "main.jdk.version";
 	public static final String TEST_JDK_VERSION = "test.jdk.version";
-	public static final String TEST_JDK_LAUNCHER_ARGS = "test.jdk.launcher.args";
 
 	private final boolean explicit;
 	private final JavaLanguageVersion baseline;
@@ -44,12 +43,11 @@ public class JdkVersionConfig {
 			JavaLanguageVersion mainReleaseVersion,
 			JavaLanguageVersion testCompileVersion,
 			JavaLanguageVersion testReleaseVersion,
-			JavaLanguageVersion testLauncherVersion,
-			String testLauncherArgs) {
+			JavaLanguageVersion testLauncherVersion) {
 		this.explicit = explicit;
 		this.baseline = baseline;
 		this.main = new MainJdks( mainCompileVersion, mainReleaseVersion );
-		this.test = new TestJdks( testCompileVersion, testReleaseVersion, testLauncherVersion, testLauncherArgs );
+		this.test = new TestJdks( testCompileVersion, testReleaseVersion, testLauncherVersion );
 	}
 
 	public boolean isExplicitlyConfigured() {
@@ -112,8 +110,7 @@ public class JdkVersionConfig {
 			JavaLanguageVersion explicitTestVersion,
 			JavaLanguageVersion gradleJdkVersion,
 			JavaLanguageVersion baselineJdkVersion,
-			JavaLanguageVersion maxSupportedJdkVersion,
-			String testLauncherArgs) {
+			JavaLanguageVersion maxSupportedJdkVersion) {
 		final boolean explicitlyConfigured = explicitMainVersion != null || explicitTestVersion != null;
 
 		final JavaLanguageVersion mainCompileVersion;
@@ -147,8 +144,7 @@ public class JdkVersionConfig {
 					mainReleaseVersion,
 					testCompileVersion,
 					testReleaseVersion,
-					testLauncherVersion,
-					testLauncherArgs
+					testLauncherVersion
 			);
 		}
 		else {
@@ -173,8 +169,7 @@ public class JdkVersionConfig {
 					baselineJdkVersion,
 					gradleJdkVersion,
 					baselineJdkVersion,
-					gradleJdkVersion,
-					testLauncherArgs
+					gradleJdkVersion
 			);
 		}
 	}
@@ -250,17 +245,14 @@ public class JdkVersionConfig {
 		private final JavaLanguageVersion compileVersion;
 		private final JavaLanguageVersion releaseVersion;
 		private final JavaLanguageVersion launcherVersion;
-		private final String launcherArgs;
 
 		public TestJdks(
 				JavaLanguageVersion compileVersion,
 				JavaLanguageVersion releaseVersion,
-				JavaLanguageVersion launcherVersion,
-				String launcherArgs) {
+				JavaLanguageVersion launcherVersion) {
 			this.compileVersion = compileVersion;
 			this.releaseVersion = releaseVersion;
 			this.launcherVersion = launcherVersion;
-			this.launcherArgs = launcherArgs;
 		}
 
 		public JavaLanguageVersion getCompiler() {
@@ -279,10 +271,6 @@ public class JdkVersionConfig {
 
 		public JavaLanguageVersion getLauncher() {
 			return launcherVersion;
-		}
-
-		public String getLauncherArgs() {
-			return launcherArgs;
 		}
 
 		@Override

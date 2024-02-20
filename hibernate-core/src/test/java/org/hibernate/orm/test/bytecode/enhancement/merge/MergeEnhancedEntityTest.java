@@ -25,6 +25,7 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 
@@ -37,7 +38,7 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
     private Person person;
     @Override
     public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Person.class, PersonAddress.class};
+        return new Class<?>[]{Person.class, PersonAddress.class, NullablePerson.class};
     }
 
     @Before
@@ -77,10 +78,48 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
         } );
     }
 
+    @Test
+    public void testMergeWithNullValues() {
+        doInHibernate( this::sessionFactory, em -> {
+            NullablePerson nullablePerson = new NullablePerson( 1L, "Sam", 100 );
+            em.persist( nullablePerson );
+        } );
+        doInHibernate( this::sessionFactory, em -> {
+            NullablePerson updated = em.find( NullablePerson.class, 1L );
+            assertThat( updated.name ).isEqualTo( "Sam" );
+            assertThat( updated.number ).isEqualTo( 100 );
+        } );
+
+        // only some properties are null
+        doInHibernate( this::sessionFactory, em -> {
+            NullablePerson nullablePerson = new NullablePerson( 1L, "Joe", null );
+            em.merge( nullablePerson );
+        } );
+        doInHibernate( this::sessionFactory, em -> {
+            NullablePerson updated = em.find( NullablePerson.class, 1L );
+            assertThat( updated.name ).isEqualTo( "Joe" );
+            assertThat( updated.number ).isNull();
+        } );
+
+        // all properties are null:
+        doInHibernate( this::sessionFactory, em -> {
+            NullablePerson nullablePerson = new NullablePerson( 1L, null, null );
+            em.merge( nullablePerson );
+        } );
+        doInHibernate( this::sessionFactory, em -> {
+            NullablePerson updated = em.find( NullablePerson.class, 1L );
+            assertThat( updated.name ).isNull();
+            assertThat( updated.number ).isNull();
+        } );
+    }
+
     @After
     public void cleanup() {
         doInHibernate( this::sessionFactory, s -> {
             s.delete( person );
+        } );
+        doInHibernate( this::sessionFactory, s -> {
+            s.createQuery( "delete from NullablePerson" );
         } );
     }
 
@@ -117,5 +156,28 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
         @ManyToOne( optional = false, fetch = FetchType.LAZY )
         Person parent;
+    }
+
+    @Entity(name = "NullablePerson")
+    @Table(name = "NULLABLE_PERSON")
+    private static class NullablePerson {
+
+        @Id
+        Long id;
+
+        @Column
+        String name;
+
+        @Column
+        Integer number;
+
+        NullablePerson() {
+        }
+
+        NullablePerson(Long id, String name, Integer number) {
+            this.id = id;
+            this.name = name;
+            this.number = number;
+        }
     }
 }

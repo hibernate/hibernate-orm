@@ -6,7 +6,7 @@
  */
 
 // $Id$
-@AnyMetaDef( name= "Property", metaType = "string", idType = "integer",
+@AnyMetaDef( name= "Property", idType = "integer",
 	metaValues = {
 			@MetaValue(value = "C", targetEntity = CharProperty.class),
 			@MetaValue(value = "I", targetEntity = IntegerProperty.class),

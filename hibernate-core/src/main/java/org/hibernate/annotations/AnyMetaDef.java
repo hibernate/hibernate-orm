@@ -40,7 +40,7 @@ public @interface AnyMetaDef {
 	 * Names the discriminator Hibernate Type for this Any/ManyToAny mapping.  The default is to use
 	 * {@link org.hibernate.type.StringType}
 	 */
-	String metaType();
+	String metaType() default "string";
 
 	/**
 	 * Names the identifier Hibernate Type for the entity associated through this Any/ManyToAny mapping.

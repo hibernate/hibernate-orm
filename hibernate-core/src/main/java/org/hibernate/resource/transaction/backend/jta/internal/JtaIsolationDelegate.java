@@ -13,10 +13,15 @@ import jakarta.transaction.TransactionManager;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.exception.internal.SQLStateConversionDelegate;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.internal.CoreLogging;
@@ -35,7 +40,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JtaIsolationDelegate.class );
 
 	private final JdbcConnectionAccess connectionAccess;
-	private final SqlExceptionHelper sqlExceptionHelper;
+	private final BiFunction<SQLException, String, JDBCException> sqlExceptionConverter;
 	private final TransactionManager transactionManager;
 
 	public JtaIsolationDelegate(TransactionCoordinatorOwner transactionCoordinatorOwner, TransactionManager transactionManager) {
@@ -52,19 +57,30 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 
 	public JtaIsolationDelegate(
 			JdbcConnectionAccess connectionAccess,
-			SqlExceptionHelper sqlExceptionHelper,
+			SqlExceptionHelper sqlExceptionConverter,
 			TransactionManager transactionManager) {
 		this.connectionAccess = connectionAccess;
-		this.sqlExceptionHelper = sqlExceptionHelper;
 		this.transactionManager = transactionManager;
+		if ( sqlExceptionConverter != null ) {
+			this.sqlExceptionConverter = sqlExceptionConverter::convert;
+		}
+		else {
+			SQLStateConversionDelegate delegate = new SQLStateConversionDelegate(
+					() -> {
+						throw new AssertionFailure(
+								"Unexpected call to ConversionContext.getViolatedConstraintNameExtractor" );
+					}
+			);
+			this.sqlExceptionConverter = (sqlException, message) -> delegate.convert( sqlException, message, null );
+		}
 	}
 
-	protected JdbcConnectionAccess jdbcConnectionAccess() {
+	private JdbcConnectionAccess jdbcConnectionAccess() {
 		return connectionAccess;
 	}
 
-	protected SqlExceptionHelper sqlExceptionHelper() {
-		return sqlExceptionHelper;
+	private BiFunction<SQLException, String, JDBCException> sqlExceptionConverter() {
+		return sqlExceptionConverter;
 	}
 
 	@Override
@@ -183,7 +199,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			}
 		}
 		catch (SQLException e) {
-			throw sqlExceptionHelper().convert( e, "unable to obtain isolated JDBC connection" );
+			throw sqlExceptionConverter().apply( e, "unable to obtain isolated JDBC connection" );
 		}
 	}
 

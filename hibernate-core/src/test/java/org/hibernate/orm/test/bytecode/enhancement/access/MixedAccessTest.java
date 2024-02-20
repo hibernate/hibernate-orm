@@ -19,6 +19,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,6 +29,9 @@ import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.joining;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Requires a custom enhancement context to disable dirty checking as bytecode enhancement is not expected to fully work with AccessType.PROPERTY
@@ -71,6 +75,23 @@ public class MixedAccessTest extends BaseCoreFunctionalTestCase {
             TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, ID );
             Assert.assertEquals( PARAMS_AS_STR, testOtherEntity.getParamsAsString() );
 
+            //check visibility of methods and fields
+            try {
+                boolean isFieldPrivate = (testOtherEntity.getClass().getDeclaredField("name").getModifiers() & Modifier.PRIVATE) != 0;
+                assertTrue("The field TestOtherEntity.name should remain private", isFieldPrivate);
+                
+                boolean isFieldFinal1 = (testOtherEntity.getClass().getDeclaredField("name").getModifiers() & Modifier.FINAL) != 0;
+                assertFalse("The field TestOtherEntity.name should not be final anymore", isFieldFinal1);
+                
+                boolean isFieldFinal2 = (testOtherEntity.getClass().getDeclaredField("params").getModifiers() & Modifier.FINAL) != 0;
+                assertTrue("The field TestOtherEntity.params should remain final", isFieldFinal2);
+                
+                boolean isMethodPublic = (testOtherEntity.getClass().getMethod("getParams").getModifiers() & Modifier.PUBLIC) != 0;
+                assertTrue("The method TestOtherEntity.getParams should remain public", isMethodPublic);
+            } catch(Exception e) {
+                fail(e);
+            }
+                
             // Clean parameters
             testEntity.setParamsAsString( "{}" );
             testOtherEntity.setParamsAsString( "{}" );
@@ -140,36 +161,36 @@ public class MixedAccessTest extends BaseCoreFunctionalTestCase {
     private static class TestOtherEntity {
 
         @Id
-        String name;
+        private final String name;
 
         @Transient
-        Map<String, String> params = new LinkedHashMap<>();
+        private final Map<String, String> params = new LinkedHashMap<>();
 
-        TestOtherEntity(String name) {
-            this();
+        public TestOtherEntity(String name) {
             this.name = name;
         }
 
-        TestOtherEntity() {
+        public TestOtherEntity() {
+            this(null);
         }
 
-        Map<String, String> getParams() {
+        public Map<String, String> getParams() {
             return Collections.unmodifiableMap( params );
         }
 
-        void setParams(Map<String, String> params) {
+        public void setParams(Map<String, String> params) {
             this.params.clear();
             this.params.putAll( params );
         }
 
         @Column( name = "params", length = 4000 )
         @Access( AccessType.PROPERTY )
-        String getParamsAsString() {
+        public String getParamsAsString() {
             return "{" + params.entrySet().stream().map( MAPPING_FUNCTION ).collect( joining( "," ) ) + "}";
         }
 
         @SuppressWarnings( "unchecked" )
-        void setParamsAsString(String string) {
+        public void setParamsAsString(String string) {
             Matcher matcher = PARAM_PATTERN.matcher( string );
 
             params.clear();

@@ -78,8 +78,7 @@ public class EagerManyToOneTest {
 		);
 		scope.inTransaction(
 				entityManager -> {
-
-					List<EagerManyToOne2Test.Child> children = entityManager.createQuery( "select c from Child c", EagerManyToOne2Test.Child.class )
+					List<Child> children = entityManager.createQuery( "select c from Child c", Child.class )
 							.getResultList();
 					assertThat( children.size() ).isEqualTo( 0 );
 				}

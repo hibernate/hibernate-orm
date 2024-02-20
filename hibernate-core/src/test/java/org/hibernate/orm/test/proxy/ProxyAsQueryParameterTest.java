@@ -118,9 +118,9 @@ public class ProxyAsQueryParameterTest {
 					.setParameter( "productId", LUXURY_PRODUCT_ID )
 					.getSingleResult();
 			assertThat( Hibernate.isInitialized( product.getVendor() ) ).isFalse();
-			final LuxuryCarVendor result = session.createQuery(
+			final CarVendor result = session.createQuery(
 					"from CarVendor v where v = :vendor",
-					LuxuryCarVendor.class
+					CarVendor.class
 			).setParameter( "vendor", product.getVendor() ).getSingleResult();
 			assertThat( result.getId() ).isEqualTo( product.getVendor().getId() );
 		} );

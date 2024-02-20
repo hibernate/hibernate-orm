@@ -2,6 +2,7 @@ package org.hibernate.orm.test.any.annotations;
 
 import java.util.List;
 
+import jakarta.persistence.TypedQuery;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
@@ -82,9 +83,9 @@ public class EagerAnyDiscriminatorQueryTest {
 	public void testHQLQuery(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					Query q = entityManager.createQuery(
+					TypedQuery<PropertyHolder> q = entityManager.createQuery(
 							"select p from PropertyHolder p",
-							LazyAnyDiscriminatorQueryTest.PropertyHolder.class
+							PropertyHolder.class
 					);
 					List<PropertyHolder> results = q.getResultList();
 					assertThat( results.size() ).isEqualTo( 1 );

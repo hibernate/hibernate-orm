@@ -26,7 +26,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -691,9 +690,6 @@ public class QuerySqmImpl<R>
 		}
 		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
-		}
-		catch (TypeMismatchException e) {
-			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException e) {
 			throw getSession().getExceptionConverter().convert( e );

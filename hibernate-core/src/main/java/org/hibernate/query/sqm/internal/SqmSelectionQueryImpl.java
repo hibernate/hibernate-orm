@@ -67,7 +67,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -82,6 +81,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
+import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
 import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 
 /**
@@ -131,17 +131,14 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 			}
 			else {
 				final SqmSelection<?> selection = selections.get(0);
-				if ( selection!=null ) {
-					final JavaType<?> javaType = selection.getNodeJavaType();
-					if ( javaType != null) {
-						return javaType.getJavaTypeClass();
-					}
+				if ( isSelectionAssignableToResultType( selection, expectedResultType ) ) {
+					return selection.getNodeJavaType().getJavaTypeClass();
 				}
-				// due to some error in the query,
-				// we don't have any information,
-				// so just let it through so the
-				// user sees the real error
-				return expectedResultType;
+				else {
+					// let's assume there's some
+					// way to instantiate it
+					return expectedResultType;
+				}
 			}
 		}
 		else if ( expectedResultType != null ) {

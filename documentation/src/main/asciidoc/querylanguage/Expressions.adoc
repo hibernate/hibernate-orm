@@ -917,6 +917,7 @@ Of course, we also have a number of functions for working with numeric values.
 | `radians()` | Convert degrees to radians | `radians(x)` | ✖
 | `least()` | Return the smallest of the given arguments | `least(x, y, z)` |✖
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | ✖
+| `bitand()`, `bitor()`, `bitxor()` | Bitwise functions | `bitand(x,y)` | ✖
 |===
 
 We haven't included <<aggregate-functions,aggregate functions>>, <<aggregate-functions-orderedset,ordered set aggregate functions>>, or <<aggregate-functions-window,window functions>> in this list, because their purpose is more specialized, and because they come with extra special syntax.

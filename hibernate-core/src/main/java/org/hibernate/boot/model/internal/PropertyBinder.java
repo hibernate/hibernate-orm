@@ -1009,7 +1009,10 @@ public class PropertyBinder {
 		final boolean isComposite;
 		final boolean isOverridden;
 		final AnnotatedColumns actualColumns;
-		if ( propertyBinder.isId() || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() ) {
+		if ( isIdentifierMapper
+				|| propertyBinder.isId()
+				|| propertyHolder.isOrWithinEmbeddedId()
+				|| propertyHolder.isInIdClass() ) {
 			// the associated entity could be using an @IdClass making the overridden property a component
 			final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
 					propertyBinder.isId(),
@@ -1019,8 +1022,7 @@ public class PropertyBinder {
 			);
 			if ( overridingProperty != null ) {
 				isOverridden = true;
-				final InheritanceState state = inheritanceStatePerClass.get( overridingProperty.getClassOrElement() );
-				isComposite = state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
+				isComposite = isComposite( inheritanceStatePerClass, property, returnedClass, overridingProperty );
 				//Get the new column
 				actualColumns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty( propertyBinder.isId() );
 			}
@@ -1098,6 +1100,15 @@ public class PropertyBinder {
 			);
 		}
 		return actualColumns;
+	}
+
+	private static boolean isComposite(
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			XProperty property,
+			XClass returnedClass,
+			PropertyData overridingProperty) {
+		final InheritanceState state = inheritanceStatePerClass.get( overridingProperty.getClassOrElement() );
+		return state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
 	}
 
 	private static void handleGeneratorsForOverriddenId(

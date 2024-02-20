@@ -701,7 +701,6 @@ public class QuerySqmImpl<R>
 	}
 
 	protected int doExecuteUpdate() {
-		getSession().prepareForQueryExecution( true );
 		return resolveNonSelectQueryPlan().executeUpdate( this );
 	}
 

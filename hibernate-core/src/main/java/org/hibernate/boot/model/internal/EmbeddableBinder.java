@@ -367,7 +367,7 @@ public class EmbeddableBinder {
 		if ( baseClassElements != null
 				//useful to avoid breaking pre JPA 2 mappings
 				&& !hasAnnotationsOnIdClass( annotatedClass ) ) {
-			processIdClassElememts( propertyHolder, baseInferredData, classElements, baseClassElements );
+			processIdClassElements( propertyHolder, baseInferredData, classElements, baseClassElements );
 		}
 		for ( PropertyData propertyAnnotatedElement : classElements ) {
 			processElementAnnotations(
@@ -555,7 +555,7 @@ public class EmbeddableBinder {
 		}
 	}
 
-	private static void processIdClassElememts(
+	private static void processIdClassElements(
 			PropertyHolder propertyHolder,
 			PropertyData baseInferredData,
 			List<PropertyData> classElements,

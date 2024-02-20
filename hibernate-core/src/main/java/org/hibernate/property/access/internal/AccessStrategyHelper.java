@@ -69,13 +69,7 @@ public class AccessStrategyHelper {
 
 	public static AccessType getExplicitAccessType(Class<?> containerClass, String propertyName, Field field) {
 		if ( isRecord( containerClass ) ) {
-			try {
-				containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
-				return AccessType.PROPERTY;
-			}
-			catch (NoSuchMethodException e) {
-				// Ignore
-			}
+			return AccessType.FIELD;
 		}
 
 		if ( field != null

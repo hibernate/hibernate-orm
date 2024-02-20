@@ -10,9 +10,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 import org.hibernate.jpamodelgen.model.ImportContext;
+
+import static java.lang.Character.isWhitespace;
+import static java.lang.System.lineSeparator;
 
 
 /**
@@ -75,7 +79,7 @@ public class ImportContextImpl implements ImportContext {
 		}
 		else if ( result.startsWith( "?" ) ) {
 			int index = 1;
-			while ( index < result.length() && Character.isWhitespace( result.charAt( index ) ) ) {
+			while ( index < result.length() && isWhitespace( result.charAt( index ) ) ) {
 				index++;
 			}
 			if ( index < result.length() ) {
@@ -86,9 +90,9 @@ public class ImportContextImpl implements ImportContext {
 				else if ( result.substring( index ).startsWith( "super" ) ) {
 					nextIndex = index + 5;
 				}
-				if ( nextIndex > 0 && nextIndex < result.length() && Character.isWhitespace( result.charAt( nextIndex ) ) ) {
+				if ( nextIndex > 0 && nextIndex < result.length() && isWhitespace( result.charAt( nextIndex ) ) ) {
 					index = nextIndex;
-					while ( Character.isWhitespace( result.charAt( index ) ) ) {
+					while ( isWhitespace( result.charAt( index ) ) ) {
 						index++;
 					}
 					preamble = result.substring( 0, index );
@@ -144,26 +148,32 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	private String importTypes(String originalArgList) {
-		String[] args = originalArgList.split(",");
 		StringBuilder argList = new StringBuilder();
 		StringBuilder acc = new StringBuilder();
-		for ( String arg : args ) {
+		StringTokenizer args = new StringTokenizer( originalArgList, "," );
+		while ( args.hasMoreTokens() ) {
 			if ( acc.length() > 0 ) {
 				acc.append( ',' );
 			}
-			acc.append( arg );
-			final int count = acc.chars().reduce(
-					0,
-					(left, right) -> left + ( right == '<' ? 1 : right == '>' ? -1 : 0 )
-			);
-			if ( count > 0 ) {
-				continue;
+			acc.append( args.nextToken() );
+			int nesting = 0;
+			for ( int i = 0; i<acc.length(); i++ ) {
+				switch ( acc.charAt(i) ) {
+					case '<':
+						nesting++;
+						break;
+					case '>':
+						nesting--;
+						break;
+				}
 			}
-			if ( argList.length() > 0 ) {
-				argList.append(',');
+			if ( nesting == 0 ) {
+				if ( argList.length() > 0 ) {
+					argList.append(',');
+				}
+				argList.append( importType( acc.toString() ) );
+				acc.setLength( 0 );
 			}
-			argList.append( importType( acc.toString() ) );
-			acc.setLength( 0 );
 		}
 		return argList.toString();
 	}
@@ -204,10 +214,10 @@ public class ImportContextImpl implements ImportContext {
 			// don't add automatically "imported" stuff
 			if ( !isAutoImported( next ) ) {
 				if ( staticImports.contains( next ) ) {
-					builder.append( "import static " ).append( next ).append( ";" ).append( System.lineSeparator() );
+					builder.append( "import static " ).append( next ).append( ";" ).append( lineSeparator() );
 				}
 				else {
-					builder.append( "import " ).append( next ).append( ";" ).append( System.lineSeparator() );
+					builder.append( "import " ).append( next ).append( ";" ).append( lineSeparator() );
 				}
 			}
 		}

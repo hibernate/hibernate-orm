@@ -201,4 +201,9 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	public boolean hasCollectionInitializers() {
 		return this.initializers.hasCollectionInitializers();
 	}
+
+	@Override
+	public boolean upgradeLocks() {
+		return executionContext.upgradeLocks();
+	}
 }

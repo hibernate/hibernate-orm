@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -1493,7 +1494,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean parameterIsMissing(String hql, int i, String param, String type) {
-		return !hql.matches(".*(:" + param + "|\\?" + i + ")\\b.*")
+		return !Pattern.compile( ".*(:" + param + "|\\?" + i + ")\\b.*", Pattern.DOTALL ).matcher( hql ).matches()
 			&& !isSessionParameter(type)
 			&& !isPageParam(type)
 			&& !isOrderParam(type);

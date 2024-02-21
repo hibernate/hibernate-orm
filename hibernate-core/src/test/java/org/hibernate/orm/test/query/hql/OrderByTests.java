@@ -18,7 +18,9 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.hibernate.orm.test.hql.Address;
 import org.hibernate.orm.test.hql.Human;
@@ -27,6 +29,7 @@ import org.hibernate.orm.test.hql.Name;
 import org.hibernate.orm.test.hql.StateProvince;
 import org.hibernate.orm.test.hql.Zoo;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -65,6 +68,7 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, false );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
+		cfg.setStatementInspector( new SQLStatementInspector() );
 	}
 
 	private void createData() {
@@ -187,6 +191,35 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		}
 		t.commit();
 		s.close();
+	}
+
+	@Test
+	@JiraKey( value = "HHH-17752")
+	public void testOrderbyWithFunctionAlias() {
+		createData();
+		SQLStatementInspector inspector = (SQLStatementInspector) sessionFactory().getSessionFactoryOptions().getStatementInspector();
+		doInHibernate(
+				this::sessionFactory,
+				session -> {
+					inspector.clear();
+					List<Object[]> list = session.createQuery(
+									"select z.id, nullif(z.name, 'Duh Zoo') as field2 from Zoo z order by field2,id",
+									Object[].class
+							)
+							.list();
+					assertEquals( 4, list.size() );
+					assertEquals( zoo4.getId(), list.get( 0 )[0] );
+					assertEquals( zoo2.getId(), list.get( 1 )[0] );
+					assertEquals( zoo2.getName(), list.get( 1 )[1] );
+					assertEquals( zoo1.getId(), list.get( 2 )[0] );
+					assertEquals( zoo1.getName(), list.get( 2 )[1] );
+					assertEquals( zoo3.getId(), list.get( 3 )[0] );
+					assertEquals( zoo3.getName(), list.get( 3 )[1] );
+					// Check that the order by fragment effectively contains a space in between 'field2,' and 'id'
+					inspector.assertNumberOfOccurrenceInQuery( 0, "order by 2,", 1 );
+				}
+		);
+		cleanupData();
 	}
 
 	@Test

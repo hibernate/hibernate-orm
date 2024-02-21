@@ -3979,7 +3979,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				for ( SortSpecification sortSpecification : sortSpecifications ) {
 					appendSql( separator );
 					visitSortSpecification( sortSpecification );
-					separator = COMMA_SEPARATOR;
+					separator = COMMA_WHSP_SEPARATOR;
 				}
 			}
 			finally {

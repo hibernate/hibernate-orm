@@ -15,6 +15,7 @@ package org.hibernate.sql.ast.spi;
 public interface SqlAppender extends Appendable {
 	String NO_SEPARATOR = "";
 	String COMMA_SEPARATOR = ",";
+	String COMMA_WHSP_SEPARATOR = ", ";
 	char COMMA_SEPARATOR_CHAR = ',';
 	char WHITESPACE = ' ';
 

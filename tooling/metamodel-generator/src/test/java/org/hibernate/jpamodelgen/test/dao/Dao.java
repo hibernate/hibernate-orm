@@ -112,4 +112,7 @@ public interface Dao {
 
     @HQL("select avg(pages) from Book")
     double averagePageCount();
+
+    @HQL("select b\nfrom Book b\nwhere b.isbn = :isbn")
+    Book findByIsbnMultiline(String isbn);
 }

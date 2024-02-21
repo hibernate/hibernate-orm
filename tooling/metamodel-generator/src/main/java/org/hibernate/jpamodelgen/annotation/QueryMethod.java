@@ -241,13 +241,31 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	public String getAttributeNameDeclarationString() {
-		return new StringBuilder()
-				.append("static final String ")
-				.append(getConstantName())
-				.append(" = \"")
-				.append(queryString)
-				.append("\";")
-				.toString();
+		StringBuilder sb = new StringBuilder(queryString.length() + 100)
+				.append( "static final String " )
+				.append( getConstantName() )
+				.append( " = \"" );
+		for ( int i = 0; i < queryString.length(); i++ ) {
+			final char c = queryString.charAt( i );
+			switch ( c ) {
+				case '\r':
+					sb.append( "\\r" );
+					break;
+				case '\n':
+					sb.append( "\\n" );
+					break;
+				case '\\':
+					sb.append( "\\\\" );
+					break;
+				case '"':
+					sb.append( "\\\"" );
+					break;
+				default:
+					sb.append( c );
+					break;
+			}
+		}
+		return sb.append("\";").toString();
 	}
 
 	private String getConstantName() {

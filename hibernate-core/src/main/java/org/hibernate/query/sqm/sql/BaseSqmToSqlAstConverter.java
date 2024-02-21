@@ -6366,7 +6366,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new UnaryOperation(
 				interpret( expression.getOperation() ),
 				toSqlExpression( expression.getOperand().accept( this ) ),
-				(BasicValuedMapping) determineValueMapping( expression.getOperand() )
+				getExpressionType( expression )
 		);
 	}
 
@@ -6429,7 +6429,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private BasicValuedMapping getExpressionType(SqmBinaryArithmetic<?> expression) {
+	private BasicValuedMapping getExpressionType(SqmExpression<?> expression) {
 		final SqmExpressible<?> nodeType = expression.getNodeType();
 		if ( nodeType != null ) {
 			if ( nodeType instanceof BasicValuedMapping ) {

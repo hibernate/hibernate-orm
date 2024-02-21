@@ -80,6 +80,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
 
 /**
  * Each instance defines a set of {@linkplain Type types} available in a given
@@ -679,16 +680,24 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return getBasicTypeRegistry().getRegisteredType( Duration.class );
 		}
 
-		if ( secondType == null || firstType != null
-				&& firstType.getExpressibleJavaType().isWider( secondType.getExpressibleJavaType() ) ) {
-			return firstType;
+		if ( firstType != null && ( secondType == null
+				|| firstType.getRelationalJavaType().isWider( secondType.getRelationalJavaType() ) ) ) {
+			return resolveBasicArithmeticType( firstType );
 		}
-		return secondType;
+		return secondType != null ? resolveBasicArithmeticType( secondType ) : null;
+	}
+
+	private BasicType<?> resolveBasicArithmeticType(SqmExpressible<?> expressible) {
+		if ( isNumberArray( expressible ) ) {
+			return (BasicType<?>) expressible.getSqmType();
+		}
+		// Use the relational java type to account for possible converters
+		return getBasicTypeForJavaType( expressible.getRelationalJavaType().getJavaTypeClass() );
 	}
 
 	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
 		assert javaType != null;
-		return type != null && javaType.isAssignableFrom( type.getExpressibleJavaType().getJavaTypeClass() );
+		return type != null && javaType.isAssignableFrom( type.getRelationalJavaType().getJavaTypeClass() );
 	}
 
 
@@ -778,7 +787,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		if ( type == null ) {
 			return null;
 		}
-		return getSqlTemporalType( type.getExpressibleJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+		return getSqlTemporalType( type.getRelationalJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
 	public static TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {

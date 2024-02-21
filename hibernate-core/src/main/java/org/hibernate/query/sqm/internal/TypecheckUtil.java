@@ -398,8 +398,8 @@ public class TypecheckUtil {
 		final SqmExpressible<?> leftNodeType = left.getNodeType();
 		final SqmExpressible<?> rightNodeType = right.getNodeType();
 		if ( leftNodeType != null && rightNodeType != null ) {
-			final Class<?> leftJavaType = leftNodeType.getExpressibleJavaType().getJavaTypeClass();
-			final Class<?> rightJavaType = rightNodeType.getExpressibleJavaType().getJavaTypeClass();
+			final Class<?> leftJavaType = leftNodeType.getRelationalJavaType().getJavaTypeClass();
+			final Class<?> rightJavaType = rightNodeType.getRelationalJavaType().getJavaTypeClass();
 			if ( Number.class.isAssignableFrom( leftJavaType ) ) {
 				// left operand is a number
 				switch (op) {
@@ -494,7 +494,7 @@ public class TypecheckUtil {
 		}
 	}
 
-	private static boolean isNumberArray(SqmExpressible<?> expressible) {
+	public static boolean isNumberArray(SqmExpressible<?> expressible) {
 		final DomainType<?> domainType;
 		if ( expressible != null && ( domainType = expressible.getSqmType() ) != null ) {
 			return domainType instanceof BasicPluralType<?, ?> && Number.class.isAssignableFrom(

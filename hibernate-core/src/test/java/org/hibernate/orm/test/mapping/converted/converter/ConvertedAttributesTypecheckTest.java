@@ -32,13 +32,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = ConvertedAttributesTypecheckTest.TestEntity.class )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17693" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17766" )
 public class ConvertedAttributesTypecheckTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.persist( new TestEntity(
 				Set.of( "one", "two" ),
 				"123",
-				String.valueOf( Duration.ofDays( 3 ).toMillis() )
+				"3"
 		) ) );
 	}
 
@@ -59,24 +60,44 @@ public class ConvertedAttributesTypecheckTest {
 	}
 
 	@Test
+	public void testBinaryArithmeticOnConvertedNumber(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery(
+					"select convertedNumber - 123 from TestEntity",
+					Integer.class
+			).getSingleResult() ).isEqualTo( 0 );
+			assertThat( session.createQuery(
+					"select 123 + convertedNumber from TestEntity",
+					Integer.class
+			).getSingleResult() ).isEqualTo( 246 );
+		} );
+	}
+
+	@Test
 	public void testUnaryExpressionOnConvertedNumber(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.createQuery(
+			assertThat( session.createQuery(
+					"select -convertedNumber from TestEntity",
+					Integer.class
+			).getSingleResult() ).isEqualTo( -123 );
+			assertThat( session.createQuery(
 					"from TestEntity where -convertedNumber = -123",
 					TestEntity.class
-			).getSingleResult();
+			).getSingleResult().getConvertedNumber() ).isEqualTo( "123" );
 		} );
 	}
 
 	@Test
 	public void testFromDurationExpressionOnConvertedDuration(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.createQuery(
-					"from TestEntity where convertedDuration by day = ?1",
-							TestEntity.class
-			)
-			.setParameter( 1, Duration.ofDays( 3 ).toNanos() )
-			.getSingleResult();
+			assertThat( session.createQuery(
+					"select convertedDuration by day from TestEntity",
+					Long.class
+			).getSingleResult() ).isEqualTo( 3L );
+			assertThat( session.createQuery(
+					"from TestEntity where convertedDuration by day = 3",
+					TestEntity.class
+			).getSingleResult().getConvertedDuration() ).isEqualTo( "3" );
 		} );
 	}
 
@@ -147,12 +168,12 @@ public class ConvertedAttributesTypecheckTest {
 	public static class DurationConverter implements AttributeConverter<String, Duration> {
 		@Override
 		public Duration convertToDatabaseColumn(final String attribute) {
-			return attribute == null ? null : Duration.ofMillis( Long.parseLong( attribute ) );
+			return attribute == null ? null : Duration.ofDays( Long.parseLong( attribute ) );
 		}
 
 		@Override
 		public String convertToEntityAttribute(final Duration dbData) {
-			return dbData == null ? null : String.valueOf( dbData.toMillis() );
+			return dbData == null ? null : String.valueOf( dbData.toDays() );
 		}
 	}
 }

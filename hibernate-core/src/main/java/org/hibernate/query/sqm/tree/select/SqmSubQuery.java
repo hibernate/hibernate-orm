@@ -241,7 +241,6 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 					break;
 				}
 				default: {
-					setResultType( (Class<T>) Object[].class );
 					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
 				}
 			}
@@ -580,7 +579,6 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	public void applyInferableType(SqmExpressible<?> type) {
 		//noinspection unchecked
 		this.expressibleType = (SqmExpressible<T>) type;
-		setResultType( type == null ? null : expressibleType.getExpressibleJavaType().getJavaTypeClass() );
 	}
 
 	private void applyInferableType(Class<T> type) {

@@ -46,7 +46,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		implements SqmSelectQuery<T> {
 	private final Map<String, SqmCteStatement<?>> cteStatements;
 	private SqmQueryPart<T> sqmQueryPart;
-	private Class<T> resultType;
+	private final Class<T> resultType;
 
 	public AbstractSqmSelectQuery(Class<T> resultType, NodeBuilder builder) {
 		this( new SqmQuerySpec<>( builder ), resultType, builder );
@@ -189,7 +189,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	protected void setResultType(Class<T> resultType) {
-		this.resultType = resultType;
+		// No-op
 	}
 
 	@Override
@@ -392,7 +392,6 @@ public abstract class AbstractSqmSelectQuery<T>
 					break;
 				}
 				default: {
-					setResultType( (Class<T>) Object[].class );
 					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
 				}
 			}

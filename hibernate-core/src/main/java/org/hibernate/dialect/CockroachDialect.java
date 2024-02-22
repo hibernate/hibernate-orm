@@ -51,6 +51,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -478,6 +479,12 @@ public class CockroachDialect extends Dialect {
 		functionFactory.arrayTrim_unnest();
 		functionFactory.arrayFill_cockroachdb();
 		functionFactory.arrayToString_postgresql();
+
+		// Postgres uses # instead of ^ for XOR
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",

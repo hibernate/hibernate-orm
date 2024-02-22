@@ -119,6 +119,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		if ( existing != null ) {
 			return existing;
 		}
+		return createCopy( context, getResultType() );
+	}
+
+	private <X> SqmSelectStatement<X> createCopy(SqmCopyContext context, Class<X> resultType) {
 		final Set<SqmParameter<?>> parameters;
 		if ( this.parameters == null ) {
 			parameters = null;
@@ -129,17 +133,19 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				parameters.add( parameter.copy( context ) );
 			}
 		}
-		final SqmSelectStatement<T> statement = context.registerCopy(
+		//noinspection unchecked
+		final SqmSelectStatement<X> statement = (SqmSelectStatement<X>) context.registerCopy(
 				this,
 				new SqmSelectStatement<>(
 						nodeBuilder(),
 						copyCteStatements( context ),
-						getResultType(),
+						resultType,
 						getQuerySource(),
 						parameters
 				)
 		);
-		statement.setQueryPart( getQueryPart().copy( context ) );
+		//noinspection unchecked
+		statement.setQueryPart( (SqmQueryPart<X>) getQueryPart().copy( context ) );
 		return statement;
 	}
 
@@ -266,9 +272,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			checkSelectionIsJpaCompliant( selection );
 		}
 		getQuerySpec().setSelection( (JpaSelection<T>) selection );
-		if ( getResultType() == Object.class ) {
-			setResultType( (Class<T>) selection.getJavaType() );
-		}
 		return this;
 	}
 
@@ -313,7 +316,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 					return (Selection<? extends T>) selectionList.get( 0 );
 				}
 				default: {
-					setResultType( (Class<T>) Object[].class );
 					return (Selection<? extends T>) nodeBuilder().array( selections );
 				}
 			}
@@ -461,14 +463,14 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 	@Override
 	public SqmSelectStatement<Long> createCountQuery() {
-		final SqmSelectStatement<?> copy = copy( noParamCopyContext() );
-		final SqmQuerySpec<?> querySpec = copy.getQuerySpec();
+		final SqmSelectStatement<?> copy = createCopy( noParamCopyContext(), Object.class );
 		final SqmQueryPart<?> queryPart = copy.getQueryPart();
+		final SqmQuerySpec<?> querySpec;
 		//TODO: detect queries with no 'group by', but aggregate functions
 		//      in 'select' list (we don't even need to hit the database to
 		//      know they return exactly one row)
 		if ( queryPart.isSimpleQueryPart()
-				&& !querySpec.isDistinct()
+				&& !( querySpec = (SqmQuerySpec<?>) queryPart ).isDistinct()
 				&& querySpec.getGroupingExpressions().isEmpty() ) {
 			for ( SqmRoot<?> root : querySpec.getRootList() ) {
 				root.removeLeftFetchJoins();
@@ -478,24 +480,21 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				querySpec.setOrderByClause( null );
 			}
 
-			@SuppressWarnings("unchecked")
-			final SqmSelectStatement<Long> statement = (SqmSelectStatement<Long>) copy;
-			statement.setResultType( Long.class );
-			return statement;
+			return (SqmSelectStatement<Long>) copy;
 		}
 		else {
-			final JpaSelection<?> selection = querySpec.getSelection();
+			final JpaSelection<?> selection = queryPart.getFirstQuerySpec().getSelection();
 			if ( selection.isCompoundSelection() ) {
 				char c = 'a';
-				for ( JpaSelection<?> item: selection.getSelectionItems() ) {
-					item.alias( Character.toString(++c) + '_' );
+				for ( JpaSelection<?> item : selection.getSelectionItems() ) {
+					item.alias( Character.toString( ++c ) + '_' );
 				}
 			}
 			else {
-				selection.alias("a_");
+				selection.alias( "a_" );
 			}
 			final SqmSubQuery<?> subquery = new SqmSubQuery<>( copy, queryPart, null, nodeBuilder() );
-			final SqmSelectStatement<Long> query = nodeBuilder().createQuery(Long.class);
+			final SqmSelectStatement<Long> query = nodeBuilder().createQuery( Long.class );
 			query.from( subquery );
 			query.select( nodeBuilder().count() );
 			return query;

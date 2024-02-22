@@ -43,17 +43,20 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
 				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
 		new BuildEnvironment( testJdkVersion: '17' ),
-		// We want to enable preview features when testing newer builds of OpenJDK:
-		// even if we don't use these features, just enabling them can cause side effects
-		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '20', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '21', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '22', testJdkLauncherArgs: '--enable-preview' ),
+		new BuildEnvironment( testJdkVersion: '20' ),
+		new BuildEnvironment( testJdkVersion: '21' ),
+		new BuildEnvironment( testJdkVersion: '22' ),
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
 		// they require the use of -Dnet.bytebuddy.experimental=true.
 		// Make sure to remove that argument as soon as possible
 		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' )
+		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '-Dnet.bytebuddy.experimental=true' ),
+		// We want to test preview features on the latest EA version OpenJDK:
+		// even if we don't use these features, just enabling them can cause side effects
+		// and it's useful to test that, so that we can report problems to
+		// https://wiki.openjdk.org/display/quality/Quality+Outreach
+		new BuildEnvironment( testJdkVersion: '23', variationName: 'preview',
+				testJdkLauncherArgs: '-Dnet.bytebuddy.experimental=true --enable-preview' )
 	];
 
 	if ( env.CHANGE_ID ) {
@@ -211,9 +214,10 @@ class BuildEnvironment {
 	String additionalOptions
 	String notificationRecipients
 	boolean longRunning
+	String variationName
 
 	String toString() { getTag() }
-	String getTag() { "${node ? node + "_" : ''}${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }
+	String getTag() { "${node ? node + "_" : ''}${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}${variationName ? '_' + variationName : '' }" }
 	String getRdbms() { dbName.contains("_") ? dbName.substring(0, dbName.indexOf('_')) : dbName }
 }
 

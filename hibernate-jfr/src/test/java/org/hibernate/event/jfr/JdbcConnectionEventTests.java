@@ -31,6 +31,8 @@ public class JdbcConnectionEventTests {
 		// starting a transaction should trigger the acquisition of the connection
 		String expectedSessionId = scope.fromTransaction(
 				session -> {
+					// Force connection acquisition
+					session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 					final List<RecordedEvent> events = jfrEvents.events()
 							.filter(
 									recordedEvent ->

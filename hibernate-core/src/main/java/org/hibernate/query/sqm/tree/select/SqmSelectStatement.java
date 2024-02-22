@@ -108,6 +108,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		if ( existing != null ) {
 			return existing;
 		}
+		return createCopy( context, getResultType() );
+	}
+
+	private <X> SqmSelectStatement<X> createCopy(SqmCopyContext context, Class<X> resultType) {
 		final Set<SqmParameter<?>> parameters;
 		if ( this.parameters == null ) {
 			parameters = null;
@@ -118,17 +122,19 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				parameters.add( parameter.copy( context ) );
 			}
 		}
-		final SqmSelectStatement<T> statement = context.registerCopy(
+		//noinspection unchecked
+		final SqmSelectStatement<X> statement = (SqmSelectStatement<X>) context.registerCopy(
 				this,
 				new SqmSelectStatement<>(
 						nodeBuilder(),
 						copyCteStatements( context ),
-						getResultType(),
+						resultType,
 						getQuerySource(),
 						parameters
 				)
 		);
-		statement.setQueryPart( getQueryPart().copy( context ) );
+		//noinspection unchecked
+		statement.setQueryPart( (SqmQueryPart<X>) getQueryPart().copy( context ) );
 		return statement;
 	}
 
@@ -262,9 +268,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			checkSelectionIsJpaCompliant( selection );
 		}
 		getQuerySpec().setSelection( (JpaSelection<T>) selection );
-		if ( getResultType() == Object.class ) {
-			setResultType( (Class<T>) selection.getJavaType() );
-		}
 		return this;
 	}
 
@@ -306,7 +309,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 					break;
 				}
 				default: {
-					setResultType( (Class<T>) Object[].class );
 					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
 				}
 			}

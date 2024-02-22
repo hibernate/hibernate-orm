@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.results.internal;
 
-import org.hibernate.TypeMismatchException;
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
@@ -29,7 +29,7 @@ public class RowTransformerCheckingImpl<R> implements RowTransformer<R> {
 			return (R) result;
 		}
 		else {
-			throw new TypeMismatchException( "Result type is '" + type.getSimpleName()
+			throw new QueryTypeMismatchException( "Result type is '" + type.getSimpleName()
 					+ "' but the query returned a '" + result.getClass().getSimpleName() + "'" );
 		}
 	}

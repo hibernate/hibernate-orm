@@ -26,7 +26,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -52,7 +51,6 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Order;
 import org.hibernate.query.Query;
-import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.SemanticException;
@@ -65,7 +63,6 @@ import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.spi.AbstractSelectionQuery;
 import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -125,6 +122,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptionsWithUniqueSemanticFilter;
+import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionFetches;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
@@ -139,7 +137,7 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  * @author Steve Ebersole
  */
 public class QuerySqmImpl<R>
-		extends AbstractSelectionQuery<R>
+		extends AbstractSqmSelectionQuery<R>
 		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QuerySqmImpl.class );
 
@@ -413,6 +411,7 @@ public class QuerySqmImpl<R>
 		}
 	}
 
+	@Override
 	public TupleMetadata getTupleMetadata() {
 		return tupleMetadata;
 	}
@@ -427,6 +426,7 @@ public class QuerySqmImpl<R>
 		return sqm;
 	}
 
+	@Override
 	public DomainParameterXref getDomainParameterXref() {
 		return domainParameterXref;
 	}
@@ -446,7 +446,13 @@ public class QuerySqmImpl<R>
 		return getQueryParameterBindings();
 	}
 
+	@Override
 	public Class<R> getResultType() {
+		return resultType;
+	}
+
+	@Override
+	public Class<R> getExpectedResultType() {
 		return resultType;
 	}
 
@@ -501,59 +507,48 @@ public class QuerySqmImpl<R>
 			}
 		};
 		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
-		return buildConcreteSelectQueryPlan( sqmStatement.createCountQuery(), Long.class, null, getQueryOptions() )
+		return buildConcreteQueryPlan( sqmStatement.createCountQuery(), Long.class, null, getQueryOptions() )
 				.executeQuery( context, new SingleResultConsumer<>() );
 	}
 
 	protected List<R> doList() {
 		verifySelect();
-
-		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
+		final SqmSelectStatement<?> statement = (SqmSelectStatement<?>) getSqmStatement();
 		final boolean containsCollectionFetches =
-				sqmStatement.containsCollectionFetches()
-						|| AppliedGraphs.containsCollectionFetches( getQueryOptions() );
-		final boolean hasLimit = hasLimit( sqmStatement, getQueryOptions() );
-		final boolean needsDistinct = containsCollectionFetches
-				&& ( hasLimit || sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) );
-
+				statement.containsCollectionFetches()
+						|| containsCollectionFetches( getQueryOptions() );
+		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
+		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
 		final List<R> list = resolveSelectQueryPlan()
 				.performList( executionContextForDoList( containsCollectionFetches, hasLimit, needsDistinct ) );
+		return needsDistinct ? handleDistinct( hasLimit, statement, list ) : list;
+	}
 
-		if ( needsDistinct ) {
-			final int first = !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
-					? getIntegerLiteral( sqmStatement.getOffset(), 0 )
-					: getQueryOptions().getLimit().getFirstRow();
-			final int max = !hasLimit || getQueryOptions().getLimit().getMaxRows() == null
-					? getMaxRows( sqmStatement, list.size() )
-					: getQueryOptions().getLimit().getMaxRows();
-			if ( first > 0 || max != -1 ) {
-				final int resultSize = list.size();
+	private List<R> handleDistinct(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
+		final int first = first( hasLimit, statement );
+		final int max = max( hasLimit, statement, list );
+		if ( first > 0 || max != -1 ) {
+			final int resultSize = list.size();
+			if ( first > resultSize ) {
+				return new ArrayList<>(0);
+			}
+			else {
 				final int toIndex = max != -1 ? first + max : resultSize;
-				if ( first > resultSize ) {
-					return new ArrayList<>(0);
-				}
 				return list.subList( first, Math.min( toIndex, resultSize ) );
 			}
 		}
-		return list;
-
+		else {
+			return list;
+		}
 	}
 
-	protected DomainQueryExecutionContext executionContextForDoList(boolean containsCollectionFetches, boolean hasLimit, boolean needsDistinct) {
+	// TODO: very similar to SqmSelectionQueryImpl.executionContext()
+	protected DomainQueryExecutionContext executionContextForDoList(
+			boolean containsCollectionFetches, boolean hasLimit, boolean needsDistinct) {
 		final MutableQueryOptions originalQueryOptions;
 		final QueryOptions normalizedQueryOptions;
 		if ( hasLimit && containsCollectionFetches ) {
-			if ( getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled() ) {
-				throw new HibernateException(
-						"setFirstResult() or setMaxResults() specified with collection fetch join "
-								+ "(in-memory pagination was about to be applied, but '"
-								+ AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH
-								+ "' is enabled)"
-				);
-			}
-			else {
-				QueryLogging.QUERY_MESSAGE_LOGGER.firstOrMaxResultsSpecifiedWithCollectionFetch();
-			}
+			errorOrLogForPaginationWithCollectionFetch();
 
 			originalQueryOptions = getQueryOptions();
 			normalizedQueryOptions = needsDistinct
@@ -627,52 +622,6 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private SelectQueryPlan<R> buildSelectQueryPlan() {
-		final SqmSelectStatement<R>[] concreteSqmStatements =
-				QuerySplitter.split( (SqmSelectStatement<R>) getSqmStatement() );
-
-		if ( concreteSqmStatements.length > 1 ) {
-			return buildAggregatedSelectQueryPlan( concreteSqmStatements );
-		}
-		else {
-			return buildConcreteSelectQueryPlan( concreteSqmStatements[0] );
-		}
-	}
-
-	private SelectQueryPlan<R> buildAggregatedSelectQueryPlan(SqmSelectStatement<R>[] concreteSqmStatements) {
-		@SuppressWarnings("unchecked")
-		final SelectQueryPlan<R>[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
-		// todo (6.0) : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
-		for ( int i = 0, x = concreteSqmStatements.length; i < x; i++ ) {
-			aggregatedQueryPlans[i] = buildConcreteSelectQueryPlan( concreteSqmStatements[i] );
-		}
-		return new AggregatedSelectQueryPlanImpl<>( aggregatedQueryPlans );
-	}
-
-	private SelectQueryPlan<R> buildConcreteSelectQueryPlan(SqmSelectStatement<R> concreteSqmStatement) {
-		return buildConcreteSelectQueryPlan(
-				concreteSqmStatement,
-				getResultType(),
-				tupleMetadata,
-				getQueryOptions()
-		);
-	}
-
-	private <T> SelectQueryPlan<T> buildConcreteSelectQueryPlan(
-			SqmSelectStatement<T> concreteSqmStatement,
-			Class<T> resultType,
-			TupleMetadata tupleMetadata,
-			QueryOptions queryOptions) {
-		return new ConcreteSqmSelectQueryPlan<>(
-				concreteSqmStatement,
-				getQueryString(),
-				getDomainParameterXref(),
-				resultType,
-				tupleMetadata,
-				queryOptions
-		);
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Update / delete / insert query execution
@@ -721,7 +670,7 @@ public class QuerySqmImpl<R>
 
 		final QueryInterpretationCache.Key cacheKey = generateNonSelectKey( this );
 		final QueryInterpretationCache interpretationCache =
-				getSession().getFactory().getQueryEngine().getInterpretationCache();
+				getSessionFactory().getQueryEngine().getInterpretationCache();
 		if ( cacheKey != null ) {
 			queryPlan = interpretationCache.getNonSelectQueryPlan( cacheKey );
 		}
@@ -762,7 +711,7 @@ public class QuerySqmImpl<R>
 				: buildConcreteDeleteQueryPlan( concreteSqmStatements[0] );
 	}
 
-	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement sqmDelete) {
+	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(SqmDeleteStatement<?> sqmDelete) {
 		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getModel();
 		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
 		final EntityPersister persister = getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToDelete );
@@ -776,13 +725,11 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private NonSelectQueryPlan buildAggregatedDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement[] concreteSqmStatements) {
+	private NonSelectQueryPlan buildAggregatedDeleteQueryPlan(SqmDeleteStatement<?>[] concreteSqmStatements) {
 		final NonSelectQueryPlan[] aggregatedQueryPlans = new NonSelectQueryPlan[ concreteSqmStatements.length ];
-
 		for ( int i = 0, x = concreteSqmStatements.length; i < x; i++ ) {
 			aggregatedQueryPlans[i] = buildConcreteDeleteQueryPlan( concreteSqmStatements[i] );
 		}
-
 		return new AggregatedNonSelectQueryPlanImpl( aggregatedQueryPlans );
 	}
 

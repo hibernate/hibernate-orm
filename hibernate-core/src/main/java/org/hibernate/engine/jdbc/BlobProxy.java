@@ -201,7 +201,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 
 		@Override
 		public long getLength() {
-			return (int) length;
+			return length;
 		}
 
 		@Override

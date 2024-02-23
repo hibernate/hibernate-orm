@@ -21,6 +21,7 @@ public class DaoConstructor implements MetaAttribute {
 	private final String sessionVariableName;
 	private final boolean addInjectAnnotation;
 	private final boolean addNonnullAnnotation;
+	private final boolean addOverrideAnnotation;
 
 	public DaoConstructor(
 			Metamodel annotationMetaEntity,
@@ -29,7 +30,8 @@ public class DaoConstructor implements MetaAttribute {
 			String sessionTypeName,
 			String sessionVariableName,
 			boolean addInjectAnnotation,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean addOverrideAnnotation) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.constructorName = constructorName;
 		this.methodName = methodName;
@@ -37,6 +39,7 @@ public class DaoConstructor implements MetaAttribute {
 		this.sessionVariableName = sessionVariableName;
 		this.addInjectAnnotation = addInjectAnnotation;
 		this.addNonnullAnnotation = addNonnullAnnotation;
+		this.addOverrideAnnotation = addOverrideAnnotation;
 	}
 
 	@Override
@@ -78,7 +81,11 @@ public class DaoConstructor implements MetaAttribute {
 				.append(sessionVariableName)
 				.append(";")
 				.append("\n}")
-				.append("\n\n")
+				.append("\n\n");
+		if (addOverrideAnnotation) {
+			declaration.append("@Override\n");
+		}
+		declaration
 				.append("public ");
 		notNull( declaration );
 		declaration

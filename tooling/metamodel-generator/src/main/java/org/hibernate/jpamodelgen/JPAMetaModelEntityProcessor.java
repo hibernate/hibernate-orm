@@ -41,13 +41,10 @@ import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.jpamodelgen.util.Constants.FIND;
 import static org.hibernate.jpamodelgen.util.Constants.HQL;
+import static org.hibernate.jpamodelgen.util.Constants.JD_REPOSITORY;
 import static org.hibernate.jpamodelgen.util.Constants.SQL;
 import static org.hibernate.jpamodelgen.util.StringUtil.isProperty;
-import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
-import static org.hibernate.jpamodelgen.util.TypeUtils.getCollectionElementType;
-import static org.hibernate.jpamodelgen.util.TypeUtils.isAnnotationMirrorOfType;
-import static org.hibernate.jpamodelgen.util.TypeUtils.isClassOrRecordType;
-import static org.hibernate.jpamodelgen.util.TypeUtils.toTypeString;
+import static org.hibernate.jpamodelgen.util.TypeUtils.*;
 
 /**
  * Main annotation processor.
@@ -70,7 +67,9 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.toTypeString;
 		Constants.HIB_FETCH_PROFILE,
 		Constants.HIB_FILTER_DEF,
 		Constants.HIB_NAMED_QUERY,
-		Constants.HIB_NAMED_NATIVE_QUERY
+		Constants.HIB_NAMED_NATIVE_QUERY,
+		// do not need to list other Jakarta Data annotations here
+		Constants.JD_REPOSITORY
 })
 @SupportedOptions({
 		JPAMetaModelEntityProcessor.DEBUG_OPTION,
@@ -246,8 +245,20 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				}
 				else if ( element instanceof TypeElement ) {
 					final TypeElement typeElement = (TypeElement) element;
+					final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
+					if ( repository != null ) {
+						final String provider = (String) getAnnotationValue( repository, "provider" );
+						if ( provider == null || provider.isEmpty()
+								|| provider.equalsIgnoreCase("hibernate") ) {
+							context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
+							final AnnotationMetaEntity metaEntity =
+									AnnotationMetaEntity.create( typeElement, context, false, false );
+							context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+						}
+					}
+					else {
 						for ( Element member : typeElement.getEnclosedElements() ) {
-							if ( containsAnnotation( member, HQL, SQL, FIND ) ) {
+							if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
 								context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
 								final AnnotationMetaEntity metaEntity =
 										AnnotationMetaEntity.create( typeElement, context, false, false );
@@ -255,6 +266,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 								break;
 							}
 						}
+					}
 				}
 			}
 			catch ( ProcessLaterException processLaterException ) {

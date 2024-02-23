@@ -61,6 +61,13 @@ public final class Constants {
 	public static final String SQL = "org.hibernate.annotations.processing.SQL";
 	public static final String FIND = "org.hibernate.annotations.processing.Find";
 
+	public static final String JD_REPOSITORY = "jakarta.data.repository.Repository";
+	public static final String JD_QUERY = "jakarta.data.repository.Query";
+	public static final String JD_FIND = "jakarta.data.repository.Find";
+	public static final String JD_INSERT = "jakarta.data.repository.Insert";
+	public static final String JD_UPDATE = "jakarta.data.repository.Update";
+	public static final String JD_DELETE = "jakarta.data.repository.Delete";
+
 	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
 
 	public static final String ENTITY_MANAGER = "jakarta.persistence.EntityManager";

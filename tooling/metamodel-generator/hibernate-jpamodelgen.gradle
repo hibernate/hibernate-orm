@@ -25,6 +25,7 @@ dependencies {
     api jakartaLibs.jaxb
     api jakartaLibs.validation
     api jakartaLibs.annotation
+    api jakartaLibs.data
     api libs.antlrRuntime
     api libs.byteBuddy
 

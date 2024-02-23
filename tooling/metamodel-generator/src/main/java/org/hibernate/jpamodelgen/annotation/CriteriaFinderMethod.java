@@ -9,8 +9,10 @@ package org.hibernate.jpamodelgen.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.util.Constants;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
@@ -190,6 +192,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			for ( int i = 0; i < paramNames.size(); i ++ ) {
 				final String paramName = paramNames.get(i);
 				final String paramType = paramTypes.get(i);
+				//TODO: Jakarta Order!!
 				if ( isJakartaSortParam(paramType) ) {
 					if ( firstOrderBy ) {
 						firstOrderBy = false;
@@ -197,7 +200,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					else {
 						declaration.append(',');
 					}
-					orderBy(declaration, paramName);
+					orderBy(declaration, paramName, paramType.endsWith("..."));
 				}
 			}
 		}
@@ -255,20 +258,33 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				.append(')');
 	}
 
-	private static void orderBy(StringBuilder declaration, String paramName) {
+	private void orderBy(StringBuilder declaration, String paramName, boolean variadic) {
 		// TODO: Sort.ignoreCase()
-		declaration
-				.append("\n\t\t")
-				.append(paramName)
-				.append(".isAscending()\n")
-				.append("\t\t\t\t? builder.")
-				.append("asc(entity.get(")
-				.append(paramName)
-				.append(".property()))\n")
-				.append("\t\t\t\t: builder.")
-				.append("desc(entity.get(")
-				.append(paramName)
-				.append(".property()))");
+		if ( variadic ) {
+			annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
+			annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+			declaration
+					.append("\n\t\tasList(")
+					.append(paramName)
+					.append(")\n\t\t\t.stream()\n\t\t\t.map(sort -> sort.isAscending()\n")
+					.append("\t\t\t\t\t? builder.asc(entity.get(sort.property()))\n")
+					.append("\t\t\t\t\t: builder.desc(entity.get(sort.property()))\n")
+					.append("\t\t\t)\n\t\t\t.collect(toList())");
+		}
+		else {
+			declaration
+					.append("\n\t\t")
+					.append(paramName)
+					.append(".isAscending()\n")
+					.append("\t\t\t\t? builder.")
+					.append("asc(entity.get(")
+					.append(paramName)
+					.append(".property()))\n")
+					.append("\t\t\t\t: builder.")
+					.append("desc(entity.get(")
+					.append(paramName)
+					.append(".property()))");
+		}
 	}
 
 	private void parameter(StringBuilder declaration, int i, String paramName, String paramType) {

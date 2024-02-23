@@ -15,6 +15,7 @@ import org.hibernate.query.Page;
 import org.hibernate.query.SortDirection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -209,29 +210,6 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
 		unwrapQuery( declaration, unwrapped );
-		if ( paramType.startsWith(JD_SORT) ) {
-			final String sortableEntityClass = getSortableEntityClass();
-			if ( sortableEntityClass != null ) {
-				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
-				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
-				declaration
-						.append("\n\t\t\t.setOrder(")
-						.append(annotationMetaEntity.importType(Order.class.getName()))
-						.append(".by(")
-						.append(annotationMetaEntity.importType(sortableEntityClass))
-						.append(".class, ")
-						.append(paramName)
-						.append(".property()")
-						.append(",\n\t\t\t\t\t")
-						.append(paramName)
-						.append(".isAscending() ? ASCENDING : DESCENDING")
-						.append("))");
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
 		if ( paramType.startsWith(JD_ORDER) ) {
 			final String sortableEntityClass = getSortableEntityClass();
 			if ( sortableEntityClass != null ) {
@@ -252,10 +230,46 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						.append(",\n\t\t\t\t\t\t")
 						.append("sort.isAscending() ? ASCENDING : DESCENDING")
 						.append(", sort.ignoreCase())));\n\t\t\t}})");
-				return true;
 			}
-			else {
-				return false;
+		}
+		else if ( paramType.startsWith(JD_SORT) && paramType.endsWith("...") ) {
+			final String sortableEntityClass = getSortableEntityClass();
+			if ( sortableEntityClass != null ) {
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
+				annotationMetaEntity.staticImport(Order.class.getName(), "by");
+				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+				declaration
+						.append("\n\t\t\t.setOrder(asList(")
+						.append(paramName)
+						.append(").stream().map(sort -> ")
+						.append("by(")
+						.append(annotationMetaEntity.importType(sortableEntityClass))
+						.append(".class, ")
+						.append("sort.property()")
+						.append(",\n\t\t\t\t\t\t")
+						.append("sort.isAscending() ? ASCENDING : DESCENDING")
+						.append(", sort.ignoreCase()))\n\t\t\t\t.collect(toList())\n\t\t\t)");
+			}
+		}
+		else if ( paramType.startsWith(JD_SORT) ) {
+			final String sortableEntityClass = getSortableEntityClass();
+			if ( sortableEntityClass != null ) {
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				declaration
+						.append("\n\t\t\t.setOrder(")
+						.append(annotationMetaEntity.importType(Order.class.getName()))
+						.append(".by(")
+						.append(annotationMetaEntity.importType(sortableEntityClass))
+						.append(".class, ")
+						.append(paramName)
+						.append(".property()")
+						.append(",\n\t\t\t\t\t")
+						.append(paramName)
+						.append(".isAscending() ? ASCENDING : DESCENDING")
+						.append("))");
 			}
 		}
 		else if ( paramType.endsWith("...") ) {

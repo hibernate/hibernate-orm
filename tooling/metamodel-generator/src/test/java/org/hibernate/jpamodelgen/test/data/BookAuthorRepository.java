@@ -47,6 +47,9 @@ public interface BookAuthorRepository {
 	@Find
 	List<Book> byPubDate2(LocalDate publicationDate, Order<? super Book> order);
 
+	@Find
+	List<Book> byPubDate3(LocalDate publicationDate, Sort<? super Book>... order);
+
 	@Insert
 	void create(Book book);
 
@@ -70,4 +73,7 @@ public interface BookAuthorRepository {
 
 	@Query("from Book where title like :title")
 	List<Book> books2(@Param("title") String titlePattern, Limit limit);
+
+	@Query("from Book where title like :title")
+	List<Book> books3(String title, Limit limit, Sort<Book>... order);
 }

@@ -12,6 +12,7 @@ import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
+import org.hibernate.query.SortDirection;
 
 import java.util.List;
 
@@ -203,7 +204,31 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
 		unwrapQuery( declaration, unwrapped );
-		if ( paramType.endsWith("...") ) {
+		final boolean jakartaSort = paramType.startsWith(JD_SORT);
+		if ( jakartaSort ) {
+			final String sortableEntityClass = getSortableEntityClass();
+			if ( sortableEntityClass != null ) {
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				declaration
+						.append("\n\t\t\t.setOrder(")
+						.append(annotationMetaEntity.importType(Order.class.getName()))
+						.append(".by(")
+						.append(annotationMetaEntity.importType(sortableEntityClass))
+						.append(".class, ")
+						.append(paramName)
+						.append(".property()")
+						.append(",\n\t\t\t\t\t")
+						.append(paramName)
+						.append(".isAscending() ? ASCENDING : DESCENDING")
+						.append("))");
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else if ( paramType.endsWith("...") ) {
 			declaration
 					.append("\n\t\t\t.setOrder(")
 					.append(annotationMetaEntity.importType(Constants.LIST))
@@ -218,6 +243,10 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(")");
 		}
 		return true;
+	}
+
+	@Nullable String getSortableEntityClass() {
+		return returnTypeName;
 	}
 
 	private void unwrapQuery(StringBuilder declaration, boolean unwrapped) {

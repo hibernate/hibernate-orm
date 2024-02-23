@@ -1020,7 +1020,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		context.message( param,
 				"no matching field named '"
-						+ param.getSimpleName().toString().replace('$', '.')
+						+ parameterName( param ).replace('$', '.')
 						+ "' in entity class '" + entityType + "'",
 				Diagnostic.Kind.ERROR );
 		return null;
@@ -1048,7 +1048,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable Element memberMatchingParameter(TypeElement entityType, VariableElement param) {
-		final StringTokenizer tokens = new StringTokenizer( param.getSimpleName().toString(), "$" );
+		final StringTokenizer tokens = new StringTokenizer( parameterName( param ), "$" );
 		return memberMatchingParameter( entityType, param, tokens );
 	}
 
@@ -1531,8 +1531,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static List<String> parameterNames(ExecutableElement method) {
 		return method.getParameters().stream()
-				.map(param -> param.getSimpleName().toString())
+				.map(AnnotationMetaEntity::parameterName)
 				.collect(toList());
+	}
+
+	private static String parameterName(VariableElement parameter) {
+		final AnnotationMirror by = getAnnotationMirror( parameter, "jakarta.data.repository.By" );
+		final AnnotationMirror param = getAnnotationMirror( parameter, "jakarta.data.repository.Param" );
+		if ( by != null ) {
+			return (String) castNonNull( getAnnotationValue( by, "value" ) );
+		}
+		else if ( param != null ) {
+			return (String) castNonNull( getAnnotationValue( param, "value" ) );
+		}
+		else {
+			return parameter.getSimpleName().toString();
+		}
 	}
 
 	private static boolean isNullable(Element member) {

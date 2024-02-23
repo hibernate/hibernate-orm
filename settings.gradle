@@ -140,6 +140,7 @@ dependencyResolutionManagement {
             def elVersion = version "el", "5.0.0"
             def injectVersion = version "inject", "2.0.1"
             def interceptorsVersion = version "interceptors", "2.1.0"
+            def dataVersion = version "data", "1.0.0-M3"
             def jaccVersion = version "jacc", "2.1.0"
             def jaxbApiVersion = version "jaxbApi", "4.0.0"
             def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.2"
@@ -157,6 +158,7 @@ dependencyResolutionManagement {
             library( "cdi", "jakarta.enterprise", "jakarta.enterprise.cdi-api" ).versionRef( cdiVersion )
             library( "annotation", "jakarta.annotation", "jakarta.annotation-api" ).versionRef( annotationVersion )
             library( "interceptors", "jakarta.interceptor", "jakarta.interceptor-api" ).versionRef( interceptorsVersion )
+            library( "data", "jakarta.data", "jakarta.data-api" ).versionRef( dataVersion )
             library( "jsonbApi", "jakarta.json.bind", "jakarta.json.bind-api" ).versionRef( jsonbApiVersion )
             library( "jsonb", "org.eclipse", "yasson" ).versionRef( jsonbRuntimeVersion )
             library( "inject", "jakarta.inject", "jakarta.inject-api" ).versionRef( injectVersion )

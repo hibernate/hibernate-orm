@@ -156,7 +156,7 @@ public class QueryMethod extends AbstractQueryMethod {
 					setOrdinalParameter( declaration, ordinal, paramName );
 				}
 				else if ( isPageParam(paramType) ) {
-					setPage( declaration, paramName );
+					setPage( declaration, paramName, paramType );
 				}
 				else if ( isOrderParam(paramType) ) {
 					unwrapped = setOrder( declaration, unwrapped, paramName, paramType );

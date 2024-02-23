@@ -635,7 +635,7 @@ include::{extrasdir}/id/identifiers-generators-pooled-lo-optimizer-persist-examp
 ====
 
 As you can see from the list of generated SQL statements, you can insert 3 entities with just one database sequence call.
-This way, the pooled and the pooled-lo optimizers allow you to reduce the number of database roundtrips, therefore reducing the overall transaction response time.
+This way, the pooled and the pooled-lo optimizers allow you to reduce the number of database round trips, therefore reducing the overall transaction response time.
 
 [[identifiers-derived]]
 ==== Derived Identifiers

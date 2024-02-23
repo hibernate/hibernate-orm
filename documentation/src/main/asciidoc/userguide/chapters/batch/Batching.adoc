@@ -72,7 +72,7 @@ There are several problems associated with this example:
   If the maximum memory allocated to the JVM is rather low, this example could fail with an `OutOfMemoryException`.
   The Java 1.8 JVM allocated either 1/4 of available RAM or 1Gb, which can easily accommodate 100 000 objects on the heap.
 . long-running transactions can deplete a connection pool so other transactions don't get a chance to proceed.
-. JDBC batching is not enabled by default, so every insert statement requires a database roundtrip.
+. JDBC batching is not enabled by default, so every insert statement requires a database round trip.
   To enable JDBC batching, set the `hibernate.jdbc.batch_size` property to an integer between 10 and 50.
 
 [IMPORTANT]

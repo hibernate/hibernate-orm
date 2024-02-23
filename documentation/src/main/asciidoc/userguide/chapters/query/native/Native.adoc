@@ -164,7 +164,7 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-asso
 This will allow the `Phone#person` to function properly since the `many-to-one` or `one-to-one`
 association is going to use a proxy that will be initialized when being navigated for the first time.
 
-It is possible to eagerly join the `Phone` and the `Person` entities to avoid the possible extra roundtrip for initializing the `many-to-one` association.
+It is possible to eagerly join the `Phone` and the `Person` entities to avoid the possible extra round trip for initializing the `many-to-one` association.
 
 [[sql-hibernate-entity-associations-query-many-to-one-join-example]]
 .Hibernate native query selecting entities with joined many-to-one association
@@ -182,7 +182,7 @@ include::{extrasdir}/sql-hibernate-entity-associations-query-many-to-one-join-ex
 
 [NOTE]
 ====
-As seen in the associated SQL query, Hibernate manages to construct the entity hierarchy without requiring any extra database roundtrip.
+As seen in the associated SQL query, Hibernate manages to construct the entity hierarchy without requiring any extra database round trips.
 ====
 
 Even when using the `addJoin()` method, the result list will only contain the root entity.

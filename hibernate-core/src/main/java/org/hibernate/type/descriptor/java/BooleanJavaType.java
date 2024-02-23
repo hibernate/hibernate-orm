@@ -191,9 +191,11 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 				@SuppressWarnings("unchecked")
 				BasicValueConverter<Boolean, ?> stringConverter =
 						(BasicValueConverter<Boolean, ?>) converter;
+				final Object falseValue = stringConverter.toRelationalValue( false );
+				final Object trueValue = stringConverter.toRelationalValue( true );
 				String[] values = new String[] {
-						stringConverter.toRelationalValue(false).toString(),
-						stringConverter.toRelationalValue(true).toString()
+						falseValue != null ? falseValue.toString() : null,
+						trueValue != null ? trueValue.toString() : null
 				};
 				return dialect.getCheckCondition( columnName, values );
 			}
@@ -201,9 +203,11 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 				@SuppressWarnings("unchecked")
 				BasicValueConverter<Boolean, ? extends Number> numericConverter =
 						(BasicValueConverter<Boolean, ? extends Number>) converter;
-				long[] values = new long[] {
-						numericConverter.toRelationalValue(false).longValue(),
-						numericConverter.toRelationalValue(true).longValue()
+				final Number falseValue = numericConverter.toRelationalValue( false );
+				final Number trueValue = numericConverter.toRelationalValue( true );
+				Long[] values = new Long[] {
+						falseValue != null ? Long.valueOf(falseValue.longValue()) : null,
+						trueValue != null ? Long.valueOf(trueValue.longValue()) : null
 				};
 				return dialect.getCheckCondition( columnName, values );
 			}

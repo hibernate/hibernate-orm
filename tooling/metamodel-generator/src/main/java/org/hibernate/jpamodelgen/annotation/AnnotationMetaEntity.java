@@ -76,6 +76,7 @@ import static org.hibernate.jpamodelgen.util.Constants.JD_INSERT;
 import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
 import static org.hibernate.jpamodelgen.util.Constants.JD_QUERY;
 import static org.hibernate.jpamodelgen.util.Constants.JD_REPOSITORY;
+import static org.hibernate.jpamodelgen.util.Constants.JD_SAVE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.Constants.JD_UPDATE;
 import static org.hibernate.jpamodelgen.util.Constants.MUTINY_SESSION;
@@ -306,7 +307,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			else if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
 				queryMethods.add( method );
 			}
-			else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE ) ) {
+			else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE, JD_SAVE ) ) {
 				lifecycleMethods.add( method );
 			}
 		}
@@ -487,7 +488,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void addLifecycleMethods(List<ExecutableElement> queryMethods) {
 		for ( ExecutableElement method : queryMethods) {
 			if ( method.getModifiers().contains(Modifier.ABSTRACT) ) {
-				if ( hasAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE ) ) {
+				if ( hasAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE, JD_SAVE ) ) {
 					addLifecycleMethod( method );
 				}
 			}
@@ -641,14 +642,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static String lifecycleOperation(ExecutableElement method) {
-		if ( hasAnnotation(method, JD_INSERT ) ) {
+		if ( hasAnnotation(method, JD_INSERT) ) {
 			return "insert";
 		}
-		else if ( hasAnnotation(method, JD_UPDATE ) ) {
+		else if ( hasAnnotation(method, JD_UPDATE) ) {
 			return "update";
 		}
-		else if ( hasAnnotation(method, JD_DELETE ) ) {
+		else if ( hasAnnotation(method, JD_DELETE) ) {
 			return "delete";
+		}
+		else if ( hasAnnotation(method, JD_SAVE) ) {
+			return "upsert";
 		}
 		else {
 			throw new AssertionFailure("Unrecognized lifecycle operation");

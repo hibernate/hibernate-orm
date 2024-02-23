@@ -11,6 +11,7 @@ import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Param;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
+import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
 import org.hibernate.StatelessSession;
 
@@ -48,6 +49,9 @@ public interface BookAuthorRepository {
 
 	@Delete
 	void delete(Book book);
+
+	@Save
+	void createOrUpdate(Book book);
 
 	@Query("from Book where title like :title")
 	List<Book> books0(String title);

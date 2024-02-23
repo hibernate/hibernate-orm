@@ -68,6 +68,7 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
         test {
             java {
                 exclude '**/records/*.java'
+                exclude '**/data/*.java'
             }
         }
     }

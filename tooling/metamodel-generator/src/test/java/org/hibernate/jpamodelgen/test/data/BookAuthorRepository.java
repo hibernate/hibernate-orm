@@ -27,6 +27,9 @@ public interface BookAuthorRepository {
 	Book book(String isbn);
 
 	@Find
+	Author author(String ssn);
+
+	@Find
 	Book byTitleAndDate(String title, LocalDate publicationDate);
 
 	@Find
@@ -55,6 +58,9 @@ public interface BookAuthorRepository {
 
 	@Save
 	void createOrUpdate(Book book);
+
+	@Query("from Book where title = :title")
+	Book bookWithTitle(String title);
 
 	@Query("from Book where title like :title")
 	List<Book> books0(String title);

@@ -39,7 +39,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			boolean dataRepository) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, addNonnullAnnotation,
-				dataRepository && containerType == null );
+				dataRepository );
 		this.containerType = containerType;
 		this.paramNullability = paramNullability;
 		this.orderBys = orderBys;
@@ -48,6 +48,11 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	@Override
 	public boolean isNullable(int index) {
 		return paramNullability.get(index);
+	}
+
+	@Override
+	boolean singleResult() {
+		return containerType == null;
 	}
 
 	@Override
@@ -77,7 +82,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private void executeQuery(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append('\n');
-		if (convertToDataExceptions) {
+		if (dataRepository) {
 			declaration
 					.append("\ttry {\n\t");
 		}
@@ -126,7 +131,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		}
 		declaration
 				.append(';');
-		if (convertToDataExceptions) {
+		if (dataRepository) {
 			declaration
 					.append('\n');
 		}

@@ -336,6 +336,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		initialized = true;
 	}
 
+	private @Nullable String dataStore() {
+		final AnnotationMirror repo = getAnnotationMirror( element, JD_REPOSITORY );
+		if ( repo != null ) {
+			final String dataStore = (String) getAnnotationValue( repo, "dataStore" );
+			if ( dataStore != null && !dataStore.isEmpty() ) {
+				return dataStore;
+			}
+		}
+		return null;
+	}
+
 	private void findSessionGetter(TypeElement type) {
 		if ( !hasAnnotation( type, Constants.ENTITY )
 				&& !hasAnnotation( type, Constants.MAPPED_SUPERCLASS )
@@ -379,6 +390,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						name,
 						sessionType,
 						sessionVariableName,
+						dataStore(),
 						context.addInjectAnnotation(),
 						context.addNonnullAnnotation(),
 						method != null

@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
@@ -19,6 +20,7 @@ public class DaoConstructor implements MetaAttribute {
 	private final String methodName;
 	private final String sessionTypeName;
 	private final String sessionVariableName;
+	private final @Nullable String dataStore;
 	private final boolean addInjectAnnotation;
 	private final boolean addNonnullAnnotation;
 	private final boolean addOverrideAnnotation;
@@ -29,6 +31,7 @@ public class DaoConstructor implements MetaAttribute {
 			String methodName,
 			String sessionTypeName,
 			String sessionVariableName,
+			@Nullable String dataStore,
 			boolean addInjectAnnotation,
 			boolean addNonnullAnnotation,
 			boolean addOverrideAnnotation) {
@@ -37,6 +40,7 @@ public class DaoConstructor implements MetaAttribute {
 		this.methodName = methodName;
 		this.sessionTypeName = sessionTypeName;
 		this.sessionVariableName = sessionVariableName;
+		this.dataStore = dataStore;
 		this.addInjectAnnotation = addInjectAnnotation;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.addOverrideAnnotation = addOverrideAnnotation;
@@ -70,6 +74,7 @@ public class DaoConstructor implements MetaAttribute {
 				.append(constructorName)
 				.append("(");
 		notNull( declaration );
+		named( declaration );
 		declaration
 				.append(annotationMetaEntity.importType(sessionTypeName))
 				.append(" ")
@@ -98,6 +103,17 @@ public class DaoConstructor implements MetaAttribute {
 				.append(";")
 				.append("\n}");
 		return declaration.toString();
+	}
+
+	private void named(StringBuilder declaration) {
+		if ( addInjectAnnotation && dataStore != null ) {
+			declaration
+					.append("@")
+					.append(annotationMetaEntity.importType("jakarta.inject.Named"))
+					.append("(\"")
+					.append(dataStore)
+					.append("\") ");
+		}
 	}
 
 	private void inject(StringBuilder declaration) {

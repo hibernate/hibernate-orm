@@ -1209,7 +1209,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final List<String> paramTypes = parameterTypes( method );
 				final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 				if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
-					if ( !((DeclaredType) returnType).getTypeArguments().isEmpty() ) {
+					final DeclaredType declaredType = (DeclaredType) returnType;
+					if ( !declaredType.getTypeArguments().isEmpty() ) {
 						context.message( method, mirror, value,
 								"query result type may not be a generic type"
 										+ " (change '" + returnType +
@@ -1231,7 +1232,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								dao,
 								sessionType[0],
 								sessionType[1],
-								context.addNonnullAnnotation()
+								context.addNonnullAnnotation(),
+								dataRepository
 						);
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
 

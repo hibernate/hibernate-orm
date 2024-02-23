@@ -45,6 +45,11 @@ public class IdFinderMethod extends AbstractFinderMethod {
 	}
 
 	@Override
+	boolean singleResult() {
+		return true;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
@@ -71,7 +76,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				.append("\n\t\t\t.load(")
 				.append(paramName)
 				.append(");");
-		if (convertToDataExceptions) {
+		if (dataRepository) {
 			declaration
 					.append("\n");
 		}
@@ -84,7 +89,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				.append(".class, ")
 				.append(paramName)
 				.append(");");
-		if (convertToDataExceptions) {
+		if (dataRepository) {
 			declaration
 					.append("\n");
 		}

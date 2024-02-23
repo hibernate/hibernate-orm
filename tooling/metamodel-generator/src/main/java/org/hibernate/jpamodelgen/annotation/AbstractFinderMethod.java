@@ -20,7 +20,6 @@ import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFr
 public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	final String entity;
 	final List<String> fetchProfiles;
-	final boolean convertToDataExceptions;
 
 	public AbstractFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -38,10 +37,10 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				methodName,
 				paramNames, paramTypes, entity,
 				sessionType, sessionName,
-				belongsToDao, addNonnullAnnotation );
+				belongsToDao, addNonnullAnnotation,
+				convertToDataExceptions );
 		this.entity = entity;
 		this.fetchProfiles = fetchProfiles;
-		this.convertToDataExceptions = convertToDataExceptions;
 	}
 
 	@Override
@@ -178,34 +177,13 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		parameters( paramTypes, declaration ) ;
 		declaration
 				.append(" {\n");
-		if (convertToDataExceptions) {
+		if (dataRepository) {
 			declaration
 					.append("\ttry {\n\t");
 		}
 		declaration
 				.append("\treturn ")
 				.append(sessionName);
-	}
-
-	void convertExceptions(StringBuilder declaration) {
-		if (convertToDataExceptions) {
-			declaration
-					.append("\t}\n")
-					.append("\tcatch (")
-					.append(annotationMetaEntity.importType("jakarta.persistence.NoResultException"))
-					.append(" exception) {\n")
-					.append("\t\tthrow new ")
-					.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
-					.append("(exception);\n")
-					.append("\t}\n")
-					.append("\tcatch (")
-					.append(annotationMetaEntity.importType("jakarta.persistence.NonUniqueResultException"))
-					.append(" exception) {\n")
-					.append("\t\tthrow new ")
-					.append(annotationMetaEntity.importType("jakarta.data.exceptions.NonUniqueResultException"))
-					.append("(exception);\n")
-					.append("\t}\n");
-		}
 	}
 
 	private void entityType(StringBuilder declaration) {

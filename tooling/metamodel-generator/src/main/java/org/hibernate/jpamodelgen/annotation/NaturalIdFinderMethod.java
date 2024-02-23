@@ -38,6 +38,11 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 	}
 
 	@Override
+	boolean singleResult() {
+		return true;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );

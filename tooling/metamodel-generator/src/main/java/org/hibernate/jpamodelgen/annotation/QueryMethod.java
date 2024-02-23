@@ -39,12 +39,14 @@ public class QueryMethod extends AbstractQueryMethod {
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean dataRepository) {
 		super( annotationMetaEntity,
 				methodName,
 				paramNames, paramTypes, returnTypeName,
 				sessionType, sessionName,
-				belongsToDao, addNonnullAnnotation );
+				belongsToDao, addNonnullAnnotation,
+				dataRepository );
 		this.queryString = queryString;
 		this.containerTypeName = containerTypeName;
 		this.isUpdate = isUpdate;
@@ -67,6 +69,11 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
+	boolean singleResult() {
+		return containerTypeName == null;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
 		final StringBuilder returnType = returnType();
@@ -79,8 +86,13 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append(methodName);
 		parameters( paramTypes, declaration );
 		declaration
-				.append(" {")
-				.append("\n\t");
+				.append(" {\n");
+		if (dataRepository) {
+			declaration
+					.append("\ttry {\n\t");
+		}
+		declaration
+				.append("\t");
 		if ( returnTypeName == null || !returnTypeName.equals("void") ) {
 			declaration
 					.append("return ");
@@ -107,7 +119,8 @@ public class QueryMethod extends AbstractQueryMethod {
 		declaration.append(")");
 		boolean unwrapped = setParameters( paramTypes, declaration );
 		execute( declaration, unwrapped );
-		declaration.append(";\n}");
+		convertExceptions( declaration );
+		declaration.append("\n}");
 		return declaration.toString();
 	}
 
@@ -137,6 +150,10 @@ public class QueryMethod extends AbstractQueryMethod {
 						.append(".class)");
 
 			}
+		}
+		declaration.append(';');
+		if (dataRepository) {
+			declaration.append('\n');
 		}
 	}
 

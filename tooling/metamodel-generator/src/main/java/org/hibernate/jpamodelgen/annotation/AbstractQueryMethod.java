@@ -38,6 +38,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	final String sessionName;
 	final boolean belongsToDao;
 	final boolean addNonnullAnnotation;
+	final boolean dataRepository;
 
 	public AbstractQueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -47,7 +48,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			String sessionType,
 			String sessionName,
 			boolean belongsToDao,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean dataRepository) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.paramNames = paramNames;
@@ -57,6 +59,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		this.sessionName = sessionName;
 		this.belongsToDao = belongsToDao;
 		this.addNonnullAnnotation = addNonnullAnnotation;
+		this.dataRepository = dataRepository;
 	}
 
 	@Override
@@ -271,6 +274,40 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		}
 		return true;
 	}
+
+	void convertExceptions(StringBuilder declaration) {
+		if (dataRepository) {
+			declaration
+					.append("\t}\n");
+			if ( singleResult() ) {
+				declaration
+						.append("\tcatch (")
+						.append(annotationMetaEntity.importType("jakarta.persistence.NoResultException"))
+						.append(" exception) {\n")
+						.append("\t\tthrow new ")
+						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
+						.append("(exception);\n")
+						.append("\t}\n")
+						.append("\tcatch (")
+						.append(annotationMetaEntity.importType("jakarta.persistence.NonUniqueResultException"))
+						.append(" exception) {\n")
+						.append("\t\tthrow new ")
+						.append(annotationMetaEntity.importType("jakarta.data.exceptions.NonUniqueResultException"))
+						.append("(exception);\n")
+						.append("\t}\n");
+			}
+			declaration
+					.append("\tcatch (")
+					.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceException"))
+					.append(" exception) {\n")
+					.append("\t\tthrow new ")
+					.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
+					.append("(exception);\n")
+					.append("\t}\n");
+		}
+	}
+
+	abstract boolean singleResult();
 
 	@Nullable String getSortableEntityClass() {
 		return returnTypeName;

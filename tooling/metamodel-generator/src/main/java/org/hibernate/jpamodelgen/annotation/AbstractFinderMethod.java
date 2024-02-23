@@ -20,6 +20,7 @@ import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFr
 public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	final String entity;
 	final List<String> fetchProfiles;
+	final boolean convertToDataExceptions;
 
 	public AbstractFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -31,7 +32,8 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			List<String> fetchProfiles,
 			List<String> paramNames,
 			List<String> paramTypes,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean convertToDataExceptions) {
 		super( annotationMetaEntity,
 				methodName,
 				paramNames, paramTypes, entity,
@@ -39,6 +41,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				belongsToDao, addNonnullAnnotation );
 		this.entity = entity;
 		this.fetchProfiles = fetchProfiles;
+		this.convertToDataExceptions = convertToDataExceptions;
 	}
 
 	@Override
@@ -172,11 +175,37 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		declaration
 				.append(" ")
 				.append(methodName);
-		parameters( paramTypes, declaration) ;
+		parameters( paramTypes, declaration ) ;
 		declaration
-				.append(" {")
-				.append("\n\treturn ")
+				.append(" {\n");
+		if (convertToDataExceptions) {
+			declaration
+					.append("\ttry {\n\t");
+		}
+		declaration
+				.append("\treturn ")
 				.append(sessionName);
+	}
+
+	void convertExceptions(StringBuilder declaration) {
+		if (convertToDataExceptions) {
+			declaration
+					.append("\t}\n")
+					.append("\tcatch (")
+					.append(annotationMetaEntity.importType("jakarta.persistence.NoResultException"))
+					.append(" exception) {\n")
+					.append("\t\tthrow new ")
+					.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
+					.append("(exception);\n")
+					.append("\t}\n")
+					.append("\tcatch (")
+					.append(annotationMetaEntity.importType("jakarta.persistence.NonUniqueResultException"))
+					.append(" exception) {\n")
+					.append("\t\tthrow new ")
+					.append(annotationMetaEntity.importType("jakarta.data.exceptions.NonUniqueResultException"))
+					.append("(exception);\n")
+					.append("\t}\n");
+		}
 	}
 
 	private void entityType(StringBuilder declaration) {

@@ -24,9 +24,10 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			String sessionType,
 			String sessionName,
 			List<String> fetchProfiles,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean dataRepository) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, addNonnullAnnotation );
+				paramNames, paramTypes, addNonnullAnnotation, dataRepository );
 		this.paramNullability = paramNullability;
 	}
 
@@ -48,7 +49,8 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		else {
 			findBlockingly( declaration );
 		}
-		declaration.append(";\n}");
+		convertExceptions( declaration );
+		declaration.append("\n}");
 		return declaration.toString();
 	}
 
@@ -72,7 +74,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			}
 		}
 		declaration
-				.append("\n\t\t\t.load()");
+				.append("\n\t\t\t.load();");
 	}
 
 	private void findReactively(StringBuilder declaration) {
@@ -121,7 +123,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if (composite) {
 			declaration.append("\n\t\t\t)\n\t");
 		}
-		declaration.append(")");
+		declaration.append(");");
 	}
 
 }

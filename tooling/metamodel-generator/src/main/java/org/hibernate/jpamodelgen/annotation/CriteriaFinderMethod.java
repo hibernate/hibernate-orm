@@ -35,9 +35,11 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			String sessionName,
 			List<String> fetchProfiles,
 			List<OrderBy> orderBys,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean dataRepository) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, addNonnullAnnotation );
+				paramNames, paramTypes, addNonnullAnnotation,
+				dataRepository && containerType == null );
 		this.containerType = containerType;
 		this.paramNullability = paramNullability;
 		this.orderBys = orderBys;
@@ -62,13 +64,25 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append(" {");
 		nullChecks(paramTypes, declaration);
-
 		createQuery(declaration);
 		where(declaration, paramTypes);
 		orderBy(paramTypes, declaration);
-
+		executeQuery(declaration, paramTypes);
+		convertExceptions( declaration );
 		declaration
-				.append("\n\treturn ")
+				.append("\n}");
+		return declaration.toString();
+	}
+
+	private void executeQuery(StringBuilder declaration, List<String> paramTypes) {
+		declaration
+				.append('\n');
+		if (convertToDataExceptions) {
+			declaration
+					.append("\ttry {\n\t");
+		}
+		declaration
+				.append("\treturn ")
 				.append(sessionName)
 				.append(".createQuery(query)");
 		final boolean hasOrderParameter =
@@ -89,13 +103,13 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
 			if ( isPageParam(paramType) ) {
-				setPage( declaration, paramName, paramType );
+				setPage(declaration, paramName, paramType );
 			}
 			else if ( isOrderParam(paramType) && !isJakartaSortParam(paramType) ) {
-				setOrder( declaration, true, paramName, paramType );
+				setOrder(declaration, true, paramName, paramType );
 			}
 		}
-		enableFetchProfile( declaration );
+		enableFetchProfile(declaration);
 		if ( containerType == null) {
 			if ( unwrap || hasEnabledFetchProfiles ) {
 				declaration.append("\n\t\t\t");
@@ -111,8 +125,11 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					.append(".getResultList()");
 		}
 		declaration
-				.append(";\n}");
-		return declaration.toString();
+				.append(';');
+		if (convertToDataExceptions) {
+			declaration
+					.append('\n');
+		}
 	}
 
 	private void createQuery(StringBuilder declaration) {

@@ -111,6 +111,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final Map<String, MetaAttribute> members;
 	private final Context context;
 	private final boolean managed;
+	private boolean dataRepository;
 
 	private AccessTypeInformation entityAccessTypeInfo;
 
@@ -312,8 +313,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 
+		dataRepository = hasAnnotation( element, JD_REPOSITORY );
 		findSessionGetter( element );
-		if ( !dao && hasAnnotation( element, JD_REPOSITORY ) ) {
+		if ( !dao && dataRepository) {
 			dao = true;
 			sessionType = HIB_STATELESS_SESSION;
 			addDaoConstructor( null );
@@ -753,7 +755,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						sessionType[1],
 						enabledFetchProfiles( method ),
 						orderByList( method, entity ),
-						context.addNonnullAnnotation()
+						context.addNonnullAnnotation(),
+						dataRepository
 				)
 		);
 	}
@@ -906,7 +909,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[0],
 							sessionType[1],
 							enabledFetchProfiles( method ),
-							context.addNonnullAnnotation()
+							context.addNonnullAnnotation(),
+							dataRepository
 					)
 			);
 		}
@@ -925,7 +929,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[1],
 							enabledFetchProfiles( method ),
 							orderByList( method, entity ),
-							context.addNonnullAnnotation()
+							context.addNonnullAnnotation(),
+							dataRepository
 					)
 			);
 		}
@@ -957,7 +962,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[0],
 									sessionType[1],
 									profiles,
-									context.addNonnullAnnotation()
+									context.addNonnullAnnotation(),
+									dataRepository
 							)
 					);
 					break;
@@ -974,7 +980,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[0],
 									sessionType[1],
 									profiles,
-									context.addNonnullAnnotation()
+									context.addNonnullAnnotation(),
+									dataRepository
 							)
 					);
 					break;
@@ -993,7 +1000,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[1],
 									profiles,
 									orderByList( method, entity ),
-									context.addNonnullAnnotation()
+									context.addNonnullAnnotation(),
+									dataRepository
 							)
 					);
 					break;

@@ -427,7 +427,7 @@ include::{example-dir-fetching}/BatchFetchingTest.java[tags=fetching-batch-mappi
 
 Considering that we have previously fetched several `Department` entities,
 and now we need to initialize the `employees` entity collection for each particular `Department`,
-the `@BatchSize` annotations allows us to load multiple `Employee` entities in a single database roundtrip.
+the `@BatchSize` annotations allows us to load multiple `Employee` entities in a single database round trip.
 
 [[fetching-batch-fetching-example]]
 .`@BatchSize` fetching example

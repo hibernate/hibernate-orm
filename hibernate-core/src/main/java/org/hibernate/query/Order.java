@@ -40,6 +40,7 @@ public class Order<X> {
 	private final String attributeName;
 	private final NullPrecedence nullPrecedence;
 	private final int element;
+	private final boolean ignoreCase;
 
 	private Order(SortDirection order, NullPrecedence nullPrecedence, SingularAttribute<X, ?> attribute) {
 		this.order = order;
@@ -48,6 +49,17 @@ public class Order<X> {
 		this.entityClass = attribute.getDeclaringType().getJavaType();
 		this.nullPrecedence = nullPrecedence;
 		this.element = 1;
+		this.ignoreCase = false;
+	}
+
+	private Order(SortDirection order, NullPrecedence nullPrecedence, SingularAttribute<X, ?> attribute, boolean ignoreCase) {
+		this.order = order;
+		this.attribute = attribute;
+		this.attributeName = attribute.getName();
+		this.entityClass = attribute.getDeclaringType().getJavaType();
+		this.nullPrecedence = nullPrecedence;
+		this.element = 1;
+		this.ignoreCase = ignoreCase;
 	}
 
 	private Order(SortDirection order, NullPrecedence nullPrecedence, Class<X> entityClass, String attributeName) {
@@ -57,6 +69,7 @@ public class Order<X> {
 		this.attribute = null;
 		this.nullPrecedence = nullPrecedence;
 		this.element = 1;
+		this.ignoreCase = false;
 	}
 
 	private Order(SortDirection order, NullPrecedence nullPrecedence, int element) {
@@ -66,6 +79,17 @@ public class Order<X> {
 		this.attribute = null;
 		this.nullPrecedence = nullPrecedence;
 		this.element = element;
+		this.ignoreCase = false;
+	}
+
+	private Order(SortDirection order, NullPrecedence nullPrecedence, Class<X> entityClass, String attributeName, boolean ignoreCase) {
+		this.order = order;
+		this.entityClass = entityClass;
+		this.attributeName = attributeName;
+		this.attribute = null;
+		this.nullPrecedence = nullPrecedence;
+		this.element = 1;
+		this.ignoreCase = ignoreCase;
 	}
 
 	public static <T> Order<T> asc(SingularAttribute<T,?> attribute) {
@@ -78,6 +102,10 @@ public class Order<X> {
 
 	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction) {
 		return new Order<>(direction, NullPrecedence.NONE, attribute);
+	}
+
+	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, boolean ignoreCase) {
+		return new Order<>(direction, NullPrecedence.NONE, attribute, ignoreCase);
 	}
 
 	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, NullPrecedence nullPrecedence) {
@@ -94,6 +122,10 @@ public class Order<X> {
 
 	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction) {
 		return new Order<>( direction, NullPrecedence.NONE, entityClass, attributeName );
+	}
+
+	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, boolean ignoreCase) {
+		return new Order<>( direction, NullPrecedence.NONE, entityClass, attributeName, ignoreCase );
 	}
 
 	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, NullPrecedence nullPrecedence) {
@@ -122,6 +154,10 @@ public class Order<X> {
 
 	public NullPrecedence getNullPrecedence() {
 		return nullPrecedence;
+	}
+
+	public boolean isCaseInsensitive() {
+		return ignoreCase;
 	}
 
 	public SingularAttribute<X, ?> getAttribute() {

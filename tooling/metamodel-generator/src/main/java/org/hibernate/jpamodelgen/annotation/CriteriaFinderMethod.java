@@ -234,6 +234,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	}
 
 	private static void orderBy(StringBuilder declaration, String paramName) {
+		// TODO: Sort.ignoreCase()
 		declaration
 				.append("\n\t\t")
 				.append(paramName)

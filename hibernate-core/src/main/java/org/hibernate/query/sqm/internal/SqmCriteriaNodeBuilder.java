@@ -549,6 +549,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase) {
+		return new SqmSortSpecification( (SqmExpression<?>) sortExpression, sortOrder, nullPrecedence, ignoreCase );
+	}
+
+	@Override
 	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder) {
 		return new SqmSortSpecification( (SqmExpression<?>) sortExpression, sortOrder );
 	}

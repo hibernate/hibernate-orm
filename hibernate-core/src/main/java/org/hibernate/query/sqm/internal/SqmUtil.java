@@ -592,7 +592,7 @@ public class SqmUtil {
 						throw new IllegalQueryOperationException("Select item was of wrong entity type");
 					}
 					final SqmPath<Object> path = root.get( order.getAttributeName() );
-					return builder.sort( path, order.getDirection(), order.getNullPrecedence() );
+					return builder.sort( path, order.getDirection(), order.getNullPrecedence(), order.isCaseInsensitive() );
 				}
 				else {
 					throw new IllegalQueryOperationException("Select item was not an entity type");

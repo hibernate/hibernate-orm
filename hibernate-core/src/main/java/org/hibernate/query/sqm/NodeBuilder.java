@@ -1023,6 +1023,13 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 			NullPrecedence nullPrecedence);
 
 	@Override
+	SqmSortSpecification sort(
+			JpaExpression<?> sortExpression,
+			SortDirection sortOrder,
+			NullPrecedence nullPrecedence,
+			boolean ignoreCase);
+
+	@Override
 	SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
 
 	@Override

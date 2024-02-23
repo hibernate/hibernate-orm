@@ -248,7 +248,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						.append("sort.property()")
 						.append(",\n\t\t\t\t\t\t")
 						.append("sort.isAscending() ? ASCENDING : DESCENDING")
-						.append(")));\n\t\t\t}})");
+						.append(", sort.ignoreCase())));\n\t\t\t}})");
 				return true;
 			}
 			else {

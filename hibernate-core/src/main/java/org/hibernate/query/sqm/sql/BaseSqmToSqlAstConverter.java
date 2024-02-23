@@ -2541,7 +2541,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new SortSpecification(
 				expression,
 				sortSpecification.getSortDirection(),
-				sortSpecification.getNullPrecedence()
+				sortSpecification.getNullPrecedence(),
+				sortSpecification.isIgnoreCase()
 		);
 	}
 

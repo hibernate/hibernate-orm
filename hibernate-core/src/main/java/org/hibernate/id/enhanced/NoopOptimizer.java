@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.id.IntegralDataTypeHolder;
 
 /**
- * An optimizer that performs no optimization. A round-trip to
+ * An optimizer that performs no optimization. A round trip to
  * the database is required for each new id.
  * <p>
  * This implementation is not the most efficient one.

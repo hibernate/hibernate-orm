@@ -59,7 +59,7 @@ While simple statement logging is fine, using https://github.com/ttddyy/datasour
 === JDBC batching
 
 JDBC allows us to batch multiple SQL statements and to send them to the database server into a single request.
-This saves database roundtrips, and so it https://leanpub.com/high-performance-java-persistence/read#jdbc-batch-updates[reduces response time significantly].
+This saves database round trips, and so it https://leanpub.com/high-performance-java-persistence/read#jdbc-batch-updates[reduces response time significantly].
 
 Not only `INSERT` and `UPDATE` statements, but even `DELETE` statements can be batched as well.
 For `INSERT` and `UPDATE` statements, make sure that you have all the right configuration properties in place, like ordering inserts and updates and activating batching for versioned data.
@@ -101,7 +101,7 @@ However, you should keep in mind that the `IDENTITY` generators disables JDBC ba
 ====
 
 If you're using the `SEQUENCE` generator, then you should be using the enhanced identifier generators that were enabled by default in Hibernate 5.
-The *pooled* and the *pooled-lo* optimizers are very useful to reduce the number of database roundtrips when writing multiple entities per database transaction.
+The *pooled* and the *pooled-lo* optimizers are very useful to reduce the number of database round trips when writing multiple entities per database transaction.
 
 [[best-practices-mapping-associations]]
 ==== Associations

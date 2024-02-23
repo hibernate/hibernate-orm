@@ -36,6 +36,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.ProcessLaterException;
+import org.hibernate.jpamodelgen.annotation.CriteriaFinderMethod.OrderBy;
 import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
@@ -733,9 +734,46 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						sessionType[0],
 						sessionType[1],
 						enabledFetchProfiles( method ),
+						orderByList( method, entity ),
 						context.addNonnullAnnotation()
 				)
 		);
+	}
+
+	private List<OrderBy> orderByList(ExecutableElement method, TypeElement entityType) {
+		final AnnotationMirror orderByList =
+				getAnnotationMirror( method, "jakarta.data.repository.OrderBy.List" );
+		if ( orderByList != null ) {
+			final List<OrderBy> result = new ArrayList<>();
+			@SuppressWarnings("unchecked")
+			final List<AnnotationValue> list = (List<AnnotationValue>)
+					castNonNull( getAnnotationValue( orderByList, "value" ) );
+			for ( AnnotationValue element : list ) {
+				result.add( orderByExpression( castNonNull( (AnnotationMirror) element.getValue() ), entityType, method ) );
+			}
+			return result;
+		}
+		final AnnotationMirror orderBy =
+				getAnnotationMirror( method, "jakarta.data.repository.OrderBy" );
+		if ( orderBy != null ) {
+			return List.of( orderByExpression(orderBy, entityType, method) );
+		}
+		return emptyList();
+	}
+
+	private OrderBy orderByExpression(AnnotationMirror orderBy, TypeElement entityType, ExecutableElement method) {
+		final String fieldName = (String) castNonNull( getAnnotationValue(orderBy, "value") );
+		final Boolean descendingOrNull = (Boolean) getAnnotationValue(orderBy, "descending");
+		final Boolean ignoreCaseOrNull = (Boolean) getAnnotationValue(orderBy, "ignoreCase");
+		final boolean descending = descendingOrNull != null && descendingOrNull;
+		final boolean ignoreCase = ignoreCaseOrNull != null && ignoreCaseOrNull;
+		if ( memberMatchingPath( entityType, fieldName ) == null ) {
+			context.message( method, orderBy,
+					"no matching field named '" + fieldName
+							+ "' in entity class '" + entityType.getQualifiedName() + "'",
+					Diagnostic.Kind.ERROR );
+		}
+		return new OrderBy( fieldName, descending, ignoreCase );
 	}
 
 	private static @Nullable TypeMirror getTypeArgument(TypeMirror parameterType) {
@@ -865,6 +903,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[0],
 							sessionType[1],
 							enabledFetchProfiles( method ),
+							orderByList( method, entity ),
 							context.addNonnullAnnotation()
 					)
 			);
@@ -932,6 +971,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[0],
 									sessionType[1],
 									profiles,
+									orderByList( method, entity ),
 									context.addNonnullAnnotation()
 							)
 					);
@@ -988,7 +1028,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable FieldType validateFinderParameter(TypeElement entityType, VariableElement param) {
-		final Element member = memberMatchingParameter(entityType, param);
+		final Element member = memberMatchingPath( entityType, parameterName( param ) );
 		if ( member != null) {
 			final String memberType = memberType( member ).toString();
 			final String paramType = param.asType().toString();
@@ -1027,7 +1067,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean finderParameterNullable(TypeElement entity, VariableElement param) {
-		final Element member = memberMatchingParameter(entity, param);
+		final Element member = memberMatchingPath( entity, parameterName( param ) );
 		return member == null || isNullable(member);
 	}
 
@@ -1047,17 +1087,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private @Nullable Element memberMatchingParameter(TypeElement entityType, VariableElement param) {
-		final StringTokenizer tokens = new StringTokenizer( parameterName( param ), "$" );
-		return memberMatchingParameter( entityType, param, tokens );
+	private @Nullable Element memberMatchingPath(TypeElement entityType, String path) {
+		final StringTokenizer tokens = new StringTokenizer( path, "$" );
+		return memberMatchingPath( entityType, tokens );
 	}
 
-	private @Nullable Element memberMatchingParameter(TypeElement entityType, VariableElement param, StringTokenizer tokens) {
+	private @Nullable Element memberMatchingPath(TypeElement entityType, StringTokenizer tokens) {
 		final AccessType accessType = getAccessType(entityType);
 		final String nextToken = tokens.nextToken();
 		for ( Element member : entityType.getEnclosedElements() ) {
 			final Element match =
-					memberMatchingParameter(entityType, param, member, accessType, tokens, nextToken);
+					memberMatchingPath(entityType, member, accessType, tokens, nextToken);
 			if ( match != null ) {
 				return match;
 			}
@@ -1065,9 +1105,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return null;
 	}
 
-	private @Nullable Element memberMatchingParameter(
+	private @Nullable Element memberMatchingPath(
 			TypeElement entityType,
-			VariableElement param,
 			Element candidate,
 			AccessType accessType,
 			StringTokenizer tokens,
@@ -1101,7 +1140,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final TypeElement memberType = (TypeElement) declaredType.asElement();
 				memberTypes.put( qualify( entityType.getQualifiedName().toString(), memberName.toString() ),
 						memberType.getQualifiedName().toString() );
-				return memberMatchingParameter( memberType, param, tokens );
+				return memberMatchingPath( memberType, tokens );
 			}
 			return null;
 		}

@@ -21,8 +21,9 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 
 	private final @Nullable String containerType;
 	private final List<Boolean> paramNullability;
+	private final List<OrderBy> orderBys;
 
-	public CriteriaFinderMethod(
+	CriteriaFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
 			String methodName, String entity,
 			@Nullable String containerType,
@@ -32,11 +33,13 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			String sessionType,
 			String sessionName,
 			List<String> fetchProfiles,
+			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, addNonnullAnnotation );
 		this.containerType = containerType;
 		this.paramNullability = paramNullability;
+		this.orderBys = orderBys;
 	}
 
 	@Override
@@ -101,7 +104,38 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			}
 		}
 		declaration
-				.append("\n\t);")
+				.append("\n\t);");
+		if ( !orderBys.isEmpty() ) {
+			declaration.append("\n\tquery.orderBy(");
+			boolean firstOrderBy = true;
+			for ( OrderBy orderBy : orderBys ) {
+				if ( firstOrderBy ) {
+					firstOrderBy = false;
+				}
+				else {
+					declaration.append(", ");
+				}
+				declaration
+						.append("builder.")
+						.append(orderBy.descending ? "desc" : "asc")
+						.append('(');
+				if ( orderBy.ignoreCase ) {
+					declaration.append("builder.lower(");
+				}
+				declaration
+						.append("entity.get(\"")
+						.append(orderBy.fieldName)
+						.append("\")");
+				if ( orderBy.ignoreCase ) {
+					declaration
+							.append(')');
+				}
+				declaration
+						.append(')');
+			}
+			declaration.append(");");
+		}
+		declaration
 				.append("\n\treturn ")
 				.append(sessionName)
 				.append(".createQuery(query)");
@@ -207,4 +241,14 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		return type;
 	}
 
+	static class OrderBy {
+		String fieldName;
+		boolean descending;
+		boolean ignoreCase;
+		public OrderBy(String fieldName, boolean descending, boolean ignoreCase) {
+			this.fieldName = fieldName;
+			this.descending = descending;
+			this.ignoreCase = ignoreCase;
+		}
+	}
 }

@@ -52,20 +52,42 @@ public class LifecycleMethod implements MetaAttribute {
 				.append(methodName)
 				.append('(');
 		notNull( declaration );
+		final boolean isInsert = operationName.equals("insert");
 		declaration
 				.append(annotationMetaEntity.importType(entity))
 				.append(' ')
 				.append(parameterName)
 				.append(')')
 				.append(" {\n")
-				.append("\t")
+				.append("\ttry {\n")
+				.append("\t\t")
 				.append(sessionName)
 				.append('.')
 				.append(operationName)
 				.append('(')
 				.append(parameterName)
 				.append(')')
-				.append(";\n}");
+				.append(";\n")
+				.append("\t}\n")
+				.append("\tcatch (")
+				.append(annotationMetaEntity.importType(isInsert
+						? "jakarta.persistence.EntityExistsException"
+						: "jakarta.persistence.OptimisticLockException"))
+				.append(" exception) {\n")
+				.append("\t\tthrow new ")
+				.append(annotationMetaEntity.importType(isInsert
+						? "jakarta.data.exceptions.EntityExistsException"
+						: "jakarta.data.exceptions.OptimisticLockingFailureException"))
+				.append("(exception);\n")
+				.append("\t}\n")
+				.append("\tcatch (")
+				.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceException"))
+				.append(" exception) {\n")
+				.append("\t\tthrow new ")
+				.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
+				.append("(exception);\n")
+				.append("\t}\n")
+				.append("}");
 		return declaration.toString();
 	}
 

@@ -808,7 +808,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * Render a SQL check condition for a column that represents an enumerated value
-	 * by its {@linkplain jakarta.persistence.EnumType#STRING string representation}.
+	 * by its {@linkplain jakarta.persistence.EnumType#STRING string representation}
+	 * or a given list of values (with NULL value allowed).
 	 *
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
@@ -816,11 +817,20 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
+		boolean nullIsValid = false;
 		for ( String value : values ) {
+			if ( value == null ) {
+				nullIsValid = true;
+				continue;
+			}
 			check.append( separator ).append('\'').append( value ).append('\'');
 			separator = ",";
 		}
-		return check.append( ')' ).toString();
+		check.append( ')' );
+		if ( nullIsValid ) {
+			check.append( " or " ).append( columnName ).append( " is null" );
+		}
+		return check.toString();
 	}
 
 	public String getCheckCondition(String columnName, Class<? extends Enum<?>> enumType) {
@@ -842,16 +852,43 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * by its {@linkplain jakarta.persistence.EnumType#ORDINAL ordinal representation}.
 	 *
 	 * @return a SQL expression that will occur in a {@code check} constraint
+	 * @deprecated use {@link #getCheckCondition(String, Long[])} instead
 	 */
+	@Deprecated(forRemoval = true)
 	public String getCheckCondition(String columnName, long[] values) {
+		Long objValues [] = new Long[ values.length ];
+		int i = 0;
+		for( long temp : values){
+			objValues[ i++ ] = temp;
+		}
+		return getCheckCondition(columnName, objValues);
+	}
+
+	/**
+	 * Render a SQL check condition for a column that represents an enumerated value
+	 * by its {@linkplain jakarta.persistence.EnumType#ORDINAL ordinal representation}
+	 * or a given list of values.
+	 *
+	 * @return a SQL expression that will occur in a {@code check} constraint
+	 */
+	public String getCheckCondition(String columnName, Long[] values) {
 		StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
-		for ( long value : values ) {
+		boolean nullIsValid = false;
+		for ( Long value : values ) {
+			if ( value == null ) {
+				nullIsValid = true;
+				continue;
+			}
 			check.append( separator ).append( value );
 			separator = ",";
 		}
-		return check.append( ')' ).toString();
+		check.append( ')' );
+		if ( nullIsValid ) {
+			check.append( " or " ).append( columnName ).append( " is null" );
+		}
+		return check.toString();
 	}
 
 	@Override

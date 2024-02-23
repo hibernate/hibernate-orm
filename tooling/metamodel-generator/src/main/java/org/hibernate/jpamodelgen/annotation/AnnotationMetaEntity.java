@@ -32,6 +32,7 @@ import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.AssertionFailure;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.ProcessLaterException;
@@ -64,10 +65,19 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
+import static org.hibernate.jpamodelgen.util.Constants.FIND;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_SESSION;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_STATELESS_SESSION;
+import static org.hibernate.jpamodelgen.util.Constants.HQL;
+import static org.hibernate.jpamodelgen.util.Constants.JD_DELETE;
+import static org.hibernate.jpamodelgen.util.Constants.JD_FIND;
+import static org.hibernate.jpamodelgen.util.Constants.JD_INSERT;
+import static org.hibernate.jpamodelgen.util.Constants.JD_QUERY;
+import static org.hibernate.jpamodelgen.util.Constants.JD_REPOSITORY;
+import static org.hibernate.jpamodelgen.util.Constants.JD_UPDATE;
 import static org.hibernate.jpamodelgen.util.Constants.MUTINY_SESSION;
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
+import static org.hibernate.jpamodelgen.util.Constants.SQL;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAccessTypeForHierarchy;
@@ -75,6 +85,7 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecif
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValueRef;
+import static org.hibernate.jpamodelgen.util.TypeUtils.hasAnnotation;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -284,16 +295,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<ExecutableElement> methodsOfClass = methodsIn( element.getEnclosedElements() );
 		final List<ExecutableElement> gettersAndSettersOfClass = new ArrayList<>();
 		final List<ExecutableElement> queryMethods = new ArrayList<>();
+		final List<ExecutableElement> lifecycleMethods = new ArrayList<>();
 		for ( ExecutableElement method: methodsOfClass ) {
 			if ( isGetterOrSetter( method ) ) {
 				gettersAndSettersOfClass.add( method );
 			}
-			else if ( containsAnnotation( method, Constants.HQL, Constants.SQL, Constants.FIND ) ) {
+			else if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
 				queryMethods.add( method );
+			}
+			else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE ) ) {
+				lifecycleMethods.add( method );
 			}
 		}
 
 		findSessionGetter( element );
+		if ( !dao && hasAnnotation( element, JD_REPOSITORY ) ) {
+			dao = true;
+			sessionType = HIB_STATELESS_SESSION;
+			addDaoConstructor( null );
+		}
 
 		if ( managed ) {
 			putMember( "class", new AnnotationMetaType(this) );
@@ -306,15 +326,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		checkNamedQueries();
 
+		addLifecycleMethods( lifecycleMethods );
+
 		addQueryMethods( queryMethods );
 
 		initialized = true;
 	}
 
 	private void findSessionGetter(TypeElement type) {
-		if ( !containsAnnotation( type, Constants.ENTITY )
-				&& !containsAnnotation( type, Constants.MAPPED_SUPERCLASS )
-				&& !containsAnnotation( type, Constants.EMBEDDABLE ) ) {
+		if ( !hasAnnotation( type, Constants.ENTITY )
+				&& !hasAnnotation( type, Constants.MAPPED_SUPERCLASS )
+				&& !hasAnnotation( type, Constants.EMBEDDABLE ) ) {
 			for ( ExecutableElement method : methodsIn( type.getEnclosedElements() ) ) {
 				if ( isSessionGetter( method ) ) {
 					dao = true;
@@ -342,19 +364,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * variable backing it, together with a constructor that initializes
 	 * it.
 	 */
-	private String addDaoConstructor(ExecutableElement method) {
-		final String name = method.getSimpleName().toString();
+	private String addDaoConstructor(@Nullable ExecutableElement method) {
+		final String sessionType = method == null ? this.sessionType : method.getReturnType().toString();
+		final String sessionVariableName = getSessionVariableName( sessionType );
+		final String name = method == null ? sessionVariableName : method.getSimpleName().toString();
 		final String typeName = element.getSimpleName().toString() + '_';
-		final String sessionType = method.getReturnType().toString();
 		putMember( name,
 				new DaoConstructor(
 						this,
 						typeName,
 						name,
 						sessionType,
-						getSessionVariableName(sessionType),
+						sessionVariableName,
 						context.addInjectAnnotation(),
-						context.addNonnullAnnotation()
+						context.addNonnullAnnotation(),
+						method != null
 				)
 		);
 		return sessionType;
@@ -445,6 +469,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				&& isSessionGetter( (ExecutableElement) memberOfClass ) );
 	}
 
+	private void addLifecycleMethods(List<ExecutableElement> queryMethods) {
+		for ( ExecutableElement method : queryMethods) {
+			if ( method.getModifiers().contains(Modifier.ABSTRACT) ) {
+				if ( hasAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE ) ) {
+					addLifecycleMethod( method );
+				}
+			}
+		}
+	}
+
 	private void addQueryMethods(List<ExecutableElement> queryMethods) {
 		for ( ExecutableElement method : queryMethods) {
 			if ( method.getModifiers().contains(Modifier.ABSTRACT) ) {
@@ -521,17 +555,88 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			ExecutableElement method,
 			@Nullable TypeMirror returnType,
 			@Nullable TypeElement containerType) {
-		final AnnotationMirror hql = getAnnotationMirror( method, Constants.HQL );
+		final AnnotationMirror hql = getAnnotationMirror( method, HQL );
 		if ( hql != null ) {
 			addQueryMethod( method, returnType, containerType, hql, false );
 		}
-		final AnnotationMirror sql = getAnnotationMirror( method, Constants.SQL );
+		final AnnotationMirror sql = getAnnotationMirror( method, SQL );
 		if ( sql != null ) {
 			addQueryMethod( method, returnType, containerType, sql, true );
 		}
-		final AnnotationMirror find = getAnnotationMirror( method, Constants.FIND );
-		if ( find != null ) {
+		final AnnotationMirror jdql = getAnnotationMirror( method, JD_QUERY );
+		if ( jdql != null ) {
+			addQueryMethod( method, returnType, containerType, jdql, false );
+		}
+		if ( hasAnnotation( method, FIND, JD_FIND ) ) {
 			addFinderMethod( method, returnType, containerType );
+		}
+	}
+
+	private void addLifecycleMethod(ExecutableElement method) {
+		final TypeMirror returnType = method.getReturnType();
+		if ( !HIB_STATELESS_SESSION.equals(sessionType) ) {
+			context.message( method,
+					"repository must be backed by a 'StatelessSession'",
+					Diagnostic.Kind.ERROR );
+		}
+		else if ( method.getParameters().size() != 1 ) {
+			context.message( method,
+					"must have exactly one parameter",
+					Diagnostic.Kind.ERROR );
+
+		}
+		else if ( returnType == null || returnType.getKind() != TypeKind.VOID ) {
+			context.message( method,
+					"must be declared 'void'",
+					Diagnostic.Kind.ERROR );
+		}
+		else {
+			final String operation = lifecycleOperation( method );
+			final VariableElement parameter = method.getParameters().get(0);
+			final TypeMirror parameterType = parameter.asType();
+			if ( parameterType.getKind() != TypeKind.DECLARED ) {
+				context.message( parameter,
+						"incorrect parameter type '" + parameterType + "' is not an entity type",
+						Diagnostic.Kind.ERROR );
+			}
+			else {
+				final DeclaredType declaredType = (DeclaredType) parameterType;
+				if ( !containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
+					context.message( parameter,
+							"incorrect parameter type '" + parameterType + "' is not annotated '@Entity'",
+							Diagnostic.Kind.ERROR );
+				}
+				else {
+					putMember(
+							method.getSimpleName().toString()
+									+ '.' + operation,
+							new LifecycleMethod(
+									this,
+									parameterType.toString(),
+									method.getSimpleName().toString(),
+									parameter.getSimpleName().toString(),
+									getSessionVariableName(),
+									operation,
+									context.addNonnullAnnotation()
+							)
+					);
+				}
+			}
+		}
+	}
+
+	private static String lifecycleOperation(ExecutableElement method) {
+		if ( hasAnnotation(method, JD_INSERT ) ) {
+			return "insert";
+		}
+		else if ( hasAnnotation(method, JD_UPDATE ) ) {
+			return "update";
+		}
+		else if ( hasAnnotation(method, JD_DELETE ) ) {
+			return "delete";
+		}
+		else {
+			throw new AssertionFailure("Unrecognized lifecycle operation");
 		}
 	}
 
@@ -700,20 +805,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static List<String> enabledFetchProfiles(ExecutableElement method) {
-		final Object enabledFetchProfiles =
-				getAnnotationValue( castNonNull( getAnnotationMirror( method, Constants.FIND ) ),
-						"enabledFetchProfiles" );
-		if ( enabledFetchProfiles == null ) {
+		final AnnotationMirror findAnnotation = getAnnotationMirror( method, FIND );
+		if ( findAnnotation == null ) {
 			return emptyList();
 		}
 		else {
-			@SuppressWarnings("unchecked")
-			final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles;
-			final List<String> result = annotationValues.stream().map(AnnotationValue::toString).collect(toList());
-			if ( result.stream().anyMatch("<error>"::equals) ) {
-				throw new ProcessLaterException();
+			final Object enabledFetchProfiles =
+					getAnnotationValue( findAnnotation, "enabledFetchProfiles" );
+			if ( enabledFetchProfiles == null ) {
+				return emptyList();
 			}
-			return result;
+			else {
+				@SuppressWarnings("unchecked")
+				final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles;
+				final List<String> result = annotationValues.stream().map(AnnotationValue::toString).collect(toList());
+				if ( result.stream().anyMatch("<error>"::equals) ) {
+					throw new ProcessLaterException();
+				}
+				return result;
+			}
 		}
 	}
 

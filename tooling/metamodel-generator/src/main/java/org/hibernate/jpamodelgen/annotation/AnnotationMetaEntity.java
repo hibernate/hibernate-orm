@@ -1595,10 +1595,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final AnnotationMirror by = getAnnotationMirror( parameter, "jakarta.data.repository.By" );
 		final AnnotationMirror param = getAnnotationMirror( parameter, "jakarta.data.repository.Param" );
 		if ( by != null ) {
-			return (String) castNonNull( getAnnotationValue( by, "value" ) );
+			final String name = (String) castNonNull(getAnnotationValue(by, "value"));
+			if ( name.contains("<error>") ) {
+				throw new ProcessLaterException();
+			}
+			return name;
 		}
 		else if ( param != null ) {
-			return (String) castNonNull( getAnnotationValue( param, "value" ) );
+			final String name = (String) castNonNull(getAnnotationValue(param, "value"));
+			if ( name.contains("<error>") ) {
+				throw new ProcessLaterException();
+			}
+			return name;
 		}
 		else {
 			return parameter.getSimpleName().toString();

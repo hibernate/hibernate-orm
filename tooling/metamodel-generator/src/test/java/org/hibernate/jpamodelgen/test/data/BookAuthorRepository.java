@@ -27,6 +27,9 @@ public interface BookAuthorRepository {
 	Book book(String isbn);
 
 	@Find
+	Book byTitleAndDate(String title, LocalDate publicationDate);
+
+	@Find
 	Book bookById(@By("isbn") String id);
 
 	@Find

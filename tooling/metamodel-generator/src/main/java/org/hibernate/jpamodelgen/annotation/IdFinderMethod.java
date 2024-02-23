@@ -23,9 +23,10 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			String sessionType,
 			String sessionName,
 			List<String> fetchProfiles,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean dataRepository) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, addNonnullAnnotation );
+				paramNames, paramTypes, addNonnullAnnotation, dataRepository );
 		this.paramName = idParameterName( paramNames, paramTypes );
 	}
 
@@ -54,6 +55,8 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		else {
 			findWithFetchProfiles( declaration );
 		}
+		convertExceptions( declaration );
+		declaration.append("\n}");
 		return declaration.toString();
 	}
 
@@ -67,7 +70,11 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append("\n\t\t\t.load(")
 				.append(paramName)
-				.append(");\n}");
+				.append(");");
+		if (convertToDataExceptions) {
+			declaration
+					.append("\n");
+		}
 	}
 
 	private void findWithNoFetchProfiles(StringBuilder declaration) {
@@ -76,7 +83,10 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class, ")
 				.append(paramName)
-				.append(");")
-				.append("\n}");
+				.append(");");
+		if (convertToDataExceptions) {
+			declaration
+					.append("\n");
+		}
 	}
 }

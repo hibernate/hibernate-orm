@@ -8,13 +8,10 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.query.Order;
-import org.hibernate.query.SortDirection;
 
 import java.util.List;
 import java.util.Locale;
 
-import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -202,27 +199,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	}
 
 	@Override
-	boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
-		final boolean jakartaSort = paramType.startsWith(JD_SORT);
-		if ( jakartaSort ) {
-			annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
-			annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
-			declaration
-					.append("\n\t\t\t.setOrder(")
-					.append(annotationMetaEntity.importType(Order.class.getName()))
-					.append(".by(")
-					.append(annotationMetaEntity.importType(entity))
-					.append(".class, ")
-					.append(paramName)
-					.append(".property()")
-					.append(",\n\t\t\t\t\t")
-					.append(paramName)
-					.append(".isAscending() ? ASCENDING : DESCENDING")
-					.append("))");
-			return true;
-		}
-		else {
-			return super.setOrder(declaration, unwrapped, paramName, paramType);
-		}
+	String getSortableEntityClass() {
+		return entity;
 	}
 }

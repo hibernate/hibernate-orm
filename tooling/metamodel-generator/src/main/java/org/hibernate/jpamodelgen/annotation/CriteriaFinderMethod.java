@@ -12,6 +12,7 @@ import org.hibernate.jpamodelgen.util.Constants;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
 /**
@@ -60,86 +61,18 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		parameters( paramTypes, declaration );
 		declaration
 				.append(" {");
-		for ( int i = 0; i< paramNames.size(); i++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
-			if ( !isNullable(i) && !isPrimitive(paramType) ) {
-				declaration
-						.append("\n\tif (")
-						.append(paramName)
-						.append(" == null) throw new IllegalArgumentException(\"Null \" + ")
-						.append(paramName)
-						.append(");");
-			}
-		}
-		declaration
-				.append("\n\tvar builder = ")
-				.append(sessionName)
-				.append(isUsingEntityManager()
-						? ".getEntityManagerFactory()"
-						: ".getFactory()")
-				.append(".getCriteriaBuilder();")
-				.append("\n\tvar query = builder.createQuery(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class);")
-				.append("\n\tvar entity = query.from(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class);")
-				.append("\n\tquery.where(");
-		boolean first = true;
-		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
-			if ( !isSessionParameter(paramType)
-					&& !isPageParam(paramType)
-					&& !isOrderParam(paramType) ) {
-				if ( first ) {
-					first = false;
-				}
-				else {
-					declaration
-							.append(", ");
-				}
-				parameter( declaration, i, paramName, paramType );
-			}
-		}
-		declaration
-				.append("\n\t);");
-		if ( !orderBys.isEmpty() ) {
-			declaration.append("\n\tquery.orderBy(");
-			boolean firstOrderBy = true;
-			for ( OrderBy orderBy : orderBys ) {
-				if ( firstOrderBy ) {
-					firstOrderBy = false;
-				}
-				else {
-					declaration.append(", ");
-				}
-				declaration
-						.append("builder.")
-						.append(orderBy.descending ? "desc" : "asc")
-						.append('(');
-				if ( orderBy.ignoreCase ) {
-					declaration.append("builder.lower(");
-				}
-				declaration
-						.append("entity.get(\"")
-						.append(orderBy.fieldName)
-						.append("\")");
-				if ( orderBy.ignoreCase ) {
-					declaration
-							.append(')');
-				}
-				declaration
-						.append(')');
-			}
-			declaration.append(");");
-		}
+		nullChecks(paramTypes, declaration);
+
+		createQuery(declaration);
+		where(declaration, paramTypes);
+		orderBy(paramTypes, declaration);
+
 		declaration
 				.append("\n\treturn ")
 				.append(sessionName)
 				.append(".createQuery(query)");
-		final boolean hasOrderParameter = paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam);
+		final boolean hasOrderParameter =
+				paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam);
 		final boolean hasEnabledFetchProfiles = !fetchProfiles.isEmpty();
 		final boolean hasNativeReturnType =
 				containerType != null && containerType.startsWith("org.hibernate");
@@ -158,7 +91,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			if ( isPageParam(paramType) ) {
 				setPage( declaration, paramName, paramType );
 			}
-			else if ( isOrderParam(paramType) ) {
+			else if ( isOrderParam(paramType) && !isJakartaSortParam(paramType) ) {
 				setOrder( declaration, true, paramName, paramType );
 			}
 		}
@@ -180,6 +113,139 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append(";\n}");
 		return declaration.toString();
+	}
+
+	private void createQuery(StringBuilder declaration) {
+		declaration
+				.append("\n\tvar builder = ")
+				.append(sessionName)
+				.append(isUsingEntityManager()
+						? ".getEntityManagerFactory()"
+						: ".getFactory()")
+				.append(".getCriteriaBuilder();")
+				.append("\n\tvar query = builder.createQuery(")
+				.append(annotationMetaEntity.importType(entity))
+				.append(".class);")
+				.append("\n\tvar entity = query.from(")
+				.append(annotationMetaEntity.importType(entity))
+				.append(".class);");
+	}
+
+	private void nullChecks(List<String> paramTypes, StringBuilder declaration) {
+		for ( int i = 0; i< paramNames.size(); i++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( !isNullable(i) && !isPrimitive(paramType) ) {
+				declaration
+						.append("\n\tif (")
+						.append(paramName)
+						.append(" == null) throw new IllegalArgumentException(\"Null \" + ")
+						.append(paramName)
+						.append(");");
+			}
+		}
+	}
+
+	private void orderBy(List<String> paramTypes, StringBuilder declaration) {
+		final boolean hasSortParameter =
+				paramTypes.stream().anyMatch(CriteriaFinderMethod::isJakartaSortParam);
+		if ( !orderBys.isEmpty() || hasSortParameter ) {
+			declaration.append("\n\tquery.orderBy(");
+		}
+		boolean firstOrderBy = true;
+		if ( !orderBys.isEmpty() ) {
+			for ( OrderBy orderBy : orderBys ) {
+				if ( firstOrderBy ) {
+					firstOrderBy = false;
+				}
+				else {
+					declaration.append(',');
+				}
+				orderBy(declaration, orderBy);
+			}
+		}
+		if ( hasSortParameter ) {
+			for ( int i = 0; i < paramNames.size(); i ++ ) {
+				final String paramName = paramNames.get(i);
+				final String paramType = paramTypes.get(i);
+				if ( isJakartaSortParam(paramType) ) {
+					if ( firstOrderBy ) {
+						firstOrderBy = false;
+					}
+					else {
+						declaration.append(',');
+					}
+					orderBy(declaration, paramName);
+				}
+			}
+		}
+		if ( !orderBys.isEmpty() || hasSortParameter ) {
+			declaration.append("\n\t);");
+		}
+	}
+
+	private void where(StringBuilder declaration, List<String> paramTypes) {
+		declaration
+				.append("\n\tquery.where(");
+		boolean first = true;
+		for ( int i = 0; i < paramNames.size(); i ++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( !isSessionParameter(paramType)
+					&& !isPageParam(paramType)
+					&& !isOrderParam(paramType) ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					declaration
+							.append(", ");
+				}
+				parameter(declaration, i, paramName, paramType );
+			}
+		}
+		declaration
+				.append("\n\t);");
+	}
+
+	private static boolean isJakartaSortParam(String paramType) {
+		return paramType.startsWith(JD_SORT);
+	}
+
+	private static void orderBy(StringBuilder declaration, OrderBy orderBy) {
+		declaration
+				.append("\n\t\t")
+				.append("builder.")
+				.append(orderBy.descending ? "desc" : "asc")
+				.append('(');
+		if ( orderBy.ignoreCase ) {
+			declaration.append("builder.lower(");
+		}
+		declaration
+				.append("entity.get(\"")
+				.append(orderBy.fieldName)
+				.append("\")");
+		if ( orderBy.ignoreCase ) {
+			declaration
+					.append(')');
+		}
+		declaration
+				.append(')');
+	}
+
+	private static void orderBy(StringBuilder declaration, String paramName) {
+		declaration
+				.append("\n\t\t")
+				.append(paramName)
+				.append(".isAscending()\n")
+				.append("\t\t\t\t? builder.")
+				.append("asc(entity.get(")
+				.append(paramName)
+				.append(".property()))\n")
+				.append("\t\t\t\t: builder.")
+				.append("desc(entity.get(")
+				.append(paramName)
+				.append(".property()))");
 	}
 
 	private void parameter(StringBuilder declaration, int i, String paramName, String paramType) {

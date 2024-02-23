@@ -20,7 +20,6 @@ import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFr
  */
 public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
-	private final @Nullable String returnTypeName;
 	private final @Nullable String containerTypeName;
 	private final boolean isUpdate;
 	private final boolean isNative;
@@ -47,7 +46,6 @@ public class QueryMethod extends AbstractQueryMethod {
 				sessionType, sessionName,
 				belongsToDao, addNonnullAnnotation );
 		this.queryString = queryString;
-		this.returnTypeName = returnTypeName;
 		this.containerTypeName = containerTypeName;
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;

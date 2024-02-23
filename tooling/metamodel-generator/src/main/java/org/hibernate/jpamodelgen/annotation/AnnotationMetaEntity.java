@@ -786,14 +786,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case DECLARED:
 				final DeclaredType type = (DeclaredType) parameterType;
 				final String parameterTypeName = parameterType.toString();
-				if ( parameterTypeName.startsWith( List.class.getName() )
-						|| parameterTypeName.startsWith( JD_ORDER ) ) {
+				if ( parameterTypeName.startsWith( List.class.getName() ) ) {
 					for (TypeMirror arg : type.getTypeArguments()) {
 						return getTypeArgument( arg );
 					}
 				}
 				else if ( parameterTypeName.startsWith( Order.class.getName() )
-						||  parameterTypeName.startsWith( JD_SORT ) ) {
+						|| parameterTypeName.startsWith( JD_SORT )
+						|| parameterTypeName.startsWith( JD_ORDER )) {
 					for ( TypeMirror arg : type.getTypeArguments() ) {
 						switch ( arg.getKind() ) {
 							case WILDCARD:

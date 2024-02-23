@@ -14,7 +14,9 @@ import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.SortDirection;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpamodelgen.util.Constants.JD_LIMIT;
@@ -204,8 +206,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
 		unwrapQuery( declaration, unwrapped );
-		final boolean jakartaSort = paramType.startsWith(JD_SORT);
-		if ( jakartaSort ) {
+		if ( paramType.startsWith(JD_SORT) ) {
 			final String sortableEntityClass = getSortableEntityClass();
 			if ( sortableEntityClass != null ) {
 				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
@@ -222,6 +223,32 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						.append(paramName)
 						.append(".isAscending() ? ASCENDING : DESCENDING")
 						.append("))");
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		if ( paramType.startsWith(JD_ORDER) ) {
+			final String sortableEntityClass = getSortableEntityClass();
+			if ( sortableEntityClass != null ) {
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+				annotationMetaEntity.staticImport(Order.class.getName(), "by");
+				declaration
+						.append("\n\t\t\t.setOrder(new ")
+						.append(annotationMetaEntity.importType(ArrayList.class.getName()))
+						.append("<>() {{\n\t\t\t\t")
+						.append(paramName)
+						.append(".forEach(sort -> add(")
+						.append("by(")
+						.append(annotationMetaEntity.importType(sortableEntityClass))
+						.append(".class, ")
+						.append("sort.property()")
+						.append(",\n\t\t\t\t\t\t")
+						.append("sort.isAscending() ? ASCENDING : DESCENDING")
+						.append(")));\n\t\t\t}})");
 				return true;
 			}
 			else {

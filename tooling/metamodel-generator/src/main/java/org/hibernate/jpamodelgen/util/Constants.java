@@ -67,6 +67,9 @@ public final class Constants {
 	public static final String JD_INSERT = "jakarta.data.repository.Insert";
 	public static final String JD_UPDATE = "jakarta.data.repository.Update";
 	public static final String JD_DELETE = "jakarta.data.repository.Delete";
+	public static final String JD_LIMIT = "jakarta.data.Limit";
+	public static final String JD_SORT = "jakarta.data.Sort";
+	public static final String JD_ORDER = "jakarta.data.Order";
 
 	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
 

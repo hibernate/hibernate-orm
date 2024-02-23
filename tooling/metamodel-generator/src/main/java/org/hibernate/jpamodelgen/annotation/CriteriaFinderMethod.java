@@ -156,7 +156,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
 			if ( isPageParam(paramType) ) {
-				setPage( declaration, paramName );
+				setPage( declaration, paramName, paramType );
 			}
 			else if ( isOrderParam(paramType) ) {
 				setOrder( declaration, true, paramName, paramType );

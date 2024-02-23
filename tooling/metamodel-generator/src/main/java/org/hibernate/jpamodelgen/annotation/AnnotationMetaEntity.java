@@ -73,8 +73,10 @@ import static org.hibernate.jpamodelgen.util.Constants.HQL;
 import static org.hibernate.jpamodelgen.util.Constants.JD_DELETE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_FIND;
 import static org.hibernate.jpamodelgen.util.Constants.JD_INSERT;
+import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
 import static org.hibernate.jpamodelgen.util.Constants.JD_QUERY;
 import static org.hibernate.jpamodelgen.util.Constants.JD_REPOSITORY;
+import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.Constants.JD_UPDATE;
 import static org.hibernate.jpamodelgen.util.Constants.MUTINY_SESSION;
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
@@ -783,12 +785,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return getTypeArgument( arrayType.getComponentType() );
 			case DECLARED:
 				final DeclaredType type = (DeclaredType) parameterType;
-				if ( parameterType.toString().startsWith( List.class.getName() ) ) {
+				final String parameterTypeName = parameterType.toString();
+				if ( parameterTypeName.startsWith( List.class.getName() )
+						|| parameterTypeName.startsWith( JD_ORDER ) ) {
 					for (TypeMirror arg : type.getTypeArguments()) {
 						return getTypeArgument( arg );
 					}
 				}
-				else if ( parameterType.toString().startsWith( Order.class.getName() ) ) {
+				else if ( parameterTypeName.startsWith( Order.class.getName() )
+						||  parameterTypeName.startsWith( JD_SORT ) ) {
 					for ( TypeMirror arg : type.getTypeArguments() ) {
 						switch ( arg.getKind() ) {
 							case WILDCARD:

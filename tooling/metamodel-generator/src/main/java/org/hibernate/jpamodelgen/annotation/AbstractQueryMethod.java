@@ -16,6 +16,9 @@ import org.hibernate.query.Page;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.jpamodelgen.util.Constants.JD_LIMIT;
+import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
@@ -171,15 +174,24 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
-	void setPage(StringBuilder declaration, String paramName) {
-		if ( isUsingEntityManager() ) {
+	void setPage(StringBuilder declaration, String paramName, String paramType) {
+		boolean jakartaLimit = JD_LIMIT.equals(paramType);
+		if ( jakartaLimit || isUsingEntityManager() ) {
 			declaration
-					.append("\n\t\t\t.setFirstResult(")
+					.append("\n\t\t\t.setFirstResult(");
+			if (jakartaLimit) {
+				declaration.append("(int) ");
+			}
+			declaration
 					.append(paramName)
-					.append(".getFirstResult())")
+					.append('.')
+					.append(jakartaLimit ? "startAt" : "getFirstResult")
+					.append("())")
 					.append("\n\t\t\t.setMaxResults(")
 					.append(paramName)
-					.append(".getMaxResults())");
+					.append('.')
+					.append(jakartaLimit ? "maxResults" : "getMaxResults")
+					.append("())");
 		}
 		else {
 			declaration
@@ -218,11 +230,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	static boolean isPageParam(String parameterType) {
-		return Page.class.getName().equals(parameterType);
+		return Page.class.getName().equals(parameterType)
+			|| JD_LIMIT.equals(parameterType);
 	}
 
 	static boolean isOrderParam(String parameterType) {
 		return parameterType.startsWith(Order.class.getName())
-			|| parameterType.startsWith(List.class.getName() + "<" + Order.class.getName());
+			|| parameterType.startsWith(List.class.getName() + "<" + Order.class.getName())
+			|| parameterType.startsWith(JD_SORT)
+			|| parameterType.startsWith(JD_ORDER);
 	}
 }

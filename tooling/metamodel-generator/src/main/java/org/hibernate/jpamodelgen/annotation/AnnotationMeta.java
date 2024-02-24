@@ -110,7 +110,7 @@ public abstract class AnnotationMeta implements Metamodel {
 										this,
 										(SqmSelectStatement<?>) statement,
 										name.substring(1),
-										belongsToDao(),
+										isRepository(),
 										getSessionType(),
 										getSessionVariableName(),
 										getContext().addNonnullAnnotation()
@@ -167,7 +167,7 @@ public abstract class AnnotationMeta implements Metamodel {
 		return "entityManager";
 	}
 
-	abstract boolean belongsToDao();
+	abstract boolean isRepository();
 
 	abstract @Nullable String getSessionType();
 

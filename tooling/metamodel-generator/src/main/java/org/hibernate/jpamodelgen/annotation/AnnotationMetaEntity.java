@@ -139,7 +139,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	/**
 	 * True if this "metamodel class" is actually an instantiable DAO-style repository.
 	 */
-	private boolean dao = false;
+	private boolean repository = false;
 
 	/**
 	 * The type of the "session getter" method of a DAO-style repository.
@@ -179,7 +179,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public boolean isImplementation() {
-		return dao;
+		return repository;
 	}
 
 	@Override
@@ -265,8 +265,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	@Override
-	boolean belongsToDao() {
-		return dao;
+	boolean isRepository() {
+		return repository;
 	}
 
 	@Override
@@ -276,7 +276,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public boolean isInjectable() {
-		return dao;
+		return repository;
+	}
+
+	@Override
+	public String scope() {
+		if (dataRepository) {
+			return context.addTransactionScopedAnnotation()
+					? "javax.transaction.TransactionScoped"
+					: "jakarta.enterprise.context.RequestScoped";
+		}
+		else {
+			return "jakarta.enterprise.context.Dependent";
+		}
 	}
 
 	@Override
@@ -316,10 +328,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		dataRepository = hasAnnotation( element, JD_REPOSITORY );
 		findSessionGetter( element );
-		if ( !dao && dataRepository) {
-			dao = true;
+		if ( !repository && dataRepository) {
+			repository = true;
 			sessionType = HIB_STATELESS_SESSION;
 			addDaoConstructor( null );
+		}
+		if ( dataRepository ) {
+			addDefaultConstructor();
 		}
 
 		if ( managed ) {
@@ -340,6 +355,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		initialized = true;
 	}
 
+	private void addDefaultConstructor() {
+		final String sessionVariableName = getSessionVariableName(sessionType);
+		final String typeName = element.getSimpleName().toString() + '_';
+		putMember("_", new DefaultConstructor(
+				this,
+				typeName,
+				sessionVariableName,
+				sessionType,
+				sessionVariableName,
+				dataStore(),
+				context.addInjectAnnotation()
+		));
+	}
+
 	private @Nullable String dataStore() {
 		final AnnotationMirror repo = getAnnotationMirror( element, JD_REPOSITORY );
 		if ( repo != null ) {
@@ -357,11 +386,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				&& !hasAnnotation( type, Constants.EMBEDDABLE ) ) {
 			for ( ExecutableElement method : methodsIn( type.getEnclosedElements() ) ) {
 				if ( isSessionGetter( method ) ) {
-					dao = true;
+					repository = true;
 					sessionType = addDaoConstructor( method );
 				}
 			}
-			if ( !dao ) {
+			if ( !repository) {
 				final TypeMirror superclass = type.getSuperclass();
 				if ( superclass.getKind() == TypeKind.DECLARED ) {
 					final DeclaredType declaredType = (DeclaredType) superclass;
@@ -388,7 +417,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String name = method == null ? sessionVariableName : method.getSimpleName().toString();
 		final String typeName = element.getSimpleName().toString() + '_';
 		putMember( name,
-				new DaoConstructor(
+				new RepositoryConstructor(
 						this,
 						typeName,
 						name,
@@ -397,7 +426,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						dataStore(),
 						context.addInjectAnnotation(),
 						context.addNonnullAnnotation(),
-						method != null
+						method != null,
+						dataRepository
 				)
 		);
 		return sessionType;
@@ -751,7 +781,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						paramNames,
 						paramTypes,
 						parameterNullability(method, entity),
-						dao,
+						repository,
 						sessionType[0],
 						sessionType[1],
 						enabledFetchProfiles( method ),
@@ -906,7 +936,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),
-							dao,
+							repository,
 							sessionType[0],
 							sessionType[1],
 							enabledFetchProfiles( method ),
@@ -925,7 +955,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),
-							dao,
+							repository,
 							sessionType[0],
 							sessionType[1],
 							enabledFetchProfiles( method ),
@@ -959,7 +989,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									returnType.toString(),
 									paramNames,
 									paramTypes,
-									dao,
+									repository,
 									sessionType[0],
 									sessionType[1],
 									profiles,
@@ -977,7 +1007,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									paramNames,
 									paramTypes,
 									parameterNullability(method, entity),
-									dao,
+									repository,
 									sessionType[0],
 									sessionType[1],
 									profiles,
@@ -996,7 +1026,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									paramNames,
 									paramTypes,
 									parameterNullability(method, entity),
-									dao,
+									repository,
 									sessionType[0],
 									sessionType[1],
 									profiles,
@@ -1233,7 +1263,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								paramTypes,
 								isInsertUpdateDelete( queryString ),
 								isNative,
-								dao,
+								repository,
 								sessionType[0],
 								sessionType[1],
 								context.addNonnullAnnotation(),

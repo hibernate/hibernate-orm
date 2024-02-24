@@ -38,4 +38,6 @@ public interface Metamodel extends ImportContext {
 	boolean isImplementation();
 
 	boolean isInjectable();
+
+	String scope();
 }

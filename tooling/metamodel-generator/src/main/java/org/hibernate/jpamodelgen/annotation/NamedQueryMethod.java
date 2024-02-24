@@ -31,7 +31,7 @@ class NamedQueryMethod implements MetaAttribute {
 	private final AnnotationMeta annotationMeta;
 	private final SqmSelectStatement<?> select;
 	private final String name;
-	private final boolean belongsToDao;
+	private final boolean belongsToRepository;
 	private final boolean reactive;
 	private final String sessionVariableName;
 	private final boolean addNonnullAnnotation;
@@ -40,14 +40,14 @@ class NamedQueryMethod implements MetaAttribute {
 			AnnotationMeta annotationMeta,
 			SqmSelectStatement<?> select,
 			String name,
-			boolean belongsToDao,
+			boolean belongsToRepository,
 			@Nullable String sessionType,
 			String sessionVariableName,
 			boolean addNonnullAnnotation) {
 		this.annotationMeta = annotationMeta;
 		this.select = select;
 		this.name = name;
-		this.belongsToDao = belongsToDao;
+		this.belongsToRepository = belongsToRepository;
 		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
 		this.sessionVariableName = sessionVariableName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
@@ -136,7 +136,7 @@ class NamedQueryMethod implements MetaAttribute {
 
 	private void modifiers(StringBuilder declaration) {
 		declaration
-				.append(belongsToDao ? "public " : "public static ");
+				.append(belongsToRepository ? "public " : "public static ");
 	}
 
 	private void returnType(StringBuilder declaration) {
@@ -160,7 +160,7 @@ class NamedQueryMethod implements MetaAttribute {
 	private void parameters(TreeSet<SqmParameter<?>> sortedParameters, StringBuilder declaration) {
 		declaration
 				.append('(');
-		if ( !belongsToDao ) {
+		if ( !belongsToRepository) {
 			notNull( declaration );
 			declaration
 					.append(annotationMeta.importType(Constants.ENTITY_MANAGER))
@@ -169,7 +169,7 @@ class NamedQueryMethod implements MetaAttribute {
 		}
 		int i = 0;
 		for ( SqmParameter<?> param : sortedParameters) {
-			if ( 0 < i++ || !belongsToDao ) {
+			if ( 0 < i++ || !belongsToRepository) {
 				declaration
 						.append(", ");
 			}

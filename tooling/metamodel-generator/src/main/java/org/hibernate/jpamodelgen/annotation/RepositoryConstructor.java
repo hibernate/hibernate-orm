@@ -12,9 +12,11 @@ import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 
 /**
+ * A general purpose constructor which accepts the session.
+ *
  * @author Gavin King
  */
-public class DaoConstructor implements MetaAttribute {
+public class RepositoryConstructor implements MetaAttribute {
 	private final Metamodel annotationMetaEntity;
 	private final String constructorName;
 	private final String methodName;
@@ -24,8 +26,9 @@ public class DaoConstructor implements MetaAttribute {
 	private final boolean addInjectAnnotation;
 	private final boolean addNonnullAnnotation;
 	private final boolean addOverrideAnnotation;
+	private final boolean dataRepository;
 
-	public DaoConstructor(
+	public RepositoryConstructor(
 			Metamodel annotationMetaEntity,
 			String constructorName,
 			String methodName,
@@ -34,7 +37,8 @@ public class DaoConstructor implements MetaAttribute {
 			@Nullable String dataStore,
 			boolean addInjectAnnotation,
 			boolean addNonnullAnnotation,
-			boolean addOverrideAnnotation) {
+			boolean addOverrideAnnotation,
+			boolean dataRepository) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.constructorName = constructorName;
 		this.methodName = methodName;
@@ -44,6 +48,7 @@ public class DaoConstructor implements MetaAttribute {
 		this.addInjectAnnotation = addInjectAnnotation;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.addOverrideAnnotation = addOverrideAnnotation;
+		this.dataRepository = dataRepository;
 	}
 
 	@Override
@@ -60,21 +65,28 @@ public class DaoConstructor implements MetaAttribute {
 	public String getAttributeDeclarationString() {
 		StringBuilder declaration = new StringBuilder();
 		declaration
-				.append("\nprivate final ");
+				.append("\nprivate ");
+		if ( !dataRepository ) {
+			// don't mark the field final
+			// because it will be initialized
+			// in @PostConstruct
+			declaration
+					.append("final ");
+		}
 		notNull( declaration );
 		declaration
 				.append(annotationMetaEntity.importType(sessionTypeName))
 				.append(" ")
 				.append(sessionVariableName)
 				.append(";")
-				.append("\n");
+				.append("\n\n");
 		inject( declaration );
 		declaration
-				.append("\npublic ")
+				.append("public ")
 				.append(constructorName)
 				.append("(");
 		notNull( declaration );
-		named( declaration );
+//		named( declaration );
 		declaration
 				.append(annotationMetaEntity.importType(sessionTypeName))
 				.append(" ")
@@ -105,22 +117,26 @@ public class DaoConstructor implements MetaAttribute {
 		return declaration.toString();
 	}
 
-	private void named(StringBuilder declaration) {
-		if ( addInjectAnnotation && dataStore != null ) {
-			declaration
-					.append("@")
-					.append(annotationMetaEntity.importType("jakarta.inject.Named"))
-					.append("(\"")
-					.append(dataStore)
-					.append("\") ");
-		}
-	}
+//	private void named(StringBuilder declaration) {
+//		if ( addInjectAnnotation && !dataRepository && dataStore != null ) {
+//			declaration
+//					.append('@')
+//					.append(annotationMetaEntity.importType("jakarta.inject.Named"))
+//					.append("(\"")
+//					.append(dataStore)
+//					.append("\") ");
+//		}
+//	}
 
 	private void inject(StringBuilder declaration) {
-		if ( addInjectAnnotation ) {
+		// Jakarta Data repositories are instantiated
+		// via the default constructor, so in that
+		// case, this one is just for testing
+		if ( addInjectAnnotation && !dataRepository ) {
 			declaration
-					.append("\n@")
-					.append(annotationMetaEntity.importType("jakarta.inject.Inject"));
+					.append('@')
+					.append(annotationMetaEntity.importType("jakarta.inject.Inject"))
+					.append('\n');
 		}
 	}
 

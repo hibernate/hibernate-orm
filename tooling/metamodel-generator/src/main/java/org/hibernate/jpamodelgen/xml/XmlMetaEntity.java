@@ -627,4 +627,9 @@ public class XmlMetaEntity implements Metamodel {
 	public boolean isInjectable() {
 		return false;
 	}
+
+	@Override
+	public String scope() {
+		throw new UnsupportedOperationException();
+	}
 }

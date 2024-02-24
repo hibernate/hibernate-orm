@@ -92,15 +92,15 @@ public final class ClassWriter {
 		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
 			if ( context.addDependentAnnotation() && entity.isInjectable() ) {
-				pw.println( writeDependentAnnotation( entity ) );
+				pw.println( writeScopeAnnotation( entity ) );
 			}
-			if ( entity.getElement() instanceof TypeElement ) {
+			if ( entity.getElement() instanceof TypeElement && !entity.isInjectable() ) {
 				pw.println( writeStaticMetaModelAnnotation( entity, context ) );
 			}
 			if ( context.addGeneratedAnnotation() ) {
 				pw.println( writeGeneratedAnnotation( entity, context ) );
 			}
-			if ( context.isAddSuppressWarningsAnnotation() ) {
+			if ( context.addSuppressWarningsAnnotation() ) {
 				pw.println( writeSuppressWarnings() );
 			}
 
@@ -235,8 +235,8 @@ public final class ClassWriter {
 		return "@SuppressWarnings({\"deprecation\", \"rawtypes\"})";
 	}
 
-	private static String writeDependentAnnotation(Metamodel entity) {
-		return "@" + entity.importType( "jakarta.enterprise.context.Dependent" );
+	private static String writeScopeAnnotation(Metamodel entity) {
+		return "@" + entity.importType( entity.scope() );
 	}
 
 	private static String writeStaticMetaModelAnnotation(Metamodel entity, Context context) {

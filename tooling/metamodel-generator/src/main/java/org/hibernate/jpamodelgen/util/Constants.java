@@ -75,11 +75,13 @@ public final class Constants {
 	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
 
 	public static final String ENTITY_MANAGER = "jakarta.persistence.EntityManager";
+	public static final String ENTITY_MANAGER_FACTORY = "jakarta.persistence.EntityManagerFactory";
 	public static final String QUERY = "jakarta.persistence.Query";
 	public static final String TYPED_QUERY = "jakarta.persistence.TypedQuery";
 	public static final String HIB_QUERY = "org.hibernate.query.Query";
 	public static final String HIB_SELECTION_QUERY = "org.hibernate.query.SelectionQuery";
 	public static final String HIB_SESSION = "org.hibernate.Session";
+	public static final String HIB_SESSION_FACTORY = "org.hibernate.SessionFactory";
 	public static final String HIB_STATELESS_SESSION = "org.hibernate.StatelessSession";
 	public static final String MUTINY_SESSION = "org.hibernate.reactive.mutiny.Mutiny.Session";
 

@@ -73,6 +73,7 @@ public final class Context {
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
+	private boolean addTransactionScopedAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean jakartaDataStyle;
 
@@ -167,12 +168,20 @@ public final class Context {
 		this.addGenerationDate = addGenerationDate;
 	}
 
-	public boolean isAddSuppressWarningsAnnotation() {
+	public boolean addSuppressWarningsAnnotation() {
 		return addSuppressWarningsAnnotation;
 	}
 
 	public void setAddSuppressWarningsAnnotation(boolean addSuppressWarningsAnnotation) {
 		this.addSuppressWarningsAnnotation = addSuppressWarningsAnnotation;
+	}
+
+	public boolean addTransactionScopedAnnotation() {
+		return addTransactionScopedAnnotation;
+	}
+
+	public void setAddTransactionScopedAnnotation(boolean addTransactionScopedAnnotation) {
+		this.addTransactionScopedAnnotation = addTransactionScopedAnnotation;
 	}
 
 	public Elements getElementUtils() {

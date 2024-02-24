@@ -50,6 +50,17 @@ public final class Context {
 	 */
 	private final Map<String, Metamodel> metaEmbeddables = new HashMap<>();
 
+	/**
+	 * Used for keeping track of parsed entities and mapped super classes (XML + annotations).
+	 */
+	private final Map<String, Metamodel> dataMetaEntities = new HashMap<>();
+
+	/**
+	 * Used for keeping track of parsed embeddable entities. These entities have to be kept separate since
+	 * they are lazily initialized.
+	 */
+	private final Map<String, Metamodel> dataMetaEmbeddables = new HashMap<>();
+
 	private final Map<String, Metamodel> metaAuxiliaries = new HashMap<>();
 
 	private final Map<String, AccessTypeInformation> accessTypeInformation = new HashMap<>();
@@ -78,7 +89,7 @@ public final class Context {
 	private boolean generateJakartaDataStaticMetamodel;
 
 	// keep track of all classes for which model have been generated
-	private final Collection<String> generatedModelClasses = new HashSet<>();
+	private final Set<Metamodel> generatedModelClasses = new HashSet<>();
 
 	// keep track of which named queries have been checked
 	private final Set<String> checkedNamedQueries = new HashSet<>();
@@ -233,6 +244,38 @@ public final class Context {
 		return metaEmbeddables.values();
 	}
 
+	public boolean containsDataMetaEntity(String qualifiedName) {
+		return dataMetaEntities.containsKey( qualifiedName );
+	}
+
+	public @Nullable Metamodel getDataMetaEntity(String qualifiedName) {
+		return dataMetaEntities.get( qualifiedName );
+	}
+
+	public Collection<Metamodel> getDataMetaEntities() {
+		return dataMetaEntities.values();
+	}
+
+	public void addDataMetaEntity(String qualifiedName, Metamodel metaEntity) {
+		dataMetaEntities.put( qualifiedName, metaEntity );
+	}
+
+	public boolean containsDataMetaEmbeddable(String qualifiedName) {
+		return dataMetaEmbeddables.containsKey( qualifiedName );
+	}
+
+	public @Nullable Metamodel getDataMetaEmbeddable(String qualifiedName) {
+		return dataMetaEmbeddables.get( qualifiedName );
+	}
+
+	public void addDataMetaEmbeddable(String qualifiedName, Metamodel metaEntity) {
+		dataMetaEmbeddables.put( qualifiedName, metaEntity );
+	}
+
+	public Collection<Metamodel> getDataMetaEmbeddables() {
+		return dataMetaEmbeddables.values();
+	}
+
 	public @Nullable Metamodel getMetaAuxiliary(String qualifiedName) {
 		return metaAuxiliaries.get( qualifiedName );
 	}
@@ -258,12 +301,12 @@ public final class Context {
 		return elementUtils.getTypeElement( qualifiedName );
 	}
 
-	void markGenerated(String name) {
-		generatedModelClasses.add( name );
+	void markGenerated(Metamodel metamodel) {
+		generatedModelClasses.add( metamodel );
 	}
 
-	boolean isAlreadyGenerated(String name) {
-		return generatedModelClasses.contains( name );
+	boolean isAlreadyGenerated(Metamodel metamodel) {
+		return generatedModelClasses.contains( metamodel );
 	}
 
 	public Set<CharSequence> getElementsToRedo() {

@@ -113,7 +113,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final Map<String, MetaAttribute> members;
 	private final Context context;
 	private final boolean managed;
-	private boolean dataRepository;
+	private boolean jakartaDataRepository;
 	private String qualifiedName;
 	private final boolean jakartaDataStaticModel;
 
@@ -306,7 +306,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public String scope() {
-		if (dataRepository) {
+		if (jakartaDataRepository) {
 			return context.addTransactionScopedAnnotation()
 					? "javax.transaction.TransactionScoped"
 					: "jakarta.enterprise.context.RequestScoped";
@@ -351,18 +351,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 
-		dataRepository = hasAnnotation( element, JD_REPOSITORY );
+		jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
 		findSessionGetter( element );
-		if ( !repository && dataRepository) {
+		if ( !repository && jakartaDataRepository) {
 			repository = true;
 			sessionType = HIB_STATELESS_SESSION;
 			addDaoConstructor( null );
 		}
-		if ( dataRepository ) {
+		if ( jakartaDataRepository ) {
 			addDefaultConstructor();
 		}
 
-		if ( managed ) {
+		if ( managed && !jakartaDataStaticModel ) {
 			putMember( "class", new AnnotationMetaType(this) );
 		}
 
@@ -452,7 +452,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						context.addInjectAnnotation(),
 						context.addNonnullAnnotation(),
 						method != null,
-						dataRepository
+						jakartaDataRepository
 				)
 		);
 		return sessionType;
@@ -822,7 +822,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						enabledFetchProfiles( method ),
 						orderByList( method, entity ),
 						context.addNonnullAnnotation(),
-						dataRepository
+						jakartaDataRepository
 				)
 		);
 	}
@@ -976,7 +976,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[1],
 							enabledFetchProfiles( method ),
 							context.addNonnullAnnotation(),
-							dataRepository
+							jakartaDataRepository
 					)
 			);
 		}
@@ -996,7 +996,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							enabledFetchProfiles( method ),
 							orderByList( method, entity ),
 							context.addNonnullAnnotation(),
-							dataRepository
+							jakartaDataRepository
 					)
 			);
 		}
@@ -1029,7 +1029,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[1],
 									profiles,
 									context.addNonnullAnnotation(),
-									dataRepository
+									jakartaDataRepository
 							)
 					);
 					break;
@@ -1047,7 +1047,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[1],
 									profiles,
 									context.addNonnullAnnotation(),
-									dataRepository
+									jakartaDataRepository
 							)
 					);
 					break;
@@ -1067,7 +1067,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									profiles,
 									orderByList( method, entity ),
 									context.addNonnullAnnotation(),
-									dataRepository
+									jakartaDataRepository
 							)
 					);
 					break;
@@ -1302,7 +1302,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								sessionType[0],
 								sessionType[1],
 								context.addNonnullAnnotation(),
-								dataRepository
+								jakartaDataRepository
 						);
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
 

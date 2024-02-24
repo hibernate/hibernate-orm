@@ -4,8 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-
+package org.hibernate.processor.test.mappedsuperclass.typedmappedsuperclass;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
@@ -17,13 +16,18 @@ import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGen
 /**
  * @author Hardy Ferentschik
  */
-@TestForIssue(jiraKey = "METAGEN-40")
-@WithClasses(DefaultPackageEntity.class)
-public class DefaultPackageTest extends CompilationTest {
+@TestForIssue(jiraKey = "METAGEN-37")
+public class TypesMappedSuperclassTest extends CompilationTest {
 	@Test
-	public void testMetaModelGeneratedForEntitiesInDefaultPackage() {
-		assertMetamodelClassGeneratedFor( DefaultPackageEntity.class );
+	@WithClasses({
+			AttachmentGroup.class,
+			AttachmentGroupInTopic.class,
+			AttachmentGroupPost.class,
+			AttachmentGroupPostInTopic.class,
+			Post.class,
+			UserRole.class
+	})
+	public void testExtractClosestRealType() {
+		assertMetamodelClassGeneratedFor( AttachmentGroup.class );
 	}
 }
-
-

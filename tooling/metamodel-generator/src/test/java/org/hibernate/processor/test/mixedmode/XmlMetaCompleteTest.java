@@ -4,26 +4,25 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-
+package org.hibernate.processor.test.mixedmode;
 
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
+import org.hibernate.processor.test.util.WithMappingFiles;
 import org.junit.Test;
 
+import static org.hibernate.processor.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Hardy Ferentschik
  */
-@TestForIssue(jiraKey = "METAGEN-40")
-@WithClasses(DefaultPackageEntity.class)
-public class DefaultPackageTest extends CompilationTest {
+public class XmlMetaCompleteTest extends CompilationTest {
 	@Test
-	public void testMetaModelGeneratedForEntitiesInDefaultPackage() {
-		assertMetamodelClassGeneratedFor( DefaultPackageEntity.class );
+	@WithClasses(Person.class)
+	@WithMappingFiles("orm.xml")
+	public void testXmlConfiguredEmbeddedClassGenerated() {
+		assertMetamodelClassGeneratedFor( Person.class );
+		assertAbsenceOfFieldInMetamodelFor( Person.class, "name" );
 	}
 }
-
-

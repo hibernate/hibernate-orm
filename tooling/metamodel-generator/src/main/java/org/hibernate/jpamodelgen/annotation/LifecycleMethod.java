@@ -47,19 +47,30 @@ public class LifecycleMethod implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		StringBuilder declaration = new StringBuilder()
-				.append("\n@Override\npublic void ")
-				.append(methodName)
-				.append('(');
-		notNull( declaration );
-		final boolean isInsert = operationName.equals("insert");
+		StringBuilder declaration = new StringBuilder();
+		preamble(declaration);
+		nullCheck(declaration);
+		declaration.append("\ttry {\n");
+		delegateCall(declaration);
+		if ( operationName.equals("insert") ) {
+			convertException(declaration,
+					"jakarta.persistence.EntityExistsException",
+					"jakarta.data.exceptions.EntityExistsException");
+		}
+		else {
+			convertException(declaration,
+					"jakarta.persistence.OptimisticLockException",
+					"jakarta.data.exceptions.OptimisticLockingFailureException");
+		}
+		convertException(declaration,
+				"jakarta.persistence.PersistenceException",
+				"jakarta.data.exceptions.DataException");
+		declaration.append("}");
+		return declaration.toString();
+	}
+
+	private void delegateCall(StringBuilder declaration) {
 		declaration
-				.append(annotationMetaEntity.importType(entity))
-				.append(' ')
-				.append(parameterName)
-				.append(')')
-				.append(" {\n")
-				.append("\ttry {\n")
 				.append("\t\t")
 				.append(sessionName)
 				.append('.')
@@ -68,27 +79,41 @@ public class LifecycleMethod implements MetaAttribute {
 				.append(parameterName)
 				.append(')')
 				.append(";\n")
-				.append("\t}\n")
+				.append("\t}\n");
+	}
+
+	private void preamble(StringBuilder declaration) {
+		declaration
+				.append("\n@Override\npublic void ")
+				.append(methodName)
+				.append('(');
+		notNull(declaration);
+		declaration
+				.append(annotationMetaEntity.importType(entity))
+				.append(' ')
+				.append(parameterName)
+				.append(')')
+				.append(" {\n");
+	}
+
+	private void nullCheck(StringBuilder declaration) {
+		declaration
+				.append("\tif (")
+				.append(parameterName)
+				.append(" == null) throw new IllegalArgumentException(\"Null ")
+				.append(parameterName)
+				.append("\");\n");
+	}
+
+	private void convertException(StringBuilder declaration, String exception, String convertedException) {
+		declaration
 				.append("\tcatch (")
-				.append(annotationMetaEntity.importType(isInsert
-						? "jakarta.persistence.EntityExistsException"
-						: "jakarta.persistence.OptimisticLockException"))
+				.append(annotationMetaEntity.importType(exception))
 				.append(" exception) {\n")
 				.append("\t\tthrow new ")
-				.append(annotationMetaEntity.importType(isInsert
-						? "jakarta.data.exceptions.EntityExistsException"
-						: "jakarta.data.exceptions.OptimisticLockingFailureException"))
+				.append(annotationMetaEntity.importType(convertedException))
 				.append("(exception);\n")
-				.append("\t}\n")
-				.append("\tcatch (")
-				.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceException"))
-				.append(" exception) {\n")
-				.append("\t\tthrow new ")
-				.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
-				.append("(exception);\n")
-				.append("\t}\n")
-				.append("}");
-		return declaration.toString();
+				.append("\t}\n");
 	}
 
 	private void notNull(StringBuilder declaration) {

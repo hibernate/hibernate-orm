@@ -8,7 +8,7 @@ plugins {
     id 'org.hibernate.build.xjc-jakarta'
 }
 
-description = 'Annotation Processor to generate JPA 2 static metamodel classes'
+description = 'Hibernate compile-time tooling'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
@@ -25,7 +25,6 @@ dependencies {
     api jakartaLibs.jaxb
     api jakartaLibs.validation
     api jakartaLibs.annotation
-    api jakartaLibs.data
     api libs.antlrRuntime
     api libs.byteBuddy
 
@@ -41,7 +40,8 @@ sourceSets.main {
 
 compileTestJava {
     options.compilerArgs += [
-            "-proc:none"
+            "-proc:none",
+            "-AsuppressJakartaDataMetamodel=true"
     ]
 }
 
@@ -63,7 +63,8 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
             languageVersion = jdkVersions.test.launcher
         }
     }
-} else {
+}
+else {
     sourceSets {
         test {
             java {

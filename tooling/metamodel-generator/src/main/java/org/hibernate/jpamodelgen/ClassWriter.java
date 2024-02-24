@@ -36,8 +36,8 @@ public final class ClassWriter {
 	public static void writeFile(Metamodel entity, Context context) {
 		try {
 			String metaModelPackage = entity.getPackageName();
-			// need to generate the body first, since this will also update the required imports which need to
-			// be written out first
+			// need to generate the body first, since this will also update
+			// the required imports which need to be written out first
 			String body = generateBody( entity, context ).toString();
 
 			FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(

@@ -83,7 +83,7 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 
 	@Override
 	public EntityMetamodel getEntityMetamodel() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override

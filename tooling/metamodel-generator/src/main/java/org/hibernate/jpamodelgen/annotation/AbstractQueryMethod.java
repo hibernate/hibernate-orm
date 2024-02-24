@@ -70,7 +70,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	@Override
 	public String getMetaType() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override

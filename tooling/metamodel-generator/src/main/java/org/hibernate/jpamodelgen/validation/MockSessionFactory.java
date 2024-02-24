@@ -401,7 +401,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public FastSessionServices getFastSessionServices() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 
@@ -410,7 +410,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public RootGraphImplementor<?> findEntityGraphByName(String s) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	static Class<?> toPrimitiveClass(Class<?> type) {
@@ -746,7 +746,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override
@@ -792,7 +792,7 @@ public abstract class MockSessionFactory
 
 		@Override
 		public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("operation not supported");
 		}
 
 		@Override
@@ -807,12 +807,12 @@ public abstract class MockSessionFactory
 
 		@Override
 		public <X> ManagedDomainType<X> managedType(Class<X> cls) {
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("operation not supported");
 		}
 
 		@Override
 		public <X> EntityDomainType<X> entity(Class<X> cls) {
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("operation not supported");
 		}
 
 		@Override

@@ -25,6 +25,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -42,6 +43,7 @@ import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.FULLY_ANNOTA
 import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.LAZY_XML_PARSING;
 import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.ORM_XML_OPTION;
 import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.SUPPRESS_JAKARTA_DATA_METAMODEL;
 import static org.hibernate.jpamodelgen.util.Constants.*;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
@@ -77,7 +79,8 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.isClassOrRecordType;
 		LAZY_XML_PARSING,
 		ADD_GENERATION_DATE,
 		ADD_GENERATED_ANNOTATION,
-		ADD_SUPPRESS_WARNINGS_ANNOTATION
+		ADD_SUPPRESS_WARNINGS_ANNOTATION,
+		SUPPRESS_JAKARTA_DATA_METAMODEL
 })
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
@@ -123,6 +126,12 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	 */
 	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
 
+	/**
+	 * Option to suppress generation of the Jakarta Data static metamodel,
+	 * even when Jakarta Data is available on the build path.
+	 */
+	public static final String SUPPRESS_JAKARTA_DATA_METAMODEL = "suppressJakartaDataMetamodel";
+
 	private static final boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = false;
 
 	private Context context;
@@ -167,9 +176,12 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
 		context.setAddDependentAnnotation( jakartaContextPackage != null );
 		context.setAddTransactionScopedAnnotation( jakartaTransactionsPackage != null );
-		context.setGenerateJakartaDataStaticMetamodel( jakartaDataPackage != null );
 
 		final Map<String, String> options = environment.getOptions();
+
+		boolean suppressJakartaData = parseBoolean( options.get( SUPPRESS_JAKARTA_DATA_METAMODEL ) );
+
+		context.setGenerateJakartaDataStaticMetamodel( !suppressJakartaData && jakartaDataPackage != null );
 
 		String setting = options.get( ADD_GENERATED_ANNOTATION );
 		if ( setting != null ) {
@@ -214,12 +226,19 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				createMetaModelClasses();
 			}
 			catch (Exception e) {
+				final StringBuffer b = new StringBuffer();
+				Arrays.stream(e.getStackTrace())
+						.forEach(stackTraceElement -> {
+							b.append(stackTraceElement);
+							b.append('\n');
+						});
 				final Throwable cause = e.getCause();
 				final String message =
 						cause != null && cause != e
 								? e.getMessage() + " caused by " + cause.getMessage()
 								: e.getMessage();
 				context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel: " + message );
+				context.logMessage( Diagnostic.Kind.ERROR, b.toString() );
 			}
 		}
 		return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;

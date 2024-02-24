@@ -37,7 +37,7 @@ class NameMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override
@@ -62,7 +62,7 @@ class NameMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getMetaType() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override

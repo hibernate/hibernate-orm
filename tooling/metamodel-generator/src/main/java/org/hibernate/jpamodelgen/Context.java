@@ -30,6 +30,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.emptyList;
+import static org.hibernate.jpamodelgen.HibernateProcessor.DEBUG_OPTION;
+import static org.hibernate.jpamodelgen.HibernateProcessor.LAZY_XML_PARSING;
+import static org.hibernate.jpamodelgen.HibernateProcessor.ORM_XML_OPTION;
+import static org.hibernate.jpamodelgen.HibernateProcessor.PERSISTENCE_XML_OPTION;
 
 /**
  * @author Max Andersen
@@ -99,7 +103,7 @@ public final class Context {
 
 		final Map<String, String> options = processingEnvironment.getOptions();
 
-		String persistenceXmlOption = options.get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
+		String persistenceXmlOption = options.get( PERSISTENCE_XML_OPTION );
 		if ( persistenceXmlOption != null ) {
 			if ( !persistenceXmlOption.startsWith("/") ) {
 				persistenceXmlOption = "/" + persistenceXmlOption;
@@ -110,7 +114,7 @@ public final class Context {
 			persistenceXmlLocation = DEFAULT_PERSISTENCE_XML_LOCATION;
 		}
 
-		String ormXmlOption = options.get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
+		String ormXmlOption = options.get( ORM_XML_OPTION );
 		if ( ormXmlOption != null ) {
 			ormXmlFiles = new ArrayList<>();
 			for ( String ormFile : ormXmlOption.split( "," ) ) {
@@ -124,8 +128,8 @@ public final class Context {
 			ormXmlFiles = emptyList();
 		}
 
-		lazyXmlParsing = parseBoolean( options.get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
-		logDebug = parseBoolean( options.get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
+		lazyXmlParsing = parseBoolean( options.get( LAZY_XML_PARSING ) );
+		logDebug = parseBoolean( options.get( DEBUG_OPTION ) );
 	}
 
 	public ProcessingEnvironment getProcessingEnvironment() {

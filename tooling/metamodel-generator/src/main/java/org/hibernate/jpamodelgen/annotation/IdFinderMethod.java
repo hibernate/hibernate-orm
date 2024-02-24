@@ -8,12 +8,15 @@ package org.hibernate.jpamodelgen.annotation;
 
 import java.util.List;
 
+import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
+
 /**
  * @author Gavin King
  */
 public class IdFinderMethod extends AbstractFinderMethod {
 
 	private final String paramName;
+	private final String paramType;
 
 	public IdFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -27,16 +30,18 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			boolean dataRepository) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, addNonnullAnnotation, dataRepository );
-		this.paramName = idParameterName( paramNames, paramTypes );
+		int idParameter = idParameter(paramNames, paramTypes);
+		this.paramName = paramNames.get(idParameter);
+		this.paramType = paramTypes.get(idParameter);
 	}
 
-	private static String idParameterName(List<String> paramNames, List<String> paramTypes) {
+	private static int idParameter(List<String> paramNames, List<String> paramTypes) {
 		for (int i = 0; i < paramNames.size(); i ++ ) {
 			if ( !isSessionParameter( paramTypes.get(i) ) ) {
-				return paramNames.get(i);
+				return i;
 			}
 		}
-		return ""; // should never occur!
+		return -1; // should never occur!
 	}
 
 	@Override
@@ -54,6 +59,10 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		preamble( declaration );
+		if ( paramName != null && !isPrimitive(paramType) ) {
+			nullCheck( declaration, paramName );
+		}
+		tryReturn( declaration );
 		if ( fetchProfiles.isEmpty() ) {
 			findWithNoFetchProfiles( declaration );
 		}
@@ -61,7 +70,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			findWithFetchProfiles( declaration );
 		}
 		convertExceptions( declaration );
-		declaration.append("\n}");
+		closingBrace( declaration );
 		return declaration.toString();
 	}
 
@@ -93,5 +102,14 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			declaration
 					.append("\n");
 		}
+	}
+
+	private static void nullCheck(StringBuilder declaration, String parameterName) {
+		declaration
+				.append("\tif (")
+				.append(parameterName)
+				.append(" == null) throw new IllegalArgumentException(\"Null ")
+				.append(parameterName)
+				.append("\");\n");
 	}
 }

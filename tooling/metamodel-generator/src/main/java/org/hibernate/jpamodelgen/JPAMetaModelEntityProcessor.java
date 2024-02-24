@@ -19,14 +19,10 @@ import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
@@ -40,7 +36,6 @@ import static java.lang.Boolean.parseBoolean;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.jpamodelgen.util.Constants.*;
-import static org.hibernate.jpamodelgen.util.StringUtil.isProperty;
 import static org.hibernate.jpamodelgen.util.TypeUtils.*;
 import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.*;
 
@@ -456,41 +451,4 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		}
 	}
 
-
-	static class ContainsAttributeTypeVisitor extends SimpleTypeVisitor8<Boolean, Element> {
-
-		private final Context context;
-		private final TypeElement type;
-
-		ContainsAttributeTypeVisitor(TypeElement elem, Context context) {
-			this.context = context;
-			this.type = elem;
-		}
-
-		@Override
-		public Boolean visitDeclared(DeclaredType declaredType, Element element) {
-			TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
-
-			final String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
-			final String collection = COLLECTIONS.get( fqNameOfReturnType );
-			if ( collection != null ) {
-				final TypeMirror collectionElementType =
-						getCollectionElementType( declaredType, fqNameOfReturnType, null, context );
-				final Element collectionElement = context.getTypeUtils().asElement( collectionElementType );
-				if ( ElementKind.TYPE_PARAMETER.equals( collectionElement.getKind() ) ) {
-					return false;
-				}
-				returnedElement = (TypeElement) collectionElement;
-			}
-
-			return type.getQualifiedName().contentEquals( returnedElement.getQualifiedName() );
-		}
-
-		@Override
-		public Boolean visitExecutable(ExecutableType t, Element element) {
-			return element.getKind().equals(ElementKind.METHOD)
-				&& isProperty( element.getSimpleName().toString(), toTypeString( t.getReturnType() ) )
-				&& t.getReturnType().accept( this, element );
-		}
-	}
 }

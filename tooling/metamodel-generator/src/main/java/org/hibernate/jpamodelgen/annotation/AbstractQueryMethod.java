@@ -222,14 +222,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						.append(annotationMetaEntity.importType(ArrayList.class.getName()))
 						.append("<>() {{\n\t\t\t\t")
 						.append(paramName)
-						.append(".forEach(sort -> add(")
+						.append(".forEach(_sort -> add(")
 						.append("by(")
 						.append(annotationMetaEntity.importType(sortableEntityClass))
 						.append(".class, ")
-						.append("sort.property()")
+						.append("_sort.property()")
 						.append(",\n\t\t\t\t\t\t")
-						.append("sort.isAscending() ? ASCENDING : DESCENDING")
-						.append(", sort.ignoreCase())));\n\t\t\t}})");
+						.append("_sort.isAscending() ? ASCENDING : DESCENDING, ")
+						.append("_sort.ignoreCase())));\n\t\t\t}})");
 			}
 		}
 		else if ( paramType.startsWith(JD_SORT) && paramType.endsWith("...") ) {
@@ -243,14 +243,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				declaration
 						.append("\n\t\t\t.setOrder(asList(")
 						.append(paramName)
-						.append(").stream().map(sort -> ")
+						.append(").stream().map(_sort -> ")
 						.append("by(")
 						.append(annotationMetaEntity.importType(sortableEntityClass))
 						.append(".class, ")
-						.append("sort.property()")
+						.append("_sort.property()")
 						.append(",\n\t\t\t\t\t\t")
-						.append("sort.isAscending() ? ASCENDING : DESCENDING")
-						.append(", sort.ignoreCase()))\n\t\t\t\t.collect(toList())\n\t\t\t)");
+						.append("_sort.isAscending() ? ASCENDING : DESCENDING, ")
+						.append("_sort.ignoreCase()))\n\t\t\t\t.collect(toList())\n\t\t\t)");
 			}
 		}
 		else if ( paramType.startsWith(JD_SORT) ) {

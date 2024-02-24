@@ -8,6 +8,7 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.query.NullPrecedence;
 
 import java.util.Arrays;
 import java.util.List;
@@ -258,32 +259,28 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				.append(')');
 	}
 
+	private static final String ORDER_CONVERSION =
+			"builder.sort(entity.get(_sort.property())," +
+			"\n\t\t\t\t\t_sort.isAscending() ? ASCENDING : DESCENDING," +
+			"\n\t\t\t\t\tNONE, _sort.ignoreCase())";
+
 	private void orderBy(StringBuilder declaration, String paramName, boolean variadic) {
 		// TODO: Sort.ignoreCase()
 		if ( variadic ) {
 			annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
 			annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+			annotationMetaEntity.staticImport(NullPrecedence.class.getName(), "NONE");
 			declaration
 					.append("\n\t\tasList(")
 					.append(paramName)
-					.append(")\n\t\t\t.stream()\n\t\t\t.map(sort -> sort.isAscending()\n")
-					.append("\t\t\t\t\t? builder.asc(entity.get(sort.property()))\n")
-					.append("\t\t\t\t\t: builder.desc(entity.get(sort.property()))\n")
-					.append("\t\t\t)\n\t\t\t.collect(toList())");
+					.append(")\n\t\t\t.stream()\n\t\t\t.map(_sort -> ")
+					.append(ORDER_CONVERSION)
+					.append("\n\t\t\t)\n\t\t\t.collect(toList())");
 		}
 		else {
 			declaration
 					.append("\n\t\t")
-					.append(paramName)
-					.append(".isAscending()\n")
-					.append("\t\t\t\t? builder.")
-					.append("asc(entity.get(")
-					.append(paramName)
-					.append(".property()))\n")
-					.append("\t\t\t\t: builder.")
-					.append("desc(entity.get(")
-					.append(paramName)
-					.append(".property()))");
+					.append(ORDER_CONVERSION.replace("_sort", paramName));
 		}
 	}
 

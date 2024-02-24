@@ -90,6 +90,7 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValueRef;
 import static org.hibernate.jpamodelgen.util.TypeUtils.hasAnnotation;
+import static org.hibernate.jpamodelgen.util.TypeUtils.primitiveClassMatchesKind;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -1141,40 +1142,43 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			StringTokenizer tokens,
 			String token) {
 		final Name memberName = candidate.getSimpleName();
-		final TypeMirror type;
-		if ( accessType == AccessType.FIELD && candidate.getKind() == ElementKind.FIELD ) {
-			if ( !fieldMatches(token, memberName) ) {
-				return null;
-			}
-			else {
-				type = candidate.asType();
-			}
-		}
-		else if ( accessType == AccessType.PROPERTY && candidate.getKind() == ElementKind.METHOD ) {
-			if ( !getterMatches(token, memberName) ) {
-				return null;
-			}
-			else {
-				final ExecutableElement method = (ExecutableElement) candidate;
-				type = method.getReturnType();
-			}
-		}
-		else {
+		final TypeMirror type = memberType( candidate, accessType, token, memberName );
+		if (type == null) {
 			return null;
 		}
-
-		if ( tokens.hasMoreTokens() ) {
-			if ( type.getKind() == TypeKind.DECLARED ) {
-				final DeclaredType declaredType = (DeclaredType) type;
-				final TypeElement memberType = (TypeElement) declaredType.asElement();
-				memberTypes.put( qualify( entityType.getQualifiedName().toString(), memberName.toString() ),
-						memberType.getQualifiedName().toString() );
-				return memberMatchingPath( memberType, tokens );
-			}
-			return null;
+		else if ( tokens.hasMoreTokens() ) {
+			return type.getKind() == TypeKind.DECLARED
+					? memberForPath( entityType, tokens, (DeclaredType) type, memberName )
+					: null;
 		}
 		else {
 			return candidate;
+		}
+	}
+
+	private @Nullable Element memberForPath(
+			TypeElement entityType, StringTokenizer tokens, DeclaredType type, Name memberName) {
+		final TypeElement memberType = (TypeElement) type.asElement();
+		memberTypes.put( qualify( entityType.getQualifiedName().toString(), memberName.toString() ),
+				memberType.getQualifiedName().toString() ); // NOTE SIDE EFFECT!
+		return memberMatchingPath( memberType, tokens );
+	}
+
+	private static @Nullable TypeMirror memberType(Element candidate, AccessType accessType, String token, Name memberName) {
+		final ElementKind kind = candidate.getKind();
+		if ( accessType == AccessType.FIELD && kind == ElementKind.FIELD ) {
+			return fieldMatches(token, memberName)
+					? candidate.asType()
+					: null;
+		}
+		else if ( accessType == AccessType.PROPERTY && kind == ElementKind.METHOD ) {
+			final ExecutableElement executable = (ExecutableElement) candidate;
+			return getterMatches(token, memberName)
+					? executable.getReturnType()
+					: null;
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -1464,30 +1468,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return paramTypeElement.getQualifiedName().contentEquals(itemTypeName);
 		}
 		else if ( kind.isPrimitive() ) {
-			switch ( kind ) {
-				case SHORT:
-					return itemType.equals(Short.class);
-				case INT:
-					return itemType.equals(Integer.class);
-				case LONG:
-					return itemType.equals(Long.class);
-				case BOOLEAN:
-					return itemType.equals(Boolean.class);
-				case FLOAT:
-					return itemType.equals(Float.class);
-				case DOUBLE:
-					return itemType.equals(Double.class);
-				case CHAR:
-					return itemType.equals(Character.class);
-				case BYTE:
-					return itemType.equals(Byte.class);
-				default:
-					return false;
-			}
+			return primitiveClassMatchesKind( itemType, kind );
 		}
 		else if ( kind == TypeKind.ARRAY ) {
+			final ArrayType arrayType = (ArrayType) parameterType;
 			return itemType.isArray()
-				&& parameterMatches( ((ArrayType) parameterType).getComponentType(), itemType.getComponentType() );
+				&& parameterMatches( arrayType.getComponentType(), itemType.getComponentType() );
 		}
 		else {
 			return false;
@@ -1499,7 +1485,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( componentType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) componentType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			return typeElement.getQualifiedName().contentEquals("java.lang.Object");
+			return typeElement.getQualifiedName().contentEquals(Constants.JAVA_OBJECT);
 		}
 		else {
 			return false;
@@ -1696,10 +1682,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean parameterIsMissing(String hql, int i, String param, String type) {
-		return !Pattern.compile( ".*(:" + param + "|\\?" + i + ")\\b.*", Pattern.DOTALL ).matcher( hql ).matches()
+		return !hasParameter(hql, i, param)
 			&& !isSessionParameter(type)
 			&& !isPageParam(type)
 			&& !isOrderParam(type);
+	}
+
+	private static boolean hasParameter(String hql, int i, String param) {
+		return Pattern.compile(".*(:" + param + "|\\?" + i + ")\\b.*", Pattern.DOTALL)
+				.matcher(hql).matches();
 	}
 
 	private static boolean isSessionParameter(String type) {

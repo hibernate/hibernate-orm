@@ -28,6 +28,8 @@ import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.jpamodelgen.util.Constants.JAVA_OBJECT;
+
 /**
  * @author Christian Beikov
  */
@@ -134,7 +136,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<@Nullable Obj
 		if ( typeVariableElement instanceof TypeParameterElement ) {
 			final TypeParameterElement typeParameter = (TypeParameterElement) typeVariableElement;
 			sb.append( typeParameter );
-			if ( !"java.lang.Object".equals( t.getUpperBound().toString() ) && visitedTypeVariables.add( t ) ) {
+			if ( !JAVA_OBJECT.equals( t.getUpperBound().toString() ) && visitedTypeVariables.add( t ) ) {
 				sb.append( " extends " );
 				t.getUpperBound().accept( this, null );
 				visitedTypeVariables.remove( t );

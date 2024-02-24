@@ -14,6 +14,7 @@ import javax.lang.model.util.Elements;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 
+import static java.beans.Introspector.decapitalize;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -82,19 +83,19 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getPropertyName() {
-		Elements elementsUtil = parent.getContext().getElementUtils();
+		final Elements elementsUtil = parent.getContext().getElementUtils();
 		if ( element.getKind() == ElementKind.FIELD ) {
 			return element.getSimpleName().toString();
 		}
 		else if ( element.getKind() == ElementKind.METHOD ) {
-			String name = element.getSimpleName().toString();
+			final String name = element.getSimpleName().toString();
 			if ( name.startsWith( "get" ) ) {
-				return elementsUtil.getName( Introspector.decapitalize( name.substring( "get".length() ) ) ).toString();
+				return elementsUtil.getName( decapitalize( name.substring( "get".length() ) ) ).toString();
 			}
 			else if ( name.startsWith( "is" ) ) {
-				return ( elementsUtil.getName( Introspector.decapitalize( name.substring( "is".length() ) ) ) ).toString();
+				return ( elementsUtil.getName( decapitalize( name.substring( "is".length() ) ) ) ).toString();
 			}
-			return elementsUtil.getName( Introspector.decapitalize( name ) ).toString();
+			return elementsUtil.getName( decapitalize( name ) ).toString();
 		}
 		else {
 			return elementsUtil.getName( element.getSimpleName() + "/* " + element.getKind() + " */" ).toString();

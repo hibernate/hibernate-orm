@@ -51,6 +51,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.StringHelper.unroot;
+import static org.hibernate.jpamodelgen.util.Constants.JAVA_OBJECT;
 
 /**
  * Implementation of the {@code Mock} objects based on standard
@@ -696,7 +697,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 		TypeMirror elementType = typeArguments.get(typeArguments.size()-1);
 		return elementType==null
-				? elementUtil.getTypeElement("java.lang.Object").asType()
+				? elementUtil.getTypeElement(JAVA_OBJECT).asType()
 				: elementType;
 	}
 

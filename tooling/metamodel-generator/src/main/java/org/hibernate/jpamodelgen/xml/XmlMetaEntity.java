@@ -637,7 +637,7 @@ public class XmlMetaEntity implements Metamodel {
 
 	@Override
 	public String scope() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override

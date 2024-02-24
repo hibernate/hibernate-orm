@@ -69,7 +69,7 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 
 	@Override
 	public @Nullable String getSupertypeName() {
-		throw new UnsupportedOperationException();
+		return null;
 	}
 
 	@Override
@@ -157,7 +157,7 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 
 	@Override
 	public String scope() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override

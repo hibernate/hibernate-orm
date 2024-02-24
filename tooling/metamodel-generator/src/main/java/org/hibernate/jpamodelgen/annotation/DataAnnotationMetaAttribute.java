@@ -60,7 +60,6 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 				.append( "<" )
 				.append( className )
 				.append( "> " )
-				.append( parent.getContext().useJakartaDataStyle() ? "" : "_" )
 				.append( getPropertyName() )
 				.append(" = ")
 				.append( getMetaImpl(className, memberName) )

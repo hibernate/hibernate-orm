@@ -323,6 +323,10 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	abstract boolean singleResult();
 
+	static void closingBrace(StringBuilder declaration) {
+		declaration.append("\n}");
+	}
+
 	@Nullable String getSortableEntityClass() {
 		return returnTypeName;
 	}

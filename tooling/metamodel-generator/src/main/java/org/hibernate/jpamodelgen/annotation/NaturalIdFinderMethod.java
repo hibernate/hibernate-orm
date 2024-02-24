@@ -47,6 +47,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		preamble( declaration );
+		tryReturn( declaration );
 		unwrapSession( declaration );
 		if ( isReactive() ) {
 			findReactively( declaration );
@@ -55,7 +56,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			findBlockingly( declaration );
 		}
 		convertExceptions( declaration );
-		declaration.append("\n}");
+		closingBrace( declaration );
 		return declaration.toString();
 	}
 
@@ -83,8 +84,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 	}
 
 	private void findReactively(StringBuilder declaration) {
-		boolean composite = paramTypes.stream()
-				.filter(type -> !isSessionParameter(type)).count()>1;
+		boolean composite = isComposite();
 		declaration
 				.append(".find(");
 		if (composite) {
@@ -131,4 +131,8 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		declaration.append(");");
 	}
 
+	private boolean isComposite() {
+		return paramTypes.stream()
+				.filter(type -> !isSessionParameter(type)).count() > 1;
+	}
 }

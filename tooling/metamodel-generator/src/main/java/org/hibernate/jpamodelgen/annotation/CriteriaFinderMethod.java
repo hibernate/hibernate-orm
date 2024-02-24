@@ -64,22 +64,25 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
+		preamble( declaration, paramTypes );
+		nullChecks( paramTypes, declaration );
+		createQuery( declaration );
+		where( declaration, paramTypes );
+		orderBy( paramTypes, declaration );
+		executeQuery( declaration, paramTypes );
+		convertExceptions( declaration );
+		closingBrace( declaration );
+		return declaration.toString();
+	}
+
+	private void preamble(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append(returnType())
 				.append(" ")
 				.append(methodName);
-		parameters( paramTypes, declaration );
+		parameters(paramTypes, declaration);
 		declaration
 				.append(" {");
-		nullChecks(paramTypes, declaration);
-		createQuery(declaration);
-		where(declaration, paramTypes);
-		orderBy(paramTypes, declaration);
-		executeQuery(declaration, paramTypes);
-		convertExceptions( declaration );
-		declaration
-				.append("\n}");
-		return declaration.toString();
 	}
 
 	private void executeQuery(StringBuilder declaration, List<String> paramTypes) {
@@ -161,14 +164,18 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
 			if ( !isNullable(i) && !isPrimitive(paramType) ) {
-				declaration
-						.append("\n\tif (")
-						.append(paramName)
-						.append(" == null) throw new IllegalArgumentException(\"Null \" + ")
-						.append(paramName)
-						.append(");");
+				nullCheck( declaration, paramName );
 			}
 		}
+	}
+
+	private static void nullCheck(StringBuilder declaration, String paramName) {
+		declaration
+				.append("\n\tif (")
+				.append(paramName)
+				.append(" == null) throw new IllegalArgumentException(\"Null ")
+				.append(paramName)
+				.append("\");");
 	}
 
 	private void orderBy(List<String> paramTypes, StringBuilder declaration) {

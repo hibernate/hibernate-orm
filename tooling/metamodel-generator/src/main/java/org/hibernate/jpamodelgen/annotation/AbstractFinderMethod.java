@@ -175,8 +175,10 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				.append(" ")
 				.append(methodName);
 		parameters( paramTypes, declaration ) ;
-		declaration
-				.append(" {\n");
+		declaration.append(" {\n");
+	}
+
+	void tryReturn(StringBuilder declaration) {
 		if (dataRepository) {
 			declaration
 					.append("\ttry {\n\t");

@@ -80,31 +80,18 @@ public class QueryMethod extends AbstractQueryMethod {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( paramTypes, declaration );
-		declaration
-				.append(returnType)
-				.append(" ")
-				.append(methodName);
-		parameters( paramTypes, declaration );
-		declaration
-				.append(" {\n");
-		if (dataRepository) {
-			declaration
-					.append("\ttry {\n\t");
-		}
-		declaration
-				.append("\t");
-		if ( returnTypeName == null || !returnTypeName.equals("void") ) {
-			declaration
-					.append("return ");
-		}
-		if ( isNative && returnTypeName != null && containerTypeName == null
-				&& isUsingEntityManager() ) {
-			// EntityManager.createNativeQuery() does not return TypedQuery,
-			// so we need to cast to the entity type
-			declaration.append("(")
-					.append(returnType)
-					.append(") ");
-		}
+		preamble( declaration, returnType, paramTypes );
+		tryReturn( declaration );
+		castResult( declaration, returnType );
+		createQuery( declaration );
+		boolean unwrapped = setParameters( paramTypes, declaration );
+		execute( declaration, unwrapped );
+		convertExceptions( declaration );
+		closingBrace( declaration );
+		return declaration.toString();
+	}
+
+	private void createQuery(StringBuilder declaration) {
 		declaration
 				.append(sessionName)
 				.append(isNative ? ".createNativeQuery" : ".createQuery")
@@ -117,11 +104,40 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append(".class");
 		}
 		declaration.append(")");
-		boolean unwrapped = setParameters( paramTypes, declaration );
-		execute( declaration, unwrapped );
-		convertExceptions( declaration );
-		declaration.append("\n}");
-		return declaration.toString();
+	}
+
+	private void castResult(StringBuilder declaration, StringBuilder returnType) {
+		if ( isNative && returnTypeName != null && containerTypeName == null
+				&& isUsingEntityManager() ) {
+			// EntityManager.createNativeQuery() does not return TypedQuery,
+			// so we need to cast to the entity type
+			declaration.append("(")
+					.append(returnType)
+					.append(") ");
+		}
+	}
+
+	private void tryReturn(StringBuilder declaration) {
+		if (dataRepository) {
+			declaration
+					.append("\ttry {\n\t");
+		}
+		declaration
+				.append("\t");
+		if ( returnTypeName == null || !returnTypeName.equals("void") ) {
+			declaration
+					.append("return ");
+		}
+	}
+
+	private void preamble(StringBuilder declaration, StringBuilder returnType, List<String> paramTypes) {
+		declaration
+				.append(returnType)
+				.append(" ")
+				.append(methodName);
+		parameters( paramTypes, declaration );
+		declaration
+				.append(" {\n");
 	}
 
 	private void execute(StringBuilder declaration, boolean unwrapped) {

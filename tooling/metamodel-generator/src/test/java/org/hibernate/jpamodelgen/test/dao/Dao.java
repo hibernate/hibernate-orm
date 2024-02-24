@@ -47,6 +47,9 @@ public interface Dao {
     @HQL("where title like ?1")
     List<Book> findBooksByTitle(String title);
 
+    @HQL("where title like :book$title")
+    List<Book> findBooksByTitle(Book book);
+
     @HQL("from Book where title like ?1")
     TypedQuery<Book> findByTitle(String title);
 

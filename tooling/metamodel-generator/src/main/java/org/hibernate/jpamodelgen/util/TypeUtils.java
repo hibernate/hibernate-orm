@@ -37,6 +37,7 @@ import org.hibernate.jpamodelgen.MetaModelGenerationException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.jpamodelgen.util.Constants.JAVA_OBJECT;
+import static org.hibernate.jpamodelgen.util.Constants.MAP;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.StringUtil.isProperty;
 
@@ -327,7 +328,7 @@ public final class TypeUtils {
 	}
 
 	public static TypeMirror getCollectionElementType(
-			DeclaredType type, String returnTupeName, @Nullable String explicitTargetEntityName, Context context) {
+			DeclaredType type, String returnTypeName, @Nullable String explicitTargetEntityName, Context context) {
 		if ( explicitTargetEntityName != null ) {
 			return context.getElementUtils().getTypeElement( explicitTargetEntityName ).asType();
 		}
@@ -336,7 +337,7 @@ public final class TypeUtils {
 			if ( typeArguments.isEmpty() ) {
 				throw new MetaModelGenerationException( "Unable to determine collection type" );
 			}
-			else if ( Map.class.getCanonicalName().equals( returnTupeName ) ) {
+			else if ( MAP.equals( returnTypeName ) ) {
 				return typeArguments.get( 1 );
 			}
 			else {

@@ -17,6 +17,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -35,6 +36,7 @@ import org.hibernate.jpamodelgen.MetaModelGenerationException;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.jpamodelgen.util.Constants.JAVA_OBJECT;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.StringUtil.isProperty;
 
@@ -50,6 +52,9 @@ public final class TypeUtils {
 	public static final String DEFAULT_ANNOTATION_PARAMETER_NAME = "value";
 	private static final Map<TypeKind, String> PRIMITIVE_WRAPPERS = new HashMap<>();
 	private static final Map<TypeKind, String> PRIMITIVES = new HashMap<>();
+
+	private static final String PROPERTY = AccessType.PROPERTY.toString();
+	private static final String FIELD = AccessType.FIELD.toString();
 
 	static {
 		PRIMITIVE_WRAPPERS.put( TypeKind.CHAR, "Character" );
@@ -131,7 +136,13 @@ public final class TypeUtils {
 	}
 
 	private static @Nullable TypeMirror upperBound(@Nullable TypeMirror bound) {
-		return bound == null || (bound.getKind() == TypeKind.DECLARED && bound.toString().equals("java.lang.Object")) ? null : bound;
+		if ( bound !=null && bound.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType type = (DeclaredType) bound;
+			return type.asElement().getSimpleName().contentEquals(JAVA_OBJECT) ? null : bound;
+		}
+		else {
+			return null;
+		}
 	}
 
 	public static @Nullable TypeMirror extractClosestRealType(TypeMirror type, Context context, Set<TypeVariable> beingVisited) {
@@ -316,20 +327,20 @@ public final class TypeUtils {
 	}
 
 	public static TypeMirror getCollectionElementType(
-			DeclaredType t, String fqNameOfReturnedType, @Nullable String explicitTargetEntityName, Context context) {
+			DeclaredType type, String returnTupeName, @Nullable String explicitTargetEntityName, Context context) {
 		if ( explicitTargetEntityName != null ) {
 			return context.getElementUtils().getTypeElement( explicitTargetEntityName ).asType();
 		}
 		else {
-			final List<? extends TypeMirror> typeArguments = t.getTypeArguments();
-			if ( typeArguments.size() == 0 ) {
+			final List<? extends TypeMirror> typeArguments = type.getTypeArguments();
+			if ( typeArguments.isEmpty() ) {
 				throw new MetaModelGenerationException( "Unable to determine collection type" );
 			}
-			else if ( Map.class.getCanonicalName().equals( fqNameOfReturnedType ) ) {
-				return t.getTypeArguments().get( 1 );
+			else if ( Map.class.getCanonicalName().equals( returnTupeName ) ) {
+				return typeArguments.get( 1 );
 			}
 			else {
-				return t.getTypeArguments().get( 0 );
+				return typeArguments.get( 0 );
 			}
 		}
 	}
@@ -460,10 +471,11 @@ public final class TypeUtils {
 			final Object accessType = getAnnotationValue( mirror, DEFAULT_ANNOTATION_PARAMETER_NAME );
 			if ( accessType instanceof VariableElement) {
 				final VariableElement enumValue = (VariableElement) accessType;
-				if ( enumValue.getSimpleName().contentEquals( AccessType.PROPERTY.toString() ) ) {
+				final Name enumValueName = enumValue.getSimpleName();
+				if ( enumValueName.contentEquals(PROPERTY) ) {
 					return AccessType.PROPERTY;
 				}
-				else if ( enumValue.getSimpleName().contentEquals( AccessType.FIELD.toString() ) ) {
+				else if ( enumValueName.contentEquals(FIELD) ) {
 					return AccessType.FIELD;
 				}
 			}
@@ -479,7 +491,7 @@ public final class TypeUtils {
 		final List<? extends TypeMirror> typeArguments = type.getTypeArguments();
 		if ( typeArguments.isEmpty() ) {
 			context.logMessage( Diagnostic.Kind.ERROR, "Unable to determine type argument for " + type );
-			return "java.lang.Object";
+			return JAVA_OBJECT;
 		}
 		else {
 			return extractClosestRealTypeAsString( typeArguments.get( 0 ), context );
@@ -491,6 +503,29 @@ public final class TypeUtils {
 		// we want to accept classes and records but not enums,
 		// and we want to avoid depending on ElementKind.RECORD
 		return kind.isClass() && kind != ElementKind.ENUM;
+	}
+
+	public static boolean primitiveClassMatchesKind(Class<?> itemType, TypeKind kind) {
+		switch (kind) {
+			case SHORT:
+				return itemType.equals(Short.class);
+			case INT:
+				return itemType.equals(Integer.class);
+			case LONG:
+				return itemType.equals(Long.class);
+			case BOOLEAN:
+				return itemType.equals(Boolean.class);
+			case FLOAT:
+				return itemType.equals(Float.class);
+			case DOUBLE:
+				return itemType.equals(Double.class);
+			case CHAR:
+				return itemType.equals(Character.class);
+			case BYTE:
+				return itemType.equals(Byte.class);
+			default:
+				return false;
+		}
 	}
 
 	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable String, Element> {
@@ -510,11 +545,11 @@ public final class TypeUtils {
 		}
 
 		@Override
-		public @Nullable String visitExecutable(ExecutableType t, Element p) {
-			if ( p.getKind().equals( ElementKind.METHOD ) ) {
-				String string = p.getSimpleName().toString();
-				return isProperty( string, toTypeString( t.getReturnType() ) )
-						? t.getReturnType().accept(this, p)
+		public @Nullable String visitExecutable(ExecutableType executable, Element element) {
+			if ( element.getKind().equals( ElementKind.METHOD ) ) {
+				final String string = element.getSimpleName().toString();
+				return isProperty( string, toTypeString( executable.getReturnType() ) )
+						? executable.getReturnType().accept(this, element)
 						: null;
 			}
 			else {

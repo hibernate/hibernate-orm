@@ -74,6 +74,7 @@ public final class Context {
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
+	private boolean jakartaDataStyle;
 
 	// keep track of all classes for which model have been generated
 	private final Collection<String> generatedModelClasses = new HashSet<>();
@@ -119,6 +120,13 @@ public final class Context {
 		return processingEnvironment;
 	}
 
+	public boolean useJakartaDataStyle() {
+		return jakartaDataStyle;
+	}
+
+	public void setJakartaDataStyle(boolean jakartaDataStyle) {
+		this.jakartaDataStyle = jakartaDataStyle;
+	}
 	public boolean addInjectAnnotation() {
 		return addInjectAnnotation;
 	}

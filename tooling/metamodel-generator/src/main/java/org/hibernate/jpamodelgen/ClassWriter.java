@@ -38,7 +38,6 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
  * @author Hardy Ferentschik
  */
 public final class ClassWriter {
-	private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
 
 	private ClassWriter() {
 	}
@@ -51,7 +50,7 @@ public final class ClassWriter {
 			String body = generateBody( entity, context ).toString();
 
 			FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(
-					getFullyQualifiedClassName( entity, metaModelPackage ),
+					getFullyQualifiedClassName( entity, metaModelPackage, context ),
 					entity.getElement()
 			);
 			OutputStream os = fo.openOutputStream();
@@ -96,7 +95,7 @@ public final class ClassWriter {
 				pw.println( writeDependentAnnotation( entity ) );
 			}
 			if ( entity.getElement() instanceof TypeElement ) {
-				pw.println( writeStaticMetaModelAnnotation( entity ) );
+				pw.println( writeStaticMetaModelAnnotation( entity, context ) );
 			}
 			if ( context.addGeneratedAnnotation() ) {
 				pw.println( writeGeneratedAnnotation( entity, context ) );
@@ -131,11 +130,11 @@ public final class ClassWriter {
 
 	private static void printClassDeclaration(Metamodel entity, PrintWriter pw, Context context) {
 		pw.print( entity.isImplementation() ? "public class " : "public abstract class " );
-		pw.print( entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
+		pw.print( generatedClassName( context, entity.getSimpleName() ) );
 
 		String superClassName = findMappedSuperClass( entity, context );
 		if ( superClassName != null ) {
-			pw.print( " extends " + superClassName + META_MODEL_CLASS_NAME_SUFFIX );
+			pw.print( " extends " + generatedClassName( context, superClassName ) );
 		}
 		if ( entity.isImplementation() ) {
 			pw.print( entity.getElement().getKind() == ElementKind.CLASS ? " extends " : " implements " );
@@ -145,13 +144,16 @@ public final class ClassWriter {
 		pw.println( " {" );
 	}
 
+	private static String generatedClassName(Context context, String superClassName) {
+		return context.useJakartaDataStyle() ? '_' + superClassName : superClassName + '_';
+	}
+
 	private static @Nullable String findMappedSuperClass(Metamodel entity, Context context) {
 		Element element = entity.getElement();
 		if ( element instanceof TypeElement ) {
 			TypeMirror superClass = ((TypeElement) element).getSuperclass();
 			//superclass of Object is of NoType which returns some other kind
 			while ( superClass.getKind() == TypeKind.DECLARED ) {
-				//F..king Ch...t Have those people used their horrible APIs even once?
 				final Element superClassElement = ( (DeclaredType) superClass ).asElement();
 				String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
 				if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
@@ -195,12 +197,12 @@ public final class ClassWriter {
 		return false;
 	}
 
-	private static String getFullyQualifiedClassName(Metamodel entity, String metaModelPackage) {
+	private static String getFullyQualifiedClassName(Metamodel entity, String metaModelPackage, Context context) {
 		String fullyQualifiedClassName = "";
 		if ( !metaModelPackage.isEmpty() ) {
 			fullyQualifiedClassName = fullyQualifiedClassName + metaModelPackage + ".";
 		}
-		fullyQualifiedClassName = fullyQualifiedClassName + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX;
+		fullyQualifiedClassName = fullyQualifiedClassName + generatedClassName( context, entity.getSimpleName() );
 		return fullyQualifiedClassName;
 	}
 
@@ -230,15 +232,17 @@ public final class ClassWriter {
 	}
 
 	private static String writeSuppressWarnings() {
-		return "@SuppressWarnings({ \"deprecation\", \"rawtypes\" })";
+		return "@SuppressWarnings({\"deprecation\", \"rawtypes\"})";
 	}
 
 	private static String writeDependentAnnotation(Metamodel entity) {
 		return "@" + entity.importType( "jakarta.enterprise.context.Dependent" );
 	}
 
-	private static String writeStaticMetaModelAnnotation(Metamodel entity) {
-		return "@" + entity.importType( "jakarta.persistence.metamodel.StaticMetamodel" )
-				+ "(" + entity.getSimpleName() + ".class)";
+	private static String writeStaticMetaModelAnnotation(Metamodel entity, Context context) {
+		final String annotation = context.useJakartaDataStyle()
+				? "jakarta.data.metamodel.StaticMetamodel"
+				: "jakarta.persistence.metamodel.StaticMetamodel";
+		return "@" + entity.importType( annotation ) + "(" + entity.getSimpleName() + ".class)";
 	}
 }

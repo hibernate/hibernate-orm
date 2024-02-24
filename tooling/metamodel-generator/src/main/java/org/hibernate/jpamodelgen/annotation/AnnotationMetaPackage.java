@@ -68,6 +68,11 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	}
 
 	@Override
+	public @Nullable String getSupertypeName() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final String getPackageName() {
 		return getPackageName( context, element );
 	}
@@ -153,5 +158,10 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	@Override
 	public String scope() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isJakartaDataStyle() {
+		return false;
 	}
 }

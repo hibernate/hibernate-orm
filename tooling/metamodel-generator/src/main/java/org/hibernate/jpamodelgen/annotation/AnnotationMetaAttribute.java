@@ -59,7 +59,6 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 				.append( parent.importType( getTypeDeclaration() ) )
 				.append( "> " )
 				.append( getPropertyName() )
-				.append( parent.getContext().useJakartaDataStyle() ? "_" : "" )
 				.append( ";" )
 				.toString();
 	}

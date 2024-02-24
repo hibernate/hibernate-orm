@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.MetaModelGenerationException;
 import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
+import org.hibernate.jpamodelgen.model.Metamodel;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -608,6 +609,55 @@ public final class TypeUtils {
 		else {
 			return elementsUtil.getName(element.getSimpleName() + "/* " + element.getKind() + " */").toString();
 		}
+	}
+
+	public static @Nullable String findMappedSuperClass(Metamodel entity, Context context) {
+		Element element = entity.getElement();
+		if ( element instanceof TypeElement ) {
+			TypeMirror superClass = ((TypeElement) element).getSuperclass();
+			//superclass of Object is of NoType which returns some other kind
+			while ( superClass.getKind() == TypeKind.DECLARED ) {
+				final Element superClassElement = ( (DeclaredType) superClass ).asElement();
+				String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
+				if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
+					return superClassName;
+				}
+				superClass = ( (TypeElement) superClassElement ).getSuperclass();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Checks whether this metamodel class needs to extend another metamodel class.
+	 * This method checks whether the processor has generated a metamodel class for the super class, but it also
+	 * allows for the possibility that the metamodel class was generated in a previous compilation. (It could be
+	 * part of a separate jar. See also METAGEN-35.)
+	 *
+	 * @param superClassElement the super class element
+	 * @param entityMetaComplete flag indicating if the entity for which the metamodel should be generated is
+	 * metamodel complete. If so we cannot use reflection to decide whether we have to add the extends clause
+	 * @param context the execution context
+	 *
+	 * @return {@code true} in case there is super class metamodel to extend from {@code false} otherwise.
+	 */
+	private static boolean extendsSuperMetaModel(Element superClassElement, boolean entityMetaComplete, Context context) {
+		// if we processed the superclass in the same run we definitely need to extend
+		String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
+		if ( context.containsMetaEntity( superClassName )
+				|| context.containsMetaEmbeddable( superClassName ) ) {
+			return true;
+		}
+
+		// to allow for the case that the metamodel class for the super entity is for example contained in another
+		// jar file we use reflection. However, we need to consider the fact that there is xml configuration
+		// and annotations should be ignored
+		if ( !entityMetaComplete
+				&& containsAnnotation( superClassElement, Constants.ENTITY, Constants.MAPPED_SUPERCLASS ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable String, Element> {

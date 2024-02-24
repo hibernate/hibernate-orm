@@ -41,7 +41,6 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 				.append( parent.importType( getTypeDeclaration() ) )
 				.append("> ")
 				.append( getPropertyName() )
-				.append( parent.getContext().useJakartaDataStyle() ? "_" : "" )
 				.append(";")
 				.toString();
 	}

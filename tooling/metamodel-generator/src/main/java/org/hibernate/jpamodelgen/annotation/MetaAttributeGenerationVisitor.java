@@ -6,10 +6,15 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
-import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.jpamodelgen.Context;
+import org.hibernate.jpamodelgen.util.AccessType;
+import org.hibernate.jpamodelgen.util.AccessTypeInformation;
+import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.jpamodelgen.util.TypeUtils;
+
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -21,26 +26,13 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import java.util.List;
 
-import org.hibernate.jpamodelgen.Context;
-import org.hibernate.jpamodelgen.util.AccessType;
-import org.hibernate.jpamodelgen.util.AccessTypeInformation;
-import org.hibernate.jpamodelgen.util.Constants;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import static org.hibernate.jpamodelgen.util.Constants.BASIC;
 import static org.hibernate.jpamodelgen.util.Constants.ELEMENT_COLLECTION;
-import static org.hibernate.jpamodelgen.util.Constants.EMBEDDED_ID;
-import static org.hibernate.jpamodelgen.util.Constants.ID;
 import static org.hibernate.jpamodelgen.util.Constants.MANY_TO_ANY;
 import static org.hibernate.jpamodelgen.util.Constants.MANY_TO_MANY;
-import static org.hibernate.jpamodelgen.util.Constants.MANY_TO_ONE;
 import static org.hibernate.jpamodelgen.util.Constants.ONE_TO_MANY;
-import static org.hibernate.jpamodelgen.util.Constants.ONE_TO_ONE;
-import static org.hibernate.jpamodelgen.util.TypeUtils.hasAnnotation;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
-import static org.hibernate.jpamodelgen.util.StringUtil.isProperty;
 import static org.hibernate.jpamodelgen.util.TypeUtils.DEFAULT_ANNOTATION_PARAMETER_NAME;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecifiedAccessType;
 import static org.hibernate.jpamodelgen.util.TypeUtils.extractClosestRealTypeAsString;
@@ -48,7 +40,9 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getCollectionElementType;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getKeyType;
-import static org.hibernate.jpamodelgen.util.TypeUtils.isAnnotationMirrorOfType;
+import static org.hibernate.jpamodelgen.util.TypeUtils.hasAnnotation;
+import static org.hibernate.jpamodelgen.util.TypeUtils.isBasicAttribute;
+import static org.hibernate.jpamodelgen.util.TypeUtils.isPropertyGetter;
 import static org.hibernate.jpamodelgen.util.TypeUtils.toArrayTypeString;
 import static org.hibernate.jpamodelgen.util.TypeUtils.toTypeString;
 
@@ -56,18 +50,6 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.toTypeString;
  * @author Hardy Ferentschik
  */
 public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable AnnotationMetaAttribute, Element> {
-
-	/**
-	 * FQCN of the Hibernate-specific {@code @Target} annotation.
-	 * We do not use the class directly to avoid depending on Hibernate Core.
-	 */
-	private static final String ORG_HIBERNATE_ANNOTATIONS_TARGET = "org.hibernate.annotations.Target";
-
-	/**
-	 * FQCN of the Hibernate-specific {@code @Type} annotation.
-	 * We do not use the class directly to avoid depending on Hibernate Core.
-	 */
-	private static final String ORG_HIBERNATE_ANNOTATIONS_TYPE = "org.hibernate.annotations.Type";
 
 	private final AnnotationMetaEntity entity;
 	private final Context context;
@@ -104,11 +86,11 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
 		final String returnTypeName = returnedElement.getQualifiedName().toString();
 		final String collection = Constants.COLLECTIONS.get( returnTypeName );
-		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
+		final String targetEntity = TypeUtils.getTargetEntity( element.getAnnotationMirrors() );
 		if ( collection != null ) {
 			return createMetaCollectionAttribute( declaredType, element, returnTypeName, collection, targetEntity );
 		}
-		else if ( isBasicAttribute( element, returnedElement ) ) {
+		else if ( isBasicAttribute( element, returnedElement, context ) ) {
 			final String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
 			return new AnnotationMetaSingleAttribute( entity, element, type );
 		}
@@ -121,7 +103,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 			DeclaredType declaredType, Element element, String returnTypeName, String collection,
 			@Nullable String targetEntity) {
 		if ( hasAnnotation( element, ELEMENT_COLLECTION ) ) {
-			final String explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
+			final String explicitTargetEntity = TypeUtils.getTargetEntity( element.getAnnotationMirrors() );
 			final TypeMirror collectionElementType =
 					getCollectionElementType( declaredType, returnTypeName, explicitTargetEntity, context );
 			if ( collectionElementType.getKind() == TypeKind.DECLARED ) {
@@ -177,18 +159,6 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 				: null;
 	}
 
-	private static boolean isPropertyGetter(ExecutableType executable, Element element) {
-		return element.getKind() == ElementKind.METHOD
-			&& isProperty( element.getSimpleName().toString(),
-				toTypeString( executable.getReturnType() ) );
-	}
-
-	private boolean isBasicAttribute(Element element, Element returnedElement) {
-		return hasAnnotation( element, BASIC, ONE_TO_ONE, MANY_TO_ONE, EMBEDDED_ID, ID )
-			|| hasAnnotation( element, ORG_HIBERNATE_ANNOTATIONS_TYPE ) // METAGEN-28
-			|| returnedElement.asType().accept( new BasicAttributeVisitor( context ), returnedElement );
-	}
-
 	private String getMapKeyType(DeclaredType declaredType, Element element) {
 		final AnnotationMirror annotationMirror = getAnnotationMirror(element, Constants.MAP_KEY_CLASS );
 		return annotationMirror == null
@@ -219,41 +189,5 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 		}
 	}
 
-	/**
-	 * @param annotations list of annotation mirrors.
-	 *
-	 * @return target entity class name as string or {@code null} if no targetEntity is here or if equals to void
-	 */
-	private @Nullable String getTargetEntity(List<? extends AnnotationMirror> annotations) {
-		for ( AnnotationMirror mirror : annotations ) {
-			if ( isAnnotationMirrorOfType( mirror, ELEMENT_COLLECTION ) ) {
-				return getFullyQualifiedClassNameOfTargetEntity( mirror, "targetClass" );
-			}
-			else if ( isAnnotationMirrorOfType( mirror, ONE_TO_MANY )
-					|| isAnnotationMirrorOfType( mirror, MANY_TO_MANY )
-					|| isAnnotationMirrorOfType( mirror, MANY_TO_ONE )
-					|| isAnnotationMirrorOfType( mirror, ONE_TO_ONE ) ) {
-				return getFullyQualifiedClassNameOfTargetEntity( mirror, "targetEntity" );
-			}
-			else if ( isAnnotationMirrorOfType( mirror, ORG_HIBERNATE_ANNOTATIONS_TARGET ) ) {
-				return getFullyQualifiedClassNameOfTargetEntity( mirror, "value" );
-			}
-		}
-		return null;
-	}
-
-	private @Nullable String getFullyQualifiedClassNameOfTargetEntity(AnnotationMirror mirror, String parameterName) {
-		assert mirror != null;
-		assert parameterName != null;
-
-		final Object parameterValue = getAnnotationValue( mirror, parameterName );
-		if ( parameterValue != null ) {
-			final TypeMirror parameterType = (TypeMirror) parameterValue;
-			if ( parameterType.getKind() != TypeKind.VOID ) {
-				return parameterType.toString();
-			}
-		}
-		return null;
-	}
 }
 

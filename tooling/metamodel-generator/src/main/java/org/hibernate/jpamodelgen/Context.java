@@ -75,6 +75,7 @@ public final class Context {
 	private boolean addSuppressWarningsAnnotation;
 	private boolean addTransactionScopedAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
+	private boolean generateJakartaDataStaticMetamodel;
 	private boolean jakartaDataStyle;
 
 	// keep track of all classes for which model have been generated
@@ -128,6 +129,15 @@ public final class Context {
 	public void setJakartaDataStyle(boolean jakartaDataStyle) {
 		this.jakartaDataStyle = jakartaDataStyle;
 	}
+
+	public boolean generateJakartaDataStaticMetamodel() {
+		return generateJakartaDataStaticMetamodel;
+	}
+
+	public void setGenerateJakartaDataStaticMetamodel(boolean generateJakartaDataStaticMetamodel) {
+		this.generateJakartaDataStaticMetamodel = generateJakartaDataStaticMetamodel;
+	}
+
 	public boolean addInjectAnnotation() {
 		return addInjectAnnotation;
 	}

@@ -17,7 +17,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
-import org.hibernate.jpamodelgen.HibernateProcessor;
+import org.hibernate.processor.HibernateProcessor;
 
 import org.junit.runners.model.Statement;
 

@@ -7,7 +7,7 @@
 package org.hibernate.jpamodelgen.test;
 
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
-import org.hibernate.jpamodelgen.util.StringUtil;
+import org.hibernate.processor.util.StringUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

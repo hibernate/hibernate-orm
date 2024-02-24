@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.xmlonly;
 
-import org.hibernate.jpamodelgen.HibernateProcessor;
+import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.hibernate.jpamodelgen.test.util.WithProcessorOption;

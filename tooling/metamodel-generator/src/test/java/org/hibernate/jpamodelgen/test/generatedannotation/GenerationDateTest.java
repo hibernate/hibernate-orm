@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.generatedannotation;
 
-import org.hibernate.jpamodelgen.HibernateProcessor;
+import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
@@ -33,7 +33,7 @@ public class GenerationDateTest extends CompilationTest {
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
 
 		dumpMetaModelSourceFor( TestEntity.class );
-		String generatedString = "@Generated(value = \"org.hibernate.jpamodelgen.HibernateProcessor\", date = \"";
+		String generatedString = "@Generated(value = \"org.hibernate.processor.HibernateProcessor\", date = \"";
 
 		assertTrue( "@Generated should also contain the date parameter.", metaModelSource.contains( generatedString ) );
 	}

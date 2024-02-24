@@ -86,6 +86,7 @@ import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAccessTypeForHierarchy;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecifiedAccessType;
+import static org.hibernate.jpamodelgen.util.TypeUtils.findMappedSuperClass;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValueRef;
@@ -113,6 +114,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final Context context;
 	private final boolean managed;
 	private boolean dataRepository;
+	private String qualifiedName;
+	private final boolean jakartaDataStaticModel;
 
 	private AccessTypeInformation entityAccessTypeInfo;
 
@@ -148,16 +151,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private final Map<String,String> memberTypes = new HashMap<>();
 
-	public AnnotationMetaEntity(TypeElement element, Context context, boolean managed) {
+	public AnnotationMetaEntity(TypeElement element, Context context, boolean managed, boolean jakartaData) {
 		this.element = element;
 		this.context = context;
 		this.managed = managed;
 		this.members = new HashMap<>();
 		this.importContext = new ImportContextImpl( getPackageName( context, element ) );
+		jakartaDataStaticModel = jakartaData;
 	}
 
-	public static AnnotationMetaEntity create(TypeElement element, Context context, boolean lazilyInitialised, boolean managed) {
-		final AnnotationMetaEntity annotationMetaEntity = new AnnotationMetaEntity( element, context, managed );
+	public static AnnotationMetaEntity create(
+			TypeElement element, Context context,
+			boolean lazilyInitialised, boolean managed) {
+		return create( element,context, lazilyInitialised, managed, false );
+	}
+
+	public static AnnotationMetaEntity create(
+			TypeElement element, Context context,
+			boolean lazilyInitialised, boolean managed, boolean jakartaData) {
+		final AnnotationMetaEntity annotationMetaEntity = new AnnotationMetaEntity( element, context, managed, jakartaData );
 		if ( !lazilyInitialised ) {
 			annotationMetaEntity.init();
 		}
@@ -183,13 +195,26 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	@Override
+	public boolean isJakartaDataStyle() {
+		return jakartaDataStaticModel;
+	}
+
+	@Override
 	public final String getSimpleName() {
 		return element.getSimpleName().toString();
 	}
 
 	@Override
 	public final String getQualifiedName() {
-		return element.getQualifiedName().toString();
+		if ( qualifiedName == null ) {
+			qualifiedName = element.getQualifiedName().toString();
+		}
+		return qualifiedName;
+	}
+
+	@Override
+	public @Nullable String getSupertypeName() {
+		return findMappedSuperClass( this, context );
 	}
 
 	@Override
@@ -498,18 +523,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {
 		for ( Element memberOfClass : membersOfClass ) {
 			if ( isPersistent( memberOfClass, membersKind ) ) {
-				final AnnotationMetaAttribute jpaMetaAttribute =
-						memberOfClass.asType()
-								.accept( new MetaAttributeGenerationVisitor( this, context ), memberOfClass );
-				if ( jpaMetaAttribute != null ) {
-					members.put( jpaMetaAttribute.getPropertyName(), jpaMetaAttribute );
-				}
-				if ( context.generateJakartaDataStaticMetamodel() ) {
+				if ( jakartaDataStaticModel ) {
 					final DataAnnotationMetaAttribute dataMetaAttribute =
 							memberOfClass.asType()
 									.accept( new DataMetaAttributeGenerationVisitor( this, context ), memberOfClass );
 					if ( dataMetaAttribute != null ) {
 						members.put( '_' + dataMetaAttribute.getPropertyName(), dataMetaAttribute );
+					}
+				}
+				else {
+					final AnnotationMetaAttribute jpaMetaAttribute =
+							memberOfClass.asType()
+									.accept( new MetaAttributeGenerationVisitor( this, context ), memberOfClass );
+					if ( jpaMetaAttribute != null ) {
+						members.put( jpaMetaAttribute.getPropertyName(), jpaMetaAttribute );
 					}
 				}
 			}

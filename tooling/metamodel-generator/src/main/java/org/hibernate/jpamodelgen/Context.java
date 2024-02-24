@@ -76,7 +76,6 @@ public final class Context {
 	private boolean addTransactionScopedAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
-	private boolean jakartaDataStyle;
 
 	// keep track of all classes for which model have been generated
 	private final Collection<String> generatedModelClasses = new HashSet<>();
@@ -120,14 +119,6 @@ public final class Context {
 
 	public ProcessingEnvironment getProcessingEnvironment() {
 		return processingEnvironment;
-	}
-
-	public boolean useJakartaDataStyle() {
-		return jakartaDataStyle;
-	}
-
-	public void setJakartaDataStyle(boolean jakartaDataStyle) {
-		this.jakartaDataStyle = jakartaDataStyle;
 	}
 
 	public boolean generateJakartaDataStaticMetamodel() {
@@ -210,61 +201,61 @@ public final class Context {
 		return ormXmlFiles;
 	}
 
-	public boolean containsMetaEntity(String fqcn) {
-		return metaEntities.containsKey( fqcn );
+	public boolean containsMetaEntity(String qualifiedName) {
+		return metaEntities.containsKey( qualifiedName );
 	}
 
-	public @Nullable Metamodel getMetaEntity(String fqcn) {
-		return metaEntities.get( fqcn );
+	public @Nullable Metamodel getMetaEntity(String qualifiedName) {
+		return metaEntities.get( qualifiedName );
 	}
 
 	public Collection<Metamodel> getMetaEntities() {
 		return metaEntities.values();
 	}
 
-	public void addMetaEntity(String fqcn, Metamodel metaEntity) {
-		metaEntities.put( fqcn, metaEntity );
+	public void addMetaEntity(String qualifiedName, Metamodel metaEntity) {
+		metaEntities.put( qualifiedName, metaEntity );
 	}
 
-	public boolean containsMetaEmbeddable(String fqcn) {
-		return metaEmbeddables.containsKey( fqcn );
+	public boolean containsMetaEmbeddable(String qualifiedName) {
+		return metaEmbeddables.containsKey( qualifiedName );
 	}
 
-	public @Nullable Metamodel getMetaEmbeddable(String fqcn) {
-		return metaEmbeddables.get( fqcn );
+	public @Nullable Metamodel getMetaEmbeddable(String qualifiedName) {
+		return metaEmbeddables.get( qualifiedName );
 	}
 
-	public void addMetaEmbeddable(String fqcn, Metamodel metaEntity) {
-		metaEmbeddables.put( fqcn, metaEntity );
+	public void addMetaEmbeddable(String qualifiedName, Metamodel metaEntity) {
+		metaEmbeddables.put( qualifiedName, metaEntity );
 	}
 
 	public Collection<Metamodel> getMetaEmbeddables() {
 		return metaEmbeddables.values();
 	}
 
-	public @Nullable Metamodel getMetaAuxiliary(String fqcn) {
-		return metaAuxiliaries.get( fqcn );
+	public @Nullable Metamodel getMetaAuxiliary(String qualifiedName) {
+		return metaAuxiliaries.get( qualifiedName );
 	}
 
 	public Collection<Metamodel> getMetaAuxiliaries() {
 		return metaAuxiliaries.values();
 	}
 
-	public void addMetaAuxiliary(String fqcn, Metamodel metamodel) {
-		metaAuxiliaries.put( fqcn, metamodel);
+	public void addMetaAuxiliary(String qualifiedName, Metamodel metamodel) {
+		metaAuxiliaries.put( qualifiedName, metamodel);
 	}
 
-	public void addAccessTypeInformation(String fqcn, AccessTypeInformation info) {
-		accessTypeInformation.put( fqcn, info );
+	public void addAccessTypeInformation(String qualifiedName, AccessTypeInformation info) {
+		accessTypeInformation.put( qualifiedName, info );
 	}
 
-	public @Nullable AccessTypeInformation getAccessTypeInfo(String fqcn) {
-		return accessTypeInformation.get( fqcn );
+	public @Nullable AccessTypeInformation getAccessTypeInfo(String qualifiedName) {
+		return accessTypeInformation.get( qualifiedName );
 	}
 
-	public TypeElement getTypeElementForFullyQualifiedName(String fqcn) {
+	public TypeElement getTypeElementForFullyQualifiedName(String qualifiedName) {
 		Elements elementUtils = processingEnvironment.getElementUtils();
-		return elementUtils.getTypeElement( fqcn );
+		return elementUtils.getTypeElement( qualifiedName );
 	}
 
 	void markGenerated(String name) {

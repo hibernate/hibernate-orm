@@ -67,14 +67,10 @@ import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.*;
 		LAZY_XML_PARSING,
 		ADD_GENERATION_DATE,
 		ADD_GENERATED_ANNOTATION,
-		ADD_SUPPRESS_WARNINGS_ANNOTATION,
-		JAKARTA_DATA_OPTION
+		ADD_SUPPRESS_WARNINGS_ANNOTATION
 })
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
-	/**
-	 * Produce Jakarta Data style static metamodel
-	 */
-	public static final String JAKARTA_DATA_OPTION = "jakartaDataStyle";
+
 	/**
 	 * Debug logging from the processor
 	 */
@@ -173,8 +169,6 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		context.setAddGenerationDate( parseBoolean( options.get( ADD_GENERATION_DATE ) ) );
 
 		context.setAddSuppressWarningsAnnotation( parseBoolean( options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION ) ) );
-
-		context.setJakartaDataStyle( parseBoolean( options.get( JAKARTA_DATA_OPTION ) ) );
 
 		return parseBoolean( options.get( FULLY_ANNOTATION_CONFIGURED_OPTION ) );
 	}
@@ -287,18 +281,22 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private void createMetaModelClasses() {
 
 		for ( Metamodel aux : context.getMetaAuxiliaries() ) {
-			if ( !context.isAlreadyGenerated( aux.getQualifiedName() ) ) {
+			final String key = aux.getQualifiedName();
+			if ( !context.isAlreadyGenerated(key) ) {
 				context.logMessage( Diagnostic.Kind.OTHER, "Writing metamodel for auxiliary '" + aux + "'" );
 				ClassWriter.writeFile( aux, context );
-				context.markGenerated( aux.getQualifiedName() );
+				context.markGenerated(key);
 			}
 		}
 
 		for ( Metamodel entity : context.getMetaEntities() ) {
-			if ( !context.isAlreadyGenerated( entity.getQualifiedName() ) ) {
+			final String key = entity.isJakartaDataStyle()
+					? '_' + entity.getQualifiedName()
+					: entity.getQualifiedName();
+			if ( !context.isAlreadyGenerated(key) ) {
 				context.logMessage( Diagnostic.Kind.OTHER, "Writing metamodel for entity '" + entity + "'" );
 				ClassWriter.writeFile( entity, context );
-				context.markGenerated( entity.getQualifiedName() );
+				context.markGenerated(key);
 			}
 		}
 
@@ -310,7 +308,10 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			int toProcessCountBeforeLoop = toProcessEntities.size();
 			for ( Metamodel entity : toProcessEntities ) {
 				// see METAGEN-36
-				if ( context.isAlreadyGenerated( entity.getQualifiedName() ) ) {
+				final String key = entity.isJakartaDataStyle()
+						? '_' + entity.getQualifiedName()
+						: entity.getQualifiedName();
+				if ( context.isAlreadyGenerated(key) ) {
 					processedEntities.add( entity );
 				}
 				else if ( !modelGenerationNeedsToBeDeferred( toProcessEntities, entity ) ) {
@@ -319,7 +320,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 							"Writing meta model for embeddable/mapped superclass " + entity
 					);
 					ClassWriter.writeFile( entity, context );
-					context.markGenerated( entity.getQualifiedName() );
+					context.markGenerated(key);
 					processedEntities.add( entity );
 				}
 			}
@@ -400,7 +401,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			for ( AnnotationMirror mirror : element.getAnnotationMirrors() ) {
 				final TypeElement typeElement = (TypeElement) element;
 				final String qualifiedName = typeElement.getQualifiedName().toString();
-				final Metamodel alreadyExistingMetaEntity = tryGettingExistingEntityFromContext( mirror, qualifiedName );
+				final Metamodel alreadyExistingMetaEntity =
+						tryGettingExistingEntityFromContext( mirror, qualifiedName );
 				if ( alreadyExistingMetaEntity != null && alreadyExistingMetaEntity.isMetaComplete() ) {
 					context.logMessage(
 							Diagnostic.Kind.OTHER,
@@ -408,15 +410,29 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 									+ "' since XML configuration is metadata complete.");
 				}
 				else {
-					boolean requiresLazyMemberInitialization
-							= containsAnnotation( element, EMBEDDABLE )
-							|| containsAnnotation( element, MAPPED_SUPERCLASS );
+					final boolean requiresLazyMemberInitialization
+							= hasAnnotation( element, EMBEDDABLE, MAPPED_SUPERCLASS );
 					final AnnotationMetaEntity metaEntity =
-							AnnotationMetaEntity.create( typeElement, context, requiresLazyMemberInitialization, true );
+							AnnotationMetaEntity.create( typeElement, context,
+									requiresLazyMemberInitialization, true );
 					if ( alreadyExistingMetaEntity != null ) {
 						metaEntity.mergeInMembers( alreadyExistingMetaEntity );
 					}
 					addMetaEntityToContext( mirror, metaEntity );
+					if ( context.generateJakartaDataStaticMetamodel()
+							// Don't generate a Jakarta Data metamodel
+							// if this entity was partially mapped in XML
+							&& alreadyExistingMetaEntity == null ) {
+						final AnnotationMetaEntity dataMetaEntity =
+								AnnotationMetaEntity.create( typeElement, context,
+										requiresLazyMemberInitialization, true, true );
+//						final Metamodel alreadyExistingDataMetaEntity =
+//								tryGettingExistingEntityFromContext( mirror, '_' + qualifiedName );
+//						if ( alreadyExistingDataMetaEntity != null ) {
+//							dataMetaEntity.mergeInMembers( alreadyExistingDataMetaEntity );
+//						}
+						addMetaEntityToContext( mirror, dataMetaEntity );
+					}
 				}
 			}
 		}
@@ -448,14 +464,17 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	private void addMetaEntityToContext(AnnotationMirror mirror, AnnotationMetaEntity metaEntity) {
+		final String key = metaEntity.isJakartaDataStyle()
+				? '_' + metaEntity.getQualifiedName()
+				: metaEntity.getQualifiedName();
 		if ( isAnnotationMirrorOfType( mirror, ENTITY ) ) {
-			context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
+			context.addMetaEntity( key, metaEntity );
 		}
 		else if ( isAnnotationMirrorOfType( mirror, MAPPED_SUPERCLASS ) ) {
-			context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
+			context.addMetaEntity( key, metaEntity );
 		}
 		else if ( isAnnotationMirrorOfType( mirror, EMBEDDABLE ) ) {
-			context.addMetaEmbeddable( metaEntity.getQualifiedName(), metaEntity );
+			context.addMetaEmbeddable( key, metaEntity );
 		}
 	}
 

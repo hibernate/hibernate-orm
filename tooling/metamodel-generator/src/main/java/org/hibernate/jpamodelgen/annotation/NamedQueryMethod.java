@@ -210,12 +210,12 @@ class NamedQueryMethod implements MetaAttribute {
 
 	@Override
 	public String getAttributeNameDeclarationString() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override
 	public String getMetaType() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override

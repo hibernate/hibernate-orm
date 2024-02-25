@@ -68,6 +68,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
 import static org.hibernate.jpamodelgen.util.Constants.FIND;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_SESSION;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_STATELESS_SESSION;
 import static org.hibernate.jpamodelgen.util.Constants.HQL;
@@ -76,11 +77,13 @@ import static org.hibernate.jpamodelgen.util.Constants.JD_DELETE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_FIND;
 import static org.hibernate.jpamodelgen.util.Constants.JD_INSERT;
 import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.JD_PAGE_REQUEST;
 import static org.hibernate.jpamodelgen.util.Constants.JD_QUERY;
 import static org.hibernate.jpamodelgen.util.Constants.JD_REPOSITORY;
 import static org.hibernate.jpamodelgen.util.Constants.JD_SAVE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.Constants.JD_UPDATE;
+import static org.hibernate.jpamodelgen.util.Constants.LIST;
 import static org.hibernate.jpamodelgen.util.Constants.MUTINY_SESSION;
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
 import static org.hibernate.jpamodelgen.util.Constants.SQL;
@@ -820,16 +823,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				validateFinderParameter( entity, parameter );
 			}
 			else {
+				final Types types = context.getTypeUtils();
 				final TypeMirror parameterType = parameter.asType();
-				if ( isOrderParam( parameterType.toString() ) ) {
+				final String type = parameterType.toString();
+				boolean pageRequest = type.startsWith(JD_PAGE_REQUEST);
+				if ( isOrderParam(type) || pageRequest ) {
 					final TypeMirror typeArgument = getTypeArgument( parameterType );
 					if ( typeArgument == null ) {
-						context.message( parameter, "missing type of order (should be 'Order<? super "
-								+ entity.getSimpleName() + ">')", Diagnostic.Kind.ERROR );
+						missingTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
 					}
-					else if ( !context.getTypeUtils().isSameType( typeArgument, entity.asType() ) ) {
-						context.message( parameter, "mismatched type of order (should be 'Order<? super "
-								+ entity.getSimpleName() + ">')", Diagnostic.Kind.ERROR);
+					else if ( !types.isSameType( typeArgument, entity.asType() ) ) {
+						wrongTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
 					}
 				}
 			}
@@ -852,6 +856,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						jakartaDataRepository
 				)
 		);
+	}
+
+	private void wrongTypeArgError(String entity, VariableElement parameter, boolean pageRequest) {
+		context.message(parameter,
+				(pageRequest
+						? "mismatched type of page request (should be 'PageRequest<? super "
+						:"mismatched type of order (should be 'Order<? super ")
+						+ entity + ">')",
+				Diagnostic.Kind.ERROR );
+	}
+
+	private void missingTypeArgError(String entity, VariableElement parameter, boolean pageRequest) {
+		context.message(parameter,
+				(pageRequest
+						? "missing type of page request (should be 'PageRequest<? super "
+						: "missing type of order (should be 'Order<? super ")
+						+ entity + ">')",
+				Diagnostic.Kind.ERROR );
 	}
 
 	private List<OrderBy> orderByList(ExecutableElement method, TypeElement entityType) {
@@ -898,14 +920,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case DECLARED:
 				final DeclaredType type = (DeclaredType) parameterType;
 				final String parameterTypeName = parameterType.toString();
-				if ( parameterTypeName.startsWith( List.class.getName() ) ) {
+				if ( parameterTypeName.startsWith( LIST ) ) {
 					for (TypeMirror arg : type.getTypeArguments()) {
 						return getTypeArgument( arg );
 					}
 				}
-				else if ( parameterTypeName.startsWith( Order.class.getName() )
+				else if ( parameterTypeName.startsWith( HIB_ORDER )
 						|| parameterTypeName.startsWith( JD_SORT )
-						|| parameterTypeName.startsWith( JD_ORDER )) {
+						|| parameterTypeName.startsWith( JD_ORDER )
+						|| parameterTypeName.startsWith( JD_PAGE_REQUEST ) ) {
 					for ( TypeMirror arg : type.getTypeArguments() ) {
 						switch ( arg.getKind() ) {
 							case WILDCARD:
@@ -1756,17 +1779,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		if ( returnType != null ) {
+			final Types types = context.getTypeUtils();
 			for ( VariableElement parameter : method.getParameters() ) {
 				final TypeMirror parameterType = parameter.asType();
 				final TypeMirror typeArgument = getTypeArgument( parameterType );
-				if ( isOrderParam( parameterType.toString() ) ) {
+				final String type = parameterType.toString();
+				final boolean pageRequest = type.startsWith(JD_PAGE_REQUEST);
+				if ( isOrderParam( type ) || pageRequest) {
 					if ( typeArgument == null ) {
-						context.message( parameter, "missing type of order (should be 'Order<? super "
-								+ returnType + ">')", Diagnostic.Kind.ERROR );
+						missingTypeArgError( returnType.toString(), parameter, pageRequest );
 					}
-					else if ( !context.getTypeUtils().isSameType(typeArgument, returnType) ) {
-						context.message( parameter, "mismatched type of order (should be 'Order<? super "
-								+ returnType + ">')", Diagnostic.Kind.ERROR );
+					else if ( !types.isSameType(typeArgument, returnType) ) {
+						wrongTypeArgError( returnType.toString(), parameter, pageRequest );
 					}
 				}
 			}

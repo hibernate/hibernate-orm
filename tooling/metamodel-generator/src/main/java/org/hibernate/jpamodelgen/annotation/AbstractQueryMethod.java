@@ -331,7 +331,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return returnTypeName;
 	}
 
-	private void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
+	void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
 		if ( !unwrapped ) {
 			declaration
 					.append("\n\t\t\t.unwrap(")

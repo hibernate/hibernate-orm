@@ -630,6 +630,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static boolean isLegalGenericResultType(String containerTypeName) {
 		return containerTypeName.equals(Constants.LIST)
+			|| containerTypeName.equals(Constants.OPTIONAL)
 			|| containerTypeName.equals(Constants.TYPED_QUERY)
 			|| containerTypeName.equals(Constants.HIB_QUERY)
 			|| containerTypeName.equals(Constants.HIB_SELECTION_QUERY);

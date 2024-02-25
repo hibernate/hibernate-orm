@@ -44,7 +44,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
@@ -888,14 +887,16 @@ public class BinderHelper {
 					.toXClass( propertyHolder.getPersistentClass().getMappedClass() );
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		if ( propertyHolder.isInIdClass() ) {
-			final PropertyData propertyData = metadataCollector.getPropertyAnnotatedWithIdAndToOne( mappedClass, propertyName );
-			return propertyData == null && buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled()
-					? metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, propertyName )
-					: propertyData;
+			final PropertyData data = metadataCollector.getPropertyAnnotatedWithIdAndToOne( mappedClass, propertyName );
+			if ( data != null ) {
+				return data;
+			}
+			// TODO: is this branch even necessary?
+			else if ( buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
+				return metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, propertyName );
+			}
 		}
-		else {
-			return metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, isId ? "" : propertyName );
-		}
+		return metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, isId ? "" : propertyName );
 	}
 
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
@@ -1174,10 +1175,9 @@ public class BinderHelper {
 		final String declaringClassName = xClass.getName();
 		final String packageName = qualifier( declaringClassName );
 		if ( isNotEmpty( packageName ) ) {
-			final ClassLoaderService classLoaderService = context.getBootstrapContext()
-					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
-			assert classLoaderService != null;
+			final ClassLoaderService classLoaderService =
+					context.getBootstrapContext().getServiceRegistry()
+							.requireService( ClassLoaderService.class );
 			final Package declaringClassPackage = classLoaderService.packageForNameOrNull( packageName );
 			if ( declaringClassPackage != null ) {
 				// will be null when there is no `package-info.class`

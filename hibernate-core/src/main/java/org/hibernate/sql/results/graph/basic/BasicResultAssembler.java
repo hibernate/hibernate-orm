@@ -68,7 +68,7 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 							String.format(
 									Locale.ROOT,
 									"Expecting raw JDBC value of type `%s`, but found `%s` : [%s]",
-									valueConverter.getRelationalJavaType().getJavaType().getTypeName(),
+									valueConverter.getRelationalJavaType().getTypeName(),
 									jdbcValue.getClass().getName(),
 									jdbcValue
 							)

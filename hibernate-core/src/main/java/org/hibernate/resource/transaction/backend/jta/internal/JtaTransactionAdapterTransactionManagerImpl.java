@@ -106,6 +106,13 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 
 	@Override
 	public void setTimeOut(int seconds) {
-
+		if ( seconds > 0 ) {
+			try {
+				transactionManager.setTransactionTimeout( seconds );
+			}
+			catch (SystemException e) {
+				throw new TransactionException( "Unable to apply requested transaction timeout", e );
+			}
+		}
 	}
 }

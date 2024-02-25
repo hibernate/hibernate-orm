@@ -10,9 +10,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 import org.hibernate.jpamodelgen.model.ImportContext;
+
+import static java.lang.Character.isWhitespace;
+import static java.lang.System.lineSeparator;
 
 
 /**
@@ -66,11 +70,34 @@ public class ImportContextImpl implements ImportContext {
 
 		// strip off type annotations and '? super' or '? extends'
 		String preamble = "";
-		if ( result.startsWith("@") || result.startsWith("?") ) {
+		if ( result.startsWith( "@" ) ) {
 			int index = result.lastIndexOf(' ');
 			if ( index > 0 ) {
 				preamble = result.substring( 0, index+1 );
 				result = result.substring( index+1 );
+			}
+		}
+		else if ( result.startsWith( "?" ) ) {
+			int index = 1;
+			while ( index < result.length() && isWhitespace( result.charAt( index ) ) ) {
+				index++;
+			}
+			if ( index < result.length() ) {
+				int nextIndex = -1;
+				if ( result.substring( index ).startsWith( "extends" ) ) {
+					nextIndex = index + 7;
+				}
+				else if ( result.substring( index ).startsWith( "super" ) ) {
+					nextIndex = index + 5;
+				}
+				if ( nextIndex > 0 && nextIndex < result.length() && isWhitespace( result.charAt( nextIndex ) ) ) {
+					index = nextIndex;
+					while ( isWhitespace( result.charAt( index ) ) ) {
+						index++;
+					}
+					preamble = result.substring( 0, index );
+					result = importType( result.substring( index ) );
+				}
 			}
 		}
 
@@ -121,13 +148,32 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	private String importTypes(String originalArgList) {
-		String[] args = originalArgList.split(",");
 		StringBuilder argList = new StringBuilder();
-		for ( String arg : args ) {
-			if ( argList.length() > 0 ) {
-				argList.append(',');
+		StringBuilder acc = new StringBuilder();
+		StringTokenizer args = new StringTokenizer( originalArgList, "," );
+		while ( args.hasMoreTokens() ) {
+			if ( acc.length() > 0 ) {
+				acc.append( ',' );
 			}
-			argList.append( importType( arg ) );
+			acc.append( args.nextToken() );
+			int nesting = 0;
+			for ( int i = 0; i<acc.length(); i++ ) {
+				switch ( acc.charAt(i) ) {
+					case '<':
+						nesting++;
+						break;
+					case '>':
+						nesting--;
+						break;
+				}
+			}
+			if ( nesting == 0 ) {
+				if ( argList.length() > 0 ) {
+					argList.append(',');
+				}
+				argList.append( importType( acc.toString() ) );
+				acc.setLength( 0 );
+			}
 		}
 		return argList.toString();
 	}
@@ -168,10 +214,10 @@ public class ImportContextImpl implements ImportContext {
 			// don't add automatically "imported" stuff
 			if ( !isAutoImported( next ) ) {
 				if ( staticImports.contains( next ) ) {
-					builder.append( "import static " ).append( next ).append( ";" ).append( System.lineSeparator() );
+					builder.append( "import static " ).append( next ).append( ";" ).append( lineSeparator() );
 				}
 				else {
-					builder.append( "import " ).append( next ).append( ";" ).append( System.lineSeparator() );
+					builder.append( "import " ).append( next ).append( ";" ).append( lineSeparator() );
 				}
 			}
 		}

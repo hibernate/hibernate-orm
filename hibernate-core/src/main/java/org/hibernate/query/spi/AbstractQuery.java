@@ -29,7 +29,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -653,9 +652,6 @@ public abstract class AbstractQuery<R>
 		}
 		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
-		}
-		catch (TypeMismatchException e) {
-			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException e) {
 			throw getSession().getExceptionConverter().convert( e );

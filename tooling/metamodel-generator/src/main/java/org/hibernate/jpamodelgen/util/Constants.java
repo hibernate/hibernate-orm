@@ -61,14 +61,27 @@ public final class Constants {
 	public static final String SQL = "org.hibernate.annotations.processing.SQL";
 	public static final String FIND = "org.hibernate.annotations.processing.Find";
 
+	public static final String JD_REPOSITORY = "jakarta.data.repository.Repository";
+	public static final String JD_QUERY = "jakarta.data.repository.Query";
+	public static final String JD_FIND = "jakarta.data.repository.Find";
+	public static final String JD_INSERT = "jakarta.data.repository.Insert";
+	public static final String JD_UPDATE = "jakarta.data.repository.Update";
+	public static final String JD_DELETE = "jakarta.data.repository.Delete";
+	public static final String JD_SAVE = "jakarta.data.repository.Save";
+	public static final String JD_LIMIT = "jakarta.data.Limit";
+	public static final String JD_SORT = "jakarta.data.Sort";
+	public static final String JD_ORDER = "jakarta.data.Order";
+
 	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
 
 	public static final String ENTITY_MANAGER = "jakarta.persistence.EntityManager";
+	public static final String ENTITY_MANAGER_FACTORY = "jakarta.persistence.EntityManagerFactory";
 	public static final String QUERY = "jakarta.persistence.Query";
 	public static final String TYPED_QUERY = "jakarta.persistence.TypedQuery";
 	public static final String HIB_QUERY = "org.hibernate.query.Query";
 	public static final String HIB_SELECTION_QUERY = "org.hibernate.query.SelectionQuery";
 	public static final String HIB_SESSION = "org.hibernate.Session";
+	public static final String HIB_SESSION_FACTORY = "org.hibernate.SessionFactory";
 	public static final String HIB_STATELESS_SESSION = "org.hibernate.StatelessSession";
 	public static final String MUTINY_SESSION = "org.hibernate.reactive.mutiny.Mutiny.Session";
 
@@ -82,6 +95,7 @@ public final class Constants {
 	public static final String LIST_ATTRIBUTE = "jakarta.persistence.metamodel.ListAttribute";
 	public static final String MAP_ATTRIBUTE = "jakarta.persistence.metamodel.MapAttribute";
 
+	public static final String JAVA_OBJECT = Object.class.getName();
 	public static final String COLLECTION = java.util.Collection.class.getName();
 	public static final String LIST = java.util.List.class.getName();
 	public static final String MAP = java.util.Map.class.getName();

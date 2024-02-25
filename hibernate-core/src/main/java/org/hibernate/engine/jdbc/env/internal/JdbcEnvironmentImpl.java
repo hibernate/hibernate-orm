@@ -72,7 +72,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		this.sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
 
-		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 
 		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
 		if ( nameQualifierSupport == null ) {
@@ -259,7 +259,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		this.sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
 
-		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService, dialect ) );
 
@@ -318,13 +318,13 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			Dialect dialect) {
 		final SchemaNameResolver schemaNameResolver;
 
-		final Object setting = serviceRegistry.getService( ConfigurationService.class ).getSettings().get(
+		final Object setting = serviceRegistry.requireService( ConfigurationService.class ).getSettings().get(
 				SCHEMA_NAME_RESOLVER );
 		if ( setting == null ) {
 			schemaNameResolver = dialect.getSchemaNameResolver();
 		}
 		else {
-			schemaNameResolver = serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+			schemaNameResolver = serviceRegistry.requireService( StrategySelector.class ).resolveDefaultableStrategy(
 					SchemaNameResolver.class,
 					setting,
 					dialect.getSchemaNameResolver()

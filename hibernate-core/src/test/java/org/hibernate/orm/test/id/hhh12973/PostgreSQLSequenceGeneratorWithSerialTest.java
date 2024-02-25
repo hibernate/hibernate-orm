@@ -108,6 +108,11 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 	}
 
 	@Override
+	protected boolean exportSchema() {
+		return false;
+	}
+
+	@Override
 	protected void entityManagerFactoryBuilt(EntityManagerFactory factory) {
 		assertTrue( triggerable.wasTriggered() );
 	}

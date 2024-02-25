@@ -54,8 +54,10 @@ public final class MappingHelper {
 			String role,
 			String propertyRef,
 			MetadataImplementor metadata) {
-		final ClassLoaderService cls = metadata.getMetadataBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
-		final Class<? extends UserCollectionType> userCollectionTypeClass = cls.classForName( typeName );
+		final Class<? extends UserCollectionType> userCollectionTypeClass =
+				metadata.getMetadataBuildingOptions().getServiceRegistry()
+						.requireService( ClassLoaderService.class )
+						.classForName( typeName );
 
 		final boolean hasParameters = CollectionHelper.isNotEmpty( typeParameters );
 		final ManagedBean<? extends UserCollectionType> userTypeBean;
@@ -70,11 +72,11 @@ public final class MappingHelper {
 			);
 		}
 		else {
-			final ManagedBeanRegistry beanRegistry = metadata
-					.getMetadataBuildingOptions()
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class );
-			final ManagedBean<? extends UserCollectionType> userCollectionTypeBean = beanRegistry.getBean( userCollectionTypeClass );
+			final ManagedBean<? extends UserCollectionType> userCollectionTypeBean =
+					metadata.getMetadataBuildingOptions()
+							.getServiceRegistry()
+							.requireService( ManagedBeanRegistry.class )
+							.getBean( userCollectionTypeClass );
 
 			if ( hasParameters ) {
 				if ( ParameterizedType.class.isAssignableFrom( userCollectionTypeBean.getBeanClass() ) ) {

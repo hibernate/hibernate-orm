@@ -95,6 +95,11 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
+	public long getResultCount() {
+		return getDelegate().getResultCount();
+	}
+
+	@Override
 	public ScrollableResults<R> scroll() {
 		return getDelegate().scroll();
 	}

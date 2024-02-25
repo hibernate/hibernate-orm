@@ -51,9 +51,9 @@ public class LazyLoadingIntegrationTest extends BaseCoreFunctionalTestCase {
 
     @Override
     protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-        configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
+        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
+        configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
     }
 
     @Before

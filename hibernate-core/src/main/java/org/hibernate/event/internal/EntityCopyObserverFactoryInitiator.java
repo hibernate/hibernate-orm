@@ -53,8 +53,9 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 			//We load an "example instance" just to get its Class;
 			//this might look excessive, but it also happens to test eagerly (at boot) that we can actually construct these
 			//and that they are indeed of the right type.
-			EntityCopyObserver exampleInstance = registry.getService( StrategySelector.class )
-					.resolveStrategy( EntityCopyObserver.class, value );
+			EntityCopyObserver exampleInstance =
+					registry.requireService( StrategySelector.class )
+							.resolveStrategy( EntityCopyObserver.class, value );
 			Class<?> observerType = exampleInstance.getClass();
 			LOG.debugf( "Configured EntityCopyObserver is a custom implementation of type %s", observerType.getName() );
 			return new EntityObserversFactoryFromClass( observerType );

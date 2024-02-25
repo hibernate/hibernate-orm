@@ -37,7 +37,7 @@ public class OracleSQLCallableStatementProxyTest extends
 	protected void configure(Configuration configuration) {
 		configuration.setProperty(
 				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				C3P0ConnectionProvider.class.getName()
+				C3P0ConnectionProvider.class
 		);
 	}
 

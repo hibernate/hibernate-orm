@@ -52,13 +52,13 @@ import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
- * An SQL dialect for Altibase 7.3 and above.
+ * An SQL dialect for Altibase 7.1 and above.
  *
  * @author Geoffrey Park
  */
 public class AltibaseDialect extends Dialect {
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 3 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 1 );
 
 	@SuppressWarnings("unused")
 	public AltibaseDialect() {
@@ -501,11 +501,6 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsInsertReturningGeneratedKeys() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsTruncateWithCast(){
 		return false;
 	}
@@ -536,6 +531,17 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsOuterJoinForUpdate() {
+		// "SELECT FOR UPDATE can only be used with a single-table SELECT statement"
+		return false;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return AltibaseSequenceSupport.INSTANCE;
 	}
@@ -561,6 +567,11 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
 	public boolean supportsCurrentTimestampSelection() {
 		return true;
 	}
@@ -578,11 +589,6 @@ public class AltibaseDialect extends Dialect {
 	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade constraints";
-	}
-
-	@Override
-	public boolean supportsValuesListForInsert() {
-		return false;
 	}
 
 	@Override
@@ -628,25 +634,28 @@ public class AltibaseDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-
-			final int errorCode = JdbcExceptionHelper.extractErrorCode(sqlException );
-
-			if ( errorCode == 334393 || errorCode == 4164) {
-				// 334393 - response timeout , 4164 - query timeout.
-				return new LockTimeoutException(message, sqlException, sql );
+			final String constraintName;
+			switch ( JdbcExceptionHelper.extractErrorCode( sqlException ) ) {
+				case 334393:       // response timeout
+				case 4164:         // query timeout
+					return new LockTimeoutException(message, sqlException, sql );
+				case 69720:        // unique constraint violated
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							constraintName
+					);
+				case 200820:        // Cannot insert NULL or update to NULL
+				case 200823:        // foreign key constraint violation
+				case 200822: 	    // failed on update or delete by foreign key constraint violation
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+					return new ConstraintViolationException( message, sqlException, sql, constraintName );
+				default:
+					return null;
 			}
-
-			// 200820 - Cannot insert NULL or update to NULL
-			// 69720 - Unique constraint violated
-			// 200823 - foreign key constraint violation
-			// 200822 - failed on update or delete by foreign key constraint violation
-			if ( errorCode == 200820 || errorCode == 69720 || errorCode == 200823 || errorCode == 200822 ) {
-				final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-
-				return new ConstraintViolationException(message, sqlException, sql, constraintName );
-			}
-
-			return null;
 		};
 	}
 

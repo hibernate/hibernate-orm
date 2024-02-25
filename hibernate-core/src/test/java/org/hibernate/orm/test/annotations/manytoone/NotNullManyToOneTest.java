@@ -27,7 +27,7 @@ public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.JAKARTA_VALIDATION_MODE, ValidationMode.AUTO.name() );
+		configuration.setProperty( AvailableSettings.JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
 	}
 
 	@Override

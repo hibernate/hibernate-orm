@@ -8,7 +8,7 @@ plugins {
     id 'org.hibernate.build.xjc-jakarta'
 }
 
-description = 'Annotation Processor to generate JPA 2 static metamodel classes'
+description = 'Hibernate compile-time tooling'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
@@ -40,7 +40,8 @@ sourceSets.main {
 
 compileTestJava {
     options.compilerArgs += [
-            "-proc:none"
+            "-proc:none",
+            "-AsuppressJakartaDataMetamodel=true"
     ]
 }
 
@@ -61,18 +62,14 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
         javaLauncher = javaToolchains.launcherFor {
             languageVersion = jdkVersions.test.launcher
         }
-
-        if ( jdkVersions.test.launcher.asInt() >= 19 ) {
-            logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
-                                 " Setting 'net.bytebuddy.experimental=true'." )
-            systemProperty 'net.bytebuddy.experimental', true
-        }
     }
-} else {
+}
+else {
     sourceSets {
         test {
             java {
                 exclude '**/records/*.java'
+                exclude '**/data/*.java'
             }
         }
     }

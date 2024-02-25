@@ -611,7 +611,7 @@ create table JsonHolder as (
 
 Again, the name and the nullability of the `aggregate` column can be refined through applying a `@Column` on the persistent attribute.
 
-[[embeddable-mapping-aggregate]]
+[[embeddable-mapping-aggregate-collections]]
 ==== Embeddable mappings containing collections
 
 Mapping <<chapters/domain/collections.adoc#collections,collections>> inside an `@Embeddable` value is supported in most cases. There are a couple exceptions:

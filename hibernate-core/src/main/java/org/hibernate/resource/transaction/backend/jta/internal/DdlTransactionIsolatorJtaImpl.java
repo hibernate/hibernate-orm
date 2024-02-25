@@ -36,7 +36,7 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 		this.jdbcContext = jdbcContext;
 
 		try {
-			final JtaPlatform jtaPlatform = jdbcContext.getServiceRegistry().getService( JtaPlatform.class );
+			final JtaPlatform jtaPlatform = jdbcContext.getServiceRegistry().requireService( JtaPlatform.class );
 			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: JtaPlatform -> %s", jtaPlatform );
 
 			final TransactionManager tm = jtaPlatform.retrieveTransactionManager();
@@ -102,7 +102,9 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 
 		if ( suspendedTransaction != null ) {
 			try {
-				jdbcContext.getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( suspendedTransaction );
+				jdbcContext.getServiceRegistry().requireService( JtaPlatform.class )
+						.retrieveTransactionManager()
+						.resume( suspendedTransaction );
 			}
 			catch (Exception e) {
 				throw new HibernateException( "Unable to resume JTA transaction after DDL execution" );

@@ -28,6 +28,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -231,6 +232,68 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
+	public void testNullNestedAggregate() {
+		sessionFactoryScope().inTransaction(
+			entityManager -> {
+				JsonHolder jsonHolder = new JsonHolder(3L, "abc", 30, "String 'xyz'", null );
+				entityManager.persist( jsonHolder );
+			}
+		);
+		sessionFactoryScope().inTransaction(
+				entityManager -> {
+					JsonHolder jsonHolder = entityManager.createQuery( "from JsonHolder b where b.id = 3", JsonHolder.class ).getSingleResult();
+					assertEquals( "abc", jsonHolder.theJson.stringField );
+					assertEquals( 30, jsonHolder.theJson.simpleEmbeddable.integerField );
+					assertEquals( "String 'xyz'", jsonHolder.theJson.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertNull( jsonHolder.getAggregate() );
+				}
+		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
+	public void testNullNestedEmbeddable() {
+		sessionFactoryScope().inTransaction(
+				entityManager -> {
+					JsonHolder jsonHolder = new JsonHolder( );
+					jsonHolder.setId( 3L );
+					jsonHolder.setTheJson( new TheJson( "abc", null, EmbeddableAggregate.createAggregate1() ) );
+					entityManager.persist( jsonHolder );
+				}
+		);
+		sessionFactoryScope().inTransaction(
+				entityManager -> {
+					JsonHolder jsonHolder = entityManager.createQuery( "from JsonHolder b where b.id = 3", JsonHolder.class ).getSingleResult();
+					assertEquals( "abc", jsonHolder.theJson.stringField );
+					assertNull( jsonHolder.theJson.simpleEmbeddable );
+					assertStructEquals( EmbeddableAggregate.createAggregate1(), jsonHolder.getAggregate() );
+				}
+		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
+	public void testNullNestedEmbeddableAndAggregate() {
+		sessionFactoryScope().inTransaction(
+				entityManager -> {
+					JsonHolder jsonHolder = new JsonHolder( );
+					jsonHolder.setId( 3L );
+					jsonHolder.setTheJson( new TheJson( "abc", null, null ) );
+					entityManager.persist( jsonHolder );
+				}
+		);
+		sessionFactoryScope().inTransaction(
+				entityManager -> {
+					JsonHolder jsonHolder = entityManager.createQuery( "from JsonHolder b where b.id = 3", JsonHolder.class ).getSingleResult();
+					assertEquals( "abc", jsonHolder.theJson.stringField );
+					assertNull( jsonHolder.theJson.simpleEmbeddable );
+					assertNull( jsonHolder.getAggregate() );
+				}
+		);
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
@@ -391,6 +454,12 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		public TheJson(String stringField, Integer integerField, String leaf, EmbeddableAggregate nested) {
 			this.stringField = stringField;
 			this.simpleEmbeddable = new SimpleEmbeddable( integerField, leaf );
+			this.nested = nested;
+		}
+
+		public TheJson(String stringField, SimpleEmbeddable simpleEmbeddable, EmbeddableAggregate nested) {
+			this.stringField = stringField;
+			this.simpleEmbeddable = simpleEmbeddable;
 			this.nested = nested;
 		}
 	}

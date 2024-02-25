@@ -53,7 +53,7 @@ import org.apache.tools.ant.types.FileSet;
  * @see SchemaUpdate
  */
 public class SchemaUpdateTask extends MatchingTask {
-	private List<FileSet> fileSets = new LinkedList<>();
+	private final List<FileSet> fileSets = new LinkedList<>();
 	private File propertiesFile;
 	private File configurationFile;
 	private File outputFile;
@@ -253,7 +253,7 @@ public class SchemaUpdateTask extends MatchingTask {
 
 	@SuppressWarnings("deprecation")
 	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 
 		if ( implicitNamingStrategy != null ) {
 			try {

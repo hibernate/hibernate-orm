@@ -30,6 +30,7 @@ import static org.hibernate.sql.Template.TEMPLATE;
  *
  * @author Steve Ebersole
  * @author Nathan Xu
+ * @author Yanming Zhou
  */
 public class ColumnReference implements Expression, Assignable {
 	private final String qualifier;
@@ -224,15 +225,6 @@ public class ColumnReference implements Expression, Assignable {
 
 	@Override
 	public String toString() {
-		if ( StringHelper.isNotEmpty( qualifier ) ) {
-			return String.format(
-					Locale.ROOT,
-					"%s(%s.%s)",
-					getClass().getSimpleName(),
-					qualifier,
-					getExpressionText()
-			);
-		}
 		return String.format(
 				Locale.ROOT,
 				"%s(%s)",

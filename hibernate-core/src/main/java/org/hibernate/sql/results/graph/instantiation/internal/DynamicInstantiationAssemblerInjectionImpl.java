@@ -6,20 +6,24 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
+import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.query.sqm.sql.internal.InstantiationException;
-import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.findField;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.propertyMatches;
 
 /**
  * @author Steve Ebersole
@@ -38,52 +42,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 				targetJavaType,
 				beanInfo -> {
 					for ( ArgumentReader<?> argumentReader : argumentReaders ) {
-						boolean found = false;
-						for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
-							if ( argumentReader.getAlias().equals( propertyDescriptor.getName() ) ) {
-								if ( propertyDescriptor.getWriteMethod() != null ) {
-									final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
-											propertyDescriptor.getWriteMethod().getParameterTypes()[0],
-											argumentReader.getAssembledJavaType().getClass()
-									);
-									if ( assignmentCompatible ) {
-										propertyDescriptor.getWriteMethod().setAccessible( true );
-										beanInjections.add(
-												new BeanInjection(
-														new BeanInjectorSetter<>( propertyDescriptor.getWriteMethod() ),
-														argumentReader
-												)
-										);
-										found = true;
-										break;
-									}
-								}
-							}
-						}
-						if ( found ) {
-							continue;
-						}
-
-						// see if we can find a Field with the given name...
-						final Field field = findField(
-								targetJavaType,
-								argumentReader.getAlias(),
-								argumentReader.getAssembledJavaType().getJavaTypeClass()
-						);
-						if ( field != null ) {
-							beanInjections.add(
-									new BeanInjection(
-											new BeanInjectorField<>( field ),
-											argumentReader
-									)
-							);
-						}
-						else {
-							throw new InstantiationException(
-									"Cannot set field '" + argumentReader.getAlias()
-											+ "' to instantiate '" + targetJavaType.getName() + "'"
-							);
-						}
+						beanInjections.add( injection( beanInfo, argumentReader, targetJavaType ) );
 					}
 				}
 		);
@@ -93,22 +52,29 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 		}
 	}
 
-	private Field findField(Class<?> declaringClass, String name, Class<?> javaType) {
-		try {
-			final Field field = declaringClass.getDeclaredField( name );
-			// field should never be null
-			if ( Compatibility.areAssignmentCompatible( field.getType(), javaType ) ) {
-				field.setAccessible( true );
-				return field;
-			}
-		}
-		catch (NoSuchFieldException ignore) {
-			if ( declaringClass.getSuperclass() != null ) {
-				return findField( declaringClass.getSuperclass(), name, javaType );
+	private static BeanInjection injection(BeanInfo beanInfo, ArgumentReader<?> argument, Class<?> targetJavaType) {
+		final Class<?> argType = argument.getAssembledJavaType().getJavaTypeClass();
+		final String alias = argument.getAlias();
+
+		// see if we can find a property with the given name...
+		for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
+			if ( propertyMatches( alias, argType, propertyDescriptor ) ) {
+				final Method setter = propertyDescriptor.getWriteMethod();
+				setter.setAccessible(true);
+				return new BeanInjection( new BeanInjectorSetter<>( setter ), argument );
 			}
 		}
 
-		return null;
+		// see if we can find a Field with the given name...
+		final Field field = findField( targetJavaType, alias, argType );
+		if ( field != null ) {
+			return new BeanInjection( new BeanInjectorField<>( field ), argument );
+		}
+		else {
+			throw new InstantiationException(
+					"Cannot set field '" + alias + "' to instantiate '" + targetJavaType.getName() + "'"
+			);
+		}
 	}
 
 	@Override
@@ -125,15 +91,14 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			constructor.setAccessible( true );
 			result = constructor.newInstance();
 		}
-		catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | java.lang.InstantiationException e) {
+		catch ( NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException
+				| java.lang.InstantiationException e ) {
 			throw new InstantiationException( "Error instantiating class '"
-					+ target.getJavaType().getTypeName() + "' using default constructor: " + e.getMessage(), e );
+					+ target.getTypeName() + "' using default constructor: " + e.getMessage(), e );
 		}
 		for ( BeanInjection beanInjection : beanInjections ) {
-			beanInjection.getBeanInjector().inject(
-					result,
-					beanInjection.getValueAssembler().assemble( rowProcessingState, options )
-			);
+			final Object assembled = beanInjection.getValueAssembler().assemble( rowProcessingState, options );
+			beanInjection.getBeanInjector().inject( result, assembled );
 		}
 		return result;
 	}

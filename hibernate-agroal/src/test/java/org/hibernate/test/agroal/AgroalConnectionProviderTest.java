@@ -31,7 +31,7 @@ public class AgroalConnectionProviderTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testAgroalConnectionProvider() throws Exception {
-		JdbcServices jdbcServices = serviceRegistry().getService( JdbcServices.class );
+		JdbcServices jdbcServices = serviceRegistry().requireService( JdbcServices.class );
 		ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
 				ConnectionProviderJdbcConnectionAccess.class,
 				jdbcServices.getBootstrapJdbcConnectionAccess()

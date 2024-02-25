@@ -19,6 +19,7 @@ import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
 import org.hibernate.query.hql.internal.SemanticQueryBuilder;
+import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.sqm.TerminalPathException;
@@ -84,7 +85,7 @@ public class Validation {
 			int errorOffset,
 			HqlParser.StatementContext statementContext) {
 		try {
-			return createSemanticQueryBuilder( returnType, factory ).visitStatement( statementContext );
+			return createSemanticQueryBuilder( returnType, hql, factory ).visitStatement( statementContext );
 		}
 		catch ( JdbcTypeRecommendationException ignored ) {
 			// just squash these for now
@@ -99,16 +100,23 @@ public class Validation {
 		return null;
 	}
 
+	private static final SqmCreationOptions CREATION_OPTIONS = new SqmCreationOptions() {
+	};
+
 	private static SemanticQueryBuilder<?> createSemanticQueryBuilder(
-			@Nullable TypeMirror returnType, SessionFactoryImplementor factory) {
+			@Nullable TypeMirror returnType, String hql, SessionFactoryImplementor factory) {
 		if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			if ( isEntity( typeElement ) ) {
-				return new SemanticQueryBuilder<>( getEntityName( typeElement ), () -> false, factory );
-			}
+			final String typeName = typeElement.getQualifiedName().toString();
+			final String shortName = typeElement.getSimpleName().toString();
+			return isEntity( typeElement )
+					? new SemanticQueryBuilder<>( typeName, shortName, getEntityName(typeElement), CREATION_OPTIONS, factory, hql )
+					: new SemanticQueryBuilder<>( typeName, shortName, Object[].class, CREATION_OPTIONS, factory, hql );
 		}
-		return new SemanticQueryBuilder<>( Object[].class, () -> false, factory );
+		else {
+			return new SemanticQueryBuilder<>( Object[].class, CREATION_OPTIONS, factory, hql );
+		}
 	}
 
 	private static HqlParser.StatementContext parseAndCheckSyntax(String hql, Handler handler) {

@@ -12,10 +12,17 @@ import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
+import org.hibernate.query.SortDirection;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.jpamodelgen.util.Constants.JD_LIMIT;
+import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
@@ -32,6 +39,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	final String sessionName;
 	final boolean belongsToDao;
 	final boolean addNonnullAnnotation;
+	final boolean dataRepository;
 
 	public AbstractQueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -41,7 +49,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			String sessionType,
 			String sessionName,
 			boolean belongsToDao,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean dataRepository) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.paramNames = paramNames;
@@ -51,6 +60,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		this.sessionName = sessionName;
 		this.belongsToDao = belongsToDao;
 		this.addNonnullAnnotation = addNonnullAnnotation;
+		this.dataRepository = dataRepository;
 	}
 
 	@Override
@@ -60,7 +70,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	@Override
 	public String getMetaType() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override
@@ -171,15 +181,24 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
-	void setPage(StringBuilder declaration, String paramName) {
-		if ( isUsingEntityManager() ) {
+	void setPage(StringBuilder declaration, String paramName, String paramType) {
+		boolean jakartaLimit = JD_LIMIT.equals(paramType);
+		if ( jakartaLimit || isUsingEntityManager() ) {
 			declaration
-					.append("\n\t\t\t.setFirstResult(")
+					.append("\n\t\t\t.setFirstResult(");
+			if (jakartaLimit) {
+				declaration.append("(int) ");
+			}
+			declaration
 					.append(paramName)
-					.append(".getFirstResult())")
+					.append('.')
+					.append(jakartaLimit ? "startAt" : "getFirstResult")
+					.append("())")
 					.append("\n\t\t\t.setMaxResults(")
 					.append(paramName)
-					.append(".getMaxResults())");
+					.append('.')
+					.append(jakartaLimit ? "maxResults" : "getMaxResults")
+					.append("())");
 		}
 		else {
 			declaration
@@ -191,7 +210,69 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
 		unwrapQuery( declaration, unwrapped );
-		if ( paramType.endsWith("...") ) {
+		if ( paramType.startsWith(JD_ORDER) ) {
+			final String sortableEntityClass = getSortableEntityClass();
+			if ( sortableEntityClass != null ) {
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+				annotationMetaEntity.staticImport(Order.class.getName(), "by");
+				declaration
+						.append("\n\t\t\t.setOrder(new ")
+						.append(annotationMetaEntity.importType(ArrayList.class.getName()))
+						.append("<>() {{\n\t\t\t\t")
+						.append(paramName)
+						.append(".forEach(_sort -> add(")
+						.append("by(")
+						.append(annotationMetaEntity.importType(sortableEntityClass))
+						.append(".class, ")
+						.append("_sort.property()")
+						.append(",\n\t\t\t\t\t\t")
+						.append("_sort.isAscending() ? ASCENDING : DESCENDING, ")
+						.append("_sort.ignoreCase())));\n\t\t\t}})");
+			}
+		}
+		else if ( paramType.startsWith(JD_SORT) && paramType.endsWith("...") ) {
+			final String sortableEntityClass = getSortableEntityClass();
+			if ( sortableEntityClass != null ) {
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
+				annotationMetaEntity.staticImport(Order.class.getName(), "by");
+				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+				declaration
+						.append("\n\t\t\t.setOrder(asList(")
+						.append(paramName)
+						.append(").stream().map(_sort -> ")
+						.append("by(")
+						.append(annotationMetaEntity.importType(sortableEntityClass))
+						.append(".class, ")
+						.append("_sort.property()")
+						.append(",\n\t\t\t\t\t\t")
+						.append("_sort.isAscending() ? ASCENDING : DESCENDING, ")
+						.append("_sort.ignoreCase()))\n\t\t\t\t.collect(toList())\n\t\t\t)");
+			}
+		}
+		else if ( paramType.startsWith(JD_SORT) ) {
+			final String sortableEntityClass = getSortableEntityClass();
+			if ( sortableEntityClass != null ) {
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
+				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				declaration
+						.append("\n\t\t\t.setOrder(")
+						.append(annotationMetaEntity.importType(Order.class.getName()))
+						.append(".by(")
+						.append(annotationMetaEntity.importType(sortableEntityClass))
+						.append(".class, ")
+						.append(paramName)
+						.append(".property()")
+						.append(",\n\t\t\t\t\t")
+						.append(paramName)
+						.append(".isAscending() ? ASCENDING : DESCENDING")
+						.append("))");
+			}
+		}
+		else if ( paramType.endsWith("...") ) {
 			declaration
 					.append("\n\t\t\t.setOrder(")
 					.append(annotationMetaEntity.importType(Constants.LIST))
@@ -208,6 +289,48 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return true;
 	}
 
+	void convertExceptions(StringBuilder declaration) {
+		if (dataRepository) {
+			declaration
+					.append("\t}\n");
+			if ( singleResult() ) {
+				declaration
+						.append("\tcatch (")
+						.append(annotationMetaEntity.importType("jakarta.persistence.NoResultException"))
+						.append(" exception) {\n")
+						.append("\t\tthrow new ")
+						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
+						.append("(exception);\n")
+						.append("\t}\n")
+						.append("\tcatch (")
+						.append(annotationMetaEntity.importType("jakarta.persistence.NonUniqueResultException"))
+						.append(" exception) {\n")
+						.append("\t\tthrow new ")
+						.append(annotationMetaEntity.importType("jakarta.data.exceptions.NonUniqueResultException"))
+						.append("(exception);\n")
+						.append("\t}\n");
+			}
+			declaration
+					.append("\tcatch (")
+					.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceException"))
+					.append(" exception) {\n")
+					.append("\t\tthrow new ")
+					.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
+					.append("(exception);\n")
+					.append("\t}\n");
+		}
+	}
+
+	abstract boolean singleResult();
+
+	static void closingBrace(StringBuilder declaration) {
+		declaration.append("\n}");
+	}
+
+	@Nullable String getSortableEntityClass() {
+		return returnTypeName;
+	}
+
 	private void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
 		if ( !unwrapped ) {
 			declaration
@@ -218,11 +341,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	static boolean isPageParam(String parameterType) {
-		return Page.class.getName().equals(parameterType);
+		return Page.class.getName().equals(parameterType)
+			|| JD_LIMIT.equals(parameterType);
 	}
 
 	static boolean isOrderParam(String parameterType) {
 		return parameterType.startsWith(Order.class.getName())
-			|| parameterType.startsWith(List.class.getName() + "<" + Order.class.getName());
+			|| parameterType.startsWith(List.class.getName() + "<" + Order.class.getName())
+			|| parameterType.startsWith(JD_SORT)
+			|| parameterType.startsWith(JD_ORDER);
 	}
 }

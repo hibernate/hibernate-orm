@@ -84,8 +84,8 @@ public abstract class BaseSessionFactoryFunctionalTest
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder ssrBuilder) {
 		ssrBuilder.applySetting( AvailableSettings.HBM2DDL_AUTO, exportSchema() ? "create-drop" : "none" );
-		ServiceRegistryUtil.applySettings( ssrBuilder );
 		applySettings( ssrBuilder );
+		ServiceRegistryUtil.applySettings( ssrBuilder );
 		return ssrBuilder.build();
 	}
 

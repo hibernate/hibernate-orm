@@ -65,6 +65,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableM
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -84,7 +85,6 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
@@ -304,6 +304,17 @@ public class OracleDialect extends Dialect {
 		//Oracle has had coalesce() since 9.0.1
 		functionFactory.coalesce();
 
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
 		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
@@ -312,6 +323,7 @@ public class OracleDialect extends Dialect {
 				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER,
 				typeConfiguration
 		).setArgumentListSignature("(pattern, string[, start])");
+
 		// The within group clause became optional in 18
 		functionFactory.listagg( null );
 		functionFactory.windowFunctions();
@@ -799,15 +811,11 @@ public class OracleDialect extends Dialect {
 				break;
 			case ARRAY:
 				if ( "MDSYS.SDO_ORDINATE_ARRAY".equals( columnTypeName ) ) {
-					final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
-					if ( jdbcTypeConstructor != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
-								jdbcTypeRegistry.getDescriptor( NUMERIC ),
-								ColumnTypeInformation.EMPTY
-						);
-					}
+					return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+							jdbcTypeCode,
+							jdbcTypeRegistry.getDescriptor( NUMERIC ),
+							ColumnTypeInformation.EMPTY
+					);
 				}
 				break;
 			case NUMERIC:
@@ -887,7 +895,7 @@ public class OracleDialect extends Dialect {
 
 		// account for Oracle's deprecated support for LONGVARBINARY
 		// prefer BLOB, unless the user explicitly opts out
-		boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		boolean preferLong = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				PREFER_LONG_RAW,
 				StandardConverters.BOOLEAN,
 				false
@@ -963,6 +971,15 @@ public class OracleDialect extends Dialect {
 		return getVersion().isSameOrAfter( 23 ) ? "select systimestamp" : "select systimestamp from dual";
 	}
 
+	@Override
+	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
+		return getVersion().isSameOrAfter( 23 ) ? SelectItemReferenceStrategy.ALIAS : SelectItemReferenceStrategy.EXPRESSION;
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return getVersion().isSameOrAfter( 23 );
+	}
 
 	// features which remain constant across 8i, 9i, and 10g ~~~~~~~~~~~~~~~~~~
 

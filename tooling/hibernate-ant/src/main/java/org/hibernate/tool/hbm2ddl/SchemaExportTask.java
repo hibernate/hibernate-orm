@@ -252,7 +252,7 @@ public class SchemaExportTask extends MatchingTask {
 
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( ssr );
 
-		ClassLoaderService classLoaderService = bsr.getService( ClassLoaderService.class );
+		ClassLoaderService classLoaderService = bsr.requireService( ClassLoaderService.class );
 		if ( implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy(
 					(ImplicitNamingStrategy) classLoaderService.classForName( implicitNamingStrategy ).newInstance()
@@ -271,7 +271,7 @@ public class SchemaExportTask extends MatchingTask {
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				ssr,
-				ssr.getService( ConfigurationService.class ).getSettings(),
+				ssr.requireService( ConfigurationService.class ).getSettings(),
 				DelayedDropRegistryNotAvailableImpl.INSTANCE
 		);
 	}

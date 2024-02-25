@@ -24,9 +24,10 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			String sessionType,
 			String sessionName,
 			List<String> fetchProfiles,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean dataRepository) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, addNonnullAnnotation );
+				paramNames, paramTypes, addNonnullAnnotation, dataRepository );
 		this.paramNullability = paramNullability;
 	}
 
@@ -37,10 +38,16 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 	}
 
 	@Override
+	boolean singleResult() {
+		return true;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		preamble( declaration );
+		tryReturn( declaration );
 		unwrapSession( declaration );
 		if ( isReactive() ) {
 			findReactively( declaration );
@@ -48,7 +55,8 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		else {
 			findBlockingly( declaration );
 		}
-		declaration.append(";\n}");
+		convertExceptions( declaration );
+		closingBrace( declaration );
 		return declaration.toString();
 	}
 
@@ -72,12 +80,11 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			}
 		}
 		declaration
-				.append("\n\t\t\t.load()");
+				.append("\n\t\t\t.load();");
 	}
 
 	private void findReactively(StringBuilder declaration) {
-		boolean composite = paramTypes.stream()
-				.filter(type -> !isSessionParameter(type)).count()>1;
+		boolean composite = isComposite();
 		declaration
 				.append(".find(");
 		if (composite) {
@@ -121,7 +128,11 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if (composite) {
 			declaration.append("\n\t\t\t)\n\t");
 		}
-		declaration.append(")");
+		declaration.append(");");
 	}
 
+	private boolean isComposite() {
+		return paramTypes.stream()
+				.filter(type -> !isSessionParameter(type)).count() > 1;
+	}
 }

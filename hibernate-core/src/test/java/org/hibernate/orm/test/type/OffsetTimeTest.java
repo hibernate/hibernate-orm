@@ -47,7 +47,7 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure(configuration);
-		configuration.setProperty( AvailableSettings.TIMEZONE_DEFAULT_STORAGE, TimeZoneStorageType.NORMALIZE.toString() );
+		configuration.setProperty( AvailableSettings.TIMEZONE_DEFAULT_STORAGE, TimeZoneStorageType.NORMALIZE );
 	}
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {

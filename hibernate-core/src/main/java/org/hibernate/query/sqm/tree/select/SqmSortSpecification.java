@@ -21,19 +21,28 @@ import java.util.Objects;
 public class SqmSortSpecification implements JpaOrder {
 	private final SqmExpression sortExpression;
 	private final SortDirection sortOrder;
-
+	private final boolean ignoreCase;
 	private NullPrecedence nullPrecedence;
 
 	public SqmSortSpecification(
 			SqmExpression sortExpression,
 			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
+		this( sortExpression, sortOrder, nullPrecedence, false );
+	}
+
+	public SqmSortSpecification(
+				SqmExpression sortExpression,
+				SortDirection sortOrder,
+				NullPrecedence nullPrecedence,
+				boolean ignoreCase) {
 		assert sortExpression != null;
 		assert sortOrder != null;
 		assert nullPrecedence != null;
 		this.sortExpression = sortExpression;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
+		this.ignoreCase = ignoreCase;
 	}
 
 	public SqmSortSpecification(SqmExpression sortExpression) {
@@ -45,7 +54,7 @@ public class SqmSortSpecification implements JpaOrder {
 	}
 
 	public SqmSortSpecification copy(SqmCopyContext context) {
-		return new SqmSortSpecification( sortExpression.copy( context ), sortOrder, nullPrecedence );
+		return new SqmSortSpecification( sortExpression.copy( context ), sortOrder, nullPrecedence, ignoreCase );
 	}
 
 	public SqmExpression<?> getSortExpression() {
@@ -55,6 +64,10 @@ public class SqmSortSpecification implements JpaOrder {
 	@Override
 	public SortDirection getSortDirection() {
 		return sortOrder;
+	}
+
+	public boolean isIgnoreCase() {
+		return ignoreCase;
 	}
 
 
@@ -75,7 +88,7 @@ public class SqmSortSpecification implements JpaOrder {
 	@Override
 	public JpaOrder reverse() {
 		SortDirection newSortOrder = this.sortOrder == null ? SortDirection.DESCENDING : sortOrder.reverse();
-		return new SqmSortSpecification( sortExpression, newSortOrder, nullPrecedence );
+		return new SqmSortSpecification( sortExpression, newSortOrder, nullPrecedence, ignoreCase );
 	}
 
 	@Override

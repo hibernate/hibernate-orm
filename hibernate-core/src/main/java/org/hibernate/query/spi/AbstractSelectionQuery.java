@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -39,7 +38,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -78,7 +76,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.hibernate.CacheMode.fromJpaModes;
+import static org.hibernate.FlushMode.fromJpaFlushMode;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -89,6 +89,8 @@ import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.QueryHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
+import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
+import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
 
 /**
  * @author Steve Ebersole
@@ -108,24 +110,24 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	protected TupleMetadata buildTupleMetadata(SqmStatement<?> statement, Class<R> resultType) {
-		if ( isInstantiableWithoutMetadata( resultType ) ) {
-			// no need to build metadata for instantiating tuples
-			return null;
-		}
-		else {
+		if ( statement instanceof SqmSelectStatement<?> ) {
 			final SqmSelectStatement<?> select = (SqmSelectStatement<?>) statement;
 			final List<SqmSelection<?>> selections =
 					select.getQueryPart().getFirstQuerySpec().getSelectClause()
 							.getSelections();
-			if ( Tuple.class.equals( resultType ) || selections.size() > 1 ) {
-				return getTupleMetadata( selections );
-			}
-			else {
-				// only one element in select list,
-				// we don't support instantiation
-				return null;
-			}
+			return isTupleMetadataRequired( resultType, selections.get(0) )
+					? getTupleMetadata( selections )
+					: null;
 		}
+		else {
+			return null;
+		}
+	}
+
+	private static <R> boolean isTupleMetadataRequired(Class<R> resultType, SqmSelection<?> selection) {
+		return isHqlTuple( selection )
+			|| !isInstantiableWithoutMetadata( resultType )
+				&& !isSelectionAssignableToResultType( selection, resultType );
 	}
 
 	private TupleMetadata getTupleMetadata(List<SqmSelection<?>> selections) {
@@ -384,32 +386,26 @@ public abstract class AbstractSelectionQuery<R>
 		if ( jdbcType != null ) {
 			switch ( jdbcType.getDefaultSqlTypeCode() ) {
 				case Types.DATE:
-					if ( resultClass.isAssignableFrom( java.sql.Date.class ) ) {
-						return true;
-					}
-					break;
+					return resultClass.isAssignableFrom( java.sql.Date.class );
 				case Types.TIME:
-					if ( resultClass.isAssignableFrom( java.sql.Time.class ) ) {
-						return true;
-					}
-					break;
+					return resultClass.isAssignableFrom( java.sql.Time.class );
 				case Types.TIMESTAMP:
-					if ( resultClass.isAssignableFrom( java.sql.Timestamp.class ) ) {
-						return true;
-					}
-					break;
+					return resultClass.isAssignableFrom( java.sql.Timestamp.class );
+				default:
+					return false;
 			}
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	private static <T> void throwQueryTypeMismatchException(Class<T> resultClass, SqmExpressible<?> sqmExpressible) {
-		final String errorMessage = String.format(
+		throw new QueryTypeMismatchException( String.format(
 				"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
 				resultClass.getName(),
 				sqmExpressible.getTypeName()
-		);
-		throw new QueryTypeMismatchException( errorMessage );
+		) );
 	}
 
 
@@ -431,9 +427,6 @@ public abstract class AbstractSelectionQuery<R>
 		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
 		}
-		catch (TypeMismatchException e) {
-			throw new IllegalArgumentException( e );
-		}
 		catch (HibernateException he) {
 			throw getSession().getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
 		}
@@ -444,9 +437,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	protected HashSet<String> beforeQueryHandlingFetchProfiles() {
 		beforeQuery();
-
 		final MutableQueryOptions options = getQueryOptions();
-
 		return getSession().getLoadQueryInfluencers()
 				.adjustFetchProfiles( options.getDisabledFetchProfiles(), options.getEnabledFetchProfiles() );
 	}
@@ -521,7 +512,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll() {
-		return scroll( getSession().getFactory().getJdbcServices().getJdbcEnvironment().getDialect().defaultScrollMode() );
+		return scroll( getSessionFactory().getJdbcServices().getDialect().defaultScrollMode() );
 	}
 
 	@Override
@@ -547,7 +538,7 @@ public abstract class AbstractSelectionQuery<R>
 	public Stream stream() {
 		final ScrollableResultsImplementor scrollableResults = scroll( ScrollMode.FORWARD_ONLY );
 		final ScrollableResultsIterator iterator = new ScrollableResultsIterator<>( scrollableResults );
-		final Spliterator spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
+		final Spliterator spliterator = spliteratorUnknownSize( iterator, Spliterator.NONNULL );
 
 		final Stream stream = StreamSupport.stream( spliterator, false );
 		return (Stream) stream.onClose( scrollableResults::close );
@@ -579,14 +570,16 @@ public abstract class AbstractSelectionQuery<R>
 		if ( size == 0 ) {
 			return null;
 		}
-		final T first = list.get( 0 );
-		// todo (6.0) : add a setting here to control whether to perform this validation or not
-		for ( int i = 1; i < size; i++ ) {
-			if ( list.get( i ) != first ) {
-				throw new NonUniqueResultException( list.size() );
+		else {
+			final T first = list.get( 0 );
+			// todo (6.0) : add a setting here to control whether to perform this validation or not
+			for ( int i = 1; i < size; i++ ) {
+				if ( list.get( i ) != first ) {
+					throw new NonUniqueResultException( list.size() );
+				}
 			}
+			return first;
 		}
-		return first;
 	}
 
 	@Override
@@ -603,17 +596,6 @@ public abstract class AbstractSelectionQuery<R>
 			throw getSession().getExceptionConverter().convert( e, getLockOptions() );
 		}
 	}
-
-	protected static boolean hasLimit(SqmSelectStatement<?> sqm, MutableQueryOptions queryOptions) {
-		return queryOptions.hasLimit() || sqm.getFetch() != null || sqm.getOffset() != null;
-	}
-
-	protected static boolean hasAppliedGraph(MutableQueryOptions queryOptions) {
-		return queryOptions.getAppliedGraph() != null
-				&& queryOptions.getAppliedGraph().getSemantic() != null;
-	}
-
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainQueryExecutionContext
@@ -643,7 +625,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> setFlushMode(FlushModeType flushMode) {
-		getQueryOptions().setFlushMode( FlushMode.fromJpaFlushMode( flushMode ) );
+		getQueryOptions().setFlushMode( fromJpaFlushMode( flushMode ) );
 		return this;
 	}
 

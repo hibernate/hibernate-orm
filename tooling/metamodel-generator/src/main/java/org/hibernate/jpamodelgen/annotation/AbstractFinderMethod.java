@@ -31,12 +31,14 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			List<String> fetchProfiles,
 			List<String> paramNames,
 			List<String> paramTypes,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean convertToDataExceptions) {
 		super( annotationMetaEntity,
 				methodName,
 				paramNames, paramTypes, entity,
 				sessionType, sessionName,
-				belongsToDao, addNonnullAnnotation );
+				belongsToDao, addNonnullAnnotation,
+				convertToDataExceptions );
 		this.entity = entity;
 		this.fetchProfiles = fetchProfiles;
 	}
@@ -172,10 +174,17 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		declaration
 				.append(" ")
 				.append(methodName);
-		parameters( paramTypes, declaration) ;
+		parameters( paramTypes, declaration ) ;
+		declaration.append(" {\n");
+	}
+
+	void tryReturn(StringBuilder declaration) {
+		if (dataRepository) {
+			declaration
+					.append("\ttry {\n\t");
+		}
 		declaration
-				.append(" {")
-				.append("\n\treturn ")
+				.append("\treturn ")
 				.append(sessionName);
 	}
 
@@ -196,5 +205,10 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	void modifiers(StringBuilder declaration) {
 		declaration
 				.append(belongsToDao ? "@Override\npublic " : "public static ");
+	}
+
+	@Override
+	String getSortableEntityClass() {
+		return entity;
 	}
 }

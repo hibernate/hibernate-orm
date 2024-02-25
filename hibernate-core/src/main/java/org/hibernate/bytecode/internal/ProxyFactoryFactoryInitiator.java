@@ -28,8 +28,7 @@ public final class ProxyFactoryFactoryInitiator implements StandardServiceInitia
 
 	@Override
 	public ProxyFactoryFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		final BytecodeProvider bytecodeProvider = registry.getService( BytecodeProvider.class );
-		return bytecodeProvider.getProxyFactoryFactory();
+		return registry.requireService( BytecodeProvider.class ).getProxyFactoryFactory();
 	}
 
 	@Override

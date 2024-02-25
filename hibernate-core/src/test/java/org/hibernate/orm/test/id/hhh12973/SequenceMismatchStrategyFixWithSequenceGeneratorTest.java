@@ -103,6 +103,11 @@ public class SequenceMismatchStrategyFixWithSequenceGeneratorTest extends Entity
 		assertTrue( triggerable.wasTriggered() );
 	}
 
+	@Override
+	protected boolean exportSchema() {
+		return false;
+	}
+
 	@Test
 	public void test() {
 

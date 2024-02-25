@@ -46,8 +46,9 @@ public final class BytecodeProviderInitiator implements StandardServiceInitiator
 
 	@Override
 	public BytecodeProvider initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		final ClassLoaderService classLoaderService = castNonNull( registry.getService( ClassLoaderService.class ) );
-		final Collection<BytecodeProvider> bytecodeProviders = classLoaderService.loadJavaServices( BytecodeProvider.class );
+		final Collection<BytecodeProvider> bytecodeProviders =
+				registry.requireService( ClassLoaderService.class )
+						.loadJavaServices( BytecodeProvider.class );
 		return getBytecodeProvider( bytecodeProviders );
 	}
 
@@ -58,7 +59,11 @@ public final class BytecodeProviderInitiator implements StandardServiceInitiator
 
 	@Internal
 	public static BytecodeProvider buildDefaultBytecodeProvider() {
-		return getBytecodeProvider( ServiceLoader.load( BytecodeProvider.class ) );
+		// Use BytecodeProvider's ClassLoader to ensure we can find the service
+		return getBytecodeProvider( ServiceLoader.load(
+				BytecodeProvider.class,
+				BytecodeProvider.class.getClassLoader()
+		) );
 	}
 
 	@Internal

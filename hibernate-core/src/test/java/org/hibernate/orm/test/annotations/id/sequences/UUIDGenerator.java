@@ -23,17 +23,17 @@ import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
  * http://en.wikipedia.org/wiki/UUID#Random_UUID_probability_of_duplicates
  */
 public class UUIDGenerator implements IdentifierGenerator {
-    @Override
-    public Object generate(SharedSessionContractImplementor session, Object entity) throws HibernateException {
-        UUID uuid = SafeRandomUUIDGenerator.safeRandomUUID();
-        String sud = uuid.toString();
-        System.out.println("uuid="+uuid);
-        sud = sud.replaceAll("-", "");
-        
-        BigInteger integer = new BigInteger(sud,16);
+	@Override
+	public Object generate(SharedSessionContractImplementor session, Object entity) throws HibernateException {
+		UUID uuid = SafeRandomUUIDGenerator.safeRandomUUID();
+		String sud = uuid.toString();
+		System.out.println("uuid="+uuid);
+		sud = sud.replaceAll("-", "");
+		
+		BigInteger integer = new BigInteger(sud,16);
 
-        System.out.println("bi ="+integer.toString() );
-        return integer;
-    }
+		System.out.println("bi ="+integer);
+		return integer;
+	}
 
 }

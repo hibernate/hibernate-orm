@@ -152,7 +152,7 @@ Let's just stick it on the `Book` class:
 ----
 @CheckHQL // validate the query at compile time
 @NamedQuery(name = "#findByTitleAndType",
-            query = "select book from Book book where book.title like :titlen and book.type = :type")
+            query = "select book from Book book where book.title like :title and book.type = :type")
 @Entity
 public class Book { ... }
 ----
@@ -167,7 +167,7 @@ Now the Metamodel Generator adds the following method declaration to the metamod
  **/
 public static List<Book> findByTitleAndType(@Nonnull EntityManager entityManager, String title, Type type) {
     return entityManager.createNamedQuery(QUERY_FIND_BY_TITLE_AND_TYPE)
-            .setParameter("titlePattern", title)
+            .setParameter("title", title)
             .setParameter("type", type)
             .getResultList();
 }
@@ -662,12 +662,18 @@ List<Book> books =
 //                 })
 // ----
 
-An `insert`, `update`, or `delete` query must return `int` or `void`.
+An `insert`, `update`, or `delete` query must return `int`, `boolean`, or `void`.
 
 [source,java]
 ----
 @HQL("delete from Book")
 int deleteAllBooks();
+----
+
+[source,java]
+----
+@HQL("update Book set discontinued = true where discontinued = false and isbn = :isbn")
+boolean discontinueBook(String isbn);
 ----
 
 [source,java]

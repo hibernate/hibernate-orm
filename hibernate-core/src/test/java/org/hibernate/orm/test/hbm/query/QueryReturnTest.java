@@ -48,7 +48,7 @@ public class QueryReturnTest extends BaseUnitTestCase {
 	@Test
 	public void testQueryReturn() {
 		Configuration cfg = new Configuration();
-		cfg.setProperty( "hibernate.temp.use_jdbc_metadata_defaults", "false" );
+		cfg.setProperty( "hibernate.temp.use_jdbc_metadata_defaults", false );
 		cfg.addInputStream( new ReaderInputStream( new StringReader( QUERY_RETURN_HBM_XML ) ) );
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory();

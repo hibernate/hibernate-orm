@@ -6,6 +6,14 @@
  */
 package org.hibernate.jpamodelgen;
 
+import org.hibernate.jpamodelgen.model.MetaAttribute;
+import org.hibernate.jpamodelgen.model.Metamodel;
+
+import javax.annotation.processing.FilerException;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
+import javax.tools.FileObject;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -13,23 +21,6 @@ import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import javax.annotation.processing.FilerException;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
-import javax.tools.FileObject;
-
-import org.hibernate.jpamodelgen.model.MetaAttribute;
-import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.Constants;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 
 /**
  * Helper class to write the actual metamodel class using the  {@link javax.annotation.processing.Filer} API.
@@ -38,7 +29,6 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
  * @author Hardy Ferentschik
  */
 public final class ClassWriter {
-	private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
 
 	private ClassWriter() {
 	}
@@ -46,8 +36,8 @@ public final class ClassWriter {
 	public static void writeFile(Metamodel entity, Context context) {
 		try {
 			String metaModelPackage = entity.getPackageName();
-			// need to generate the body first, since this will also update the required imports which need to
-			// be written out first
+			// need to generate the body first, since this will also update
+			// the required imports which need to be written out first
 			String body = generateBody( entity, context ).toString();
 
 			FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(
@@ -93,19 +83,19 @@ public final class ClassWriter {
 		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
 			if ( context.addDependentAnnotation() && entity.isInjectable() ) {
-				pw.println( writeDependentAnnotation( entity ) );
+				pw.println( writeScopeAnnotation( entity ) );
 			}
-			if ( entity.getElement() instanceof TypeElement ) {
+			if ( entity.getElement() instanceof TypeElement && !entity.isInjectable() ) {
 				pw.println( writeStaticMetaModelAnnotation( entity ) );
 			}
 			if ( context.addGeneratedAnnotation() ) {
 				pw.println( writeGeneratedAnnotation( entity, context ) );
 			}
-			if ( context.isAddSuppressWarningsAnnotation() ) {
+			if ( context.addSuppressWarningsAnnotation() ) {
 				pw.println( writeSuppressWarnings() );
 			}
 
-			printClassDeclaration( entity, pw, context );
+			printClassDeclaration( entity, pw );
 
 			pw.println();
 
@@ -129,13 +119,13 @@ public final class ClassWriter {
 		}
 	}
 
-	private static void printClassDeclaration(Metamodel entity, PrintWriter pw, Context context) {
+	private static void printClassDeclaration(Metamodel entity, PrintWriter pw) {
 		pw.print( entity.isImplementation() ? "public class " : "public abstract class " );
-		pw.print( entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
+		pw.print( getGeneratedClassName(entity) );
 
-		String superClassName = findMappedSuperClass( entity, context );
+		String superClassName = entity.getSupertypeName();
 		if ( superClassName != null ) {
-			pw.print( " extends " + superClassName + META_MODEL_CLASS_NAME_SUFFIX );
+			pw.print( " extends " + getGeneratedSuperclassName(entity, superClassName) );
 		}
 		if ( entity.isImplementation() ) {
 			pw.print( entity.getElement().getKind() == ElementKind.CLASS ? " extends " : " implements " );
@@ -145,63 +135,34 @@ public final class ClassWriter {
 		pw.println( " {" );
 	}
 
-	private static @Nullable String findMappedSuperClass(Metamodel entity, Context context) {
-		Element element = entity.getElement();
-		if ( element instanceof TypeElement ) {
-			TypeMirror superClass = ((TypeElement) element).getSuperclass();
-			//superclass of Object is of NoType which returns some other kind
-			while ( superClass.getKind() == TypeKind.DECLARED ) {
-				//F..king Ch...t Have those people used their horrible APIs even once?
-				final Element superClassElement = ( (DeclaredType) superClass ).asElement();
-				String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
-				if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
-					return superClassName;
-				}
-				superClass = ( (TypeElement) superClassElement ).getSuperclass();
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Checks whether this metamodel class needs to extend another metamodel class.
-	 * This method checks whether the processor has generated a metamodel class for the super class, but it also
-	 * allows for the possibility that the metamodel class was generated in a previous compilation. (It could be
-	 * part of a separate jar. See also METAGEN-35.)
-	 *
-	 * @param superClassElement the super class element
-	 * @param entityMetaComplete flag indicating if the entity for which the metamodel should be generated is
-	 * metamodel complete. If so we cannot use reflection to decide whether we have to add the extends clause
-	 * @param context the execution context
-	 *
-	 * @return {@code true} in case there is super class metamodel to extend from {@code false} otherwise.
-	 */
-	private static boolean extendsSuperMetaModel(Element superClassElement, boolean entityMetaComplete, Context context) {
-		// if we processed the superclass in the same run we definitely need to extend
-		String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
-		if ( context.containsMetaEntity( superClassName )
-				|| context.containsMetaEmbeddable( superClassName ) ) {
-			return true;
-		}
-
-		// to allow for the case that the metamodel class for the super entity is for example contained in another
-		// jar file we use reflection. However, we need to consider the fact that there is xml configuration
-		// and annotations should be ignored
-		if ( !entityMetaComplete
-				&& containsAnnotation( superClassElement, Constants.ENTITY, Constants.MAPPED_SUPERCLASS ) ) {
-			return true;
-		}
-
-		return false;
-	}
-
 	private static String getFullyQualifiedClassName(Metamodel entity, String metaModelPackage) {
 		String fullyQualifiedClassName = "";
 		if ( !metaModelPackage.isEmpty() ) {
 			fullyQualifiedClassName = fullyQualifiedClassName + metaModelPackage + ".";
 		}
-		fullyQualifiedClassName = fullyQualifiedClassName + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX;
+		fullyQualifiedClassName = fullyQualifiedClassName + getGeneratedClassName( entity );
 		return fullyQualifiedClassName;
+	}
+
+	private static String getGeneratedClassName(Metamodel entity) {
+		final String className = entity.getSimpleName();
+		return entity.isJakartaDataStyle() ? '_' + className : className + '_';
+	}
+
+	private static String getGeneratedSuperclassName(Metamodel entity, String superClassName) {
+		if ( entity.isJakartaDataStyle() ) {
+			int lastDot = superClassName.lastIndexOf('.');
+			if ( lastDot<0 ) {
+				return '_' + superClassName;
+			}
+			else {
+				return superClassName.substring(0,lastDot+1)
+						+ '_' + superClassName.substring(lastDot+1);
+			}
+		}
+		else {
+			return superClassName + '_';
+		}
 	}
 
 	private static String writeGeneratedAnnotation(Metamodel entity, Context context) {
@@ -230,15 +191,17 @@ public final class ClassWriter {
 	}
 
 	private static String writeSuppressWarnings() {
-		return "@SuppressWarnings({ \"deprecation\", \"rawtypes\" })";
+		return "@SuppressWarnings({\"deprecation\", \"rawtypes\"})";
 	}
 
-	private static String writeDependentAnnotation(Metamodel entity) {
-		return "@" + entity.importType( "jakarta.enterprise.context.Dependent" );
+	private static String writeScopeAnnotation(Metamodel entity) {
+		return "@" + entity.importType( entity.scope() );
 	}
 
 	private static String writeStaticMetaModelAnnotation(Metamodel entity) {
-		return "@" + entity.importType( "jakarta.persistence.metamodel.StaticMetamodel" )
-				+ "(" + entity.getSimpleName() + ".class)";
+		final String annotation = entity.isJakartaDataStyle()
+				? "jakarta.data.metamodel.StaticMetamodel"
+				: "jakarta.persistence.metamodel.StaticMetamodel";
+		return "@" + entity.importType( annotation ) + "(" + entity.getSimpleName() + ".class)";
 	}
 }

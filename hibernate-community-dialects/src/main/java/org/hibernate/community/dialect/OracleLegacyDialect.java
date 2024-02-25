@@ -82,6 +82,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableM
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -100,7 +101,6 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
@@ -253,6 +253,17 @@ public class OracleLegacyDialect extends Dialect {
 			//Oracle has had coalesce() since 9.0.1
 			functionFactory.coalesce();
 		}
+
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
 
 		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
@@ -760,15 +771,11 @@ public class OracleLegacyDialect extends Dialect {
 				break;
 			case ARRAY:
 				if ( "MDSYS.SDO_ORDINATE_ARRAY".equals( columnTypeName ) ) {
-					final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
-					if ( jdbcTypeConstructor != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
-								jdbcTypeRegistry.getDescriptor( NUMERIC ),
-								ColumnTypeInformation.EMPTY
-						);
-					}
+					return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+							jdbcTypeCode,
+							jdbcTypeRegistry.getDescriptor( NUMERIC ),
+							ColumnTypeInformation.EMPTY
+					);
 				}
 				break;
 			case Types.NUMERIC:
@@ -846,7 +853,7 @@ public class OracleLegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			// account for Oracle's deprecated support for LONGVARBINARY
 			// prefer BLOB, unless the user explicitly opts out
-			boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+			boolean preferLong = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 					PREFER_LONG_RAW,
 					StandardConverters.BOOLEAN,
 					false

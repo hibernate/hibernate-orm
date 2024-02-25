@@ -37,6 +37,7 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 			constructor.setAccessible( true );
 		}
 		catch (Exception e) {
+			//TODO try again with primitive types
 			throw new InstantiationException( "Cannot instantiate query result type ", type, e );
 		}
 	}

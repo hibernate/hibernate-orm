@@ -13,10 +13,19 @@ import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.PostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import jakarta.persistence.TemporalType;
 
@@ -52,7 +61,12 @@ public class PostgresPlusLegacyDialect extends PostgreSQLLegacyDialect {
 		functionFactory.sysdate();
 		functionFactory.systimestamp();
 
-//		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+		functionFactory.bitand();
+		functionFactory.bitor();
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(bitor(?1,?2)-bitand(?1,?2))" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
 
 	}
 
@@ -106,6 +120,25 @@ public class PostgresPlusLegacyDialect extends PostgreSQLLegacyDialect {
 	@Override
 	public String getSelectGUIDString() {
 		return "select uuid_generate_v1";
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new PostgreSQLLegacySqlAstTranslator<>( sessionFactory, statement ) {
+					@Override
+					public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+						if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+							appendSql( "floor" );
+						}
+						super.visitBinaryArithmeticExpression(arithmeticExpression);
+					}
+				};
+			}
+		};
 	}
 
 }

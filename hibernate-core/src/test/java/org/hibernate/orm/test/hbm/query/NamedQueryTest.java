@@ -37,7 +37,7 @@ public class NamedQueryTest extends BaseUnitTestCase {
 	@Test
 	public void testQuery() {
 		Configuration cfg = new Configuration();
-		cfg.setProperty( "hibernate.temp.use_jdbc_metadata_defaults", "false" );
+		cfg.setProperty( "hibernate.temp.use_jdbc_metadata_defaults", false );
 		cfg.addInputStream( new ReaderInputStream( new StringReader( NAMED_QUERY_HBM_XML ) ) );
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		SessionFactory sessionFactory = cfg.buildSessionFactory();

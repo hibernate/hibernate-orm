@@ -48,8 +48,8 @@ public class AlternativeToRepeatedTableTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure(configuration);
-		configuration.setProperty(SHOW_SQL, Boolean.toString(true));
-		configuration.setProperty(FORMAT_SQL, Boolean.toString(true));
+		configuration.setProperty(SHOW_SQL, true);
+		configuration.setProperty(FORMAT_SQL, true);
 	}
 
 	@Test

@@ -11,9 +11,11 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
  * @author Steve Ebersole
+ *
+ * @param <R> the query result type
  */
-public interface HqlInterpretation {
-	SqmStatement<?> getSqmStatement();
+public interface HqlInterpretation<R> {
+	SqmStatement<R> getSqmStatement();
 
 	ParameterMetadataImplementor getParameterMetadata();
 

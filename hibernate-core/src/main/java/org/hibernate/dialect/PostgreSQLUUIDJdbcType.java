@@ -9,7 +9,6 @@ package org.hibernate.dialect;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.UUID;
 
 import org.hibernate.type.descriptor.ValueBinder;

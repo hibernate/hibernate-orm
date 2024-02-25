@@ -104,9 +104,6 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 					sql
 			);
 		}
-		finally {
-			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, preparedStatement );
-		}
 	}
 
 	@Override

@@ -33,7 +33,7 @@ public class ParameterMarkerStrategyInitiator implements StandardServiceInitiato
 		);
 
 		if ( useNativeMarkers ) {
-			final Dialect dialect = registry.getService( JdbcServices.class ).getDialect();
+			final Dialect dialect = registry.requireService( JdbcServices.class ).getDialect();
 			final ParameterMarkerStrategy nativeParameterMarkerStrategy = dialect.getNativeParameterMarkerStrategy();
 			// the Dialect may return `null`, indicating falling-through to the standard strategy
 			if ( nativeParameterMarkerStrategy != null ) {

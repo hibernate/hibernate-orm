@@ -16,7 +16,7 @@ import static org.junit.Assert.assertFalse;
 public class NoCachingRegionFactoryTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.CACHE_REGION_FACTORY, NoCachingRegionFactory.class.getName()  );
+		configuration.setProperty( AvailableSettings.CACHE_REGION_FACTORY, NoCachingRegionFactory.class  );
 	}
 
 	@Test

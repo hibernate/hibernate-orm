@@ -49,7 +49,6 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
@@ -58,7 +57,6 @@ import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -1011,7 +1009,10 @@ public class PropertyBinder {
 		final boolean isComposite;
 		final boolean isOverridden;
 		final AnnotatedColumns actualColumns;
-		if ( propertyBinder.isId() || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() ) {
+		if ( isIdentifierMapper
+				|| propertyBinder.isId()
+				|| propertyHolder.isOrWithinEmbeddedId()
+				|| propertyHolder.isInIdClass() ) {
 			// the associated entity could be using an @IdClass making the overridden property a component
 			final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
 					propertyBinder.isId(),
@@ -1021,8 +1022,7 @@ public class PropertyBinder {
 			);
 			if ( overridingProperty != null ) {
 				isOverridden = true;
-				final InheritanceState state = inheritanceStatePerClass.get( overridingProperty.getClassOrElement() );
-				isComposite = state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
+				isComposite = isComposite( inheritanceStatePerClass, property, returnedClass, overridingProperty );
 				//Get the new column
 				actualColumns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty( propertyBinder.isId() );
 			}
@@ -1100,6 +1100,15 @@ public class PropertyBinder {
 			);
 		}
 		return actualColumns;
+	}
+
+	private static boolean isComposite(
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			XProperty property,
+			XClass returnedClass,
+			PropertyData overridingProperty) {
+		final InheritanceState state = inheritanceStatePerClass.get( overridingProperty.getClassOrElement() );
+		return state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
 	}
 
 	private static void handleGeneratorsForOverriddenId(

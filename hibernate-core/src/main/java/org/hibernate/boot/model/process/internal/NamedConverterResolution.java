@@ -66,7 +66,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 
 		final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
 				context.getBootstrapContext().getServiceRegistry()
-						.getService( ClassLoaderService.class )
+						.requireService( ClassLoaderService.class )
 						.classForName( converterClassName ),
 				context.getBootstrapContext().getClassmateContext()
 		);
@@ -200,11 +200,11 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 
 		this.legacyResolvedType = new CustomMutabilityConvertedBasicTypeImpl<>(
 				ConverterDescriptor.TYPE_NAME_PREFIX
-						+ valueConverter.getConverterJavaType().getJavaType().getTypeName(),
+						+ valueConverter.getConverterJavaType().getTypeName(),
 				String.format(
 						"BasicType adapter for AttributeConverter<%s,%s>",
-						domainJtd.getJavaType().getTypeName(),
-						relationalJtd.getJavaType().getTypeName()
+						domainJtd.getTypeName(),
+						relationalJtd.getTypeName()
 				),
 				jdbcType,
 				valueConverter,

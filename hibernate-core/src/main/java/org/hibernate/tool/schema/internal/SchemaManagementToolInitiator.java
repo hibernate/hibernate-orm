@@ -23,10 +23,11 @@ public class SchemaManagementToolInitiator implements StandardServiceInitiator<S
 
 	public SchemaManagementTool initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object setting = configurationValues.get( AvailableSettings.SCHEMA_MANAGEMENT_TOOL );
-		SchemaManagementTool tool = registry.getService( StrategySelector.class ).resolveStrategy( SchemaManagementTool.class, setting );
+		SchemaManagementTool tool =
+				registry.requireService( StrategySelector.class )
+						.resolveStrategy( SchemaManagementTool.class, setting );
 		if ( tool == null ) {
-			tool = registry.getService( JdbcServices.class )
-					.getDialect()
+			tool = registry.requireService( JdbcServices.class ).getDialect()
 					.getFallbackSchemaManagementTool( configurationValues, registry );
 		}
 

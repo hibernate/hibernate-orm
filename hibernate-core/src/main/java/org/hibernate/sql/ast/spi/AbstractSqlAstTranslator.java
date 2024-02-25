@@ -50,7 +50,6 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -64,7 +63,6 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
-import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -81,7 +79,6 @@ import org.hibernate.query.sqm.function.MultipatternSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
@@ -227,6 +224,7 @@ import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
@@ -1316,6 +1314,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitInsertSource( statement );
 		visitConflictClause( statement.getConflictClause() );
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected boolean isIntegerDivisionEmulationRequired(BinaryArithmeticExpression expression) {
+		return expression.getOperator() == DIVIDE_PORTABLE
+			&& jdbcType( expression.getLeftHandOperand() ).isInteger()
+			&& jdbcType( expression.getRightHandOperand() ).isInteger();
+	}
+
+	private JdbcType jdbcType(Expression expression) {
+		return expression.getExpressionType().getSingleJdbcMapping().getJdbcType();
 	}
 
 	protected void visitInsertSource(InsertSelectStatement statement) {
@@ -4362,21 +4370,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Expression sortExpression = sortSpecification.getSortExpression();
 		final NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
 		final SortDirection sortOrder = sortSpecification.getSortOrder();
+		final boolean ignoreCase = sortSpecification.isIgnoreCase();
 		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( sortExpression );
 		if ( sqlTuple != null ) {
 			String separator = NO_SEPARATOR;
 			for ( Expression expression : sqlTuple.getExpressions() ) {
 				appendSql( separator );
-				visitSortSpecification( expression, sortOrder, nullPrecedence );
+				visitSortSpecification( expression, sortOrder, nullPrecedence, ignoreCase );
 				separator = COMMA_SEPARATOR;
 			}
 		}
 		else {
-			visitSortSpecification( sortExpression, sortOrder, nullPrecedence );
+			visitSortSpecification( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 		}
 	}
 
-	protected void visitSortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+	protected void visitSortSpecification(
+			Expression sortExpression,
+			SortDirection sortOrder,
+			NullPrecedence nullPrecedence,
+			boolean ignoreCase) {
 		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
 			nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 		}
@@ -4387,11 +4400,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
 
+		if ( ignoreCase ) {
+			appendSql("lower(");
+		}
+
 		if ( inOverOrWithinGroupClause() ) {
 			resolveAliasedExpression( sortExpression ).accept( this );
 		}
 		else {
 			sortExpression.accept( this );
+		}
+
+		if ( ignoreCase ) {
+			appendSql(")");
 		}
 
 		if ( sortOrder == SortDirection.DESCENDING ) {
@@ -7149,8 +7170,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
-		final EntityMappingType entityMapping = expression.getEntityTypeDescriptor();
-		appendSql( entityMapping.getDiscriminatorSQLValue() );
+		appendSql( expression.getEntityTypeDescriptor().getDiscriminatorSQLValue() );
 	}
 
 	@Override
@@ -8276,7 +8296,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else if ( ( rhsTuple = SqlTupleContainer.getSqlTuple( comparisonPredicate.getRightHandExpression() ) ) != null ) {
 			final Expression lhsExpression = comparisonPredicate.getLeftHandExpression();
 
-			if ( lhsExpression instanceof SelectStatement && ( (SelectStatement) lhsExpression ).getQueryPart() instanceof QueryGroup ) {
+			if ( lhsExpression instanceof SqlTupleContainer
+					|| lhsExpression instanceof SelectStatement && ( (SelectStatement) lhsExpression ).getQueryPart() instanceof QueryGroup ) {
 				if ( rhsTuple.getExpressions().size() == 1 ) {
 					// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 					renderComparison(

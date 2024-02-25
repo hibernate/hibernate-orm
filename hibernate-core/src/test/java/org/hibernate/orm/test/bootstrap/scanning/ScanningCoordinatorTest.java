@@ -87,7 +87,7 @@ public class ScanningCoordinatorTest {
 		when( bootstrapContext.getScanEnvironment() ).thenReturn( scanEnvironment );
 		when( bootstrapContext.getClassmateContext() ).thenReturn( classmateContext );
 		when( bootstrapContext.getServiceRegistry() ).thenReturn( serviceRegistry );
-		when( serviceRegistry.getService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
+		when( serviceRegistry.requireService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
 
 		when( scanEnvironment.getExplicitlyListedClassNames() ).thenReturn(
 				Arrays.asList( "a.b.C" ) );

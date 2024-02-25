@@ -42,7 +42,7 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
+		switch ( javaType.getTypeName() ) {
 			case "byte":
 			case "java.lang.Byte":
 				return true;

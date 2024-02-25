@@ -34,7 +34,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
-import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -63,10 +62,9 @@ public class ScanningCoordinator {
 			return;
 		}
 
-		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
 				bootstrapContext.getJpaTempClassLoader(),
-				classLoaderService
+				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class )
 		);
 
 		// NOTE : the idea with JandexInitializer/JandexInitManager was to allow adding classes
@@ -81,7 +79,7 @@ public class ScanningCoordinator {
 		applyScanResultsToManagedResources( managedResources, scanResult, bootstrapContext, xmlMappingBinderAccess );
 	}
 
-	private static final Class[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
+	private static final Class<?>[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
 
 	@SuppressWarnings("unchecked")
 	private static Scanner buildScanner(BootstrapContext bootstrapContext, ClassLoaderAccess classLoaderAccess) {
@@ -121,7 +119,7 @@ public class ScanningCoordinator {
 
 
 			if ( archiveDescriptorFactory != null ) {
-				// find the single-arg constructor - its an error if none exists
+				// find the single-arg constructor - it's an error if none exists
 				try {
 					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
 					try {
@@ -190,8 +188,8 @@ public class ScanningCoordinator {
 			XmlMappingBinderAccess xmlMappingBinderAccess) {
 
 		final ScanEnvironment scanEnvironment = bootstrapContext.getScanEnvironment();
-		final ServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService =
+				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class );
 
 
 		// mapping files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

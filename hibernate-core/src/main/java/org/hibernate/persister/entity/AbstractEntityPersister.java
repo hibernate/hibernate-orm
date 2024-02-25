@@ -874,7 +874,7 @@ public abstract class AbstractEntityPersister
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
-					.getService( BatchLoaderFactory.class )
+					.requireService( BatchLoaderFactory.class )
 					.createEntityBatchLoader( batchSize, this, factory );
 		}
 		else {
@@ -5312,7 +5312,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
-		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+		return serviceRegistry.requireService( SqmMultiTableMutationStrategyProvider.class )
 				.createMutationStrategy( entityMappingDescriptor, creationProcess );
 	}
 
@@ -5320,7 +5320,7 @@ public abstract class AbstractEntityPersister
 			AbstractEntityPersister entityMappingDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
-		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+		return serviceRegistry.requireService( SqmMultiTableMutationStrategyProvider.class )
 				.createInsertStrategy( entityMappingDescriptor, creationProcess );
 	}
 
@@ -6087,15 +6087,11 @@ public abstract class AbstractEntityPersister
 											Locale.ROOT,
 											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes '%s' and '%s'",
 											name,
-											getJavaType().getJavaType().getTypeName(),
+											getJavaType().getTypeName(),
 											attribute.asAttributeMapping().getDeclaringType()
-													.getJavaType()
-													.getJavaType()
-													.getTypeName(),
+													.getJavaType().getTypeName(),
 											subDefinedAttribute.asAttributeMapping().getDeclaringType()
-													.getJavaType()
-													.getJavaType()
-													.getTypeName()
+													.getJavaType().getTypeName()
 									)
 							);
 						}

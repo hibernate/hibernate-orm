@@ -51,6 +51,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.StringHelper.unroot;
+import static org.hibernate.jpamodelgen.util.Constants.JAVA_OBJECT;
 
 /**
  * Implementation of the {@code Mock} objects based on standard
@@ -262,6 +263,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		@Override
 		public String getName() {
 			return type.getSimpleName().toString();
+		}
+
+		@Override
+		public String getReturnedClassName() {
+			return type.getQualifiedName().toString();
 		}
 
 		@Override
@@ -691,7 +697,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 		TypeMirror elementType = typeArguments.get(typeArguments.size()-1);
 		return elementType==null
-				? elementUtil.getTypeElement("java.lang.Object").asType()
+				? elementUtil.getTypeElement(JAVA_OBJECT).asType()
 				: elementType;
 	}
 
@@ -803,11 +809,10 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	//						}
 							else if (type instanceof BasicType) {
 								String className;
-								//sadly there is no way to get the classname
-								//from a Hibernate Type without trying to load
-								//the class!
+								//TODO: custom impl of getReturnedClassName()
+								//      for many more Hibernate types!
 								try {
-									className = type.getReturnedClass().getName();
+									className = type.getReturnedClassName();
 								}
 								catch (Exception e) {
 									continue;

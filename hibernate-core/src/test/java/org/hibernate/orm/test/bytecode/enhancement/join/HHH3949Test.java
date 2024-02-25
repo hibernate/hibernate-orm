@@ -48,8 +48,8 @@ public class HHH3949Test extends BaseCoreFunctionalTestCase {
 
     @Override
     protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
+        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
         // see HHH-3949 for further details ^^^^^
     }
 

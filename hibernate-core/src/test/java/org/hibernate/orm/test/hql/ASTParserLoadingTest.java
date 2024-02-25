@@ -231,8 +231,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
 	@Test

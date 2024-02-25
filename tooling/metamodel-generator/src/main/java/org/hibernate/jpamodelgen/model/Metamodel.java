@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpamodelgen.model;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.Context;
 
 import java.util.List;
@@ -18,6 +19,8 @@ public interface Metamodel extends ImportContext {
 	String getSimpleName();
 
 	String getQualifiedName();
+
+	@Nullable String getSupertypeName();
 
 	String getPackageName();
 
@@ -38,4 +41,8 @@ public interface Metamodel extends ImportContext {
 	boolean isImplementation();
 
 	boolean isInjectable();
+
+	String scope();
+
+	boolean isJakartaDataStyle();
 }

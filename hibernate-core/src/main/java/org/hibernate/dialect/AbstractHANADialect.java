@@ -251,8 +251,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		// This is the best hook for consuming dialect configuration that we have for now,
 		// since this method is called very early in the bootstrap process
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-		assert configurationService != null;
+		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 
 		this.defaultTableTypeColumn = configurationService.getSetting(
 				USE_DEFAULT_TABLE_TYPE_COLUMN,
@@ -428,6 +427,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.log10_log();
 		functionFactory.log();
 		functionFactory.bitand();
+		functionFactory.bitor();
+		functionFactory.bitxor();
+		functionFactory.bitnot();
 		functionFactory.hourMinuteSecond();
 		functionFactory.yearMonthDay();
 		functionFactory.dayofweekmonthyear();

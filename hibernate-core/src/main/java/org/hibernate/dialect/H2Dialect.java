@@ -63,7 +63,6 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
@@ -275,6 +274,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.bitand();
 		functionFactory.bitor();
 		functionFactory.bitxor();
+		functionFactory.bitnot();
 		functionFactory.bitAndOr();
 		functionFactory.yearMonthDay();
 		functionFactory.hourMinuteSecond();
@@ -335,11 +335,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	/**
-	 * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
-	 * due to https://github.com/h2database/h2database/issues/1815.
-	 * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
-	 * but requires that {@code system_range} is fed with a "maximum array size".
-	 */
+     * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+     * due to <a href="https://github.com/h2database/h2database/issues/1815">issue 1815</a>.
+     * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
+     * but requires that {@code system_range} is fed with a "maximum array size".
+     */
 	protected int getMaximumArraySize() {
 		return 1000;
 	}
@@ -954,12 +954,12 @@ public class H2Dialect extends Dialect {
 		return translator.createMergeOperation( optionalTableUpdate );
 	}
 
-	private static MutationOperation withoutMerge(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
-	}
+//	private static MutationOperation withoutMerge(
+//			EntityMutationTarget mutationTarget,
+//			OptionalTableUpdate optionalTableUpdate,
+//			SessionFactoryImplementor factory) {
+//		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+//	}
 
 	@Override
 	public ParameterMarkerStrategy getNativeParameterMarkerStrategy() {
@@ -982,4 +982,15 @@ public class H2Dialect extends Dialect {
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
+
+	@Override
+	public String getCaseInsensitiveLike() {
+		return "ilike";
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike(){
+		return true;
+	}
+
 }

@@ -6,13 +6,11 @@
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
-import java.lang.reflect.Method;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
-import org.hibernate.internal.util.NullnessUtil;
 
 /**
  * @author Steve Ebersole
@@ -24,9 +22,11 @@ public class JOTMJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
-			final Class tmClass = NullnessUtil.castNonNull( serviceRegistry().getService( ClassLoaderService.class ) ).classForName( TM_CLASS_NAME );
-			final Method getTransactionManagerMethod = tmClass.getMethod( "getTransactionManager" );
-			return (TransactionManager) getTransactionManagerMethod.invoke( null, (Object[]) null );
+			return (TransactionManager) serviceRegistry()
+					.requireService( ClassLoaderService.class )
+					.classForName( TM_CLASS_NAME )
+					.getMethod( "getTransactionManager" )
+					.invoke( null, (Object[]) null );
 		}
 		catch (Exception e) {
 			throw new JtaPlatformException( "Could not obtain JOTM transaction manager instance", e );

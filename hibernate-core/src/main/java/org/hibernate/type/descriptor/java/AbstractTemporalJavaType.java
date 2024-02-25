@@ -82,6 +82,6 @@ public abstract class AbstractTemporalJavaType<T>
 
 	@Override
 	public String toString() {
-		return "TemporalJavaType(javaType=" + getJavaType().getTypeName() + ")";
+		return "TemporalJavaType(javaType=" + getTypeName() + ")";
 	}
 }

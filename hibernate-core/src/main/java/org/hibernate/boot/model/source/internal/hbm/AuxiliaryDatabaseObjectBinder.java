@@ -33,7 +33,7 @@ public class AuxiliaryDatabaseObjectBinder {
 			try {
 				auxDbObject = (AuxiliaryDatabaseObject) context.getBuildingOptions()
 						.getServiceRegistry()
-						.getService( ClassLoaderService.class )
+						.requireService( ClassLoaderService.class )
 						.classForName( auxDbObjectImplClass )
 						.newInstance();
 			}

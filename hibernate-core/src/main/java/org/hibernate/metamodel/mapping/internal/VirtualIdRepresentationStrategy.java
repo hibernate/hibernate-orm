@@ -42,7 +42,7 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 					bootDescriptor.getComponentClass(),
 					() -> virtualIdEmbeddable,
 					creationContext.getServiceRegistry()
-							.getService( ProxyFactoryFactory.class )
+							.requireService( ProxyFactoryFactory.class )
 							.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
 
 			);

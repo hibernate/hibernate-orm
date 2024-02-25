@@ -74,6 +74,9 @@ public interface Dao {
     @HQL("delete from Book")
     int deleteBooks();
 
+    @HQL("delete from Book book where book.isbn=:isbn")
+    boolean deleteBook(String isbn);
+
     @HQL("select count(*), count(*)>1 from Book")
     Object[] funnyQueryReturningArray();
 
@@ -109,4 +112,7 @@ public interface Dao {
 
     @HQL("select avg(pages) from Book")
     double averagePageCount();
+
+    @HQL("select b\nfrom Book b\nwhere b.isbn = :isbn")
+    Book findByIsbnMultiline(String isbn);
 }

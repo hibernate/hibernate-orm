@@ -16,10 +16,10 @@ import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFr
 
 /**
  * @author Gavin King
+ * @author Yanming Zhou
  */
 public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
-	private final @Nullable String returnTypeName;
 	private final @Nullable String containerTypeName;
 	private final boolean isUpdate;
 	private final boolean isNative;
@@ -39,14 +39,15 @@ public class QueryMethod extends AbstractQueryMethod {
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean dataRepository) {
 		super( annotationMetaEntity,
 				methodName,
 				paramNames, paramTypes, returnTypeName,
 				sessionType, sessionName,
-				belongsToDao, addNonnullAnnotation );
+				belongsToDao, addNonnullAnnotation,
+				dataRepository );
 		this.queryString = queryString;
-		this.returnTypeName = returnTypeName;
 		this.containerTypeName = containerTypeName;
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;
@@ -68,32 +69,29 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
+	boolean singleResult() {
+		return containerTypeName == null;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
 		final StringBuilder returnType = returnType();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( paramTypes, declaration );
-		declaration
-				.append(returnType)
-				.append(" ")
-				.append(methodName);
-		parameters( paramTypes, declaration );
-		declaration
-				.append(" {")
-				.append("\n\t");
-		if ( returnTypeName == null || !returnTypeName.equals("void") ) {
-			declaration
-					.append("return ");
-		}
-		if ( isNative && returnTypeName != null && containerTypeName == null
-				&& isUsingEntityManager() ) {
-			// EntityManager.createNativeQuery() does not return TypedQuery,
-			// so we need to cast to the entity type
-			declaration.append("(")
-					.append(returnType)
-					.append(") ");
-		}
+		preamble( declaration, returnType, paramTypes );
+		tryReturn( declaration );
+		castResult( declaration, returnType );
+		createQuery( declaration );
+		boolean unwrapped = setParameters( paramTypes, declaration );
+		execute( declaration, unwrapped );
+		convertExceptions( declaration );
+		closingBrace( declaration );
+		return declaration.toString();
+	}
+
+	private void createQuery(StringBuilder declaration) {
 		declaration
 				.append(sessionName)
 				.append(isNative ? ".createNativeQuery" : ".createQuery")
@@ -106,18 +104,51 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append(".class");
 		}
 		declaration.append(")");
-		boolean unwrapped = setParameters( paramTypes, declaration );
-		execute( declaration, unwrapped );
-		declaration.append(";\n}");
-		return declaration.toString();
+	}
+
+	private void castResult(StringBuilder declaration, StringBuilder returnType) {
+		if ( isNative && returnTypeName != null && containerTypeName == null
+				&& isUsingEntityManager() ) {
+			// EntityManager.createNativeQuery() does not return TypedQuery,
+			// so we need to cast to the entity type
+			declaration.append("(")
+					.append(returnType)
+					.append(") ");
+		}
+	}
+
+	private void tryReturn(StringBuilder declaration) {
+		if (dataRepository) {
+			declaration
+					.append("\ttry {\n\t");
+		}
+		declaration
+				.append("\t");
+		if ( returnTypeName == null || !returnTypeName.equals("void") ) {
+			declaration
+					.append("return ");
+		}
+	}
+
+	private void preamble(StringBuilder declaration, StringBuilder returnType, List<String> paramTypes) {
+		declaration
+				.append(returnType)
+				.append(" ")
+				.append(methodName);
+		parameters( paramTypes, declaration );
+		declaration
+				.append(" {\n");
 	}
 
 	private void execute(StringBuilder declaration, boolean unwrapped) {
 		if ( isUpdate ) {
 			declaration
 					.append("\n\t\t\t.executeUpdate()");
+			if ( "boolean".equals(returnTypeName) ) {
+				declaration.append(" > 0");
+			}
 		}
-		else if ( containerTypeName == null) {
+		else if ( containerTypeName == null ) {
 			declaration
 					.append("\n\t\t\t.getSingleResult()");
 		}
@@ -136,6 +167,10 @@ public class QueryMethod extends AbstractQueryMethod {
 
 			}
 		}
+		declaration.append(';');
+		if (dataRepository) {
+			declaration.append('\n');
+		}
 	}
 
 	private boolean setParameters(List<String> paramTypes, StringBuilder declaration) {
@@ -152,7 +187,7 @@ public class QueryMethod extends AbstractQueryMethod {
 					setOrdinalParameter( declaration, ordinal, paramName );
 				}
 				else if ( isPageParam(paramType) ) {
-					setPage( declaration, paramName );
+					setPage( declaration, paramName, paramType );
 				}
 				else if ( isOrderParam(paramType) ) {
 					unwrapped = setOrder( declaration, unwrapped, paramName, paramType );
@@ -237,13 +272,31 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	public String getAttributeNameDeclarationString() {
-		return new StringBuilder()
-				.append("static final String ")
-				.append(getConstantName())
-				.append(" = \"")
-				.append(queryString)
-				.append("\";")
-				.toString();
+		StringBuilder sb = new StringBuilder(queryString.length() + 100)
+				.append( "static final String " )
+				.append( getConstantName() )
+				.append( " = \"" );
+		for ( int i = 0; i < queryString.length(); i++ ) {
+			final char c = queryString.charAt( i );
+			switch ( c ) {
+				case '\r':
+					sb.append( "\\r" );
+					break;
+				case '\n':
+					sb.append( "\\n" );
+					break;
+				case '\\':
+					sb.append( "\\\\" );
+					break;
+				case '"':
+					sb.append( "\\\"" );
+					break;
+				default:
+					sb.append( c );
+					break;
+			}
+		}
+		return sb.append("\";").toString();
 	}
 
 	private String getConstantName() {

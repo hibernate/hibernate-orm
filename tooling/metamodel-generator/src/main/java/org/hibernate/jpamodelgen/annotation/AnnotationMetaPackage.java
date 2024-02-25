@@ -68,6 +68,11 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	}
 
 	@Override
+	public @Nullable String getSupertypeName() {
+		return null;
+	}
+
+	@Override
 	public final String getPackageName() {
 		return getPackageName( context, element );
 	}
@@ -136,7 +141,7 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	}
 
 	@Override
-	boolean belongsToDao() {
+	boolean isRepository() {
 		return false;
 	}
 
@@ -147,6 +152,16 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 
 	@Override
 	public boolean isInjectable() {
+		return false;
+	}
+
+	@Override
+	public String scope() {
+		throw new UnsupportedOperationException("operation not supported");
+	}
+
+	@Override
+	public boolean isJakartaDataStyle() {
 		return false;
 	}
 }

@@ -782,11 +782,11 @@ public final class AnnotationBinder {
 				new JpaAttributeConverterImpl( bean, converterJtd, domainJtd, relationalJtd );
 		return new ConvertedBasicTypeImpl<>(
 				ConverterDescriptor.TYPE_NAME_PREFIX
-						+ valueConverter.getConverterJavaType().getJavaType().getTypeName(),
+						+ valueConverter.getConverterJavaType().getTypeName(),
 				String.format(
 						"BasicType adapter for AttributeConverter<%s,%s>",
-						domainJtd.getJavaType().getTypeName(),
-						relationalJtd.getJavaType().getTypeName()
+						domainJtd.getTypeName(),
+						relationalJtd.getTypeName()
 				),
 				relationalJtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() ),
 				valueConverter
@@ -813,9 +813,10 @@ public final class AnnotationBinder {
 			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
 		}
 
-		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
-		return beanRegistry.getBean(javaTypeClass).getBeanInstance();
+		return context.getBootstrapContext().getServiceRegistry()
+				.requireService( ManagedBeanRegistry.class )
+				.getBean( javaTypeClass )
+				.getBeanInstance();
 	}
 
 	public static void bindFetchProfilesForClass(XClass annotatedClass, MetadataBuildingContext context) {

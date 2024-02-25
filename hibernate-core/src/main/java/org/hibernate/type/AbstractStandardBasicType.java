@@ -119,7 +119,7 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public String[] getRegistrationKeys() {
 		return registerUnderJavaType()
-				? new String[] { getName(), javaType.getJavaType().getTypeName() }
+				? new String[] { getName(), javaType.getTypeName() }
 				: new String[] { getName() };
 	}
 

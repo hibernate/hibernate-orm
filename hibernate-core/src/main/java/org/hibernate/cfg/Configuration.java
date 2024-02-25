@@ -95,7 +95,7 @@ import static java.util.Collections.emptyList;
  *     // set a configuration property
  *     .setProperty(AvailableSettings.DATASOURCE,
  *                  "java:comp/env/jdbc/test")
- *     .getSessionFactory();
+ *     .buildSessionFactory();
  * </pre>
  * <p>
  * In addition, there are convenience methods for adding
@@ -281,6 +281,62 @@ public class Configuration {
 	public Configuration setProperty(String propertyName, String value) {
 		properties.setProperty( propertyName, value );
 		return this;
+	}
+
+	/**
+	 * Set a property to a boolean value by name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new boolean property value
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, boolean value) {
+		return setProperty( propertyName, Boolean.toString(value) );
+	}
+
+	/**
+	 * Set a property to a Java class name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The Java class
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, Class<?> value) {
+		return setProperty( propertyName, value.getName() );
+	}
+
+	/**
+	 * Set a property to the name of a value of an enumerated type
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value A value of an enumerated type
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, Enum<?> value) {
+		return setProperty( propertyName, value.name() );
+	}
+
+	/**
+	 * Set a property to an integer value by name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new integer property value
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, int value) {
+		return setProperty( propertyName, Integer.toString(value) );
 	}
 
 	/**
@@ -965,14 +1021,29 @@ public class Configuration {
 		}
 	}
 
+	/**
+	 * @deprecated use {@link #addSqlFunction(String, SqmFunctionDescriptor)}
+	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public Map<String,SqmFunctionDescriptor> getSqlFunctions() {
+		if ( customFunctionDescriptors == null ) {
+			customFunctionDescriptors = new HashMap<>();
+		}
 		return customFunctionDescriptors;
 	}
 
 	/**
-	 * Adds a {@linkplain SqmFunctionDescriptor SQL function descriptor} to this configuration.
+	 * Adds a {@linkplain SqmFunctionDescriptor function descriptor} to
+	 * this configuration.
+	 *
+	 * @apiNote For historical reasons, this method is misnamed.
+	 *          The function descriptor actually describes a function
+	 *          available in HQL, and it may or may not map directly
+	 *          to a function defined in SQL.
 	 *
 	 * @return {@code this} for method chaining
+	 *
+	 * @see SqmFunctionDescriptor
 	 */
 	public Configuration addSqlFunction(String functionName, SqmFunctionDescriptor function) {
 		if ( customFunctionDescriptors == null ) {

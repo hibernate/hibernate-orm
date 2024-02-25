@@ -35,8 +35,8 @@ public class OneToOnEnhancedEntityLoadedAsReferenceTest extends BaseCoreFunction
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "10" );
-		configuration.setProperty( AvailableSettings.MAX_FETCH_DEPTH, "0" );
+		configuration.setProperty( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, 10 );
+		configuration.setProperty( AvailableSettings.MAX_FETCH_DEPTH, 0 );
 	}
 
 	@Before

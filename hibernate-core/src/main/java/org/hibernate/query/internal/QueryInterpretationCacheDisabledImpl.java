@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -60,15 +61,16 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	}
 
 	@Override
-	public HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, Function<String, SqmStatement<?>> creator) {
+	public <R> HqlInterpretation<R> resolveHqlInterpretation(
+			String queryString, Class<R> expectedResultType, HqlTranslator translator) {
 		final StatisticsImplementor statistics = statisticsSupplier.get();
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = stats ? System.nanoTime() : 0L;
-		final SqmStatement<?> sqmStatement = creator.apply( queryString );
+
+		final SqmStatement<R> sqmStatement = translator.translate( queryString, expectedResultType );
 
 		final DomainParameterXref domainParameterXref;
 		final ParameterMetadataImplementor parameterMetadata;
-
 		if ( sqmStatement.getSqmParameters().isEmpty() ) {
 			domainParameterXref = DomainParameterXref.empty();
 			parameterMetadata = ParameterMetadataImpl.EMPTY;
@@ -84,9 +86,9 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 			statistics.queryCompiled( queryString, microseconds );
 		}
 
-		return new HqlInterpretation() {
+		return new HqlInterpretation<>() {
 			@Override
-			public SqmStatement<?> getSqmStatement() {
+			public SqmStatement<R> getSqmStatement() {
 				return sqmStatement;
 			}
 

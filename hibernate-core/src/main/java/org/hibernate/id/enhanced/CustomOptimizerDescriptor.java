@@ -27,8 +27,8 @@ public class CustomOptimizerDescriptor implements OptimizerDescriptor {
 		return className;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public Class<? extends Optimizer> getOptimizerClass() throws ClassNotFoundException {
-		return ReflectHelper.classForName( className );
+		return (Class<? extends Optimizer>) ReflectHelper.classForName( className );
 	}
 }

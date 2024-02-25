@@ -18,8 +18,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.Internal;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -591,14 +589,12 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	}
 
 	/**
-	 * Bag does not respect the collection API and do an
-	 * JVM instance comparison to do the equals.
-	 * The semantic is broken not to have to initialize a
-	 * collection for a simple equals() operation.
+	 * For efficiency, bag does not respect the semantics of
+	 * {@link List#equals(Object)} as specified by the supertype
+	 * {@link List}. Instead, instance equality is used, to avoid
+	 * the need to fetch the elements of the bag.
 	 *
 	 * @see Object#equals(Object)
-	 * <p>
-	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean equals(Object obj) {

@@ -177,7 +177,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		bootModel.getEntityBindings().forEach( persistentClass -> persistentClass.prepareForMappingModel( context ) );
 
 		final PersisterFactory persisterFactory =
-				jpaMetamodel.getServiceRegistry().getService( PersisterFactory.class );
+				jpaMetamodel.getServiceRegistry().requireService( PersisterFactory.class );
 		final CacheImplementor cache = context.getCache();
 		processBootEntities(
 				bootModel.getEntityBindings(),
@@ -534,7 +534,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 		try {
 			final Class<?> clazz =
-					jpaMetamodel.getServiceRegistry().getService( ClassLoaderService.class )
+					jpaMetamodel.getServiceRegistry().requireService( ClassLoaderService.class )
 							.classForName( className );
 			implementors = doGetImplementors( clazz );
 			if ( implementors.length > 0 ) {
@@ -775,12 +775,11 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		}
 
 		if ( sqmExpressible instanceof BasicDomainType ) {
-			final BasicDomainType<?> domainType = (BasicDomainType<?>) sqmExpressible;
-			return getTypeConfiguration().getBasicTypeForJavaType( domainType.getExpressibleJavaType().getJavaTypeClass() );
+			return getTypeConfiguration().getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
 		}
 
 		if ( sqmExpressible instanceof BasicSqmPathSource<?> ) {
-			return getTypeConfiguration().getBasicTypeForJavaType(((BasicSqmPathSource<?>) sqmExpressible).getJavaType());
+			return getTypeConfiguration().getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
 		}
 
 		if ( sqmExpressible instanceof SqmFieldLiteral ) {

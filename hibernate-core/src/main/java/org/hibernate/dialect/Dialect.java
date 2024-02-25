@@ -179,7 +179,6 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
@@ -725,22 +724,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		if ( jdbcTypeCode == ARRAY ) {
-			final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
-			if ( jdbcTypeConstructor != null ) {
-				// Special handling for array types, because we need the proper element/component type
-				// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
-				final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
-				if ( arraySuffixIndex != -1 ) {
-					final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
-					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
-					if ( sqlTypeCode != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
-								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-								ColumnTypeInformation.EMPTY
-						);
-					}
+			// Special handling for array types, because we need the proper element/component type
+			// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
+			final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
+			if ( arraySuffixIndex != -1 ) {
+				final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
+				final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+				if ( sqlTypeCode != null ) {
+					return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+							jdbcTypeCode,
+							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+							ColumnTypeInformation.EMPTY
+					);
 				}
 			}
 		}
@@ -988,6 +983,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <li> <code>greatest(arg0, arg1, ...)</code>
 	 * <li> <code>degrees(arg)</code>
 	 * <li> <code>radians(arg)</code>
+	 * <li> <code>bitand(arg1, arg1)</code>
+	 * <li> <code>bitor(arg1, arg1)</code>
+	 * <li> <code>bitxor(arg1, arg1)</code>
 	 * </ul>
 	 *
 	 * <ul>
@@ -1055,7 +1053,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		functionFactory.math();
 		functionFactory.round();
-
 
 		//trig functions supported on almost every database
 
@@ -1592,8 +1589,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <p>
 	 * An implementation may set configuration properties from
 	 * {@link #initDefaultProperties()}, though it is discouraged.
-	 *
-	 * @return a set of Hibernate configuration properties
+	 the
+	 * @return the Hibernate configuration properties
 	 *
 	 * @see #initDefaultProperties()
 	 */
@@ -1782,9 +1779,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			}
 			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
 			try {
-				final LobCreator lobCreator = jdbcServices.getLobCreator(
-						session
-				);
+				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
 						? lobCreator.createBlob( ArrayHelper.EMPTY_BYTE_ARRAY )
 						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
@@ -4579,7 +4574,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		// Keep this here, rather than moving to Select.
 		// Some Dialects may need the hint to be appended to the very end or beginning
 		// of the finalized SQL statement, so wait until everything is processed.
-		if ( queryOptions.getDatabaseHints() != null && queryOptions.getDatabaseHints().size() > 0 ) {
+		if ( queryOptions.getDatabaseHints() != null && !queryOptions.getDatabaseHints().isEmpty() ) {
 			sql = getQueryHintString( sql, queryOptions.getDatabaseHints() );
 		}
 		if ( commentsEnabled && queryOptions.getComment() != null ) {

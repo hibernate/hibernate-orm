@@ -398,8 +398,8 @@ public class TypecheckUtil {
 		final SqmExpressible<?> leftNodeType = left.getNodeType();
 		final SqmExpressible<?> rightNodeType = right.getNodeType();
 		if ( leftNodeType != null && rightNodeType != null ) {
-			final Class<?> leftJavaType = leftNodeType.getExpressibleJavaType().getJavaTypeClass();
-			final Class<?> rightJavaType = rightNodeType.getExpressibleJavaType().getJavaTypeClass();
+			final Class<?> leftJavaType = leftNodeType.getRelationalJavaType().getJavaTypeClass();
+			final Class<?> rightJavaType = rightNodeType.getRelationalJavaType().getJavaTypeClass();
 			if ( Number.class.isAssignableFrom( leftJavaType ) ) {
 				// left operand is a number
 				switch (op) {
@@ -494,7 +494,7 @@ public class TypecheckUtil {
 		}
 	}
 
-	private static boolean isNumberArray(SqmExpressible<?> expressible) {
+	public static boolean isNumberArray(SqmExpressible<?> expressible) {
 		final DomainType<?> domainType;
 		if ( expressible != null && ( domainType = expressible.getSqmType() ) != null ) {
 			return domainType instanceof BasicPluralType<?, ?> && Number.class.isAssignableFrom(
@@ -507,39 +507,24 @@ public class TypecheckUtil {
 	public static void assertString(SqmExpression<?> expression) {
 		final SqmExpressible<?> nodeType = expression.getNodeType();
 		if ( nodeType != null ) {
-			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
-			if ( javaType != String.class && javaType != char[].class ) {
+			final DomainType<?> domainType = nodeType.getSqmType();
+			if ( !( domainType instanceof JdbcMapping ) || !( (JdbcMapping) domainType ).getJdbcType().isStringLike() ) {
 				throw new SemanticException(
 						"Operand of 'like' is of type '" + nodeType.getTypeName() +
-								"' which is not a string (it is not an instance of 'java.lang.String' or 'char[]')"
+								"' which is not a string (its JDBC type code is not string-like)"
 				);
 			}
 		}
 	}
 
-//	public static void assertNumeric(SqmExpression<?> expression, BinaryArithmeticOperator op) {
-//		final SqmExpressible<?> nodeType = expression.getNodeType();
-//		if ( nodeType != null ) {
-//			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
-//			if ( !Number.class.isAssignableFrom( javaType )
-//					&& !Temporal.class.isAssignableFrom( javaType )
-//					&& !TemporalAmount.class.isAssignableFrom( javaType )
-//					&& !java.util.Date.class.isAssignableFrom( javaType ) ) {
-//				throw new SemanticException( "Operand of " + op.getOperatorSqlText()
-//						+ " is of type '" + nodeType.getTypeName() + "' which is not a numeric type"
-//						+ " (it is not an instance of 'java.lang.Number', 'java.time.Temporal', or 'java.time.TemporalAmount')" );
-//			}
-//		}
-//	}
-
 	public static void assertDuration(SqmExpression<?> expression) {
 		final SqmExpressible<?> nodeType = expression.getNodeType();
 		if ( nodeType != null ) {
-			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
-			if ( !TemporalAmount.class.isAssignableFrom( javaType ) ) {
+			final DomainType<?> domainType = nodeType.getSqmType();
+			if ( !( domainType instanceof JdbcMapping ) || !( (JdbcMapping) domainType ).getJdbcType().isDuration() ) {
 				throw new SemanticException(
 						"Operand of 'by' is of type '" + nodeType.getTypeName() +
-								"' which is not a duration (it is not an instance of 'java.time.TemporalAmount')"
+								"' which is not a duration (its JDBC type code is not duration-like)"
 				);
 			}
 		}
@@ -548,11 +533,11 @@ public class TypecheckUtil {
 	public static void assertNumeric(SqmExpression<?> expression, UnaryArithmeticOperator op) {
 		final SqmExpressible<?> nodeType = expression.getNodeType();
 		if ( nodeType != null ) {
-			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
-			if ( !Number.class.isAssignableFrom( javaType ) ) {
+			final DomainType<?> domainType = nodeType.getSqmType();
+			if ( !( domainType instanceof JdbcMapping ) || !( (JdbcMapping) domainType ).getJdbcType().isNumber() ) {
 				throw new SemanticException(
 						"Operand of " + op.getOperatorChar() + " is of type '" + nodeType.getTypeName() +
-								"' which is not a numeric type (it is not an instance of 'java.lang.Number')"
+								"' which is not a numeric type (its JDBC type code is not numeric)"
 				);
 			}
 		}

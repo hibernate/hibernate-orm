@@ -65,7 +65,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			Class<R> jdbcJavaType,
 			Class<? extends AttributeConverter<O, R>> converterJavaType,
 			SessionFactoryImplementor sessionFactory) {
-		final ManagedBeanRegistry beans = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
+		final ManagedBeanRegistry beans = sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class );
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converterJavaType );

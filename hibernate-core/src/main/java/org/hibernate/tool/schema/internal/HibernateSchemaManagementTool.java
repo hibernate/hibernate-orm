@@ -125,7 +125,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		final Object configuredOption = (options == null)
 				? null
 				: options.get( AvailableSettings.HBM2DDL_FILTER_PROVIDER );
-		return serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+		return serviceRegistry.requireService( StrategySelector.class ).resolveDefaultableStrategy(
 				SchemaFilterProvider.class,
 				configuredOption,
 				DefaultSchemaFilterProvider.INSTANCE
@@ -234,7 +234,8 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		if ( jdbcContext.getJdbcConnectionAccess() instanceof JdbcConnectionAccessProvidedConnectionImpl ) {
 			return new DdlTransactionIsolatorProvidedConnectionImpl( jdbcContext );
 		}
-		return serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext );
+		return serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
+				.buildDdlTransactionIsolator( jdbcContext );
 	}
 
 	public JdbcContext resolveJdbcContext(Map<String,Object> configurationValues) {
@@ -300,7 +301,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 					}
 			);
 
-			final Dialect indicatedDialect = serviceRegistry.getService( DialectResolver.class ).resolveDialect(
+			final Dialect indicatedDialect = serviceRegistry.requireService( DialectResolver.class ).resolveDialect(
 					new DialectResolutionInfo() {
 						@Override
 						public String getDatabaseName() {
@@ -385,7 +386,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 		public JdbcContextBuilder(ServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
-			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+			final JdbcServices jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 			this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 			this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 

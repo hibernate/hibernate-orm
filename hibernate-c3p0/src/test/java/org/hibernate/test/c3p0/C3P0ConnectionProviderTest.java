@@ -44,7 +44,7 @@ public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testC3P0isDefaultWhenThereIsC3P0Properties() {
-		JdbcServices jdbcServices = serviceRegistry().getService( JdbcServices.class );
+		JdbcServices jdbcServices = serviceRegistry().requireService( JdbcServices.class );
 		ConnectionProviderJdbcConnectionAccess connectionAccess =
 			assertTyping(
 				ConnectionProviderJdbcConnectionAccess.class,

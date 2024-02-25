@@ -141,7 +141,8 @@ public class MetadataBuildingProcess {
 			final MetadataSources sources,
 			final BootstrapContext bootstrapContext) {
 		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
-		final ConfigurationService configService = bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
+		final ConfigurationService configService =
+				bootstrapContext.getServiceRegistry().requireService( ConfigurationService.class );
 		final boolean xmlMappingEnabled = configService.getSetting(
 				AvailableSettings.XML_MAPPING_ENABLED,
 				StandardConverters.BOOLEAN,
@@ -174,7 +175,8 @@ public class MetadataBuildingProcess {
 
 		handleTypes( bootstrapContext, options, metadataCollector );
 
-		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService =
+				options.getServiceRegistry().requireService( ClassLoaderService.class );
 
 		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
 				"orm",
@@ -594,7 +596,8 @@ public class MetadataBuildingProcess {
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
 			InFlightMetadataCollector metadataCollector) {
-		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService(ClassLoaderService.class);
+		final ClassLoaderService classLoaderService =
+				options.getServiceRegistry().requireService(ClassLoaderService.class);
 
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
@@ -632,7 +635,7 @@ public class MetadataBuildingProcess {
 		}
 
 		// add Dialect contributed types
-		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		final Dialect dialect = options.getServiceRegistry().requireService( JdbcServices.class ).getDialect();
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
 		// Capture the dialect configured JdbcTypes so that we can detect if a TypeContributor overwrote them,
 		// which has precedence over the fallback and preferred type registrations
@@ -686,7 +689,7 @@ public class MetadataBuildingProcess {
 			);
 		}
 		else {
-			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INTERVAL_SECOND, SqlTypes.NUMERIC );
+			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INTERVAL_SECOND, SqlTypes.DURATION );
 		}
 
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );

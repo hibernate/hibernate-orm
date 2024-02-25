@@ -2541,7 +2541,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new SortSpecification(
 				expression,
 				sortSpecification.getSortDirection(),
-				sortSpecification.getNullPrecedence()
+				sortSpecification.getNullPrecedence(),
+				sortSpecification.isIgnoreCase()
 		);
 	}
 
@@ -3100,8 +3101,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 		);
 
-		// Resolve the table reference for all types which we register an entity name use for
-		if ( actualTableGroup.isInitialized() ) {
+		// Resolve the table reference for all types which we register an entity name use for.
+		// Also, force table group initialization for treats when needed to ensure correct cardinality
+		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
+		if ( actualTableGroup.isInitialized() || ( useKind == EntityNameUse.UseKind.TREAT && actualTableGroup.canUseInnerJoins()
+				&& !( (EntityMappingType) actualTableGroup.getModelPart().getPartMappingType() ).isTypeOrSuperType( persister ) ) ) {
 			actualTableGroup.resolveTableReference( null, persister.getTableName() );
 		}
 
@@ -3118,7 +3122,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// If we encounter a treat or projection use, we also want register the use for all subtypes.
 		// We do this here to not have to expand entity name uses during pruning later on
-		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
 		if ( useKind == EntityNameUse.UseKind.TREAT ) {
 			for ( EntityMappingType subType : persister.getSubMappingTypes() ) {
 				entityNameUses.compute(
@@ -3174,15 +3177,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// The AND junction allows to create an intersection of entity name lists of all sub-predicates
 		final EntityMappingType mappingType = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
 		final AbstractEntityPersister persister = (AbstractEntityPersister) mappingType.getEntityPersister();
+		// Avoid resolving subclass tables for persisters with physical discriminators as we won't need them
+		if ( persister.getDiscriminatorMapping().hasPhysicalColumn() ) {
+			return;
+		}
 		if ( getCurrentClauseStack().getCurrent() != Clause.WHERE && getCurrentClauseStack().getCurrent() != Clause.HAVING ) {
 			// Where and having clauses are handled specially with EntityNameUse.FILTER and pruning
 			registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, persister.getEntityName(), true );
 		}
 		else {
-			// Avoid resolving subclass tables for persisters with physical discriminators as we won't need them
-			if ( persister.getDiscriminatorMapping().hasPhysicalColumn() ) {
-				return;
-			}
 			final int subclassTableSpan = persister.getSubclassTableSpan();
 			for ( int i = 0; i < subclassTableSpan; i++ ) {
 				tableGroup.resolveTableReference( null, persister.getSubclassTableName( i ) );
@@ -6364,7 +6367,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new UnaryOperation(
 				interpret( expression.getOperation() ),
 				toSqlExpression( expression.getOperand().accept( this ) ),
-				(BasicValuedMapping) determineValueMapping( expression.getOperand() )
+				getExpressionType( expression )
 		);
 	}
 
@@ -6427,7 +6430,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private BasicValuedMapping getExpressionType(SqmBinaryArithmetic<?> expression) {
+	private BasicValuedMapping getExpressionType(SqmExpression<?> expression) {
 		final SqmExpressible<?> nodeType = expression.getNodeType();
 		if ( nodeType != null ) {
 			if ( nodeType instanceof BasicValuedMapping ) {

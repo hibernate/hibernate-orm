@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 public final class PgJdbcHelper {
 
 	public static boolean isUsable(ServiceRegistry serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
 			classLoaderService.classForName( "org.postgresql.util.PGobject" );
 			return true;
@@ -55,7 +55,7 @@ public final class PgJdbcHelper {
 	}
 
 	public static JdbcType createJdbcType(ServiceRegistry serviceRegistry, String className) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
 			final Class<?> clazz = classLoaderService.classForName( className );
 			final Constructor<?> constructor = clazz.getConstructor();

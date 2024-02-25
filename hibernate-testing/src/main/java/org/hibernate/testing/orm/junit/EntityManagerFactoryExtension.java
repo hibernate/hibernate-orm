@@ -168,7 +168,6 @@ public class EntityManagerFactoryExtension
 		integrationSettings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		integrationSettings.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		integrationSettings.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		ServiceRegistryUtil.applySettings( integrationSettings );
 		for ( int i = 0; i < emfAnn.integrationSettings().length; i++ ) {
 			final Setting setting = emfAnn.integrationSettings()[i];
 			integrationSettings.put( setting.name(), setting.value() );
@@ -194,6 +193,7 @@ public class EntityManagerFactoryExtension
 			integrationSettings.put( AvailableSettings.STATEMENT_INSPECTOR, new SQLStatementInspector() );
 		}
 
+		ServiceRegistryUtil.applySettings( integrationSettings );
 		final EntityManagerFactoryScopeImpl scope = new EntityManagerFactoryScopeImpl( pui, integrationSettings );
 
 		locateExtensionStore( testInstance, context ).put( EMF_KEY, scope );

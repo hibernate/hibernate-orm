@@ -86,6 +86,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
+import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -400,7 +401,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public FastSessionServices getFastSessionServices() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 
@@ -409,7 +410,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public RootGraphImplementor<?> findEntityGraphByName(String s) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	static Class<?> toPrimitiveClass(Class<?> type) {
@@ -478,7 +479,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public HqlTranslator getHqlTranslator() {
-		return new StandardHqlTranslator(MockSessionFactory.this, () -> false);
+		return new StandardHqlTranslator(MockSessionFactory.this, new SqmCreationOptions() {});
 	}
 
 	@Override
@@ -745,7 +746,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override
@@ -791,7 +792,7 @@ public abstract class MockSessionFactory
 
 		@Override
 		public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("operation not supported");
 		}
 
 		@Override
@@ -806,12 +807,12 @@ public abstract class MockSessionFactory
 
 		@Override
 		public <X> ManagedDomainType<X> managedType(Class<X> cls) {
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("operation not supported");
 		}
 
 		@Override
 		public <X> EntityDomainType<X> entity(Class<X> cls) {
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("operation not supported");
 		}
 
 		@Override
@@ -1060,16 +1061,15 @@ public abstract class MockSessionFactory
 		}
 	}
 
-	private EmbeddableTypeImpl<Object> createEmbeddableDomainType(String entityName, CompositeType compositeType, ManagedDomainType<?> owner) {
-		return new EmbeddableTypeImpl<Object>(new UnknownBasicJavaType<>(Object.class), true, metamodel.getJpaMetamodel()) {
+	private EmbeddableTypeImpl<?> createEmbeddableDomainType(String entityName, CompositeType compositeType, ManagedDomainType<?> owner) {
+		final JavaType<Object> javaType = new UnknownBasicJavaType<>(Object.class, compositeType.getReturnedClassName());
+		return new EmbeddableTypeImpl<>(javaType, true, metamodel.getJpaMetamodel()) {
 			@Override
 			public PersistentAttribute<Object, Object> findAttribute(String name) {
-				int i = compositeType.getPropertyIndex(name);
-				Type subtype = compositeType.getSubtypes()[i];
 				return createAttribute(
 						name,
-						entityName, //TOOD: WRONG!!!
-						subtype,
+						entityName,
+						compositeType.getSubtypes()[compositeType.getPropertyIndex(name)],
 						owner
 				);
 			}

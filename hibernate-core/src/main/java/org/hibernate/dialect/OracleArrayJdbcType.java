@@ -35,7 +35,6 @@ import oracle.jdbc.OracleConnection;
 
 import static java.sql.Types.ARRAY;
 import static java.util.Collections.emptySet;
-import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * Descriptor for {@link Types#ARRAY ARRAY} handling.

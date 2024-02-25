@@ -90,8 +90,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
 		this.hcannReflectionManager = generateHcannReflectionManager();
 
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
 		this.jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings() );
 		this.scanOptions = new StandardScanOptions(

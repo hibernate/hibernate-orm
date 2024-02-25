@@ -73,8 +73,11 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			annotatedPackages.addAll( managedResources.getAnnotatedPackageNames() );
 		}
 
-		final ConverterRegistry converterRegistry = rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();
-		this.classLoaderService = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
+		final ConverterRegistry converterRegistry =
+				rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();
+		this.classLoaderService =
+				rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry()
+						.requireService( ClassLoaderService.class );
 
 		MetadataBuildingOptions metadataBuildingOptions = rootMetadataBuildingContext.getBuildingOptions();
 		if ( metadataBuildingOptions.isXmlMappingEnabled() ) {

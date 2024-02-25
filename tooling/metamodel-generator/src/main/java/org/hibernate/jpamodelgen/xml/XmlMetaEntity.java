@@ -47,6 +47,8 @@ import org.hibernate.jpamodelgen.xml.jaxb.OneToOne;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.jpamodelgen.util.StringUtil.determineFullyQualifiedClassName;
+import static org.hibernate.jpamodelgen.util.TypeUtils.extractClosestRealTypeAsString;
+import static org.hibernate.jpamodelgen.util.TypeUtils.findMappedSuperClass;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getElementKindForAccessType;
 import static org.hibernate.jpamodelgen.xml.jaxb.AccessType.*;
 
@@ -132,7 +134,7 @@ public class XmlMetaEntity implements Metamodel {
 		this.isMetaComplete = initIsMetaComplete( context, metaComplete );
 	}
 
-	private final void init() {
+	private void init() {
 		context.logMessage( Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + "." );
 
 		this.accessTypeInfo = NullnessUtil.castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
@@ -156,6 +158,11 @@ public class XmlMetaEntity implements Metamodel {
 
 	public String getPackageName() {
 		return packageName;
+	}
+
+	@Override
+	public @Nullable String getSupertypeName() {
+		return findMappedSuperClass( this, context );
 	}
 
 	public List<MetaAttribute> getMembers() {
@@ -265,12 +272,12 @@ public class XmlMetaEntity implements Metamodel {
 	private void determineTargetType(DeclaredType type, String propertyName, String explicitTargetEntity, @Nullable String[] types) {
 		List<? extends TypeMirror> typeArguments = type.getTypeArguments();
 
-		if ( typeArguments.size() == 0 && explicitTargetEntity == null ) {
+		if ( typeArguments.isEmpty() && explicitTargetEntity == null ) {
 			throw new MetaModelGenerationException( "Unable to determine target entity type for " + clazzName + "." + propertyName + "." );
 		}
 
 		if ( explicitTargetEntity == null ) {
-			types[0] = TypeUtils.extractClosestRealTypeAsString( typeArguments.get( 0 ), context );
+			types[0] = extractClosestRealTypeAsString( typeArguments.get( 0 ), context );
 		}
 		else {
 			types[0] = explicitTargetEntity;
@@ -625,6 +632,16 @@ public class XmlMetaEntity implements Metamodel {
 
 	@Override
 	public boolean isInjectable() {
+		return false;
+	}
+
+	@Override
+	public String scope() {
+		throw new UnsupportedOperationException("operation not supported");
+	}
+
+	@Override
+	public boolean isJakartaDataStyle() {
 		return false;
 	}
 }

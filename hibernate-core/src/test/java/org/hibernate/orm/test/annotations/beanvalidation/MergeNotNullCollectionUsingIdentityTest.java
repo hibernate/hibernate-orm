@@ -19,6 +19,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotNull;
 
+import org.hibernate.boot.beanvalidation.ValidationMode;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -29,6 +30,8 @@ import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 
 /**
  * @author Ryan Emerson
@@ -48,7 +51,7 @@ public class MergeNotNullCollectionUsingIdentityTest extends BaseCoreFunctionalT
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( "jakarta.persistence.validation.mode", "AUTO" );
+		cfg.setProperty( JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
 	}
 
 	@Test

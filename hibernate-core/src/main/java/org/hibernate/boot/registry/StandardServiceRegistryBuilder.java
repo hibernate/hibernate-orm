@@ -376,7 +376,7 @@ public class StandardServiceRegistryBuilder {
 
 	private void applyServiceContributors() {
 		final Iterable<ServiceContributor> serviceContributors =
-				bootstrapServiceRegistry.getService( ClassLoaderService.class )
+				bootstrapServiceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( ServiceContributor.class );
 
 		for ( ServiceContributor serviceContributor : serviceContributors ) {

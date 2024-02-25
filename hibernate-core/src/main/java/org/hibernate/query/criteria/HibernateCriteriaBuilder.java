@@ -389,6 +389,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	JpaExpression<Long> countDistinct(Expression<?> x);
 
+	/**
+	 * Equivalent to HQL {@code count(*)}.
+	 */
+	JpaExpression<Long> count();
+
 	@Override
 	<N extends Number> JpaExpression<N> neg(Expression<N> x);
 
@@ -996,6 +1001,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Ordering
 
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase);
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence);
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
 	JpaOrder sort(JpaExpression<?> sortExpression);
@@ -2680,7 +2686,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 6.4
 	 */
 	@Incubating
-	<T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
+	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
 
 	/**
 	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
@@ -2688,7 +2694,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 6.4
 	 */
 	@Incubating
-	<T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
+	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
 	
 	/**
 	 * Whether an array contains an element.

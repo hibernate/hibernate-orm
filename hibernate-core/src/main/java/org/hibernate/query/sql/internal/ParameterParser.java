@@ -22,7 +22,7 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
  * @author Steve Ebersole
  */
 public class ParameterParser {
-	private static final String HQL_SEPARATORS = " \n\r\f\t,()=<>&|+-=/*'^![]#~\\";
+	private static final String HQL_SEPARATORS = " \n\r\f\t,;()=<>&|+-=/*'^![]#~\\";
 	private static final BitSet HQL_SEPARATORS_BITSET = new BitSet();
 
 	static {

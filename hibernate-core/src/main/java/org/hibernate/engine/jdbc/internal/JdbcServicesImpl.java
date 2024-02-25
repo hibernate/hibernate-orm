@@ -49,9 +49,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public void configure(Map<String, Object> configValues) {
-		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
-
+		this.jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		this.sqlStatementLogger = serviceRegistry.getService( SqlStatementLogger.class );
 		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
 	}

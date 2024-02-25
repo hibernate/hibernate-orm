@@ -132,7 +132,7 @@ public class C3P0ConnectionProvider
 		}
 		else {
 			try {
-				serviceRegistry.getService( ClassLoaderService.class ).classForName( jdbcDriverClass );
+				serviceRegistry.requireService( ClassLoaderService.class ).classForName( jdbcDriverClass );
 			}
 			catch (ClassLoadingException e) {
 				throw new ClassLoadingException( C3P0_MSG_LOGGER.jdbcDriverNotFound( jdbcDriverClass ), e );

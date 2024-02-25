@@ -243,7 +243,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldJavaType.getJavaType().getTypeName(),
+						fieldJavaType.getTypeName(),
 						fieldName
 				)
 		);
@@ -258,7 +258,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldJavaType.getJavaType().getTypeName(),
+						fieldJavaType.getTypeName(),
 						fieldName
 				)
 		);

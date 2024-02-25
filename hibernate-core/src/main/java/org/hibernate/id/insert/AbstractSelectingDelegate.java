@@ -95,10 +95,19 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 		final JdbcServices jdbcServices = session.getJdbcServices();
 
 		jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
-		jdbcValueBindings.beforeStatement( statementDetails );
 
-		jdbcCoordinator.getResultSetReturn()
-				.executeUpdate( statementDetails.resolveStatement(), statementDetails.getSqlString() );
+		try {
+			jdbcValueBindings.beforeStatement( statementDetails );
+			jdbcCoordinator.getResultSetReturn()
+					.executeUpdate( statementDetails.resolveStatement(), statementDetails.getSqlString() );
+		}
+		finally {
+			if ( statementDetails.getStatement() != null ) {
+				statementDetails.releaseStatement( session );
+			}
+			jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
+			session.getJdbcCoordinator().afterStatementExecution();
+		}
 
 		// the insert is complete, select the generated id...
 

@@ -152,7 +152,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 	private SqlStringGenerationContext sqlGenerationContext(Metadata metadata, ExecutionOptions options) {
 		return SqlStringGenerationContextImpl.fromConfigurationMapForMigration(
-				tool.getServiceRegistry().getService( JdbcEnvironment.class ),
+				tool.getServiceRegistry().requireService( JdbcEnvironment.class ),
 				metadata.getDatabase(),
 				options.getConfigurationValues()
 		);
@@ -420,8 +420,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	private UniqueConstraintSchemaUpdateStrategy determineUniqueConstraintSchemaUpdateStrategy() {
-		final String updateStrategy = tool.getServiceRegistry().getService( ConfigurationService.class )
-				.getSetting( UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, STRING );
+		final String updateStrategy =
+				tool.getServiceRegistry().requireService( ConfigurationService.class )
+						.getSetting( UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, STRING );
 		return UniqueConstraintSchemaUpdateStrategy.interpret( updateStrategy );
 	}
 

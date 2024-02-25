@@ -497,11 +497,12 @@ public final class DateTimeUtils {
 					? (T) temporal.plus( 1, ChronoUnit.SECONDS ).with( ChronoField.NANO_OF_SECOND, 0L )
 					: (T) temporal.with( ChronoField.NANO_OF_SECOND, 0L );
 		}
+		final long nanos = roundToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), precision );
+		if ( nanos == 1000000000L ) {
+			return (T) temporal.plus( 1L, ChronoUnit.SECONDS ).with( ChronoField.NANO_OF_SECOND, 0L );
+		}
 		//noinspection unchecked
-		return (T) temporal.with(
-				ChronoField.NANO_OF_SECOND,
-				roundToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), precision )
-		);
+		return (T) temporal.with( ChronoField.NANO_OF_SECOND, nanos );
 	}
 
 	public static long roundToPrecision(int nano, int precision) {

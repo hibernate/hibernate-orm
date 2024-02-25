@@ -6,15 +6,13 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
-import java.beans.Introspector;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.util.Elements;
-
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 
+import javax.lang.model.element.Element;
+
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
+import static org.hibernate.jpamodelgen.util.TypeUtils.propertyName;
 
 /**
  * Captures all information about an annotated persistent attribute.
@@ -82,23 +80,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getPropertyName() {
-		Elements elementsUtil = parent.getContext().getElementUtils();
-		if ( element.getKind() == ElementKind.FIELD ) {
-			return element.getSimpleName().toString();
-		}
-		else if ( element.getKind() == ElementKind.METHOD ) {
-			String name = element.getSimpleName().toString();
-			if ( name.startsWith( "get" ) ) {
-				return elementsUtil.getName( Introspector.decapitalize( name.substring( "get".length() ) ) ).toString();
-			}
-			else if ( name.startsWith( "is" ) ) {
-				return ( elementsUtil.getName( Introspector.decapitalize( name.substring( "is".length() ) ) ) ).toString();
-			}
-			return elementsUtil.getName( Introspector.decapitalize( name ) ).toString();
-		}
-		else {
-			return elementsUtil.getName( element.getSimpleName() + "/* " + element.getKind() + " */" ).toString();
-		}
+		return propertyName(parent, element);
 	}
 
 	@Override

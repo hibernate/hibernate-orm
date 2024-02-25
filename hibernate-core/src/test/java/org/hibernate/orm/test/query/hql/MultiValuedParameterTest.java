@@ -93,9 +93,9 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 	public void test() {
 		inTransaction( session -> {
 			final List<BigInteger> ids = List.of( BigInteger.ZERO, BigInteger.ONE, BigInteger.TWO );
-			final List<EntityWithNumericId> resultList = session.createQuery(
+			final List<BigInteger> resultList = session.createQuery(
 					"select id from EntityWithNumericId e WHERE e.id in (:ids)",
-					EntityWithNumericId.class
+					BigInteger.class
 			).setParameter( "ids", ids ).getResultList();
 			assertThat( resultList.size(), is( 3 ) );
 			assertThat( resultList, is( ids ) );

@@ -65,7 +65,7 @@ dependencyResolutionManagement {
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"
-            def byteBuddyVersion = version "byteBuddy", "1.14.7"
+            def byteBuddyVersion = version "byteBuddy", "1.14.12"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.8.2"
             def hcannVersion = version "hcann", "6.0.6.Final"
@@ -140,6 +140,7 @@ dependencyResolutionManagement {
             def elVersion = version "el", "5.0.0"
             def injectVersion = version "inject", "2.0.1"
             def interceptorsVersion = version "interceptors", "2.1.0"
+            def dataVersion = version "data", "1.0.0-M3"
             def jaccVersion = version "jacc", "2.1.0"
             def jaxbApiVersion = version "jaxbApi", "4.0.0"
             def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.2"
@@ -157,6 +158,7 @@ dependencyResolutionManagement {
             library( "cdi", "jakarta.enterprise", "jakarta.enterprise.cdi-api" ).versionRef( cdiVersion )
             library( "annotation", "jakarta.annotation", "jakarta.annotation-api" ).versionRef( annotationVersion )
             library( "interceptors", "jakarta.interceptor", "jakarta.interceptor-api" ).versionRef( interceptorsVersion )
+            library( "data", "jakarta.data", "jakarta.data-api" ).versionRef( dataVersion )
             library( "jsonbApi", "jakarta.json.bind", "jakarta.json.bind-api" ).versionRef( jsonbApiVersion )
             library( "jsonb", "org.eclipse", "yasson" ).versionRef( jsonbRuntimeVersion )
             library( "inject", "jakarta.inject", "jakarta.inject-api" ).versionRef( injectVersion )
@@ -235,7 +237,7 @@ dependencyResolutionManagement {
             def pgsqlVersion = version "pgsql", "42.7.1"
             def sybaseVersion = version "sybase", "1.3.1"
             def tidbVersion = version "tidb", mysqlVersion
-            def altibaseVersion = version "altibase", "7.3.0.0.2"
+            def altibaseVersion = version "altibase", "7.3.0.0.3"
 
             library( "h2", "com.h2database", "h2" ).versionRef( h2Version )
             library( "h2gis", "org.orbisgis", "h2gis" ).versionRef( h2gisVersion )

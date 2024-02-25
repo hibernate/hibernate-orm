@@ -50,6 +50,17 @@ public final class Context {
 	 */
 	private final Map<String, Metamodel> metaEmbeddables = new HashMap<>();
 
+	/**
+	 * Used for keeping track of parsed entities and mapped super classes (XML + annotations).
+	 */
+	private final Map<String, Metamodel> dataMetaEntities = new HashMap<>();
+
+	/**
+	 * Used for keeping track of parsed embeddable entities. These entities have to be kept separate since
+	 * they are lazily initialized.
+	 */
+	private final Map<String, Metamodel> dataMetaEmbeddables = new HashMap<>();
+
 	private final Map<String, Metamodel> metaAuxiliaries = new HashMap<>();
 
 	private final Map<String, AccessTypeInformation> accessTypeInformation = new HashMap<>();
@@ -73,10 +84,12 @@ public final class Context {
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
+	private boolean addTransactionScopedAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
+	private boolean generateJakartaDataStaticMetamodel;
 
 	// keep track of all classes for which model have been generated
-	private final Collection<String> generatedModelClasses = new HashSet<>();
+	private final Set<Metamodel> generatedModelClasses = new HashSet<>();
 
 	// keep track of which named queries have been checked
 	private final Set<String> checkedNamedQueries = new HashSet<>();
@@ -119,6 +132,14 @@ public final class Context {
 		return processingEnvironment;
 	}
 
+	public boolean generateJakartaDataStaticMetamodel() {
+		return generateJakartaDataStaticMetamodel;
+	}
+
+	public void setGenerateJakartaDataStaticMetamodel(boolean generateJakartaDataStaticMetamodel) {
+		this.generateJakartaDataStaticMetamodel = generateJakartaDataStaticMetamodel;
+	}
+
 	public boolean addInjectAnnotation() {
 		return addInjectAnnotation;
 	}
@@ -159,12 +180,20 @@ public final class Context {
 		this.addGenerationDate = addGenerationDate;
 	}
 
-	public boolean isAddSuppressWarningsAnnotation() {
+	public boolean addSuppressWarningsAnnotation() {
 		return addSuppressWarningsAnnotation;
 	}
 
 	public void setAddSuppressWarningsAnnotation(boolean addSuppressWarningsAnnotation) {
 		this.addSuppressWarningsAnnotation = addSuppressWarningsAnnotation;
+	}
+
+	public boolean addTransactionScopedAnnotation() {
+		return addTransactionScopedAnnotation;
+	}
+
+	public void setAddTransactionScopedAnnotation(boolean addTransactionScopedAnnotation) {
+		this.addTransactionScopedAnnotation = addTransactionScopedAnnotation;
 	}
 
 	public Elements getElementUtils() {
@@ -183,69 +212,101 @@ public final class Context {
 		return ormXmlFiles;
 	}
 
-	public boolean containsMetaEntity(String fqcn) {
-		return metaEntities.containsKey( fqcn );
+	public boolean containsMetaEntity(String qualifiedName) {
+		return metaEntities.containsKey( qualifiedName );
 	}
 
-	public @Nullable Metamodel getMetaEntity(String fqcn) {
-		return metaEntities.get( fqcn );
+	public @Nullable Metamodel getMetaEntity(String qualifiedName) {
+		return metaEntities.get( qualifiedName );
 	}
 
 	public Collection<Metamodel> getMetaEntities() {
 		return metaEntities.values();
 	}
 
-	public void addMetaEntity(String fqcn, Metamodel metaEntity) {
-		metaEntities.put( fqcn, metaEntity );
+	public void addMetaEntity(String qualifiedName, Metamodel metaEntity) {
+		metaEntities.put( qualifiedName, metaEntity );
 	}
 
-	public boolean containsMetaEmbeddable(String fqcn) {
-		return metaEmbeddables.containsKey( fqcn );
+	public boolean containsMetaEmbeddable(String qualifiedName) {
+		return metaEmbeddables.containsKey( qualifiedName );
 	}
 
-	public @Nullable Metamodel getMetaEmbeddable(String fqcn) {
-		return metaEmbeddables.get( fqcn );
+	public @Nullable Metamodel getMetaEmbeddable(String qualifiedName) {
+		return metaEmbeddables.get( qualifiedName );
 	}
 
-	public void addMetaEmbeddable(String fqcn, Metamodel metaEntity) {
-		metaEmbeddables.put( fqcn, metaEntity );
+	public void addMetaEmbeddable(String qualifiedName, Metamodel metaEntity) {
+		metaEmbeddables.put( qualifiedName, metaEntity );
 	}
 
 	public Collection<Metamodel> getMetaEmbeddables() {
 		return metaEmbeddables.values();
 	}
 
-	public @Nullable Metamodel getMetaAuxiliary(String fqcn) {
-		return metaAuxiliaries.get( fqcn );
+	public boolean containsDataMetaEntity(String qualifiedName) {
+		return dataMetaEntities.containsKey( qualifiedName );
+	}
+
+	public @Nullable Metamodel getDataMetaEntity(String qualifiedName) {
+		return dataMetaEntities.get( qualifiedName );
+	}
+
+	public Collection<Metamodel> getDataMetaEntities() {
+		return dataMetaEntities.values();
+	}
+
+	public void addDataMetaEntity(String qualifiedName, Metamodel metaEntity) {
+		dataMetaEntities.put( qualifiedName, metaEntity );
+	}
+
+	public boolean containsDataMetaEmbeddable(String qualifiedName) {
+		return dataMetaEmbeddables.containsKey( qualifiedName );
+	}
+
+	public @Nullable Metamodel getDataMetaEmbeddable(String qualifiedName) {
+		return dataMetaEmbeddables.get( qualifiedName );
+	}
+
+	public void addDataMetaEmbeddable(String qualifiedName, Metamodel metaEntity) {
+		dataMetaEmbeddables.put( qualifiedName, metaEntity );
+	}
+
+	public Collection<Metamodel> getDataMetaEmbeddables() {
+		return dataMetaEmbeddables.values();
+	}
+
+	public @Nullable Metamodel getMetaAuxiliary(String qualifiedName) {
+		return metaAuxiliaries.get( qualifiedName );
 	}
 
 	public Collection<Metamodel> getMetaAuxiliaries() {
 		return metaAuxiliaries.values();
 	}
 
-	public void addMetaAuxiliary(String fqcn, Metamodel metamodel) {
-		metaAuxiliaries.put( fqcn, metamodel);
+	public void addMetaAuxiliary(String qualifiedName, Metamodel metamodel) {
+		metaAuxiliaries.put( qualifiedName, metamodel);
 	}
 
-	public void addAccessTypeInformation(String fqcn, AccessTypeInformation info) {
-		accessTypeInformation.put( fqcn, info );
+	public void addAccessTypeInformation(String qualifiedName, AccessTypeInformation info) {
+		accessTypeInformation.put( qualifiedName, info );
 	}
 
-	public @Nullable AccessTypeInformation getAccessTypeInfo(String fqcn) {
-		return accessTypeInformation.get( fqcn );
+	public @Nullable AccessTypeInformation getAccessTypeInfo(String qualifiedName) {
+		return accessTypeInformation.get( qualifiedName );
 	}
 
-	public TypeElement getTypeElementForFullyQualifiedName(String fqcn) {
+	public TypeElement getTypeElementForFullyQualifiedName(String qualifiedName) {
 		Elements elementUtils = processingEnvironment.getElementUtils();
-		return elementUtils.getTypeElement( fqcn );
+		return elementUtils.getTypeElement( qualifiedName );
 	}
 
-	void markGenerated(String name) {
-		generatedModelClasses.add( name );
+	void markGenerated(Metamodel metamodel) {
+		generatedModelClasses.add( metamodel );
 	}
 
-	boolean isAlreadyGenerated(String name) {
-		return generatedModelClasses.contains( name );
+	boolean isAlreadyGenerated(Metamodel metamodel) {
+		return generatedModelClasses.contains( metamodel );
 	}
 
 	public Set<CharSequence> getElementsToRedo() {

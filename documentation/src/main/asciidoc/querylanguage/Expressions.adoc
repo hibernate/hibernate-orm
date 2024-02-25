@@ -172,8 +172,32 @@ Literal values of a Java enumerated type may be written without needing to speci
 ----
 from Book where status <> OUT_OF_PRINT
 ----
+[source, hql]
+----
+from Book where type in (BOOK, MAGAZINE)
+----
+[source, hql]
+----
+update Book set status = OUT_OF_PRINT
+----
 
-Here, the enum class is inferred from the type of the expression on the left of the comparison operator.
+In the examples above, the enum class is inferred from the type of the expression on the left of the comparison, assignment operator, or
+`in` predicate.
+
+[[enum-case-example]]
+[source, hql]
+----
+from Book
+order by
+    case type
+    when BOOK then 1
+    when MAGAZINE then 2
+    when JOURNAL then 3
+    else 4
+    end
+----
+
+In this example the enum class is inferred from the type of the `case` expression.
 
 [[java-constants]]
 ==== Java constants
@@ -323,7 +347,15 @@ When both operands of a binary numeric operator have the same type, the result t
 
 [WARNING]
 ====
-Thus, `3/2` performs integer division and evaluates to `1`.
+By default, the semantics of integer division depend on the database:
+
+- On most databases, division of an integer by an integer evaluates to an integer, just like in Java.
+  Thus, `3/2` evaluates to `1`.
+- But on some databases, including Oracle, MySQL, and MariaDB, integer division may result in a non-integral value.
+  So `3/2` evaluates to `1.5` on these databases.
+
+This default behavior may be changed using configuration property `hibernate.query.hql.portable_integer_division`.
+Setting this property to `true` instructs Hibernate to produce SQL that emulates Java-style integer division (that is, `3/2 = 1`) on platforms where that is not the native semantics.
 ====
 
 When the operands are of different type, one of the operands is implicitly converted to _wider_ type, with wideness given, in decreasing order, by the list below:
@@ -885,6 +917,7 @@ Of course, we also have a number of functions for working with numeric values.
 | `radians()` | Convert degrees to radians | `radians(x)` | ✖
 | `least()` | Return the smallest of the given arguments | `least(x, y, z)` |✖
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | ✖
+| `bitand()`, `bitor()`, `bitxor()` | Bitwise functions | `bitand(x,y)` | ✖
 |===
 
 We haven't included <<aggregate-functions,aggregate functions>>, <<aggregate-functions-orderedset,ordered set aggregate functions>>, or <<aggregate-functions-window,window functions>> in this list, because their purpose is more specialized, and because they come with extra special syntax.

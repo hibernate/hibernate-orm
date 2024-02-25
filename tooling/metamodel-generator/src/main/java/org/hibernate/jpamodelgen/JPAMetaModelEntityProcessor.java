@@ -6,10 +6,12 @@
  */
 package org.hibernate.jpamodelgen;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
+import org.hibernate.jpamodelgen.annotation.AnnotationMetaPackage;
+import org.hibernate.jpamodelgen.model.Metamodel;
+import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
+
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -18,36 +20,36 @@ import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
-
-import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
-import org.hibernate.jpamodelgen.annotation.AnnotationMetaPackage;
-import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.lang.Boolean.parseBoolean;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
-import static org.hibernate.jpamodelgen.util.Constants.FIND;
-import static org.hibernate.jpamodelgen.util.Constants.HQL;
-import static org.hibernate.jpamodelgen.util.Constants.SQL;
-import static org.hibernate.jpamodelgen.util.StringUtil.isProperty;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.ADD_GENERATION_DATE;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.DEBUG_OPTION;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.LAZY_XML_PARSING;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.ORM_XML_OPTION;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION;
+import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.SUPPRESS_JAKARTA_DATA_METAMODEL;
+import static org.hibernate.jpamodelgen.util.Constants.*;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
-import static org.hibernate.jpamodelgen.util.TypeUtils.getCollectionElementType;
-import static org.hibernate.jpamodelgen.util.TypeUtils.isAnnotationMirrorOfType;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
+import static org.hibernate.jpamodelgen.util.TypeUtils.hasAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isClassOrRecordType;
-import static org.hibernate.jpamodelgen.util.TypeUtils.toTypeString;
 
 /**
  * Main annotation processor.
@@ -55,34 +57,33 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.toTypeString;
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
+ * @author Gavin King
  */
 @SupportedAnnotationTypes({
-		Constants.ENTITY,
-		Constants.MAPPED_SUPERCLASS,
-		Constants.EMBEDDABLE,
-		Constants.HQL,
-		Constants.SQL,
-		Constants.FIND,
-		Constants.NAMED_QUERY,
-		Constants.NAMED_NATIVE_QUERY,
-		Constants.NAMED_ENTITY_GRAPH,
-		Constants.SQL_RESULT_SET_MAPPING,
-		Constants.HIB_FETCH_PROFILE,
-		Constants.HIB_FILTER_DEF,
-		Constants.HIB_NAMED_QUERY,
-		Constants.HIB_NAMED_NATIVE_QUERY
+		// standard for JPA 2
+		ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE,
+		// standard for JPA 3.2
+		NAMED_QUERY, NAMED_NATIVE_QUERY, NAMED_ENTITY_GRAPH, SQL_RESULT_SET_MAPPING,
+		// extra for Hibernate
+		HIB_FETCH_PROFILE, HIB_FILTER_DEF, HIB_NAMED_QUERY, HIB_NAMED_NATIVE_QUERY,
+		// Hibernate query methods
+		HQL, SQL, FIND,
+		// Jakarta Data repositories
+		JD_REPOSITORY // do not need to list any other Jakarta Data annotations here
 })
 @SupportedOptions({
-		JPAMetaModelEntityProcessor.DEBUG_OPTION,
-		JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
-		JPAMetaModelEntityProcessor.ORM_XML_OPTION,
-		JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION,
-		JPAMetaModelEntityProcessor.LAZY_XML_PARSING,
-		JPAMetaModelEntityProcessor.ADD_GENERATION_DATE,
-		JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION,
-		JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION
+		DEBUG_OPTION,
+		PERSISTENCE_XML_OPTION,
+		ORM_XML_OPTION,
+		FULLY_ANNOTATION_CONFIGURED_OPTION,
+		LAZY_XML_PARSING,
+		ADD_GENERATION_DATE,
+		ADD_GENERATED_ANNOTATION,
+		ADD_SUPPRESS_WARNINGS_ANNOTATION,
+		SUPPRESS_JAKARTA_DATA_METAMODEL
 })
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
+
 	/**
 	 * Debug logging from the processor
 	 */
@@ -125,6 +126,12 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	 */
 	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
 
+	/**
+	 * Option to suppress generation of the Jakarta Data static metamodel,
+	 * even when Jakarta Data is available on the build path.
+	 */
+	public static final String SUPPRESS_JAKARTA_DATA_METAMODEL = "suppressJakartaDataMetamodel";
+
 	private static final boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = false;
 
 	private Context context;
@@ -135,7 +142,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		context = new Context( processingEnvironment );
 		context.logMessage(
 				Diagnostic.Kind.NOTE,
-				"Hibernate/JPA static Metamodel Generator " + Version.getVersionString()
+				"Hibernate compile-time tooling " + Version.getVersionString()
 		);
 
 		boolean fullyAnnotationConfigured = handleSettings( processingEnvironment );
@@ -157,13 +164,24 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		final PackageElement jakartaContextPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "jakarta.enterprise.context" );
+		final PackageElement jakartaTransactionsPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "jakarta.transactions" );
+		final PackageElement jakartaDataPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "jakarta.data" );
 
 		context.setAddInjectAnnotation( jakartaInjectPackage != null );
 		context.setAddNonnullAnnotation( jakartaAnnotationPackage != null );
 		context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
 		context.setAddDependentAnnotation( jakartaContextPackage != null );
+		context.setAddTransactionScopedAnnotation( jakartaTransactionsPackage != null );
 
 		final Map<String, String> options = environment.getOptions();
+
+		boolean suppressJakartaData = parseBoolean( options.get( SUPPRESS_JAKARTA_DATA_METAMODEL ) );
+
+		context.setGenerateJakartaDataStaticMetamodel( !suppressJakartaData && jakartaDataPackage != null );
 
 		String setting = options.get( ADD_GENERATED_ANNOTATION );
 		if ( setting != null ) {
@@ -208,7 +226,19 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				createMetaModelClasses();
 			}
 			catch (Exception e) {
-				context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel: " + e.getMessage() );
+				final StringBuffer b = new StringBuffer();
+				Arrays.stream(e.getStackTrace())
+						.forEach(stackTraceElement -> {
+							b.append(stackTraceElement);
+							b.append('\n');
+						});
+				final Throwable cause = e.getCause();
+				final String message =
+						cause != null && cause != e
+								? e.getMessage() + " caused by " + cause.getMessage()
+								: e.getMessage();
+				context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel: " + message );
+				context.logMessage( Diagnostic.Kind.ERROR, b.toString() );
 			}
 		}
 		return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
@@ -241,8 +271,20 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				}
 				else if ( element instanceof TypeElement ) {
 					final TypeElement typeElement = (TypeElement) element;
+					final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
+					if ( repository != null ) {
+						final String provider = (String) getAnnotationValue( repository, "provider" );
+						if ( provider == null || provider.isEmpty()
+								|| provider.equalsIgnoreCase("hibernate") ) {
+							context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
+							final AnnotationMetaEntity metaEntity =
+									AnnotationMetaEntity.create( typeElement, context, false, false );
+							context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+						}
+					}
+					else {
 						for ( Element member : typeElement.getEnclosedElements() ) {
-							if ( containsAnnotation( member, HQL, SQL, FIND ) ) {
+							if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
 								context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
 								final AnnotationMetaEntity metaEntity =
 										AnnotationMetaEntity.create( typeElement, context, false, false );
@@ -250,6 +292,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 								break;
 							}
 						}
+					}
 				}
 			}
 			catch ( ProcessLaterException processLaterException ) {
@@ -267,44 +310,62 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private void createMetaModelClasses() {
 
 		for ( Metamodel aux : context.getMetaAuxiliaries() ) {
-			if ( !context.isAlreadyGenerated( aux.getQualifiedName() ) ) {
-				context.logMessage( Diagnostic.Kind.OTHER, "Writing metamodel for auxiliary '" + aux + "'" );
+			if ( !context.isAlreadyGenerated(aux) ) {
+				context.logMessage( Diagnostic.Kind.OTHER,
+						"Writing metamodel for auxiliary '" + aux + "'" );
 				ClassWriter.writeFile( aux, context );
-				context.markGenerated( aux.getQualifiedName() );
+				context.markGenerated(aux);
 			}
 		}
 
 		for ( Metamodel entity : context.getMetaEntities() ) {
-			if ( !context.isAlreadyGenerated( entity.getQualifiedName() ) ) {
-				context.logMessage( Diagnostic.Kind.OTHER, "Writing metamodel for entity '" + entity + "'" );
+			if ( !context.isAlreadyGenerated(entity) ) {
+				context.logMessage( Diagnostic.Kind.OTHER,
+						"Writing Jakarta Persistence metamodel for entity '" + entity + "'" );
 				ClassWriter.writeFile( entity, context );
-				context.markGenerated( entity.getQualifiedName() );
+				context.markGenerated(entity);
 			}
 		}
 
-		// we cannot process the delayed entities in any order. There might be dependencies between them.
-		// we need to process the top level entities first
-		final Collection<Metamodel> toProcessEntities = context.getMetaEmbeddables();
-		while ( !toProcessEntities.isEmpty() ) {
-			final Set<Metamodel> processedEntities = new HashSet<>();
-			int toProcessCountBeforeLoop = toProcessEntities.size();
-			for ( Metamodel entity : toProcessEntities ) {
+		for ( Metamodel entity : context.getDataMetaEntities() ) {
+			if ( !context.isAlreadyGenerated(entity) ) {
+				context.logMessage( Diagnostic.Kind.OTHER,
+						"Writing Jakarta Data metamodel for entity '" + entity + "'" );
+				ClassWriter.writeFile( entity, context );
+				context.markGenerated(entity);
+			}
+		}
+
+		processEmbeddables( context.getMetaEmbeddables() );
+		processEmbeddables( context.getDataMetaEmbeddables() );
+	}
+
+	/**
+	 * We cannot process the delayed classes in any order.
+	 * There might be dependencies between them.
+	 * We need to process the toplevel classes first.
+	 */
+	private void processEmbeddables(Collection<Metamodel> models) {
+		while ( !models.isEmpty() ) {
+			final Set<Metamodel> processed = new HashSet<>();
+			final int toProcessCountBeforeLoop = models.size();
+			for ( Metamodel metamodel : models ) {
 				// see METAGEN-36
-				if ( context.isAlreadyGenerated( entity.getQualifiedName() ) ) {
-					processedEntities.add( entity );
+				if ( context.isAlreadyGenerated(metamodel) ) {
+					processed.add( metamodel );
 				}
-				else if ( !modelGenerationNeedsToBeDeferred( toProcessEntities, entity ) ) {
+				else if ( !modelGenerationNeedsToBeDeferred(models, metamodel ) ) {
 					context.logMessage(
 							Diagnostic.Kind.OTHER,
-							"Writing meta model for embeddable/mapped superclass " + entity
+							"Writing metamodel for embeddable " + metamodel
 					);
-					ClassWriter.writeFile( entity, context );
-					context.markGenerated( entity.getQualifiedName() );
-					processedEntities.add( entity );
+					ClassWriter.writeFile( metamodel, context );
+					context.markGenerated(metamodel);
+					processed.add( metamodel );
 				}
 			}
-			toProcessEntities.removeAll( processedEntities );
-			if ( toProcessEntities.size() >= toProcessCountBeforeLoop ) {
+			models.removeAll( processed );
+			if ( models.size() >= toProcessCountBeforeLoop ) {
 				context.logMessage(
 						Diagnostic.Kind.ERROR,
 						"Potential endless loop in generation of entities."
@@ -320,16 +381,18 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 					new ContainsAttributeTypeVisitor( (TypeElement) element, context );
 			for ( Metamodel entity : entities ) {
 				if ( !entity.equals( containedEntity ) ) {
-					for ( Element subElement : fieldsIn( entity.getElement().getEnclosedElements() ) ) {
-						TypeMirror mirror = subElement.asType();
+					final List<? extends Element> enclosedElements =
+							entity.getElement().getEnclosedElements();
+					for ( Element subElement : fieldsIn(enclosedElements) ) {
+						final TypeMirror mirror = subElement.asType();
 						if ( TypeKind.DECLARED == mirror.getKind() ) {
 							if ( mirror.accept( visitor, subElement ) ) {
 								return true;
 							}
 						}
 					}
-					for ( Element subElement : methodsIn( entity.getElement().getEnclosedElements() ) ) {
-						TypeMirror mirror = subElement.asType();
+					for ( Element subElement : methodsIn(enclosedElements) ) {
+						final TypeMirror mirror = subElement.asType();
 						if ( TypeKind.DECLARED == mirror.getKind() ) {
 							if ( mirror.accept( visitor, subElement ) ) {
 								return true;
@@ -345,40 +408,41 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private static boolean isEntityOrEmbeddable(Element element) {
 		return containsAnnotation(
 				element,
-				Constants.ENTITY,
-				Constants.MAPPED_SUPERCLASS,
-				Constants.EMBEDDABLE
+				ENTITY,
+				MAPPED_SUPERCLASS,
+				EMBEDDABLE
 		);
 	}
 
 	private boolean hasAuxiliaryAnnotations(Element element) {
 		return containsAnnotation(
 				element,
-				Constants.NAMED_QUERY,
-				Constants.NAMED_QUERIES,
-				Constants.NAMED_NATIVE_QUERY,
-				Constants.NAMED_NATIVE_QUERIES,
-				Constants.SQL_RESULT_SET_MAPPING,
-				Constants.SQL_RESULT_SET_MAPPINGS,
-				Constants.NAMED_ENTITY_GRAPH,
-				Constants.NAMED_ENTITY_GRAPHS,
-				Constants.HIB_NAMED_QUERY,
-				Constants.HIB_NAMED_QUERIES,
-				Constants.HIB_NAMED_NATIVE_QUERY,
-				Constants.HIB_NAMED_NATIVE_QUERIES,
-				Constants.HIB_FETCH_PROFILE,
-				Constants.HIB_FETCH_PROFILES,
-				Constants.HIB_FILTER_DEF,
-				Constants.HIB_FILTER_DEFS
+				NAMED_QUERY,
+				NAMED_QUERIES,
+				NAMED_NATIVE_QUERY,
+				NAMED_NATIVE_QUERIES,
+				SQL_RESULT_SET_MAPPING,
+				SQL_RESULT_SET_MAPPINGS,
+				NAMED_ENTITY_GRAPH,
+				NAMED_ENTITY_GRAPHS,
+				HIB_NAMED_QUERY,
+				HIB_NAMED_QUERIES,
+				HIB_NAMED_NATIVE_QUERY,
+				HIB_NAMED_NATIVE_QUERIES,
+				HIB_FETCH_PROFILE,
+				HIB_FETCH_PROFILES,
+				HIB_FILTER_DEF,
+				HIB_FILTER_DEFS
 		);
 	}
 
 	private void handleRootElementAnnotationMirrors(final Element element) {
 		if ( isClassOrRecordType( element ) ) {
-			for ( AnnotationMirror mirror : element.getAnnotationMirrors() ) {
+			if ( hasAnnotation( element, ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE ) ) {
 				final TypeElement typeElement = (TypeElement) element;
 				final String qualifiedName = typeElement.getQualifiedName().toString();
-				final Metamodel alreadyExistingMetaEntity = tryGettingExistingEntityFromContext( mirror, qualifiedName );
+				final Metamodel alreadyExistingMetaEntity =
+						tryGettingExistingEntityFromContext( typeElement, qualifiedName );
 				if ( alreadyExistingMetaEntity != null && alreadyExistingMetaEntity.isMetaComplete() ) {
 					context.logMessage(
 							Diagnostic.Kind.OTHER,
@@ -386,15 +450,29 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 									+ "' since XML configuration is metadata complete.");
 				}
 				else {
-					boolean requiresLazyMemberInitialization
-							= containsAnnotation( element, Constants.EMBEDDABLE )
-							|| containsAnnotation( element, Constants.MAPPED_SUPERCLASS );
+					final boolean requiresLazyMemberInitialization
+							= hasAnnotation( element, EMBEDDABLE, MAPPED_SUPERCLASS );
 					final AnnotationMetaEntity metaEntity =
-							AnnotationMetaEntity.create( typeElement, context, requiresLazyMemberInitialization, true );
+							AnnotationMetaEntity.create( typeElement, context,
+									requiresLazyMemberInitialization, true );
 					if ( alreadyExistingMetaEntity != null ) {
 						metaEntity.mergeInMembers( alreadyExistingMetaEntity );
 					}
-					addMetaEntityToContext( mirror, metaEntity );
+					addMetamodelToContext( typeElement, metaEntity );
+					if ( context.generateJakartaDataStaticMetamodel()
+							// Don't generate a Jakarta Data metamodel
+							// if this entity was partially mapped in XML
+							&& alreadyExistingMetaEntity == null ) {
+						final AnnotationMetaEntity dataMetaEntity =
+								AnnotationMetaEntity.create( typeElement, context,
+										requiresLazyMemberInitialization, true, true );
+//						final Metamodel alreadyExistingDataMetaEntity =
+//								tryGettingExistingDataEntityFromContext( mirror, '_' + qualifiedName );
+//						if ( alreadyExistingDataMetaEntity != null ) {
+//							dataMetaEntity.mergeInMembers( alreadyExistingDataMetaEntity );
+//						}
+						addDataMetamodelToContext( typeElement, dataMetaEntity );
+					}
 				}
 			}
 		}
@@ -414,64 +492,40 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		//TODO: handle PackageElement
 	}
 
-	private @Nullable Metamodel tryGettingExistingEntityFromContext(AnnotationMirror mirror, String qualifiedName) {
-		if ( isAnnotationMirrorOfType( mirror, Constants.ENTITY )
-				|| isAnnotationMirrorOfType( mirror, Constants.MAPPED_SUPERCLASS ) ) {
+	private @Nullable Metamodel tryGettingExistingEntityFromContext(TypeElement typeElement, String qualifiedName) {
+		if ( hasAnnotation( typeElement, ENTITY, MAPPED_SUPERCLASS ) ) {
 			return context.getMetaEntity( qualifiedName );
 		}
-		else if ( isAnnotationMirrorOfType( mirror, Constants.EMBEDDABLE ) ) {
+		else if ( hasAnnotation( typeElement, EMBEDDABLE ) ) {
 			return context.getMetaEmbeddable( qualifiedName );
 		}
 		return null;
 	}
 
-	private void addMetaEntityToContext(AnnotationMirror mirror, AnnotationMetaEntity metaEntity) {
-		if ( isAnnotationMirrorOfType( mirror, Constants.ENTITY ) ) {
-			context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
+	private void addMetamodelToContext(TypeElement typeElement, AnnotationMetaEntity entity) {
+		final String key = entity.getQualifiedName();
+		if ( hasAnnotation( typeElement, ENTITY ) ) {
+			context.addMetaEntity( key, entity );
 		}
-		else if ( isAnnotationMirrorOfType( mirror, Constants.MAPPED_SUPERCLASS ) ) {
-			context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
+		else if ( hasAnnotation( typeElement, MAPPED_SUPERCLASS ) ) {
+			context.addMetaEntity( key, entity );
 		}
-		else if ( isAnnotationMirrorOfType( mirror, Constants.EMBEDDABLE ) ) {
-			context.addMetaEmbeddable( metaEntity.getQualifiedName(), metaEntity );
+		else if ( hasAnnotation( typeElement, EMBEDDABLE ) ) {
+			context.addMetaEmbeddable( key, entity );
+		}
+	}
+
+	private void addDataMetamodelToContext(TypeElement typeElement, AnnotationMetaEntity entity) {
+		final String key = entity.getQualifiedName();
+		if ( hasAnnotation( typeElement, ENTITY ) ) {
+			context.addDataMetaEntity( key, entity );
+		}
+		else if ( hasAnnotation( typeElement, MAPPED_SUPERCLASS ) ) {
+			context.addDataMetaEntity( key, entity );
+		}
+		else if ( hasAnnotation( typeElement, EMBEDDABLE ) ) {
+			context.addDataMetaEmbeddable( key, entity );
 		}
 	}
 
-
-	static class ContainsAttributeTypeVisitor extends SimpleTypeVisitor8<Boolean, Element> {
-
-		private final Context context;
-		private final TypeElement type;
-
-		ContainsAttributeTypeVisitor(TypeElement elem, Context context) {
-			this.context = context;
-			this.type = elem;
-		}
-
-		@Override
-		public Boolean visitDeclared(DeclaredType declaredType, Element element) {
-			TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
-
-			final String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
-			final String collection = Constants.COLLECTIONS.get( fqNameOfReturnType );
-			if ( collection != null ) {
-				final TypeMirror collectionElementType =
-						getCollectionElementType( declaredType, fqNameOfReturnType, null, context );
-				final Element collectionElement = context.getTypeUtils().asElement( collectionElementType );
-				if ( ElementKind.TYPE_PARAMETER.equals( collectionElement.getKind() ) ) {
-					return false;
-				}
-				returnedElement = (TypeElement) collectionElement;
-			}
-
-			return type.getQualifiedName().contentEquals( returnedElement.getQualifiedName() );
-		}
-
-		@Override
-		public Boolean visitExecutable(ExecutableType t, Element element) {
-			return element.getKind().equals(ElementKind.METHOD)
-				&& isProperty( element.getSimpleName().toString(), toTypeString( t.getReturnType() ) )
-				&& t.getReturnType().accept( this, element );
-		}
-	}
 }

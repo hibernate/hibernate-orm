@@ -152,6 +152,11 @@ public class QueryMethod extends AbstractQueryMethod {
 			declaration
 					.append("\n\t\t\t.getSingleResult()");
 		}
+		else if ( containerTypeName.equals(Constants.OPTIONAL) ) {
+			unwrapQuery( declaration, unwrapped );
+			declaration
+					.append("\n\t\t\t.uniqueResultOptional()");
+		}
 		else if ( containerTypeName.equals(Constants.LIST) ) {
 			declaration
 					.append("\n\t\t\t.getResultList()");

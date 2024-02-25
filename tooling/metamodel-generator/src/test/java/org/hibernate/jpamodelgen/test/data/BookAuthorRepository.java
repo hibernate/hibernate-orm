@@ -3,6 +3,7 @@ package org.hibernate.jpamodelgen.test.data;
 import jakarta.data.Limit;
 import jakarta.data.Order;
 import jakarta.data.Sort;
+import jakarta.data.page.PageRequest;
 import jakarta.data.repository.By;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Find;
@@ -94,4 +95,10 @@ public interface BookAuthorRepository {
 
 	@Query("select title from Book where title like :title order by isbn")
 	Stream<String> titles(String title);
+
+	@Query("from Book")
+	List<Book> everyBook1(PageRequest<? super Book> pageRequest);
+
+	@Find
+	List<Book> everyBook2(PageRequest<? super Book> pageRequest);
 }

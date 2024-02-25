@@ -77,7 +77,6 @@ public class DefaultConstructor implements MetaAttribute {
 				.append("Factory;\n\n");
 		inject( declaration );
 		declaration
-				.append("public ")
 				.append(constructorName)
 				.append("(")
 				.append(") {")

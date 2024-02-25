@@ -69,8 +69,12 @@ public final class Constants {
 	public static final String JD_DELETE = "jakarta.data.repository.Delete";
 	public static final String JD_SAVE = "jakarta.data.repository.Save";
 	public static final String JD_LIMIT = "jakarta.data.Limit";
+	public static final String JD_PAGE_REQUEST = "jakarta.data.page.PageRequest";
 	public static final String JD_SORT = "jakarta.data.Sort";
 	public static final String JD_ORDER = "jakarta.data.Order";
+
+	public static final String HIB_ORDER = "org.hibernate.query.Order";
+	public static final String HIB_PAGE = "org.hibernate.query.Page";
 
 	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
 

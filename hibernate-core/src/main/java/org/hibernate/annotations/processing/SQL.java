@@ -77,8 +77,8 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <p>
  * The return type of an annotated method must be:
  * <ul>
- * <li>an entity type,
- * <li>{@link java.util.List},
+ * <li>an entity type or {@link java.util.Optional},
+ * <li>{@link java.util.List} or {@link java.util.stream.Stream},
  * <li>{@code io.smallrye.mutiny.Uni}, when used with Hibernate Reactive,
  * <li>{@link org.hibernate.query.Query},
  * <li>{@link jakarta.persistence.Query}, or

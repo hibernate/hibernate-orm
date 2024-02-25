@@ -99,6 +99,8 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * or one of the following types:
  * <ul>
  * <li>{@link java.util.List java.util.List&lt;E&gt;},
+ * <li>{@link java.util.stream.Stream java.util.stream.Stream&lt;E&gt;},
+ * <li>{@link java.util.Optional java.util.Optional&lt;E&gt;},
  * <li>{@code io.smallrye.mutiny.Uni<E>}, when used with Hibernate Reactive,
  * <li>{@link org.hibernate.query.Query org.hibernate.query.Query&lt;E&gt;},
  * <li>{@link org.hibernate.query.SelectionQuery org.hibernate.query.SelectionQuery&lt;E&gt;},

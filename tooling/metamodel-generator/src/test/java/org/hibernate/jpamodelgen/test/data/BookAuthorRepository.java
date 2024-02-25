@@ -17,6 +17,8 @@ import org.hibernate.StatelessSession;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @Repository(dataStore = "myds")
 public interface BookAuthorRepository {
@@ -25,6 +27,9 @@ public interface BookAuthorRepository {
 
 	@Find
 	Book book(String isbn);
+
+	@Find
+	Optional<Book> bookIfAny(String isbn);
 
 	@Find
 	Author author(String ssn);
@@ -76,4 +81,7 @@ public interface BookAuthorRepository {
 
 	@Query("from Book where title like :title")
 	List<Book> books3(String title, Limit limit, Sort<Book>... order);
+
+	@Query("select title from Book where title like :title order by isbn")
+	Stream<String> titles(String title);
 }

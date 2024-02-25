@@ -81,8 +81,13 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * For a {@code select} query, the return type of an annotated method
  * must be:
  * <ul>
- * <li>an entity type, or {@link java.util.List List&lt;E&gt;} where
- *     {@code E} is an entity type,
+ * <li>an entity type, or {@link java.util.Optional Optional&lt;E&gt;}
+ *     where {@code E} is an entity type,
+ * <li>{@link java.util.List List&lt;E&gt;} or
+ *     {@link java.util.stream.Stream Stream&lt;E&gt;}
+ *     where {@code E} is an entity type,
+ * <li>{@link java.util.List List&lt;Object[]&gt;} or
+ *     {@link java.util.stream.Stream Stream&lt;Object[]&gt;}
  * <li>a record type or JavaBean class with a constructor signature
  *     matching the types in the query {@code select} list, or
  *     {@link java.util.List List&lt;R&gt;} where {@code R} is such

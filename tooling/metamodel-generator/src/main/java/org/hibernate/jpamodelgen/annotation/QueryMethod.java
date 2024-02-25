@@ -157,6 +157,10 @@ public class QueryMethod extends AbstractQueryMethod {
 			declaration
 					.append("\n\t\t\t.uniqueResultOptional()");
 		}
+		else if ( containerTypeName.equals(Constants.STREAM) ) {
+			declaration
+					.append("\n\t\t\t.getResultStream()");
+		}
 		else if ( containerTypeName.equals(Constants.LIST) ) {
 			declaration
 					.append("\n\t\t\t.getResultList()");

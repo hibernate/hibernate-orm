@@ -12,6 +12,8 @@ import org.hibernate.query.SelectionQuery;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface Dao {
 
@@ -19,6 +21,9 @@ public interface Dao {
 
     @Find
     Book getBook(String isbn);
+
+    @Find
+    Optional<Book> getBookIfAny(String isbn);
 
     @Find(enabledFetchProfiles="Goodbye")
     Book getBookFetching(String isbn);
@@ -46,6 +51,9 @@ public interface Dao {
 
     @HQL("where title like ?1")
     List<Book> findBooksByTitle(String title);
+
+    @HQL("where title like ?1")
+    Stream<Book> streamBooksByTitle(String title);
 
     @HQL("from Book where title like ?1")
     TypedQuery<Book> findByTitle(String title);
@@ -88,6 +96,9 @@ public interface Dao {
 
     @HQL("from Book where isbn = :isbn")
     Book findByIsbn(String isbn);
+
+    @HQL("from Book where isbn = :isbn")
+    Optional<Book> findByIsbnIfExists(String isbn);
 
     @SQL("select * from Book where isbn = :isbn")
     Book findByIsbnNative(String isbn);

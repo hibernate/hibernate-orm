@@ -11,7 +11,6 @@ import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.query.Order;
-import org.hibernate.query.Page;
 import org.hibernate.query.SortDirection;
 
 import java.util.ArrayList;
@@ -20,9 +19,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_PAGE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_LIMIT;
 import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.JD_PAGE_REQUEST;
 import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
+import static org.hibernate.jpamodelgen.util.Constants.LIST;
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
@@ -183,22 +186,30 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	void setPage(StringBuilder declaration, String paramName, String paramType) {
 		boolean jakartaLimit = JD_LIMIT.equals(paramType);
-		if ( jakartaLimit || isUsingEntityManager() ) {
-			declaration
-					.append("\n\t\t\t.setFirstResult(");
-			if (jakartaLimit) {
-				declaration.append("(int) ");
+		boolean jakartaPageRequest = paramType.startsWith(JD_PAGE_REQUEST);
+		if ( jakartaLimit || jakartaPageRequest
+				|| isUsingEntityManager() ) {
+			final String firstResult;
+			final String maxResults;
+			if ( jakartaLimit ) {
+				firstResult = "(int) " + paramName + ".startAt() - 1";
+				maxResults = paramName + ".maxResults()";
+			}
+			else if ( jakartaPageRequest ) {
+				firstResult = "(int) (" + paramName + ".page()-1) * " + paramName + ".size()";
+				maxResults = paramName + ".size()";
+			}
+			else {
+				firstResult = paramName + ".getFirstResult()";
+				maxResults = paramName + ".getMaxResults()";
 			}
 			declaration
-					.append(paramName)
-					.append('.')
-					.append(jakartaLimit ? "startAt" : "getFirstResult")
-					.append("())")
+					.append("\n\t\t\t.setFirstResult(")
+					.append(firstResult)
+					.append(")")
 					.append("\n\t\t\t.setMaxResults(")
-					.append(paramName)
-					.append('.')
-					.append(jakartaLimit ? "maxResults" : "getMaxResults")
-					.append("())");
+					.append(maxResults)
+					.append(")");
 		}
 		else {
 			declaration
@@ -341,13 +352,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	static boolean isPageParam(String parameterType) {
-		return Page.class.getName().equals(parameterType)
-			|| JD_LIMIT.equals(parameterType);
+		return HIB_PAGE.equals(parameterType)
+			|| JD_LIMIT.equals(parameterType)
+			|| parameterType.startsWith(JD_PAGE_REQUEST);
 	}
 
 	static boolean isOrderParam(String parameterType) {
-		return parameterType.startsWith(Order.class.getName())
-			|| parameterType.startsWith(List.class.getName() + "<" + Order.class.getName())
+		return parameterType.startsWith(HIB_ORDER)
+			|| parameterType.startsWith(LIST + "<" + HIB_ORDER)
 			|| parameterType.startsWith(JD_SORT)
 			|| parameterType.startsWith(JD_ORDER);
 	}

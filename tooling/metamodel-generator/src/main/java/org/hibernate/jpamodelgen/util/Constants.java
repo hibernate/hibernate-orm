@@ -101,6 +101,7 @@ public final class Constants {
 	public static final String MAP = java.util.Map.class.getName();
 	public static final String SET = java.util.Set.class.getName();
 	public static final String OPTIONAL = java.util.Optional.class.getName();
+	public static final String STREAM = java.util.stream.Stream.class.getName();
 
 	public static final Map<String, String> COLLECTIONS = Map.of(
 			COLLECTION, Constants.COLLECTION_ATTRIBUTE,

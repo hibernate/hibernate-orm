@@ -133,6 +133,13 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			declaration
 					.append("\n\t\t\t.uniqueResultOptional()");
 		}
+		else if ( containerType.equals(Constants.STREAM) ) {
+			if ( unwrap || hasOrderParameter || hasEnabledFetchProfiles ) {
+				declaration.append("\n\t\t\t");
+			}
+			declaration
+					.append(".getResultStream()");
+		}
 		else if ( containerType.equals(Constants.LIST) ) {
 			if ( unwrap || hasOrderParameter || hasEnabledFetchProfiles ) {
 				declaration.append("\n\t\t\t");

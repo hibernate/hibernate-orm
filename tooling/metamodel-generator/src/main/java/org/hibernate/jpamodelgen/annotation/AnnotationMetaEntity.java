@@ -47,6 +47,7 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
@@ -70,6 +71,7 @@ import static org.hibernate.jpamodelgen.util.Constants.FIND;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_SESSION;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_STATELESS_SESSION;
 import static org.hibernate.jpamodelgen.util.Constants.HQL;
+import static org.hibernate.jpamodelgen.util.Constants.ITERABLE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_DELETE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_FIND;
 import static org.hibernate.jpamodelgen.util.Constants.JD_INSERT;
@@ -680,34 +682,57 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final String operation = lifecycleOperation( method );
 			final VariableElement parameter = method.getParameters().get(0);
 			final TypeMirror parameterType = parameter.asType();
-			if ( parameterType.getKind() != TypeKind.DECLARED ) {
+			final DeclaredType declaredType = entityType( parameterType );
+			if ( declaredType == null ) {
 				context.message( parameter,
 						"incorrect parameter type '" + parameterType + "' is not an entity type",
 						Diagnostic.Kind.ERROR );
 			}
+			else if ( !containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
+				context.message( parameter,
+						"incorrect parameter type '" + parameterType + "' is not annotated '@Entity'",
+						Diagnostic.Kind.ERROR );
+			}
 			else {
+				putMember(
+						method.getSimpleName().toString()
+								+ '.' + operation,
+						new LifecycleMethod(
+								this,
+								parameterType.toString(),
+								method.getSimpleName().toString(),
+								parameter.getSimpleName().toString(),
+								getSessionVariableName(),
+								operation,
+								context.addNonnullAnnotation(),
+								declaredType != parameterType
+						)
+				);
+			}
+		}
+	}
+
+	private @Nullable DeclaredType entityType(TypeMirror parameterType) {
+		switch ( parameterType.getKind() ) {
+			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) parameterType;
-				if ( !containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
-					context.message( parameter,
-							"incorrect parameter type '" + parameterType + "' is not annotated '@Entity'",
-							Diagnostic.Kind.ERROR );
+				final Types types = context.getTypeUtils();
+				final Elements elements = context.getElementUtils();
+				if ( types.isAssignable( declaredType,
+						types.erasure( elements.getTypeElement(ITERABLE).asType() ) )
+							&& !declaredType.getTypeArguments().isEmpty() ) {
+					final TypeMirror elementType = declaredType.getTypeArguments().get(0);
+					return elementType.getKind() == TypeKind.DECLARED ? (DeclaredType) elementType : null;
 				}
 				else {
-					putMember(
-							method.getSimpleName().toString()
-									+ '.' + operation,
-							new LifecycleMethod(
-									this,
-									parameterType.toString(),
-									method.getSimpleName().toString(),
-									parameter.getSimpleName().toString(),
-									getSessionVariableName(),
-									operation,
-									context.addNonnullAnnotation()
-							)
-					);
+					return declaredType;
 				}
-			}
+			case ARRAY:
+				final ArrayType arrayType = (ArrayType) parameterType;
+				final TypeMirror componentType = arrayType.getComponentType();
+				return componentType.getKind() == TypeKind.DECLARED ? (DeclaredType) componentType : null;
+			default:
+				return null;
 		}
 	}
 

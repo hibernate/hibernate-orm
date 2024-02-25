@@ -96,6 +96,7 @@ public final class Constants {
 	public static final String MAP_ATTRIBUTE = "jakarta.persistence.metamodel.MapAttribute";
 
 	public static final String JAVA_OBJECT = Object.class.getName();
+	public static final String ITERABLE = java.lang.Iterable.class.getName();
 	public static final String COLLECTION = java.util.Collection.class.getName();
 	public static final String LIST = java.util.List.class.getName();
 	public static final String MAP = java.util.Map.class.getName();

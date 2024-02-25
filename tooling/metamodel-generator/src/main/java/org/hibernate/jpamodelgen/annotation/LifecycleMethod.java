@@ -17,6 +17,7 @@ public class LifecycleMethod implements MetaAttribute {
 	private final String sessionName;
 	private final String operationName;
 	private final boolean addNonnullAnnotation;
+	private final boolean iterateParameter;
 
 	public LifecycleMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -25,7 +26,8 @@ public class LifecycleMethod implements MetaAttribute {
 			String parameterName,
 			String sessionName,
 			String operationName,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			boolean iterateParameter) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.entity = entity;
 		this.methodName = methodName;
@@ -33,6 +35,7 @@ public class LifecycleMethod implements MetaAttribute {
 		this.sessionName = sessionName;
 		this.operationName = operationName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
+		this.iterateParameter = iterateParameter;
 	}
 
 	@Override
@@ -70,15 +73,26 @@ public class LifecycleMethod implements MetaAttribute {
 	}
 
 	private void delegateCall(StringBuilder declaration) {
+		if ( iterateParameter ) {
+			declaration
+					.append("\t\tfor (var entity : ")
+					.append(parameterName)
+					.append(") {\n\t");
+		}
 		declaration
 				.append("\t\t")
 				.append(sessionName)
 				.append('.')
 				.append(operationName)
 				.append('(')
-				.append(parameterName)
+				.append(iterateParameter ? "entity" : parameterName)
 				.append(')')
-				.append(";\n")
+				.append(";\n");
+		if ( iterateParameter ) {
+			declaration
+					.append("\t\t}\n");
+		}
+		declaration
 				.append("\t}\n");
 	}
 

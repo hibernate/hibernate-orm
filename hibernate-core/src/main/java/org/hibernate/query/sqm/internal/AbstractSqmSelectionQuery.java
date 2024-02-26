@@ -35,8 +35,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
-import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -238,15 +236,26 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 			keyed( keyDefinition, key );
 		}
 
-		final SqmSelectStatement<KeyedResult<R>> sqm = keyed( keyDefinition, key );
 		final ConcreteSqmSelectQueryPlan<KeyedResult<R>> plan =
-				buildConcreteQueryPlan( sqm, null, null, getQueryOptions() );
-		final List<KeyedResult<R>> executed =
-				plan.executeQuery( this, new ListResultsConsumer<>(UniqueSemantic.NONE) );
-		final List<Comparable<?>> keyOfLastResult =
-				executed.isEmpty() ? key : executed.get( executed.size()-1 ).getKey();
-		return new KeyedResultList<>( executed.stream().map(KeyedResult::getResult).collect(toList()),
-				keyedPage, KeyedPage.forKey( keyDefinition, page.next(), keyOfLastResult ) );
+				buildConcreteQueryPlan( keyed( keyDefinition, key ),
+						null, null,
+						getQueryOptions() );
+		final List<KeyedResult<R>> executed = plan.performList(this);
+		final KeyedPage<R> nextPage =
+				KeyedPage.forKey(keyDefinition, page.next(),
+						getKeyOfLastResult(executed, key));
+		return new KeyedResultList<>( collectResultList( executed ), keyedPage, nextPage );
+	}
+
+	private static <R> List<R> collectResultList(List<KeyedResult<R>> executed) {
+		return executed.stream()
+				.map(KeyedResult::getResult)
+				.collect(toList());
+	}
+
+	private static <R> List<Comparable<?>> getKeyOfLastResult(
+			List<KeyedResult<R>> executed, List<Comparable<?>> key) {
+		return executed.isEmpty() ? key : executed.get(executed.size() - 1).getKey();
 	}
 
 	public abstract Class<R> getExpectedResultType();

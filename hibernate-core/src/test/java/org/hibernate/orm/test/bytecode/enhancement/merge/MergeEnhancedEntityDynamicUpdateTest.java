@@ -6,6 +6,12 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -22,8 +28,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -34,7 +38,7 @@ import static org.junit.Assert.fail;
  */
 @TestForIssue( jiraKey = "HHH-11459" )
 @RunWith( BytecodeEnhancerRunner.class )
-public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
+public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTestCase {
     private Person person;
     @Override
     public Class<?>[] getAnnotatedClasses() {
@@ -127,6 +131,8 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "PERSON" )
+    @DynamicUpdate
+    @DynamicInsert
     private static class Person {
 
         @Id
@@ -149,6 +155,8 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "PERSON_ADDRESS" )
+    @DynamicUpdate
+    @DynamicInsert
     private static class PersonAddress {
 
         @Id
@@ -160,6 +168,8 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "NullablePerson")
     @Table(name = "NULLABLE_PERSON")
+    @DynamicUpdate
+    @DynamicInsert
     private static class NullablePerson {
 
         @Id

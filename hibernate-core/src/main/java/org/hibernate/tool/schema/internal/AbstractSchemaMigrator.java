@@ -244,7 +244,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					sqlGenerationContext, targets
 			);
 			tablesInformation.put( namespace, nameSpaceTablesInformation );
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( Sequence sequence : namespace.getSequences() ) {
 					if ( contributableInclusionFilter.matches( sequence ) ) {
 						checkExportIdentifier( sequence, exportIdentifiers);
@@ -259,10 +259,10 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
 		for ( Namespace namespace : database.getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );
 				for ( Table table : namespace.getTables() ) {
-					if ( options.getSchemaFilter().includeTable( table ) && contributableInclusionFilter.matches( table ) ) {
+					if ( schemaFilter.includeTable( table ) && contributableInclusionFilter.matches( table ) ) {
 						final TableInformation tableInformation = nameSpaceTablesInformation.getTableInformation( table );
 						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 							applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options,

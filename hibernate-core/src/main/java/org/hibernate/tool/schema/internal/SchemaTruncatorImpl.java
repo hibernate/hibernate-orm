@@ -58,9 +58,11 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 	private static final Logger log = Logger.getLogger( SchemaTruncatorImpl.class );
 
 	private final HibernateSchemaManagementTool tool;
+	private final SchemaFilter schemaFilter;
 
 	public SchemaTruncatorImpl(HibernateSchemaManagementTool tool, SchemaFilter truncatorFilter) {
 		this.tool = tool;
+		schemaFilter = truncatorFilter;
 	}
 
 	@Override
@@ -111,12 +113,13 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
 
-		truncateFromMetadata( metadata, options, contributableInclusionFilter, dialect, formatter, targets );
+		truncateFromMetadata( metadata, options, schemaFilter, contributableInclusionFilter, dialect, formatter, targets );
 	}
 
 	private void truncateFromMetadata(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			Formatter formatter,
@@ -128,11 +131,11 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 
 		for ( Namespace namespace : database.getNamespaces() ) {
 
-			if ( ! options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( ! schemaFilter.includeNamespace( namespace ) ) {
 				continue;
 			}
 
-			disableConstraints( namespace, metadata, formatter, options, context,
+			disableConstraints( namespace, metadata, formatter, options, schemaFilter, context,
 					contributableInclusionFilter, targets );
 			applySqlString( dialect.getTableCleaner().getSqlBeforeString(), formatter, options,targets );
 
@@ -142,7 +145,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				if ( ! table.isPhysicalTable() ) {
 					continue;
 				}
-				if ( ! options.getSchemaFilter().includeTable( table ) ) {
+				if ( ! schemaFilter.includeTable( table ) ) {
 					continue;
 				}
 				if ( ! contributableInclusionFilter.matches( table ) ) {
@@ -172,7 +175,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 //			}
 
 			applySqlString( dialect.getTableCleaner().getSqlAfterString(), formatter, options,targets );
-			enableConstraints( namespace, metadata, formatter, options, context,
+			enableConstraints( namespace, metadata, formatter, options, schemaFilter, context,
 					contributableInclusionFilter, targets );
 		}
 
@@ -187,6 +190,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			SqlStringGenerationContext context,
 			ContributableMatcher contributableInclusionFilter,
 			GenerationTarget... targets) {
@@ -196,7 +200,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			if ( !table.isPhysicalTable() ) {
 				continue;
 			}
-			if ( ! options.getSchemaFilter().includeTable( table ) ) {
+			if ( ! schemaFilter.includeTable( table ) ) {
 				continue;
 			}
 			if ( ! contributableInclusionFilter.matches( table ) ) {
@@ -233,6 +237,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			SqlStringGenerationContext context,
 			ContributableMatcher contributableInclusionFilter,
 			GenerationTarget... targets) {
@@ -242,7 +247,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			if ( !table.isPhysicalTable() ) {
 				continue;
 			}
-			if ( ! options.getSchemaFilter().includeTable( table ) ) {
+			if ( ! schemaFilter.includeTable( table ) ) {
 				continue;
 			}
 			if ( ! contributableInclusionFilter.matches( table ) ) {

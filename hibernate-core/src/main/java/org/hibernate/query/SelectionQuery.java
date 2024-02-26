@@ -220,6 +220,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Incubating
 	long getResultCount();
 
+	@Incubating
+	KeyedResultList<R> getKeyedResultList();
+
 	SelectionQuery<R> setHint(String hintName, Object value);
 
 	/**

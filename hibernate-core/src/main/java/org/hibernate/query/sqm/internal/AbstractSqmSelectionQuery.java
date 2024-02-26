@@ -14,6 +14,7 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
@@ -26,6 +27,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -33,9 +35,13 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
@@ -45,6 +51,8 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  * @author Gavin King
  */
 abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
+
+	private KeyedPage<R> keyedPage;
 
 	AbstractSqmSelectionQuery(SharedSessionContractImplementor session) {
 		super(session);
@@ -141,48 +149,62 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	@Override
 	public SelectionQuery<R> setPage(KeyedPage<R> page) {
-		setOrder( page.getKeyDefinition() );
-		setMaxResults( page.getPage().getMaxResults() );
-		if ( page.getKey() == null ) {
-			setFirstResult( page.getPage().getFirstResult() );
-		}
-		else {
-			addRestrictions( page.getKeyDefinition(), page.getKey() );
-		}
+		keyedPage = page;
 		return this;
 	}
 
-	private void addRestrictions(List<Order<? super R>> keyDefinition, List<Comparable<?>> keyValues) {
-		SqmSelectStatement<R> sqm = getSqmSelectStatement();
-		sqm = sqm.copy( noParamCopyContext() );
+	static class KeyedResult<R> {
+		final R result;
+		final List<Comparable<?>> key;
+		public KeyedResult(R result, List<Comparable<?>> key) {
+			this.result = result;
+			this.key = key;
+		}
+
+		public R getResult() {
+			return result;
+		}
+
+		public List<Comparable<?>> getKey() {
+			return key;
+		}
+	}
+
+	private SqmSelectStatement<KeyedResult<R>> keyed(List<Order<? super R>> keyDefinition, List<Comparable<?>> keyValues) {
+		@SuppressWarnings("unchecked")
+		final SqmSelectStatement<KeyedResult<R>> sqm =
+				(SqmSelectStatement<KeyedResult<R>>)
+						getSqmSelectStatement().copy( noParamCopyContext() );
 		final NodeBuilder builder = sqm.nodeBuilder();
-		final SqmQuerySpec<R> querySpec = sqm.getQuerySpec();
+		final SqmQuerySpec<?> querySpec = sqm.getQuerySpec();
 		final SqmWhereClause whereClause = querySpec.getWhereClause();
 		final List<? extends JpaSelection<?>> items = querySpec.getSelectClause().getSelectionItems();
+		final List<SqmPath<?>> newItems = new ArrayList<>();
 		if ( items.size() == 1 ) {
 			final JpaSelection<?> selected = items.get(0);
 			for ( int i = 0; i < keyDefinition.size(); i++ ) {
 				// ordering by an attribute of the returned entity
 				if ( selected instanceof SqmRoot ) {
-					whereClause.applyPredicate( keyPredicate(
-							(SqmFrom<?,?>) selected,
-							keyDefinition.get(i),
-							(Comparable) keyValues.get(i),
-							builder)
-					);
+					final Order<? super R> key = keyDefinition.get(i);
+					final SqmFrom<?,?> root = (SqmFrom<?,?>) selected;
+					if ( keyValues != null ) {
+						@SuppressWarnings("rawtypes")
+						final Comparable keyValue = keyValues.get(i);
+						whereClause.applyPredicate( keyPredicate( root, key, keyValue, builder ) );
+					}
+					newItems.add( root.get( key.getAttributeName() ) );
 				}
 				else {
 					throw new IllegalQueryOperationException("Select item was not an entity type");
 				}
 			}
+			sqm.select( builder.construct((Class) KeyedResult.class,
+					asList(selected, builder.construct(List.class, newItems)) ) );
+			return sqm;
 		}
 		else {
 			throw new IllegalQueryOperationException("Query has multiple items in the select list");
 		}
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
-		setSqmStatement( sqm );
 	}
 
 	private <C extends Comparable<? super C>> SqmPredicate keyPredicate(
@@ -204,6 +226,35 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 			default:
 				throw new AssertionFailure("Unrecognized key direction");
 		}
+	}
+
+	@Override
+	public KeyedResultList<R> getKeyedResultList() {
+		if ( keyedPage == null ) {
+			throw new IllegalStateException( "KeyedPage was not set" );
+		}
+		final Page page = keyedPage.getPage();
+		final List<Order<? super R>> keyDefinition = keyedPage.getKeyDefinition();
+		final List<Comparable<?>> key = keyedPage.getKey();
+
+		setOrder( keyDefinition );
+		setMaxResults( page.getMaxResults() );
+		if ( key == null ) {
+			setFirstResult( page.getFirstResult() );
+		}
+		else {
+			keyed( keyDefinition, key );
+		}
+
+		final SqmSelectStatement<KeyedResult<R>> sqm = keyed( keyDefinition, key );
+		final ConcreteSqmSelectQueryPlan<KeyedResult<R>> plan =
+				buildConcreteQueryPlan( sqm, null, null, getQueryOptions() );
+		final List<KeyedResult<R>> executed =
+				plan.executeQuery( this, new ListResultsConsumer<>(UniqueSemantic.NONE) );
+		final List<Comparable<?>> keyOfLastResult =
+				executed.isEmpty() ? key : executed.get( executed.size()-1 ).getKey();
+		return new KeyedResultList<>( executed.stream().map(KeyedResult::getResult).collect(toList()),
+				keyedPage, new KeyedPage<>(keyDefinition, page.next(), keyOfLastResult) );
 	}
 
 	public abstract Class<R> getExpectedResultType();

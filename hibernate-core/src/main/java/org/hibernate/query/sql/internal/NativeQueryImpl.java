@@ -42,6 +42,7 @@ import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Order;
 import org.hibernate.query.ParameterMetadata;
@@ -635,6 +636,11 @@ public class NativeQueryImpl<R>
 			}
 		};
 		return createCountQueryPlan().executeQuery( context, new SingleResultConsumer<>() );
+	}
+
+	@Override
+	public KeyedResultList<R> getKeyedResultList() {
+		throw new UnsupportedOperationException("native queries do not support key-based pagination");
 	}
 
 	protected SelectQueryPlan<R> resolveSelectQueryPlan() {

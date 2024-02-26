@@ -42,6 +42,7 @@ import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Order;
@@ -639,7 +640,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public KeyedResultList<R> getKeyedResultList() {
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> page) {
 		throw new UnsupportedOperationException("native queries do not support key-based pagination");
 	}
 

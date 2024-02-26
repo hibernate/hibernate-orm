@@ -6,16 +6,25 @@
  */
 package org.hibernate.query;
 
+import org.hibernate.Incubating;
+
 import java.util.List;
 
 /**
  * Support for pagination based on a unique key of the result
  * set instead of the {@link Page#getFirstResult() offset}.
+ * An instance of this class represent a page of results returned
+ * by {@link SelectionQuery#getKeyedResultList(KeyedPage)}. The
+ * actual query results are held in {@link #getResultList()}.
  *
  * @since 6.5
  *
+ * @see KeyedPage
+ * @see SelectionQuery#getKeyedResultList(KeyedPage)
+ *
  * @author Gavin King
  */
+@Incubating
 public class KeyedResultList<R> {
 	private final List<R> resultList;
 	private final KeyedPage<R> page;

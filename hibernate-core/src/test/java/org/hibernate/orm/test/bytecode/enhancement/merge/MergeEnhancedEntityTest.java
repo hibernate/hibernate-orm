@@ -43,6 +43,7 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Before
     public void prepare() {
+        person = new Person();
         person = new Person( 1L, "Sam" );
         doInHibernate( this::sessionFactory, s -> {
             s.persist( person );

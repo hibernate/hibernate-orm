@@ -19,6 +19,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -35,11 +36,13 @@ import static org.hibernate.engine.internal.AbstractEntityEntry.BooleanState.IS_
 import static org.hibernate.engine.internal.AbstractEntityEntry.EnumState.LOCK_MODE;
 import static org.hibernate.engine.internal.AbstractEntityEntry.EnumState.PREVIOUS_STATUS;
 import static org.hibernate.engine.internal.AbstractEntityEntry.EnumState.STATUS;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 import static org.hibernate.engine.spi.CachedNaturalIdValueSource.LOAD;
 import static org.hibernate.engine.spi.Status.DELETED;
@@ -279,6 +282,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		}
 
 		processIfSelfDirtinessTracker( entity, AbstractEntityEntry::clearDirtyAttributes );
+		processIfManagedEntity( entity, AbstractEntityEntry::useTracker );
 
 		final SharedSessionContractImplementor session = getPersistenceContext().getSession();
 		session.getFactory().getCustomEntityDirtinessStrategy()
@@ -287,6 +291,10 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
 		entity.$$_hibernate_clearDirtyAttributes();
+	}
+
+	private static void useTracker(final ManagedEntity entity) {
+		entity.$$_hibernate_setUseTracker( true );
 	}
 
 	@Override
@@ -367,7 +375,8 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return uninitializedProxy
 				|| !persister.hasCollections()
 					&& !persister.hasMutableProperties()
-					&& !asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes();
+					&& !asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes()
+					&& asManagedEntity( entity ).$$_hibernate_useTracker();
 		}
 		else {
 			if ( isPersistentAttributeInterceptable( entity ) ) {

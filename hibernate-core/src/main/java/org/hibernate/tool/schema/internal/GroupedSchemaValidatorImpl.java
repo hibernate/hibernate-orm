@@ -40,7 +40,7 @@ public class GroupedSchemaValidatorImpl extends AbstractSchemaValidator {
 
 		final NameSpaceTablesInformation tables = databaseInformation.getTablesInformation( namespace );
 		for ( Table table : namespace.getTables() ) {
-			if ( options.getSchemaFilter().includeTable( table )
+			if ( schemaFilter.includeTable( table )
 					&& table.isPhysicalTable()
 					&& contributableInclusionFilter.matches( table ) ) {
 				validateTable(

@@ -55,7 +55,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 		final NameSpaceTablesInformation tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
 
-		if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+		if ( schemaFilter.includeNamespace( namespace ) ) {
 			createSchemaAndCatalog(
 					existingDatabase,
 					options,
@@ -69,7 +69,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					targets
 			);
 			for ( Table table : namespace.getTables() ) {
-				if ( options.getSchemaFilter().includeTable( table )
+				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
 					checkExportIdentifier( table, exportIdentifiers );
@@ -86,7 +86,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			}
 
 			for ( Table table : namespace.getTables() ) {
-				if ( options.getSchemaFilter().includeTable( table )
+				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
 					final TableInformation tableInformation = tablesInformation.getTableInformation( table );

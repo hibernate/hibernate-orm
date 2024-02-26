@@ -47,9 +47,10 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.KeyedPage;
 import org.hibernate.query.Order;
+import org.hibernate.query.Page;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
@@ -109,7 +110,6 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
 
-import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
@@ -126,10 +126,8 @@ import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionF
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
-import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatement;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
-import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -424,6 +422,11 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmStatement<R> getSqmStatement() {
 		return sqm;
+	}
+
+	@Override
+	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
+		this.sqm = sqm;
 	}
 
 	@Override
@@ -903,36 +906,27 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Query<R> setOrder(List<Order<? super R>> orderList) {
-		if ( sqm instanceof SqmSelectStatement ) {
-			sqm = sqm.copy( noParamCopyContext() );
-			final SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
-			select.orderBy( orderList.stream().map( order -> sortSpecification( select, order ) )
-					.collect( toList() ) );
-			// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-			//       simply cache the new SQM as if it were a criteria query, and remove this:
-			getQueryOptions().setQueryPlanCachingEnabled( false );
-			return this;
-		}
-		else {
-			throw new IllegalSelectQueryException( "Not a select query" );
-		}
+	public Query<R> setOrder(Order<? super R> order) {
+		super.setOrder(order);
+		return this;
 	}
 
 	@Override
-	public Query<R> setOrder(Order<? super R> order) {
-		if ( sqm instanceof SqmSelectStatement ) {
-			sqm = sqm.copy( noParamCopyContext() );
-			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
-			select.orderBy( sortSpecification( select, order ) );
-			// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-			//       simply cache the new SQM as if it were a criteria query, and remove this:
-			getQueryOptions().setQueryPlanCachingEnabled( false );
-			return this;
-		}
-		else {
-			throw new IllegalSelectQueryException( "Not a select query" );
-		}
+	public Query<R> setOrder(List<Order<? super R>> orders) {
+		super.setOrder(orders);
+		return this;
+	}
+
+	@Override
+	public Query<R> setPage(Page page) {
+		super.setPage(page);
+		return this;
+	}
+
+	@Override
+	public Query<R> setPage(KeyedPage<R> page) {
+		super.setPage(page);
+		return this;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

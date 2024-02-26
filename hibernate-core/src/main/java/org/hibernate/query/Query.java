@@ -904,6 +904,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	}
 
 	@Override
+	default SelectionQuery<R> setPage(KeyedPage<R> page) {
+		throw new UnsupportedOperationException("keyed paging not supported");
+	}
+
+	@Override
 	Query<R> setHint(String hintName, Object value);
 
 	@Override

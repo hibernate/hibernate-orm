@@ -8,6 +8,8 @@ package org.hibernate.query;
 
 import org.hibernate.Incubating;
 
+import java.util.List;
+
 /**
  * Identifies a page of query results by {@linkplain #size page size}
  * and {@linkplain #number page number}.
@@ -50,7 +52,7 @@ public class Page {
 		return size*number;
 	}
 
-	private Page(int size, int number) {
+	Page(int size, int number) {
 		if ( size <= 0 ) {
 			throw new IllegalArgumentException("page size must be strictly positive");
 		}
@@ -82,5 +84,9 @@ public class Page {
 
 	public Page first() {
 		return first( size );
+	}
+
+	public <R> KeyedPage<R> keyedBy(List<Order<? super R>> keyDefinition) {
+		return new KeyedPage<>( keyDefinition, this );
 	}
 }

@@ -61,6 +61,7 @@ public class CompilationRunner extends BlockJUnit4ClassRunner {
 
 		return new CompilationStatement(
 				statement,
+				getTestClass().getJavaClass(),
 				testEntities,
 				preCompileEntities,
 				mappingFiles,

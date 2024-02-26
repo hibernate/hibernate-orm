@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpamodelgen.test.ormPanache;
+package org.hibernate.jpamodelgen.test.hrPanache;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
@@ -12,6 +12,7 @@ import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
@@ -24,7 +25,7 @@ import java.lang.reflect.Modifier;
 /**
  * @author Gavin King
  */
-public class QuarkusOrmPanacheTest extends CompilationTest {
+public class QuarkusHrPanacheTest extends CompilationTest {
 	@Test
 	@WithClasses({ PanacheBook.class })
 	public void testPanacheEntityMetamodel() throws Exception {
@@ -36,17 +37,19 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		// Make sure it has the proper supertype
 		Class<?> superclass = entityClass.getSuperclass();
 		if ( superclass != null ) {
-			Assertions.assertEquals( "io.quarkus.hibernate.orm.panache.PanacheEntity_", superclass.getName() );
+			Assertions.assertEquals( "io.quarkus.hibernate.reactive.panache.PanacheEntity_", superclass.getName() );
 		}
 		
 		// Panache static native method generates a static method
-		Method method = entityClass.getDeclaredMethod( "hqlBook", EntityManager.class, String.class );
+		Method method = entityClass.getDeclaredMethod( "hqlBook", Uni.class, String.class );
 		Assertions.assertNotNull( method );
+		checkUni(method);
 		Assertions.assertTrue( Modifier.isStatic( method.getModifiers()) );
 
 		// Panache static native method generates a static method
-		method = entityClass.getDeclaredMethod( "findBook", EntityManager.class, String.class );
+		method = entityClass.getDeclaredMethod( "findBook", Uni.class, String.class );
 		Assertions.assertNotNull( method );
+		checkUni(method);
 		Assertions.assertTrue( Modifier.isStatic( method.getModifiers() ) );
 	}
 
@@ -65,20 +68,26 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		}
 		
 		// Panache native method generates a static method
-		Method method = repositoryClass.getDeclaredMethod( "hqlBook", EntityManager.class, String.class );
+		Method method = repositoryClass.getDeclaredMethod( "hqlBook", Uni.class, String.class );
 		Assertions.assertNotNull( method );
+		checkUni(method);
 		Assertions.assertTrue( Modifier.isStatic(method.getModifiers()) );
 
 		// Panache native method generates a static method
-		method = repositoryClass.getDeclaredMethod( "findBook", EntityManager.class, String.class );
+		method = repositoryClass.getDeclaredMethod( "findBook", Uni.class, String.class );
 		Assertions.assertNotNull( method );
+		checkUni(method);
 		Assertions.assertTrue( Modifier.isStatic( method.getModifiers() ) );
+	}
+
+	private void checkUni(Method method) {
+		Assertions.assertEquals("io.smallrye.mutiny.Uni<org.hibernate.reactive.mutiny.Mutiny$Session>", method.getGenericParameterTypes()[0].toString());
 	}
 
 	@Test
 	@WithClasses({ PanacheBook.class, QuarkusBookRepository.class })
 	public void testQuarkusRepositoryMetamodel() throws Exception {
-		// Panache repository
+		// Regular repository
 		System.out.println( TestUtil.getMetaModelSourceAsString( QuarkusBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( QuarkusBookRepository.class );
 		Assertions.assertNotNull( repositoryClass );
@@ -102,9 +111,41 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		Assertions.assertNotNull( method );
 		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
 		
-		// Make sure we have the proper constructor
-		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( EntityManager.class );
-		Assertions.assertNotNull( constructor );
-		Assertions.assertTrue( constructor.isAnnotationPresent( Inject.class ) );
+		// Make sure we have only the default constructor
+		Constructor<?>[] constructors = repositoryClass.getDeclaredConstructors();
+		Assertions.assertNotNull( constructors );
+		Assertions.assertEquals( 1, constructors.length );
+		Assertions.assertNotNull( repositoryClass.getDeclaredConstructor() );
+
+		// Proper return type
+		method = repositoryClass.getDeclaredMethod( "deleteAllBooksVoid" );
+		Assertions.assertNotNull( method );
+		Assertions.assertEquals("io.smallrye.mutiny.Uni<java.lang.Void>", method.getGenericReturnType().toString());
+		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
+
+		// Proper return type
+		method = repositoryClass.getDeclaredMethod( "deleteAllBooksInt" );
+		Assertions.assertNotNull( method );
+		Assertions.assertEquals("io.smallrye.mutiny.Uni<java.lang.Integer>", method.getGenericReturnType().toString());
+		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
+	}
+
+	@Test
+	@WithClasses({ PanacheBook.class, BookRepositoryWithSession.class })
+	public void testBookRepositoryWithSessionMetamodel() throws Exception {
+		// Regular repository with default session method
+		System.out.println( TestUtil.getMetaModelSourceAsString( BookRepositoryWithSession.class ) );
+		Class<?> repositoryClass = getMetamodelClassFor( BookRepositoryWithSession.class );
+		Assertions.assertNotNull( repositoryClass );
+
+		// Make sure we have only the default constructor
+		Constructor<?>[] constructors = repositoryClass.getDeclaredConstructors();
+		Assertions.assertNotNull( constructors );
+		Assertions.assertEquals( 1, constructors.length );
+		Assertions.assertNotNull( repositoryClass.getDeclaredConstructor() );
+		
+		// Make sure we do not override the default session method
+		Assertions.assertThrows( NoSuchMethodException.class, () -> repositoryClass.getDeclaredMethod( "mySession" ) );
 	}
 }
+

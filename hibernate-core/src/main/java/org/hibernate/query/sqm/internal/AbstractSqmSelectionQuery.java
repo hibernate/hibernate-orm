@@ -155,6 +155,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	private void addRestrictions(List<Order<? super R>> keyDefinition, List<Comparable<?>> keyValues) {
 		SqmSelectStatement<R> sqm = getSqmSelectStatement();
 		sqm = sqm.copy( noParamCopyContext() );
+		final NodeBuilder builder = sqm.nodeBuilder();
 		final SqmQuerySpec<R> querySpec = sqm.getQuerySpec();
 		final SqmWhereClause whereClause = querySpec.getWhereClause();
 		final List<? extends JpaSelection<?>> items = querySpec.getSelectClause().getSelectionItems();
@@ -166,7 +167,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 					whereClause.applyPredicate( keyPredicate(
 							(SqmFrom<?,?>) selected,
 							keyDefinition.get(i),
-							(Comparable) keyValues.get(i))
+							(Comparable) keyValues.get(i),
+							builder)
 					);
 				}
 				else {
@@ -184,17 +186,21 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	private <C extends Comparable<? super C>> SqmPredicate keyPredicate(
-			SqmFrom<?, ?> selected, Order<? super R> key, C keyValue) {
+			SqmFrom<?, ?> selected, Order<? super R> key, C keyValue, NodeBuilder builder) {
 		if ( !key.getEntityClass().isAssignableFrom( selected.getJavaType() ) ) {
 			throw new IllegalQueryOperationException("Select item was of wrong entity type");
 		}
 		final Expression<? extends C> path = selected.get( key.getAttributeName() );
-		final NodeBuilder builder = getSqmStatement().nodeBuilder();
+		// TODO: use a parameter here and create a binding for it
+//		@SuppressWarnings("unchecked")
+//		final Class<C> valueClass = (Class<C>) keyValue.getClass();
+//		final JpaParameterExpression<C> parameter = builder.parameter(valueClass);
+//		setParameter( parameter, keyValue );
 		switch ( key.getDirection() ) {
 			case ASCENDING:
-				return builder.greaterThan( path, keyValue);
+				return builder.greaterThan( path, builder.literal(keyValue) );
 			case DESCENDING:
-				return builder.lessThan( path, keyValue);
+				return builder.lessThan( path, builder.literal(keyValue) );
 			default:
 				throw new AssertionFailure("Unrecognized key direction");
 		}

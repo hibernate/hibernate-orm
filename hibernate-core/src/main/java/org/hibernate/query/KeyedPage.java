@@ -7,6 +7,7 @@
 package org.hibernate.query;
 
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 
 import java.util.List;
 
@@ -75,7 +76,8 @@ public class KeyedPage<R> {
 		return key;
 	}
 
-	public static <R> KeyedPage<R> forKey(List<Order<? super R>> keyDefinition, Page page, List<Comparable<?>> key) {
-		return new KeyedPage<>( keyDefinition, page, key );
+	@Internal
+	public KeyedPage<R> nextPage(List<Comparable<?>> keyOfLastResult) {
+		return new KeyedPage<>( keyDefinition, page, keyOfLastResult );
 	}
 }

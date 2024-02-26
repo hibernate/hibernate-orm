@@ -45,17 +45,6 @@ public class TestUtil {
 	public static final String RESOURCE_SEPARATOR = "/";
 	private static final String PACKAGE_SEPARATOR = ".";
 	private static final String META_MODEL_CLASS_POSTFIX = "_";
-	private static final File OUT_BASE_DIR;
-
-	static {
-		File targetDir = getTargetDir();
-		OUT_BASE_DIR = new File( targetDir, "processor-generated-test-classes" );
-		if ( !OUT_BASE_DIR.exists() ) {
-			if ( !OUT_BASE_DIR.mkdirs() ) {
-				fail( "Unable to create test output directory " + OUT_BASE_DIR.toString() );
-			}
-		}
-	}
 
 	private TestUtil() {
 	}
@@ -206,9 +195,10 @@ public class TestUtil {
 
 	/**
 	 * Deletes recursively all files found in the output directory for the annotation processor.
+	 * @return the output directory for the generated source and class files.
 	 */
-	public static void deleteProcessorGeneratedFiles() {
-		for ( File file : OUT_BASE_DIR.listFiles() ) {
+	public static void deleteProcessorGeneratedFiles(Class<?> testClass) {
+		for ( File file : getOutBaseDir(testClass).listFiles() ) {
 			deleteFilesRecursive( file );
 		}
 	}
@@ -216,8 +206,36 @@ public class TestUtil {
 	/**
 	 * @return the output directory for the generated source and class files.
 	 */
-	public static File getOutBaseDir() {
-		return OUT_BASE_DIR;
+	public static File getOutBaseDir(Class<?> testClass) {
+		File targetDir = getTargetDir( testClass );
+		File outBaseDir = new File( targetDir, "processor-generated-test-classes" );
+		if ( !outBaseDir.exists() ) {
+			if ( !outBaseDir.mkdirs() ) {
+				fail( "Unable to create test output directory " + outBaseDir );
+			}
+		}
+		return outBaseDir;
+	}
+
+	public static File getSourceBaseDir(Class<?> testClass) {
+		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+		String currentTestClassName = testClass.getName();
+		int hopsToCompileDirectory = currentTestClassName.split( "\\." ).length;
+		URL classURL = contextClassLoader.getResource( currentTestClassName.replace( '.', '/' ) + ".class" );
+		File targetDir = new File( classURL.getFile() );
+		// navigate back to '/target'
+		for ( int i = 0; i < hopsToCompileDirectory; i++ ) {
+			targetDir = targetDir.getParentFile();
+		}
+		final String configurationDirectory = targetDir.getName();
+		final File baseDir = targetDir.getParentFile().getParentFile().getParentFile().getParentFile();
+		final File outBaseDir = new File( baseDir, "src/" + configurationDirectory + "/java" );
+		if ( !outBaseDir.exists() ) {
+			if ( !outBaseDir.mkdirs() ) {
+				fail( "Unable to create test output directory " + outBaseDir );
+			}
+		}
+		return outBaseDir;
 	}
 
 	/**
@@ -231,7 +249,7 @@ public class TestUtil {
 		assertNotNull( "Class parameter cannot be null", entityClass );
 		String metaModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
 		try {
-			URL outDirUrl = OUT_BASE_DIR.toURI().toURL();
+			URL outDirUrl = getOutBaseDir( entityClass ).toURI().toURL();
 			URL[] urls = new URL[1];
 			urls[0] = outDirUrl;
 			URLClassLoader classLoader = new URLClassLoader( urls, TestUtil.class.getClassLoader() );
@@ -249,7 +267,7 @@ public class TestUtil {
 		// generate the file name
 		String fileName = metaModelClassName.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
 		fileName = fileName.concat( ".java" );
-		return new File( OUT_BASE_DIR + PATH_SEPARATOR + fileName );
+		return new File( getOutBaseDir( clazz ), fileName );
 	}
 
 	public static String getMetaModelSourceAsString(Class<?> clazz) {
@@ -390,13 +408,12 @@ public class TestUtil {
 	 *
 	 * @return the target directory of the build
 	 */
-	public static File getTargetDir() {
+	public static File getTargetDir(Class<?> currentTestClass) {
 		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-		// get a URL reference to something we now is part of the classpath (our own classes)
-		String currentTestClass = TestUtil.class.getName();
-		int hopsToCompileDirectory = currentTestClass.split( "\\." ).length;
+		String currentTestClassName = currentTestClass.getName();
+		int hopsToCompileDirectory = currentTestClassName.split( "\\." ).length;
 		int hopsToTargetDirectory = hopsToCompileDirectory + 2;
-		URL classURL = contextClassLoader.getResource( currentTestClass.replace( '.', '/' ) + ".class" );
+		URL classURL = contextClassLoader.getResource( currentTestClassName.replace( '.', '/' ) + ".class" );
 		// navigate back to '/target'
 		File targetDir = new File( classURL.getFile() );
 		// navigate back to '/target'

@@ -4401,7 +4401,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		if ( ignoreCase ) {
-			appendSql("lower(");
+			appendSql( dialect.getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
 		}
 
 		if ( inOverOrWithinGroupClause() ) {
@@ -4412,7 +4413,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		if ( ignoreCase ) {
-			appendSql(")");
+			appendSql( CLOSE_PARENTHESIS );
 		}
 
 		if ( sortOrder == SortDirection.DESCENDING ) {

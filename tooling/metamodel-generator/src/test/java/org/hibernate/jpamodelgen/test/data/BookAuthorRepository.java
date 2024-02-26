@@ -101,4 +101,9 @@ public interface BookAuthorRepository {
 
 	@Find
 	List<Book> everyBook2(PageRequest<? super Book> pageRequest);
+
+	@Query("from Book")
+	@OrderBy("isbn")
+	@OrderBy(value = "publicationDate", descending = true)
+	List<Book> everyBook3(PageRequest<? super Book> pageRequest);
 }

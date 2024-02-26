@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpamodelgen.util.Constants;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
@@ -23,8 +24,9 @@ public class QueryMethod extends AbstractQueryMethod {
 	private final @Nullable String containerTypeName;
 	private final boolean isUpdate;
 	private final boolean isNative;
+	private final List<OrderBy> orderBys;
 
-	public QueryMethod(
+	QueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
 			String methodName,
 			String queryString,
@@ -39,6 +41,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
+			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
 		super( annotationMetaEntity,
@@ -51,6 +54,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		this.containerTypeName = containerTypeName;
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;
+		this.orderBys = orderBys;
 	}
 
 	@Override
@@ -85,10 +89,49 @@ public class QueryMethod extends AbstractQueryMethod {
 		castResult( declaration, returnType );
 		createQuery( declaration );
 		boolean unwrapped = setParameters( paramTypes, declaration );
+		unwrapped = orderBy( declaration, unwrapped);
 		execute( declaration, unwrapped );
 		convertExceptions( declaration );
 		closingBrace( declaration );
 		return declaration.toString();
+	}
+
+	private boolean orderBy(StringBuilder declaration, boolean unwrapped) {
+		if ( !orderBys.isEmpty() && returnTypeName!=null ) {
+			unwrapQuery( declaration, unwrapped );
+			declaration.append("\n\t\t\t.setOrder(");
+			if ( orderBys.size() > 1) {
+				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
+				declaration
+						.append("asList(");
+			}
+			boolean first = true;
+			for (OrderBy orderBy : orderBys) {
+				if (first) {
+					first = false;
+				}
+				else {
+					declaration
+							.append(",\n\t\t\t\t\t\t\t");
+				}
+				declaration
+						.append(annotationMetaEntity.importType(Constants.HIB_ORDER))
+						.append(orderBy.descending ? ".desc(" : ".asc(")
+						.append(annotationMetaEntity.importType(returnTypeName))
+						.append(".class, \"")
+						.append(orderBy.fieldName)
+						.append("\")");
+			}
+			if ( orderBys.size() > 1) {
+				declaration
+						.append(')');
+			}
+			declaration.append(')');
+			return true;
+		}
+		else {
+			return unwrapped;
+		}
 	}
 
 	private void createQuery(StringBuilder declaration) {

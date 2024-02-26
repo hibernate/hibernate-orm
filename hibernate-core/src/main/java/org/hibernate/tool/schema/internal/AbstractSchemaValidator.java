@@ -93,15 +93,15 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				validateTables( metadata, databaseInformation, options, contributableInclusionFilter, dialect, namespace );
 			}
 		}
 
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( Sequence sequence : namespace.getSequences() ) {
-					if ( ! options.getSchemaFilter().includeSequence( sequence ) ) {
+					if ( !schemaFilter.includeSequence( sequence ) ) {
 						continue;
 					}
 

@@ -39,7 +39,7 @@ public class IndividuallySchemaValidatorImpl extends AbstractSchemaValidator {
 			Dialect dialect,
 			Namespace namespace) {
 		for ( Table table : namespace.getTables() ) {
-			if ( options.getSchemaFilter().includeTable( table )
+			if ( schemaFilter.includeTable( table )
 					&& table.isPhysicalTable()
 					&& contributableInclusionFilter.matches( table ) ) {
 				final TableInformation tableInformation = databaseInformation.getTableInformation(

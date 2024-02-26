@@ -222,8 +222,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 				targets
 		);
 		dropAuxiliaryObjectsAfterTables( metadata, options, dialect, formatter, context, targets );
-		dropUserDefinedTypes( metadata, options, dialect, formatter, context, targets );
-		dropSchemasAndCatalogs( metadata, options, dialect, formatter, context, targets );
+		dropUserDefinedTypes( metadata, options, schemaFilter, dialect, formatter, context, targets );
+		dropSchemasAndCatalogs( metadata, options, schemaFilter, dialect, formatter, context, targets );
 	}
 
 	private void dropConstraintsTablesSequences(
@@ -236,7 +236,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			GenerationTarget[] targets) {
 		final Set<String> exportIdentifiers = setOfSize( 50 );
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 
 				// we need to drop all constraints/indexes prior to dropping the tables
 				applyConstraintDropping(
@@ -253,6 +253,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				dropTables(
 						metadata,
 						options,
+						schemaFilter,
 						inclusionFilter,
 						dialect,
 						formatter,
@@ -265,6 +266,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				dropSequences(
 						metadata,
 						options,
+						schemaFilter,
 						inclusionFilter,
 						dialect,
 						formatter,
@@ -323,6 +325,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private static void dropSequences(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher inclusionFilter,
 			Dialect dialect,
 			Formatter formatter,
@@ -331,7 +334,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Namespace namespace,
 			GenerationTarget[] targets) {
 		for ( Sequence sequence : namespace.getSequences() ) {
-			if ( options.getSchemaFilter().includeSequence( sequence )
+			if ( schemaFilter.includeSequence( sequence )
 					&& inclusionFilter.matches( sequence ) ) {
 				checkExportIdentifier( sequence, exportIdentifiers);
 				applySqlStrings(
@@ -347,6 +350,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private static void dropTables(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher inclusionFilter,
 			Dialect dialect,
 			Formatter formatter,
@@ -357,7 +361,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		for ( Table table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& table.isView()
-					&& options.getSchemaFilter().includeTable( table )
+					&& schemaFilter.includeTable( table )
 					&& inclusionFilter.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers);
 				applySqlStrings(
@@ -371,7 +375,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		for ( Table table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& !table.isView()
-					&& options.getSchemaFilter().includeTable( table )
+					&& schemaFilter.includeTable( table )
 					&& inclusionFilter.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers);
 				applySqlStrings(
@@ -387,12 +391,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private static void dropUserDefinedTypes(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			Dialect dialect,
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				final List<UserDefinedType> dependencyOrderedUserDefinedTypes = namespace.getDependencyOrderedUserDefinedTypes();
 				Collections.reverse( dependencyOrderedUserDefinedTypes );
 				for ( UserDefinedType userDefinedType : dependencyOrderedUserDefinedTypes ) {
@@ -411,6 +416,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private static void dropSchemasAndCatalogs(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			Dialect dialect,
 			Formatter formatter,
 			SqlStringGenerationContext context,
@@ -420,7 +426,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		if ( tryToDropCatalogs || tryToDropSchemas) {
 			final Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-				if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+				if ( schemaFilter.includeNamespace( namespace ) ) {
 					Namespace.Name logicalName = namespace.getName();
 					Namespace.Name physicalName = namespace.getPhysicalName();
 
@@ -464,7 +470,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		if ( dialect.dropConstraints() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( table.isPhysicalTable()
-						&& options.getSchemaFilter().includeTable( table )
+						&& schemaFilter.includeTable( table )
 						&& inclusionFilter.matches( table ) ) {
 					for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
 						applySqlStrings(
@@ -551,11 +557,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 					@Override
 					public ExceptionHandler getExceptionHandler() {
 						return ExceptionHandlerLoggedImpl.INSTANCE;
-					}
-
-					@Override
-					public SchemaFilter getSchemaFilter() {
-						return schemaFilter;
 					}
 				},
 				(contributed) -> true,

@@ -23,7 +23,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.Helper;
@@ -173,17 +172,6 @@ public class SchemaManagementToolCoordinator {
 	public static ExecutionOptions buildExecutionOptions(
 			final Map<String,Object> configurationValues,
 			final ExceptionHandler exceptionHandler) {
-		return buildExecutionOptions(
-				configurationValues,
-				DefaultSchemaFilter.INSTANCE,
-				exceptionHandler
-		);
-	}
-
-	public static ExecutionOptions buildExecutionOptions(
-			final Map<String,Object> configurationValues,
-			final SchemaFilter schemaFilter,
-			final ExceptionHandler exceptionHandler) {
 		return new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -199,12 +187,18 @@ public class SchemaManagementToolCoordinator {
 			public ExceptionHandler getExceptionHandler() {
 				return exceptionHandler;
 			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return schemaFilter;
-			}
 		};
+	}
+
+	/**
+	 * @deprecated Use {@link #buildExecutionOptions(Map, ExceptionHandler)} instead.
+	 */
+	@Deprecated(forRemoval = true)
+	public static ExecutionOptions buildExecutionOptions(
+			final Map<String,Object> configurationValues,
+			final SchemaFilter schemaFilter,
+			final ExceptionHandler exceptionHandler) {
+		return buildExecutionOptions( configurationValues, exceptionHandler );
 	}
 
 	private static void performDatabaseAction(

@@ -18,9 +18,27 @@ ext {
 	xsdDir = file( "${projectDir}/src/main/xsd" )
 }
 
-configurations {
-	quarkusOrmPanache
-	quarkusHrPanache
+sourceSets {
+	quarkusOrmPanache {
+		java {
+			srcDirs = ['src/quarkusOrmPanache/java']
+		}
+		resources {
+			srcDirs tasks.processTestResources
+		}
+		compileClasspath += sourceSets.main.output + sourceSets.test.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+	}
+	quarkusHrPanache {
+		java {
+			srcDirs = ['src/quarkusHrPanache/java']
+		}
+		resources {
+			srcDirs tasks.processTestResources
+		}
+		compileClasspath += sourceSets.main.output + sourceSets.test.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+	}
 }
 
 dependencies {
@@ -37,16 +55,26 @@ dependencies {
     xjc jakartaLibs.jaxb
     xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 
-	quarkusOrmPanache "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
-	quarkusHrPanache "io.quarkus:quarkus-hibernate-reactive-panache:3.6.2"
+	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
+	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.6.2"
+}
+
+// The source set gets a custom configuration which extends the normal test implementation config
+configurations {
+	quarkusOrmPanacheImplementation.extendsFrom(testImplementation)
+	quarkusOrmPanacheRuntimeOnly.extendsFrom(testRuntimeOnly)
+	quarkusOrmPanacheCompileOnly.extendsFrom(testCompileOnly)
+	quarkusHrPanacheImplementation.extendsFrom(testImplementation)
+	quarkusHrPanacheRuntimeOnly.extendsFrom(testRuntimeOnly)
+	quarkusHrPanacheCompileOnly.extendsFrom(testCompileOnly)
 }
 
 def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) {
 	description = 'Runs the Quarkus ORM Panache tests.'
 	group = 'verification'
 
-	testClassesDirs = sourceSets.test.output.classesDirs
-	classpath = sourceSets.test.runtimeClasspath + configurations.quarkusOrmPanache
+	testClassesDirs = sourceSets.quarkusOrmPanache.output.classesDirs
+	classpath = sourceSets.quarkusOrmPanache.runtimeClasspath
 	shouldRunAfter test
 	dependsOn test
 }
@@ -55,8 +83,8 @@ def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
 	description = 'Runs the Quarkus HR Panache tests.'
 	group = 'verification'
 
-	testClassesDirs = sourceSets.test.output.classesDirs
-	classpath = sourceSets.test.runtimeClasspath + configurations.quarkusHrPanache
+	testClassesDirs = sourceSets.quarkusHrPanache.output.classesDirs
+	classpath = sourceSets.quarkusHrPanache.runtimeClasspath
 	shouldRunAfter test
 	dependsOn test
 }

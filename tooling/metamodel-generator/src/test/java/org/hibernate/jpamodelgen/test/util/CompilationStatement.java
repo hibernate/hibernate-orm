@@ -37,34 +37,9 @@ public class CompilationStatement extends Statement {
 	private static final Logger log = Logger.getLogger( CompilationStatement.class );
 	private static final String PACKAGE_SEPARATOR = ".";
 	private static final String ANNOTATION_PROCESSOR_OPTION_PREFIX = "-A";
-	private static final String SOURCE_BASE_DIR_PROPERTY = "sourceBaseDir";
-	private static final String SOURCE_BASE_DIR;
-
-	static {
-		// first we try to guess the target directory.
-		File potentialSourceDirectory = new File(System.getProperty( "user.dir" ), "tooling/metamodel-generator/src/test/java");
-
-		// the command line build sets the user.dir to sub project directory
-		if ( !potentialSourceDirectory.exists() ) {
-			potentialSourceDirectory = new File(System.getProperty( "user.dir" ), "src/test/java");
-		}
-
-		if ( potentialSourceDirectory.exists() ) {
-			SOURCE_BASE_DIR = potentialSourceDirectory.getAbsolutePath();
-		}
-		else {
-			String tmp = System.getProperty( SOURCE_BASE_DIR_PROPERTY );
-			if ( tmp == null ) {
-				fail(
-						"Unable to guess determine the source directory. Specify the system property 'sourceBaseDir'" +
-								" pointing to the base directory of the test java sources."
-				);
-			}
-			SOURCE_BASE_DIR = tmp;
-		}
-	}
 
 	private final Statement originalStatement;
+	private final Class<?> testClass;
 	private final List<Class<?>> testEntities;
 	private final List<Class<?>> preCompileEntities;
 	private final List<String> xmlMappingFiles;
@@ -73,12 +48,14 @@ public class CompilationStatement extends Statement {
 	private final List<Diagnostic<?>> compilationDiagnostics;
 
 	public CompilationStatement(Statement originalStatement,
+			Class<?> testClass,
 			List<Class<?>> testEntities,
 			List<Class<?>> proCompileEntities,
 			List<String> xmlMappingFiles,
 			Map<String, String> processorOptions,
 			boolean ignoreCompilationErrors) {
 		this.originalStatement = originalStatement;
+		this.testClass = testClass;
 		this.testEntities = testEntities;
 		this.preCompileEntities = proCompileEntities;
 		this.xmlMappingFiles = xmlMappingFiles;
@@ -114,7 +91,7 @@ public class CompilationStatement extends Statement {
 	}
 
 	private String getPathToSource(Class<?> testClass) {
-		return SOURCE_BASE_DIR + File.separator + testClass.getName()
+		return TestUtil.getSourceBaseDir( testClass ).getAbsolutePath() + File.separator + testClass.getName()
 				.replace( PACKAGE_SEPARATOR, File.separator ) + ".java";
 	}
 
@@ -136,7 +113,7 @@ public class CompilationStatement extends Statement {
 	private List<String> createJavaOptions() {
 		List<String> options = new ArrayList<String>();
 		options.add( "-d" );
-		options.add( TestUtil.getOutBaseDir().getAbsolutePath() );
+		options.add( TestUtil.getOutBaseDir( testClass ).getAbsolutePath() );
 		options.add( "-processor" );
 		options.add( JPAMetaModelEntityProcessor.class.getName() );
 

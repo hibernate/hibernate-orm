@@ -160,37 +160,45 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		}
 	}
 
-	private SqmSelectStatement<KeyedResult<R>> keyed(List<Order<? super R>> keyDefinition, List<Comparable<?>> keyValues) {
+	private SqmSelectStatement<KeyedResult<R>> keyedQuery(
+			List<Order<? super R>> keyDefinition, List<Comparable<?>> keyValues) {
 		@SuppressWarnings("unchecked")
 		final SqmSelectStatement<KeyedResult<R>> sqm =
 				(SqmSelectStatement<KeyedResult<R>>)
 						getSqmSelectStatement().copy( noParamCopyContext() );
 		final NodeBuilder builder = sqm.nodeBuilder();
 		final SqmQuerySpec<?> querySpec = sqm.getQuerySpec();
-		final SqmWhereClause whereClause = querySpec.getWhereClause();
 		final List<? extends JpaSelection<?>> items = querySpec.getSelectClause().getSelectionItems();
-		final List<SqmPath<?>> newItems = new ArrayList<>();
 		if ( items.size() == 1 ) {
 			final JpaSelection<?> selected = items.get(0);
-			for ( int i = 0; i < keyDefinition.size(); i++ ) {
-				// ordering by an attribute of the returned entity
-				if ( selected instanceof SqmRoot ) {
+			if ( selected instanceof SqmRoot ) {
+				final List<SqmPath<?>> newItems = new ArrayList<>();
+				final SqmFrom<?,?> root = (SqmFrom<?,?>) selected;
+				SqmPredicate restriction = querySpec.getRestriction();
+				if ( restriction==null && keyValues != null ) {
+					restriction = builder.disjunction();
+				}
+				for ( int i = 0; i < keyDefinition.size(); i++ ) {
+					// ordering by an attribute of the returned entity
 					final Order<? super R> key = keyDefinition.get(i);
-					final SqmFrom<?,?> root = (SqmFrom<?,?>) selected;
 					if ( keyValues != null ) {
 						@SuppressWarnings("rawtypes")
 						final Comparable keyValue = keyValues.get(i);
-						whereClause.applyPredicate( keyPredicate( root, key, keyValue, builder ) );
+						restriction = builder.or( restriction,
+								keyPredicate( root, key, keyValue, newItems, keyValues, builder ) );
 					}
 					newItems.add( root.get( key.getAttributeName() ) );
 				}
-				else {
-					throw new IllegalQueryOperationException("Select item was not an entity type");
+				sqm.select( builder.construct((Class) KeyedResult.class,
+						asList(selected, builder.construct(List.class, newItems)) ) );
+				if ( keyValues != null ) {
+					sqm.where( restriction );
 				}
+				return sqm;
 			}
-			sqm.select( builder.construct((Class) KeyedResult.class,
-					asList(selected, builder.construct(List.class, newItems)) ) );
-			return sqm;
+			else {
+				throw new IllegalQueryOperationException("Select item was not an entity type");
+			}
 		}
 		else {
 			throw new IllegalQueryOperationException("Query has multiple items in the select list");
@@ -198,7 +206,9 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	private <C extends Comparable<? super C>> SqmPredicate keyPredicate(
-			SqmFrom<?, ?> selected, Order<? super R> key, C keyValue, NodeBuilder builder) {
+			SqmFrom<?, ?> selected, Order<? super R> key, C keyValue,
+			List<SqmPath<?>> previousKeys, List<Comparable<?>> keyValues,
+			NodeBuilder builder) {
 		if ( !key.getEntityClass().isAssignableFrom( selected.getJavaType() ) ) {
 			throw new IllegalQueryOperationException("Select item was of wrong entity type");
 		}
@@ -208,14 +218,22 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 //		final Class<C> valueClass = (Class<C>) keyValue.getClass();
 //		final JpaParameterExpression<C> parameter = builder.parameter(valueClass);
 //		setParameter( parameter, keyValue );
+		SqmPredicate predicate;
 		switch ( key.getDirection() ) {
 			case ASCENDING:
-				return builder.greaterThan( path, keyValue );
+				predicate = builder.greaterThan( path, keyValue );
+				break;
 			case DESCENDING:
-				return builder.lessThan( path, keyValue );
+				predicate = builder.lessThan( path, keyValue );
+				break;
 			default:
 				throw new AssertionFailure("Unrecognized key direction");
 		}
+		for ( int i = 0; i < previousKeys.size(); i++ ) {
+			final SqmPath keyPath = previousKeys.get(i);
+			predicate = builder.and( predicate, keyPath.equalTo( keyValues.get(i) ) );
+		}
+		return predicate;
 	}
 
 	@Override
@@ -232,18 +250,11 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		if ( key == null ) {
 			setFirstResult( page.getFirstResult() );
 		}
-		else {
-			keyed( keyDefinition, key );
-		}
 
-		final ConcreteSqmSelectQueryPlan<KeyedResult<R>> plan =
-				buildConcreteQueryPlan( keyed( keyDefinition, key ),
-						null, null,
-						getQueryOptions() );
-		final List<KeyedResult<R>> executed = plan.performList(this);
-		final KeyedPage<R> nextPage =
-				KeyedPage.forKey(keyDefinition, page.next(),
-						getKeyOfLastResult(executed, key));
+		final List<KeyedResult<R>> executed =
+				buildConcreteQueryPlan( keyedQuery( keyDefinition, key ), getQueryOptions() )
+						.performList(this);
+		final KeyedPage<R> nextPage = keyedPage.nextPage( getKeyOfLastResult( executed, key ) );
 		return new KeyedResultList<>( collectResultList( executed ), keyedPage, nextPage );
 	}
 
@@ -300,5 +311,9 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 				tupleMetadata,
 				queryOptions
 		);
+	}
+
+	private <T> SelectQueryPlan<T> buildConcreteQueryPlan(SqmSelectStatement<T> sqmStatement, QueryOptions options) {
+		return buildConcreteQueryPlan( sqmStatement, null, null, options );
 	}
 }

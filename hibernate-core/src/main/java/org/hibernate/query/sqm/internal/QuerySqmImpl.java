@@ -48,7 +48,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.KeyedPage;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.Query;
@@ -923,11 +922,6 @@ public class QuerySqmImpl<R>
 		return this;
 	}
 
-	@Override
-	public Query<R> setPage(KeyedPage<R> page) {
-		super.setPage(page);
-		return this;
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// hints

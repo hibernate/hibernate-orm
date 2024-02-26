@@ -11,7 +11,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.ProcessLaterException;
-import org.hibernate.jpamodelgen.annotation.CriteriaFinderMethod.OrderBy;
 import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
@@ -21,7 +20,6 @@ import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
 import org.hibernate.jpamodelgen.validation.Validation;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.Order;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
@@ -67,26 +65,7 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
-import static org.hibernate.jpamodelgen.util.Constants.FIND;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_SESSION;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_STATELESS_SESSION;
-import static org.hibernate.jpamodelgen.util.Constants.HQL;
-import static org.hibernate.jpamodelgen.util.Constants.ITERABLE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_DELETE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_FIND;
-import static org.hibernate.jpamodelgen.util.Constants.JD_INSERT;
-import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
-import static org.hibernate.jpamodelgen.util.Constants.JD_PAGE_REQUEST;
-import static org.hibernate.jpamodelgen.util.Constants.JD_QUERY;
-import static org.hibernate.jpamodelgen.util.Constants.JD_REPOSITORY;
-import static org.hibernate.jpamodelgen.util.Constants.JD_SAVE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
-import static org.hibernate.jpamodelgen.util.Constants.JD_UPDATE;
-import static org.hibernate.jpamodelgen.util.Constants.LIST;
-import static org.hibernate.jpamodelgen.util.Constants.MUTINY_SESSION;
-import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
-import static org.hibernate.jpamodelgen.util.Constants.SQL;
+import static org.hibernate.jpamodelgen.util.Constants.*;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAccessTypeForHierarchy;
@@ -1327,16 +1306,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final List<String> paramNames = parameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
 				final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
-				if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
-					final DeclaredType declaredType = (DeclaredType) returnType;
-					if ( !declaredType.getTypeArguments().isEmpty() ) {
-						context.message( method, mirror, value,
-								"query result type may not be a generic type"
-										+ " (change '" + returnType +
-										"' to '" + context.getTypeUtils().erasure( returnType ) + "')",
-								Diagnostic.Kind.ERROR );
-					}
-				}
+				final DeclaredType resultType = resultType( method, returnType, mirror, value );
+				final List<OrderBy> orderBys = resultType == null
+						? emptyList()
+						: orderByList( method, (TypeElement) resultType.asElement() );
 				final QueryMethod attribute =
 						new QueryMethod(
 								this,
@@ -1351,6 +1324,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								repository,
 								sessionType[0],
 								sessionType[1],
+								orderBys,
 								context.addNonnullAnnotation(),
 								jakartaDataRepository
 						);
@@ -1366,6 +1340,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				// now check that the query has a parameter for every method parameter
 				checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString );
 			}
+		}
+	}
+
+	private @Nullable DeclaredType resultType(
+			ExecutableElement method, @Nullable TypeMirror returnType, AnnotationMirror mirror, AnnotationValue value) {
+		if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType resultType = (DeclaredType) returnType;
+			if ( !resultType.getTypeArguments().isEmpty() ) {
+				context.message(method, mirror, value,
+						"query result type may not be a generic type"
+								+ " (change '" + returnType +
+								"' to '" + context.getTypeUtils().erasure(returnType) + "')",
+						Diagnostic.Kind.ERROR );
+			}
+			return resultType;
+		}
+		else {
+			return null;
 		}
 	}
 

@@ -25,10 +25,12 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.KeyedPage;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.sql.results.spi.ResultsConsumer;
@@ -192,6 +194,12 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	@Incubating
 	public SqmSelectionQueryImplementor<R> setPage(Page page) {
+		getDelegate().setPage( page );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setPage(KeyedPage<R> page) {
 		getDelegate().setPage( page );
 		return this;
 	}

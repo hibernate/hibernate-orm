@@ -396,6 +396,16 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setPage(Page page);
 
 	/**
+	 * Set the {@linkplain KeyedPage keyed page} of results to return.
+	 *
+	 * @see KeyedPage
+	 *
+	 * @since 6.5
+	 */
+	@Incubating
+	SelectionQuery<R> setPage(KeyedPage<R> page);
+
+	/**
 	 * Obtain the {@link CacheMode} in effect for this query. By default,
 	 * the query inherits the {@link CacheMode} of the session from which
 	 * it originates.

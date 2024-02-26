@@ -568,10 +568,12 @@ public class SqmUtil {
 		final List<SqmSelectableNode<?>> items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
 		int element = order.getElement();
 		if ( element < 1) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element + " (the first select item is element 1)");
+			throw new IllegalQueryOperationException("Cannot order by element " + element
+					+ " (the first select item is element 1)");
 		}
 		if ( element > items.size() ) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element + " (there are only " + items.size() + " select items)");
+			throw new IllegalQueryOperationException("Cannot order by element " + element
+					+ " (there are only " + items.size() + " select items)");
 		}
 		final SqmSelectableNode<?> selected = items.get( element-1 );
 

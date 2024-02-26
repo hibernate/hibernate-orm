@@ -86,6 +86,9 @@ public class Page {
 		return first( size );
 	}
 
+	public <R> KeyedPage<R> keyedBy(Order<? super R> keyDefinition) {
+		return new KeyedPage<>( List.of(keyDefinition), this );
+	}
 	public <R> KeyedPage<R> keyedBy(List<Order<? super R>> keyDefinition) {
 		return new KeyedPage<>( keyDefinition, this );
 	}

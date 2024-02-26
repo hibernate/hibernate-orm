@@ -220,8 +220,23 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Incubating
 	long getResultCount();
 
+	/**
+	 * Execute the query and return the results for the given
+	 * {@linkplain KeyedPage page}, using key-based pagination.
+	 *
+	 * @param page the key-based specification of the page as
+	 *        an instance of {@link KeyedPage}
+	 *
+	 * @return the query results and the key of the next page
+	 *         as an instance of {@link KeyedResultList}
+	 *
+	 * @since 6.5
+	 *
+	 * @see KeyedPage
+	 * @see KeyedResultList
+	 */
 	@Incubating
-	KeyedResultList<R> getKeyedResultList();
+	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
 
 	SelectionQuery<R> setHint(String hintName, Object value);
 
@@ -397,16 +412,6 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	@Incubating
 	SelectionQuery<R> setPage(Page page);
-
-	/**
-	 * Set the {@linkplain KeyedPage keyed page} of results to return.
-	 *
-	 * @see KeyedPage
-	 *
-	 * @since 6.5
-	 */
-	@Incubating
-	SelectionQuery<R> setPage(KeyedPage<R> page);
 
 	/**
 	 * Obtain the {@link CacheMode} in effect for this query. By default,

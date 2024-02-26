@@ -45,6 +45,7 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.OutputableType;
@@ -971,7 +972,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public KeyedResultList<R> getKeyedResultList() {
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> page) {
 		throw new UnsupportedOperationException("getKeyedResultList() not implemented for ProcedureCall/StoredProcedureQuery");
 	}
 

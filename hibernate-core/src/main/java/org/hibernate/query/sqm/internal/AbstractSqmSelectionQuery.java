@@ -52,8 +52,6 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  */
 abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
-	private KeyedPage<R> keyedPage;
-
 	AbstractSqmSelectionQuery(SharedSessionContractImplementor session) {
 		super(session);
 	}
@@ -147,12 +145,6 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		return this;
 	}
 
-	@Override
-	public SelectionQuery<R> setPage(KeyedPage<R> page) {
-		keyedPage = page;
-		return this;
-	}
-
 	static class KeyedResult<R> {
 		final R result;
 		final List<Comparable<?>> key;
@@ -220,16 +212,16 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 //		setParameter( parameter, keyValue );
 		switch ( key.getDirection() ) {
 			case ASCENDING:
-				return builder.greaterThan( path, builder.literal(keyValue) );
+				return builder.greaterThan( path, keyValue );
 			case DESCENDING:
-				return builder.lessThan( path, builder.literal(keyValue) );
+				return builder.lessThan( path, keyValue );
 			default:
 				throw new AssertionFailure("Unrecognized key direction");
 		}
 	}
 
 	@Override
-	public KeyedResultList<R> getKeyedResultList() {
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> keyedPage) {
 		if ( keyedPage == null ) {
 			throw new IllegalStateException( "KeyedPage was not set" );
 		}
@@ -254,7 +246,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		final List<Comparable<?>> keyOfLastResult =
 				executed.isEmpty() ? key : executed.get( executed.size()-1 ).getKey();
 		return new KeyedResultList<>( executed.stream().map(KeyedResult::getResult).collect(toList()),
-				keyedPage, new KeyedPage<>(keyDefinition, page.next(), keyOfLastResult) );
+				keyedPage, KeyedPage.forKey( keyDefinition, page.next(), keyOfLastResult ) );
 	}
 
 	public abstract Class<R> getExpectedResultType();

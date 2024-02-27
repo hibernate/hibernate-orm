@@ -1359,16 +1359,35 @@ public class SessionImpl
 
 	@Override
 	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
+		return autoFlushIfRequired( querySpaces, false );
+	}
+
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
 		checkOpen();
 		if ( !isTransactionInProgress() ) {
 			// do not auto-flush while outside a transaction
 			return false;
 		}
-		AutoFlushEvent event = new AutoFlushEvent( querySpaces, this );
+		AutoFlushEvent event = new AutoFlushEvent( querySpaces, skipPreFlush, this );
 		fastSessionServices.eventListenerGroup_AUTO_FLUSH
 				.fireEventOnEachListener( event, AutoFlushEventListener::onAutoFlush );
 		return event.isFlushRequired();
 	}
+
+	@Override
+	public void autoPreFlush(){
+		checkOpen();
+		if ( !isTransactionInProgress() ) {
+			// do not auto-flush while outside a transaction
+			return;
+		}
+		fastSessionServices.eventListenerGroup_AUTO_FLUSH
+				.fireEventOnEachListener( this, AutoFlushEventListener::onAutoPreFlush );
+	}
+
+
 
 	@Override
 	public boolean isDirty() throws HibernateException {

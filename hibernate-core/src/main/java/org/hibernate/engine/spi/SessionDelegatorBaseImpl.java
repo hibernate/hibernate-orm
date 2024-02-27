@@ -38,6 +38,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
@@ -395,6 +396,17 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
 		return delegate.autoFlushIfRequired( querySpaces );
+	}
+
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
+		return delegate.autoFlushIfRequired( querySpaces, skipPreFlush );
+	}
+
+	@Override
+	public void autoPreFlush() {
+		delegate.autoPreFlush();
 	}
 
 	@Override

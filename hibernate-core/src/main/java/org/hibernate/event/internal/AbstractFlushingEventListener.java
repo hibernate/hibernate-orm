@@ -74,6 +74,29 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		final EventSource session = event.getSession();
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		preFlush( session, persistenceContext );
+
+		flushEverythingToExecutions( event, persistenceContext, session );
+	}
+
+	protected void flushEverythingToExecutions(FlushEvent event, PersistenceContext persistenceContext, EventSource session) {
+		persistenceContext.setFlushing( true );
+		try {
+			int entityCount = flushEntities( event, persistenceContext );
+			int collectionCount = flushCollections( session, persistenceContext );
+
+			event.setNumberOfEntitiesProcessed( entityCount );
+			event.setNumberOfCollectionsProcessed( collectionCount );
+		}
+		finally {
+			persistenceContext.setFlushing( false);
+		}
+
+		//some statistics
+		logFlushResults( event );
+	}
+
+	protected void preFlush(EventSource session, PersistenceContext persistenceContext) {
 		session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() );
 
 		prepareEntityFlushes( session, persistenceContext );
@@ -84,21 +107,6 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		// now, any collections that are initialized
 		// inside this block do not get updated - they
 		// are ignored until the next flush
-
-		persistenceContext.setFlushing( true );
-		try {
-			int entityCount = flushEntities( event, persistenceContext );
-			int collectionCount = flushCollections( session, persistenceContext );
-
-			event.setNumberOfEntitiesProcessed( entityCount );
-			event.setNumberOfCollectionsProcessed( collectionCount );
-		}
-		finally {
-			persistenceContext.setFlushing(false);
-		}
-
-		//some statistics
-		logFlushResults( event );
 	}
 
 	protected void logFlushResults(FlushEvent event) {

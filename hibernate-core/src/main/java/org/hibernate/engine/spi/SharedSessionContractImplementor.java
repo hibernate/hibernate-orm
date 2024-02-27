@@ -18,6 +18,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.Query;
@@ -536,6 +537,14 @@ public interface SharedSessionContractImplementor
 	 * @return true if flush is required, false otherwise.
 	 */
 	boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException;
+
+	default boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
+		return autoFlushIfRequired( querySpaces );
+	}
+
+	default void autoPreFlush(){
+	}
 
 	/**
 	 * Are we currently enforcing a {@linkplain GraphSemantic#FETCH fetch graph}?

@@ -12,12 +12,14 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.persistence.Tuple;
+
 import org.hibernate.InstantiationException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.Query;
@@ -105,7 +107,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						JdbcParametersList.empty(),
 						jdbcParameterBindings
 				);
-
+				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
 						jdbcSelect,
 						jdbcParameterBindings,
@@ -133,8 +135,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						JdbcParametersList.empty(),
 						jdbcParameterBindings
 				);
-
-				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
+				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 						jdbcSelect,
 						jdbcParameterBindings,
@@ -162,7 +163,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				final JdbcSelectExecutor jdbcSelectExecutor = session.getFactory()
 						.getJdbcServices()
 						.getJdbcSelectExecutor();
-				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
+				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
 				return jdbcSelectExecutor.scroll(
 						jdbcSelect,
 						scrollMode,
@@ -204,7 +205,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return selections.size() == 1 ? selections.get( 0 ) : null;
 	}
 
-	private static final Map<Class<?>,Class<?>> WRAPPERS
+	private static final Map<Class<?>, Class<?>> WRAPPERS
 			= Map.of(
 					boolean.class, Boolean.class,
 					int.class, Integer.class,
@@ -317,6 +318,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 		CacheableSqmInterpretation localCopy = cacheableSqmInterpretation;
 		JdbcParameterBindings jdbcParameterBindings = null;
+
+		executionContext.getSession().autoPreFlush();
 
 		if ( localCopy == null ) {
 			synchronized ( this ) {

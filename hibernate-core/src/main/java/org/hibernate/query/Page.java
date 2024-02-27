@@ -89,6 +89,14 @@ public class Page {
 	public <R> KeyedPage<R> keyedBy(Order<? super R> keyDefinition) {
 		return new KeyedPage<>( List.of(keyDefinition), this );
 	}
+
+	/**
+	 * Obtain a {@linkplain KeyedPage key-based specification} of this page.
+	 *
+	 * @param keyDefinition a list of {@link Order} objects defining a total
+	 *                      order on the result set
+	 * @return a {@link KeyedPage} representing this page
+	 */
 	public <R> KeyedPage<R> keyedBy(List<Order<? super R>> keyDefinition) {
 		if ( keyDefinition.isEmpty() )  {
 			throw new IllegalArgumentException("Key definition must not be empty");

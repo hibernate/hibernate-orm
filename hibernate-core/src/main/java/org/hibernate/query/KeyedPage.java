@@ -60,22 +60,47 @@ public class KeyedPage<R> {
 		this.key = key;
 	}
 
+	/**
+	 * A key definition for key-based pagination. The list of {@link Order}
+	 * objects must define a total ordering of the query result set, and
+	 * thus forms a unique key on the result set.
+	 */
 	public List<Order<? super R>> getKeyDefinition() {
 		return keyDefinition;
 	}
 
+	/**
+	 * A specification of this page in terms of page size and an
+	 * (approximate) page number.
+	 */
 	public Page getPage() {
 		return page;
 	}
 
 	/**
-	 * Null key indicates that the {@linkplain Page#getNumber() page number}
-	 * should be used. This is useful to obtain an initial page of results.
+	 * The key of the last result on the previous page, which is used
+	 * to locate the start of the current page.
+	 * <p>
+	 * A null key indicates that an {@linkplain Page#getFirstResult()
+	 * offset} should be used instead. This is used to obtain an
+	 * initial page of results.
+	 *
+	 * @return the key of the last result on the previous page, or
+	 *         null if an offset should be used to obtain an initial
+	 *         page
 	 */
 	public List<Comparable<?>> getKey() {
 		return key;
 	}
 
+	/**
+	 * Obtain a specification of the next page of results, which is
+	 * to be located using the given key, which must be the key of
+	 * the last result on this page.
+	 *
+	 * @param keyOfLastResult the key of the last result on this page
+	 * @return a {@link KeyedPage} representing the next page of results
+	 */
 	@Internal
 	public KeyedPage<R> nextPage(List<Comparable<?>> keyOfLastResult) {
 		return new KeyedPage<>( keyDefinition, page.next(), keyOfLastResult );

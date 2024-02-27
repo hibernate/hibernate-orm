@@ -13,6 +13,11 @@ import org.hibernate.jpamodelgen.util.Constants;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_RESULT_LIST;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.LIST;
+import static org.hibernate.jpamodelgen.util.Constants.OPTIONAL;
+import static org.hibernate.jpamodelgen.util.Constants.STREAM;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -115,7 +120,7 @@ public class QueryMethod extends AbstractQueryMethod {
 							.append(",\n\t\t\t\t\t\t\t");
 				}
 				declaration
-						.append(annotationMetaEntity.importType(Constants.HIB_ORDER))
+						.append(annotationMetaEntity.importType(HIB_ORDER))
 						.append(orderBy.descending ? ".desc(" : ".asc(")
 						.append(annotationMetaEntity.importType(returnTypeName))
 						.append(".class, \"")
@@ -195,18 +200,28 @@ public class QueryMethod extends AbstractQueryMethod {
 			declaration
 					.append("\n\t\t\t.getSingleResult()");
 		}
-		else if ( containerTypeName.equals(Constants.OPTIONAL) ) {
+		else if ( containerTypeName.equals(OPTIONAL) ) {
 			unwrapQuery( declaration, unwrapped );
 			declaration
 					.append("\n\t\t\t.uniqueResultOptional()");
 		}
-		else if ( containerTypeName.equals(Constants.STREAM) ) {
+		else if ( containerTypeName.equals(STREAM) ) {
 			declaration
 					.append("\n\t\t\t.getResultStream()");
 		}
-		else if ( containerTypeName.equals(Constants.LIST) ) {
+		else if ( containerTypeName.equals(LIST) ) {
 			declaration
 					.append("\n\t\t\t.getResultList()");
+		}
+		else if ( containerTypeName.equals(HIB_KEYED_RESULT_LIST) ) {
+			for (int i = 0; i < paramTypes.size(); i++) {
+				if ( isKeyedPageParam( paramTypes.get(i) ) ) {
+					declaration
+							.append("\n\t\t\t.getKeyedResultList(")
+							.append(paramNames.get(i))
+							.append(')');
+				}
+			}
 		}
 		else {
 			if ( isUsingEntityManager() && !unwrapped
@@ -270,7 +285,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	private StringBuilder returnType() {
 		StringBuilder type = new StringBuilder();
 		boolean returnsUni = isReactive()
-				&& (containerTypeName == null || Constants.LIST.equals(containerTypeName));
+				&& (containerTypeName == null || LIST.equals(containerTypeName));
 		if ( returnsUni ) {
 			type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
 		}
@@ -359,8 +374,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		else {
 			return stem + "_"
 					+ paramTypes.stream()
-							.filter(type -> !isPageParam(type) && !isOrderParam(type)
-									&& !isSessionParameter(type))
+							.filter(type -> !isSpecialParam(type))
 							.map(StringHelper::unqualify)
 							.reduce((x,y) -> x + '_' + y)
 							.orElse("");

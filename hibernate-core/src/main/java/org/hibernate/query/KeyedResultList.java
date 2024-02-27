@@ -36,15 +36,45 @@ public class KeyedResultList<R> {
 		this.nextPage = nextPage;
 	}
 
+	/**
+	 * The results on the current page.
+	 */
 	public List<R> getResultList() {
 		return resultList;
 	}
 
+	/**
+	 * The {@linkplain Page#getSize() size} and
+	 * approximate {@linkplain Page#getNumber()
+	 * page number} of the current page.
+	 */
 	public KeyedPage<R> getPage() {
 		return page;
 	}
 
+	/**
+	 * The specification of the next page of results,
+	 * if there are more results, or {@code null} if
+	 * it is known that there are no more results
+	 * after this page.
+	 */
 	public KeyedPage<R> getNextPage() {
 		return nextPage;
+	}
+
+	/**
+	 * @return {@code true} if this is known to be the
+	 *         last page of results.
+	 */
+	public boolean isLastPage() {
+		return nextPage == null;
+	}
+
+	/**
+	 * @return {@code true} if this is the first page
+	 *         of results.
+	 */
+	public boolean isFirstPage() {
+		return page.getPage().isFirst();
 	}
 }

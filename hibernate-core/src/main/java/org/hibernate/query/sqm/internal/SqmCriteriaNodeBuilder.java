@@ -197,7 +197,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final transient boolean jpaComplianceEnabled;
 	private final transient QueryEngine queryEngine;
 	private final transient Supplier<SessionFactoryImplementor> sessionFactory;
-	private final transient ValueHandlingMode criteriaValueHandlingMode;
+	private transient ValueHandlingMode criteriaValueHandlingMode;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Long> longType;
@@ -222,6 +222,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			HibernateCriteriaBuilder builder = extension.extend( this );
 			extensions.put( extension.getRegistrationKey(), builder );
 		}
+	}
+
+	public void setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode) {
+		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
 	}
 
 	@Override

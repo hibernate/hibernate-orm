@@ -2445,8 +2445,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitCteDefinition(CteStatement cte) {
 		final CteStatement oldCteStatement = currentCteStatement;
 		currentCteStatement = cte;
+		final Limit oldLimit = limit;
+		limit = null;
 		cte.getCteDefinition().accept( this );
 		currentCteStatement = oldCteStatement;
+		limit = oldLimit;
 	}
 
 	/**
@@ -6211,11 +6214,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				true,
 				null
 		);
+		final Limit oldLimit = limit;
+		limit = null;
 		statementStack.push( cteDefinition );
 		renderPrimaryTableReference( queryPartTableGroup, lockMode );
 		if ( queryPartTableGroup.isLateral() && !dialect.supportsLateral() ) {
 			addAdditionalWherePredicate( determineLateralEmulationPredicate( queryPartTableGroup ) );
 		}
+		limit = oldLimit;
 		statementStack.pop();
 	}
 

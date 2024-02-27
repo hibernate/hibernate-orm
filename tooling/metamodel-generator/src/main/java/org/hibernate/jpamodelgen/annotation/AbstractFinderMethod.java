@@ -91,14 +91,12 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				.append(annotationMetaEntity.importType(entity))
 				.append("} by ");
 		long paramCount = paramTypes.stream()
-				.filter(type -> !isOrderParam(type) && !isPageParam(type)
-						&& !isSessionParameter(type))
+				.filter(type -> !isSpecialParam(type))
 				.count();
 		int count = 0;
 		for (int i = 0; i < paramTypes.size(); i++) {
 			String type = paramTypes.get(i);
-			if ( !isPageParam(type) && !isOrderParam(type)
-					&& !isSessionParameter(type) ) {
+			if ( !isSpecialParam(type) ) {
 				if ( count>0 ) {
 					if ( count + 1 == paramCount) {
 						declaration

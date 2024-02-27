@@ -15,7 +15,12 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
+import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_RESULT_LIST;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_SELECTION_QUERY;
 import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
+import static org.hibernate.jpamodelgen.util.Constants.LIST;
+import static org.hibernate.jpamodelgen.util.Constants.OPTIONAL;
+import static org.hibernate.jpamodelgen.util.Constants.STREAM;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
 /**
@@ -107,17 +112,17 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		if ( unwrap ) {
 			declaration
 					.append("\n\t\t\t.unwrap(")
-					.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
+					.append(annotationMetaEntity.importType(HIB_SELECTION_QUERY))
 					.append(".class)");
 		}
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
 			if ( isPageParam(paramType) ) {
-				setPage(declaration, paramName, paramType );
+				setPage( declaration, paramName, paramType );
 			}
 			else if ( isOrderParam(paramType) && !isJakartaSortParam(paramType) ) {
-				setOrder(declaration, true, paramName, paramType );
+				setOrder( declaration, true, paramName, paramType );
 			}
 		}
 		enableFetchProfile(declaration);
@@ -128,24 +133,37 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			declaration
 					.append(".getSingleResult()");
 		}
-		else if ( containerType.equals(Constants.OPTIONAL) ) {
+		else if ( containerType.equals(OPTIONAL) ) {
 			unwrapQuery( declaration, unwrap );
 			declaration
 					.append("\n\t\t\t.uniqueResultOptional()");
 		}
-		else if ( containerType.equals(Constants.STREAM) ) {
+		else if ( containerType.equals(STREAM) ) {
 			if ( unwrap || hasOrderParameter || hasEnabledFetchProfiles ) {
 				declaration.append("\n\t\t\t");
 			}
 			declaration
 					.append(".getResultStream()");
 		}
-		else if ( containerType.equals(Constants.LIST) ) {
+		else if ( containerType.equals(LIST) ) {
 			if ( unwrap || hasOrderParameter || hasEnabledFetchProfiles ) {
 				declaration.append("\n\t\t\t");
 			}
 			declaration
 					.append(".getResultList()");
+		}
+		else if ( containerType.equals(HIB_KEYED_RESULT_LIST) ) {
+			if ( unwrap || hasOrderParameter || hasEnabledFetchProfiles ) {
+				declaration.append("\n\t\t\t");
+			}
+			for (int i = 0; i < paramTypes.size(); i++) {
+				if ( isKeyedPageParam( paramTypes.get(i) ) ) {
+					declaration
+							.append(".getKeyedResultList(")
+							.append(paramNames.get(i))
+							.append(')');
+				}
+			}
 		}
 		declaration
 				.append(';');
@@ -236,9 +254,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
-			if ( !isSessionParameter(paramType)
-					&& !isPageParam(paramType)
-					&& !isOrderParam(paramType) ) {
+			if ( !isSpecialParam(paramType) ) {
 				if ( first ) {
 					first = false;
 				}
@@ -345,7 +361,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private StringBuilder returnType() {
 		StringBuilder type = new StringBuilder();
 		boolean returnsUni = isReactive()
-				&& (containerType == null || Constants.LIST.equals(containerType));
+				&& (containerType == null || LIST.equals(containerType));
 		if ( returnsUni ) {
 			type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
 		}

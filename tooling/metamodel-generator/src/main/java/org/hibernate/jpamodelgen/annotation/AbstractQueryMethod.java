@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_PAGE;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_RESULT_LIST;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_PAGE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_LIMIT;
@@ -349,6 +351,21 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
 					.append(".class)");
 		}
+	}
+
+	static boolean isSpecialParam(String parameterType) {
+		return isPageParam(parameterType)
+			|| isOrderParam(parameterType)
+			|| isKeyedPageParam(parameterType)
+			|| isSessionParameter(parameterType);
+	}
+
+	static boolean isKeyedPageParam(String parameterType) {
+		return parameterType.startsWith(HIB_KEYED_PAGE);
+	}
+
+	static boolean isKeyedResultList(String returnType) {
+		return returnType.startsWith(HIB_KEYED_RESULT_LIST);
 	}
 
 	static boolean isPageParam(String parameterType) {

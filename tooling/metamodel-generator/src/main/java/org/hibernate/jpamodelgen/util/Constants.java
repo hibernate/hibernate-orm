@@ -75,6 +75,8 @@ public final class Constants {
 
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
 	public static final String HIB_PAGE = "org.hibernate.query.Page";
+	public static final String HIB_KEYED_PAGE = "org.hibernate.query.KeyedPage";
+	public static final String HIB_KEYED_RESULT_LIST = "org.hibernate.query.KeyedResultList";
 
 	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
 

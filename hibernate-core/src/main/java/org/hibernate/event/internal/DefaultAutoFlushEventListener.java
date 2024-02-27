@@ -48,8 +48,13 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				// Need to get the number of collection removals before flushing to executions
 				// (because flushing to executions can add collection removal actions to the action queue).
 				final ActionQueue actionQueue = source.getActionQueue();
+				final EventSource session = event.getSession();
+				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+				if ( !event.isSkipPreFlush() ) {
+					preFlush( session, persistenceContext );
+				}
 				final int oldSize = actionQueue.numberOfCollectionRemovals();
-				flushEverythingToExecutions( event );
+				flushEverythingToExecutions( event, persistenceContext, session );
 				if ( flushIsReallyNeeded( event, source ) ) {
 					LOG.trace( "Need to execute flush" );
 					event.setFlushRequired( true );
@@ -84,6 +89,13 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 					event.getNumberOfEntitiesProcessed(),
 					event.getNumberOfEntitiesProcessed()
 			);
+		}
+	}
+
+	@Override
+	public void onAutoPreFlush(EventSource source) {
+		if ( flushMightBeNeeded( source ) ) {
+			preFlush( source, source.getPersistenceContextInternal() );
 		}
 	}
 

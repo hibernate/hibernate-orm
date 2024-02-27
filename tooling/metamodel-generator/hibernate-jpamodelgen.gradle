@@ -45,6 +45,13 @@ compileTestJava {
     ]
 }
 
+sourceSets {
+    test {
+        java {
+            exclude '**/data/*.java'
+        }
+    }
+}
 
 // Tests with records
 if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
@@ -69,7 +76,6 @@ else {
         test {
             java {
                 exclude '**/records/*.java'
-                exclude '**/data/*.java'
             }
         }
     }

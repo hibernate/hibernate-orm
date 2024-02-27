@@ -63,9 +63,31 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isKeyedPageParam;
+import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isKeyedResultList;
+import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isSessionParameter;
+import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isSpecialParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
-import static org.hibernate.jpamodelgen.util.Constants.*;
+import static org.hibernate.jpamodelgen.util.Constants.FIND;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_SESSION;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_STATELESS_SESSION;
+import static org.hibernate.jpamodelgen.util.Constants.HQL;
+import static org.hibernate.jpamodelgen.util.Constants.ITERABLE;
+import static org.hibernate.jpamodelgen.util.Constants.JD_DELETE;
+import static org.hibernate.jpamodelgen.util.Constants.JD_FIND;
+import static org.hibernate.jpamodelgen.util.Constants.JD_INSERT;
+import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.JD_PAGE_REQUEST;
+import static org.hibernate.jpamodelgen.util.Constants.JD_QUERY;
+import static org.hibernate.jpamodelgen.util.Constants.JD_REPOSITORY;
+import static org.hibernate.jpamodelgen.util.Constants.JD_SAVE;
+import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
+import static org.hibernate.jpamodelgen.util.Constants.JD_UPDATE;
+import static org.hibernate.jpamodelgen.util.Constants.LIST;
+import static org.hibernate.jpamodelgen.util.Constants.MUTINY_SESSION;
+import static org.hibernate.jpamodelgen.util.Constants.SQL;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAccessTypeForHierarchy;
@@ -581,7 +603,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					}
 					break;
 				case 1:
-					if ( isLegalGenericResultType( typeElement.toString() ) ) {
+					final String typeName = typeElement.getQualifiedName().toString();
+					if ( isLegalGenericResultType(typeName) ) {
+						if ( isKeyedResultList(typeName)
+								&& method.getParameters().stream()
+									.noneMatch(param -> isKeyedPageParam(param.asType().toString()))) {
+							context.message(method,
+									"method with return type 'KeyedResultList' has no parameter of type 'KeyedPage'",
+									Diagnostic.Kind.ERROR);
+						}
 						addQueryMethod( method, typeArguments.get(0), typeElement );
 					}
 					else {
@@ -618,7 +648,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			|| containerTypeName.equals(Constants.OPTIONAL)
 			|| containerTypeName.equals(Constants.TYPED_QUERY)
 			|| containerTypeName.equals(Constants.HIB_QUERY)
-			|| containerTypeName.equals(Constants.HIB_SELECTION_QUERY);
+			|| containerTypeName.equals(Constants.HIB_SELECTION_QUERY)
+			|| containerTypeName.equals(Constants.HIB_KEYED_RESULT_LIST);
 	}
 
 	private void addQueryMethod(
@@ -928,10 +959,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isFinderParameterMappingToAttribute(VariableElement param) {
-		final String type = param.asType().toString();
-		return !isSessionParameter( type )
-			&& !isPageParam( type )
-			&& !isOrderParam( type );
+		return !isSpecialParam( param.asType().toString() );
 	}
 
 	private String[] sessionTypeFromParameters(List<String> paramNames, List<String> paramTypes) {
@@ -1790,19 +1818,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean parameterIsMissing(String hql, int i, String param, String type) {
-		return !hasParameter(hql, i, param)
-			&& !isSessionParameter(type)
-			&& !isPageParam(type)
-			&& !isOrderParam(type);
+		return !hasParameter(hql, i, param) && !isSpecialParam(type);
 	}
 
 	private static boolean hasParameter(String hql, int i, String param) {
 		return Pattern.compile(".*(:" + param + "|\\?" + i + ")\\b.*", Pattern.DOTALL)
 				.matcher(hql).matches();
-	}
-
-	private static boolean isSessionParameter(String type) {
-		return SESSION_TYPES.contains(type);
 	}
 
 	private boolean usingReactiveSession(String sessionType) {

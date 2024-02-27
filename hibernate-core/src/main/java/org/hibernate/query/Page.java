@@ -90,6 +90,9 @@ public class Page {
 		return new KeyedPage<>( List.of(keyDefinition), this );
 	}
 	public <R> KeyedPage<R> keyedBy(List<Order<? super R>> keyDefinition) {
+		if ( keyDefinition.isEmpty() )  {
+			throw new IllegalArgumentException("Key definition must not be empty");
+		}
 		return new KeyedPage<>( keyDefinition, this );
 	}
 }

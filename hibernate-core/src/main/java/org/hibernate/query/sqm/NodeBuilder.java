@@ -32,6 +32,7 @@ import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.JpaWindow;
+import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
@@ -84,6 +85,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	boolean isJpaQueryComplianceEnabled();
 
 	QueryEngine getQueryEngine();
+
+	void setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode);
 
 	<R> SqmTuple<R> tuple(
 			Class<R> tupleType,

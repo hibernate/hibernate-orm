@@ -33,6 +33,8 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.sqm.internal.KeyBasedPagination.paginate;
+import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
+import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
 import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
@@ -150,7 +152,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	@Override
 	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> keyedPage) {
 		if ( keyedPage == null ) {
-			throw new IllegalStateException( "KeyedPage was not set" );
+			throw new IllegalStateException( "KeyedPage was not null" );
 		}
 		final Page page = keyedPage.getPage();
 		final List<Order<? super R>> keyDefinition = keyedPage.getKeyDefinition();
@@ -163,21 +165,16 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		}
 
 //		getQueryOptions().setQueryPlanCachingEnabled( false );
-		final List<KeyedResult<R>> executed =
+		final List<KeyedResult<R>> results =
 				buildConcreteQueryPlan( paginateQuery( keyDefinition, key ), getQueryOptions() )
 						.performList(this);
 
-		return new KeyedResultList<>( collectResults( executed, page.getSize() ),
-				keyedPage, getNextPage( keyedPage, executed ) );
-	}
-
-	private static <R> List<R> collectResults(List<KeyedResult<R>> executed, int pageSize) {
-		final int size = executed.size();
-		final List<R> resultList = new ArrayList<>( size );
-		for (int i = 0; i < size && i < pageSize; i++) {
-			resultList.add( executed.get(i).getResult() );
-		}
-		return resultList;
+		return new KeyedResultList<>(
+				collectResults( results, page.getSize() ),
+				collectKeys( results, page.getSize() ),
+				keyedPage,
+				getNextPage( keyedPage, results )
+		);
 	}
 
 	private static <R> KeyedPage<R> getNextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> executed) {

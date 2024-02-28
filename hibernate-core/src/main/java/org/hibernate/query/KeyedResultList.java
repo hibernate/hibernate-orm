@@ -27,11 +27,13 @@ import java.util.List;
 @Incubating
 public class KeyedResultList<R> {
 	private final List<R> resultList;
+	private final List<List<?>> keyList;
 	private final KeyedPage<R> page;
 	private final KeyedPage<R> nextPage;
 
-	public KeyedResultList(List<R> resultList, KeyedPage<R> page, KeyedPage<R> nextPage) {
+	public KeyedResultList(List<R> resultList, List<List<?>> keyList, KeyedPage<R> page, KeyedPage<R> nextPage) {
 		this.resultList = resultList;
+		this.keyList = keyList;
 		this.page = page;
 		this.nextPage = nextPage;
 	}
@@ -41,6 +43,13 @@ public class KeyedResultList<R> {
 	 */
 	public List<R> getResultList() {
 		return resultList;
+	}
+
+	/**
+	 * The keys of the results, in order.
+	 */
+	public List<List<?>> getKeyList() {
+		return keyList;
 	}
 
 	/**

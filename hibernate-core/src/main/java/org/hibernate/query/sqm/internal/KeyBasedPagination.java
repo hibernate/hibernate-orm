@@ -88,11 +88,16 @@ public class KeyBasedPagination {
 			NodeBuilder builder) {
 		final List<SqmPath<?>> items = new ArrayList<>();
 		for ( Order<? super R> key : keyDefinition ) {
-			if ( !key.getEntityClass().isAssignableFrom( selected.getJavaType() ) ) {
-				throw new IllegalQueryOperationException("Select item was of wrong entity type");
+			if ( key.getEntityClass() == null ) {
+				throw new IllegalQueryOperationException("Key-based pagination based on select list items is not yet supported");
 			}
-			// ordering by an attribute of the returned entity
-			items.add( root.get( key.getAttributeName() ) );
+			else {
+				if ( !key.getEntityClass().isAssignableFrom( selected.getJavaType() ) ) {
+					throw new IllegalQueryOperationException("Select item was of wrong entity type");
+				}
+				// ordering by an attribute of the returned entity
+				items.add( root.get( key.getAttributeName() ) );
+			}
 		}
 		return keyedResultConstructor( selected, builder, items );
 	}

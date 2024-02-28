@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,5 +30,27 @@ class KeyedResult<R> {
 
 	public List<Comparable<?>> getKey() {
 		return key;
+	}
+
+	static <R> List<R> collectResults(List<KeyedResult<R>> executed, int pageSize) {
+		final int size = executed.size();
+		final List<R> resultList = new ArrayList<>( size );
+		for (int i = 0; i < size && i < pageSize; i++) {
+			resultList.add( executed.get(i).getResult() );
+		}
+		return resultList;
+	}
+
+	static List<List<?>> collectKeys(List<? extends KeyedResult<?>> executed, int pageSize) {
+		final int size = executed.size();
+		final List<List<?>> resultList = new ArrayList<>( size );
+		for ( int i = 0; i < size && i < pageSize; i++ ) {
+			final List<Comparable<?>> key = executed.get(i).getKey();
+			if ( key == null ) {
+				throw new IllegalArgumentException("Null keys in key-based pagination are not yet supported");
+			}
+			resultList.add( key );
+		}
+		return resultList;
 	}
 }

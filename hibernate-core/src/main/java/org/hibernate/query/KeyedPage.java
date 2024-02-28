@@ -105,4 +105,9 @@ public class KeyedPage<R> {
 	public KeyedPage<R> nextPage(List<Comparable<?>> keyOfLastResult) {
 		return new KeyedPage<>( keyDefinition, page.next(), keyOfLastResult );
 	}
+
+	@Internal
+	public KeyedPage<R> withKey(List<Comparable<?>> keyOfLastResult) {
+		return new KeyedPage<>( keyDefinition, page, keyOfLastResult );
+	}
 }

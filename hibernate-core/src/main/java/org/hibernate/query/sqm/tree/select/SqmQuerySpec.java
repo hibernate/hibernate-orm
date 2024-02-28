@@ -64,13 +64,13 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	public SqmQuerySpec(NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
+		// Enforce non-nullness of the fromClause
+		this.fromClause = new SqmFromClause();
 	}
 
 	public SqmQuerySpec(SqmQuerySpec<T> original, SqmCopyContext context) {
 		super( original, context );
-		if ( original.fromClause != null ) {
-			this.fromClause = original.fromClause.copy( context );
-		}
+		this.fromClause = original.fromClause.copy( context );
 		if ( original.selectClause != null ) {
 			this.selectClause = original.selectClause.copy( context );
 		}
@@ -96,9 +96,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			return existing;
 		}
 		final SqmQuerySpec<T> querySpec = context.registerCopy( this, new SqmQuerySpec<>( nodeBuilder() ) );
-		if ( fromClause != null ) {
-			querySpec.fromClause = fromClause.copy( context );
-		}
+		querySpec.fromClause = fromClause.copy( context );
 		if ( selectClause != null ) {
 			querySpec.selectClause = selectClause.copy( context );
 		}
@@ -145,7 +143,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	public void setFromClause(SqmFromClause fromClause) {
-		this.fromClause = fromClause;
+		// Enforce non-nullness of the fromClause
+		if ( fromClause != null ) {
+			this.fromClause = fromClause;
+		}
 	}
 
 	public boolean producesUniqueResults() {

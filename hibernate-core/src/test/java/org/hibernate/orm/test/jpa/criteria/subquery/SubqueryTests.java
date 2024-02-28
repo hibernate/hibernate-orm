@@ -9,35 +9,44 @@ package org.hibernate.orm.test.jpa.criteria.subquery;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.Session;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaDerivedRoot;
+import org.hibernate.query.criteria.JpaSubQuery;
+
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @Jpa(
 		annotatedClasses = {
-				RootInSubqueryWhereClauseTest.Person.class,
-				RootInSubqueryWhereClauseTest.Address.class
+				SubqueryTests.Person.class,
+				SubqueryTests.Address.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15477")
-public class RootInSubqueryWhereClauseTest {
+public class SubqueryTests {
 
-	@BeforeEach
+	@BeforeAll
 	public void setUp(EntityManagerFactoryScope scope){
 		scope.inTransaction(
 				entityManager -> {
@@ -54,7 +63,8 @@ public class RootInSubqueryWhereClauseTest {
 	}
 
 	@Test
-	public void testSubquery(EntityManagerFactoryScope scope) {
+	@JiraKey(value = "HHH-15477")
+	public void testRootInSubqueryWhereClause(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -76,12 +86,58 @@ public class RootInSubqueryWhereClauseTest {
 		);
 	}
 
+	@Test
+	@JiraKey(value = "HHH-17776")
+	public void testNoFromClauseInSubquery(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					List<Person> entities = getEntities(entityManager);
+					assertEquals( 2, entities.size());
+					assertEquals("Jack", entities.get(0).getName());
+					assertEquals("Black", entities.get(0).getSurName());
+					assertEquals("John", entities.get(1).getName());
+					assertEquals("Doe", entities.get(1).getSurName());
+				}
+		);
+	}
+
+	private List<Person> getEntities(EntityManager entityManager) {
+
+		HibernateCriteriaBuilder builder = entityManager.unwrap( Session.class ).getCriteriaBuilder();
+		JpaCriteriaQuery<Person> mainQuery = builder.createQuery( Person.class );
+
+		JpaSubQuery<Tuple> q1 = mainQuery.subquery(Tuple.class);
+		q1.multiselect(
+				builder.literal("John").alias("name"),
+				builder.literal("Doe").alias("surName")
+		);
+
+		JpaSubQuery<Tuple> q2 = mainQuery.subquery(Tuple.class);
+		q2.multiselect(
+				builder.literal("Jack").alias("name"),
+				builder.literal("Black").alias("surName")
+		);
+
+		JpaSubQuery<Tuple> unionAllSubQuery = builder.unionAll(q1, q2);
+		JpaDerivedRoot<Tuple> mainQueryRoot = mainQuery.from( unionAllSubQuery );
+
+		mainQuery.multiselect(
+				builder.trim(mainQueryRoot.get("name")).alias("name"),
+				builder.trim(mainQueryRoot.get("surName")).alias("surName")
+		);
+		mainQuery.orderBy( builder.asc(mainQueryRoot.get("name")) );
+
+		return entityManager.createQuery(mainQuery).getResultList();
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 		@Id
 		Integer id;
 
 		String name;
+
+		String surName;
 
 		@OneToMany
 		List<Address> addresses =new ArrayList<>();
@@ -90,8 +146,13 @@ public class RootInSubqueryWhereClauseTest {
 		}
 
 		public Person(Integer id, String name) {
+			this(id,name,null);
+		}
+
+		public Person(Integer id, String name, String surName) {
 			this.id = id;
 			this.name = name;
+			this.surName = surName;
 		}
 
 		public void addAddress(Address address){
@@ -105,6 +166,10 @@ public class RootInSubqueryWhereClauseTest {
 
 		public String getName() {
 			return name;
+		}
+
+		public String getSurName() {
+			return surName;
 		}
 
 		public List<Address> getAddresses() {

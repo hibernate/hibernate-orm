@@ -22,6 +22,6 @@ public interface AutoFlushEventListener {
 	 */
 	void onAutoFlush(AutoFlushEvent event) throws HibernateException;
 
-	default void onAutoPreFlush(EventSource source) {
+	default void onAutoPreFlush(EventSource source) throws HibernateException {
 	}
 }

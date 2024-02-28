@@ -516,6 +516,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Object entity = holder.entity;
 			if ( holder.proxy != null ) {
 				holder.entity = null;
+				holder.state = EntityHolderState.UNINITIALIZED;
 				entitiesByKey.put( key, holder );
 			}
 			return entity;
@@ -2180,6 +2181,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		@Override
 		public void markAsReloaded(JdbcValuesSourceProcessingState processingState) {
 			processingState.registerReloadedEntityHolder( this );
+		}
+
+		@Override
+		public boolean isInitialized() {
+			return state == EntityHolderState.INITIALIZED;
 		}
 
 		@Override

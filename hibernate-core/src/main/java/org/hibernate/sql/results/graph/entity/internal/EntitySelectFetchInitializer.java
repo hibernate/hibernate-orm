@@ -134,7 +134,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 						)
 				);
 			}
-			entityInstance = holder.getEntity();
+			entityInstance = persistenceContext.proxyFor( holder, concreteDescriptor );
 			if ( holder.getEntityInitializer() == null ) {
 				if ( entityInstance != null && Hibernate.isInitialized( entityInstance ) ) {
 					state = State.INITIALIZED;

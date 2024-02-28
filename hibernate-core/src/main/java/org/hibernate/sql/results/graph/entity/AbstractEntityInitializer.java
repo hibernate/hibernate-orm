@@ -104,6 +104,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private Object version;
 	private Object entityInstance;
 	private Object entityInstanceForNotify;
+	private EntityHolder holder;
 	protected boolean missing;
 	boolean isInitialized;
 	private boolean isOwningInitializer;
@@ -391,7 +392,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				return;
 			}
 			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
-			final EntityHolder holder = persistenceContext.claimEntityHolderIfPossible(
+			holder = persistenceContext.claimEntityHolderIfPossible(
 					entityKey,
 					null,
 					rowProcessingState.getJdbcValuesSourceProcessingState(),
@@ -553,9 +554,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					else {
 						registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
 					}
-				}
-				else if ( !isOwningInitializer ) {
-					this.isInitialized = true;
 				}
 			}
 			else if ( ( entityFromExecutionContext = getEntityFromExecutionContext( rowProcessingState ) ) != null ) {
@@ -1092,8 +1090,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	protected boolean skipInitialization(Object toInitialize, RowProcessingState rowProcessingState) {
-		if ( !isOwningInitializer ) {
-			return true;
+		if ( holder.isInitialized() ) {
+			return rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
+					.getEffectiveOptionalObject() != toInitialize;
 		}
 		final EntityEntry entry =
 				rowProcessingState.getSession().getPersistenceContextInternal().getEntry( toInitialize );
@@ -1104,7 +1103,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		else if ( entry.getStatus().isDeletedOrGone() ) {
 			return true;
 		}
-		else {
+		else if ( isOwningInitializer ) {
 			if ( isPersistentAttributeInterceptable( toInitialize ) ) {
 				final PersistentAttributeInterceptor interceptor =
 						asPersistentAttributeInterceptable( toInitialize ).$$_hibernate_getInterceptor();
@@ -1126,6 +1125,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				return false;
 			}
+		}
+		else {
+			return true;
 		}
 	}
 

@@ -8,6 +8,7 @@ package org.hibernate.query.sql.internal;
 
 import java.util.BitSet;
 
+import java.util.Map;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.internal.util.StringHelper;
@@ -52,6 +53,7 @@ public class ParameterParser {
 	 */
 	public static void parse(String sqlString, ParameterRecognizer recognizer, boolean nativeJdbcParametersIgnored) throws QueryException {
 		checkIsNotAFunctionCall( sqlString );
+		sqlString = preprocessing(sqlString);
 		final int stringLength = sqlString.length();
 
 		boolean inSingleQuotes = false;
@@ -128,17 +130,8 @@ public class ParameterParser {
 			}
 			// otherwise
 			else {
-				if ( c == ':' && indx < stringLength - 1 && sqlString.charAt( indx + 1 ) == ':') {
-					// colon character has been escaped
-					recognizer.other( c );
-
-					// Skip another colon character at only parameter case
-					if(indx < stringLength - 2 && sqlString.charAt( indx + 2 ) != '=') {
-						recognizer.other( ':' );
-					}
-					indx++;
-				}
-				else if ( c == ':' ) {
+				if ( c == ':' && indx < stringLength - 1 && Character.isJavaIdentifierStart( sqlString.charAt( indx + 1 ) )
+						&& !(0 < indx && sqlString.charAt( indx - 1 ) == ':')) {
 					// named parameter
 					final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
 					final int chopLocation = right < 0 ? sqlString.length() : right;
@@ -181,6 +174,14 @@ public class ParameterParser {
 		}
 
 		recognizer.complete();
+	}
+
+	private static String preprocessing(String sqlString) {
+		final Map<String, String> preprocessingExchangeMap = Map.of("::=", ":=");
+		for(Map.Entry<String, String> entry: preprocessingExchangeMap.entrySet()) {
+			sqlString = sqlString.replace(entry.getKey(), entry.getValue());
+		}
+		return sqlString;
 	}
 
 	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {

@@ -181,7 +181,7 @@ public class TestUtil {
 	public static void assertNoCompilationError(List<Diagnostic<?>> diagnostics) {
 		for ( Diagnostic<?> diagnostic : diagnostics ) {
 			if ( diagnostic.getKind().equals( Diagnostic.Kind.ERROR ) ) {
-				fail( "There was a compilation error during annotation processing:\n" + diagnostic.getMessage( null ) );
+				fail( "There was a compilation error during annotation processing:\n" + diagnostic );
 			}
 		}
 	}

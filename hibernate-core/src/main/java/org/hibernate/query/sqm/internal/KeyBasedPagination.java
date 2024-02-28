@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 
 /**
  * Manipulation of SQM query tree for key-based pagination.
@@ -35,20 +37,22 @@ public class KeyBasedPagination {
 
 	static <R> SqmSelectStatement<KeyedResult<R>> paginate(
 			List<Order<? super R>> keyDefinition, List<Comparable<?>> keyValues,
-			SqmSelectStatement<KeyedResult<R>> sqm, NodeBuilder builder) {
-		final SqmQuerySpec<?> querySpec = sqm.getQuerySpec();
+			SqmSelectStatement<KeyedResult<R>> statement, NodeBuilder builder) {
+		final SqmQuerySpec<?> querySpec = statement.getQuerySpec();
 		final List<? extends JpaSelection<?>> items = querySpec.getSelectClause().getSelectionItems();
 		if ( items.size() == 1 ) {
 			final JpaSelection<?> selected = items.get(0);
 			if ( selected instanceof SqmRoot) {
+				statement.orderBy( keyDefinition.stream().map( order -> sortSpecification( statement, order ) )
+						.collect( toList() ) );
 				final SqmFrom<?,?> root = (SqmFrom<?,?>) selected;
-				sqm.select( keySelection( keyDefinition, root, selected, builder ) );
+				statement.select( keySelection( keyDefinition, root, selected, builder ) );
 				if ( keyValues != null ) {
 					final SqmPredicate restriction = keyRestriction( keyDefinition, keyValues, root, builder );
 					final SqmPredicate queryWhere = querySpec.getRestriction();
-					sqm.where( queryWhere == null ? restriction : builder.and( queryWhere, restriction ) );
+					statement.where( queryWhere == null ? restriction : builder.and( queryWhere, restriction ) );
 				}
-				return sqm;
+				return statement;
 			}
 			else {
 				throw new IllegalQueryOperationException("Select item was not an entity type");

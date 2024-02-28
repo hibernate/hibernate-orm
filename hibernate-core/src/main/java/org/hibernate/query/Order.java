@@ -9,7 +9,10 @@ package org.hibernate.query;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 
+import java.util.List;
 import java.util.Objects;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * A rule for sorting a query result set.
@@ -90,6 +93,16 @@ public class Order<X> {
 		this.nullPrecedence = nullPrecedence;
 		this.element = 1;
 		this.ignoreCase = ignoreCase;
+	}
+
+	private Order(Order<X> other, SortDirection order) {
+		this.order = order;
+		this.attribute = other.attribute;
+		this.entityClass = other.entityClass;
+		this.attributeName = other.attributeName;
+		this.nullPrecedence = other.nullPrecedence;
+		this.element = other.element;
+		this.ignoreCase = other.ignoreCase;
 	}
 
 	public static <T> Order<T> asc(SingularAttribute<T,?> attribute) {
@@ -176,6 +189,10 @@ public class Order<X> {
 		return element;
 	}
 
+	public Order<X> reverse() {
+		return new Order<>( this, order.reverse() );
+	}
+
 	@Override
 	public String toString() {
 		return attributeName + " " + order;
@@ -199,5 +216,19 @@ public class Order<X> {
 	@Override
 	public int hashCode() {
 		return Objects.hash( order, element, attributeName, entityClass );
+	}
+
+	/**
+	 * Reverse the direction of the given ordering list
+	 *
+	 * @param ordering a list of {@code Order} items
+	 * @return a new list, with each {@code Order} reversed
+	 *
+	 * @see #reverse()
+	 *
+	 * @since 6.5
+	 */
+	public static <T> List<Order<? super T>> reverse(List<Order<? super T>> ordering) {
+		return ordering.stream().map(Order::reverse).collect(toList());
 	}
 }

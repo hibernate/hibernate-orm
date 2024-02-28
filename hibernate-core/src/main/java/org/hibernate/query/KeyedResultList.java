@@ -30,12 +30,16 @@ public class KeyedResultList<R> {
 	private final List<List<?>> keyList;
 	private final KeyedPage<R> page;
 	private final KeyedPage<R> nextPage;
+	private final KeyedPage<R> previousPage;
 
-	public KeyedResultList(List<R> resultList, List<List<?>> keyList, KeyedPage<R> page, KeyedPage<R> nextPage) {
+	public KeyedResultList(
+			List<R> resultList, List<List<?>> keyList,
+			KeyedPage<R> page, KeyedPage<R> nextPage, KeyedPage<R> previousPage) {
 		this.resultList = resultList;
 		this.keyList = keyList;
 		this.page = page;
 		this.nextPage = nextPage;
+		this.previousPage = previousPage;
 	}
 
 	/**
@@ -69,6 +73,15 @@ public class KeyedResultList<R> {
 	 */
 	public KeyedPage<R> getNextPage() {
 		return nextPage;
+	}
+
+	/**
+	 * The specification of the previous page of results,
+	 * or {@code null} if it is known that this is the
+	 * first page.
+	 */
+	public KeyedPage<R> getPreviousPage() {
+		return previousPage;
 	}
 
 	/**

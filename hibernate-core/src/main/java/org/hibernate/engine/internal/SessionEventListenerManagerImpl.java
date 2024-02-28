@@ -230,6 +230,28 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	}
 
 	@Override
+	public void prePartialFlushStart() {
+		if ( listeners == null ) {
+			return;
+		}
+
+		for ( SessionEventListener listener : listeners ) {
+			listener.prePartialFlushStart();
+		}
+	}
+
+	@Override
+	public void prePartialFlushEnd() {
+		if ( listeners == null ) {
+			return;
+		}
+
+		for ( SessionEventListener listener : listeners ) {
+			listener.prePartialFlushEnd();
+		}
+	}
+
+	@Override
 	public void partialFlushStart() {
 		if ( listeners == null ) {
 			return;

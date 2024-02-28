@@ -22,6 +22,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTrackerType;
 
@@ -215,23 +216,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 		if ( isTemporarySession ) {
 			// Add an entry for this entity in the PC of the temp Session
-			session.getPersistenceContextInternal().addEntity(
-					target,
-					org.hibernate.engine.spi.Status.READ_ONLY,
-					// loaded state
-					ArrayHelper.filledArray(
-							LazyPropertyInitializer.UNFETCHED_PROPERTY,
-							Object.class,
-							persister.getPropertyTypes().length
-					),
-					entityKey,
-					persister.getVersion( target ),
-					LockMode.NONE,
-					// we assume an entry exists in the db
-					true,
-					persister,
-					true
-			);
+			session.getPersistenceContext().addEnhancedProxy( entityKey, asPersistentAttributeInterceptable( target ) );
 		}
 
 		return persister.initializeEnhancedEntityUsedAsProxy(

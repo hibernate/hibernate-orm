@@ -53,6 +53,9 @@ public interface SessionEventListener extends Serializable {
 	default void flushStart() {}
 	default void flushEnd(int numberOfEntities, int numberOfCollections) {}
 
+	default void prePartialFlushStart(){}
+	default void prePartialFlushEnd(){}
+
 	default void partialFlushStart() {}
 	default void partialFlushEnd(int numberOfEntities, int numberOfCollections) {}
 

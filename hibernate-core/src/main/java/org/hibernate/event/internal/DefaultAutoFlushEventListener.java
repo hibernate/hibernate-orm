@@ -93,9 +93,19 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	}
 
 	@Override
-	public void onAutoPreFlush(EventSource source) {
-		if ( flushMightBeNeeded( source ) ) {
-			preFlush( source, source.getPersistenceContextInternal() );
+	public void onAutoPreFlush(EventSource source) throws HibernateException {
+		final SessionEventListenerManager eventListenerManager = source.getEventListenerManager();
+		eventListenerManager.prePartialFlushStart();
+		final EventManager eventManager = source.getEventManager();
+		HibernateMonitoringEvent hibernateMonitoringEvent = eventManager.beginPrePartialFlush();
+		try {
+			if ( flushMightBeNeeded( source ) ) {
+				preFlush( source, source.getPersistenceContextInternal() );
+			}
+		}
+		finally {
+			eventManager.completePrePartialFlush( hibernateMonitoringEvent, source );
+			eventListenerManager.prePartialFlushEnd();
 		}
 	}
 

@@ -224,4 +224,16 @@ public final class EmptyEventManager implements EventManager {
 			int[] dirtyProperties) {
 
 	}
+
+	@Override
+	public HibernateMonitoringEvent beginPrePartialFlush() {
+		return null;
+	}
+
+	@Override
+	public void completePrePartialFlush(
+			HibernateMonitoringEvent prePartialFlush,
+			SharedSessionContractImplementor session) {
+
+	}
 }

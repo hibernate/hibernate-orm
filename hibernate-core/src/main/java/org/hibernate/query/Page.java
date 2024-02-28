@@ -87,6 +87,9 @@ public class Page {
 	}
 
 	public <R> KeyedPage<R> keyedBy(Order<? super R> keyDefinition) {
+		if ( keyDefinition == null )  {
+			throw new IllegalArgumentException("Key definition must not null");
+		}
 		return new KeyedPage<>( List.of(keyDefinition), this );
 	}
 
@@ -98,8 +101,8 @@ public class Page {
 	 * @return a {@link KeyedPage} representing this page
 	 */
 	public <R> KeyedPage<R> keyedBy(List<Order<? super R>> keyDefinition) {
-		if ( keyDefinition.isEmpty() )  {
-			throw new IllegalArgumentException("Key definition must not be empty");
+		if ( keyDefinition == null || keyDefinition.isEmpty() )  {
+			throw new IllegalArgumentException("Key definition must not be empty or null");
 		}
 		return new KeyedPage<>( keyDefinition, this );
 	}

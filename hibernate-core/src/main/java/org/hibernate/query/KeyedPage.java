@@ -12,6 +12,9 @@ import org.hibernate.Internal;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
+import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
+import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_LAST_ON_PREVIOUS_PAGE;
+import static org.hibernate.query.KeyedPage.KeyInterpretation.NO_KEY;
 
 /**
  * Support for pagination based on a unique key of the result
@@ -49,15 +52,17 @@ public class KeyedPage<R> {
 	private final List<Order<? super R>> keyDefinition;
 	private final Page page;
 	private final List<Comparable<?>> key;
+	private final KeyInterpretation keyInterpretation;
 
 	KeyedPage(List<Order<? super R>> keyDefinition, Page page) {
-		this( keyDefinition, page, null );
+		this( keyDefinition, page, null, NO_KEY );
 	}
 
-	KeyedPage(List<Order<? super R>> keyDefinition, Page page, List<Comparable<?>> key) {
-		this.page = page;
+	KeyedPage(List<Order<? super R>> keyDefinition, Page page, List<Comparable<?>> key, KeyInterpretation interpretation) {
 		this.keyDefinition = unmodifiableList(keyDefinition);
+		this.page = page;
 		this.key = key;
+		this.keyInterpretation = interpretation;
 	}
 
 	/**
@@ -78,19 +83,27 @@ public class KeyedPage<R> {
 	}
 
 	/**
-	 * The key of the last result on the previous page, which is used
-	 * to locate the start of the current page.
+	 * The key of the last result on the previous page, or of the
+	 * first result on the next page, which may be used to locate
+	 * the start or end, respectively, of the current page.
 	 * <p>
 	 * A null key indicates that an {@linkplain Page#getFirstResult()
 	 * offset} should be used instead. This is used to obtain an
 	 * initial page of results.
 	 *
-	 * @return the key of the last result on the previous page, or
-	 *         null if an offset should be used to obtain an initial
-	 *         page
+	 * @return the key, or null if an offset should be used
 	 */
 	public List<Comparable<?>> getKey() {
 		return key;
+	}
+
+	/**
+	 * Determines whether the {@link #getKey() key} should be
+	 * interpreted as the last result on the previous page, or
+	 * as the first result on the next page.
+	 */
+	public KeyInterpretation getKeyInterpretation() {
+		return keyInterpretation;
 	}
 
 	/**
@@ -98,16 +111,48 @@ public class KeyedPage<R> {
 	 * to be located using the given key, which must be the key of
 	 * the last result on this page.
 	 *
-	 * @param keyOfLastResult the key of the last result on this page
+	 * @param keyOfLastResultOnThisPage the key of the last result on this page
 	 * @return a {@link KeyedPage} representing the next page of results
 	 */
 	@Internal
-	public KeyedPage<R> nextPage(List<Comparable<?>> keyOfLastResult) {
-		return new KeyedPage<>( keyDefinition, page.next(), keyOfLastResult );
+	public KeyedPage<R> nextPage(List<Comparable<?>> keyOfLastResultOnThisPage) {
+		return new KeyedPage<>( keyDefinition, page.next(), keyOfLastResultOnThisPage, KEY_OF_LAST_ON_PREVIOUS_PAGE );
 	}
 
+	/**
+	 * Obtain a specification of the previous page of results, which
+	 * is to be located using the given key, which must be the key of
+	 * the first result on this page.
+	 *
+	 * @param keyOfFirstResultOnThisPage the key of the first result on this page
+	 * @return a {@link KeyedPage} representing the next page of results
+	 */
 	@Internal
-	public KeyedPage<R> withKey(List<Comparable<?>> keyOfLastResult) {
-		return new KeyedPage<>( keyDefinition, page, keyOfLastResult );
+	public KeyedPage<R> previousPage(List<Comparable<?>> keyOfFirstResultOnThisPage) {
+		if ( page.isFirst() ) {
+			return null;
+		}
+		else {
+			return new KeyedPage<>( keyDefinition, page.previous(), keyOfFirstResultOnThisPage, KEY_OF_FIRST_ON_NEXT_PAGE );
+		}
+	}
+
+	/**
+	 * Attach the given key to the specification of this page,
+	 * with the given interpretation.
+	 *
+	 * @return a {@link KeyedPage} representing the same page
+	 *         of results, but which may be located using the
+	 *         given key
+	 */
+	@Internal
+	public KeyedPage<R> withKey(List<Comparable<?>> key, KeyInterpretation interpretation) {
+		return new KeyedPage<>( keyDefinition, page, key, interpretation );
+	}
+
+	public enum KeyInterpretation {
+		KEY_OF_LAST_ON_PREVIOUS_PAGE,
+		KEY_OF_FIRST_ON_NEXT_PAGE,
+		NO_KEY
 	}
 }

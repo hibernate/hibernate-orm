@@ -27,11 +27,11 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
+import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.sqm.internal.KeyBasedPagination.paginate;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
@@ -152,13 +152,15 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	@Override
 	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> keyedPage) {
 		if ( keyedPage == null ) {
-			throw new IllegalStateException( "KeyedPage was not null" );
+			throw new IllegalArgumentException( "KeyedPage was null" );
 		}
 		final Page page = keyedPage.getPage();
-		final List<Order<? super R>> keyDefinition = keyedPage.getKeyDefinition();
 		final List<Comparable<?>> key = keyedPage.getKey();
+		final List<Order<? super R>> keyDefinition = keyedPage.getKeyDefinition();
+		final List<Order<? super R>> appliedKeyDefinition =
+				keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE
+						? Order.reverse(keyDefinition) : keyDefinition;
 
-		setOrder( keyDefinition );
 		setMaxResults( page.getMaxResults() + 1 );
 		if ( key == null ) {
 			setFirstResult( page.getFirstResult() );
@@ -166,21 +168,28 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 //		getQueryOptions().setQueryPlanCachingEnabled( false );
 		final List<KeyedResult<R>> results =
-				buildConcreteQueryPlan( paginateQuery( keyDefinition, key ), getQueryOptions() )
+				buildConcreteQueryPlan( paginateQuery( appliedKeyDefinition, key ), getQueryOptions() )
 						.performList(this);
 
 		return new KeyedResultList<>(
 				collectResults( results, page.getSize() ),
 				collectKeys( results, page.getSize() ),
 				keyedPage,
-				getNextPage( keyedPage, results )
+				nextPage( keyedPage, results ),
+				previousPage( keyedPage, results )
 		);
 	}
 
-	private static <R> KeyedPage<R> getNextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> executed) {
+	private static <R> KeyedPage<R> nextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
 		final int pageSize = keyedPage.getPage().getSize();
-		return executed.size() == pageSize + 1
-				? keyedPage.nextPage( executed.get(pageSize - 1).getKey() )
+		return results.size() == pageSize + 1
+				? keyedPage.nextPage( results.get(pageSize - 1).getKey() )
+				: null;
+	}
+
+	private static <R> KeyedPage<R> previousPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
+		return !results.isEmpty()
+				? keyedPage.previousPage( results.get(0).getKey() )
 				: null;
 	}
 

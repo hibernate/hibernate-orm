@@ -14,6 +14,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
 @DomainModel(annotatedClasses = KeyBasedPagingTest.Person.class)
@@ -35,17 +37,38 @@ public class KeyBasedPagingTest {
 					session.createSelectionQuery("from Person", Person.class)
 							.getKeyedResultList(Page.first(5)
 									.keyedBy(Order.asc(Person.class, "ssn")));
+			assertTrue( first.isFirstPage() );
+			assertFalse( first.isLastPage() );
 			assertEquals(5,first.getResultList().size());
-			int page = 1;
+			int page = 0;
 			KeyedResultList<Person> next = first;
-			while ( next.getNextPage() != null ) {
+			while ( !next.isLastPage() ) {
+				page ++;
 				next = session.createSelectionQuery("from Person", Person.class)
 						.getKeyedResultList(next.getNextPage());
 				assertEquals(page, next.getPage().getPage().getNumber());
-				page ++;
+				if ( !next.isLastPage() ) {
+					assertEquals(5, next.getResultList().size());
+				}
 			}
-			assertEquals(4, page);
-			assertEquals( 2, next.getResultList().size());
+			assertEquals(3, page);
+			assertEquals(2, next.getResultList().size());
+			assertTrue( next.isLastPage() );
+			assertFalse( next.isFirstPage() );
+
+			KeyedResultList<Person> previous = next;
+			while ( !previous.isFirstPage() ) {
+				page --;
+				previous = session.createSelectionQuery("from Person where dob > :minDate", Person.class)
+						.setParameter("minDate", LocalDate.of(1970, 2, 5))
+						.getKeyedResultList(previous.getPreviousPage());
+				assertEquals(page, previous.getPage().getPage().getNumber());
+				assertEquals(5, previous.getResultList().size());
+			}
+			assertEquals(0, page);
+			assertEquals(5, previous.getResultList().size());
+			assertTrue( previous.isFirstPage() );
+			assertFalse( previous.isLastPage() );
 		});
 
 		scope.inSession(session -> {
@@ -74,18 +97,39 @@ public class KeyBasedPagingTest {
 							.setParameter("minDate", LocalDate.of(1970, 2, 5))
 							.getKeyedResultList(Page.first(5)
 									.keyedBy(Order.asc(Person.class, "ssn")));
+			assertTrue( first.isFirstPage() );
+			assertFalse( first.isLastPage() );
 			assertEquals(5,first.getResultList().size());
-			int page = 1;
+			int page = 0;
 			KeyedResultList<Person> next = first;
-			while ( next.getNextPage() != null ) {
+			while ( !next.isLastPage() ) {
+				page ++;
 				next = session.createSelectionQuery("from Person where dob > :minDate", Person.class)
 						.setParameter("minDate", LocalDate.of(1970, 2, 5))
 						.getKeyedResultList(next.getNextPage());
 				assertEquals(page, next.getPage().getPage().getNumber());
-				page ++;
+				if ( !next.isLastPage() ) {
+					assertEquals(5, next.getResultList().size());
+				}
 			}
-			assertEquals(3, page);
-			assertEquals( 2, next.getResultList().size());
+			assertEquals(2, page);
+			assertEquals(2, next.getResultList().size());
+			assertTrue( next.isLastPage() );
+			assertFalse( next.isFirstPage() );
+
+			KeyedResultList<Person> previous = next;
+			while ( !previous.isFirstPage() ) {
+				page --;
+				previous = session.createSelectionQuery("from Person where dob > :minDate", Person.class)
+						.setParameter("minDate", LocalDate.of(1970, 2, 5))
+						.getKeyedResultList(previous.getPreviousPage());
+				assertEquals(page, previous.getPage().getPage().getNumber());
+				assertEquals(5, previous.getResultList().size());
+			}
+			assertEquals(0, page);
+			assertEquals(5, previous.getResultList().size());
+			assertTrue( previous.isFirstPage() );
+			assertFalse( previous.isLastPage() );
 		});
 	}
 

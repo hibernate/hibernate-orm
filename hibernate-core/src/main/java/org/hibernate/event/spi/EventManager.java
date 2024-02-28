@@ -155,6 +155,12 @@ public interface EventManager {
 			EntityEntry entry,
 			int[] dirtyProperties);
 
+	HibernateMonitoringEvent beginPrePartialFlush();
+
+	void completePrePartialFlush(
+			HibernateMonitoringEvent prePartialFlush,
+			SharedSessionContractImplementor session
+	);
 
 	enum CacheActionDescription {
 		ENTITY_INSERT( "Entity Insert" ),

@@ -169,7 +169,50 @@ public class ParameterParserTest {
 		recognizer.complete();
         assertEquals("SELECT @a,(@a:=20) FROM tbl_name", captured.toString());
     }
-    
+
+    @Test
+    @JiraKey( value = "HHH-17759")
+    public void testParseColonCharacterTypeCasting() {
+        final StringBuilder captured = new StringBuilder();
+        ParameterRecognizer recognizer = new ParameterRecognizer() {
+            @Override
+            public void ordinalParameter(int position) {
+                // don't care
+            }
+
+            @Override
+            public void namedParameter(String name, int position) {
+                // don't care
+            }
+
+            @Override
+            public void jpaPositionalParameter(int name, int position) {
+                // don't care
+            }
+
+            @Override
+            public void other(char character) {
+                captured.append(character);
+            }
+
+            @Override
+            public void complete() {
+            }
+
+        };
+        String expectedQuery = "SELECT column_name::text FROM table_name";
+
+        ParameterParser.parse("SELECT column_name::text FROM table_name", recognizer);
+        recognizer.complete();
+        assertEquals(expectedQuery, captured.toString());
+
+		captured.setLength(0); // clear for new test
+
+		ParameterParser.parse("SELECT column_name::::text FROM table_name", recognizer);
+		recognizer.complete();
+		assertEquals(expectedQuery, captured.toString());
+    }
+
     @Test
     public void testParseNamedParameter() {
         ExtendedParameterRecognizer recognizer = createRecognizer();

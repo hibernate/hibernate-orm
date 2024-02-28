@@ -131,6 +131,11 @@ public class ParameterParser {
 				if ( c == ':' && indx < stringLength - 1 && sqlString.charAt( indx + 1 ) == ':') {
 					// colon character has been escaped
 					recognizer.other( c );
+
+					// Skip another colon character at only parameter case
+					if(indx < stringLength - 2 && sqlString.charAt( indx + 2 ) != '=') {
+						recognizer.other( ':' );
+					}
 					indx++;
 				}
 				else if ( c == ':' ) {

@@ -106,4 +106,16 @@ public interface BookAuthorRepository {
 	@OrderBy("isbn")
 	@OrderBy(value = "publicationDate", descending = true)
 	List<Book> everyBook3(PageRequest<? super Book> pageRequest);
+
+	@Find
+	KeysetAwareSlice<Book> everyBook4(PageRequest<Book> pageRequest);
+
+	@Find
+	KeysetAwareSlice<Book> everyBook5(String title, PageRequest<Book> pageRequest);
+
+	@Query("from Book")
+	KeysetAwareSlice<Book> everyBook6(PageRequest<Book> pageRequest);
+
+	@Query("from Book where title like :titlePattern")
+	KeysetAwareSlice<Book> everyBook7(String titlePattern, PageRequest<Book> pageRequest);
 }

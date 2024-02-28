@@ -72,6 +72,7 @@ public final class Constants {
 	public static final String JD_PAGE_REQUEST = "jakarta.data.page.PageRequest";
 	public static final String JD_SORT = "jakarta.data.Sort";
 	public static final String JD_ORDER = "jakarta.data.Order";
+	public static final String JD_KEYED_SLICE = "jakarta.data.page.KeysetAwareSlice";
 
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
 	public static final String HIB_PAGE = "org.hibernate.query.Page";
@@ -101,14 +102,14 @@ public final class Constants {
 	public static final String LIST_ATTRIBUTE = "jakarta.persistence.metamodel.ListAttribute";
 	public static final String MAP_ATTRIBUTE = "jakarta.persistence.metamodel.MapAttribute";
 
-	public static final String JAVA_OBJECT = Object.class.getName();
-	public static final String ITERABLE = java.lang.Iterable.class.getName();
-	public static final String COLLECTION = java.util.Collection.class.getName();
-	public static final String LIST = java.util.List.class.getName();
-	public static final String MAP = java.util.Map.class.getName();
-	public static final String SET = java.util.Set.class.getName();
-	public static final String OPTIONAL = java.util.Optional.class.getName();
-	public static final String STREAM = java.util.stream.Stream.class.getName();
+	public static final String JAVA_OBJECT = "java.lang.Object";
+	public static final String ITERABLE = "java.lang.Iterable";
+	public static final String COLLECTION = "java.util.Collection";
+	public static final String LIST = "java.util.List";
+	public static final String MAP = "java.util.Map";
+	public static final String SET = "java.util.Set";
+	public static final String OPTIONAL = "java.util.Optional";
+	public static final String STREAM = "java.util.stream.Stream";
 
 	public static final Map<String, String> COLLECTIONS = Map.of(
 			COLLECTION, Constants.COLLECTION_ATTRIBUTE,

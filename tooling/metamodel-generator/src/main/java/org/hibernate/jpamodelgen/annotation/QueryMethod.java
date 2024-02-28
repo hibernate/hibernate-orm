@@ -13,11 +13,14 @@ import org.hibernate.jpamodelgen.util.Constants;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_RESULT_LIST;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_QUERY;
+import static org.hibernate.jpamodelgen.util.Constants.HIB_SELECTION_QUERY;
+import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_SLICE;
 import static org.hibernate.jpamodelgen.util.Constants.LIST;
 import static org.hibernate.jpamodelgen.util.Constants.OPTIONAL;
-import static org.hibernate.jpamodelgen.util.Constants.STREAM;
+import static org.hibernate.jpamodelgen.util.Constants.QUERY;
+import static org.hibernate.jpamodelgen.util.Constants.TYPED_QUERY;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -26,7 +29,7 @@ import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFr
  */
 public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
-	private final @Nullable String containerTypeName;
+	private final @Nullable String containerType;
 	private final boolean isUpdate;
 	private final boolean isNative;
 	private final List<OrderBy> orderBys;
@@ -38,7 +41,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			@Nullable
 			String returnTypeName,
 			@Nullable
-			String containerTypeName,
+			String containerType,
 			List<String> paramNames,
 			List<String> paramTypes,
 			boolean isUpdate,
@@ -56,7 +59,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				belongsToDao, addNonnullAnnotation,
 				dataRepository );
 		this.queryString = queryString;
-		this.containerTypeName = containerTypeName;
+		this.containerType = containerType;
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;
 		this.orderBys = orderBys;
@@ -79,7 +82,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	boolean singleResult() {
-		return containerTypeName == null;
+		return containerType == null;
 	}
 
 	@Override
@@ -93,12 +96,44 @@ public class QueryMethod extends AbstractQueryMethod {
 		tryReturn( declaration );
 		castResult( declaration, returnType );
 		createQuery( declaration );
-		boolean unwrapped = setParameters( paramTypes, declaration );
-		unwrapped = orderBy( declaration, unwrapped);
+		setParameters( paramTypes, declaration );
+		boolean unwrapped = specialNeeds( paramTypes, declaration );
 		execute( declaration, unwrapped );
 		convertExceptions( declaration );
 		closingBrace( declaration );
 		return declaration.toString();
+	}
+
+	private boolean specialNeeds(List<String> paramTypes, StringBuilder declaration) {
+		boolean unwrapped;
+		if ( containerType == null || !containerType.equals(JD_KEYED_SLICE) ) {
+			unwrapped = handleSpecialParameters( paramTypes, declaration );
+			unwrapped = orderBy( declaration, unwrapped );
+		}
+		else {
+			unwrapped = !isUsingEntityManager();
+		}
+		unwrapped = unwrapIfOptional( declaration, unwrapped );
+		if ( isUpdate || containerType == null || !isQueryType(containerType)) {
+			declaration
+					.append("\n\t\t\t");
+		}
+		return unwrapped;
+	}
+
+	private boolean unwrapIfOptional(StringBuilder declaration, boolean unwrapped) {
+		if ( OPTIONAL.equals(containerType) ) {
+			unwrapQuery(declaration, unwrapped);
+			unwrapped = true;
+		}
+		return unwrapped;
+	}
+
+	private boolean isQueryType(String containerType) {
+		return HIB_QUERY.equals(containerType)
+			|| HIB_SELECTION_QUERY.equals(containerType)
+			|| QUERY.equals(containerType)
+			|| TYPED_QUERY.equals(containerType);
 	}
 
 	private boolean orderBy(StringBuilder declaration, boolean unwrapped) {
@@ -155,7 +190,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private void castResult(StringBuilder declaration, StringBuilder returnType) {
-		if ( isNative && returnTypeName != null && containerTypeName == null
+		if ( isNative && returnTypeName != null && containerType == null
 				&& isUsingEntityManager() ) {
 			// EntityManager.createNativeQuery() does not return TypedQuery,
 			// so we need to cast to the entity type
@@ -168,13 +203,23 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void tryReturn(StringBuilder declaration) {
 		if (dataRepository) {
 			declaration
-					.append("\ttry {\n\t");
+					.append("\ttry {\n");
 		}
-		declaration
-				.append("\t");
-		if ( returnTypeName == null || !returnTypeName.equals("void") ) {
+		if ( containerType != null
+				&& containerType.equals(JD_KEYED_SLICE) ) {
+			makeKeyedPage( declaration, paramTypes );
+		}
+		else {
+			if ( dataRepository ) {
+				declaration
+						.append('\t');
+			}
 			declaration
-					.append("return ");
+					.append("\t");
+			if ( returnTypeName == null || !returnTypeName.equals("void") ) {
+				declaration
+						.append("return ");
+			}
 		}
 	}
 
@@ -191,61 +236,30 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void execute(StringBuilder declaration, boolean unwrapped) {
 		if ( isUpdate ) {
 			declaration
-					.append("\n\t\t\t.executeUpdate()");
+					.append(".executeUpdate()");
 			if ( "boolean".equals(returnTypeName) ) {
 				declaration.append(" > 0");
 			}
-		}
-		else if ( containerTypeName == null ) {
 			declaration
-					.append("\n\t\t\t.getSingleResult()");
-		}
-		else if ( containerTypeName.equals(OPTIONAL) ) {
-			unwrapQuery( declaration, unwrapped );
-			declaration
-					.append("\n\t\t\t.uniqueResultOptional()");
-		}
-		else if ( containerTypeName.equals(STREAM) ) {
-			declaration
-					.append("\n\t\t\t.getResultStream()");
-		}
-		else if ( containerTypeName.equals(LIST) ) {
-			declaration
-					.append("\n\t\t\t.getResultList()");
-		}
-		else if ( containerTypeName.equals(HIB_KEYED_RESULT_LIST) ) {
-			for (int i = 0; i < paramTypes.size(); i++) {
-				if ( isKeyedPageParam( paramTypes.get(i) ) ) {
-					declaration
-							.append("\n\t\t\t.getKeyedResultList(")
-							.append(paramNames.get(i))
-							.append(')');
-				}
-			}
+					.append(';');
 		}
 		else {
-			if ( isUsingEntityManager() && !unwrapped
-					&& ( containerTypeName.startsWith("org.hibernate")
-						|| isNative && returnTypeName != null ) ) {
-				declaration
-						.append("\n\t\t\t.unwrap(")
-						.append(annotationMetaEntity.importType(containerTypeName))
-						.append(".class)");
-
-			}
+			final boolean mustUnwrap =
+					containerType != null && containerType.startsWith("org.hibernate")
+							|| isNative && returnTypeName != null;
+			executeSelect( declaration, paramTypes, containerType, unwrapped, mustUnwrap );
 		}
-		declaration.append(';');
-		if (dataRepository) {
-			declaration.append('\n');
+		if ( dataRepository ) {
+			declaration
+					.append('\n');
 		}
 	}
 
-	private boolean setParameters(List<String> paramTypes, StringBuilder declaration) {
-		boolean unwrapped = !isUsingEntityManager();
+	private void setParameters(List<String> paramTypes, StringBuilder declaration) {
 		for ( int i = 0; i < paramNames.size(); i++ ) {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
-			if ( !isSessionParameter(paramType) ) {
+			if ( !isSpecialParam(paramType) ) {
 				final int ordinal = i+1;
 				if ( queryString.contains(":" + paramName) ) {
 					setNamedParameter( declaration, paramName );
@@ -253,12 +267,20 @@ public class QueryMethod extends AbstractQueryMethod {
 				else if ( queryString.contains("?" + ordinal) ) {
 					setOrdinalParameter( declaration, ordinal, paramName );
 				}
-				else if ( isPageParam(paramType) ) {
-					setPage( declaration, paramName, paramType );
-				}
-				else if ( isOrderParam(paramType) ) {
-					unwrapped = setOrder( declaration, unwrapped, paramName, paramType );
-				}
+			}
+		}
+	}
+
+	private boolean handleSpecialParameters(List<String> paramTypes, StringBuilder declaration) {
+		boolean unwrapped = !isUsingEntityManager();
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( isPageParam(paramType) ) {
+				setPage( declaration, paramName, paramType );
+			}
+			else if ( isOrderParam(paramType) ) {
+				unwrapped = setOrder( declaration, unwrapped, paramName, paramType );
 			}
 		}
 		return unwrapped;
@@ -285,12 +307,12 @@ public class QueryMethod extends AbstractQueryMethod {
 	private StringBuilder returnType() {
 		StringBuilder type = new StringBuilder();
 		boolean returnsUni = isReactive()
-				&& (containerTypeName == null || LIST.equals(containerTypeName));
+				&& (containerType == null || LIST.equals(containerType));
 		if ( returnsUni ) {
 			type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
 		}
-		if ( containerTypeName != null ) {
-			type.append(annotationMetaEntity.importType(containerTypeName));
+		if ( containerType != null ) {
+			type.append(annotationMetaEntity.importType(containerType));
 			if ( returnTypeName != null ) {
 				type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
 			}

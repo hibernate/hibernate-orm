@@ -12,6 +12,7 @@ import org.hibernate.jpamodelgen.util.Constants;
 import java.util.List;
 import java.util.Locale;
 
+import static org.hibernate.jpamodelgen.util.Constants.HIB_SESSION;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -146,24 +147,23 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		if ( isUsingEntityManager() ) {
 			declaration
 					.append(".unwrap(")
-					.append(annotationMetaEntity.importType(Constants.HIB_SESSION))
+					.append(annotationMetaEntity.importType(HIB_SESSION))
 					.append(".class)\n\t\t\t");
 		}
 	}
 
-	void enableFetchProfile(StringBuilder declaration) {
-//		if ( !usingEntityManager ) {
-//			declaration
-//					.append("\n\t\t\t.enableFetchProfile(")
-//					.append(constantName())
-//					.append(")");
-//		}
+	boolean enableFetchProfile(StringBuilder declaration, boolean unwrapped) {
+		if ( !fetchProfiles.isEmpty() ) {
+			unwrapQuery( declaration, unwrapped );
+			unwrapped = true;
+		}
 		for ( String profile : fetchProfiles ) {
 			declaration
 					.append("\n\t\t\t.enableFetchProfile(")
 					.append(profile)
 					.append(")");
 		}
+		return unwrapped;
 	}
 
 	void preamble(StringBuilder declaration) {

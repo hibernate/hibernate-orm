@@ -15,12 +15,10 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
-import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_RESULT_LIST;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_SELECTION_QUERY;
+import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_SLICE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.Constants.LIST;
 import static org.hibernate.jpamodelgen.util.Constants.OPTIONAL;
-import static org.hibernate.jpamodelgen.util.Constants.STREAM;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
 /**
@@ -71,7 +69,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		modifiers( declaration );
 		preamble( declaration, paramTypes );
 		nullChecks( paramTypes, declaration );
-		createQuery( declaration );
+		createCriteriaQuery( declaration );
 		where( declaration, paramTypes );
 		orderBy( paramTypes, declaration );
 		executeQuery( declaration, paramTypes );
@@ -93,87 +91,95 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private void executeQuery(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append('\n');
-		if (dataRepository) {
+		tryReturn( declaration, paramTypes );
+		castResult( declaration );
+		createQuery( declaration );
+		boolean unwrapped = specialNeeds( declaration, paramTypes );
+		execute( declaration, paramTypes, unwrapped );
+	}
+
+	private void castResult(StringBuilder declaration) {
+		if ( containerType == null && !fetchProfiles.isEmpty()
+				&& isUsingEntityManager() ) {
 			declaration
-					.append("\ttry {\n\t");
+					.append("(")
+					.append(annotationMetaEntity.importType(entity))
+					.append(") ");
 		}
+	}
+
+	private boolean specialNeeds(StringBuilder declaration, List<String> paramTypes) {
+		boolean unwrapped = !isUsingEntityManager();
+		unwrapped = handleSpecialParameters( declaration, paramTypes, unwrapped );
+		unwrapped = enableFetchProfile( declaration, unwrapped );
+		unwrapped = unwrapIfOptional( declaration, unwrapped );
+		if ( unwrapped ) {
+			declaration.append("\n\t\t\t");
+		}
+		return unwrapped;
+	}
+
+	private boolean unwrapIfOptional(StringBuilder declaration, boolean unwrapped) {
+		if ( OPTIONAL.equals(containerType) ) {
+			unwrapQuery(declaration, unwrapped);
+			unwrapped = true;
+		}
+		return unwrapped;
+	}
+
+	private void createQuery(StringBuilder declaration) {
 		declaration
-				.append("\treturn ")
 				.append(sessionName)
 				.append(".createQuery(query)");
-		final boolean hasOrderParameter =
-				paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam);
-		final boolean hasEnabledFetchProfiles = !fetchProfiles.isEmpty();
-		final boolean hasNativeReturnType =
+	}
+
+	private void execute(StringBuilder declaration, List<String> paramTypes, boolean unwrapped) {
+		final boolean mustUnwrap =
 				containerType != null && containerType.startsWith("org.hibernate");
-		final boolean unwrap =
-				( hasOrderParameter || hasEnabledFetchProfiles || hasNativeReturnType )
-						&& isUsingEntityManager();
-		if ( unwrap ) {
-			declaration
-					.append("\n\t\t\t.unwrap(")
-					.append(annotationMetaEntity.importType(HIB_SELECTION_QUERY))
-					.append(".class)");
-		}
-		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
-			if ( isPageParam(paramType) ) {
-				setPage( declaration, paramName, paramType );
-			}
-			else if ( isOrderParam(paramType) && !isJakartaSortParam(paramType) ) {
-				setOrder( declaration, true, paramName, paramType );
-			}
-		}
-		enableFetchProfile(declaration);
-		if ( containerType == null) {
-			if ( unwrap || hasEnabledFetchProfiles ) {
-				declaration.append("\n\t\t\t");
-			}
-			declaration
-					.append(".getSingleResult()");
-		}
-		else if ( containerType.equals(OPTIONAL) ) {
-			unwrapQuery( declaration, unwrap );
-			declaration
-					.append("\n\t\t\t.uniqueResultOptional()");
-		}
-		else if ( containerType.equals(STREAM) ) {
-			if ( unwrap || hasOrderParameter || hasEnabledFetchProfiles ) {
-				declaration.append("\n\t\t\t");
-			}
-			declaration
-					.append(".getResultStream()");
-		}
-		else if ( containerType.equals(LIST) ) {
-			if ( unwrap || hasOrderParameter || hasEnabledFetchProfiles ) {
-				declaration.append("\n\t\t\t");
-			}
-			declaration
-					.append(".getResultList()");
-		}
-		else if ( containerType.equals(HIB_KEYED_RESULT_LIST) ) {
-			if ( unwrap || hasOrderParameter || hasEnabledFetchProfiles ) {
-				declaration.append("\n\t\t\t");
-			}
-			for (int i = 0; i < paramTypes.size(); i++) {
-				if ( isKeyedPageParam( paramTypes.get(i) ) ) {
-					declaration
-							.append(".getKeyedResultList(")
-							.append(paramNames.get(i))
-							.append(')');
-				}
-			}
-		}
-		declaration
-				.append(';');
-		if (dataRepository) {
+		executeSelect( declaration, paramTypes, containerType, unwrapped, mustUnwrap );
+		if ( dataRepository ) {
 			declaration
 					.append('\n');
 		}
 	}
 
-	private void createQuery(StringBuilder declaration) {
+	private boolean handleSpecialParameters(StringBuilder declaration, List<String> paramTypes, boolean unwrapped) {
+		if ( containerType == null || !containerType.equals(JD_KEYED_SLICE) ) {
+			for ( int i = 0; i < paramNames.size(); i ++ ) {
+				final String paramName = paramNames.get(i);
+				final String paramType = paramTypes.get(i);
+				if ( isPageParam(paramType) ) {
+					setPage( declaration, paramName, paramType );
+				}
+				else if ( isOrderParam(paramType) && !isJakartaSortParam(paramType) ) {
+					setOrder( declaration, unwrapped, paramName, paramType );
+					unwrapped = true;
+				}
+			}
+		}
+		return unwrapped;
+	}
+
+	private void tryReturn(StringBuilder declaration, List<String> paramTypes) {
+		if (dataRepository) {
+			declaration
+					.append("\ttry {\n");
+		}
+		if ( containerType != null
+				&& containerType.equals(JD_KEYED_SLICE) ) {
+			makeKeyedPage(declaration, paramTypes);
+		}
+		else {
+			if ( dataRepository ) {
+				declaration
+						.append('\t');
+			}
+			declaration
+					.append("\treturn ");
+		}
+	}
+
+	private void createCriteriaQuery(StringBuilder declaration) {
 		declaration
 				.append("\n\tvar builder = ")
 				.append(sessionName)

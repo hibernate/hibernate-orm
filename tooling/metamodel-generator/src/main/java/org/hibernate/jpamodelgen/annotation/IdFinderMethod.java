@@ -80,7 +80,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				.append(".byId(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class)");
-		enableFetchProfile(declaration);
+		enableFetchProfile( declaration, true );
 		declaration
 				.append("\n\t\t\t.load(")
 				.append(paramName)

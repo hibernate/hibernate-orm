@@ -53,6 +53,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -69,25 +70,7 @@ import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isSession
 import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isSpecialParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
-import static org.hibernate.jpamodelgen.util.Constants.FIND;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_SESSION;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_STATELESS_SESSION;
-import static org.hibernate.jpamodelgen.util.Constants.HQL;
-import static org.hibernate.jpamodelgen.util.Constants.ITERABLE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_DELETE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_FIND;
-import static org.hibernate.jpamodelgen.util.Constants.JD_INSERT;
-import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
-import static org.hibernate.jpamodelgen.util.Constants.JD_PAGE_REQUEST;
-import static org.hibernate.jpamodelgen.util.Constants.JD_QUERY;
-import static org.hibernate.jpamodelgen.util.Constants.JD_REPOSITORY;
-import static org.hibernate.jpamodelgen.util.Constants.JD_SAVE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
-import static org.hibernate.jpamodelgen.util.Constants.JD_UPDATE;
-import static org.hibernate.jpamodelgen.util.Constants.LIST;
-import static org.hibernate.jpamodelgen.util.Constants.MUTINY_SESSION;
-import static org.hibernate.jpamodelgen.util.Constants.SQL;
+import static org.hibernate.jpamodelgen.util.Constants.*;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAccessTypeForHierarchy;
@@ -637,20 +620,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isLegalRawResultType(String containerTypeName) {
-		return containerTypeName.equals(Constants.LIST)
-			|| containerTypeName.equals(Constants.QUERY)
-			|| containerTypeName.equals(Constants.HIB_QUERY);
+		return LEGAL_RAW_RESULT_TYPES.contains( containerTypeName );
 	}
 
 	private static boolean isLegalGenericResultType(String containerTypeName) {
-		return containerTypeName.equals(Constants.LIST)
-			|| containerTypeName.equals(Constants.STREAM)
-			|| containerTypeName.equals(Constants.OPTIONAL)
-			|| containerTypeName.equals(Constants.TYPED_QUERY)
-			|| containerTypeName.equals(Constants.HIB_QUERY)
-			|| containerTypeName.equals(Constants.HIB_SELECTION_QUERY)
-			|| containerTypeName.equals(Constants.HIB_KEYED_RESULT_LIST);
+		return LEGAL_GENERIC_RESULT_TYPES.contains( containerTypeName );
 	}
+
+	private static final Set<String> LEGAL_RAW_RESULT_TYPES
+			= Set.of(LIST, QUERY, HIB_QUERY);
+
+	private static final Set<String> LEGAL_GENERIC_RESULT_TYPES
+			= Set.of(LIST, STREAM, OPTIONAL, TYPED_QUERY, HIB_QUERY, HIB_SELECTION_QUERY, HIB_KEYED_RESULT_LIST, JD_KEYED_SLICE);
 
 	private void addQueryMethod(
 			ExecutableElement method,

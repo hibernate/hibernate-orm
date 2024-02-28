@@ -65,7 +65,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 				.append(".byNaturalId(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class)");
-		enableFetchProfile( declaration );
+		enableFetchProfile( declaration, true );
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			if ( !isSessionParameter( paramTypes.get(i) ) ) {
 				final String paramName = paramNames.get(i);

@@ -8,6 +8,7 @@ package org.hibernate.jpamodelgen.annotation;
 
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
 /**
@@ -29,7 +30,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, addNonnullAnnotation, dataRepository );
+				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository );
 		int idParameter = idParameter(paramNames, paramTypes);
 		this.paramName = paramNames.get(idParameter);
 		this.paramType = paramTypes.get(idParameter);

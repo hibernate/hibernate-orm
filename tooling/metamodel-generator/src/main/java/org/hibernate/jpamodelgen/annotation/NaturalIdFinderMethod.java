@@ -8,6 +8,8 @@ package org.hibernate.jpamodelgen.annotation;
 
 import java.util.List;
 
+import static java.util.Collections.emptyList;
+
 /**
  * @author Gavin King
  */
@@ -27,7 +29,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, addNonnullAnnotation, dataRepository );
+				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository );
 		this.paramNullability = paramNullability;
 	}
 

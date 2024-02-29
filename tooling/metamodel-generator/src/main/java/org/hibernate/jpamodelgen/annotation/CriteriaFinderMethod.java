@@ -22,7 +22,6 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 
 	private final @Nullable String containerType;
 	private final List<Boolean> paramNullability;
-	private final List<OrderBy> orderBys;
 
 	CriteriaFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -38,11 +37,9 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, addNonnullAnnotation,
-				dataRepository );
+				paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository );
 		this.containerType = containerType;
 		this.paramNullability = paramNullability;
-		this.orderBys = orderBys;
 	}
 
 	@Override
@@ -56,17 +53,12 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	}
 
 	@Override
-	List<OrderBy> getOrderBys() {
-		return orderBys;
-	}
-
-	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
-		preamble( declaration, paramTypes );
+		preamble( declaration, returnType(), paramTypes );
 		nullChecks( paramTypes, declaration );
 		createCriteriaQuery( declaration );
 		where( declaration, paramTypes );
@@ -75,16 +67,6 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		convertExceptions( declaration );
 		closingBrace( declaration );
 		return declaration.toString();
-	}
-
-	private void preamble(StringBuilder declaration, List<String> paramTypes) {
-		declaration
-				.append(returnType())
-				.append(" ")
-				.append(methodName);
-		parameters(paramTypes, declaration);
-		declaration
-				.append(" {\n");
 	}
 
 	private void executeQuery(StringBuilder declaration, List<String> paramTypes) {

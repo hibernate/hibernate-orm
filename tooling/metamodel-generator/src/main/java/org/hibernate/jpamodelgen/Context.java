@@ -87,6 +87,7 @@ public final class Context {
 	private boolean addTransactionScopedAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
+	private boolean quarkusInjection;
 
 	// keep track of all classes for which model have been generated
 	private final Set<Metamodel> generatedModelClasses = new HashSet<>();
@@ -194,6 +195,14 @@ public final class Context {
 
 	public void setAddTransactionScopedAnnotation(boolean addTransactionScopedAnnotation) {
 		this.addTransactionScopedAnnotation = addTransactionScopedAnnotation;
+	}
+
+	public boolean isQuarkusInjection() {
+		return quarkusInjection;
+	}
+
+	public void setQuarkusInjection(boolean quarkusInjection) {
+		this.quarkusInjection = quarkusInjection;
 	}
 
 	public Elements getElementUtils() {

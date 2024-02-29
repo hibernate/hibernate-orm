@@ -159,9 +159,9 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		}
 		for ( String profile : fetchProfiles ) {
 			declaration
-					.append("\n\t\t\t.enableFetchProfile(")
+					.append("\t\t\t.enableFetchProfile(")
 					.append(profile)
-					.append(")");
+					.append(")\n");
 		}
 		return unwrapped;
 	}

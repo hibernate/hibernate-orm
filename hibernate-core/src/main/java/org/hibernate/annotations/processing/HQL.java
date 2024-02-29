@@ -129,6 +129,13 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * List&lt;Book&gt; findBooksByTitleWithPagination(String title, Page page, Order&lt;Book&gt; order);
  * </pre>
  * <p>
+ * As a further exception, a method might support key-based pagination.
+ * Then it must have:
+ * <ul>
+ * <li>return type {@link org.hibernate.query.KeyedResultList}, and
+ * <li>a parameter of type {@link org.hibernate.query.KeyedPage}.
+ * </ul>
+ * <p>
  * Queries specified using this annotation are always validated by
  * the Metamodel Generator, and so it isn't necessary to specify the
  * {@link CheckHQL} annotation.

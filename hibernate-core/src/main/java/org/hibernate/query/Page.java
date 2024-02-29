@@ -18,7 +18,8 @@ import java.util.List;
  * results to be passed around the system before being applied to
  * a {@link Query} by calling {@link Query#setPage(Page)}.
  * <p>
- * A parameter of a {@linkplain org.hibernate.annotations.processing.HQL
+ * A parameter of a {@linkplain org.hibernate.annotations.processing.Find
+ * finder method} or {@linkplain org.hibernate.annotations.processing.HQL
  * HQL query method} may be declared with type {@code Page}.
  *
  * @see SelectionQuery#setPage(Page)

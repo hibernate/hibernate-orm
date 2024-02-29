@@ -170,12 +170,16 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		final PackageElement jakartaDataPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "jakarta.data" );
+		final PackageElement quarkusOrmPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "io.quarkus.hibernate.orm" );
 
 		context.setAddInjectAnnotation( jakartaInjectPackage != null );
 		context.setAddNonnullAnnotation( jakartaAnnotationPackage != null );
 		context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
 		context.setAddDependentAnnotation( jakartaContextPackage != null );
 		context.setAddTransactionScopedAnnotation( jakartaTransactionsPackage != null );
+		context.setQuarkusInjection( quarkusOrmPackage != null );
 
 		final Map<String, String> options = environment.getOptions();
 
@@ -250,7 +254,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			final TypeElement typeElement = context.getElementUtils().getTypeElement( elementName );
 			try {
 				final AnnotationMetaEntity metaEntity =
-						AnnotationMetaEntity.create( typeElement, context, false, false );
+						AnnotationMetaEntity.create( typeElement, context );
 				context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				context.removeElementToRedo( elementName );
 			}
@@ -278,7 +282,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 								|| provider.equalsIgnoreCase("hibernate") ) {
 							context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
 							final AnnotationMetaEntity metaEntity =
-									AnnotationMetaEntity.create( typeElement, context, false, false );
+									AnnotationMetaEntity.create( typeElement, context );
 							context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 						}
 					}
@@ -287,7 +291,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 							if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
 								context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
 								final AnnotationMetaEntity metaEntity =
-										AnnotationMetaEntity.create( typeElement, context, false, false );
+										AnnotationMetaEntity.create( typeElement, context );
 								context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 								break;
 							}
@@ -454,7 +458,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 							= hasAnnotation( element, EMBEDDABLE, MAPPED_SUPERCLASS );
 					final AnnotationMetaEntity metaEntity =
 							AnnotationMetaEntity.create( typeElement, context,
-									requiresLazyMemberInitialization, true );
+									requiresLazyMemberInitialization,
+									true, false );
 					if ( alreadyExistingMetaEntity != null ) {
 						metaEntity.mergeInMembers( alreadyExistingMetaEntity );
 					}
@@ -465,7 +470,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 							&& alreadyExistingMetaEntity == null ) {
 						final AnnotationMetaEntity dataMetaEntity =
 								AnnotationMetaEntity.create( typeElement, context,
-										requiresLazyMemberInitialization, true, true );
+										requiresLazyMemberInitialization,
+										true, true );
 //						final Metamodel alreadyExistingDataMetaEntity =
 //								tryGettingExistingDataEntityFromContext( mirror, '_' + qualifiedName );
 //						if ( alreadyExistingDataMetaEntity != null ) {
@@ -481,7 +487,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private void handleRootElementAuxiliaryAnnotationMirrors(final Element element) {
 		if ( element instanceof TypeElement ) {
 			final AnnotationMetaEntity metaEntity =
-					AnnotationMetaEntity.create( (TypeElement) element, context, false, false );
+					AnnotationMetaEntity.create( (TypeElement) element, context );
 			context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 		}
 		else if ( element instanceof PackageElement ) {

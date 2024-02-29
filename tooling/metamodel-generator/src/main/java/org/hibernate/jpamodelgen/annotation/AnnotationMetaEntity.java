@@ -101,6 +101,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final Context context;
 	private final boolean managed;
 	private boolean jakartaDataRepository;
+	private final boolean quarkusInjection;
 	private String qualifiedName;
 	private final boolean jakartaDataStaticModel;
 
@@ -138,25 +139,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private final Map<String,String> memberTypes = new HashMap<>();
 
-	public AnnotationMetaEntity(TypeElement element, Context context, boolean managed, boolean jakartaData) {
+	public AnnotationMetaEntity(
+			TypeElement element, Context context, boolean managed,
+			boolean jakartaDataStaticMetamodel) {
 		this.element = element;
 		this.context = context;
 		this.managed = managed;
 		this.members = new HashMap<>();
+		this.quarkusInjection = context.isQuarkusInjection();
 		this.importContext = new ImportContextImpl( getPackageName( context, element ) );
-		jakartaDataStaticModel = jakartaData;
+		jakartaDataStaticModel = jakartaDataStaticMetamodel;
+	}
+
+	public static AnnotationMetaEntity create(TypeElement element, Context context) {
+		return create( element,context, false, false, false );
 	}
 
 	public static AnnotationMetaEntity create(
 			TypeElement element, Context context,
-			boolean lazilyInitialised, boolean managed) {
-		return create( element,context, lazilyInitialised, managed, false );
-	}
-
-	public static AnnotationMetaEntity create(
-			TypeElement element, Context context,
-			boolean lazilyInitialised, boolean managed, boolean jakartaData) {
-		final AnnotationMetaEntity annotationMetaEntity = new AnnotationMetaEntity( element, context, managed, jakartaData );
+			boolean lazilyInitialised, boolean managed,
+			boolean jakartaData) {
+		final AnnotationMetaEntity annotationMetaEntity =
+				new AnnotationMetaEntity( element, context, managed, jakartaData );
 		if ( !lazilyInitialised ) {
 			annotationMetaEntity.init();
 		}
@@ -293,7 +297,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public String scope() {
-		if (jakartaDataRepository) {
+		if (jakartaDataRepository && !quarkusInjection) {
 			return context.addTransactionScopedAnnotation()
 					? "javax.transaction.TransactionScoped"
 					: "jakarta.enterprise.context.RequestScoped";
@@ -345,7 +349,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			sessionType = HIB_STATELESS_SESSION;
 			addDaoConstructor( null );
 		}
-		if ( jakartaDataRepository ) {
+		if ( jakartaDataRepository && !quarkusInjection ) {
 			addDefaultConstructor();
 		}
 
@@ -439,7 +443,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						context.addInjectAnnotation(),
 						context.addNonnullAnnotation(),
 						method != null,
-						jakartaDataRepository
+						jakartaDataRepository,
+						quarkusInjection
 				)
 		);
 		return sessionType;

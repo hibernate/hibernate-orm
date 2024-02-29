@@ -114,9 +114,6 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		boolean unwrapped = !isUsingEntityManager();
 		unwrapped = enableFetchProfile( declaration, unwrapped );
 		unwrapped = unwrapIfNecessary( declaration, containerType, unwrapped );
-//		if ( unwrapped ) {
-//			declaration.append("\n\t\t\t");
-//		}
 		return unwrapped;
 	}
 
@@ -171,45 +168,6 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				.append(paramName)
 				.append("\");\n");
 	}
-//
-//	private void orderBy(List<String> paramTypes, StringBuilder declaration) {
-//		final boolean hasSortParameter =
-//				paramTypes.stream().anyMatch(CriteriaFinderMethod::isJakartaSortParam);
-//		if ( !orderBys.isEmpty() || hasSortParameter ) {
-//			declaration.append("\n\t_query.orderBy(");
-//		}
-//		boolean firstOrderBy = true;
-//		if ( !orderBys.isEmpty() ) {
-//			for ( OrderBy orderBy : orderBys ) {
-//				if ( firstOrderBy ) {
-//					firstOrderBy = false;
-//				}
-//				else {
-//					declaration.append(',');
-//				}
-//				orderBy(declaration, orderBy);
-//			}
-//		}
-//		if ( hasSortParameter ) {
-//			for ( int i = 0; i < paramNames.size(); i ++ ) {
-//				final String paramName = paramNames.get(i);
-//				final String paramType = paramTypes.get(i);
-//				//TODO: Jakarta Order!!
-//				if ( isJakartaSortParam(paramType) ) {
-//					if ( firstOrderBy ) {
-//						firstOrderBy = false;
-//					}
-//					else {
-//						declaration.append(',');
-//					}
-//					orderBy(declaration, paramName, paramType.endsWith("..."));
-//				}
-//			}
-//		}
-//		if ( !orderBys.isEmpty() || hasSortParameter ) {
-//			declaration.append("\n\t);");
-//		}
-//	}
 
 	private void where(StringBuilder declaration, List<String> paramTypes) {
 		declaration
@@ -232,56 +190,6 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append("\n\t);");
 	}
-
-//	private static boolean isJakartaSortParam(String paramType) {
-//		return paramType.startsWith(JD_SORT);
-//	}
-//
-//	private static void orderBy(StringBuilder declaration, OrderBy orderBy) {
-//		declaration
-//				.append("\n\t\t")
-//				.append("_builder.")
-//				.append(orderBy.descending ? "desc" : "asc")
-//				.append('(');
-//		if ( orderBy.ignoreCase ) {
-//			declaration.append("_builder.lower(");
-//		}
-//		declaration
-//				.append("_entity.get(\"")
-//				.append(orderBy.fieldName)
-//				.append("\")");
-//		if ( orderBy.ignoreCase ) {
-//			declaration
-//					.append(')');
-//		}
-//		declaration
-//				.append(')');
-//	}
-
-//	private static final String ORDER_CONVERSION =
-//			"_builder.sort(_entity.get(_sort.property())," +
-//			"\n\t\t\t\t\t_sort.isAscending() ? ASCENDING : DESCENDING," +
-//			"\n\t\t\t\t\tNONE, _sort.ignoreCase())";
-
-//	private void orderBy(StringBuilder declaration, String paramName, boolean variadic) {
-//		// TODO: Sort.ignoreCase()
-//		if ( variadic ) {
-//			annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
-//			annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
-//			annotationMetaEntity.staticImport(NullPrecedence.class.getName(), "NONE");
-//			declaration
-//					.append("\n\t\tasList(")
-//					.append(paramName)
-//					.append(")\n\t\t\t.stream()\n\t\t\t.map(_sort -> ")
-//					.append(ORDER_CONVERSION)
-//					.append("\n\t\t\t)\n\t\t\t.collect(toList())");
-//		}
-//		else {
-//			declaration
-//					.append("\n\t\t")
-//					.append(ORDER_CONVERSION.replace("_sort", paramName));
-//		}
-//	}
 
 	private void parameter(StringBuilder declaration, int i, String paramName, String paramType) {
 		declaration

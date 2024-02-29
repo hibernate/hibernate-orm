@@ -106,64 +106,9 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private boolean specialNeeds(StringBuilder declaration) {
 		boolean unwrapped = !isUsingEntityManager();
-//		if ( isJakartaKeyedSlice(containerType) ) {
-//			unwrapped = !isUsingEntityManager();
-//		}
-//		else {
-//			unwrapped = orderBy( declaration, unwrapped );
-//		}
 		unwrapped = unwrapIfNecessary( declaration, containerType, unwrapped );
-//		if ( isUpdate || containerType == null || !isQueryType(containerType)) {
-//			declaration
-//					.append("\t\t\t");
-//		}
 		return unwrapped;
 	}
-
-//	private boolean isQueryType(String containerType) {
-//		return HIB_QUERY.equals(containerType)
-//			|| HIB_SELECTION_QUERY.equals(containerType)
-//			|| QUERY.equals(containerType)
-//			|| TYPED_QUERY.equals(containerType);
-//	}
-
-//	private boolean orderBy(StringBuilder declaration, boolean unwrapped) {
-//		if ( !orderBys.isEmpty() && returnTypeName!=null ) {
-//			unwrapQuery( declaration, unwrapped );
-//			declaration.append("\n\t\t\t.setOrder(");
-//			if ( orderBys.size() > 1) {
-//				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
-//				declaration
-//						.append("asList(");
-//			}
-//			boolean first = true;
-//			for (OrderBy orderBy : orderBys) {
-//				if (first) {
-//					first = false;
-//				}
-//				else {
-//					declaration
-//							.append(",\n\t\t\t\t\t\t\t");
-//				}
-//				declaration
-//						.append(annotationMetaEntity.importType(HIB_ORDER))
-//						.append(orderBy.descending ? ".desc(" : ".asc(")
-//						.append(annotationMetaEntity.importType(returnTypeName))
-//						.append(".class, \"")
-//						.append(orderBy.fieldName)
-//						.append("\")");
-//			}
-//			if ( orderBys.size() > 1) {
-//				declaration
-//						.append(')');
-//			}
-//			declaration.append(')');
-//			return true;
-//		}
-//		else {
-//			return unwrapped;
-//		}
-//	}
 
 	@Override
 	void createQuery(StringBuilder declaration) {

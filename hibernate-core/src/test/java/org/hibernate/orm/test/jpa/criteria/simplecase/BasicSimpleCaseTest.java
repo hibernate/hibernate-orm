@@ -174,7 +174,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13016")
-	@FailureExpected(jiraKey = "HHH-13016")
+//	@FailureExpected(jiraKey = "HHH-13016")
 	public void testCaseEnumResult() {
 		doInJPA( this::entityManagerFactory, em -> {
 			// create entities

@@ -724,6 +724,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return registeredType;
 		}
 
+		if ( ((Class) javaType).isEnum() ) {
+			return standardBasicTypeForJavaType( javaType );
+		}
+
 		return null;
 	}
 
@@ -741,7 +745,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		);
 	}
 
-	public BasicType<?> standardBasicTypeForJavaType(Type javaType) {
+	public <J> BasicType<J> standardBasicTypeForJavaType(Type javaType) {
 		if ( javaType == null ) {
 			return null;
 		}

@@ -11,8 +11,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.query.Order;
-import org.hibernate.query.SortDirection;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,6 +22,7 @@ import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_RESULT_LIST;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_PAGE;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_SELECTION_QUERY;
+import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_PAGE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_SLICE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_LIMIT;
 import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
@@ -230,10 +229,9 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		if ( paramType.startsWith(JD_ORDER) ) {
 			final String sortableEntityClass = getSortableEntityClass();
 			if ( sortableEntityClass != null ) {
-				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
-				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
 				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
-				annotationMetaEntity.staticImport(Order.class.getName(), "by");
+				annotationMetaEntity.staticImport(HIB_ORDER, "by");
 				declaration
 						.append("\n\t\t\t.setOrder(")
 						.append(paramName)
@@ -253,16 +251,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		else if ( paramType.startsWith(JD_SORT) && paramType.endsWith("...") ) {
 			final String sortableEntityClass = getSortableEntityClass();
 			if ( sortableEntityClass != null ) {
-				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
-				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
 				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
-				annotationMetaEntity.staticImport(Order.class.getName(), "by");
 				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+				annotationMetaEntity.staticImport(HIB_ORDER, "by");
 				declaration
 						.append("\n\t\t\t.setOrder(asList(")
 						.append(paramName)
-						.append(").stream().map(_sort -> ")
-						.append("by(")
+						.append(").stream().map(_sort -> by(")
 						.append(annotationMetaEntity.importType(sortableEntityClass))
 						.append(".class, ")
 						.append("_sort.property()")
@@ -274,11 +270,10 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		else if ( paramType.startsWith(JD_SORT) ) {
 			final String sortableEntityClass = getSortableEntityClass();
 			if ( sortableEntityClass != null ) {
-				annotationMetaEntity.staticImport(SortDirection.class.getName(), "ASCENDING");
-				annotationMetaEntity.staticImport(SortDirection.class.getName(), "DESCENDING");
+				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
 				declaration
 						.append("\n\t\t\t.setOrder(")
-						.append(annotationMetaEntity.importType(Order.class.getName()))
+						.append(annotationMetaEntity.importType(HIB_ORDER))
 						.append(".by(")
 						.append(annotationMetaEntity.importType(sortableEntityClass))
 						.append(".class, ")
@@ -293,7 +288,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		else if ( paramType.endsWith("...") ) {
 			declaration
 					.append("\n\t\t\t.setOrder(")
-					.append(annotationMetaEntity.importType(Constants.LIST))
+					.append(annotationMetaEntity.importType(LIST))
 					.append(".of(")
 					.append(paramName)
 					.append("))");
@@ -384,7 +379,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	static boolean isKeyedResultList(String returnType) {
 		return returnType.startsWith(HIB_KEYED_RESULT_LIST)
-			|| returnType.startsWith(JD_KEYED_SLICE);
+			|| returnType.startsWith(JD_KEYED_SLICE)
+			|| returnType.startsWith(JD_KEYED_PAGE);
 	}
 
 	static boolean isPageParam(String parameterType) {
@@ -400,16 +396,28 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			|| parameterType.startsWith(JD_ORDER);
 	}
 
+	static boolean isJakartaKeyedSlice(@Nullable String containerType) {
+		return JD_KEYED_SLICE.equals(containerType)
+			|| JD_KEYED_PAGE.equals(containerType);
+	}
+
 	void makeKeyedPage(StringBuilder declaration, List<String> paramTypes) {
-		annotationMetaEntity.importType("org.hibernate.query.Page");
-		annotationMetaEntity.importType("jakarta.data.page.impl.KeysetAwareSliceRecord");
-		annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
+		annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
 		annotationMetaEntity.staticImport("org.hibernate.query.KeyedPage.KeyInterpretation", "*");
+		annotationMetaEntity.staticImport("org.hibernate.query.Order", "by");
+		annotationMetaEntity.importType("org.hibernate.query.Page");
+		annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
 		for (int i = 0; i < paramTypes.size(); i++) {
 			if ( isKeyedPageParam( paramTypes.get(i) ) ) {
-				declaration
-						.append(MAKE_KEYED_PAGE.replace("pageRequest", paramNames.get(i)))
-						.append("\t\tvar results = ");
+				final String entityClass = getSortableEntityClass();
+				if ( entityClass == null ) {
+					throw new AssertionFailure("entity class cannot be null");
+				}
+				else {
+					declaration
+							.append(MAKE_KEYED_PAGE.replace("pageRequest", paramNames.get(i))
+									.replace("Entity", annotationMetaEntity.importType(entityClass)));
+				}
 			}
 		}
 	}
@@ -425,28 +433,93 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			"\t\t\t\t\t\t.sortBy(pageRequest.sorts())\n" +
 			"\t\t\t\t\t\t.size(pageRequest.size())\n" +
 			"\t\t\t\t\t\t.page(pageRequest.page() + 1);\n" +
-			"\t\treturn new KeysetAwareSliceRecord<>( results.getResultList(), cursors, pageRequest,\n" +
+			"\t\treturn new KeysetAwareSliceRecord<>( results.getResultList(), cursors, totalResults, pageRequest,\n" +
 			"\t\t\t\tresults.isLastPage() ? null : page.afterKeyset( results.getNextPage().getKey().toArray() ),\n" +
 			"\t\t\t\tresults.isFirstPage() ? null : page.beforeKeyset( results.getPreviousPage().getKey().toArray() ) );\n";
 
 	static final String MAKE_KEYED_PAGE
-			= "\t\tvar unkeyedPage =\n" +
-			"\t\t\t\tPage.page(pageRequest.size(), (int) pageRequest.page()-1)\n" +
-			"\t\t\t\t\t\t.keyedBy(pageRequest.sorts().stream()\n" +
-			"\t\t\t\t\t\t\t\t.map(_sort -> by(Book.class, _sort.property(),\n" +
-			"\t\t\t\t\t\t\t\t\t\t_sort.isAscending() ? ASCENDING : DESCENDING,\n" +
-			"\t\t\t\t\t\t\t\t\t\t_sort.ignoreCase())).collect(toList()));\n" +
-			"\t\tvar keyedPage =\n" +
-			"\t\t\t\tpageRequest.cursor()\n" +
-			"\t\t\t\t\t\t.map(_cursor -> {\n" +
-			"\t\t\t\t\t\t\t@SuppressWarnings(\"unchecked\")\n" +
-			"\t\t\t\t\t\t\tvar elements = (List<Comparable<?>>) _cursor.elements();\n" +
-			"\t\t\t\t\t\t\treturn switch ( pageRequest.mode() ) {\n" +
-			"\t\t\t\t\t\t\t\tcase CURSOR_NEXT -> unkeyedPage.withKey(elements, KEY_OF_LAST_ON_PREVIOUS_PAGE);\n" +
-			"\t\t\t\t\t\t\t\tcase CURSOR_PREVIOUS -> unkeyedPage.withKey(elements, KEY_OF_FIRST_ON_NEXT_PAGE);\n" +
-			"\t\t\t\t\t\t\t\tdefault -> unkeyedPage;\n" +
-			"\t\t\t\t\t\t\t};\n" +
-			"\t\t\t\t\t\t}).orElse(unkeyedPage);\n";
+			= "\tvar unkeyedPage =\n" +
+			"\t\t\tPage.page(pageRequest.size(), (int) pageRequest.page()-1)\n" +
+			"\t\t\t\t\t.keyedBy(pageRequest.sorts().stream()\n" +
+			"\t\t\t\t\t\t\t.map(_sort -> by(Entity.class, _sort.property(),\n" +
+			"\t\t\t\t\t\t\t\t\t_sort.isAscending() ? ASCENDING : DESCENDING,\n" +
+			"\t\t\t\t\t\t\t\t\t_sort.ignoreCase())).collect(toList()));\n" +
+			"\tvar keyedPage =\n" +
+			"\t\t\tpageRequest.cursor()\n" +
+			"\t\t\t\t\t.map(_cursor -> {\n" +
+			"\t\t\t\t\t\t@SuppressWarnings(\"unchecked\")\n" +
+			"\t\t\t\t\t\tvar elements = (List<Comparable<?>>) _cursor.elements();\n" +
+			"\t\t\t\t\t\treturn switch ( pageRequest.mode() ) {\n" +
+			"\t\t\t\t\t\t\tcase CURSOR_NEXT -> unkeyedPage.withKey(elements, KEY_OF_LAST_ON_PREVIOUS_PAGE);\n" +
+			"\t\t\t\t\t\t\tcase CURSOR_PREVIOUS -> unkeyedPage.withKey(elements, KEY_OF_FIRST_ON_NEXT_PAGE);\n" +
+			"\t\t\t\t\t\t\tdefault -> unkeyedPage;\n" +
+			"\t\t\t\t\t\t};\n" +
+			"\t\t\t\t\t}).orElse(unkeyedPage);\n";
+
+	void createQuery(StringBuilder declaration) {}
+
+	void setParameters(StringBuilder declaration, List<String> paramTypes) {}
+
+	void tryReturn(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
+		if ( isJakartaKeyedSlice(containerType) ) {
+			makeKeyedPage( declaration, paramTypes );
+		}
+		if ( dataRepository ) {
+			declaration
+					.append("\ttry {\n");
+		}
+		if ( JD_KEYED_PAGE.equals(containerType) ) {
+			if ( dataRepository ) {
+				declaration
+						.append('\t');
+			}
+			declaration
+					.append("\tlong totalResults = ");
+			createQuery( declaration );
+			setParameters( declaration, paramTypes );
+			unwrapQuery( declaration, !isUsingEntityManager() );
+			declaration
+					.append("\n\t\t\t\t\t\t.getResultCount();\n");
+		}
+		if ( dataRepository ) {
+			declaration
+					.append('\t');
+		}
+		declaration
+				.append('\t');
+		if ( isJakartaKeyedSlice(containerType) ) {
+			final String entityClass = getSortableEntityClass();
+			if ( entityClass != null && isUsingEntityManager() ) {
+				// this is necessary to avoid losing the type
+				// after unwrapping the Query object
+				declaration
+						.append(annotationMetaEntity.importType(HIB_KEYED_RESULT_LIST))
+						.append('<')
+						.append(annotationMetaEntity.importType(entityClass))
+						.append('>');
+			}
+			else {
+				declaration
+						.append("var");
+			}
+			declaration
+					.append(" results = ");
+		}
+		else {
+			if ( !"void".equals(returnTypeName) ) {
+				declaration
+						.append("return ");
+			}
+		}
+	}
+
+	boolean unwrapIfNecessary(StringBuilder declaration, @Nullable String containerType, boolean unwrapped) {
+		if ( OPTIONAL.equals(containerType) || isJakartaKeyedSlice(containerType) ) {
+			unwrapQuery( declaration, unwrapped );
+			unwrapped = true;
+		}
+		return unwrapped;
+	}
 
 	protected void executeSelect(
 			StringBuilder declaration,
@@ -483,6 +556,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 					break;
 				case JD_KEYED_SLICE:
+				case JD_KEYED_PAGE:
 					for (int i = 0; i < paramTypes.size(); i++) {
 						if ( isKeyedPageParam( paramTypes.get(i) ) ) {
 							final String entityClass = getSortableEntityClass();
@@ -490,12 +564,19 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 								throw new AssertionFailure("entity class cannot be null");
 							}
 							else {
-								final String entity = annotationMetaEntity.importType(entityClass);
 								declaration
-										.append("\t\t\t.getKeyedResultList(keyedPage);\n")
-										.append(MAKE_KEYED_SLICE
-												.replace("pageRequest", paramNames.get(i))
-												.replace("Entity", entity));
+										.append("\t\t\t.getKeyedResultList(keyedPage);\n");
+								annotationMetaEntity.importType("jakarta.data.page.PageRequest");
+								annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
+								String fragment = MAKE_KEYED_SLICE
+										.replace("pageRequest", paramNames.get(i))
+										.replace("Entity", annotationMetaEntity.importType(entityClass))
+										.replace("KeysetAwareSliceRecord", implType(containerType));
+								if ( JD_KEYED_SLICE.equals(containerType) ) {
+									fragment = fragment.replace("totalResults, ", "");
+								}
+								declaration
+										.append(fragment);
 							}
 						}
 					}
@@ -514,5 +595,20 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 			}
 		}
+	}
+
+	private String implType(String containerType) {
+		String recordType;
+		switch (containerType) {
+			case JD_KEYED_SLICE:
+				recordType = annotationMetaEntity.importType("jakarta.data.page.impl.KeysetAwareSliceRecord");
+				break;
+			case JD_KEYED_PAGE:
+				recordType = annotationMetaEntity.importType("jakarta.data.page.impl.KeysetAwarePageRecord");
+				break;
+			default:
+				throw new AssertionFailure("unrecognized slice type");
+		}
+		return recordType;
 	}
 }

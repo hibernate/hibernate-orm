@@ -631,7 +631,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			= Set.of(LIST, QUERY, HIB_QUERY);
 
 	private static final Set<String> LEGAL_GENERIC_RESULT_TYPES
-			= Set.of(LIST, STREAM, OPTIONAL, TYPED_QUERY, HIB_QUERY, HIB_SELECTION_QUERY, HIB_KEYED_RESULT_LIST, JD_KEYED_SLICE);
+			= Set.of(LIST, STREAM, OPTIONAL,
+					TYPED_QUERY, HIB_QUERY, HIB_SELECTION_QUERY,
+					HIB_KEYED_RESULT_LIST, JD_KEYED_SLICE, JD_KEYED_PAGE);
 
 	private void addQueryMethod(
 			ExecutableElement method,

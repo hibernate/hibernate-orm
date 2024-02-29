@@ -248,92 +248,9 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				if ( isPageParam(paramType) ) {
 					setPage( declaration, paramName, paramType );
 				}
-//				if ( isOrderParam(paramType) && !isJakartaSortParam(paramType) ) {
-//					setOrder( declaration, unwrapped, paramName, paramType );
-//					unwrapped = true;
-//				}
 			}
 		}
 	}
-
-//	boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
-//		unwrapQuery( declaration, unwrapped );
-//		if ( paramType.startsWith(JD_ORDER)
-//				|| paramType.startsWith(JD_PAGE_REQUEST) ) {
-//			final String sortableEntityClass = getSortableEntityClass();
-//			if ( sortableEntityClass != null ) {
-//				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
-//				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
-//				annotationMetaEntity.staticImport(HIB_ORDER, "by");
-//				declaration
-//						.append("\n\t\t\t.setOrder(")
-//						.append(paramName)
-//						.append(".sorts().stream()")
-//						.append("\n\t\t\t\t\t")
-//						.append(".map(_sort -> by(")
-//						.append(annotationMetaEntity.importType(sortableEntityClass))
-//						.append(".class, _sort.property(),")
-//						.append("\n\t\t\t\t\t\t\t")
-//						.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
-//						.append("\n\t\t\t\t\t\t\t")
-//						.append("_sort.ignoreCase()))")
-//						.append("\n\t\t\t\t\t")
-//						.append(".collect(toList()))");
-//			}
-//		}
-//		else if ( paramType.startsWith(JD_SORT) && paramType.endsWith("...") ) {
-//			final String sortableEntityClass = getSortableEntityClass();
-//			if ( sortableEntityClass != null ) {
-//				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
-//				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
-//				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
-//				annotationMetaEntity.staticImport(HIB_ORDER, "by");
-//				declaration
-//						.append("\n\t\t\t.setOrder(asList(")
-//						.append(paramName)
-//						.append(").stream().map(_sort -> by(")
-//						.append(annotationMetaEntity.importType(sortableEntityClass))
-//						.append(".class, ")
-//						.append("_sort.property()")
-//						.append(",\n\t\t\t\t\t\t")
-//						.append("_sort.isAscending() ? ASCENDING : DESCENDING, ")
-//						.append("_sort.ignoreCase()))\n\t\t\t\t.collect(toList())\n\t\t\t)");
-//			}
-//		}
-//		else if ( paramType.startsWith(JD_SORT) ) {
-//			final String sortableEntityClass = getSortableEntityClass();
-//			if ( sortableEntityClass != null ) {
-//				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
-//				declaration
-//						.append("\n\t\t\t.setOrder(")
-//						.append(annotationMetaEntity.importType(HIB_ORDER))
-//						.append(".by(")
-//						.append(annotationMetaEntity.importType(sortableEntityClass))
-//						.append(".class, ")
-//						.append(paramName)
-//						.append(".property()")
-//						.append(",\n\t\t\t\t\t")
-//						.append(paramName)
-//						.append(".isAscending() ? ASCENDING : DESCENDING")
-//						.append("))");
-//			}
-//		}
-//		else if ( paramType.endsWith("...") ) {
-//			declaration
-//					.append("\n\t\t\t.setOrder(")
-//					.append(annotationMetaEntity.importType(LIST))
-//					.append(".of(")
-//					.append(paramName)
-//					.append("))");
-//		}
-//		else {
-//			declaration
-//					.append("\n\t\t\t.setOrder(")
-//					.append(paramName)
-//					.append(")");
-//		}
-//		return true;
-//	}
 
 	void convertExceptions(StringBuilder declaration) {
 		if (dataRepository) {
@@ -382,16 +299,6 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			declaration
 					.append("\t\t\t.unwrap(");
 			final String selectionQuery = annotationMetaEntity.importType(HIB_SELECTION_QUERY);
-//			final String className = getSortableEntityClass();
-//			if ( className != null ) {
-//				final String entityClass = annotationMetaEntity.importType(className);
-//				declaration
-//						.append("(Class<")
-//						.append(selectionQuery)
-//						.append("<")
-//						.append(entityClass)
-//						.append(">>) (Class) ");
-//			}
 			declaration
 					.append(selectionQuery)
 					.append(".class)\n");
@@ -572,10 +479,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 							.append(".class, \"")
 							.append(orderBy.fieldName)
 							.append("\", ")
-//							.append("\n\t\t\t\t\t\t")
 							.append(orderBy.descending ? "DESCENDING" : "ASCENDING")
 							.append(", ")
-//							.append("\n\t\t\t\t\t\t")
 							.append(orderBy.ignoreCase)
 							.append("));\n");
 

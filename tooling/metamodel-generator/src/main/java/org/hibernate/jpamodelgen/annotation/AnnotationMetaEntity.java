@@ -64,8 +64,6 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isKeyedPageParam;
-import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isKeyedResultList;
 import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isSessionParameter;
 import static org.hibernate.jpamodelgen.annotation.AbstractQueryMethod.isSpecialParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
@@ -586,21 +584,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					}
 					break;
 				case 1:
-					final String typeName = typeElement.getQualifiedName().toString();
-					if ( isLegalGenericResultType(typeName) ) {
-						if ( isKeyedResultList(typeName)
-								&& method.getParameters().stream()
-									.noneMatch(param -> isKeyedPageParam(param.asType().toString()))) {
-							context.message(method,
-									"method with return type 'KeyedResultList' has no parameter of type 'KeyedPage'",
-									Diagnostic.Kind.ERROR);
-						}
+					if ( validatedQueryReturnType( method, typeElement ) ) {
 						addQueryMethod( method, typeArguments.get(0), typeElement );
-					}
-					else {
-						context.message( method,
-								"incorrect return type '" + typeElement + "'",
-								Diagnostic.Kind.ERROR );
 					}
 					break;
 				default:
@@ -609,6 +594,51 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							Diagnostic.Kind.ERROR );
 					break;
 			}
+		}
+	}
+
+	private boolean validatedQueryReturnType(ExecutableElement method, TypeElement typeElement) {
+		final String typeName = typeElement.getQualifiedName().toString();
+		switch ( typeName ) {
+			case JD_PAGE:
+			case JD_SLICE:
+			case JD_KEYED_PAGE:
+			case JD_KEYED_SLICE:
+				if ( method.getParameters().stream()
+						.noneMatch(param -> param.asType().toString()
+								.startsWith(JD_PAGE_REQUEST))) {
+					context.message(method,
+							"method with return type '" + typeName
+									+ "' has no parameter of type 'PageRequest'",
+							Diagnostic.Kind.ERROR);
+					return false;
+				}
+				else {
+					return true;
+				}
+			case HIB_KEYED_RESULT_LIST:
+				if ( method.getParameters().stream()
+						.noneMatch(param -> param.asType().toString()
+								.startsWith(HIB_KEYED_PAGE))) {
+					context.message(method,
+							"method with return type '" + typeName
+									+ "' has no parameter of type 'KeyedPage'",
+							Diagnostic.Kind.ERROR);
+					return false;
+				}
+				else {
+					return true;
+				}
+			default:
+				if ( isLegalGenericResultType(typeName) ) {
+					return true;
+				}
+				else {
+					context.message(method,
+							"incorrect return type '" + typeName + "'",
+							Diagnostic.Kind.ERROR);
+					return false;
+				}
 		}
 	}
 
@@ -632,8 +662,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static final Set<String> LEGAL_GENERIC_RESULT_TYPES
 			= Set.of(LIST, STREAM, OPTIONAL,
-					TYPED_QUERY, HIB_QUERY, HIB_SELECTION_QUERY,
-					HIB_KEYED_RESULT_LIST, JD_KEYED_SLICE, JD_KEYED_PAGE);
+					TYPED_QUERY, HIB_QUERY, HIB_SELECTION_QUERY, HIB_KEYED_RESULT_LIST,
+					JD_SLICE, JD_PAGE, JD_KEYED_SLICE, JD_KEYED_PAGE);
 
 	private void addQueryMethod(
 			ExecutableElement method,

@@ -26,7 +26,9 @@ import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_PAGE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_SLICE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_LIMIT;
 import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
+import static org.hibernate.jpamodelgen.util.Constants.JD_PAGE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_PAGE_REQUEST;
+import static org.hibernate.jpamodelgen.util.Constants.JD_SLICE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.Constants.LIST;
 import static org.hibernate.jpamodelgen.util.Constants.OPTIONAL;
@@ -373,14 +375,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	static boolean isKeyedPageParam(String parameterType) {
-		return parameterType.startsWith(HIB_KEYED_PAGE)
-			|| parameterType.startsWith(JD_PAGE_REQUEST);
-	}
-
-	static boolean isKeyedResultList(String returnType) {
-		return returnType.startsWith(HIB_KEYED_RESULT_LIST)
-			|| returnType.startsWith(JD_KEYED_SLICE)
-			|| returnType.startsWith(JD_KEYED_PAGE);
+		return parameterType.startsWith(HIB_KEYED_PAGE);
 	}
 
 	static boolean isPageParam(String parameterType) {
@@ -401,24 +396,27 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			|| JD_KEYED_PAGE.equals(containerType);
 	}
 
+	static boolean isJakartaSlice(@Nullable String containerType) {
+		return JD_SLICE.equals(containerType)
+			|| JD_PAGE.equals(containerType);
+	}
+
 	void makeKeyedPage(StringBuilder declaration, List<String> paramTypes) {
 		annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
 		annotationMetaEntity.staticImport("org.hibernate.query.KeyedPage.KeyInterpretation", "*");
 		annotationMetaEntity.staticImport("org.hibernate.query.Order", "by");
-		annotationMetaEntity.importType("org.hibernate.query.Page");
+		annotationMetaEntity.staticImport("org.hibernate.query.Page", "page");
 		annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
-		for (int i = 0; i < paramTypes.size(); i++) {
-			if ( isKeyedPageParam( paramTypes.get(i) ) ) {
-				final String entityClass = getSortableEntityClass();
-				if ( entityClass == null ) {
-					throw new AssertionFailure("entity class cannot be null");
-				}
-				else {
-					declaration
-							.append(MAKE_KEYED_PAGE.replace("pageRequest", paramNames.get(i))
-									.replace("Entity", annotationMetaEntity.importType(entityClass)));
-				}
-			}
+		final String entityClass = getSortableEntityClass();
+		if ( entityClass == null ) {
+			throw new AssertionFailure("entity class cannot be null");
+		}
+		else {
+			declaration
+					.append(MAKE_KEYED_PAGE
+							.replace("pageRequest",
+									parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
+							.replace("Entity", annotationMetaEntity.importType(entityClass)));
 		}
 	}
 
@@ -439,7 +437,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	static final String MAKE_KEYED_PAGE
 			= "\tvar unkeyedPage =\n" +
-			"\t\t\tPage.page(pageRequest.size(), (int) pageRequest.page()-1)\n" +
+			"\t\t\tpage(pageRequest.size(), (int) pageRequest.page()-1)\n" +
 			"\t\t\t\t\t.keyedBy(pageRequest.sorts().stream()\n" +
 			"\t\t\t\t\t\t\t.map(_sort -> by(Entity.class, _sort.property(),\n" +
 			"\t\t\t\t\t\t\t\t\t_sort.isAscending() ? ASCENDING : DESCENDING,\n" +
@@ -468,7 +466,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			declaration
 					.append("\ttry {\n");
 		}
-		if ( JD_KEYED_PAGE.equals(containerType) ) {
+		if ( JD_KEYED_PAGE.equals(containerType)
+				|| JD_PAGE.equals(containerType) ) {
 			if ( dataRepository ) {
 				declaration
 						.append('\t');
@@ -487,7 +486,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		}
 		declaration
 				.append('\t');
-		if ( isJakartaKeyedSlice(containerType) ) {
+		if ( isJakartaKeyedSlice(containerType)
+				|| isJakartaSlice(containerType) ) {
 			final String entityClass = getSortableEntityClass();
 			if ( entityClass != null && isUsingEntityManager() ) {
 				// this is necessary to avoid losing the type
@@ -546,39 +546,50 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 							.append(".getResultList();");
 					break;
 				case HIB_KEYED_RESULT_LIST:
-					for (int i = 0; i < paramTypes.size(); i++) {
-						if ( isKeyedPageParam( paramTypes.get(i) ) ) {
-							declaration
-									.append(".getKeyedResultList(")
-									.append(paramNames.get(i))
-									.append(");");
-						}
-					}
+					declaration
+							.append(".getKeyedResultList(")
+							.append(parameterName(HIB_KEYED_PAGE, paramTypes, paramNames))
+							.append(");");
+					break;
+				case JD_SLICE:
+					declaration
+							.append(".getResultList();\n")
+							.append("\t\treturn new ")
+							.append(implType(containerType))
+							.append('(')
+							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
+							.append(", results);\n");
+					break;
+				case JD_PAGE:
+					declaration
+							.append(".getResultList();\n")
+							.append("\t\treturn new ")
+							.append(implType(containerType))
+							.append('(')
+							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
+							.append(", results, totalResults);\n");
 					break;
 				case JD_KEYED_SLICE:
 				case JD_KEYED_PAGE:
-					for (int i = 0; i < paramTypes.size(); i++) {
-						if ( isKeyedPageParam( paramTypes.get(i) ) ) {
-							final String entityClass = getSortableEntityClass();
-							if ( entityClass == null ) {
-								throw new AssertionFailure("entity class cannot be null");
-							}
-							else {
-								declaration
-										.append("\t\t\t.getKeyedResultList(keyedPage);\n");
-								annotationMetaEntity.importType("jakarta.data.page.PageRequest");
-								annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
-								String fragment = MAKE_KEYED_SLICE
-										.replace("pageRequest", paramNames.get(i))
-										.replace("Entity", annotationMetaEntity.importType(entityClass))
-										.replace("KeysetAwareSliceRecord", implType(containerType));
-								if ( JD_KEYED_SLICE.equals(containerType) ) {
-									fragment = fragment.replace("totalResults, ", "");
-								}
-								declaration
-										.append(fragment);
-							}
+					final String entityClass = getSortableEntityClass();
+					if ( entityClass == null ) {
+						throw new AssertionFailure("entity class cannot be null");
+					}
+					else {
+						declaration
+								.append("\t\t\t.getKeyedResultList(keyedPage);\n");
+						annotationMetaEntity.importType("jakarta.data.page.PageRequest");
+						annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
+						String fragment = MAKE_KEYED_SLICE
+								.replace("pageRequest",
+										parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
+								.replace("Entity", annotationMetaEntity.importType(entityClass))
+								.replace("KeysetAwareSliceRecord", implType(containerType));
+						if ( JD_KEYED_SLICE.equals(containerType) ) {
+							fragment = fragment.replace("totalResults, ", "");
 						}
+						declaration
+								.append(fragment);
 					}
 					break;
 				default:
@@ -597,18 +608,27 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		}
 	}
 
+	private static String parameterName(String paramType, List<String> paramTypes, List<String> paramNames) {
+		for (int i = 0; i < paramTypes.size(); i++) {
+			if ( paramTypes.get(i).startsWith(paramType) ) {
+				return paramNames.get(i);
+			}
+		}
+		throw new AssertionFailure("could not find parameter");
+	}
+
 	private String implType(String containerType) {
-		String recordType;
 		switch (containerType) {
+			case JD_SLICE:
+				return annotationMetaEntity.importType("jakarta.data.page.impl.SliceRecord");
+			case JD_PAGE:
+				return annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord");
 			case JD_KEYED_SLICE:
-				recordType = annotationMetaEntity.importType("jakarta.data.page.impl.KeysetAwareSliceRecord");
-				break;
+				return annotationMetaEntity.importType("jakarta.data.page.impl.KeysetAwareSliceRecord");
 			case JD_KEYED_PAGE:
-				recordType = annotationMetaEntity.importType("jakarta.data.page.impl.KeysetAwarePageRecord");
-				break;
+				return annotationMetaEntity.importType("jakarta.data.page.impl.KeysetAwarePageRecord");
 			default:
 				throw new AssertionFailure("unrecognized slice type");
 		}
-		return recordType;
 	}
 }

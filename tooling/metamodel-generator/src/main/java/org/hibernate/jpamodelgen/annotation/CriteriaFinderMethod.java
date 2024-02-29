@@ -15,10 +15,8 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
-import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_SLICE;
 import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.Constants.LIST;
-import static org.hibernate.jpamodelgen.util.Constants.OPTIONAL;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
 /**
@@ -91,7 +89,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private void executeQuery(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append('\n');
-		tryReturn( declaration, paramTypes );
+		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
 		createQuery( declaration );
 		boolean unwrapped = specialNeeds( declaration, paramTypes );
@@ -112,22 +110,15 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		boolean unwrapped = !isUsingEntityManager();
 		unwrapped = handleSpecialParameters( declaration, paramTypes, unwrapped );
 		unwrapped = enableFetchProfile( declaration, unwrapped );
-		unwrapped = unwrapIfOptional( declaration, unwrapped );
+		unwrapped = unwrapIfNecessary( declaration, containerType, unwrapped );
 		if ( unwrapped ) {
 			declaration.append("\n\t\t\t");
 		}
 		return unwrapped;
 	}
 
-	private boolean unwrapIfOptional(StringBuilder declaration, boolean unwrapped) {
-		if ( OPTIONAL.equals(containerType) ) {
-			unwrapQuery(declaration, unwrapped);
-			unwrapped = true;
-		}
-		return unwrapped;
-	}
-
-	private void createQuery(StringBuilder declaration) {
+	@Override
+	void createQuery(StringBuilder declaration) {
 		declaration
 				.append(sessionName)
 				.append(".createQuery(query)");
@@ -144,7 +135,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	}
 
 	private boolean handleSpecialParameters(StringBuilder declaration, List<String> paramTypes, boolean unwrapped) {
-		if ( containerType == null || !containerType.equals(JD_KEYED_SLICE) ) {
+		if ( !isJakartaKeyedSlice(containerType) ) {
 			for ( int i = 0; i < paramNames.size(); i ++ ) {
 				final String paramName = paramNames.get(i);
 				final String paramType = paramTypes.get(i);
@@ -158,25 +149,6 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			}
 		}
 		return unwrapped;
-	}
-
-	private void tryReturn(StringBuilder declaration, List<String> paramTypes) {
-		if (dataRepository) {
-			declaration
-					.append("\ttry {\n");
-		}
-		if ( containerType != null
-				&& containerType.equals(JD_KEYED_SLICE) ) {
-			makeKeyedPage(declaration, paramTypes);
-		}
-		else {
-			if ( dataRepository ) {
-				declaration
-						.append('\t');
-			}
-			declaration
-					.append("\treturn ");
-		}
 	}
 
 	private void createCriteriaQuery(StringBuilder declaration) {

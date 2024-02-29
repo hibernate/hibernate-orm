@@ -16,9 +16,7 @@ import java.util.List;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_QUERY;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_SELECTION_QUERY;
-import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_SLICE;
 import static org.hibernate.jpamodelgen.util.Constants.LIST;
-import static org.hibernate.jpamodelgen.util.Constants.OPTIONAL;
 import static org.hibernate.jpamodelgen.util.Constants.QUERY;
 import static org.hibernate.jpamodelgen.util.Constants.TYPED_QUERY;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
@@ -93,10 +91,10 @@ public class QueryMethod extends AbstractQueryMethod {
 		comment( declaration );
 		modifiers( paramTypes, declaration );
 		preamble( declaration, returnType, paramTypes );
-		tryReturn( declaration );
+		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration, returnType );
 		createQuery( declaration );
-		setParameters( paramTypes, declaration );
+		setParameters( declaration, paramTypes );
 		boolean unwrapped = specialNeeds( paramTypes, declaration );
 		execute( declaration, unwrapped );
 		convertExceptions( declaration );
@@ -106,25 +104,17 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private boolean specialNeeds(List<String> paramTypes, StringBuilder declaration) {
 		boolean unwrapped;
-		if ( containerType == null || !containerType.equals(JD_KEYED_SLICE) ) {
+		if ( !isJakartaKeyedSlice(containerType) ) {
 			unwrapped = handleSpecialParameters( paramTypes, declaration );
 			unwrapped = orderBy( declaration, unwrapped );
 		}
 		else {
 			unwrapped = !isUsingEntityManager();
 		}
-		unwrapped = unwrapIfOptional( declaration, unwrapped );
+		unwrapped = unwrapIfNecessary( declaration, containerType, unwrapped );
 		if ( isUpdate || containerType == null || !isQueryType(containerType)) {
 			declaration
 					.append("\n\t\t\t");
-		}
-		return unwrapped;
-	}
-
-	private boolean unwrapIfOptional(StringBuilder declaration, boolean unwrapped) {
-		if ( OPTIONAL.equals(containerType) ) {
-			unwrapQuery(declaration, unwrapped);
-			unwrapped = true;
 		}
 		return unwrapped;
 	}
@@ -174,7 +164,8 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 	}
 
-	private void createQuery(StringBuilder declaration) {
+	@Override
+	void createQuery(StringBuilder declaration) {
 		declaration
 				.append(sessionName)
 				.append(isNative ? ".createNativeQuery" : ".createQuery")
@@ -197,29 +188,6 @@ public class QueryMethod extends AbstractQueryMethod {
 			declaration.append("(")
 					.append(returnType)
 					.append(") ");
-		}
-	}
-
-	private void tryReturn(StringBuilder declaration) {
-		if (dataRepository) {
-			declaration
-					.append("\ttry {\n");
-		}
-		if ( containerType != null
-				&& containerType.equals(JD_KEYED_SLICE) ) {
-			makeKeyedPage( declaration, paramTypes );
-		}
-		else {
-			if ( dataRepository ) {
-				declaration
-						.append('\t');
-			}
-			declaration
-					.append("\t");
-			if ( returnTypeName == null || !returnTypeName.equals("void") ) {
-				declaration
-						.append("return ");
-			}
 		}
 	}
 
@@ -255,7 +223,8 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 	}
 
-	private void setParameters(List<String> paramTypes, StringBuilder declaration) {
+	@Override
+	void setParameters(StringBuilder declaration, List<String> paramTypes) {
 		for ( int i = 0; i < paramNames.size(); i++ ) {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);

@@ -21,7 +21,8 @@ import static java.util.stream.Collectors.toList;
  * rules to be passed around the system before being applied to
  * a {@link Query} by calling {@link SelectionQuery#setOrder}.
  * <p>
- * A parameter of a {@linkplain org.hibernate.annotations.processing.HQL
+ * A parameter of a {@linkplain org.hibernate.annotations.processing.Find
+ * finder method} or {@linkplain org.hibernate.annotations.processing.HQL
  * HQL query method} may be declared with type {@code Order<? super E>},
  * {@code List<Order<? super E>>}, or {@code Order<? super E>...} (varargs)
  * where {@code E} is the entity type returned by the query.

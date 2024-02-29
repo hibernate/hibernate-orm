@@ -149,6 +149,13 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * &#064;Find
  * List&lt;Book&gt; getBooksWithTitle(String title, List&lt;Order&lt;Book&gt;&gt; order);
  * </pre>
+ * <p>
+ * As a further exception, a method might support key-based pagination.
+ * Then it must have:
+ * <ul>
+ * <li>return type {@link org.hibernate.query.KeyedResultList}, and
+ * <li>a parameter of type {@link org.hibernate.query.KeyedPage}.
+ * </ul>
  *
  * @see HQL
  * @see SQL

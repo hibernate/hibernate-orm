@@ -73,6 +73,7 @@ public final class Constants {
 	public static final String JD_SORT = "jakarta.data.Sort";
 	public static final String JD_ORDER = "jakarta.data.Order";
 	public static final String JD_KEYED_SLICE = "jakarta.data.page.KeysetAwareSlice";
+	public static final String JD_KEYED_PAGE = "jakarta.data.page.KeysetAwarePage";
 
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
 	public static final String HIB_PAGE = "org.hibernate.query.Page";

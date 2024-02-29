@@ -59,7 +59,6 @@ public class DefaultConstructor implements MetaAttribute {
 	public String getAttributeDeclarationString() {
 		StringBuilder declaration = new StringBuilder();
 		declaration.append('\n');
-		inject( declaration );
 		declaration
 				.append("@")
 				.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceUnit"));

@@ -27,6 +27,7 @@ public class RepositoryConstructor implements MetaAttribute {
 	private final boolean addNonnullAnnotation;
 	private final boolean addOverrideAnnotation;
 	private final boolean dataRepository;
+	private final boolean quarkusInjection;
 
 	public RepositoryConstructor(
 			Metamodel annotationMetaEntity,
@@ -38,7 +39,8 @@ public class RepositoryConstructor implements MetaAttribute {
 			boolean addInjectAnnotation,
 			boolean addNonnullAnnotation,
 			boolean addOverrideAnnotation,
-			boolean dataRepository) {
+			boolean dataRepository,
+			boolean quarkusInjection) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.constructorName = constructorName;
 		this.methodName = methodName;
@@ -49,6 +51,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.addOverrideAnnotation = addOverrideAnnotation;
 		this.dataRepository = dataRepository;
+		this.quarkusInjection = quarkusInjection;
 	}
 
 	@Override
@@ -86,7 +89,7 @@ public class RepositoryConstructor implements MetaAttribute {
 				.append(constructorName)
 				.append("(");
 		notNull( declaration );
-//		named( declaration );
+		qualifier( declaration );
 		declaration
 				.append(annotationMetaEntity.importType(sessionTypeName))
 				.append(" ")
@@ -117,22 +120,24 @@ public class RepositoryConstructor implements MetaAttribute {
 		return declaration.toString();
 	}
 
-//	private void named(StringBuilder declaration) {
-//		if ( addInjectAnnotation && !dataRepository && dataStore != null ) {
-//			declaration
-//					.append('@')
-//					.append(annotationMetaEntity.importType("jakarta.inject.Named"))
-//					.append("(\"")
-//					.append(dataStore)
-//					.append("\") ");
-//		}
-//	}
+	private void qualifier(StringBuilder declaration) {
+		if ( addInjectAnnotation && quarkusInjection && dataStore != null ) {
+			declaration
+					.append('@')
+					.append(annotationMetaEntity.importType("io.quarkus.hibernate.orm.PersistenceUnit"))
+					.append("(\"")
+					.append(dataStore)
+					.append("\") ");
+		}
+	}
 
 	private void inject(StringBuilder declaration) {
 		// Jakarta Data repositories are instantiated
 		// via the default constructor, so in that
-		// case, this one is just for testing
-		if ( addInjectAnnotation && !dataRepository ) {
+		// case, this one is just for testing, unless
+		// we are in Quarkus where we can use
+		// constructor injection
+		if ( addInjectAnnotation && (!dataRepository || quarkusInjection) ) {
 			declaration
 					.append('@')
 					.append(annotationMetaEntity.importType("jakarta.inject.Inject"))

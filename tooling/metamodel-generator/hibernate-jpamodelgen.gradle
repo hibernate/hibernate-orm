@@ -76,7 +76,6 @@ def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) 
 	testClassesDirs = sourceSets.quarkusOrmPanache.output.classesDirs
 	classpath = sourceSets.quarkusOrmPanache.runtimeClasspath
 	shouldRunAfter test
-	dependsOn test
 }
 
 def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
@@ -86,11 +85,12 @@ def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
 	testClassesDirs = sourceSets.quarkusHrPanache.output.classesDirs
 	classpath = sourceSets.quarkusHrPanache.runtimeClasspath
 	shouldRunAfter test
-	dependsOn test
 }
 
 check.dependsOn quarkusHrPanacheTestTask
 check.dependsOn quarkusOrmPanacheTestTask
+test.dependsOn quarkusHrPanacheTestTask
+test.dependsOn quarkusOrmPanacheTestTask
 
 sourceSets.main {
     java.srcDir xjcTargetDir

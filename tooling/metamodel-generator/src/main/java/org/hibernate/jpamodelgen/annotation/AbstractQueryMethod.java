@@ -10,30 +10,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.Constants;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_PAGE;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_RESULT_LIST;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_PAGE;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_SELECTION_QUERY;
-import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_PAGE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_KEYED_SLICE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_LIMIT;
-import static org.hibernate.jpamodelgen.util.Constants.JD_ORDER;
-import static org.hibernate.jpamodelgen.util.Constants.JD_PAGE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_PAGE_REQUEST;
-import static org.hibernate.jpamodelgen.util.Constants.JD_SLICE;
-import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
-import static org.hibernate.jpamodelgen.util.Constants.LIST;
-import static org.hibernate.jpamodelgen.util.Constants.OPTIONAL;
-import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
-import static org.hibernate.jpamodelgen.util.Constants.STREAM;
+import static org.hibernate.jpamodelgen.util.Constants.*;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
 /**
@@ -48,10 +30,11 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	final String sessionType;
 	final String sessionName;
 	final boolean belongsToDao;
+	final List<OrderBy> orderBys;
 	final boolean addNonnullAnnotation;
 	final boolean dataRepository;
 
-	public AbstractQueryMethod(
+	AbstractQueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
 			String methodName,
 			List<String> paramNames, List<String> paramTypes,
@@ -59,6 +42,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			String sessionType,
 			String sessionName,
 			boolean belongsToDao,
+			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
 		this.annotationMetaEntity = annotationMetaEntity;
@@ -69,6 +53,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		this.sessionType = sessionType;
 		this.sessionName = sessionName;
 		this.belongsToDao = belongsToDao;
+		this.orderBys = orderBys;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.dataRepository = dataRepository;
 	}
@@ -110,6 +95,16 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		int index = type.indexOf("<");
 		String stripped = index > 0 ? type.substring(0, index) : type;
 		return type.endsWith("...") ? stripped + "..." : stripped;
+	}
+
+	void preamble(StringBuilder declaration, StringBuilder returnType, List<String> paramTypes) {
+		declaration
+				.append(returnType)
+				.append(" ")
+				.append(methodName);
+		parameters( paramTypes, declaration );
+		declaration
+				.append(" {\n");
 	}
 
 	void parameters(List<String> paramTypes, StringBuilder declaration) {
@@ -180,15 +175,15 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	boolean isUsingEntityManager() {
-		return Constants.ENTITY_MANAGER.equals(sessionType);
+		return ENTITY_MANAGER.equals(sessionType);
 	}
 
 	boolean isUsingStatelessSession() {
-		return Constants.HIB_STATELESS_SESSION.equals(sessionType);
+		return HIB_STATELESS_SESSION.equals(sessionType);
 	}
 
 	boolean isReactive() {
-		return Constants.MUTINY_SESSION.equals(sessionType);
+		return MUTINY_SESSION.equals(sessionType);
 	}
 
 	void setPage(StringBuilder declaration, String paramName, String paramType) {
@@ -290,17 +285,11 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		declaration.append("\n}");
 	}
 
-	@Nullable String getSortableEntityClass() {
-		return returnTypeName;
-	}
-
 	void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
 		if ( !unwrapped && isUsingEntityManager() ) {
 			declaration
-					.append("\t\t\t.unwrap(");
-			final String selectionQuery = annotationMetaEntity.importType(HIB_SELECTION_QUERY);
-			declaration
-					.append(selectionQuery)
+					.append("\t\t\t.unwrap(")
+					.append(annotationMetaEntity.importType(HIB_SELECTION_QUERY))
 					.append(".class)\n");
 		}
 	}
@@ -346,8 +335,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		annotationMetaEntity.staticImport("org.hibernate.query.Order", "by");
 		annotationMetaEntity.staticImport("org.hibernate.query.Page", "page");
 		annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
-		final String entityClass = getSortableEntityClass();
-		if ( entityClass == null ) {
+		if ( returnTypeName == null ) {
 			throw new AssertionFailure("entity class cannot be null");
 		}
 		else {
@@ -355,7 +343,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(MAKE_KEYED_PAGE
 							.replace("pageRequest",
 									parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-							.replace("Entity", annotationMetaEntity.importType(entityClass)));
+							.replace("Entity", annotationMetaEntity.importType(returnTypeName)));
 		}
 	}
 
@@ -394,10 +382,6 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	void setParameters(StringBuilder declaration, List<String> paramTypes) {}
 
-	List<OrderBy> getOrderBys() {
-		return emptyList();
-	}
-
 	void tryReturn(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
 		if ( isJakartaKeyedSlice(containerType) ) {
 			makeKeyedPage( declaration, paramTypes );
@@ -422,14 +406,13 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				.append('\t');
 		if ( isJakartaKeyedSlice(containerType)
 				|| isJakartaSlice(containerType) ) {
-			final String entityClass = getSortableEntityClass();
-			if ( entityClass != null && isUsingEntityManager() ) {
+			if ( returnTypeName != null && isUsingEntityManager() ) {
 				// this is necessary to avoid losing the type
 				// after unwrapping the Query object
 				declaration
 						.append(annotationMetaEntity.importType(HIB_KEYED_RESULT_LIST))
 						.append('<')
-						.append(annotationMetaEntity.importType(entityClass))
+						.append(annotationMetaEntity.importType(returnTypeName))
 						.append('>');
 			}
 			else {
@@ -454,28 +437,27 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		setParameters( declaration, paramTypes );
 		unwrapQuery( declaration, !isUsingEntityManager() );
 		declaration
-				.append("\t\t\t\t\t\t.getResultCount();\n");
+				.append("\t\t\t.getResultCount();\n");
 	}
 
 	void collectOrdering(StringBuilder declaration, List<String> paramTypes) {
-		final String entityClass = getSortableEntityClass();
 		if ( hasOrdering(paramTypes) ) {
-			if ( entityClass != null ) {
+			if ( returnTypeName != null ) {
 				declaration
 						.append("\tvar _orders = new ")
 						.append(annotationMetaEntity.importType("java.util.ArrayList"))
 						.append("<")
 						.append(annotationMetaEntity.importType(HIB_ORDER))
 						.append("<? super ")
-						.append(annotationMetaEntity.importType(entityClass))
+						.append(annotationMetaEntity.importType(returnTypeName))
 						.append(">>();\n");
 				// static orders declared using @OrderBy must come first
-				for ( OrderBy orderBy : getOrderBys() ) {
+				for ( OrderBy orderBy : orderBys ) {
 					declaration
 							.append("\t_orders.add(")
 							.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
 							.append('(')
-							.append(annotationMetaEntity.importType(entityClass))
+							.append(annotationMetaEntity.importType(returnTypeName))
 							.append(".class, \"")
 							.append(orderBy.fieldName)
 							.append("\", ")
@@ -517,7 +499,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 								.append("\t\t_orders.add(")
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
 								.append('(')
-								.append(annotationMetaEntity.importType(entityClass))
+								.append(annotationMetaEntity.importType(returnTypeName))
 								.append(".class, _sort.property(),")
 								.append("\n\t\t\t\t\t\t")
 								.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
@@ -534,7 +516,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 								.append("\t\t_orders.add(")
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
 								.append('(')
-								.append(annotationMetaEntity.importType(entityClass))
+								.append(annotationMetaEntity.importType(returnTypeName))
 								.append(".class, _sort.property(),")
 								.append("\n\t\t\t\t\t\t")
 								.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
@@ -547,7 +529,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 								.append("\t_orders.add(")
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
 								.append('(')
-								.append(annotationMetaEntity.importType(entityClass))
+								.append(annotationMetaEntity.importType(returnTypeName))
 								.append(".class, ")
 								.append(name)
 								.append(".property(),")
@@ -565,7 +547,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	private boolean hasOrdering(List<String> paramTypes) {
 		return paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam)
-			|| !getOrderBys().isEmpty();
+			|| !orderBys.isEmpty();
 	}
 
 	boolean unwrapIfNecessary(StringBuilder declaration, @Nullable String containerType, boolean unwrapped) {
@@ -628,8 +610,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					break;
 				case JD_KEYED_SLICE:
 				case JD_KEYED_PAGE:
-					final String entityClass = getSortableEntityClass();
-					if ( entityClass == null ) {
+					if ( returnTypeName == null ) {
 						throw new AssertionFailure("entity class cannot be null");
 					}
 					else {
@@ -640,7 +621,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						String fragment = MAKE_KEYED_SLICE
 								.replace("pageRequest",
 										parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-								.replace("Entity", annotationMetaEntity.importType(entityClass))
+								.replace("Entity", annotationMetaEntity.importType(returnTypeName))
 								.replace("KeysetAwareSliceRecord", implType(containerType));
 						if ( JD_KEYED_SLICE.equals(containerType) ) {
 							fragment = fragment.replace("_totalResults, ", "");

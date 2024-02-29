@@ -12,10 +12,10 @@ import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_PAGE;
 import static org.hibernate.jpamodelgen.util.Constants.HIB_KEYED_RESULT_LIST;
@@ -211,98 +211,129 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				maxResults = paramName + ".getMaxResults()";
 			}
 			declaration
-					.append("\n\t\t\t.setFirstResult(")
+					.append("\t\t\t.setFirstResult(")
 					.append(firstResult)
-					.append(")")
-					.append("\n\t\t\t.setMaxResults(")
+					.append(")\n")
+					.append("\t\t\t.setMaxResults(")
 					.append(maxResults)
-					.append(")");
+					.append(")\n");
 		}
 		else {
 			declaration
-					.append("\n\t\t\t.setPage(")
+					.append("\t\t\t.setPage(")
 					.append(paramName)
-					.append(")");
+					.append(")\n");
 		}
 	}
 
-	boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
-		unwrapQuery( declaration, unwrapped );
-		if ( paramType.startsWith(JD_ORDER) ) {
-			final String sortableEntityClass = getSortableEntityClass();
-			if ( sortableEntityClass != null ) {
-				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
-				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
-				annotationMetaEntity.staticImport(HIB_ORDER, "by");
-				declaration
-						.append("\n\t\t\t.setOrder(")
-						.append(paramName)
-						.append(".sorts().stream()")
-						.append("\n\t\t\t\t\t")
-						.append(".map(_sort -> by(")
-						.append(annotationMetaEntity.importType(sortableEntityClass))
-						.append(".class, _sort.property(),")
-						.append("\n\t\t\t\t\t\t\t")
-						.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
-						.append("\n\t\t\t\t\t\t\t")
-						.append("_sort.ignoreCase()))")
-						.append("\n\t\t\t\t\t")
-						.append(".collect(toList()))");
-			}
-		}
-		else if ( paramType.startsWith(JD_SORT) && paramType.endsWith("...") ) {
-			final String sortableEntityClass = getSortableEntityClass();
-			if ( sortableEntityClass != null ) {
-				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
-				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
-				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
-				annotationMetaEntity.staticImport(HIB_ORDER, "by");
-				declaration
-						.append("\n\t\t\t.setOrder(asList(")
-						.append(paramName)
-						.append(").stream().map(_sort -> by(")
-						.append(annotationMetaEntity.importType(sortableEntityClass))
-						.append(".class, ")
-						.append("_sort.property()")
-						.append(",\n\t\t\t\t\t\t")
-						.append("_sort.isAscending() ? ASCENDING : DESCENDING, ")
-						.append("_sort.ignoreCase()))\n\t\t\t\t.collect(toList())\n\t\t\t)");
-			}
-		}
-		else if ( paramType.startsWith(JD_SORT) ) {
-			final String sortableEntityClass = getSortableEntityClass();
-			if ( sortableEntityClass != null ) {
-				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
-				declaration
-						.append("\n\t\t\t.setOrder(")
-						.append(annotationMetaEntity.importType(HIB_ORDER))
-						.append(".by(")
-						.append(annotationMetaEntity.importType(sortableEntityClass))
-						.append(".class, ")
-						.append(paramName)
-						.append(".property()")
-						.append(",\n\t\t\t\t\t")
-						.append(paramName)
-						.append(".isAscending() ? ASCENDING : DESCENDING")
-						.append("))");
-			}
-		}
-		else if ( paramType.endsWith("...") ) {
+	boolean applyOrder(
+			StringBuilder declaration, List<String> paramTypes,
+			@Nullable String containerType, boolean unwrapped) {
+		if ( !isJakartaKeyedSlice(containerType) && hasOrdering(paramTypes) ) {
+			unwrapQuery( declaration, unwrapped );
 			declaration
-					.append("\n\t\t\t.setOrder(")
-					.append(annotationMetaEntity.importType(LIST))
-					.append(".of(")
-					.append(paramName)
-					.append("))");
+					.append("\t\t\t.setOrder(_orders)\n");
+			return true;
 		}
-		else {
-			declaration
-					.append("\n\t\t\t.setOrder(")
-					.append(paramName)
-					.append(")");
-		}
-		return true;
+		return unwrapped;
 	}
+
+	void handlePageParameters(
+			StringBuilder declaration, List<String> paramTypes,
+			@Nullable String containerType) {
+		if ( !isJakartaKeyedSlice(containerType) ) {
+			for ( int i = 0; i < paramNames.size(); i ++ ) {
+				final String paramName = paramNames.get(i);
+				final String paramType = paramTypes.get(i);
+				if ( isPageParam(paramType) ) {
+					setPage( declaration, paramName, paramType );
+				}
+//				if ( isOrderParam(paramType) && !isJakartaSortParam(paramType) ) {
+//					setOrder( declaration, unwrapped, paramName, paramType );
+//					unwrapped = true;
+//				}
+			}
+		}
+	}
+
+//	boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
+//		unwrapQuery( declaration, unwrapped );
+//		if ( paramType.startsWith(JD_ORDER)
+//				|| paramType.startsWith(JD_PAGE_REQUEST) ) {
+//			final String sortableEntityClass = getSortableEntityClass();
+//			if ( sortableEntityClass != null ) {
+//				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
+//				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+//				annotationMetaEntity.staticImport(HIB_ORDER, "by");
+//				declaration
+//						.append("\n\t\t\t.setOrder(")
+//						.append(paramName)
+//						.append(".sorts().stream()")
+//						.append("\n\t\t\t\t\t")
+//						.append(".map(_sort -> by(")
+//						.append(annotationMetaEntity.importType(sortableEntityClass))
+//						.append(".class, _sort.property(),")
+//						.append("\n\t\t\t\t\t\t\t")
+//						.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
+//						.append("\n\t\t\t\t\t\t\t")
+//						.append("_sort.ignoreCase()))")
+//						.append("\n\t\t\t\t\t")
+//						.append(".collect(toList()))");
+//			}
+//		}
+//		else if ( paramType.startsWith(JD_SORT) && paramType.endsWith("...") ) {
+//			final String sortableEntityClass = getSortableEntityClass();
+//			if ( sortableEntityClass != null ) {
+//				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
+//				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
+//				annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+//				annotationMetaEntity.staticImport(HIB_ORDER, "by");
+//				declaration
+//						.append("\n\t\t\t.setOrder(asList(")
+//						.append(paramName)
+//						.append(").stream().map(_sort -> by(")
+//						.append(annotationMetaEntity.importType(sortableEntityClass))
+//						.append(".class, ")
+//						.append("_sort.property()")
+//						.append(",\n\t\t\t\t\t\t")
+//						.append("_sort.isAscending() ? ASCENDING : DESCENDING, ")
+//						.append("_sort.ignoreCase()))\n\t\t\t\t.collect(toList())\n\t\t\t)");
+//			}
+//		}
+//		else if ( paramType.startsWith(JD_SORT) ) {
+//			final String sortableEntityClass = getSortableEntityClass();
+//			if ( sortableEntityClass != null ) {
+//				annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
+//				declaration
+//						.append("\n\t\t\t.setOrder(")
+//						.append(annotationMetaEntity.importType(HIB_ORDER))
+//						.append(".by(")
+//						.append(annotationMetaEntity.importType(sortableEntityClass))
+//						.append(".class, ")
+//						.append(paramName)
+//						.append(".property()")
+//						.append(",\n\t\t\t\t\t")
+//						.append(paramName)
+//						.append(".isAscending() ? ASCENDING : DESCENDING")
+//						.append("))");
+//			}
+//		}
+//		else if ( paramType.endsWith("...") ) {
+//			declaration
+//					.append("\n\t\t\t.setOrder(")
+//					.append(annotationMetaEntity.importType(LIST))
+//					.append(".of(")
+//					.append(paramName)
+//					.append("))");
+//		}
+//		else {
+//			declaration
+//					.append("\n\t\t\t.setOrder(")
+//					.append(paramName)
+//					.append(")");
+//		}
+//		return true;
+//	}
 
 	void convertExceptions(StringBuilder declaration) {
 		if (dataRepository) {
@@ -349,7 +380,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
 		if ( !unwrapped && isUsingEntityManager() ) {
 			declaration
-					.append("\n\t\t\t.unwrap(");
+					.append("\t\t\t.unwrap(");
 			final String selectionQuery = annotationMetaEntity.importType(HIB_SELECTION_QUERY);
 //			final String className = getSortableEntityClass();
 //			if ( className != null ) {
@@ -363,7 +394,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 //			}
 			declaration
 					.append(selectionQuery)
-					.append(".class)");
+					.append(".class)\n");
 		}
 	}
 
@@ -388,7 +419,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return parameterType.startsWith(HIB_ORDER)
 			|| parameterType.startsWith(LIST + "<" + HIB_ORDER)
 			|| parameterType.startsWith(JD_SORT)
-			|| parameterType.startsWith(JD_ORDER);
+			|| parameterType.startsWith(JD_ORDER)
+			|| parameterType.startsWith(JD_PAGE_REQUEST);
 	}
 
 	static boolean isJakartaKeyedSlice(@Nullable String containerType) {
@@ -421,42 +453,43 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	static final String MAKE_KEYED_SLICE
-			= "\t\tvar cursors =\n" +
-			"\t\t\t\tresults.getKeyList()\n" +
+			= "\t\tvar _cursors =\n" +
+			"\t\t\t\t_results.getKeyList()\n" +
 			"\t\t\t\t\t\t.stream()\n" +
 			"\t\t\t\t\t\t.map(_key -> Cursor.forKeyset(_key.toArray()))\n" +
 			"\t\t\t\t\t\t.collect(toList());\n" +
-			"\t\tvar page =\n" +
+			"\t\tvar _page =\n" +
 			"\t\t\t\tPageRequest.of(Entity.class)\n" +
 			"\t\t\t\t\t\t.sortBy(pageRequest.sorts())\n" +
 			"\t\t\t\t\t\t.size(pageRequest.size())\n" +
 			"\t\t\t\t\t\t.page(pageRequest.page() + 1);\n" +
-			"\t\treturn new KeysetAwareSliceRecord<>( results.getResultList(), cursors, totalResults, pageRequest,\n" +
-			"\t\t\t\tresults.isLastPage() ? null : page.afterKeyset( results.getNextPage().getKey().toArray() ),\n" +
-			"\t\t\t\tresults.isFirstPage() ? null : page.beforeKeyset( results.getPreviousPage().getKey().toArray() ) );\n";
+			"\t\treturn new KeysetAwareSliceRecord<>( _results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
+			"\t\t\t\t_results.isLastPage() ? null : _page.afterKeyset(_results.getNextPage().getKey().toArray()),\n" +
+			"\t\t\t\t_results.isFirstPage() ? null : _page.beforeKeyset(_results.getPreviousPage().getKey().toArray()) );\n";
 
 	static final String MAKE_KEYED_PAGE
-			= "\tvar unkeyedPage =\n" +
+			= "\tvar _unkeyedPage =\n" +
 			"\t\t\tpage(pageRequest.size(), (int) pageRequest.page()-1)\n" +
-			"\t\t\t\t\t.keyedBy(pageRequest.sorts().stream()\n" +
-			"\t\t\t\t\t\t\t.map(_sort -> by(Entity.class, _sort.property(),\n" +
-			"\t\t\t\t\t\t\t\t\t_sort.isAscending() ? ASCENDING : DESCENDING,\n" +
-			"\t\t\t\t\t\t\t\t\t_sort.ignoreCase())).collect(toList()));\n" +
-			"\tvar keyedPage =\n" +
+			"\t\t\t\t\t.keyedBy(_orders);\n" +
+			"\tvar _keyedPage =\n" +
 			"\t\t\tpageRequest.cursor()\n" +
 			"\t\t\t\t\t.map(_cursor -> {\n" +
 			"\t\t\t\t\t\t@SuppressWarnings(\"unchecked\")\n" +
-			"\t\t\t\t\t\tvar elements = (List<Comparable<?>>) _cursor.elements();\n" +
+			"\t\t\t\t\t\tvar _elements = (List<Comparable<?>>) _cursor.elements();\n" +
 			"\t\t\t\t\t\treturn switch ( pageRequest.mode() ) {\n" +
-			"\t\t\t\t\t\t\tcase CURSOR_NEXT -> unkeyedPage.withKey(elements, KEY_OF_LAST_ON_PREVIOUS_PAGE);\n" +
-			"\t\t\t\t\t\t\tcase CURSOR_PREVIOUS -> unkeyedPage.withKey(elements, KEY_OF_FIRST_ON_NEXT_PAGE);\n" +
-			"\t\t\t\t\t\t\tdefault -> unkeyedPage;\n" +
+			"\t\t\t\t\t\t\tcase CURSOR_NEXT -> _unkeyedPage.withKey(_elements, KEY_OF_LAST_ON_PREVIOUS_PAGE);\n" +
+			"\t\t\t\t\t\t\tcase CURSOR_PREVIOUS -> _unkeyedPage.withKey(_elements, KEY_OF_FIRST_ON_NEXT_PAGE);\n" +
+			"\t\t\t\t\t\t\tdefault -> _unkeyedPage;\n" +
 			"\t\t\t\t\t\t};\n" +
-			"\t\t\t\t\t}).orElse(unkeyedPage);\n";
+			"\t\t\t\t\t}).orElse(_unkeyedPage);\n";
 
 	void createQuery(StringBuilder declaration) {}
 
 	void setParameters(StringBuilder declaration, List<String> paramTypes) {}
+
+	List<OrderBy> getOrderBys() {
+		return emptyList();
+	}
 
 	void tryReturn(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
 		if ( isJakartaKeyedSlice(containerType) ) {
@@ -472,13 +505,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				declaration
 						.append('\t');
 			}
-			declaration
-					.append("\tlong totalResults = ");
-			createQuery( declaration );
-			setParameters( declaration, paramTypes );
-			unwrapQuery( declaration, !isUsingEntityManager() );
-			declaration
-					.append("\n\t\t\t\t\t\t.getResultCount();\n");
+			totalResults(declaration, paramTypes);
 		}
 		if ( dataRepository ) {
 			declaration
@@ -503,7 +530,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						.append("var");
 			}
 			declaration
-					.append(" results = ");
+					.append(" _results = ");
 		}
 		else {
 			if ( !"void".equals(returnTypeName) ) {
@@ -511,6 +538,129 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						.append("return ");
 			}
 		}
+	}
+
+	private void totalResults(StringBuilder declaration, List<String> paramTypes) {
+		declaration
+				.append("\tlong _totalResults = ");
+		createQuery( declaration );
+		setParameters( declaration, paramTypes );
+		unwrapQuery( declaration, !isUsingEntityManager() );
+		declaration
+				.append("\t\t\t\t\t\t.getResultCount();\n");
+	}
+
+	void collectOrdering(StringBuilder declaration, List<String> paramTypes) {
+		final String entityClass = getSortableEntityClass();
+		if ( hasOrdering(paramTypes) ) {
+			if ( entityClass != null ) {
+				declaration
+						.append("\tvar _orders = new ")
+						.append(annotationMetaEntity.importType("java.util.ArrayList"))
+						.append("<")
+						.append(annotationMetaEntity.importType(HIB_ORDER))
+						.append("<? super ")
+						.append(annotationMetaEntity.importType(entityClass))
+						.append(">>();\n");
+				// static orders declared using @OrderBy must come first
+				for ( OrderBy orderBy : getOrderBys() ) {
+					declaration
+							.append("\t_orders.add(")
+							.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+							.append('(')
+							.append(annotationMetaEntity.importType(entityClass))
+							.append(".class, \"")
+							.append(orderBy.fieldName)
+							.append("\", ")
+//							.append("\n\t\t\t\t\t\t")
+							.append(orderBy.descending ? "DESCENDING" : "ASCENDING")
+							.append(", ")
+//							.append("\n\t\t\t\t\t\t")
+							.append(orderBy.ignoreCase)
+							.append("));\n");
+
+				}
+				for (int i = 0; i < paramTypes.size(); i++) {
+					final String type = paramTypes.get(i);
+					final String name = paramNames.get(i);
+					if ( type.startsWith(HIB_ORDER) && type.endsWith("...") ) {
+						declaration
+								.append("\tfor (var _sort : ")
+								.append(name)
+								.append(") {\n")
+								.append("\t\t_orders.add(_sort);\n")
+								.append("\t}\n");
+					}
+					else if ( type.startsWith(HIB_ORDER) ) {
+						declaration
+								.append("\t_orders.add(")
+								.append(name)
+								.append(");\n");
+					}
+					else if ( type.startsWith(LIST + "<" + HIB_ORDER) ) {
+						declaration
+								.append("\t_orders.addAll(")
+								.append(name)
+								.append(");\n");
+					}
+					else if ( type.startsWith(JD_ORDER)
+							|| type.startsWith(JD_PAGE_REQUEST) ) {
+						declaration
+								.append("\tfor (var _sort : ")
+								.append(name)
+								.append(".sorts()) {\n")
+								.append("\t\t_orders.add(")
+								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+								.append('(')
+								.append(annotationMetaEntity.importType(entityClass))
+								.append(".class, _sort.property(),")
+								.append("\n\t\t\t\t\t\t")
+								.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
+								.append("\n\t\t\t\t\t\t")
+								.append("_sort.ignoreCase()));\n")
+								.append("\t}\n");
+					}
+					else if ( type.startsWith(JD_SORT) && type.endsWith("...") ) {
+						// almost identical
+						declaration
+								.append("\tfor (var _sort : ")
+								.append(name)
+								.append(") {\n")
+								.append("\t\t_orders.add(")
+								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+								.append('(')
+								.append(annotationMetaEntity.importType(entityClass))
+								.append(".class, _sort.property(),")
+								.append("\n\t\t\t\t\t\t")
+								.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
+								.append("\n\t\t\t\t\t\t")
+								.append("_sort.ignoreCase()));\n")
+								.append("\t}\n");
+					}
+					else if ( type.startsWith(JD_SORT) ) {
+						declaration
+								.append("\t_orders.add(")
+								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+								.append('(')
+								.append(annotationMetaEntity.importType(entityClass))
+								.append(".class, ")
+								.append(name)
+								.append(".property(),")
+								.append("\n\t\t\t\t\t\t")
+								.append(name)
+								.append(".isAscending() ? ASCENDING : DESCENDING,")
+								.append("\n\t\t\t\t\t\t")
+								.append(name)
+								.append(".ignoreCase()));\n");
+					}
+				}
+			}
+		}
+	}
+
+	private boolean hasOrdering(List<String> paramTypes) {
+		return paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam)
+			|| !getOrderBys().isEmpty();
 	}
 
 	boolean unwrapIfNecessary(StringBuilder declaration, @Nullable String containerType, boolean unwrapped) {
@@ -527,6 +677,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			@Nullable String containerType,
 			boolean unwrapped,
 			boolean mustUnwrap) {
+		declaration
+				.append("\t\t\t");
 		if ( containerType == null ) {
 			declaration
 					.append(".getSingleResult();");
@@ -558,7 +710,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 							.append(implType(containerType))
 							.append('(')
 							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-							.append(", results);\n");
+							.append(", _results);\n");
 					break;
 				case JD_PAGE:
 					declaration
@@ -567,7 +719,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 							.append(implType(containerType))
 							.append('(')
 							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-							.append(", results, totalResults);\n");
+							.append(", _results, _totalResults);\n");
 					break;
 				case JD_KEYED_SLICE:
 				case JD_KEYED_PAGE:
@@ -577,7 +729,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 					else {
 						declaration
-								.append("\t\t\t.getKeyedResultList(keyedPage);\n");
+								.append(".getKeyedResultList(_keyedPage);\n");
 						annotationMetaEntity.importType("jakarta.data.page.PageRequest");
 						annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
 						String fragment = MAKE_KEYED_SLICE
@@ -586,7 +738,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 								.replace("Entity", annotationMetaEntity.importType(entityClass))
 								.replace("KeysetAwareSliceRecord", implType(containerType));
 						if ( JD_KEYED_SLICE.equals(containerType) ) {
-							fragment = fragment.replace("totalResults, ", "");
+							fragment = fragment.replace("_totalResults, ", "");
 						}
 						declaration
 								.append(fragment);
@@ -595,7 +747,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				default:
 					if ( isUsingEntityManager() && !unwrapped && mustUnwrap ) {
 						declaration
-								.append("\n\t\t\t")
+								.append("\t\t\t")
 								.append(".unwrap(")
 								.append(annotationMetaEntity.importType(containerType))
 								.append(".class);");

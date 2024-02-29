@@ -79,10 +79,10 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append(".byId(")
 				.append(annotationMetaEntity.importType(entity))
-				.append(".class)");
+				.append(".class)\n");
 		enableFetchProfile( declaration, true );
 		declaration
-				.append("\n\t\t\t.load(")
+				.append("\t\t\t.load(")
 				.append(paramName)
 				.append(");");
 		if (dataRepository) {

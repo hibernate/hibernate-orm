@@ -124,4 +124,10 @@ public interface BookAuthorRepository {
 
 	@Query("from Book where title like :titlePattern")
 	KeysetAwarePage<Book> everyBook9(String titlePattern, PageRequest<Book> pageRequest);
+
+	@Find
+	Page<Book> booksByTitle1(String title, PageRequest<Book> pageRequest);
+
+	@Query("from Book where title like :titlePattern")
+	Slice<Book> booksByTitle2(String titlePattern, PageRequest<Book> pageRequest);
 }

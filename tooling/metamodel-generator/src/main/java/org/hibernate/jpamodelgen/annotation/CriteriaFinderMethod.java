@@ -8,14 +8,10 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.query.NullPrecedence;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
 
-import static org.hibernate.jpamodelgen.util.Constants.JD_SORT;
 import static org.hibernate.jpamodelgen.util.Constants.LIST;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
@@ -60,6 +56,11 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	}
 
 	@Override
+	List<OrderBy> getOrderBys() {
+		return orderBys;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
 		final StringBuilder declaration = new StringBuilder();
@@ -69,7 +70,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		nullChecks( paramTypes, declaration );
 		createCriteriaQuery( declaration );
 		where( declaration, paramTypes );
-		orderBy( paramTypes, declaration );
+//		orderBy( paramTypes, declaration );
 		executeQuery( declaration, paramTypes );
 		convertExceptions( declaration );
 		closingBrace( declaration );
@@ -83,16 +84,19 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				.append(methodName);
 		parameters(paramTypes, declaration);
 		declaration
-				.append(" {");
+				.append(" {\n");
 	}
 
 	private void executeQuery(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append('\n');
+		collectOrdering( declaration, paramTypes );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
 		createQuery( declaration );
-		boolean unwrapped = specialNeeds( declaration, paramTypes );
+		handlePageParameters( declaration, paramTypes, containerType );
+		boolean unwrapped = specialNeeds( declaration );
+		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
 		execute( declaration, paramTypes, unwrapped );
 	}
 
@@ -106,14 +110,13 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		}
 	}
 
-	private boolean specialNeeds(StringBuilder declaration, List<String> paramTypes) {
+	private boolean specialNeeds(StringBuilder declaration) {
 		boolean unwrapped = !isUsingEntityManager();
-		unwrapped = handleSpecialParameters( declaration, paramTypes, unwrapped );
 		unwrapped = enableFetchProfile( declaration, unwrapped );
 		unwrapped = unwrapIfNecessary( declaration, containerType, unwrapped );
-		if ( unwrapped ) {
-			declaration.append("\n\t\t\t");
-		}
+//		if ( unwrapped ) {
+//			declaration.append("\n\t\t\t");
+//		}
 		return unwrapped;
 	}
 
@@ -121,7 +124,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	void createQuery(StringBuilder declaration) {
 		declaration
 				.append(sessionName)
-				.append(".createQuery(query)");
+				.append(".createQuery(_query)\n");
 	}
 
 	private void execute(StringBuilder declaration, List<String> paramTypes, boolean unwrapped) {
@@ -134,37 +137,20 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		}
 	}
 
-	private boolean handleSpecialParameters(StringBuilder declaration, List<String> paramTypes, boolean unwrapped) {
-		if ( !isJakartaKeyedSlice(containerType) ) {
-			for ( int i = 0; i < paramNames.size(); i ++ ) {
-				final String paramName = paramNames.get(i);
-				final String paramType = paramTypes.get(i);
-				if ( isPageParam(paramType) ) {
-					setPage( declaration, paramName, paramType );
-				}
-				else if ( isOrderParam(paramType) && !isJakartaSortParam(paramType) ) {
-					setOrder( declaration, unwrapped, paramName, paramType );
-					unwrapped = true;
-				}
-			}
-		}
-		return unwrapped;
-	}
-
 	private void createCriteriaQuery(StringBuilder declaration) {
 		declaration
-				.append("\n\tvar builder = ")
+				.append("\tvar _builder = ")
 				.append(sessionName)
 				.append(isUsingEntityManager()
 						? ".getEntityManagerFactory()"
 						: ".getFactory()")
-				.append(".getCriteriaBuilder();")
-				.append("\n\tvar query = builder.createQuery(")
+				.append(".getCriteriaBuilder();\n")
+				.append("\tvar _query = _builder.createQuery(")
 				.append(annotationMetaEntity.importType(entity))
-				.append(".class);")
-				.append("\n\tvar entity = query.from(")
+				.append(".class);\n")
+				.append("\tvar _entity = _query.from(")
 				.append(annotationMetaEntity.importType(entity))
-				.append(".class);");
+				.append(".class);\n");
 	}
 
 	private void nullChecks(List<String> paramTypes, StringBuilder declaration) {
@@ -179,55 +165,55 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 
 	private static void nullCheck(StringBuilder declaration, String paramName) {
 		declaration
-				.append("\n\tif (")
+				.append("\tif (")
 				.append(paramName)
 				.append(" == null) throw new IllegalArgumentException(\"Null ")
 				.append(paramName)
-				.append("\");");
+				.append("\");\n");
 	}
-
-	private void orderBy(List<String> paramTypes, StringBuilder declaration) {
-		final boolean hasSortParameter =
-				paramTypes.stream().anyMatch(CriteriaFinderMethod::isJakartaSortParam);
-		if ( !orderBys.isEmpty() || hasSortParameter ) {
-			declaration.append("\n\tquery.orderBy(");
-		}
-		boolean firstOrderBy = true;
-		if ( !orderBys.isEmpty() ) {
-			for ( OrderBy orderBy : orderBys ) {
-				if ( firstOrderBy ) {
-					firstOrderBy = false;
-				}
-				else {
-					declaration.append(',');
-				}
-				orderBy(declaration, orderBy);
-			}
-		}
-		if ( hasSortParameter ) {
-			for ( int i = 0; i < paramNames.size(); i ++ ) {
-				final String paramName = paramNames.get(i);
-				final String paramType = paramTypes.get(i);
-				//TODO: Jakarta Order!!
-				if ( isJakartaSortParam(paramType) ) {
-					if ( firstOrderBy ) {
-						firstOrderBy = false;
-					}
-					else {
-						declaration.append(',');
-					}
-					orderBy(declaration, paramName, paramType.endsWith("..."));
-				}
-			}
-		}
-		if ( !orderBys.isEmpty() || hasSortParameter ) {
-			declaration.append("\n\t);");
-		}
-	}
+//
+//	private void orderBy(List<String> paramTypes, StringBuilder declaration) {
+//		final boolean hasSortParameter =
+//				paramTypes.stream().anyMatch(CriteriaFinderMethod::isJakartaSortParam);
+//		if ( !orderBys.isEmpty() || hasSortParameter ) {
+//			declaration.append("\n\t_query.orderBy(");
+//		}
+//		boolean firstOrderBy = true;
+//		if ( !orderBys.isEmpty() ) {
+//			for ( OrderBy orderBy : orderBys ) {
+//				if ( firstOrderBy ) {
+//					firstOrderBy = false;
+//				}
+//				else {
+//					declaration.append(',');
+//				}
+//				orderBy(declaration, orderBy);
+//			}
+//		}
+//		if ( hasSortParameter ) {
+//			for ( int i = 0; i < paramNames.size(); i ++ ) {
+//				final String paramName = paramNames.get(i);
+//				final String paramType = paramTypes.get(i);
+//				//TODO: Jakarta Order!!
+//				if ( isJakartaSortParam(paramType) ) {
+//					if ( firstOrderBy ) {
+//						firstOrderBy = false;
+//					}
+//					else {
+//						declaration.append(',');
+//					}
+//					orderBy(declaration, paramName, paramType.endsWith("..."));
+//				}
+//			}
+//		}
+//		if ( !orderBys.isEmpty() || hasSortParameter ) {
+//			declaration.append("\n\t);");
+//		}
+//	}
 
 	private void where(StringBuilder declaration, List<String> paramTypes) {
 		declaration
-				.append("\n\tquery.where(");
+				.append("\t_query.where(");
 		boolean first = true;
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			final String paramName = paramNames.get(i);
@@ -247,55 +233,55 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				.append("\n\t);");
 	}
 
-	private static boolean isJakartaSortParam(String paramType) {
-		return paramType.startsWith(JD_SORT);
-	}
+//	private static boolean isJakartaSortParam(String paramType) {
+//		return paramType.startsWith(JD_SORT);
+//	}
+//
+//	private static void orderBy(StringBuilder declaration, OrderBy orderBy) {
+//		declaration
+//				.append("\n\t\t")
+//				.append("_builder.")
+//				.append(orderBy.descending ? "desc" : "asc")
+//				.append('(');
+//		if ( orderBy.ignoreCase ) {
+//			declaration.append("_builder.lower(");
+//		}
+//		declaration
+//				.append("_entity.get(\"")
+//				.append(orderBy.fieldName)
+//				.append("\")");
+//		if ( orderBy.ignoreCase ) {
+//			declaration
+//					.append(')');
+//		}
+//		declaration
+//				.append(')');
+//	}
 
-	private static void orderBy(StringBuilder declaration, OrderBy orderBy) {
-		declaration
-				.append("\n\t\t")
-				.append("builder.")
-				.append(orderBy.descending ? "desc" : "asc")
-				.append('(');
-		if ( orderBy.ignoreCase ) {
-			declaration.append("builder.lower(");
-		}
-		declaration
-				.append("entity.get(\"")
-				.append(orderBy.fieldName)
-				.append("\")");
-		if ( orderBy.ignoreCase ) {
-			declaration
-					.append(')');
-		}
-		declaration
-				.append(')');
-	}
+//	private static final String ORDER_CONVERSION =
+//			"_builder.sort(_entity.get(_sort.property())," +
+//			"\n\t\t\t\t\t_sort.isAscending() ? ASCENDING : DESCENDING," +
+//			"\n\t\t\t\t\tNONE, _sort.ignoreCase())";
 
-	private static final String ORDER_CONVERSION =
-			"builder.sort(entity.get(_sort.property())," +
-			"\n\t\t\t\t\t_sort.isAscending() ? ASCENDING : DESCENDING," +
-			"\n\t\t\t\t\tNONE, _sort.ignoreCase())";
-
-	private void orderBy(StringBuilder declaration, String paramName, boolean variadic) {
-		// TODO: Sort.ignoreCase()
-		if ( variadic ) {
-			annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
-			annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
-			annotationMetaEntity.staticImport(NullPrecedence.class.getName(), "NONE");
-			declaration
-					.append("\n\t\tasList(")
-					.append(paramName)
-					.append(")\n\t\t\t.stream()\n\t\t\t.map(_sort -> ")
-					.append(ORDER_CONVERSION)
-					.append("\n\t\t\t)\n\t\t\t.collect(toList())");
-		}
-		else {
-			declaration
-					.append("\n\t\t")
-					.append(ORDER_CONVERSION.replace("_sort", paramName));
-		}
-	}
+//	private void orderBy(StringBuilder declaration, String paramName, boolean variadic) {
+//		// TODO: Sort.ignoreCase()
+//		if ( variadic ) {
+//			annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
+//			annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+//			annotationMetaEntity.staticImport(NullPrecedence.class.getName(), "NONE");
+//			declaration
+//					.append("\n\t\tasList(")
+//					.append(paramName)
+//					.append(")\n\t\t\t.stream()\n\t\t\t.map(_sort -> ")
+//					.append(ORDER_CONVERSION)
+//					.append("\n\t\t\t)\n\t\t\t.collect(toList())");
+//		}
+//		else {
+//			declaration
+//					.append("\n\t\t")
+//					.append(ORDER_CONVERSION.replace("_sort", paramName));
+//		}
+//	}
 
 	private void parameter(StringBuilder declaration, int i, String paramName, String paramType) {
 		declaration
@@ -305,14 +291,14 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					.append(paramName)
 					.append("==null")
 					.append("\n\t\t\t\t? ")
-					.append("entity");
+					.append("_entity");
 			path( declaration, paramName );
 			declaration
 					.append(".isNull()")
 					.append("\n\t\t\t\t: ");
 		}
 		declaration
-				.append("builder.equal(entity");
+				.append("_builder.equal(_entity");
 		path( declaration, paramName );
 		declaration
 				.append(", ")

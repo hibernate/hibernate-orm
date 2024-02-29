@@ -10,15 +10,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpamodelgen.util.Constants;
 
-import java.util.Arrays;
 import java.util.List;
 
-import static org.hibernate.jpamodelgen.util.Constants.HIB_ORDER;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_QUERY;
-import static org.hibernate.jpamodelgen.util.Constants.HIB_SELECTION_QUERY;
 import static org.hibernate.jpamodelgen.util.Constants.LIST;
-import static org.hibernate.jpamodelgen.util.Constants.QUERY;
-import static org.hibernate.jpamodelgen.util.Constants.TYPED_QUERY;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -84,6 +78,11 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
+	List<OrderBy> getOrderBys() {
+		return orderBys;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
 		final StringBuilder returnType = returnType();
@@ -91,78 +90,80 @@ public class QueryMethod extends AbstractQueryMethod {
 		comment( declaration );
 		modifiers( paramTypes, declaration );
 		preamble( declaration, returnType, paramTypes );
+		collectOrdering( declaration, paramTypes );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration, returnType );
 		createQuery( declaration );
 		setParameters( declaration, paramTypes );
-		boolean unwrapped = specialNeeds( paramTypes, declaration );
+		handlePageParameters( declaration, paramTypes, containerType );
+		boolean unwrapped = specialNeeds( declaration );
+		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
 		execute( declaration, unwrapped );
 		convertExceptions( declaration );
 		closingBrace( declaration );
 		return declaration.toString();
 	}
 
-	private boolean specialNeeds(List<String> paramTypes, StringBuilder declaration) {
-		boolean unwrapped;
-		if ( !isJakartaKeyedSlice(containerType) ) {
-			unwrapped = handleSpecialParameters( paramTypes, declaration );
-			unwrapped = orderBy( declaration, unwrapped );
-		}
-		else {
-			unwrapped = !isUsingEntityManager();
-		}
+	private boolean specialNeeds(StringBuilder declaration) {
+		boolean unwrapped = !isUsingEntityManager();
+//		if ( isJakartaKeyedSlice(containerType) ) {
+//			unwrapped = !isUsingEntityManager();
+//		}
+//		else {
+//			unwrapped = orderBy( declaration, unwrapped );
+//		}
 		unwrapped = unwrapIfNecessary( declaration, containerType, unwrapped );
-		if ( isUpdate || containerType == null || !isQueryType(containerType)) {
-			declaration
-					.append("\n\t\t\t");
-		}
+//		if ( isUpdate || containerType == null || !isQueryType(containerType)) {
+//			declaration
+//					.append("\t\t\t");
+//		}
 		return unwrapped;
 	}
 
-	private boolean isQueryType(String containerType) {
-		return HIB_QUERY.equals(containerType)
-			|| HIB_SELECTION_QUERY.equals(containerType)
-			|| QUERY.equals(containerType)
-			|| TYPED_QUERY.equals(containerType);
-	}
+//	private boolean isQueryType(String containerType) {
+//		return HIB_QUERY.equals(containerType)
+//			|| HIB_SELECTION_QUERY.equals(containerType)
+//			|| QUERY.equals(containerType)
+//			|| TYPED_QUERY.equals(containerType);
+//	}
 
-	private boolean orderBy(StringBuilder declaration, boolean unwrapped) {
-		if ( !orderBys.isEmpty() && returnTypeName!=null ) {
-			unwrapQuery( declaration, unwrapped );
-			declaration.append("\n\t\t\t.setOrder(");
-			if ( orderBys.size() > 1) {
-				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
-				declaration
-						.append("asList(");
-			}
-			boolean first = true;
-			for (OrderBy orderBy : orderBys) {
-				if (first) {
-					first = false;
-				}
-				else {
-					declaration
-							.append(",\n\t\t\t\t\t\t\t");
-				}
-				declaration
-						.append(annotationMetaEntity.importType(HIB_ORDER))
-						.append(orderBy.descending ? ".desc(" : ".asc(")
-						.append(annotationMetaEntity.importType(returnTypeName))
-						.append(".class, \"")
-						.append(orderBy.fieldName)
-						.append("\")");
-			}
-			if ( orderBys.size() > 1) {
-				declaration
-						.append(')');
-			}
-			declaration.append(')');
-			return true;
-		}
-		else {
-			return unwrapped;
-		}
-	}
+//	private boolean orderBy(StringBuilder declaration, boolean unwrapped) {
+//		if ( !orderBys.isEmpty() && returnTypeName!=null ) {
+//			unwrapQuery( declaration, unwrapped );
+//			declaration.append("\n\t\t\t.setOrder(");
+//			if ( orderBys.size() > 1) {
+//				annotationMetaEntity.staticImport(Arrays.class.getName(), "asList");
+//				declaration
+//						.append("asList(");
+//			}
+//			boolean first = true;
+//			for (OrderBy orderBy : orderBys) {
+//				if (first) {
+//					first = false;
+//				}
+//				else {
+//					declaration
+//							.append(",\n\t\t\t\t\t\t\t");
+//				}
+//				declaration
+//						.append(annotationMetaEntity.importType(HIB_ORDER))
+//						.append(orderBy.descending ? ".desc(" : ".asc(")
+//						.append(annotationMetaEntity.importType(returnTypeName))
+//						.append(".class, \"")
+//						.append(orderBy.fieldName)
+//						.append("\")");
+//			}
+//			if ( orderBys.size() > 1) {
+//				declaration
+//						.append(')');
+//			}
+//			declaration.append(')');
+//			return true;
+//		}
+//		else {
+//			return unwrapped;
+//		}
+//	}
 
 	@Override
 	void createQuery(StringBuilder declaration) {
@@ -177,7 +178,7 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append(annotationMetaEntity.importType(returnTypeName))
 					.append(".class");
 		}
-		declaration.append(")");
+		declaration.append(")\n");
 	}
 
 	private void castResult(StringBuilder declaration, StringBuilder returnType) {
@@ -204,6 +205,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void execute(StringBuilder declaration, boolean unwrapped) {
 		if ( isUpdate ) {
 			declaration
+					.append("\t\t\t")
 					.append(".executeUpdate()");
 			if ( "boolean".equals(returnTypeName) ) {
 				declaration.append(" > 0");
@@ -240,37 +242,22 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 	}
 
-	private boolean handleSpecialParameters(List<String> paramTypes, StringBuilder declaration) {
-		boolean unwrapped = !isUsingEntityManager();
-		for ( int i = 0; i < paramNames.size(); i++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
-			if ( isPageParam(paramType) ) {
-				setPage( declaration, paramName, paramType );
-			}
-			else if ( isOrderParam(paramType) ) {
-				unwrapped = setOrder( declaration, unwrapped, paramName, paramType );
-			}
-		}
-		return unwrapped;
-	}
-
 	private static void setOrdinalParameter(StringBuilder declaration, int i, String paramName) {
 		declaration
-				.append("\n\t\t\t.setParameter(")
+				.append("\t\t\t.setParameter(")
 				.append(i)
 				.append(", ")
 				.append(paramName)
-				.append(")");
+				.append(")\n");
 	}
 
 	private static void setNamedParameter(StringBuilder declaration, String paramName) {
 		declaration
-				.append("\n\t\t\t.setParameter(\"")
+				.append("\t\t\t.setParameter(\"")
 				.append(paramName)
 				.append("\", ")
 				.append(paramName)
-				.append(")");
+				.append(")\n");
 	}
 
 	private StringBuilder returnType() {

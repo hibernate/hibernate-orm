@@ -64,23 +64,23 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append(".byNaturalId(")
 				.append(annotationMetaEntity.importType(entity))
-				.append(".class)");
+				.append(".class)\n");
 		enableFetchProfile( declaration, true );
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			if ( !isSessionParameter( paramTypes.get(i) ) ) {
 				final String paramName = paramNames.get(i);
 				declaration
-						.append("\n\t\t\t.using(")
+						.append("\t\t\t.using(")
 						.append(annotationMetaEntity.importType(entity + '_'))
 						.append('.')
 						.append(paramName)
 						.append(", ")
 						.append(paramName)
-						.append(")");
+						.append(")\n");
 			}
 		}
 		declaration
-				.append("\n\t\t\t.load();");
+				.append("\t\t\t.load();");
 	}
 
 	private void findReactively(StringBuilder declaration) {

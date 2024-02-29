@@ -39,6 +39,11 @@ import static org.hibernate.query.KeyedPage.KeyInterpretation.NO_KEY;
  *         session.createQuery("from Book", Book.class)
  *                .getKeyedResultList(nextPage);
  * </pre>
+ * <p>
+ * A parameter of a {@linkplain org.hibernate.annotations.processing.Find
+ * finder method} or {@linkplain org.hibernate.annotations.processing.HQL
+ * HQL query method} may be declared with type {@code Page}. Then the
+ * return type of the method should be {@link KeyedResultList}.
  *
  * @since 6.5
  *

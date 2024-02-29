@@ -24,7 +24,6 @@ public class QueryMethod extends AbstractQueryMethod {
 	private final @Nullable String containerType;
 	private final boolean isUpdate;
 	private final boolean isNative;
-	private final List<OrderBy> orderBys;
 
 	QueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -48,13 +47,13 @@ public class QueryMethod extends AbstractQueryMethod {
 				methodName,
 				paramNames, paramTypes, returnTypeName,
 				sessionType, sessionName,
-				belongsToDao, addNonnullAnnotation,
+				belongsToDao, orderBys,
+				addNonnullAnnotation,
 				dataRepository );
 		this.queryString = queryString;
 		this.containerType = containerType;
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;
-		this.orderBys = orderBys;
 	}
 
 	@Override
@@ -75,11 +74,6 @@ public class QueryMethod extends AbstractQueryMethod {
 	@Override
 	boolean singleResult() {
 		return containerType == null;
-	}
-
-	@Override
-	List<OrderBy> getOrderBys() {
-		return orderBys;
 	}
 
 	@Override
@@ -135,16 +129,6 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append(returnType)
 					.append(") ");
 		}
-	}
-
-	private void preamble(StringBuilder declaration, StringBuilder returnType, List<String> paramTypes) {
-		declaration
-				.append(returnType)
-				.append(" ")
-				.append(methodName);
-		parameters( paramTypes, declaration );
-		declaration
-				.append(" {\n");
 	}
 
 	private void execute(StringBuilder declaration, boolean unwrapped) {

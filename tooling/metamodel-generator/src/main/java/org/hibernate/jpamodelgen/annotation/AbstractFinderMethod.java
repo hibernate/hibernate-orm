@@ -22,7 +22,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	final String entity;
 	final List<String> fetchProfiles;
 
-	public AbstractFinderMethod(
+	AbstractFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
 			String methodName,
 			String entity,
@@ -32,13 +32,15 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			List<String> fetchProfiles,
 			List<String> paramNames,
 			List<String> paramTypes,
+			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean convertToDataExceptions) {
 		super( annotationMetaEntity,
 				methodName,
 				paramNames, paramTypes, entity,
 				sessionType, sessionName,
-				belongsToDao, addNonnullAnnotation,
+				belongsToDao, orderBys,
+				addNonnullAnnotation,
 				convertToDataExceptions );
 		this.entity = entity;
 		this.fetchProfiles = fetchProfiles;
@@ -203,10 +205,5 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	void modifiers(StringBuilder declaration) {
 		declaration
 				.append(belongsToDao ? "@Override\npublic " : "public static ");
-	}
-
-	@Override
-	String getSortableEntityClass() {
-		return entity;
 	}
 }

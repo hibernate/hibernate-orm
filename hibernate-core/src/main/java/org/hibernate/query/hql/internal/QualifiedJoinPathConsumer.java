@@ -30,6 +30,8 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
+
 /**
  * Specialized "intermediate" SemanticPathPart for processing domain model paths.
  *
@@ -191,15 +193,26 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				name,
 				creationState.getCreationContext().getJpaMetamodel()
 		);
-		if ( allowReuse && !isTerminal ) {
-			for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
-				if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {
-					return sqmJoin;
+		if ( allowReuse ) {
+			if ( !isTerminal ) {
+				for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
+					if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {
+						return sqmJoin;
+					}
+				}
+			}
+			else if ( fetch ) {
+				final SqmAttributeJoin<U, ?> compatibleFetchJoin = findCompatibleFetchJoin( lhs, subPathSource, joinType );
+				if ( compatibleFetchJoin != null ) {
+					if ( alias != null ) {
+						throw new IllegalStateException( "Cannot fetch the same association twice with a different alias" );
+					}
+					return compatibleFetchJoin;
 				}
 			}
 		}
 		@SuppressWarnings("unchecked")
-		SqmJoinable<U, ?> joinSource = (SqmJoinable<U, ?>) subPathSource;
+		final SqmJoinable<U, ?> joinSource = (SqmJoinable<U, ?>) subPathSource;
 		return createJoin( lhs, joinType, alias, fetch, isTerminal, allowReuse, creationState, joinSource );
 	}
 

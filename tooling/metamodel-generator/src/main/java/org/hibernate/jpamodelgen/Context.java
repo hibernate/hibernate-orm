@@ -103,7 +103,7 @@ public final class Context {
 
 		final Map<String, String> options = processingEnvironment.getOptions();
 
-		String persistenceXmlOption = options.get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
+		String persistenceXmlOption = options.get( HibernateProcessor.PERSISTENCE_XML_OPTION );
 		if ( persistenceXmlOption != null ) {
 			if ( !persistenceXmlOption.startsWith("/") ) {
 				persistenceXmlOption = "/" + persistenceXmlOption;
@@ -114,7 +114,7 @@ public final class Context {
 			persistenceXmlLocation = DEFAULT_PERSISTENCE_XML_LOCATION;
 		}
 
-		String ormXmlOption = options.get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
+		String ormXmlOption = options.get( HibernateProcessor.ORM_XML_OPTION );
 		if ( ormXmlOption != null ) {
 			ormXmlFiles = new ArrayList<>();
 			for ( String ormFile : ormXmlOption.split( "," ) ) {
@@ -128,8 +128,8 @@ public final class Context {
 			ormXmlFiles = emptyList();
 		}
 
-		lazyXmlParsing = parseBoolean( options.get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
-		logDebug = parseBoolean( options.get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
+		lazyXmlParsing = parseBoolean( options.get( HibernateProcessor.LAZY_XML_PARSING ) );
+		logDebug = parseBoolean( options.get( HibernateProcessor.DEBUG_OPTION ) );
 	}
 
 	public ProcessingEnvironment getProcessingEnvironment() {

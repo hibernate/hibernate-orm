@@ -140,4 +140,10 @@ public interface BookAuthorRepository {
 
 	@Find
 	List<Book> allBooksWithLotsOfSorting(Sort<? super Book> s1, Order<? super Book> order, Sort<? super Book>... s3);
+
+	@Save
+	Book write(Book book);
+
+	@Insert
+	Iterable<Book> createAll(Iterable<Book> books);
 }

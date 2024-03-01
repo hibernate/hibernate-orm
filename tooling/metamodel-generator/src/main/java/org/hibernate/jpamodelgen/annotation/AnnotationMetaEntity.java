@@ -824,12 +824,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					Diagnostic.Kind.ERROR );
 
 		}
-		else if ( returnType == null || returnType.getKind() != TypeKind.VOID ) {
+		else if ( returnType == null ) {
 			context.message( method,
 					"must be declared 'void'",
 					Diagnostic.Kind.ERROR );
 		}
 		else {
+			final boolean returnArgument = returnType.getKind() != TypeKind.VOID;
 			final String operation = lifecycleOperation( method );
 			final VariableElement parameter = method.getParameters().get(0);
 			final TypeMirror parameterType = parameter.asType();
@@ -844,6 +845,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						"incorrect parameter type '" + parameterType + "' is not annotated '@Entity'",
 						Diagnostic.Kind.ERROR );
 			}
+			else if ( returnArgument
+					&& !context.getTypeUtils().isSameType( returnType, parameterType ) ) {
+				context.message( parameter,
+						"return type '" + returnType
+								+ "' disagrees with parameter type '" + parameterType + "'",
+						Diagnostic.Kind.ERROR );
+			}
 			else {
 				putMember(
 						method.getSimpleName().toString()
@@ -856,7 +864,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								getSessionVariableName(),
 								operation,
 								context.addNonnullAnnotation(),
-								declaredType != parameterType
+								declaredType != parameterType,
+								returnArgument
 						)
 				);
 			}

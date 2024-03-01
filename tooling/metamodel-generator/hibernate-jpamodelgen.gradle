@@ -39,6 +39,16 @@ sourceSets {
 		compileClasspath += sourceSets.main.output + sourceSets.test.output
 		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
 	}
+    jakartaData {
+        java {
+            srcDirs = ['src/jakartaData/java']
+        }
+        resources {
+            srcDirs tasks.processTestResources
+        }
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+    }
 }
 
 dependencies {
@@ -57,6 +67,7 @@ dependencies {
 
 	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
 	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.6.2"
+    jakartaDataImplementation "jakarta.data:jakarta.data-api:1.0.0-SNAPSHOT"
 }
 
 // The source set gets a custom configuration which extends the normal test implementation config
@@ -67,6 +78,9 @@ configurations {
 	quarkusHrPanacheImplementation.extendsFrom(testImplementation)
 	quarkusHrPanacheRuntimeOnly.extendsFrom(testRuntimeOnly)
 	quarkusHrPanacheCompileOnly.extendsFrom(testCompileOnly)
+    jakartaDataImplementation.extendsFrom(testImplementation)
+    jakartaDataRuntimeOnly.extendsFrom(testRuntimeOnly)
+    jakartaDataCompileOnly.extendsFrom(testCompileOnly)
 }
 
 def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) {
@@ -87,6 +101,15 @@ def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
 	shouldRunAfter test
 }
 
+def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
+    description = 'Runs the Jakarta Data tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.jakartaData.output.classesDirs
+    classpath = sourceSets.jakartaData.runtimeClasspath
+    shouldRunAfter test
+}
+
 check.dependsOn quarkusHrPanacheTestTask
 check.dependsOn quarkusOrmPanacheTestTask
 test.dependsOn quarkusHrPanacheTestTask
@@ -102,14 +125,6 @@ compileTestJava {
             "-proc:none",
             "-AsuppressJakartaDataMetamodel=true"
     ]
-}
-
-sourceSets {
-    test {
-        java {
-            exclude '**/data/*.java'
-        }
-    }
 }
 
 // Tests with records

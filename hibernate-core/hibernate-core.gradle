@@ -227,7 +227,7 @@ task generateEnversStaticMetamodel(
     options.compilerArgs = [
             "-proc:only",
             "-processor",
-            "org.hibernate.jpamodelgen.HibernateProcessor"
+            "org.hibernate.processor.HibernateProcessor"
     ]
 
     // put static metamodel classes back out to the source tree since they're version controlled.

@@ -88,7 +88,7 @@
  *
  * &#064;Dependent 
  * &#064;StaticMetamodel(BookRepository.class) 
- * &#064;Generated("org.hibernate.jpamodelgen.HibernateProcessor")
+ * &#064;Generated("org.hibernate.processor.HibernateProcessor")
  * public class BookRepository_ implements BookRepository {
  *
  *

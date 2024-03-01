@@ -438,7 +438,7 @@ checkstyle {
 // exclude generated java sources - by explicitly setting the base source dir
 tasks.checkstyleMain.source = 'src/main/java'
 tasks.checkstyleMain
-		.exclude('org/hibernate/jpamodelgen/util/NullnessUtil.java')
+		.exclude('org/hibernate/processor/util/NullnessUtil.java')
 		.exclude('org/hibernate/internal/util/NullnessUtil.java')
 
 // define a second checkstyle task for checking non-fatal violations
@@ -475,7 +475,7 @@ checkerFramework {
 	extraJavacArgs = [
             '-AsuppressWarnings=initialization',
             // stubs is passed directly through options.compilerArgumentProviders
-            '-AonlyDefs=^org\\.hibernate\\.(jdbc|exception|integrator|jpamodelgen|service|spi|pretty|property\\.access|stat|engine\\.(config|jndi|profile|spi|transaction)|(action|context|bytecode)\\.spi)\\.'
+            '-AonlyDefs=^org\\.hibernate\\.(jdbc|exception|integrator|processor|service|spi|pretty|property\\.access|stat|engine\\.(config|jndi|profile|spi|transaction)|(action|context|bytecode)\\.spi)\\.'
 	]
 }
 

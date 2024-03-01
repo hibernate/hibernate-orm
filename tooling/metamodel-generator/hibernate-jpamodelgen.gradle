@@ -170,7 +170,7 @@ task jaxb {
 
         ant.xjc(
                 destdir: ( xjcTargetDir as File ).absolutePath,
-                package: 'org.hibernate.jpamodelgen.xml.jaxb',
+                package: 'org.hibernate.processor.xml.jaxb',
                 extension: 'true'
         ) {
             project.ant.arg line: '-no-header'

@@ -22,7 +22,11 @@ public class DataTest extends CompilationTest {
 	public void test() {
 		System.out.println( getMetaModelSourceAsString( Author.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
+		System.out.println( getMetaModelSourceAsString( Author.class, true ) );
+		System.out.println( getMetaModelSourceAsString( Book.class, true ) );
 		System.out.println( getMetaModelSourceAsString( BookAuthorRepository.class ) );
+		assertMetamodelClassGeneratedFor( Author.class, true );
+		assertMetamodelClassGeneratedFor( Book.class, true );
 		assertMetamodelClassGeneratedFor( Author.class );
 		assertMetamodelClassGeneratedFor( Book.class );
 		assertMetamodelClassGeneratedFor( BookAuthorRepository.class );

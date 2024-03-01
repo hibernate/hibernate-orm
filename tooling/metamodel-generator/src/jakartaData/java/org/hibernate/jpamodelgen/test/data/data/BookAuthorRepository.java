@@ -1,9 +1,13 @@
-package org.hibernate.jpamodelgen.test.data;
+package org.hibernate.jpamodelgen.test.data.data;
 
 import jakarta.data.Limit;
 import jakarta.data.Order;
 import jakarta.data.Sort;
 import jakarta.data.page.PageRequest;
+import jakarta.data.page.Page;
+import jakarta.data.page.Slice;
+import jakarta.data.page.KeysetAwarePage;
+import jakarta.data.page.KeysetAwareSlice;
 import jakarta.data.repository.By;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Find;
@@ -133,4 +137,7 @@ public interface BookAuthorRepository {
 
 	@Query("from Book where title like :titlePattern")
 	Slice<Book> booksByTitle2(String titlePattern, PageRequest<Book> pageRequest);
+
+	@Find
+	List<Book> allBooksWithLotsOfSorting(Sort<? super Book> s1, Order<? super Book> order, Sort<? super Book>... s3);
 }

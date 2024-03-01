@@ -1,4 +1,4 @@
-package org.hibernate.jpamodelgen.test.data;
+package org.hibernate.jpamodelgen.test.data.data;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.NaturalId;

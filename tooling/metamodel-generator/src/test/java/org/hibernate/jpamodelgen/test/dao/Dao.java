@@ -109,6 +109,9 @@ public interface Dao {
     @Find
     List<Bean> beansForText(String text);
 
+    @Find
+    Bean[] beansAsArray(String text);
+
     @HQL("where isbn = ?1")
     List<Book> sortedBooksForIsbn(String isbn, Order<? super Book>... order);
 

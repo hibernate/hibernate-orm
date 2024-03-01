@@ -66,6 +66,9 @@ public interface BookAuthorRepository {
 	@Find
 	List<Book> byPubDate3(LocalDate publicationDate, Sort<? super Book>... order);
 
+	@Find
+	Book[] bookArrayByTitle(String title);
+
 	@Insert
 	void create(Book book);
 

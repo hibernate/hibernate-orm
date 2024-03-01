@@ -527,6 +527,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 					else if ( type.startsWith(JD_ORDER)
 							|| type.startsWith(JD_PAGE_REQUEST) ) {
+						annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
 						declaration
 								.append("\tfor (var _sort : ")
 								.append(name)
@@ -544,6 +545,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 					else if ( type.startsWith(JD_SORT) && type.endsWith("...") ) {
 						// almost identical
+						annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
 						declaration
 								.append("\tfor (var _sort : ")
 								.append(name)
@@ -560,6 +562,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 								.append("\t}\n");
 					}
 					else if ( type.startsWith(JD_SORT) ) {
+						annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
 						declaration
 								.append("\t_orders.add(")
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))

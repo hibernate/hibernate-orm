@@ -58,8 +58,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
-import jakarta.persistence.EntityManager;
-
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
@@ -397,7 +395,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	
 	private void setupSession() {
 		jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
-		ExecutableElement getter = findSessionGetter( element );
+		final ExecutableElement getter = findSessionGetter( element );
 		if ( getter != null ) {
 			// Never make a DAO for Panache subtypes
 			if ( !isPanacheType( element ) ) {
@@ -426,9 +424,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable ExecutableElement findSessionGetter(TypeElement type) {
-		if ( ( !hasAnnotation( type, Constants.ENTITY )
-				&& !hasAnnotation( type, Constants.MAPPED_SUPERCLASS )
-				&& !hasAnnotation( type, Constants.EMBEDDABLE ) )
+		if ( !hasAnnotation( type, ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE )
 				|| isPanacheType( type ) ) {
 			for ( ExecutableElement method : methodsIn( type.getEnclosedElements() ) ) {
 				if ( isSessionGetter( method ) ) {
@@ -470,7 +466,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		Types types = processingEnvironment.getTypeUtils();
 		// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
 		return processingEnvironment.getTypeUtils().isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
-				|| processingEnvironment.getTypeUtils().isSubtype( type.asType(), panacheEntitySuperType.asType() );
+			|| processingEnvironment.getTypeUtils().isSubtype( type.asType(), panacheEntitySuperType.asType() );
 	}
 
 	private boolean isReactivePanacheType(TypeElement type) {
@@ -484,7 +480,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		Types types = processingEnvironment.getTypeUtils();
 		// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
 		return types.isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
-				|| types.isSubtype( type.asType(), panacheEntitySuperType.asType());
+			|| types.isSubtype( type.asType(), panacheEntitySuperType.asType());
 	}
 
 	/**
@@ -498,7 +494,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String name = method == null ? sessionVariableName : method.getSimpleName().toString();
 		final String typeName = element.getSimpleName().toString() + '_';
 
-		if( method == null || !method.isDefault() ) {
+		if ( method == null || !method.isDefault() ) {
 			putMember( name,
 					new RepositoryConstructor(
 							this,
@@ -545,8 +541,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							false,
 							false,
 							true
-							)
-					);
+					)
+			);
 			return Constants.ENTITY_MANAGER;
 		}
 		else {
@@ -597,8 +593,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean hasPrefix(Name methodSimpleName, String prefix) {
-		return methodSimpleName.length() > prefix.length()
-			&& methodSimpleName.subSequence( 0, prefix.length() ).toString().equals( prefix );
+		final int prefixLength = prefix.length();
+		if ( methodSimpleName.length() > prefixLength ) {
+			for ( int i = 0; i < prefixLength; i++ ) {
+				if ( methodSimpleName.charAt(i) != prefix.charAt(i) ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	private static boolean isGetter(
@@ -664,7 +670,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addQueryMethods(List<ExecutableElement> queryMethods) {
 		for ( ExecutableElement method : queryMethods) {
-			if ( method.getModifiers().contains(Modifier.ABSTRACT) || method.getModifiers().contains(Modifier.NATIVE) ) {
+			final Set<Modifier> modifiers = method.getModifiers();
+			if ( modifiers.contains(Modifier.ABSTRACT)
+					|| modifiers.contains(Modifier.NATIVE) ) {
 				addQueryMethod( method );
 			}
 		}
@@ -682,7 +690,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
 				case 0:
-					if ( containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
+					if ( containsAnnotation( declaredType.asElement(), ENTITY ) ) {
 						addQueryMethod( method, declaredType, null );
 					}
 					else {
@@ -758,7 +766,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( returnType.getKind() != TypeKind.DECLARED ) {
 			return returnType;
 		}
-		DeclaredType declaredType = (DeclaredType) returnType;
+		final DeclaredType declaredType = (DeclaredType) returnType;
 		final TypeElement typeElement = (TypeElement) declaredType.asElement();
 		if ( typeElement.getQualifiedName().contentEquals( Constants.UNI ) ) {
 			returnType = declaredType.getTypeArguments().get(0);
@@ -831,7 +839,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						"incorrect parameter type '" + parameterType + "' is not an entity type",
 						Diagnostic.Kind.ERROR );
 			}
-			else if ( !containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
+			else if ( !containsAnnotation( declaredType.asElement(), ENTITY ) ) {
 				context.message( parameter,
 						"incorrect parameter type '" + parameterType + "' is not annotated '@Entity'",
 						Diagnostic.Kind.ERROR );
@@ -918,7 +926,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			else {
 				final DeclaredType declaredType = (DeclaredType) componentType;
 				final TypeElement entity = (TypeElement) declaredType.asElement();
-				if ( !containsAnnotation( entity, Constants.ENTITY ) ) {
+				if ( !containsAnnotation( entity, ENTITY ) ) {
 					context.message( method,
 							"incorrect return type '" + returnType + "' is not annotated '@Entity'",
 							Diagnostic.Kind.ERROR );
@@ -932,7 +940,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else if ( returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement entity = (TypeElement) declaredType.asElement();
-			if ( !containsAnnotation( entity, Constants.ENTITY ) ) {
+			if ( !containsAnnotation( entity, ENTITY ) ) {
 				context.message( method,
 						"incorrect return type '" + returnType + "' is not annotated '@Entity'",
 						Diagnostic.Kind.ERROR );
@@ -1615,16 +1623,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		if ( reactive ) {
 			// for reactive calls, don't use the returnType param, which has been ununi-ed, we want to check the full one
-			return method.getReturnType().toString().equals( Constants.UNI_VOID )
-					|| method.getReturnType().toString().equals( Constants.UNI_BOOLEAN )
-					|| method.getReturnType().toString().equals( Constants.UNI_INTEGER );
+			final String returnTypeName = method.getReturnType().toString();
+			return returnTypeName.equals( Constants.UNI_VOID )
+				|| returnTypeName.equals( Constants.UNI_BOOLEAN )
+				|| returnTypeName.equals( Constants.UNI_INTEGER );
 			
 		}
 		else {
 			// non-reactive
 			return returnType.getKind() == TypeKind.VOID
-					|| returnType.getKind() == TypeKind.BOOLEAN
-					|| returnType.getKind() == TypeKind.INT;
+				|| returnType.getKind() == TypeKind.BOOLEAN
+				|| returnType.getKind() == TypeKind.INT;
 		}
 	}
 
@@ -1819,7 +1828,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			final AnnotationMirror mirror = getAnnotationMirror(typeElement, Constants.ENTITY );
+			final AnnotationMirror mirror = getAnnotationMirror(typeElement, ENTITY );
 			if ( mirror != null ) {
 				final Object value = getAnnotationValue( mirror, "name" );
 				final String entityName = value instanceof String ? (String) value : typeElement.getSimpleName().toString();
@@ -2016,7 +2025,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean usingReactiveSession(String sessionType) {
 		return Constants.MUTINY_SESSION.equals(sessionType)
-				|| Constants.UNI_MUTINY_SESSION.equals(sessionType);
+			|| Constants.UNI_MUTINY_SESSION.equals(sessionType);
 	}
 
 	private boolean usingStatelessSession(String sessionType) {

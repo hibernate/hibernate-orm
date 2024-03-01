@@ -184,7 +184,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	boolean isReactive() {
 		return MUTINY_SESSION.equals(sessionType)
-				|| UNI_MUTINY_SESSION.equals(sessionType);
+			|| UNI_MUTINY_SESSION.equals(sessionType);
 	}
 
 	boolean isReactiveSession() {
@@ -198,7 +198,12 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	void chainSession(StringBuilder declaration) {
 		// Reactive calls always have a return type
 		if ( isReactiveSession() ) {
-			declaration.append("\treturn ").append(sessionName).append(".chain(").append(localSessionName()).append(" -> {\n\t");
+			declaration
+					.append("\treturn ")
+					.append(sessionName)
+					.append(".chain(")
+					.append(localSessionName())
+					.append(" -> {\n\t");
 		}
 	}
 

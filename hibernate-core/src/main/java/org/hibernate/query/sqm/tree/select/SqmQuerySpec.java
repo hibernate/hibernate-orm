@@ -578,6 +578,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 		}
 		if ( fromClause != null ) {
+			sb.append( " from" );
 			fromClause.appendHqlString( sb );
 		}
 		if ( whereClause != null && whereClause.getPredicate() != null ) {

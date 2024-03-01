@@ -93,15 +93,9 @@ public class OneToManyBidirectionalTest {
 					List<Item> items = session.createQuery(
 							"from Item i" +
 									"    join fetch i.order o" +
-									"    join fetch i.order o2", Item.class ).list();
-					/*
-						select i1_0.id, o21_0.id, o21_0.name
-							from Item as i1_0
-							inner join "Order" as o21_0 on i1_0."order_id" = o21_0.id
-							inner join "Order" as o1_0  on i1_0."order_id" = o1_0.id
-					 */
+									"    join fetch i.order", Item.class ).list();
 
-					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 					sqlStatementInterceptor.clear();
 
 					assertThat( items.size(), is( 2 ) );

@@ -61,6 +61,8 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
+
 /**
  * Convenience base class for SqmFrom implementations
  *
@@ -648,8 +650,18 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <A> SqmSingularJoin<T, A> fetch(SingularAttribute<? super T, A> attribute, JoinType jt) {
+		final SingularPersistentAttribute<? super T, A> persistentAttribute = (SingularPersistentAttribute<? super T, A>) attribute;
+		final SqmAttributeJoin<T, A> compatibleFetchJoin = findCompatibleFetchJoin(
+				this,
+				persistentAttribute,
+				SqmJoinType.from( jt )
+		);
+		if ( compatibleFetchJoin != null ) {
+			return (SqmSingularJoin<T, A>) compatibleFetchJoin;
+		}
+
 		final SqmSingularJoin<T, A> join = buildSingularJoin(
-				(SingularPersistentAttribute<? super T, A>) attribute,
+				persistentAttribute,
 				SqmJoinType.from( jt ),
 				true
 		);
@@ -693,6 +705,11 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			SqmPathSource<A> joinedPathSource,
 			SqmJoinType joinType,
 			boolean fetched) {
+		final SqmAttributeJoin<T, A> compatibleFetchJoin = findCompatibleFetchJoin( this, joinedPathSource, joinType );
+		if ( compatibleFetchJoin != null ) {
+			return compatibleFetchJoin;
+		}
+
 		final SqmAttributeJoin<T, A> sqmJoin;
 		if ( joinedPathSource instanceof SingularPersistentAttribute<?, ?> ) {
 			sqmJoin = buildSingularJoin(

@@ -157,7 +157,7 @@ public class H2Dialect extends Dialect {
 			return 0;
 		}
 
-		final String[] bits = databaseVersion.split("[. ]");
+		final String[] bits = databaseVersion.split("[. \\-]");
 		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
 	}
 

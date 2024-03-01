@@ -248,10 +248,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		if ( getVersion().isSameOrAfter( DatabaseVersion.make(23) ) ) {
-			return super.getPreferredSqlTypeCodeForBoolean();
-		}
-		return Types.BIT;
+		return getVersion().isSameOrAfter( 23 ) ? super.getPreferredSqlTypeCodeForBoolean() : Types.BIT;
 	}
 
 	@Override
@@ -411,7 +408,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	/**
-	 * Oracle doesn't have any sort of {@link Types#BOOLEAN}
 	 * type or {@link Types#TIME} type, and its default behavior
 	 * for casting dates and timestamps to and from strings is just awful.
 	 */
@@ -450,6 +446,7 @@ public class OracleDialect extends Dialect {
 					case INTEGER_BOOLEAN:
 					case TF_BOOLEAN:
 					case YN_BOOLEAN:
+					case BOOLEAN:
 						return BooleanDecoder.toString( from );
 					case DATE:
 						return "to_char(?1,'YYYY-MM-DD')";
@@ -877,11 +874,12 @@ public class OracleDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-		if ( getVersion().isSame( DatabaseVersion.make(21) ) ||
-			getVersion().isBefore( DatabaseVersion.make(21) )) {
+		if ( getVersion().isSame( 21 ) ||
+			getVersion().isBefore( 21 )) {
 			// starting 23c we support Boolean type natively
 			typeContributions.contributeJdbcType(OracleBooleanJdbcType.INSTANCE);
 		}
+
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcType( OracleJdbcHelper.getStructJdbcType( serviceRegistry ) );

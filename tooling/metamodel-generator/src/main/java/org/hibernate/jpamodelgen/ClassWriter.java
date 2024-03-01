@@ -177,7 +177,7 @@ public final class ClassWriter {
 		}
 		generatedAnnotation
 				.append( "\"" )
-				.append( JPAMetaModelEntityProcessor.class.getName() )
+				.append( HibernateProcessor.class.getName() )
 				.append( "\"" );
 		if ( context.addGeneratedDate() ) {
 			generatedAnnotation

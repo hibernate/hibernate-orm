@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.xmlmetacomplete.multiplepus;
 
-import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
+import org.hibernate.jpamodelgen.HibernateProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
@@ -23,7 +23,7 @@ public class XmlMetaDataCompleteMultiplePersistenceUnitsTest extends Compilation
 
 	@Test
 	@WithClasses(Dummy.class)
-	@WithProcessorOption(key = JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
+	@WithProcessorOption(key = HibernateProcessor.PERSISTENCE_XML_OPTION,
 			value = "org/hibernate/jpamodelgen/test/xmlmetacomplete/multiplepus/persistence.xml")
 	public void testMetaModelGenerated() {
 		// only one of the xml files in the example uses 'xml-mapping-metadata-complete', hence annotation processing

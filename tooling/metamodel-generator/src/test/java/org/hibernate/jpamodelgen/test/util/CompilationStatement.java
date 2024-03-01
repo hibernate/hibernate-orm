@@ -17,7 +17,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
-import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
+import org.hibernate.jpamodelgen.HibernateProcessor;
 
 import org.junit.runners.model.Statement;
 
@@ -115,13 +115,13 @@ public class CompilationStatement extends Statement {
 		options.add( "-d" );
 		options.add( TestUtil.getOutBaseDir( testClass ).getAbsolutePath() );
 		options.add( "-processor" );
-		options.add( JPAMetaModelEntityProcessor.class.getName() );
+		options.add( HibernateProcessor.class.getName() );
 
 		// pass orm files if specified
 		if ( !xmlMappingFiles.isEmpty() ) {
 			StringBuilder builder = new StringBuilder();
 			builder.append( ANNOTATION_PROCESSOR_OPTION_PREFIX );
-			builder.append( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
+			builder.append( HibernateProcessor.ORM_XML_OPTION );
 			builder.append( "=" );
 			for ( String ormFile : xmlMappingFiles ) {
 				builder.append( ormFile );

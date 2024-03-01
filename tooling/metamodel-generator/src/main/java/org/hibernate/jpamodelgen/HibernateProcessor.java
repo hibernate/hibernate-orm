@@ -35,15 +35,15 @@ import java.util.Set;
 import static java.lang.Boolean.parseBoolean;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
-import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION;
-import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.ADD_GENERATION_DATE;
-import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION;
-import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.DEBUG_OPTION;
-import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
-import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.LAZY_XML_PARSING;
-import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.ORM_XML_OPTION;
-import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION;
-import static org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor.SUPPRESS_JAKARTA_DATA_METAMODEL;
+import static org.hibernate.jpamodelgen.HibernateProcessor.ADD_GENERATED_ANNOTATION;
+import static org.hibernate.jpamodelgen.HibernateProcessor.ADD_GENERATION_DATE;
+import static org.hibernate.jpamodelgen.HibernateProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION;
+import static org.hibernate.jpamodelgen.HibernateProcessor.DEBUG_OPTION;
+import static org.hibernate.jpamodelgen.HibernateProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
+import static org.hibernate.jpamodelgen.HibernateProcessor.LAZY_XML_PARSING;
+import static org.hibernate.jpamodelgen.HibernateProcessor.ORM_XML_OPTION;
+import static org.hibernate.jpamodelgen.HibernateProcessor.PERSISTENCE_XML_OPTION;
+import static org.hibernate.jpamodelgen.HibernateProcessor.SUPPRESS_JAKARTA_DATA_METAMODEL;
 import static org.hibernate.jpamodelgen.util.Constants.*;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
@@ -82,7 +82,7 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.isClassOrRecordType;
 		ADD_SUPPRESS_WARNINGS_ANNOTATION,
 		SUPPRESS_JAKARTA_DATA_METAMODEL
 })
-public class JPAMetaModelEntityProcessor extends AbstractProcessor {
+public class HibernateProcessor extends AbstractProcessor {
 
 	/**
 	 * Debug logging from the processor

@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.xmlmapped;
 
-import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
+import org.hibernate.jpamodelgen.HibernateProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
@@ -31,7 +31,7 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelat
 		Mammal.class,
 		Superhero.class
 })
-@WithProcessorOption(key = JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
+@WithProcessorOption(key = HibernateProcessor.PERSISTENCE_XML_OPTION,
 		value = "org/hibernate/jpamodelgen/test/xmlmapped/persistence.xml")
 public class XmlMappingTest extends CompilationTest {
 	@Test

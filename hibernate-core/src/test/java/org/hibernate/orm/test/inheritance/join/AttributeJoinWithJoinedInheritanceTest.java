@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -59,6 +60,7 @@ public class AttributeJoinWithJoinedInheritanceTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17646" )
+	@Disabled("Can't backport improvement to 6.2 that changes SPIs")
 	public void testLeftJoinSelectFk(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			final ChildEntityA childEntityA = new SubChildEntityA1( 11 );

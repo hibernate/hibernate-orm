@@ -13,6 +13,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -53,6 +54,7 @@ public class AttributeJoinWithNaturalJoinedInheritanceTest {
 	}
 
 	@Test
+	@Disabled("Can't backport improvement to 6.2 that changes SPIs")
 	public void testLeftJoinWithDiscriminatorFiltering(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			final ChildEntityA childEntityA1 = new SubChildEntityA1( 11 );

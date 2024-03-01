@@ -51,7 +51,7 @@ public class TestUtil {
 
 	public static void assertNoSourceFileGeneratedFor(Class<?> clazz) {
 		assertNotNull( "Class parameter cannot be null", clazz );
-		File sourceFile = getMetaModelSourceFileFor( clazz );
+		File sourceFile = getMetaModelSourceFileFor( clazz, false );
 		assertFalse( "There should be no source file: " + sourceFile.getName(), sourceFile.exists() );
 	}
 
@@ -184,6 +184,15 @@ public class TestUtil {
 		assertNotNull( getMetamodelClassFor( clazz ) );
 	}
 
+	/**
+	 * Asserts that a metamodel class for the specified class got generated.
+	 *
+	 * @param clazz the class for which a metamodel class should have been generated.
+	 */
+	public static void assertMetamodelClassGeneratedFor(Class<?> clazz, boolean prefix) {
+		assertNotNull( getMetamodelClassFor( clazz, prefix ) );
+	}
+
 	public static void assertNoMetamodelClassGeneratedFor(Class<?> clazz) {
 		try {
 			getMetamodelClassFor( clazz );
@@ -246,8 +255,18 @@ public class TestUtil {
 	 * @return the static metamodel class for the specified entity.
 	 */
 	public static Class<?> getMetamodelClassFor(Class<?> entityClass) {
+		return getMetamodelClassFor( entityClass, false );
+	}
+	/**
+	 * Returns the static metamodel class for the specified entity.
+	 *
+	 * @param entityClass the entity for which to retrieve the metamodel class. Cannot be {@code null}.
+	 *
+	 * @return the static metamodel class for the specified entity.
+	 */
+	public static Class<?> getMetamodelClassFor(Class<?> entityClass, boolean prefix) {
 		assertNotNull( "Class parameter cannot be null", entityClass );
-		String metaModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
+		String metaModelClassName = getMetaModelClassName( entityClass, prefix );
 		try {
 			URL outDirUrl = getOutBaseDir( entityClass ).toURI().toURL();
 			URL[] urls = new URL[1];
@@ -262,16 +281,26 @@ public class TestUtil {
 		return null;
 	}
 
-	public static File getMetaModelSourceFileFor(Class<?> clazz) {
-		String metaModelClassName = clazz.getName() + META_MODEL_CLASS_POSTFIX;
+	public static File getMetaModelSourceFileFor(Class<?> clazz, boolean prefix) {
+		String metaModelClassName = getMetaModelClassName(clazz, prefix);
 		// generate the file name
 		String fileName = metaModelClassName.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
 		fileName = fileName.concat( ".java" );
 		return new File( getOutBaseDir( clazz ), fileName );
 	}
 
+	private static String getMetaModelClassName(Class<?> clazz, boolean prefix) {
+		return prefix
+				? clazz.getPackageName() + '.' + META_MODEL_CLASS_POSTFIX + clazz.getSimpleName()
+				: clazz.getName() + META_MODEL_CLASS_POSTFIX;
+	}
+
 	public static String getMetaModelSourceAsString(Class<?> clazz) {
-		File sourceFile = getMetaModelSourceFileFor( clazz );
+		return getMetaModelSourceAsString( clazz, false );
+	}
+
+	public static String getMetaModelSourceAsString(Class<?> clazz, boolean prefix) {
+		File sourceFile = getMetaModelSourceFileFor( clazz, prefix );
 		StringBuilder contents = new StringBuilder();
 
 		try {

@@ -572,6 +572,17 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		}
 		else {
 			switch (containerType) {
+				case "[]":
+					if ( returnTypeName== null ) {
+						throw new AssertionFailure("missing return type");
+					}
+					else {
+						declaration
+								.append(".getResultList()\n\t\t\t.toArray(new ")
+								.append(annotationMetaEntity.importType(returnTypeName))
+								.append("[0]);");
+					}
+					break;
 				case OPTIONAL:
 					declaration
 							.append(".uniqueResultOptional();");

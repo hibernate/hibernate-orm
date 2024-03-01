@@ -213,21 +213,26 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	}
 
 	private StringBuilder returnType() {
-		StringBuilder type = new StringBuilder();
-		boolean returnsUni = isReactive()
-				&& (containerType == null || LIST.equals(containerType));
-		if ( returnsUni ) {
-			type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
+		final StringBuilder type = new StringBuilder();
+		if ( "[]".equals(containerType) ) {
+			type.append(returnTypeName).append("[]");
 		}
-		if ( containerType != null ) {
-			type.append(annotationMetaEntity.importType(containerType)).append('<');
-		}
-		type.append(annotationMetaEntity.importType(entity));
-		if ( containerType != null ) {
-			type.append('>');
-		}
-		if ( returnsUni ) {
-			type.append('>');
+		else {
+			boolean returnsUni = isReactive()
+					&& (containerType == null || LIST.equals(containerType));
+			if ( returnsUni ) {
+				type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
+			}
+			if ( containerType != null ) {
+				type.append(annotationMetaEntity.importType(containerType)).append('<');
+			}
+			type.append(annotationMetaEntity.importType(entity));
+			if ( containerType != null ) {
+				type.append('>');
+			}
+			if ( returnsUni ) {
+				type.append('>');
+			}
 		}
 		return type;
 	}

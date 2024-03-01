@@ -695,7 +695,7 @@ public abstract class AbstractHANADialect extends Dialect {
 						return result;
 					}
 					Blob blob = new MaterializedBlob( DataHelper.extractBytes( rsBlob.getBinaryStream() ) );
-					blob.free();
+					rsBlob.free();
 					return javaTypeDescriptor.wrap( blob, options );
 				}
 

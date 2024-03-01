@@ -789,12 +789,34 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			ExecutableElement method,
 			@Nullable TypeMirror returnType,
 			@Nullable TypeElement containerType) {
-		if ( returnType == null || returnType.getKind() != TypeKind.DECLARED ) {
+		if ( returnType == null ) {
 			context.message( method,
-					"incorrect return type '" + returnType + "' is not an entity type",
+					"missing return type",
 					Diagnostic.Kind.ERROR );
 		}
-		else {
+		else if ( returnType.getKind() == TypeKind.ARRAY ) {
+			final ArrayType arrayType = (ArrayType) returnType;
+			final TypeMirror componentType = arrayType.getComponentType();
+			if ( componentType.getKind() != TypeKind.DECLARED ) {
+				context.message( method,
+						"incorrect return type '" + returnType + "' is not an array with entity elements",
+						Diagnostic.Kind.ERROR );
+			}
+			else {
+				final DeclaredType declaredType = (DeclaredType) componentType;
+				final TypeElement entity = (TypeElement) declaredType.asElement();
+				if ( !containsAnnotation( entity, Constants.ENTITY ) ) {
+					context.message( method,
+							"incorrect return type '" + returnType + "' is not annotated '@Entity'",
+							Diagnostic.Kind.ERROR );
+				}
+				else {
+					// multiple results, it has to be a criteria finder
+					createCriteriaFinder( method, returnType, containerType, entity );
+				}
+			}
+		}
+		else if ( returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = ununi( (DeclaredType) returnType );
 			final TypeElement entity = (TypeElement) declaredType.asElement();
 			if ( !containsAnnotation( entity, Constants.ENTITY ) ) {
@@ -834,6 +856,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 		}
+		else {
+			context.message( method,
+					"incorrect return type '" + returnType + "' is not an entity type",
+					Diagnostic.Kind.ERROR );
+		}
 	}
 
 	/**
@@ -866,12 +893,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 		}
+		// TODO: this is ugly, do something better
+		//       higher up in the call chain
+		final String containerTypeName;
+		final String entityTypeName;
+		if ( returnType.getKind() == TypeKind.ARRAY ) {
+			final ArrayType arrayType = (ArrayType) returnType;
+			entityTypeName = arrayType.getComponentType().toString();
+			containerTypeName = "[]";
+		}
+		else {
+			entityTypeName = returnType.toString();
+			containerTypeName = containerType == null ? null : containerType.toString();
+		}
 		putMember( methodKey,
 				new CriteriaFinderMethod(
 						this,
 						methodName,
-						returnType.toString(),
-						containerType == null ? null : containerType.toString(),
+						entityTypeName,
+						containerTypeName,
 						paramNames,
 						paramTypes,
 						parameterNullability(method, entity),

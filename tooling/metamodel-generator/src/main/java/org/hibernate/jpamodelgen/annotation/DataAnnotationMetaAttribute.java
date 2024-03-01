@@ -8,7 +8,6 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.Constants;
 
 import javax.lang.model.element.Element;
 
@@ -49,76 +48,28 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 	public String getAttributeDeclarationString() {
 		final String className = parent.importType( parent.getQualifiedName() );
 		final String memberName = element.getSimpleName().toString();
+		final String impl = isTextual()
+				? parent.importType("jakarta.data.metamodel.impl.TextAttributeRecord")
+				: parent.importType("jakarta.data.metamodel.impl.SortableAttributeRecord");
 		return new StringBuilder()
 				.append("\n/**\n * @see ")
 				.append(className)
 				.append( "#")
 				.append(memberName)
 				.append( "\n **/\n" )
-				.append( "public static volatile " )
+				.append( "public static final " )
 				.append( parent.importType( getMetaType() ) )
 				.append( "<" )
 				.append( className )
 				.append( "> " )
 				.append( getPropertyName() )
-				.append(" = ")
-				.append( getMetaImpl(className, memberName) )
-				.append( ";" )
+				.append(" = new ")
+				.append( impl )
+				.append( "<>(\"" )
+				.append(memberName)
+				.append( "\");" )
 				.toString();
 	}
-
-	private String getMetaImpl(String className, String memberName) {
-		parent.importType(Constants.JD_SORT);
-		return (isTextual() ? TEXT_IMPL : SORTABLE_IMPL)
-				.replace("Entity", className )
-				.replace( "\"name\"", "\"" + memberName + "\"" );
-	}
-
-	private static final String TEXT_IMPL =
-			"new TextAttribute<>() {\n" +
-			"\t\t@Override\n" +
-			"\t\tpublic Sort<Entity> ascIgnoreCase() {\n" +
-			"\t\t\treturn Sort.ascIgnoreCase(name());\n" +
-			"\t\t}\n" +
-			"\n" +
-			"\t\t@Override\n" +
-			"\t\tpublic Sort<Entity> descIgnoreCase() {\n" +
-			"\t\t\treturn Sort.descIgnoreCase(name());\n" +
-			"\t\t}\n" +
-			"\n" +
-			"\t\t@Override\n" +
-			"\t\tpublic Sort<Entity> asc() {\n" +
-			"\t\t\treturn Sort.asc(name());\n" +
-			"\t\t}\n" +
-			"\n" +
-			"\t\t@Override\n" +
-			"\t\tpublic Sort<Entity> desc() {\n" +
-			"\t\t\treturn Sort.desc(name());\n" +
-			"\t\t}\n" +
-			"\n" +
-			"\t\t@Override\n" +
-			"\t\tpublic String name() {\n" +
-			"\t\t\treturn \"name\";\n" +
-			"\t\t}\n" +
-			"\t}";
-
-	private static final String SORTABLE_IMPL =
-			"new SortableAttribute<>() {\n" +
-			"\t\t@Override\n" +
-			"\t\tpublic Sort<Entity> asc() {\n" +
-			"\t\t\treturn Sort.asc(name());\n" +
-			"\t\t}\n" +
-			"\n" +
-			"\t\t@Override\n" +
-			"\t\tpublic Sort<Entity> desc() {\n" +
-			"\t\t\treturn Sort.desc(name());\n" +
-			"\t\t}\n" +
-			"\n" +
-			"\t\t@Override\n" +
-			"\t\tpublic String name() {\n" +
-			"\t\t\treturn \"name\";\n" +
-			"\t\t}\n" +
-			"\t}";
 
 	@Override
 	public String getAttributeNameDeclarationString(){

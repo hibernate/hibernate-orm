@@ -41,6 +41,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
@@ -53,6 +54,7 @@ import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
@@ -157,6 +159,32 @@ public class SqmUtil {
 			}
 		}
 		return false;
+	}
+
+	public static <T, A> SqmAttributeJoin<T, A> findCompatibleFetchJoin(
+			SqmFrom<?, T> sqmFrom,
+			SqmPathSource<A> pathSource,
+			SqmJoinType requestedJoinType) {
+		for ( final SqmJoin<T, ?> join : sqmFrom.getSqmJoins() ) {
+			if ( join.getReferencedPathSource() == pathSource ) {
+				final SqmAttributeJoin<T, ?> attributeJoin = (SqmAttributeJoin<T, ?>) join;
+				if ( attributeJoin.isFetched() ) {
+					final SqmJoinType joinType = join.getSqmJoinType();
+					if ( joinType != requestedJoinType ) {
+						throw new IllegalStateException( String.format(
+								"Requested join fetch with association [%s] with '%s' join type, " +
+										"but found existing join fetch with '%s' join type.",
+								pathSource.getPathName(),
+								requestedJoinType,
+								joinType
+						) );
+					}
+					//noinspection unchecked
+					return (SqmAttributeJoin<T, A>) attributeJoin;
+				}
+			}
+		}
+		return null;
 	}
 
 	public static Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> generateJdbcParamsXref(

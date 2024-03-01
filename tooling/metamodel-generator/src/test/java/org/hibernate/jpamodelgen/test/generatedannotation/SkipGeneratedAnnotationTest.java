@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.generatedannotation;
 
-import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
+import org.hibernate.jpamodelgen.HibernateProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
@@ -24,7 +24,7 @@ public class SkipGeneratedAnnotationTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-79")
 	@WithClasses(TestEntity.class)
-	@WithProcessorOption(key = JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION, value = "false")
+	@WithProcessorOption(key = HibernateProcessor.ADD_GENERATED_ANNOTATION, value = "false")
 	public void testGeneratedAnnotationGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );
 

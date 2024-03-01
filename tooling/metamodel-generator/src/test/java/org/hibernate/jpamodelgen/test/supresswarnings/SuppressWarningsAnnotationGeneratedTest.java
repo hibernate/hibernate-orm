@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.supresswarnings;
 
-import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
+import org.hibernate.jpamodelgen.HibernateProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
@@ -24,7 +24,7 @@ public class SuppressWarningsAnnotationGeneratedTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-50")
 	@WithClasses(TestEntity.class)
-	@WithProcessorOption(key = JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION, value = "true")
+	@WithProcessorOption(key = HibernateProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION, value = "true")
 	public void testSuppressedWarningsAnnotationGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );
 

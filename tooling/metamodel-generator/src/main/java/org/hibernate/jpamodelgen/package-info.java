@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 /**
- * The main package of this annotation processor. The actual processor class is {@link JPAMetaModelEntityProcessor}.
+ * The main package of this annotation processor.
+ * The actual processor class is {@link org.hibernate.jpamodelgen.HibernateProcessor}.
  */
 package org.hibernate.jpamodelgen;

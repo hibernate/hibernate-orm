@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.xmlmetacomplete.singlepu;
 
-import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
+import org.hibernate.jpamodelgen.HibernateProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.hibernate.jpamodelgen.test.util.WithProcessorOption;
@@ -20,7 +20,7 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGen
 public class XmlMetaDataCompleteSinglePersistenceUnitTest extends CompilationTest {
 	@Test
 	@WithClasses(org.hibernate.jpamodelgen.test.xmlmetacomplete.multiplepus.Dummy.class)
-	@WithProcessorOption(key = JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
+	@WithProcessorOption(key = HibernateProcessor.PERSISTENCE_XML_OPTION,
 			value = "org/hibernate/jpamodelgen/test/xmlmetacomplete/singlepu/persistence.xml")
 	public void testNoMetaModelGenerated() {
 		// the xml mapping files used in the example say that the xml data is meta complete. For that

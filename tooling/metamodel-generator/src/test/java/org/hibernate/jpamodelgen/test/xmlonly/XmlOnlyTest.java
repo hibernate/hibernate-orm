@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.xmlonly;
 
-import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
+import org.hibernate.jpamodelgen.HibernateProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.hibernate.jpamodelgen.test.util.WithProcessorOption;
@@ -19,7 +19,7 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
  * @author Hardy Ferentschik
  */
 @WithClasses({ Car.class, Course.class, Option.class, Period.class, Teacher.class, Tire.class, XmlOnly.class })
-@WithProcessorOption(key = JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
+@WithProcessorOption(key = HibernateProcessor.PERSISTENCE_XML_OPTION,
 		value = "org/hibernate/jpamodelgen/test/xmlonly/persistence.xml")
 public class XmlOnlyTest extends CompilationTest {
 	@Test

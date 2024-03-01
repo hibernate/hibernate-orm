@@ -28,7 +28,7 @@ public class GeneratedAnnotationTest extends CompilationTest {
 
 		// need to check the source because @Generated is not a runtime annotation
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
-		String generatedString = "@Generated(\"org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor\")";
+		String generatedString = "@Generated(\"org.hibernate.jpamodelgen.HibernateProcessor\")";
 		assertTrue( "@Generated should be added to the metamodel.", metaModelSource.contains( generatedString ) );
 	}
 }

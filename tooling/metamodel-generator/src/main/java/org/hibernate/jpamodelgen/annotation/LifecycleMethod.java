@@ -18,6 +18,7 @@ public class LifecycleMethod implements MetaAttribute {
 	private final String operationName;
 	private final boolean addNonnullAnnotation;
 	private final boolean iterateParameter;
+	private final boolean returnArgument;
 
 	public LifecycleMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -27,7 +28,8 @@ public class LifecycleMethod implements MetaAttribute {
 			String sessionName,
 			String operationName,
 			boolean addNonnullAnnotation,
-			boolean iterateParameter) {
+			boolean iterateParameter,
+			boolean returnArgument) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.entity = entity;
 		this.methodName = methodName;
@@ -36,6 +38,7 @@ public class LifecycleMethod implements MetaAttribute {
 		this.operationName = operationName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.iterateParameter = iterateParameter;
+		this.returnArgument = returnArgument;
 	}
 
 	@Override
@@ -55,6 +58,8 @@ public class LifecycleMethod implements MetaAttribute {
 		nullCheck(declaration);
 		declaration.append("\ttry {\n");
 		delegateCall(declaration);
+		returnArgument(declaration);
+		declaration.append("\t}\n");
 		if ( operationName.equals("insert") ) {
 			convertException(declaration,
 					"jakarta.persistence.EntityExistsException",
@@ -70,6 +75,15 @@ public class LifecycleMethod implements MetaAttribute {
 				"jakarta.data.exceptions.DataException");
 		declaration.append("}");
 		return declaration.toString();
+	}
+
+	private void returnArgument(StringBuilder declaration) {
+		if ( returnArgument ) {
+			declaration
+					.append("\t\treturn ")
+					.append(parameterName)
+					.append(";\n");
+		}
 	}
 
 	private void delegateCall(StringBuilder declaration) {
@@ -92,13 +106,13 @@ public class LifecycleMethod implements MetaAttribute {
 			declaration
 					.append("\t\t}\n");
 		}
-		declaration
-				.append("\t}\n");
 	}
 
 	private void preamble(StringBuilder declaration) {
 		declaration
-				.append("\n@Override\npublic void ")
+				.append("\n@Override\npublic ")
+				.append(returnArgument ? annotationMetaEntity.importType(entity) : "void")
+				.append(' ')
 				.append(methodName)
 				.append('(');
 		notNull(declaration);

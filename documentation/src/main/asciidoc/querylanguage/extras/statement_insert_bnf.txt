@@ -1,5 +1,7 @@
 insertStatement
-    : "INSERT" "INTO"? targetEntity targetFields (queryExpression | valuesList)
+    : "INSERT" "INTO"? targetEntity targetFields
+      (queryExpression | valuesList)
+      conflictClause?
 
 targetEntity
 	: entityName variable?

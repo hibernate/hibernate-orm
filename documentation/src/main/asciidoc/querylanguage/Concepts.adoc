@@ -427,6 +427,24 @@ It's not available for entities whose id generator is implemented in Java, nor f
 The same two options are available for a `@Version` attribute.
 When no version is explicitly specified, the version for a new entity instance is used.
 
+The `on conflict` clause lets us specify what action should be taken when the database already contains the record we're attempting to insert.
+
+[source, antlrv4]
+----
+include::{extrasdir}/on_conflict_bnf.txt[]
+----
+
+Note that the `on constraint` variant accepting the name of a unique constraint only works on certain databases, or when just a single row is being inserted.
+
+[[onconflict-example]]
+[source, hql]
+----
+insert Person (ssn, name, phone)
+    values ('116-76-1234', 'Jane Doe', '404 888 4319')
+    on conflict (ssn) set phone = excluded.phone
+----
+
+
 Like `update` and `delete` statements, an `insert` statement must be executed by calling `Query.executeUpdate()`.
 
 Now it's time to look at something _much_ more complicated.

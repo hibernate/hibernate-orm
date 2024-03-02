@@ -70,7 +70,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 
 	@Override
 	public SqmConflictClause<T> conflictOnConstraint(@Nullable String constraintName) {
-		if ( !constraintPaths.isEmpty() ) {
+		if ( constraintPaths != null && !constraintPaths.isEmpty() ) {
 			throw new IllegalStateException( "Constraint paths were already set: " + constraintPaths );
 		}
 		this.constraintName = constraintName;

@@ -110,13 +110,18 @@ values
 /**
  * a 'conflict' clause in an 'insert' statement
  */
-conflictClause: ON CONFLICT conflictTarget? conflictAction;
+conflictClause
+	: ON CONFLICT conflictTarget? DO conflictAction
+	;
+
 conflictTarget
 	: ON CONSTRAINT identifier
-	| LEFT_PAREN simplePath (COMMA simplePath)* RIGHT_PAREN;
+	| LEFT_PAREN simplePath (COMMA simplePath)* RIGHT_PAREN
+	;
+
 conflictAction
-	: DO NOTHING
-	| DO UPDATE setClause whereClause?
+	: NOTHING
+	| UPDATE setClause whereClause?
 	;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

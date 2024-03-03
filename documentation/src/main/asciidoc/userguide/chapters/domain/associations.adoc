@@ -215,7 +215,7 @@ include::{extrasdir}/associations-one-to-one-bidirectional-lifecycle-example.sql
 ----
 ====
 
-When using a bidirectional `@OneToOne` association, Hibernate enforces the unique constraint upon fetching the child-side.
+When using a `@OneToOne` association, Hibernate enforces the unique constraint upon fetching the child-side.
 If there are more than one children associated with the same parent, Hibernate will throw a `org.hibernate.exception.ConstraintViolationException`.
 Continuing the previous example, when adding another `PhoneDetails`, Hibernate validates the uniqueness constraint when reloading the `Phone` object.
 

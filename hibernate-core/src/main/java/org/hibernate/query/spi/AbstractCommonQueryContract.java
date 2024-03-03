@@ -71,6 +71,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
+import static org.hibernate.jpa.HibernateHints.HINT_QUERY_DATABASE;
 import static org.hibernate.jpa.HibernateHints.HINT_QUERY_PLAN_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
@@ -269,6 +270,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					return true;
 				case HINT_NATIVE_SPACES:
 					applySynchronizeSpacesHint( value );
+					return true;
+				case HINT_QUERY_DATABASE:
+					applyDatabaseHint( (String) value );
 					return true;
 				default:
 					if ( applySelectionHint( hintName, value ) || applyAdditionalPossibleHints( hintName, value ) ) {
@@ -547,6 +551,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		setHibernateFlushMode( flushMode );
 	}
 
+	protected void applyDatabaseHint(String hint) {
+		getQueryOptions().addDatabaseHint( hint );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options

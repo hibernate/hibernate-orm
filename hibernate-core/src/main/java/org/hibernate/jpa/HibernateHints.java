@@ -223,4 +223,14 @@ public interface HibernateHints {
 	 * @since 6.3
 	 */
 	String HINT_QUERY_PLAN_CACHEABLE = "hibernate.query.plan.cacheable";
+
+	/**
+	 * Hint for specifying a query hint to be appended to the 
+	 * SQL statement sent to the database.
+	 *
+	 * @see org.hibernate.query.spi.MutableQueryOptions#addDatabaseHint(String)
+	 * @see org.hibernate.query.Query#addQueryHint
+	 * @since 6.5
+	 */
+	String HINT_QUERY_DATABASE = "hibernate.query.database";
 }

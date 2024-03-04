@@ -29,7 +29,7 @@ For code contributions, these guidelines include:
   	For your convenience, a [set of test templates](https://github.com/hibernate/hibernate-test-case-templates/tree/main/orm) have been made available.
   	
 	When submitting bug reports, the tests should reproduce the initially reported bug and illustrate that your solution addresses the issue.
-	For features/enhancements, the tests should demonstrated that the feature works as intended.  
+	For features/enhancements, the tests should demonstrate that the feature works as intended.  
     	In both cases, be sure to incorporate your tests into the project to protect against possible regressions.
 * If applicable, documentation should be updated to reflect the introduced changes
 * The code compiles and the tests pass (`./gradlew clean build`)
@@ -92,9 +92,9 @@ appreciated btw), please use rebasing rather than merging.  Merging creates
 
 * Push your changes to the topic branch in your fork of the repository
 * Initiate a [pull request](https://help.github.com/articles/creating-a-pull-request)
-* Once your pull request has been summitted you can verify that the pull request has been properly linked to its corrosponding Jira issue by clicking on the _Recent rule runs_ _Refresh_ button on the right side of issue, if your pull request has been properly linked a _Pull Request (ORM)_ entry will be displayed.
+* Once your pull request has been submitted you can verify that the pull request has been properly linked to its corresponding Jira issue by confirming that the issue status is now _Waiting for Review_ and that clicking on the _Recent rule runs_ _Refresh_ button on the right side of the issue displays a _Pull Request (ORM)_ entry.
 
-It is important that this topic branch on your fork:
+It is important that this topic branch of your fork:
 
 * Is isolated to just the work on this one JIRA issue, or multiple issues if they are
 	related and also fixed/implemented by this work.  The main point is to not push

@@ -5,6 +5,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -34,6 +36,8 @@ public class InsertConflictOnConstraintTest {
 	@RequiresDialect( OracleDialect.class )
 	@RequiresDialect( SQLServerDialect.class )
 	@RequiresDialect( MySQLDialect.class )
+	@RequiresDialect( HSQLDialect.class )
+	@RequiresDialect( DerbyDialect.class )
 	@Test void testDoNothing(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 		scope.inTransaction( s -> s.persist(new Constrained()));

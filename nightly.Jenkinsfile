@@ -139,7 +139,7 @@ stage('Build') {
 									break;
 								case "oracle_21":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:21.3.0-full').pull()
+										docker.image('gvenzl/oracle-xe:21.3.0').pull()
 									}
 									sh "./docker_db.sh oracle_21"
 									state[buildEnv.tag]['containerName'] = "oracle"

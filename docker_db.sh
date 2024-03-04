@@ -775,7 +775,7 @@ oracle_21() {
        --health-interval 5s \
        --health-timeout 5s \
        --health-retries 10 \
-       docker.io/gvenzl/oracle-xe:21.3.0-full
+       docker.io/gvenzl/oracle-xe:21.3.0
     oracle_setup
 }
 
@@ -789,7 +789,7 @@ oracle_23() {
        --health-interval 5s \
        --health-timeout 5s \
        --health-retries 10 \
-       docker.io/gvenzl/oracle-free:23-full
+       docker.io/gvenzl/oracle-free:23
     oracle_free_setup
 }
 

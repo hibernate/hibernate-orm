@@ -846,26 +846,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 
+		return new JdbcOperationQueryInsertImpl(
+				getSql(),
+				getParameterBinders(),
+				getAffectedTableNames(),
+				getUniqueConstraintNameThatMayFail(sqlAst)
+		);
+	}
+
+	protected String getUniqueConstraintNameThatMayFail(InsertSelectStatement sqlAst) {
 		final ConflictClause conflictClause = sqlAst.getConflictClause();
-		final String uniqueConstraintNameThatMayFail;
 		if ( conflictClause == null || !conflictClause.getConstraintColumnNames().isEmpty() ) {
-			uniqueConstraintNameThatMayFail = null;
+			return null;
 		}
 		else {
 			if ( sqlAst.getSourceSelectStatement() != null && !isFetchFirstRowOnly( sqlAst.getSourceSelectStatement() )
 					|| sqlAst.getValuesList().size() > 1 ) {
 				throw new IllegalQueryOperationException( "Can't emulate conflict clause with constraint name for more than one row to insert" );
 			}
-			uniqueConstraintNameThatMayFail = conflictClause.getConstraintName() == null
-					? ""
-					: conflictClause.getConstraintName();
+			return conflictClause.getConstraintName() == null ? "" : conflictClause.getConstraintName();
 		}
-		return new JdbcOperationQueryInsertImpl(
-				getSql(),
-				getParameterBinders(),
-				getAffectedTableNames(),
-				uniqueConstraintNameThatMayFail
-		);
 	}
 
 	protected JdbcOperationQuerySelect translateSelect(SelectStatement selectStatement) {
@@ -2059,7 +2059,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// propagated, but instead will run the respective conflict action.
 		final String constraintName = conflictClause.getConstraintName();
 		if ( constraintName != null ) {
-			throw new IllegalQueryOperationException( "Dialect does not support constraint name in conflict clause" );
+			if ( conflictClause.isDoUpdate() ) {
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
+			}
+			else {
+				return;
+			}
 		}
 //		final List<String> constraintColumnNames = conflictClause.getConstraintColumnNames();
 //		if ( !constraintColumnNames.isEmpty() ) {

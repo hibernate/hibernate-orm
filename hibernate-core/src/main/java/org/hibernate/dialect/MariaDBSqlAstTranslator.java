@@ -163,7 +163,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				null
+				getUniqueConstraintNameThatMayFail(sqlAst)
 		);
 	}
 

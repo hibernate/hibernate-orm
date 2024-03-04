@@ -122,3 +122,9 @@ This change will not affect most users as such processors are normally discovere
 
 6.5 adds support for the Jakarta Data specification, though this support is considered tech preview as the specification is still being actively developed.
 
+
+[[auto-flush]]
+== Auto Flush
+
+The auto flush event has been split in two parts a pre-partialFlush and a partialFlush and in order to track the start and the end fo the pre-partialFlush two new methods (`void prePartialFlushStart()` and
+`void prePartialFlushEnd()`) have been added to the `SessionEventListener`.

@@ -150,7 +150,7 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				null
+				getUniqueConstraintNameThatMayFail(sqlAst)
 		);
 	}
 

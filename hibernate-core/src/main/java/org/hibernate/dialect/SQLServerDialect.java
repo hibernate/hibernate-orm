@@ -708,11 +708,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 						case 2627:
 						case 2601:
 							String message = sqle.getMessage();
-							int i = message.indexOf("unique index ");
-							if (i>0) {
-								message = message.substring(i);
+							if ( message.contains("unique index ") ) {
+								return extractUsingTemplate( "unique index '", "'", message);
 							}
-							return extractUsingTemplate( "'", "'", message);
+							else {
+								return extractUsingTemplate( "'", "'", message);
+							}
 						default:
 							return null;
 					}

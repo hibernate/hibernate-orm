@@ -3255,7 +3255,7 @@ public abstract class AbstractEntityPersister
 			Map<String, EntityNameUse> entityNameUses,
 			MappingMetamodelImplementor mappingMetamodel,
 			String alias) {
-		final InFragment frag = new InFragment();
+		final InFragment frag = new InFragment( false );
 		if ( isDiscriminatorFormula() ) {
 			frag.setFormula( alias, getDiscriminatorFormulaTemplate() );
 		}

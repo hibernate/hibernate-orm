@@ -21,10 +21,15 @@ import org.hibernate.internal.util.StringHelper;
 @Internal
 public class InFragment {
 
+	public InFragment(boolean columnCanBeNull) {
+		this.columnCanBeNull = columnCanBeNull;
+	}
+
 	public static final String NULL = "null";
 	public static final String NOT_NULL = "not null";
 
 	protected String columnName;
+	protected boolean columnCanBeNull;
 	protected List<Object> values = new ArrayList<>();
 
 	/**
@@ -62,67 +67,80 @@ public class InFragment {
 	}
 
 	public String toFragmentString() {
-		if ( values.size() == 0 ) {
-			return "1=2";
-		}
+		final StringBuilder buf = new StringBuilder( values.size() * 5 );
 
-		StringBuilder buf = new StringBuilder( values.size() * 5 );
-
-		if ( values.size() == 1 ) {
-			Object value = values.get( 0 );
-			buf.append( columnName );
-
-			if ( NULL.equals( value ) ) {
-				buf.append( " is null" );
-			}
-			else {
-				if ( NOT_NULL.equals( value ) ) {
-					buf.append( " is not null" );
+		switch ( values.size() ) {
+			case 0: {
+				if ( columnCanBeNull ) {
+					return buf.append( "(1 = case when " )
+							.append( columnName )
+							.append(" is not null then 0 end)")
+							.toString();
 				}
 				else {
-					buf.append( '=' ).append( value );
+					return "0=1";
 				}
 			}
-			return buf.toString();
-		}
+			case 1: {
+				Object value = values.get( 0 );
+				buf.append( columnName );
 
-		boolean allowNull = false;
-
-		for ( Object value : values ) {
-			if ( NULL.equals( value ) ) {
-				allowNull = true;
-			}
-			else {
-				if ( NOT_NULL.equals( value ) ) {
-					throw new IllegalArgumentException( "not null makes no sense for in expression" );
+				if ( NULL.equals( value ) ) {
+					buf.append( " is null" );
 				}
+				else {
+					if ( NOT_NULL.equals( value ) ) {
+						buf.append( " is not null" );
+					}
+					else {
+						buf.append( '=' ).append( value );
+					}
+				}
+				return buf.toString();
+			}
+			default: {
+				boolean allowNull = false;
+
+				for ( Object value : values ) {
+					if ( NULL.equals( value ) ) {
+						allowNull = true;
+					}
+					else {
+						if ( NOT_NULL.equals( value ) ) {
+							throw new IllegalArgumentException( "not null makes no sense for in expression" );
+						}
+					}
+				}
+
+				if ( allowNull ) {
+					buf.append( '(' )
+							.append( columnName )
+							.append( " is null or " )
+							.append( columnName )
+							.append( " in (" );
+				}
+				else {
+					buf.append( columnName ).append( " in (" );
+				}
+
+				for ( Object value : values ) {
+					if ( !NULL.equals( value ) ) {
+						buf.append( value );
+						buf.append( ", " );
+					}
+				}
+
+				buf.setLength( buf.length() - 2 );
+
+				if ( allowNull ) {
+					buf.append( "))" );
+				}
+				else {
+					buf.append( ')' );
+				}
+
+				return buf.toString();
 			}
 		}
-
-		if ( allowNull ) {
-			buf.append( '(' ).append( columnName ).append( " is null or " ).append( columnName ).append( " in (" );
-		}
-		else {
-			buf.append( columnName ).append( " in (" );
-		}
-
-		for ( Object value : values ) {
-			if ( !NULL.equals( value ) ) {
-				buf.append( value );
-				buf.append( ", " );
-			}
-		}
-
-		buf.setLength( buf.length() - 2 );
-
-		if ( allowNull ) {
-			buf.append( "))" );
-		}
-		else {
-			buf.append( ')' );
-		}
-
-		return buf.toString();
-
 	}
 }

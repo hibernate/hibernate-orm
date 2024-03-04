@@ -122,8 +122,8 @@ public class SubqueryTests {
 		JpaDerivedRoot<Tuple> mainQueryRoot = mainQuery.from( unionAllSubQuery );
 
 		mainQuery.multiselect(
-				builder.trim(mainQueryRoot.get("name")).alias("name"),
-				builder.trim(mainQueryRoot.get("surName")).alias("surName")
+				mainQueryRoot.get("name").alias("name"),
+				mainQueryRoot.get("surName").alias("surName")
 		);
 		mainQuery.orderBy( builder.asc(mainQueryRoot.get("name")) );
 

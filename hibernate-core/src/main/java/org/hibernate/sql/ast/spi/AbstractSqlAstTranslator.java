@@ -7603,7 +7603,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
-			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
+			emptyInList( inListPredicate );
 			return;
 		}
 		Function<Expression, Expression> itemAccessor = Function.identity();
@@ -7708,6 +7708,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( parenthesis ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	protected void emptyInList(InListPredicate inListPredicate) {
+		appendSql("(");
+		appendSql( inListPredicate.isNegated() ? "0" : "1" );
+		appendSql(" = case when ");
+		inListPredicate.getTestExpression().accept( this );
+		appendSql( " is not null then 0");
+//		dialect.appendBooleanValueString( this, inListPredicate.isNegated() );
+		appendSql(" end)");
 	}
 
 	private void appendInClauseSeparator(InListPredicate inListPredicate) {

@@ -1529,25 +1529,33 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 			return new BasicExtractor<>( javaType, this ) {
+				private X extract(Blob blob, WrapperOptions options) throws SQLException {
+					if ( blob == null ) {
+						return null;
+					}
+					if ( blob.length() < HANAStreamBlobType.this.maxLobPrefetchSize ) {
+						X result = javaType.wrap( blob, options );
+						blob.free();
+						return result;
+					}
+					Blob materializedBlob = new MaterializedBlob( DataHelper.extractBytes( blob.getBinaryStream() ) );
+					blob.free();
+					return javaType.wrap( materializedBlob, options );
+				}
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					Blob rsBlob = rs.getBlob( paramIndex );
-					if ( rsBlob == null || rsBlob.length() < HANAStreamBlobType.this.maxLobPrefetchSize ) {
-						return javaType.wrap( rsBlob, options );
-					}
-					Blob blob = new MaterializedBlob( DataHelper.extractBytes( rsBlob.getBinaryStream() ) );
-					return javaType.wrap( blob, options );
+					return extract( rs.getBlob( paramIndex ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaType.wrap( statement.getBlob( index ), options );
+					return extract( statement.getBlob( index ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaType.wrap( statement.getBlob( name ), options );
+					return extract( statement.getBlob( name ), options );
 				}
 			};
 		}
@@ -1623,6 +1631,20 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 			return new BasicExtractor<>( javaType, this ) {
+				private X extract(Clob clob, WrapperOptions options) throws SQLException {
+					if ( clob == null ) {
+						return null;
+					}
+
+					if ( clob.length() < HANAClobJdbcType.this.maxLobPrefetchSize ) {
+						X retVal = javaType.wrap(clob, options);
+						clob.free();
+						return retVal;
+					}
+					NClob materializedNClob = new MaterializedNClob( DataHelper.extractString( clob ) );
+					clob.free();
+					return javaType.wrap( materializedNClob, options );
+				}
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -1633,22 +1655,31 @@ public abstract class AbstractHANADialect extends Dialect {
 					else {
 						rsClob = rs.getClob( paramIndex );
 					}
-
-					if ( rsClob == null || rsClob.length() < HANAClobJdbcType.this.maxLobPrefetchSize ) {
-						return javaType.wrap( rsClob, options );
-					}
-					Clob clob = new MaterializedNClob( DataHelper.extractString( rsClob ) );
-					return javaType.wrap( clob, options );
+					return extract( rsClob, options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaType.wrap( statement.getClob( index ), options );
+					Clob rsClob;
+					if ( HANAClobJdbcType.this.useUnicodeStringTypes ) {
+						rsClob = statement.getNClob( index );
+					}
+					else {
+						rsClob = statement.getClob( index );
+					}
+					return extract( rsClob, options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaType.wrap( statement.getClob( name ), options );
+					Clob rsClob;
+					if ( HANAClobJdbcType.this.useUnicodeStringTypes ) {
+						rsClob = statement.getNClob( name );
+					}
+					else {
+						rsClob = statement.getClob( name );
+					}
+					return extract( rsClob, options );
 				}
 			};
 		}
@@ -1722,25 +1753,32 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 			return new BasicExtractor<>( javaType, this ) {
-
+				private X extract(NClob nclob, WrapperOptions options) throws SQLException {
+					if ( nclob == null ) {
+						return null;
+					}
+					if ( nclob.length() < HANANClobJdbcType.this.maxLobPrefetchSize ) {
+						X retVal = javaType.wrap(nclob, options);
+						nclob.free();
+						return retVal;
+					}
+					NClob materializedNClob = new MaterializedNClob( DataHelper.extractString( nclob ) );
+					nclob.free();
+					return javaType.wrap( materializedNClob, options );
+				}
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					NClob rsNClob = rs.getNClob( paramIndex );
-					if ( rsNClob == null || rsNClob.length() < HANANClobJdbcType.this.maxLobPrefetchSize ) {
-						return javaType.wrap( rsNClob, options );
-					}
-					NClob nClob = new MaterializedNClob( DataHelper.extractString( rsNClob ) );
-					return javaType.wrap( nClob, options );
+					return extract( rs.getNClob( paramIndex ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaType.wrap( statement.getNClob( index ), options );
+					return extract( statement.getNClob( index ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaType.wrap( statement.getNClob( name ), options );
+					return extract( statement.getNClob( name ), options );
 				}
 			};
 		}
@@ -1782,25 +1820,32 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
 			return new BasicExtractor<>( javaType, this ) {
-
+				private X extract(Blob blob, WrapperOptions options) throws SQLException {
+					if ( blob == null ) {
+						return null;
+					}
+					if (blob.length() < HANABlobType.this.maxLobPrefetchSize ) {
+						X retVal = javaType.wrap(blob, options);
+						blob.free();
+						return retVal;
+					}
+					Blob materializedBlob = new MaterializedBlob( DataHelper.extractBytes( blob.getBinaryStream() ) );
+					blob.free();
+					return javaType.wrap( materializedBlob, options );
+				}
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					Blob rsBlob = rs.getBlob( paramIndex );
-					if ( rsBlob == null || rsBlob.length() < HANABlobType.this.maxLobPrefetchSize ) {
-						return javaType.wrap( rsBlob, options );
-					}
-					Blob blob = new MaterializedBlob( DataHelper.extractBytes( rsBlob.getBinaryStream() ) );
-					return javaType.wrap( blob, options );
+					return extract( rs.getBlob( paramIndex ) , options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaType.wrap( statement.getBlob( index ), options );
+					return extract( statement.getBlob( index ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaType.wrap( statement.getBlob( name ), options );
+					return extract( statement.getBlob( name ), options );
 				}
 			};
 		}

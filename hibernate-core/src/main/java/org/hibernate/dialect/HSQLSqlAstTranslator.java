@@ -214,7 +214,12 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected void renderSelectExpression(Expression expression) {
-		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		if ( isInSubquery() && expression instanceof Literal ) {
+			renderCasted( expression );
+		}
+		else {
+			renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		}
 	}
 
 	@Override

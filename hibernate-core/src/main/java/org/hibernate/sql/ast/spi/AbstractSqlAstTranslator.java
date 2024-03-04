@@ -1922,7 +1922,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				.get( 1 ) == getCurrentQueryPart();
 	}
 
-	private boolean isInSubquery() {
+	protected boolean isInSubquery() {
 		return statementStack.depth() > 1 && statementStack.getCurrent() instanceof SelectStatement
 				&& !( (SelectStatement) statementStack.getCurrent() ).getQueryPart().isRoot();
 	}

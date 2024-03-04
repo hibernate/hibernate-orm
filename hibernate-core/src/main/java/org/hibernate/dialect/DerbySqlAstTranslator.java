@@ -167,7 +167,12 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected void renderSelectExpression(Expression expression) {
-		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		if ( isInSubquery() && expression instanceof Literal ) {
+			renderCasted( expression );
+		}
+		else {
+			renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		}
 	}
 
 	@Override

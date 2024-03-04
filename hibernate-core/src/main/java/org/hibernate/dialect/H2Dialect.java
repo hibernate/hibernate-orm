@@ -709,13 +709,16 @@ public class H2Dialect extends Dialect {
 				// 23001: Unique index or primary key violation: {0}
 				if ( sqle.getSQLState().startsWith( "23" ) ) {
 					final String message = sqle.getMessage();
-					final int idx = message.indexOf( "violation: " );
-					if ( idx > 0 ) {
-						String constraintName = message.substring( idx + "violation: ".length() );
+					final int i = message.indexOf( "violation: " );
+					if ( i > 0 ) {
+						String constraintDescription =
+								message.substring( i + "violation: ".length() )
+										.replace( "\"", "" );
 						if ( sqle.getSQLState().equals( "23506" ) ) {
-							constraintName = constraintName.substring( 1, constraintName.indexOf( ':' ) );
+							constraintDescription = constraintDescription.substring( 1, constraintDescription.indexOf( ':' ) );
 						}
-						return constraintName;
+						final int j = constraintDescription.indexOf(" ON ");
+						return j>0 ? constraintDescription.substring(0, j) : constraintDescription;
 					}
 				}
 				return null;

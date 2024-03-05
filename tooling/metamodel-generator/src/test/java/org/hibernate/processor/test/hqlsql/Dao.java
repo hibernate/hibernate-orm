@@ -69,4 +69,7 @@ public interface Dao {
 
     @HQL("from Publisher where address = :address")
     List<Publisher> publisherAt(Address address);
+
+    @HQL("where array_contains(:isbns, isbn) is true")
+    List<Book> forIsbnIn(String[] isbns);
 }

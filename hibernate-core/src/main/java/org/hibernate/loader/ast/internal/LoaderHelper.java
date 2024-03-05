@@ -107,7 +107,12 @@ public class LoaderHelper {
 					entry.forceLocked( object, nextVersion );
 				}
 				else {
-					persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+					if ( entry.isExistsInDatabase() ) {
+						persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+					}
+					else {
+						session.forceFlush( entry );
+					}
 				}
 				entry.setLockMode(requestedLockMode);
 			}

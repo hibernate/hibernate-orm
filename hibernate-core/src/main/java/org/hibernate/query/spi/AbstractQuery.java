@@ -38,6 +38,8 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -663,7 +665,10 @@ public abstract class AbstractQuery<R>
 
 	protected abstract int doExecuteUpdate();
 
-
+	@Override
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> keyedPage) {
+		throw new UnsupportedOperationException("Getting keyed result list is not supported by this query.");
+	}
 
 	@Override
 	public void setOptionalId(Serializable id) {

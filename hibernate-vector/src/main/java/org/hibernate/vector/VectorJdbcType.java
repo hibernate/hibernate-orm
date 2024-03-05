@@ -68,6 +68,9 @@ public class VectorJdbcType extends ArrayJdbcType {
 			}
 
 			private float[] getFloatArray(String string) {
+				if ( string == null ) {
+					return null;
+				}
 				if ( string.length() == 2 ) {
 					return EMPTY;
 				}

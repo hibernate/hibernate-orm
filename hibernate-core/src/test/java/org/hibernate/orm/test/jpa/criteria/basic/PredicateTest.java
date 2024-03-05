@@ -78,7 +78,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		em.createQuery( orderCriteria ).getResultList();
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 3 );
+		assertEquals( 3, orders.size() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -95,7 +95,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		em.createQuery( orderCriteria ).getResultList();
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 3 );
+		assertEquals( 3, orders.size() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -231,7 +231,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( p );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 1 );
+		assertEquals( 1, orders.size() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -254,7 +254,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( p );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 0 );
+		assertTrue( orders.isEmpty() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -280,7 +280,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( p );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 0 );
+		assertTrue( orders.isEmpty() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -319,6 +319,38 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
 		orderCriteria.select( orderRoot );
 		orderCriteria.where( builder.in( orderRoot.get("totalPrice") ) );
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.isEmpty() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-17804" )
+	public void testEmptyInPredicate2() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
+		orderCriteria.select( orderRoot );
+		orderCriteria.where( builder.in( orderRoot.get("creditCard") ) );
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.isEmpty() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-17804" )
+	public void testEmptyInPredicate3() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
+		orderCriteria.select( orderRoot );
+		orderCriteria.where( builder.in( orderRoot.get("creditCard") ).not() );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.isEmpty() );

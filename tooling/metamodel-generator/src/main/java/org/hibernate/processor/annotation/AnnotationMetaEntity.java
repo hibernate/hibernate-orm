@@ -1370,6 +1370,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private @Nullable FieldType validateFinderParameter(TypeElement entityType, VariableElement param) {
 		final Element member = memberMatchingPath( entityType, parameterName( param ) );
 		if ( member != null) {
+			if ( containsAnnotation( member, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
+				context.message( param,
+						"matching field is a collection",
+						Diagnostic.Kind.ERROR );
+				return null;
+			}
+
 			final String memberType = memberType( member ).toString();
 			final String paramType = param.asType().toString();
 			if ( !isLegalAssignment( paramType, memberType ) ) {
@@ -1379,17 +1386,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR );
 			}
 
-			if ( containsAnnotation( member, Constants.ID, Constants.EMBEDDED_ID ) ) {
+			if ( containsAnnotation( member, ID, EMBEDDED_ID ) ) {
 				return FieldType.ID;
 			}
-			else if ( containsAnnotation( member, Constants.NATURAL_ID ) ) {
+			else if ( containsAnnotation( member, NATURAL_ID ) ) {
 				return FieldType.NATURAL_ID;
 			}
 			else {
 				return FieldType.BASIC;
 			}
 		}
-		final AnnotationMirror idClass = getAnnotationMirror( entityType, Constants.ID_CLASS );
+
+		final AnnotationMirror idClass = getAnnotationMirror( entityType, ID_CLASS );
 		if ( idClass != null ) {
 			final Object value = getAnnotationValue( idClass, "value" );
 			if ( value instanceof TypeMirror ) {
@@ -1398,6 +1406,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 		}
+
 		context.message( param,
 				"no matching field named '"
 						+ parameterName( param ).replace('$', '.')

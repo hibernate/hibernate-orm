@@ -284,6 +284,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			return stem + "_"
 					+ paramTypes.stream()
 							.filter(type -> !isSpecialParam(type))
+							.map(type -> type.indexOf('<')>0 ? type.substring(0, type.indexOf('<')) : type)
 							.map(StringHelper::unqualify)
 							.map(type -> type.replace("[]", "Array"))
 							.reduce((x,y) -> x + '_' + y)

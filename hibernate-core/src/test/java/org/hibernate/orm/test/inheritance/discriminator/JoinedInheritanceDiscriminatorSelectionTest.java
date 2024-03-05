@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
+import java.util.List;
+
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -35,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @SessionFactory( useCollectingStatementInspector = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17727" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17806" )
 public class JoinedInheritanceDiscriminatorSelectionTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -72,11 +75,24 @@ public class JoinedInheritanceDiscriminatorSelectionTest {
 			inspector.clear();
 
 			assertThat( session.createQuery(
+					"select p.name from ParentEntity p where type(p) in (ParentEntity)",
+					String.class
+			).getSingleResult() ).isEqualTo( "parent" );
+			inspector.assertNumberOfJoins( 0, 0 );
+			inspector.clear();
+
+			assertThat( session.createQuery(
 					"select p.name from ParentEntity p where type(p) = ChildA",
 					String.class
 			).getSingleResult() ).isEqualTo( "child_a" );
-			// We still inner-join the subtype table, this could be avoided since we have a discriminator condition
-			inspector.assertNumberOfJoins( 0, 1 );
+			inspector.assertNumberOfJoins( 0, 0 );
+			inspector.clear();
+
+			assertThat( session.createQuery(
+					"select p.name from ParentEntity p where type(p) in (ParentEntity, ChildA)",
+					String.class
+			).getResultList() ).containsOnly( "parent", "child_a" );
+			inspector.assertNumberOfJoins( 0, 0 );
 		} );
 	}
 
@@ -128,6 +144,58 @@ public class JoinedInheritanceDiscriminatorSelectionTest {
 					ParentEntity.class
 			).getResultList() ).hasSize( 1 );
 			inspector.assertNumberOfJoins( 0, 3 );
+		} );
+	}
+
+	@Test
+	public void testTypeFilterParameter(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery(
+					"select p.name from ParentEntity p where type(p) = :type",
+					String.class
+			).setParameter( "type", ParentEntity.class ).getSingleResult() ).isEqualTo( "parent" );
+			inspector.assertNumberOfJoins( 0, 0 );
+			inspector.clear();
+
+			assertThat( session.createQuery(
+					"select p.propertyA from ParentEntity p where type(p) = :type",
+					Integer.class
+			).setParameter( "type", ChildA.class ).getSingleResult() ).isEqualTo( 2 );
+			inspector.assertNumberOfJoins( 0, 1 );
+			inspector.clear();
+
+			assertThat( session.createQuery(
+					"select p.name from ParentEntity p where type(p) = :type",
+					String.class
+			).setParameter( "type", ChildA.class ).getSingleResult() ).isEqualTo( "child_a" );
+			inspector.assertNumberOfJoins( 0, 0 );
+			inspector.clear();
+
+			assertThat( session.createQuery(
+					"select p.name from ParentEntity p where type(p) in :types",
+					String.class
+			).setParameter( "types", List.of( ParentEntity.class ) ).getSingleResult() ).isEqualTo( "parent" );
+			inspector.assertNumberOfJoins( 0, 0 );
+			inspector.clear();
+
+			assertThat( session.createQuery(
+					"select p.subPropertyA from ParentEntity p where type(p) in :types",
+					Integer.class
+			).setParameter( "types", List.of( SubChildA.class ) ).getSingleResult() ).isEqualTo( 3 );
+			inspector.assertNumberOfJoins( 0, 1 );
+			inspector.clear();
+
+			assertThat( session.createQuery(
+					"select p.name from ParentEntity p where type(p) in :types",
+					String.class
+			).setParameter( "types", List.of( ParentEntity.class, ChildA.class ) ).getResultList() ).containsOnly(
+					"parent",
+					"child_a"
+			);
+			inspector.assertNumberOfJoins( 0, 0 );
 			inspector.clear();
 		} );
 	}

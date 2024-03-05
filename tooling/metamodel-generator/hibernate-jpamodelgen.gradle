@@ -130,20 +130,51 @@ compileTestJava {
 // Tests with records
 if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
     // We need to configure the source and target version to 17
-    //compileTestJava17Java {
+	def testCompilerConfig = {
+		javaCompiler = javaToolchains.compilerFor {
+			languageVersion = jdkVersions.test.compile
+		}
+		sourceCompatibility = 17
+		targetCompatibility = 17
+	}
+
     compileTestJava {
-        javaCompiler = javaToolchains.compilerFor {
-            languageVersion = jdkVersions.test.compile
-        }
-        sourceCompatibility = 17
-        targetCompatibility = 17
+        configure testCompilerConfig
     }
 
+	compileQuarkusOrmPanacheJava {
+		configure testCompilerConfig
+	}
+
+	compileQuarkusHrPanacheJava {
+		configure testCompilerConfig
+	}
+
+	compileJakartaDataJava {
+		configure testCompilerConfig
+	}
+
+	def testLauncherConfig = {
+		javaLauncher = javaToolchains.launcherFor {
+			languageVersion = jdkVersions.test.launcher
+		}
+	}
+
     test {
-        javaLauncher = javaToolchains.launcherFor {
-            languageVersion = jdkVersions.test.launcher
-        }
+        configure testLauncherConfig
     }
+
+	quarkusOrmPanacheTest {
+		configure testLauncherConfig
+	}
+
+	quarkusHrPanacheTest {
+		configure testLauncherConfig
+	}
+
+	jakartaDataTest {
+		configure testLauncherConfig
+	}
 }
 else {
     sourceSets {

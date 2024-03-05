@@ -785,12 +785,12 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 			return (BasicType<?>) sqmExpressible;
 		}
 
-		if ( sqmExpressible instanceof BasicDomainType ) {
+		if ( sqmExpressible instanceof BasicDomainType<?> ) {
 			return getTypeConfiguration().getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
 		}
 
 		if ( sqmExpressible instanceof BasicSqmPathSource<?> ) {
-			return getTypeConfiguration().getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
+			return resolveMappingExpressible( sqmExpressible.getSqmType(), tableGroupLocator );
 		}
 
 		if ( sqmExpressible instanceof SqmFieldLiteral ) {

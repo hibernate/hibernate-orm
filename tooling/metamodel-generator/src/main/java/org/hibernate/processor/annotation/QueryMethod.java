@@ -276,7 +276,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private String getConstantName() {
-		String stem = getUpperUnderscoreCaseFromLowerCamelCase(methodName);
+		final String stem = getUpperUnderscoreCaseFromLowerCamelCase(methodName);
 		if ( paramTypes.isEmpty() ) {
 			return stem;
 		}
@@ -285,6 +285,7 @@ public class QueryMethod extends AbstractQueryMethod {
 					+ paramTypes.stream()
 							.filter(type -> !isSpecialParam(type))
 							.map(StringHelper::unqualify)
+							.map(type -> type.replace("[]", "Array"))
 							.reduce((x,y) -> x + '_' + y)
 							.orElse("");
 		}

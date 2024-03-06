@@ -17,7 +17,6 @@ import java.util.function.Function;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -25,6 +24,7 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.MemberDetails;
 
 import org.jboss.logging.Logger;
 
@@ -161,12 +161,13 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 
 	@Override
 	public ConverterDescriptor findAutoApplyConverterForAttribute(
-			XProperty property,
+			MemberDetails attributeMember,
 			MetadataBuildingContext context) {
 		return locateMatchingConverter(
-				property,
+				attributeMember,
 				ConversionSite.ATTRIBUTE,
-				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForAttribute( property, context ),
+				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForAttribute(
+						attributeMember, context ),
 				context
 		);
 	}
@@ -174,13 +175,13 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 	private static final StringHelper.Renderer<ConverterDescriptor> RENDERER = value -> value.getAttributeConverterClass().getName();
 
 	private ConverterDescriptor locateMatchingConverter(
-			XProperty xProperty,
+			MemberDetails memberDetails,
 			ConversionSite conversionSite,
 			Function<AutoApplicableConverterDescriptor, ConverterDescriptor> matcher,
 			MetadataBuildingContext context) {
 		if ( registeredConversionsByDomainType != null ) {
 			// we had registered conversions - see if any of them match and, if so, use that conversion
-			final ResolvedType resolveAttributeType = resolveAttributeType( xProperty, context );
+			final ResolvedType resolveAttributeType = resolveAttributeType( memberDetails, context );
 			final RegisteredConversion registrationForDomainType =
 					registeredConversionsByDomainType.get( resolveAttributeType.getErasedType() );
 			if ( registrationForDomainType != null ) {
@@ -197,9 +198,9 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 						descriptor.getAttributeConverterClass().getName(),
 						descriptor.getDomainValueResolvedType().getSignature(),
 						conversionSite.getSiteDescriptor(),
-						xProperty.getDeclaringClass().getName(),
-						xProperty.getName(),
-						xProperty.getType().getName()
+						memberDetails.getDeclaringType().getName(),
+						memberDetails.getName(),
+						memberDetails.getType().getName()
 				);
 			}
 
@@ -229,8 +230,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 						Locale.ROOT,
 						"Multiple auto-apply converters matched %s [%s.%s] : %s",
 						conversionSite.getSiteDescriptor(),
-						xProperty.getDeclaringClass().getName(),
-						xProperty.getName(),
+						memberDetails.getDeclaringType().getName(),
+						memberDetails.getName(),
 						StringHelper.join( matches, RENDERER )
 				)
 		);
@@ -238,24 +239,25 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 
 	@Override
 	public ConverterDescriptor findAutoApplyConverterForCollectionElement(
-			XProperty property,
+			MemberDetails attributeMember,
 			MetadataBuildingContext context) {
 		return locateMatchingConverter(
-				property,
+				attributeMember,
 				ConversionSite.COLLECTION_ELEMENT,
-				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForCollectionElement( property, context ),
+				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForCollectionElement(
+						attributeMember, context ),
 				context
 		);
 	}
 
 	@Override
 	public ConverterDescriptor findAutoApplyConverterForMapKey(
-			XProperty property,
+			MemberDetails attributeMember,
 			MetadataBuildingContext context) {
 		return locateMatchingConverter(
-				property,
+				attributeMember,
 				ConversionSite.MAP_KEY,
-				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForMapKey( property, context ),
+				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForMapKey( attributeMember, context ),
 				context
 		);
 	}

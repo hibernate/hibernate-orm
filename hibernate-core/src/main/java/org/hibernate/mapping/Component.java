@@ -46,6 +46,7 @@ import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.entity.DiscriminatorHelper;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -175,7 +176,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return properties;
 	}
 
-	public void addProperty(Property p, XClass declaringClass) {
+	public void addProperty(Property p, ClassDetails declaringClass) {
 		properties.add( p );
 		if ( isPolymorphic() && declaringClass != null ) {
 			if ( propertyDeclaringClasses == null ) {

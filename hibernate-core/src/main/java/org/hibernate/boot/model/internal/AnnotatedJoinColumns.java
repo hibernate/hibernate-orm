@@ -29,6 +29,7 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.cfg.RecoverableException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
@@ -38,6 +39,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.AnnotationUsage;
 
 import jakarta.persistence.JoinColumn;
 
@@ -75,7 +77,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	private String manyToManyOwnerSideEntityName;
 
 	public static AnnotatedJoinColumns buildJoinColumnsOrFormulas(
-			JoinColumnOrFormula[] joinColumnOrFormulas,
+			List<AnnotationUsage<JoinColumnOrFormula>> joinColumnOrFormulas,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
@@ -87,10 +89,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		parent.setPropertyHolder( propertyHolder );
 		parent.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		parent.setMappedBy( mappedBy );
-		for ( JoinColumnOrFormula columnOrFormula : joinColumnOrFormulas ) {
-			final JoinFormula formula = columnOrFormula.formula();
-			final JoinColumn column = columnOrFormula.column();
-			final String annotationString = formula.value();
+		for ( AnnotationUsage<JoinColumnOrFormula> columnOrFormula : joinColumnOrFormulas ) {
+			final AnnotationUsage<JoinFormula> formula = columnOrFormula.getNestedUsage( "formula" );
+			final AnnotationUsage<JoinColumn> column = columnOrFormula.getNestedUsage( "column" );
+			final String annotationString = formula.getString( "value" );
 			if ( isNotEmpty( annotationString ) ) {
 				AnnotatedJoinColumn.buildJoinFormula( formula, parent );
 			}
@@ -102,7 +104,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	}
 
 	static AnnotatedJoinColumns buildJoinColumnsWithFormula(
-			JoinFormula joinFormula,
+			AnnotationUsage<JoinFormula> joinFormula,
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -117,7 +119,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	}
 
 	public static AnnotatedJoinColumns buildJoinColumns(
-			JoinColumn[] joinColumns,
+			List<AnnotationUsage<JoinColumn>> joinColumns,
 //			Comment comment,
 			String mappedBy,
 			Map<String, Join> joins,
@@ -137,7 +139,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	}
 
 	public static AnnotatedJoinColumns buildJoinColumnsWithDefaultColumnSuffix(
-			JoinColumn[] joinColumns,
+			List<AnnotationUsage<JoinColumn>> joinColumns,
 //			Comment comment,
 			String mappedBy,
 			Map<String, Join> joins,
@@ -148,15 +150,15 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		assert mappedBy == null || !mappedBy.isEmpty();
 		final String propertyName = inferredData.getPropertyName();
 		final String path = qualify( propertyHolder.getPath(), propertyName );
-		final JoinColumn[] overriddes = propertyHolder.getOverriddenJoinColumn( path );
-		final JoinColumn[] actualColumns = overriddes == null ? joinColumns : overriddes;
+		final List<AnnotationUsage<JoinColumn>> overrides = propertyHolder.getOverriddenJoinColumn( path );
+		final List<AnnotationUsage<JoinColumn>> actualColumns = overrides == null ? joinColumns : overrides;
 		final AnnotatedJoinColumns parent = new AnnotatedJoinColumns();
 		parent.setBuildingContext( context );
 		parent.setJoins( joins );
 		parent.setPropertyHolder( propertyHolder );
 		parent.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		parent.setMappedBy( mappedBy );
-		if ( actualColumns == null || actualColumns.length == 0 ) {
+		if ( CollectionHelper.isEmpty( actualColumns ) ) {
 			AnnotatedJoinColumn.buildJoinColumn(
 					null,
 //					comment,
@@ -169,7 +171,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		}
 		else {
 			parent.setMappedBy( mappedBy );
-			for ( JoinColumn actualColumn : actualColumns ) {
+			for ( AnnotationUsage<JoinColumn> actualColumn : actualColumns ) {
 				AnnotatedJoinColumn.buildJoinColumn(
 						actualColumn,
 //						comment,
@@ -188,7 +190,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	 * Called for join tables in {@link jakarta.persistence.ManyToMany} associations.
 	 */
 	public static AnnotatedJoinColumns buildJoinTableJoinColumns(
-			JoinColumn[] joinColumns,
+			List<AnnotationUsage<JoinColumn>> joinColumns,
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -204,7 +206,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			AnnotatedJoinColumn.buildImplicitJoinTableJoinColumn( parent, propertyHolder, inferredData );
 		}
 		else {
-			for ( JoinColumn joinColumn : joinColumns ) {
+			for ( AnnotationUsage<JoinColumn> joinColumn : joinColumns ) {
 				AnnotatedJoinColumn.buildExplicitJoinTableJoinColumn( parent, propertyHolder, inferredData, joinColumn );
 			}
 		}

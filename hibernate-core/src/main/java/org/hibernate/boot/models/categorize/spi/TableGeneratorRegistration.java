@@ -15,20 +15,5 @@ import jakarta.persistence.TableGenerator;
  *
  * @author Steve Ebersole
  */
-public class TableGeneratorRegistration {
-	private final String name;
-	private final AnnotationUsage<TableGenerator> configuration;
-
-	public TableGeneratorRegistration(String name, AnnotationUsage<TableGenerator> configuration) {
-		this.name = name;
-		this.configuration = configuration;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public AnnotationUsage<TableGenerator> getConfiguration() {
-		return configuration;
-	}
+public record TableGeneratorRegistration(String name, AnnotationUsage<TableGenerator> configuration) {
 }

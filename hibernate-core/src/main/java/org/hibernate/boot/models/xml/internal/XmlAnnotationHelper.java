@@ -24,6 +24,7 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.JavaType;
@@ -55,6 +56,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbConfigurationParameterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConvertImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCustomSqlImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorFormulaImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
@@ -85,6 +87,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
@@ -94,15 +97,15 @@ import org.hibernate.internal.util.KeyedConsumer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
-import org.hibernate.models.internal.MutableAnnotationTarget;
-import org.hibernate.models.internal.MutableAnnotationUsage;
-import org.hibernate.models.internal.MutableClassDetails;
-import org.hibernate.models.internal.MutableMemberDetails;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MethodDetails;
+import org.hibernate.models.spi.MutableAnnotationTarget;
+import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.MutableClassDetails;
+import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.SqlTypes;
 
@@ -1583,15 +1586,27 @@ public class XmlAnnotationHelper {
 	}
 
 	public static void applyDiscriminatorFormula(
-			String discriminatorFormula,
+			JaxbDiscriminatorFormulaImpl jaxbDiscriminatorFormula,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isNotEmpty( discriminatorFormula ) ) {
-			final MutableAnnotationUsage<DiscriminatorFormula> discriminatorFormulaAnn = XmlProcessingHelper
-					.getOrMakeAnnotation( DiscriminatorFormula.class, target, xmlDocumentContext );
-			discriminatorFormulaAnn.setAttributeValue( "value", discriminatorFormula );
+		if ( jaxbDiscriminatorFormula == null || StringHelper.isEmpty( jaxbDiscriminatorFormula.getFragment() ) ) {
+			return;
+		}
 
-			// todo add to mapping-3.2.0.xsd discriminatorType of @DiscriminatorFormula
+		final MutableAnnotationUsage<DiscriminatorFormula> discriminatorFormulaAnn = HibernateAnnotations.DISCRIMINATOR_FORMULA.createUsage(
+				target,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		discriminatorFormulaAnn.setAttributeValue( "value", jaxbDiscriminatorFormula.getFragment() );
+		discriminatorFormulaAnn.setAttributeValue( "discriminatorType", jaxbDiscriminatorFormula.getDiscriminatorType() );
+
+		if ( jaxbDiscriminatorFormula.isForceSelection() ) {
+			final MutableAnnotationUsage<DiscriminatorOptions> existingOptionsAnnotation = (MutableAnnotationUsage<DiscriminatorOptions>) target.getAnnotationUsage( DiscriminatorOptions.class );
+			final MutableAnnotationUsage<DiscriminatorOptions> optionsAnnotation = existingOptionsAnnotation != null
+					? existingOptionsAnnotation
+					: HibernateAnnotations.DISCRIMINATOR_OPTIONS.createUsage( target, xmlDocumentContext.getModelBuildingContext() );
+			optionsAnnotation.setAttributeValue( "force", true );
 		}
 	}
 }

@@ -7,8 +7,8 @@
 package org.hibernate.boot.model.convert.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Converter;
 
@@ -27,25 +27,25 @@ public interface ConverterAutoApplyHandler {
 	 * by the passed property descriptor.  {@code null} indicates that no auto-applied
 	 * converter matched
 	 *
-	 * @param property The HCANN descriptor for the basic attribute
+	 * @param attributeMember The HCANN descriptor for the basic attribute
 	 */
-	ConverterDescriptor findAutoApplyConverterForAttribute(XProperty property, MetadataBuildingContext context);
+	ConverterDescriptor findAutoApplyConverterForAttribute(MemberDetails attributeMember, MetadataBuildingContext context);
 
 	/**
 	 * Resolve the auto-applied converter to be applied to the elements of a plural attribute
 	 * described by the passed property descriptor.  {@code null} indicates that no auto-applied
 	 * converter matched
 	 *
-	 * @param property The HCANN descriptor for the plural attribute
+	 * @param attributeMember The HCANN descriptor for the plural attribute
 	 */
-	ConverterDescriptor findAutoApplyConverterForCollectionElement(XProperty property, MetadataBuildingContext context);
+	ConverterDescriptor findAutoApplyConverterForCollectionElement(MemberDetails attributeMember, MetadataBuildingContext context);
 
 	/**
 	 * Resolve the auto-applied converter to be applied to the keys of a plural Map attribute
 	 * described by the passed property descriptor.  {@code null} indicates that no auto-applied
 	 * converter matched
 	 *
-	 * @param property The HCANN descriptor for the Map-typed plural attribute
+	 * @param attributeMember The HCANN descriptor for the Map-typed plural attribute
 	 */
-	ConverterDescriptor findAutoApplyConverterForMapKey(XProperty property, MetadataBuildingContext context);
+	ConverterDescriptor findAutoApplyConverterForMapKey(MemberDetails attributeMember, MetadataBuildingContext context);
 }

@@ -472,15 +472,16 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	String CONNECTION_HANDLING = "hibernate.connection.handling_mode";
 
 	/**
-	 * Disables access to JDBC {@linkplain java.sql.DatabaseMetaData metadata} during bootstrap.
+	 * Whether access to JDBC {@linkplain java.sql.DatabaseMetaData metadata} during bootstrap is allowed.
 	 * <p/>
 	 * Typically, Hibernate accesses this metadata to understand the capabilities of the underlying
-	 * database to help minimize needed configuration.
+	 * database to help minimize needed configuration.  Disabling this access means that only explicit
+	 * settings are used.  At a minimum, the Dialect to use must be specified either by {@linkplain #DIALECT}
+	 * or {@linkplain JdbcSettings#JAKARTA_HBM2DDL_DB_NAME}.
 	 *
-	 * @apiNote Disabling this access means that only explicit settings are used.  At a minimum,
-	 * the Dialect to use must be specified either by {@linkplain #DIALECT} or
-	 * {@linkplain JdbcSettings#JAKARTA_HBM2DDL_DB_NAME}.  The specified Dialect may also provide
-	 * defaults into the properties.
+	 * @apiNote The specified Dialect may also provide defaults into the properties.
+	 *
+	 * @settingDefault {@code true}
 	 *
 	 * @since 6.5
 	 */

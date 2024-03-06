@@ -1349,7 +1349,7 @@ public class EntityBinder {
 		final SQLInsert sqlInsert = findMatchingSqlAnnotation( "", SQLInsert.class, SQLInserts.class );
 		if ( sqlInsert != null ) {
 			persistentClass.setCustomSQLInsert(
-					sqlInsert.sql().trim(),
+					sqlInsert.sql().trim().isEmpty() ? null : sqlInsert.sql().trim(),
 					sqlInsert.callable(),
 					fromResultCheckStyle( sqlInsert.check() )
 			);
@@ -2232,7 +2232,7 @@ public class EntityBinder {
 		final SQLInsert sqlInsert = findMatchingSqlAnnotation( tableName, SQLInsert.class, SQLInserts.class );
 		if ( sqlInsert != null ) {
 			join.setCustomSQLInsert(
-					sqlInsert.sql().trim(),
+					sqlInsert.sql().trim().isEmpty() ? null : sqlInsert.sql().trim(),
 					sqlInsert.callable(),
 					fromResultCheckStyle( sqlInsert.check() )
 			);

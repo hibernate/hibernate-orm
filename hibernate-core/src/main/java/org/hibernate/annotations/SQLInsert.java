@@ -50,7 +50,7 @@ public @interface SQLInsert {
 	/**
 	 * Procedure name or SQL {@code INSERT} statement.
 	 */
-	String sql();
+	String sql() default "";
 
 	/**
 	 * Is the statement callable (aka a {@link java.sql.CallableStatement})?

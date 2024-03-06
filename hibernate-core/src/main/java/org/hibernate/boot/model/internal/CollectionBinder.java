@@ -1334,7 +1334,7 @@ public abstract class CollectionBinder {
 		final SQLInsert sqlInsert = property.getAnnotation( SQLInsert.class );
 		if ( sqlInsert != null ) {
 			collection.setCustomSQLInsert(
-					sqlInsert.sql().trim(),
+					sqlInsert.sql().trim().isEmpty() ? null : sqlInsert.sql().trim(),
 					sqlInsert.callable(),
 					fromResultCheckStyle( sqlInsert.check() )
 			);

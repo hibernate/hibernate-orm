@@ -1949,7 +1949,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( name.contains("<error>") ) {
 				throw new ProcessLaterException();
 			}
-			return name;
+			return name.replace('.', '$'); // since the rest of the code assumes $ as the path separator
 		}
 		else if ( param != null ) {
 			final String name = (String) castNonNull(getAnnotationValue(param, "value"));

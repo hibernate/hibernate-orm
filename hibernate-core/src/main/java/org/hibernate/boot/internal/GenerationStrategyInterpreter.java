@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.internal;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -15,11 +16,15 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.models.spi.AnnotationUsage;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * Interpretations related to value generators based on the {@linkplain GenerationType strategy/type}
@@ -81,91 +86,97 @@ public class GenerationStrategyInterpreter {
 	}
 
 	public void interpretTableGenerator(
-			TableGenerator tableGeneratorAnnotation,
+			AnnotationUsage<TableGenerator> tableGeneratorAnnotation,
 			IdentifierGeneratorDefinition.Builder definitionBuilder) {
-		definitionBuilder.setName( tableGeneratorAnnotation.name() );
+		definitionBuilder.setName( tableGeneratorAnnotation.getString( "name" ) );
 		definitionBuilder.setStrategy( org.hibernate.id.enhanced.TableGenerator.class.getName() );
 		definitionBuilder.addParam( org.hibernate.id.enhanced.TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 
-		if ( !tableGeneratorAnnotation.catalog().isEmpty()) {
-			definitionBuilder.addParam( PersistentIdentifierGenerator.CATALOG, tableGeneratorAnnotation.catalog() );
+		final String catalog = tableGeneratorAnnotation.getString( "catalog" );
+		if ( StringHelper.isNotEmpty( catalog ) ) {
+			definitionBuilder.addParam( PersistentIdentifierGenerator.CATALOG, catalog );
 		}
-		if ( !tableGeneratorAnnotation.schema().isEmpty()) {
-			definitionBuilder.addParam( PersistentIdentifierGenerator.SCHEMA, tableGeneratorAnnotation.schema() );
+
+		final String schema = tableGeneratorAnnotation.getString( "schema" );
+		if ( StringHelper.isNotEmpty( schema ) ) {
+			definitionBuilder.addParam( PersistentIdentifierGenerator.SCHEMA, schema );
 		}
-		if ( !tableGeneratorAnnotation.table().isEmpty()) {
-			definitionBuilder.addParam(
-					org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM,
-					tableGeneratorAnnotation.table()
-			);
+
+		final String table = tableGeneratorAnnotation.getString( "table" );
+		if ( StringHelper.isNotEmpty( table ) ) {
+			definitionBuilder.addParam( org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM, table );
 		}
-		if ( !tableGeneratorAnnotation.pkColumnName().isEmpty()) {
+
+		final String pkColumnName = tableGeneratorAnnotation.getString( "pkColumnName" );
+		if ( StringHelper.isNotEmpty( pkColumnName ) ) {
 			definitionBuilder.addParam(
 					org.hibernate.id.enhanced.TableGenerator.SEGMENT_COLUMN_PARAM,
-					tableGeneratorAnnotation.pkColumnName()
+					pkColumnName
 			);
 		}
-		if ( !tableGeneratorAnnotation.pkColumnValue().isEmpty()) {
+
+		final String pkColumnValue = tableGeneratorAnnotation.getString( "pkColumnValue" );
+		if ( StringHelper.isNotEmpty( pkColumnValue ) ) {
 			definitionBuilder.addParam(
 					org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM,
-					tableGeneratorAnnotation.pkColumnValue()
+					pkColumnValue
 			);
 		}
-		if ( !tableGeneratorAnnotation.valueColumnName().isEmpty()) {
+
+		final String valueColumnName = tableGeneratorAnnotation.getString( "valueColumnName" );
+		if ( StringHelper.isNotEmpty( valueColumnName ) ) {
 			definitionBuilder.addParam(
 					org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM,
-					tableGeneratorAnnotation.valueColumnName()
+					valueColumnName
 			);
 		}
+
 		definitionBuilder.addParam(
 				org.hibernate.id.enhanced.TableGenerator.INCREMENT_PARAM,
-				String.valueOf( tableGeneratorAnnotation.allocationSize() )
+				String.valueOf( tableGeneratorAnnotation.getInteger( "allocationSize" ) )
 		);
+
 		// See comment on HHH-4884 wrt initialValue.  Basically initialValue is really the stated value + 1
 		definitionBuilder.addParam(
 				org.hibernate.id.enhanced.TableGenerator.INITIAL_PARAM,
-				String.valueOf( tableGeneratorAnnotation.initialValue() + 1 )
+				String.valueOf( tableGeneratorAnnotation.getInteger( "initialValue" ) + 1 )
 		);
 
 		// TODO : implement unique-constraint support
-		if ( tableGeneratorAnnotation.uniqueConstraints() != null
-				&& tableGeneratorAnnotation.uniqueConstraints().length > 0 ) {
-			LOG.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
+		final List<AnnotationUsage<UniqueConstraint>> uniqueConstraints = tableGeneratorAnnotation.getList( "uniqueConstraints" );
+		if ( CollectionHelper.isNotEmpty( uniqueConstraints ) ) {
+			LOG.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.getString( "name" ) );
 		}
 	}
 
 	public void interpretSequenceGenerator(
-			SequenceGenerator sequenceGeneratorAnnotation,
+			AnnotationUsage<SequenceGenerator> sequenceGeneratorAnnotation,
 			IdentifierGeneratorDefinition.Builder definitionBuilder) {
-		definitionBuilder.setName( sequenceGeneratorAnnotation.name() );
+		definitionBuilder.setName( sequenceGeneratorAnnotation.getString( "name" ) );
 		definitionBuilder.setStrategy( SequenceStyleGenerator.class.getName() );
 
-		if ( !sequenceGeneratorAnnotation.catalog().isEmpty()) {
-			definitionBuilder.addParam(
-					PersistentIdentifierGenerator.CATALOG,
-					sequenceGeneratorAnnotation.catalog()
-			);
+		final String catalog = sequenceGeneratorAnnotation.getString( "catalog" );
+		if ( StringHelper.isNotEmpty( catalog ) ) {
+			definitionBuilder.addParam( PersistentIdentifierGenerator.CATALOG, catalog );
 		}
-		if ( !sequenceGeneratorAnnotation.schema().isEmpty()) {
-			definitionBuilder.addParam(
-					PersistentIdentifierGenerator.SCHEMA,
-					sequenceGeneratorAnnotation.schema()
-			);
+
+		final String schema = sequenceGeneratorAnnotation.getString( "schema" );
+		if ( StringHelper.isNotEmpty( schema ) ) {
+			definitionBuilder.addParam( PersistentIdentifierGenerator.SCHEMA, schema );
 		}
-		if ( !sequenceGeneratorAnnotation.sequenceName().isEmpty()) {
-			definitionBuilder.addParam(
-					SequenceStyleGenerator.SEQUENCE_PARAM,
-					sequenceGeneratorAnnotation.sequenceName()
-			);
+
+		final String sequenceName = sequenceGeneratorAnnotation.getString( "sequenceName" );
+		if ( StringHelper.isNotEmpty( sequenceName ) ) {
+			definitionBuilder.addParam( SequenceStyleGenerator.SEQUENCE_PARAM, sequenceName );
 		}
 
 		definitionBuilder.addParam(
 				SequenceStyleGenerator.INCREMENT_PARAM,
-				String.valueOf( sequenceGeneratorAnnotation.allocationSize() )
+				String.valueOf( sequenceGeneratorAnnotation.getInteger( "allocationSize" ) )
 		);
 		definitionBuilder.addParam(
 				SequenceStyleGenerator.INITIAL_PARAM,
-				String.valueOf( sequenceGeneratorAnnotation.initialValue() )
+				String.valueOf( sequenceGeneratorAnnotation.getInteger( "initialValue" ) )
 		);
 	}
 }

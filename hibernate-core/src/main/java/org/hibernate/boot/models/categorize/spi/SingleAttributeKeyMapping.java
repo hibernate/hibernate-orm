@@ -19,7 +19,7 @@ public interface SingleAttributeKeyMapping extends KeyMapping {
 	}
 
 	default ClassDetails getKeyType() {
-		return getAttribute().getMember().getType();
+		return getAttribute().getMember().getType().determineRawClass();
 	}
 
 	@Override

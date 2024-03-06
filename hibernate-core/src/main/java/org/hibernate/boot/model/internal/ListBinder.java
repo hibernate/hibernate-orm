@@ -20,6 +20,7 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -49,7 +50,7 @@ public class ListBinder extends CollectionBinder {
 	}
 
 	@Override
-	public void setSqlOrderBy(OrderBy orderByAnn) {
+	public void setSqlOrderBy(AnnotationUsage<OrderBy> orderByAnn) {
 		if ( orderByAnn != null ) {
 			throw new AnnotationException( "A collection of type 'List' is annotated '@OrderBy'" );
 		}

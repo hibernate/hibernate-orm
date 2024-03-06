@@ -69,7 +69,7 @@ public class BasicValueHelper {
 			@SuppressWarnings("unused") BindingOptions bindingOptions,
 			@SuppressWarnings("unused") BindingState bindingState,
 			@SuppressWarnings("unused") BindingContext bindingContext) {
-		basicValue.setImplicitJavaTypeAccess( (typeConfiguration) -> member.getType().toJavaClass() );
+		basicValue.setImplicitJavaTypeAccess( (typeConfiguration) -> member.getType().determineRawClass().toJavaClass() );
 	}
 
 	public static void bindJavaType(
@@ -313,7 +313,7 @@ public class BasicValueHelper {
 		final TypeConfiguration typeConfiguration = collector.getTypeConfiguration();
 
 		final MemberDetails memberDetails = tenantIdAttribute.getMember();
-		final String returnedClassName = memberDetails.getType().getClassName();
+		final String returnedClassName = memberDetails.getType().determineRawClass().getClassName();
 		final BasicType<Object> tenantIdType = typeConfiguration
 				.getBasicTypeRegistry()
 				.getRegisteredType( returnedClassName );

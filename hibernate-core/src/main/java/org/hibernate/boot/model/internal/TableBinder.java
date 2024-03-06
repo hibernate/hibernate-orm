@@ -36,6 +36,7 @@ import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.models.spi.AnnotationUsage;
 
 import org.jboss.logging.Logger;
 
@@ -71,8 +72,8 @@ public class TableBinder {
 	private String associatedEntity;
 	private String associatedJpaEntity;
 	private boolean isJPA2ElementCollection;
-	private UniqueConstraint[] uniqueConstraints;
-	private Index[] indexes;
+	private List<AnnotationUsage<UniqueConstraint>> uniqueConstraints;
+	private List<AnnotationUsage<Index>> indexes;
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
@@ -98,11 +99,11 @@ public class TableBinder {
 		isAbstract = anAbstract;
 	}
 
-	public void setUniqueConstraints(UniqueConstraint[] uniqueConstraints) {
+	public void setUniqueConstraints(List<AnnotationUsage<UniqueConstraint>> uniqueConstraints) {
 		this.uniqueConstraints = uniqueConstraints;
 	}
 
-	public void setJpaIndex(Index[] indexes){
+	public void setJpaIndex(List<AnnotationUsage<Index>> indexes){
 		this.indexes = indexes;
 	}
 
@@ -430,7 +431,7 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			UniqueConstraint[] uniqueConstraints,
+			List<AnnotationUsage<UniqueConstraint>> uniqueConstraints,
 			MetadataBuildingContext buildingContext) {
 		return buildAndFillTable(
 				schema,
@@ -450,7 +451,7 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			UniqueConstraint[] uniqueConstraints,
+			List<AnnotationUsage<UniqueConstraint>> uniqueConstraints,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
@@ -472,17 +473,23 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			UniqueConstraint[] uniqueConstraints,
-			Index[] indexes,
+			List<AnnotationUsage<UniqueConstraint>> uniqueConstraints,
+			List<AnnotationUsage<Index>> indexes,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
-		final Table table =
-				addTable( nullIfEmpty( schema ), nullIfEmpty( catalog ),
-						logicalName, isAbstract, buildingContext, subselect,
-						denormalizedSuperTableXref, metadataCollector );
+		final Table table = addTable(
+				nullIfEmpty( schema ),
+				nullIfEmpty( catalog ),
+				logicalName,
+				isAbstract,
+				buildingContext,
+				subselect,
+				denormalizedSuperTableXref,
+				metadataCollector
+		);
 
 		if ( uniqueConstraints != null ) {
 			new IndexBinder( buildingContext ).bindUniqueConstraints( table, uniqueConstraints );
@@ -837,12 +844,34 @@ public class TableBinder {
 		}
 	}
 
-	static void addIndexes(Table table, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext context) {
-		for ( org.hibernate.annotations.Index index : indexes ) {
+	static void addIndexes(Table table, List<AnnotationUsage<org.hibernate.annotations.Index>> indexes, MetadataBuildingContext context) {
+		for ( AnnotationUsage<org.hibernate.annotations.Index> indexUsage : indexes ) {
+			final String name = indexUsage.getString( "name" );
+			final String[] columnNames = indexUsage.<String>getList( "columnNames" ).toArray(new String[0]);
+
 			//no need to handle inSecondPass here since it is only called from EntityBinder
-			context.getMetadataCollector().addSecondPass(
-					new IndexOrUniqueKeySecondPass( table, index.name(), index.columnNames(), context )
-			);
+			context.getMetadataCollector().addSecondPass( new IndexOrUniqueKeySecondPass(
+					table,
+					name,
+					columnNames,
+					context
+			) );
+		}
+	}
+
+	static void addJpaIndexes(Table table, List<AnnotationUsage<jakarta.persistence.Index>> indexes, MetadataBuildingContext context) {
+		for ( AnnotationUsage<jakarta.persistence.Index> indexUsage : indexes ) {
+			final String name = indexUsage.getString( "name" );
+			final String columnList = indexUsage.getString( "columnList" );
+			final String[] columnFragments = columnList.split(",");
+
+			//no need to handle inSecondPass here since it is only called from EntityBinder
+			context.getMetadataCollector().addSecondPass( new IndexOrUniqueKeySecondPass(
+					table,
+					name,
+					columnFragments,
+					context
+			) );
 		}
 	}
 

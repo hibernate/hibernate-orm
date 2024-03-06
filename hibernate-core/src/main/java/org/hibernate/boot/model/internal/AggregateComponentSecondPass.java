@@ -14,7 +14,6 @@ import java.util.TreeSet;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Comment;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
@@ -35,6 +34,8 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableHelper;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.sql.Template;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
@@ -47,13 +48,13 @@ public class AggregateComponentSecondPass implements SecondPass {
 
 	private final PropertyHolder propertyHolder;
 	private final Component component;
-	private final XClass returnedClassOrElement;
+	private final ClassDetails returnedClassOrElement;
 	private final MetadataBuildingContext context;
 
 	public AggregateComponentSecondPass(
 			PropertyHolder propertyHolder,
 			Component component,
-			XClass returnedClassOrElement,
+			ClassDetails returnedClassOrElement,
 			MetadataBuildingContext context) {
 		this.propertyHolder = propertyHolder;
 		this.component = component;
@@ -87,9 +88,9 @@ public class AggregateComponentSecondPass implements SecondPass {
 			final Namespace defaultNamespace = database.getDefaultNamespace();
 			final Identifier udtName = Identifier.toIdentifier( structName );
 			final UserDefinedType udt = new UserDefinedType( "orm", defaultNamespace, udtName );
-			final Comment comment = returnedClassOrElement.getAnnotation( Comment.class );
+			final AnnotationUsage<Comment> comment = returnedClassOrElement.getAnnotationUsage( Comment.class );
 			if ( comment != null ) {
-				udt.setComment( comment.value() );
+				udt.setComment( comment.getString( "value" ) );
 			}
 			for ( org.hibernate.mapping.Column aggregatedColumn : aggregatedColumns ) {
 				udt.addColumn( aggregatedColumn );

@@ -18,11 +18,11 @@ import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnSizable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnStandard;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnUniqueable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCommentable;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
+import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.internal.MutableAnnotationTarget;
-import org.hibernate.models.internal.MutableAnnotationUsage;
+import org.hibernate.models.spi.MutableAnnotationTarget;
+import org.hibernate.models.spi.MutableAnnotationUsage;
 
 /**
  * @author Steve Ebersole

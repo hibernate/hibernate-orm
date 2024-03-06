@@ -128,6 +128,7 @@ public class XmlProcessingSmokeTests {
 				false,
 				buildingContext.getClassDetailsRegistry(),
 				buildingContext.getAnnotationDescriptorRegistry(),
+				new GlobalRegistrationsImpl( buildingContext ),
 				null
 		);
 		collectedXmlResources.getDocuments().forEach( collector::apply );

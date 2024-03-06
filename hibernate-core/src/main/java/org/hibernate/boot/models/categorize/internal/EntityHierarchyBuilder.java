@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.boot.models.AccessTypeDeterminationException;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
@@ -127,7 +126,7 @@ public class EntityHierarchyBuilder {
 				return accessAnnotation.getAttributeValue( "value" );
 			}
 
-			current = current.getSuperType();
+			current = current.getSuperClass();
 		}
 
 		return null;
@@ -152,7 +151,7 @@ public class EntityHierarchyBuilder {
 				}
 			}
 
-			current = current.getSuperType();
+			current = current.getSuperClass();
 		}
 
 		return null;
@@ -208,17 +207,17 @@ public class EntityHierarchyBuilder {
 		// 		1) it has no super-types
 		//		2) its super types contain no entities (MappedSuperclasses are allowed)
 
-		if ( classInfo.getSuperType() == null ) {
+		if ( classInfo.getSuperClass() == null ) {
 			return true;
 		}
 
-		ClassDetails current = classInfo.getSuperType();
+		ClassDetails current = classInfo.getSuperClass();
 		while (  current != null ) {
 			if ( current.getAnnotationUsage( JpaAnnotations.ENTITY ) != null && !current.isAbstract() ) {
 				// a non-abstract super type has `@Entity` -> classInfo cannot be a root entity
 				return false;
 			}
-			current = current.getSuperType();
+			current = current.getSuperClass();
 		}
 
 		// if we hit no opt-outs we have a root

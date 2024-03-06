@@ -9,8 +9,6 @@ package org.hibernate.boot.model.internal;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -117,61 +115,4 @@ public final class HCANNHelper {
 		return member.getMember();
 	}
 
-	/**
-	 * Return an annotation of the given type which annotates the given
-	 * annotated program element, or which meta-annotates an annotation
-	 * of the given annotated program element.
-	 *
-	 * @implNote Searches only one level deep
-	 */
-	public static <T extends Annotation> T findAnnotation(
-			XAnnotatedElement annotatedElement,
-			Class<T> annotationType) {
-		// first, see if we can find it directly...
-		final T direct = annotatedElement.getAnnotation( annotationType );
-		if ( direct != null ) {
-			return direct;
-		}
-
-		// or as composed...
-		final Annotation[] annotations = annotatedElement.getAnnotations();
-		for ( Annotation annotation : annotations ) {
-			if ( annotationType.equals( annotation.getClass() ) ) {
-				// we would have found this on the direct search, so no need
-				// to check its meta-annotations
-				continue;
-			}
-
-			// we only check one level deep
-			final T metaAnnotation = annotation.annotationType().getAnnotation( annotationType );
-			if ( metaAnnotation != null ) {
-				return metaAnnotation;
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Return an annotation of the given annotated program element which
-	 * is annotated by the given type of meta-annotation.
-	 *
-	 * @implNote Searches only one level deep
-	 */
-	public static List<Annotation> findContainingAnnotations(
-			XAnnotatedElement annotatedElement,
-			Class<? extends Annotation> annotationType) {
-
-		final List<Annotation> result = new ArrayList<>();
-
-		final Annotation[] annotations = annotatedElement.getAnnotations();
-		for ( Annotation annotation : annotations ) {
-			final Annotation metaAnn = annotation.annotationType().getAnnotation( annotationType );
-			if ( metaAnn != null ) {
-				result.add( annotation );
-			}
-		}
-
-		return result;
-	}
 }

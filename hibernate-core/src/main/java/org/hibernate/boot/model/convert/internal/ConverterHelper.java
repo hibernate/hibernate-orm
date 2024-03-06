@@ -14,13 +14,11 @@ import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.internal.ClassmateContext;
-import org.hibernate.boot.model.internal.HCANNHelper;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
+import org.hibernate.models.spi.MemberDetails;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
@@ -37,24 +35,21 @@ public class ConverterHelper {
 		return GenericsHelper.extractParameterizedType( base );
 	}
 
-	public static ResolvedType resolveAttributeType(XProperty xProperty, MetadataBuildingContext context) {
-		return resolveMember( xProperty, context ).getType();
+	public static ResolvedType resolveAttributeType(MemberDetails memberDetails, MetadataBuildingContext context) {
+		return resolveMember( memberDetails, context ).getType();
 	}
 
-	public static ResolvedMember<? extends Member> resolveMember(XProperty xProperty, MetadataBuildingContext buildingContext) {
+	public static ResolvedMember<? extends Member> resolveMember(MemberDetails memberDetails, MetadataBuildingContext buildingContext) {
 		final ClassmateContext classmateContext = buildingContext.getBootstrapContext().getClassmateContext();
-		final ReflectionManager reflectionManager = buildingContext.getBootstrapContext().getReflectionManager();
 
-		final ResolvedType declaringClassType = classmateContext.getTypeResolver().resolve(
-				reflectionManager.toClass( xProperty.getDeclaringClass() )
-		);
+		final ResolvedType declaringClassType = classmateContext.getTypeResolver().resolve( memberDetails.getDeclaringType().toJavaClass() );
 		final ResolvedTypeWithMembers declaringClassWithMembers = classmateContext.getMemberResolver().resolve(
 				declaringClassType,
 				null,
 				null
 		);
 
-		final Member member = toMember( xProperty );
+		final Member member = memberDetails.toJavaMember();
 		if ( member instanceof Method ) {
 			for ( ResolvedMethod resolvedMember : declaringClassWithMembers.getMemberMethods() ) {
 				if ( resolvedMember.getName().equals( member.getName() ) ) {
@@ -76,18 +71,6 @@ public class ConverterHelper {
 		throw new HibernateException(
 				"Could not locate resolved type information for attribute [" + member.getName() + "] from Classmate"
 		);
-	}
-
-	public static Member toMember(XProperty xProperty) {
-		try {
-			return HCANNHelper.getUnderlyingMember( xProperty );
-		}
-		catch (Exception e) {
-			throw new HibernateException(
-					"Could not resolve member signature from XProperty reference",
-					e
-			);
-		}
 	}
 
 	public static List<ResolvedType> resolveConverterClassParamTypes(

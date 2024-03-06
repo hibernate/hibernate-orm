@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.util.collections;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -245,6 +246,14 @@ public final class CollectionHelper {
 		return new ArrayList<>( Math.max( expectedNumberOfElements + 1, DEFAULT_LIST_CAPACITY ) );
 	}
 
+	public static <T> ArrayList<T> populatedArrayList(int expectedNumberOfElements, T value) {
+		final ArrayList<T> list = new ArrayList<>( Math.max( expectedNumberOfElements + 1, DEFAULT_LIST_CAPACITY ) );
+		for ( int i = 0; i < expectedNumberOfElements; i++ ) {
+			list.add( value );
+		}
+		return list;
+	}
+
 	public static <T> Set<T> makeCopy(Set<T> source) {
 		if ( source == null ) {
 			return null;
@@ -296,6 +305,13 @@ public final class CollectionHelper {
 		final HashSet<T> set = new HashSet<>( determineProperSizing( values.length ) );
 		Collections.addAll( set, values );
 		return set;
+	}
+
+	public static <T> Set<T> setOf(Collection<T> values) {
+		if ( isEmpty( values ) ) {
+			return Collections.emptySet();
+		}
+		return new HashSet<>( values );
 	}
 
 	public static Properties asProperties(Map<?,?> map) {

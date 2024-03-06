@@ -9,12 +9,12 @@ package org.hibernate.boot.model.internal;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.models.spi.MemberDetails;
 
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 
@@ -23,7 +23,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
  */
 public class IdGeneratorResolverSecondPass implements SecondPass {
 	private final SimpleValue id;
-	private final XProperty idXProperty;
+	private final MemberDetails idAttributeMember;
 	private final String generatorType;
 	private final String generatorName;
 	private final MetadataBuildingContext buildingContext;
@@ -31,12 +31,12 @@ public class IdGeneratorResolverSecondPass implements SecondPass {
 
 	public IdGeneratorResolverSecondPass(
 			SimpleValue id,
-			XProperty idXProperty,
+			MemberDetails idAttributeMember,
 			String generatorType,
 			String generatorName,
 			MetadataBuildingContext buildingContext) {
 		this.id = id;
-		this.idXProperty = idXProperty;
+		this.idAttributeMember = idAttributeMember;
 		this.generatorType = generatorType;
 		this.generatorName = generatorName;
 		this.buildingContext = buildingContext;
@@ -44,17 +44,17 @@ public class IdGeneratorResolverSecondPass implements SecondPass {
 
 	public IdGeneratorResolverSecondPass(
 			SimpleValue id,
-			XProperty idXProperty,
+			MemberDetails idAttributeMember,
 			String generatorType,
 			String generatorName,
 			MetadataBuildingContext buildingContext,
 			IdentifierGeneratorDefinition localIdentifierGeneratorDefinition) {
-		this(id,idXProperty,generatorType,generatorName,buildingContext);
+		this( id, idAttributeMember, generatorType, generatorName, buildingContext );
 		this.localIdentifierGeneratorDefinition = localIdentifierGeneratorDefinition;
 	}
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> idGeneratorDefinitionMap) throws MappingException {
-		makeIdGenerator( id, idXProperty, generatorType, generatorName, buildingContext, localIdentifierGeneratorDefinition );
+		makeIdGenerator( id, idAttributeMember, generatorType, generatorName, buildingContext, localIdentifierGeneratorDefinition );
 	}
 }

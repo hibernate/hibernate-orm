@@ -102,6 +102,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCustomSqlImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDatabaseObjectImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDatabaseObjectScopeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorFormulaImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
@@ -1207,10 +1208,14 @@ public class HbmXmlTransformer {
 			entity.getDiscriminatorColumn().setName( hbmClass.getDiscriminator().getColumnAttribute() );
 		}
 		else if ( StringHelper.isEmpty( hbmClass.getDiscriminator().getFormulaAttribute() ) ) {
-			entity.setDiscriminatorFormula( hbmClass.getDiscriminator().getFormulaAttribute() );
+			final JaxbDiscriminatorFormulaImpl formula = new JaxbDiscriminatorFormulaImpl();
+			formula.setFragment( hbmClass.getDiscriminator().getFormulaAttribute() );
+			entity.setDiscriminatorFormula( formula );
 		}
 		else if ( StringHelper.isEmpty( hbmClass.getDiscriminator().getFormula() ) ) {
-			entity.setDiscriminatorFormula( hbmClass.getDiscriminator().getFormulaAttribute().trim() );
+			final JaxbDiscriminatorFormulaImpl formula = new JaxbDiscriminatorFormulaImpl();
+			formula.setFragment( hbmClass.getDiscriminator().getFormula().trim() );
+			entity.setDiscriminatorFormula( formula );
 		}
 		else {
 			entity.setDiscriminatorColumn( new JaxbDiscriminatorColumnImpl() );

@@ -22,6 +22,7 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Converts;
@@ -116,6 +117,7 @@ public interface JpaAnnotations {
 	AnnotationDescriptor<CollectionTable> COLLECTION_TABLE = createOrmDescriptor( CollectionTable.class );
 	AnnotationDescriptor<Column> COLUMN = createOrmDescriptor( Column.class );
 	AnnotationDescriptor<ColumnResult> COLUMN_RESULT = createOrmDescriptor( ColumnResult.class );
+	AnnotationDescriptor<ConstructorResult> CONSTRUCTOR_RESULT = createOrmDescriptor( ConstructorResult.class );
 	AnnotationDescriptor<Converts> CONVERTS = createOrmDescriptor( Converts.class );
 	AnnotationDescriptor<Convert> CONVERT = createOrmDescriptor( Convert.class, CONVERTS );
 	AnnotationDescriptor<Converter> CONVERTER = createOrmDescriptor( Converter.class );

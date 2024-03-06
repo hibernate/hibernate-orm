@@ -6,10 +6,10 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.spi.MemberDetails;
 
 /**
  * An implementation of AutoApplicableConverterDescriptor that always reports
@@ -28,21 +28,21 @@ public class AutoApplicableConverterDescriptorBypassedImpl implements AutoApplic
 
 	@Override
 	public ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(
-			XProperty xProperty,
+			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		return null;
 	}
 
 	@Override
 	public ConverterDescriptor getAutoAppliedConverterDescriptorForCollectionElement(
-			XProperty xProperty,
+			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		return null;
 	}
 
 	@Override
 	public ConverterDescriptor getAutoAppliedConverterDescriptorForMapKey(
-			XProperty xProperty,
+			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		return null;
 	}

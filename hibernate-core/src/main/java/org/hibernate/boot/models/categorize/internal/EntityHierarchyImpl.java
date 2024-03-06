@@ -117,8 +117,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	private ClassDetails findRootRoot(ClassDetails rootEntityClassDetails) {
-		if ( rootEntityClassDetails.getSuperType() != null ) {
-			final ClassDetails match = walkSupers( rootEntityClassDetails.getSuperType() );
+		if ( rootEntityClassDetails.getSuperClass() != null ) {
+			final ClassDetails match = walkSupers( rootEntityClassDetails.getSuperClass() );
 			if ( match != null ) {
 				return match;
 			}
@@ -129,8 +129,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private ClassDetails walkSupers(ClassDetails type) {
 		assert type != null;
 
-		if ( type.getSuperType() != null ) {
-			final ClassDetails match = walkSupers( type.getSuperType() );
+		if ( type.getSuperClass() != null ) {
+			final ClassDetails match = walkSupers( type.getSuperClass() );
 			if ( match != null ) {
 				return match;
 			}

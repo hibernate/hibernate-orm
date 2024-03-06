@@ -13,6 +13,7 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
@@ -157,6 +158,20 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
 		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
 			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( jpaOrmXmlPersistenceUnitDefaults );
+		}
+		else {
+			throw new HibernateException(
+					"AbstractDelegatingMetadataBuildingOptions delegate did not " +
+							"implement JpaOrmXmlPersistenceUnitDefaultAware; " +
+							"cannot delegate JpaOrmXmlPersistenceUnitDefaultAware#apply"
+			);
+		}
+	}
+
+	@Override
+	public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
+			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( persistenceUnitMetadata );
 		}
 		else {
 			throw new HibernateException(

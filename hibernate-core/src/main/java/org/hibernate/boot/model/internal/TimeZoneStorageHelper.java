@@ -6,19 +6,22 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+
 import org.hibernate.annotations.TimeZoneStorage;
-import org.hibernate.annotations.common.reflection.XAnnotatedElement;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.spi.AnnotationTarget;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
-
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
 
 import static org.hibernate.TimeZoneStorageStrategy.COLUMN;
 import static org.hibernate.dialect.TimeZoneSupport.NATIVE;
@@ -30,10 +33,10 @@ public class TimeZoneStorageHelper {
 	private static final String ZONED_DATETIME_CLASS = ZonedDateTime.class.getName();
 
 	static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
-			XProperty property,
-			XClass returnedClass,
+			MemberDetails attributeMember,
+			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
-		if ( useColumnForTimeZoneStorage( property, context ) ) {
+		if ( useColumnForTimeZoneStorage( attributeMember, context ) ) {
 			String returnedClassName = returnedClass.getName();
 			if ( OFFSET_DATETIME_CLASS.equals( returnedClassName ) ) {
 				return OffsetDateTimeCompositeUserType.class;
@@ -54,24 +57,31 @@ public class TimeZoneStorageHelper {
 				|| isOffsetTimeClass( returnedClassName );
 	}
 
-	public static boolean isOffsetTimeClass(XAnnotatedElement element) {
-		if ( element instanceof XProperty ) {
-			XProperty property = (XProperty) element;
-			return isOffsetTimeClass( property.getType().getName() );
+	public static boolean isOffsetTimeClass(AnnotationTarget element) {
+		if ( element instanceof MemberDetails memberDetails ) {
+			return isOffsetTimeClass( memberDetails );
 		}
 		return false;
+	}
+
+	public static boolean isOffsetTimeClass(MemberDetails element) {
+		final TypeDetails type = element.getType();
+		if ( type == null ) {
+			return false;
+		}
+
+		return isOffsetTimeClass( type.determineRawClass().getClassName() );
 	}
 
 	private static boolean isOffsetTimeClass(String returnedClassName) {
 		return OFFSET_TIME_CLASS.equals( returnedClassName );
 	}
 
-	static boolean useColumnForTimeZoneStorage(XAnnotatedElement element, MetadataBuildingContext context) {
-		final TimeZoneStorage timeZoneStorage = element.getAnnotation( TimeZoneStorage.class );
+	static boolean useColumnForTimeZoneStorage(AnnotationTarget element, MetadataBuildingContext context) {
+		final AnnotationUsage<TimeZoneStorage> timeZoneStorage = element.getAnnotationUsage( TimeZoneStorage.class );
 		if ( timeZoneStorage == null ) {
-			if ( element instanceof XProperty ) {
-				XProperty property = (XProperty) element;
-				return isTemporalWithTimeZoneClass( property.getType().getName() )
+			if ( element instanceof MemberDetails attributeMember ) {
+				return isTemporalWithTimeZoneClass( attributeMember.getType().getName() )
 						//no @TimeZoneStorage annotation, so we need to use the default storage strategy
 						&& context.getBuildingOptions().getDefaultTimeZoneStorage() == COLUMN;
 			}
@@ -80,15 +90,12 @@ public class TimeZoneStorageHelper {
 			}
 		}
 		else {
-			switch ( timeZoneStorage.value() ) {
-				case COLUMN:
-					return true;
-				case AUTO:
-					// if the db has native support for timezones, we use that, not a column
-					return context.getBuildingOptions().getTimeZoneSupport() != NATIVE;
-				default:
-					return false;
-			}
+			return switch ( timeZoneStorage.getEnum( "value", TimeZoneStorageType.class ) ) {
+				case COLUMN -> true;
+				// if the db has native support for timezones, we use that, not a column
+				case AUTO -> context.getBuildingOptions().getTimeZoneSupport() != NATIVE;
+				default -> false;
+			};
 		}
 	}
 }

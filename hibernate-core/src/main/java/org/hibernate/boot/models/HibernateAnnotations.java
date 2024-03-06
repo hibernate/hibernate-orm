@@ -21,13 +21,17 @@ import org.hibernate.models.spi.AnnotationDescriptor;
 import static org.hibernate.models.internal.AnnotationHelper.createOrmDescriptor;
 
 /**
- * Details about Hibernate annotations
+ * Details about Hibernate annotations.
  *
- * @implNote Suppressed for deprecation because we refer to many deprecated annotations
+ * @apiNote Here we only collect "stateless" annotations - namely those where we do not care about
+ * meta-annotations, which is the vast majority.
+ *
+ * @implNote Suppressed for deprecation and removal because we refer to many deprecated annotations; suppressed
+ * for unused because
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings({ "deprecation", "removal", "unused" })
 public interface HibernateAnnotations {
 	AnnotationDescriptor<Any> ANY = createOrmDescriptor( Any.class );
 	AnnotationDescriptor<AnyDiscriminator> ANY_DISCRIMINATOR = createOrmDescriptor( AnyDiscriminator.class );
@@ -159,7 +163,6 @@ public interface HibernateAnnotations {
 	AnnotationDescriptor<Synchronize> SYNCHRONIZE = createOrmDescriptor( Synchronize.class );
 	AnnotationDescriptor<Tables> TABLES = createOrmDescriptor( Tables.class );
 	AnnotationDescriptor<Table> TABLE = createOrmDescriptor( Table.class, TABLES );
-	AnnotationDescriptor<TenantId> TENANT_ID = createOrmDescriptor( TenantId.class );
 	AnnotationDescriptor<TimeZoneColumn> TZ_COLUMN = createOrmDescriptor( TimeZoneColumn.class );
 	AnnotationDescriptor<TimeZoneStorage> TZ_STORAGE = createOrmDescriptor( TimeZoneStorage.class );
 	AnnotationDescriptor<Type> TYPE = createOrmDescriptor( Type.class );

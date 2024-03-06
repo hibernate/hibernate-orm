@@ -9,8 +9,8 @@ package org.hibernate.boot.model.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.spi.AnnotationUsage;
 
-import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -45,9 +45,9 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 	}
 
 	public static AnnotatedDiscriminatorColumn buildDiscriminatorColumn(
-			DiscriminatorColumn discriminatorColumn,
-			DiscriminatorFormula discriminatorFormula,
-			Column columnOverride,
+			AnnotationUsage<DiscriminatorColumn> discriminatorColumn,
+			AnnotationUsage<DiscriminatorFormula> discriminatorFormula,
+			AnnotationUsage<Column> columnOverride,
 			String defaultColumnName,
 			MetadataBuildingContext context) {
 		final AnnotatedColumns parent = new AnnotatedColumns();
@@ -55,24 +55,24 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 		final AnnotatedDiscriminatorColumn column = new AnnotatedDiscriminatorColumn( defaultColumnName );
 		final DiscriminatorType discriminatorType;
 		if ( discriminatorFormula != null ) {
-			final DiscriminatorType type = discriminatorFormula.discriminatorType();
+			final DiscriminatorType type = discriminatorFormula.getEnum( "discriminatorType" );
 			if ( type == DiscriminatorType.STRING ) {
-				discriminatorType = discriminatorColumn == null ? type : discriminatorColumn.discriminatorType();
+				discriminatorType = discriminatorColumn == null ? type : discriminatorColumn.getEnum( "discriminatorType" );
 			}
 			else {
 				discriminatorType = type;
 			}
 			column.setImplicit( false );
-			column.setFormula( discriminatorFormula.value() );
+			column.setFormula( discriminatorFormula.getString( "value" ) );
 		}
 		else if ( discriminatorColumn != null ) {
-			discriminatorType = discriminatorColumn.discriminatorType();
+			discriminatorType = discriminatorColumn.getEnum( "discriminatorType" );
 			column.setImplicit( false );
-			if ( !discriminatorColumn.columnDefinition().isEmpty() ) {
-				column.setSqlType( discriminatorColumn.columnDefinition() );
+			if ( !discriminatorColumn.getString( "columnDefinition" ).isEmpty() ) {
+				column.setSqlType( discriminatorColumn.getString( "columnDefinition" ) );
 			}
-			if ( !discriminatorColumn.name().isEmpty() ) {
-				column.setLogicalColumnName( discriminatorColumn.name() );
+			if ( !discriminatorColumn.getString( "name" ).isEmpty() ) {
+				column.setLogicalColumnName( discriminatorColumn.getString( "name" ) );
 			}
 			column.setNullable( false );
 		}
@@ -81,9 +81,11 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 			column.setImplicit( true );
 		}
 		if ( columnOverride != null ) {
-			column.setLogicalColumnName( columnOverride.name() );
-			if ( !columnOverride.columnDefinition().isEmpty() ) {
-				column.setSqlType( columnOverride.columnDefinition() );
+			column.setLogicalColumnName( columnOverride.getString( "name" ) );
+
+			final String columnDefinition = columnOverride.getString( "columnDefinition" );
+			if ( !columnDefinition.isEmpty() ) {
+				column.setSqlType( columnDefinition );
 			}
 		}
 		setDiscriminatorType( discriminatorType, discriminatorColumn, columnOverride, column );
@@ -94,8 +96,8 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 
 	private static void setDiscriminatorType(
 			DiscriminatorType type,
-			DiscriminatorColumn discriminatorColumn,
-			Column columnOverride,
+			AnnotationUsage<DiscriminatorColumn> discriminatorColumn,
+			AnnotationUsage<Column> columnOverride,
 			AnnotatedDiscriminatorColumn column) {
 		if ( type == null ) {
 			column.setDiscriminatorTypeName( "string" );
@@ -114,10 +116,10 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 				case STRING:
 					column.setDiscriminatorTypeName( "string" );
 					if ( columnOverride != null ) {
-						column.setLength( (long) columnOverride.length() );
+						column.setLength( (long) columnOverride.getInteger( "length" ) );
 					}
 					else if ( discriminatorColumn != null ) {
-						column.setLength( (long) discriminatorColumn.length() );
+						column.setLength( (long) discriminatorColumn.getInteger( "length" ) );
 					}
 					break;
 				default:

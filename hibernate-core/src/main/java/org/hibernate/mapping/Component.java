@@ -42,6 +42,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -167,7 +168,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return properties;
 	}
 
-	public void addProperty(Property p, XClass declaringClass) {
+	public void addProperty(Property p, ClassDetails declaringClass) {
 		properties.add( p );
 		if ( isPolymorphic() && declaringClass != null ) {
 			if ( propertyDeclaringClasses == null ) {

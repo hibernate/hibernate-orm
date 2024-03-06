@@ -12,10 +12,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.ModelCategorizationLogging;
 import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
 import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
@@ -123,10 +125,12 @@ public class ManagedResourcesProcessor {
 		final boolean areIdGeneratorsGlobal = true;
 		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 		final AnnotationDescriptorRegistry descriptorRegistry = sourceModelBuildingContext.getAnnotationDescriptorRegistry();
+		final GlobalRegistrationsImpl globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext );
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
 				classDetailsRegistry,
 				descriptorRegistry,
+				globalRegistrations,
 				jandexIndex
 		);
 
@@ -166,7 +170,7 @@ public class ManagedResourcesProcessor {
 		final ModelCategorizationContextImpl mappingBuildingContext = new ModelCategorizationContextImpl(
 				classDetailsRegistryImmutable,
 				annotationDescriptorRegistryImmutable,
-				modelCategorizationCollector.getGlobalRegistrations()
+				globalRegistrations
 		);
 
 		final Set<EntityHierarchy> entityHierarchies;
@@ -239,6 +243,8 @@ public class ManagedResourcesProcessor {
 
 	public static void preFillRegistries(RegistryPrimer.Contributions contributions, SourceModelBuildingContext buildingContext) {
 		OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
+
+		buildingContext.getAnnotationDescriptorRegistry().getDescriptor( TenantId.class );
 
 		final IndexView jandexIndex = buildingContext.getJandexIndex();
 		if ( jandexIndex == null ) {

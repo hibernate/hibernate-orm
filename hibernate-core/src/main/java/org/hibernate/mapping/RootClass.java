@@ -17,7 +17,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
@@ -49,7 +48,6 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	private boolean mutable = true;
 	private boolean embeddedIdentifier;
 	private boolean explicitPolymorphism;
-	private Class<? extends EntityPersister> entityPersisterClass;
 	private boolean forceDiscriminator;
 	private boolean concreteProxy;
 	private String where;
@@ -195,18 +193,8 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	}
 
 	@Override
-	public Class<? extends EntityPersister> getEntityPersisterClass() {
-		return entityPersisterClass;
-	}
-
-	@Override
 	public Table getRootTable() {
 		return getTable();
-	}
-
-	@Override
-	public void setEntityPersisterClass(Class<? extends EntityPersister> persister) {
-		this.entityPersisterClass = persister;
 	}
 
 	@Override

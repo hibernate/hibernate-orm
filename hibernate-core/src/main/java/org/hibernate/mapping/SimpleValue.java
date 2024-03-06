@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,8 +26,6 @@ import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.annotations.common.reflection.java.JavaXMember;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
@@ -39,18 +38,21 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.generator.Generator;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.generator.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -922,11 +924,9 @@ public abstract class SimpleValue implements KeyValue {
 				}
 			}
 
-			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );
+			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
-			final Annotation[] annotations = xProperty == null
-					? new Annotation[0]
-					: xProperty.getAnnotations();
+			final Annotation[] annotations = getAnnotations( attributeMember );
 
 			final ClassLoaderService classLoaderService = getMetadata()
 					.getMetadataBuildingOptions()
@@ -954,6 +954,22 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	private static Annotation[] getAnnotations(MemberDetails memberDetails) {
+		final Annotation[] annotations;
+		final Collection<AnnotationUsage<?>> allAnnotationUsages = memberDetails.getAllAnnotationUsages();
+		if ( allAnnotationUsages == null ) {
+			annotations = new Annotation[0];
+		}
+		else {
+			annotations = new Annotation[allAnnotationUsages.size()];
+			int index = 0;
+			for ( AnnotationUsage<?> annotationUsage : allAnnotationUsages ) {
+				annotations[ index++ ] = annotationUsage.toAnnotation();
+			}
+		}
+		return annotations;
+	}
+
 	public DynamicParameterizedType.ParameterType makeParameterImpl() {
 		try {
 			final String[] columnNames = new String[ columns.size() ];
@@ -968,11 +984,9 @@ public abstract class SimpleValue implements KeyValue {
 				}
 			}
 
-			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );
+			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
-			final Annotation[] annotations = xProperty == null
-					? new Annotation[0]
-					: xProperty.getAnnotations();
+			final Annotation[] annotations = getAnnotations( attributeMember );
 
 			final ClassLoaderService classLoaderService = getMetadata()
 					.getMetadataBuildingOptions()

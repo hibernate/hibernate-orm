@@ -42,6 +42,7 @@ import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -94,6 +95,7 @@ import jakarta.persistence.SharedCacheMode;
 import static org.hibernate.cfg.AvailableSettings.JPA_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * @author Steve Ebersole
@@ -983,15 +985,30 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 
 			if ( mappingDefaults.getImplicitCatalogName() == null ) {
-				mappingDefaults.implicitCatalogName = StringHelper.nullIfEmpty(
+				mappingDefaults.implicitCatalogName = nullIfEmpty(
 						jpaOrmXmlPersistenceUnitDefaults.getDefaultCatalogName()
 				);
 			}
 
 			if ( mappingDefaults.getImplicitSchemaName() == null ) {
-				mappingDefaults.implicitSchemaName = StringHelper.nullIfEmpty(
+				mappingDefaults.implicitSchemaName = nullIfEmpty(
 						jpaOrmXmlPersistenceUnitDefaults.getDefaultSchemaName()
 				);
+			}
+		}
+
+		@Override
+		public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
+			if ( !mappingDefaults.implicitlyQuoteIdentifiers ) {
+				mappingDefaults.implicitlyQuoteIdentifiers = persistenceUnitMetadata.useQuotedIdentifiers();
+			}
+
+			if ( mappingDefaults.getImplicitCatalogName() == null ) {
+				mappingDefaults.implicitCatalogName = nullIfEmpty( persistenceUnitMetadata.getDefaultCatalog() );
+			}
+
+			if ( mappingDefaults.getImplicitSchemaName() == null ) {
+				mappingDefaults.implicitSchemaName = nullIfEmpty( persistenceUnitMetadata.getDefaultSchema() );
 			}
 		}
 

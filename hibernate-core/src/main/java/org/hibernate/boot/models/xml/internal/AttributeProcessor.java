@@ -29,8 +29,8 @@ import org.hibernate.boot.models.xml.internal.attr.OneToManyAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.OneToOneAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.PluralAnyMappingAttributeProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.internal.MutableClassDetails;
-import org.hibernate.models.internal.MutableMemberDetails;
+import org.hibernate.models.spi.MutableClassDetails;
+import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
 

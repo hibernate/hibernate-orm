@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal.log;
 
+import java.lang.annotation.Annotation;
+
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.cfg.AvailableSettings;
 
@@ -15,6 +17,8 @@ import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
+
+import jakarta.persistence.Temporal;
 
 import static org.jboss.logging.Logger.Level.WARN;
 
@@ -297,4 +301,10 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	void deprecatedArrayContainsWithArray();
 
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000033,
+			value = "Encountered use of deprecated annotation [%s] at %s."
+	)
+	void deprecatedAnnotation(Class<? extends Annotation> annotationType, String locationDescription);
 }

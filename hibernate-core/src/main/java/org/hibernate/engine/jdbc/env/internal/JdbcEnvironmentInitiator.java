@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
@@ -55,11 +56,11 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSI
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
+import static org.hibernate.cfg.JdbcSettings.ALLOW_METADATA_ON_BOOT;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
 import static org.hibernate.cfg.JdbcSettings.DIALECT;
 import static org.hibernate.cfg.JdbcSettings.DIALECT_DB_VERSION;
 import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_DB_VERSION;
-import static org.hibernate.cfg.JdbcSettings.ALLOW_METADATA_ON_BOOT;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -181,9 +182,14 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return new JdbcEnvironmentImpl( registry, dialect );
 	}
 
-	// `hibernate.boot.allow_jdbc_metadata_access` defines whether we can access JDBC DatabaseMetaData
-	// 		- we also check for the deprecated `hibernate.temp.use_jdbc_metadata_defaults` setting
-
+	/**
+	 * Determine whether we can access JDBC {@linkplain DatabaseMetaData metadata} based on
+	 * the {@value JdbcSettings#ALLOW_METADATA_ON_BOOT} setting. The default is to allow access.
+	 *
+	 * @implNote Currently also looks for the deprecated {@value JdbcEnvironmentInitiator#USE_JDBC_METADATA_DEFAULTS} setting as a fallback.
+	 *
+	 * @see JdbcSettings#ALLOW_METADATA_ON_BOOT
+	 */
 	private static boolean allowJdbcMetadataAccess(Map<String, Object> configurationValues) {
 		final Boolean allow = getBooleanWrapper( ALLOW_METADATA_ON_BOOT, configurationValues, null );
 		if ( allow != null ) {

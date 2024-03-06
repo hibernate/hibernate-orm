@@ -476,10 +476,10 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	 * <p/>
 	 * Typically, Hibernate accesses this metadata to understand the capabilities of the underlying
 	 * database to help minimize needed configuration.  Disabling this access means that only explicit
-	 * settings are used.  At a minimum, the Dialect to use must be specified either by {@linkplain #DIALECT}
-	 * or {@linkplain JdbcSettings#JAKARTA_HBM2DDL_DB_NAME}.
+	 * settings are used.  At a minimum, the Dialect to use must be specified using either the {@value #DIALECT}
+	 * or {@value JdbcSettings#JAKARTA_HBM2DDL_DB_NAME} setting.
 	 *
-	 * @apiNote The specified Dialect may also provide defaults into the properties.
+	 * @apiNote The specified Dialect may also provide defaults into the "explicit" settings.
 	 *
 	 * @settingDefault {@code true}
 	 *

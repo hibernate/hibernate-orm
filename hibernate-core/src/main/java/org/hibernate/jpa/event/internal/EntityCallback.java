@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import org.hibernate.jpa.event.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
@@ -28,6 +29,11 @@ public class EntityCallback extends AbstractCallback {
 
 		public Definition(Method callbackMethod, CallbackType callbackType) {
 			this.callbackMethod = callbackMethod;
+			this.callbackType = callbackType;
+		}
+
+		public Definition(MethodDetails callbackMethod, CallbackType callbackType) {
+			this.callbackMethod = (Method) callbackMethod.toJavaMember();
 			this.callbackType = callbackType;
 		}
 

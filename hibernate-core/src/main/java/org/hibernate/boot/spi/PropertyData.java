@@ -7,8 +7,9 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 /**
  * Details about an attribute as we process the {@linkplain org.hibernate.mapping boot model}.
@@ -30,17 +31,17 @@ public interface PropertyData {
 	/**
 	 * Returns the returned class itself or the element type if an array
 	 */
-	XClass getClassOrElement() throws MappingException;
+	TypeDetails getClassOrElementType() throws MappingException;
 
 	/**
 	 * Returns the returned class itself or the element type if an array or collection
 	 */
-	XClass getClassOrPluralElement() throws MappingException;
+	ClassDetails getClassOrPluralElement() throws MappingException;
 
 	/**
 	 * Return the class itself
 	 */
-	XClass getPropertyClass() throws MappingException;
+	TypeDetails getPropertyType() throws MappingException;
 
 	/**
 	 * Returns the returned class name itself or the element type if an array
@@ -55,12 +56,12 @@ public interface PropertyData {
 	/**
 	 * Return the Hibernate mapping property
 	 */
-	XProperty getProperty();
+	MemberDetails getAttributeMember();
 
 	/**
 	 * Return the Class the property is declared on
 	 * If the property is declared on a @MappedSuperclass,
 	 * this class will be different than the PersistentClass's class
 	 */
-	XClass getDeclaringClass();
+	ClassDetails getDeclaringClass();
 }

@@ -2222,7 +2222,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 			List<StoredProcedureParameter> storedProcedureParameters = new ArrayList<>();
 
-			for ( JaxbStoredProcedureParameterImpl parameterElement : element.getParameter() ) {
+			for ( JaxbStoredProcedureParameterImpl parameterElement : element.getProcedureParameters() ) {
 				AnnotationDescriptor parameterDescriptor = new AnnotationDescriptor( StoredProcedureParameter.class );
 				copyAttribute( parameterDescriptor, "name", parameterElement.getName(), false );
 				ParameterMode modeValue = parameterElement.getMode();

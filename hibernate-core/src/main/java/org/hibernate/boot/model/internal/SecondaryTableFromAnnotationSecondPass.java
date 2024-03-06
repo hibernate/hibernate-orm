@@ -9,19 +9,18 @@ package org.hibernate.boot.model.internal;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.PersistentClass;
 
 public class SecondaryTableFromAnnotationSecondPass implements SecondPass {
 	private final EntityBinder entityBinder;
 	private final PropertyHolder propertyHolder;
-	private final XAnnotatedElement annotatedClass;
 
-	public SecondaryTableFromAnnotationSecondPass(EntityBinder entityBinder, PropertyHolder propertyHolder, XAnnotatedElement annotatedClass) {
+	public SecondaryTableFromAnnotationSecondPass(
+			EntityBinder entityBinder,
+			PropertyHolder propertyHolder) {
 		this.entityBinder = entityBinder;
 		this.propertyHolder = propertyHolder;
-		this.annotatedClass = annotatedClass;
 	}
 
 	@Override

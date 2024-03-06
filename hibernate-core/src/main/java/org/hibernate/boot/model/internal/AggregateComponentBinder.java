@@ -10,8 +10,6 @@ import java.util.List;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Struct;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
@@ -22,6 +20,10 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -38,14 +40,14 @@ public final class AggregateComponentBinder {
 			Component component,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			XClass componentXClass,
+			ClassDetails returnedClassOrElement,
 			AnnotatedColumns columns,
 			MetadataBuildingContext context) {
-		if ( isAggregate( inferredData.getProperty(), componentXClass ) ) {
+		if ( isAggregate( inferredData.getAttributeMember(), inferredData.getClassOrElementType(), context ) ) {
 			final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
 			final TypeConfiguration typeConfiguration = metadataCollector.getTypeConfiguration();
 			// Determine a struct name if this is a struct through some means
-			final QualifiedName structQualifiedName = determineStructName( columns, inferredData, componentXClass, context );
+			final QualifiedName structQualifiedName = determineStructName( columns, inferredData, returnedClassOrElement, context );
 			final String structName = structQualifiedName == null ? null : structQualifiedName.render();
 
 			// We must register a special JavaType for the embeddable which can provide a recommended JdbcType
@@ -54,24 +56,24 @@ public final class AggregateComponentBinder {
 					() -> new EmbeddableAggregateJavaType<>( component.getComponentClass(), structName )
 			);
 			component.setStructName( structQualifiedName );
-			component.setStructColumnNames( determineStructAttributeNames( inferredData, componentXClass ) );
+			component.setStructColumnNames( determineStructAttributeNames( inferredData, returnedClassOrElement ) );
 
 			// Determine the aggregate column
 			BasicValueBinder basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, component, context );
 			basicValueBinder.setPropertyName( inferredData.getPropertyName() );
-			basicValueBinder.setReturnedClassName( inferredData.getPropertyClass().getName() );
+			basicValueBinder.setReturnedClassName( inferredData.getClassOrElementType().getName() );
 			basicValueBinder.setColumns( columns );
 			basicValueBinder.setPersistentClassName( propertyHolder.getClassName() );
 			basicValueBinder.setType(
-					inferredData.getProperty(),
-					inferredData.getPropertyClass(),
+					inferredData.getAttributeMember(),
+					inferredData.getPropertyType(),
 					inferredData.getDeclaringClass().getName(),
 					null
 			);
 			final BasicValue propertyValue = basicValueBinder.make();
 			final AggregateColumn aggregateColumn = (AggregateColumn) propertyValue.getColumn();
 			if ( structName != null && aggregateColumn.getSqlType() == null ) {
-				if ( inferredData.getProperty().isArray() || inferredData.getProperty().isCollection() ) {
+				if ( inferredData.getAttributeMember().isArray() || inferredData.getAttributeMember().isPlural() ) {
 					aggregateColumn.setSqlTypeCode( getStructPluralSqlTypeCode( context ) );
 					aggregateColumn.setSqlType(
 							context.getMetadataCollector()
@@ -95,7 +97,7 @@ public final class AggregateComponentBinder {
 					new AggregateComponentSecondPass(
 							propertyHolder,
 							component,
-							componentXClass,
+							returnedClassOrElement,
 							inferredData.getPropertyName(),
 							context
 					)
@@ -122,17 +124,19 @@ public final class AggregateComponentBinder {
 	private static QualifiedName determineStructName(
 			AnnotatedColumns columns,
 			PropertyData inferredData,
-			XClass returnedClassOrElement,
+			ClassDetails returnedClassOrElement,
 			MetadataBuildingContext context) {
-		final XProperty property = inferredData.getProperty();
+		final MemberDetails property = inferredData.getAttributeMember();
 		if ( property != null ) {
-			final Struct struct = property.getAnnotation( Struct.class );
+			final AnnotationUsage<Struct> struct = property.getAnnotationUsage( Struct.class );
 			if ( struct != null ) {
 				return toQualifiedName( struct, context );
 			}
-			final JdbcTypeCode jdbcTypeCode = property.getAnnotation( JdbcTypeCode.class );
+			final AnnotationUsage<JdbcTypeCode> jdbcTypeCode = property.getAnnotationUsage( JdbcTypeCode.class );
 			if ( jdbcTypeCode != null
-					&& ( jdbcTypeCode.value() == SqlTypes.STRUCT || jdbcTypeCode.value() == SqlTypes.STRUCT_ARRAY || jdbcTypeCode.value() == SqlTypes.STRUCT_TABLE )
+					&& ( jdbcTypeCode.getInteger( "value" ) == SqlTypes.STRUCT
+					|| jdbcTypeCode.getInteger( "value" ) == SqlTypes.STRUCT_ARRAY
+					|| jdbcTypeCode.getInteger( "value" ) == SqlTypes.STRUCT_TABLE )
 					&& columns != null ) {
 				final List<AnnotatedColumn> columnList = columns.getColumns();
 				final String sqlType;
@@ -148,60 +152,72 @@ public final class AggregateComponentBinder {
 				}
 			}
 		}
-		final Struct struct = returnedClassOrElement.getAnnotation( Struct.class );
+
+		final AnnotationUsage<Struct> struct = returnedClassOrElement.getAnnotationUsage( Struct.class );
 		if ( struct != null ) {
 			return toQualifiedName( struct, context );
 		}
+
 		return null;
 	}
 
-	private static QualifiedName toQualifiedName(Struct struct, MetadataBuildingContext context) {
+	private static QualifiedName toQualifiedName(AnnotationUsage<Struct> struct, MetadataBuildingContext context) {
 		final Database database = context.getMetadataCollector().getDatabase();
 		return new QualifiedNameImpl(
-				database.toIdentifier( struct.catalog() ),
-				database.toIdentifier( struct.schema() ),
-				database.toIdentifier( struct.name() )
+				database.toIdentifier( struct.getString( "catalog" ) ),
+				database.toIdentifier( struct.getString( "schema" ) ),
+				database.toIdentifier( struct.getString( "name" ) )
 		);
 	}
 
-	private static String[] determineStructAttributeNames(PropertyData inferredData, XClass returnedClassOrElement) {
-		final XProperty property = inferredData.getProperty();
+	private static String[] determineStructAttributeNames(PropertyData inferredData, ClassDetails returnedClassOrElement) {
+		final MemberDetails property = inferredData.getAttributeMember();
 		if ( property != null ) {
-			final Struct struct = property.getAnnotation( Struct.class );
+			final AnnotationUsage<Struct> struct = property.getAnnotationUsage( Struct.class );
 			if ( struct != null ) {
-				return struct.attributes();
+				final List<String> attributes = struct.getList( "attributes" );
+				return attributes.toArray( new String[0] );
 			}
 		}
-		final Struct struct = returnedClassOrElement.getAnnotation( Struct.class );
+
+		final AnnotationUsage<Struct> struct = returnedClassOrElement.getAnnotationUsage( Struct.class );
 		if ( struct != null ) {
-			return struct.attributes();
+			final List<String> attributes = struct.getList( "attributes" );
+			return attributes.toArray( new String[0] );
 		}
+
 		return null;
 	}
 
-	private static boolean isAggregate(XProperty property, XClass returnedClass) {
+	private static boolean isAggregate(
+			MemberDetails property,
+			TypeDetails returnedClass,
+			MetadataBuildingContext context) {
 		if ( property != null ) {
-			final Struct struct = property.getAnnotation( Struct.class );
-			if ( struct != null ) {
+			if ( property.hasAnnotationUsage( Struct.class ) ) {
 				return true;
 			}
-			final JdbcTypeCode jdbcTypeCode = property.getAnnotation( JdbcTypeCode.class );
+
+			final AnnotationUsage<JdbcTypeCode> jdbcTypeCode = property.getAnnotationUsage( JdbcTypeCode.class );
 			if ( jdbcTypeCode != null ) {
-				switch ( jdbcTypeCode.value() ) {
+				switch ( jdbcTypeCode.getInteger( "value" ) ) {
 					case SqlTypes.STRUCT:
 					case SqlTypes.JSON:
 					case SqlTypes.SQLXML:
 					case SqlTypes.STRUCT_ARRAY:
 					case SqlTypes.STRUCT_TABLE:
 					case SqlTypes.JSON_ARRAY:
-					case SqlTypes.XML_ARRAY:
+					case SqlTypes.XML_ARRAY: {
 						return true;
+					}
 				}
 			}
 		}
+
 		if ( returnedClass != null ) {
-			return returnedClass.isAnnotationPresent( Struct.class );
+			return returnedClass.determineRawClass().hasAnnotationUsage( Struct.class );
 		}
+
 		return false;
 	}
 }

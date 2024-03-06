@@ -17,11 +17,13 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
 import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.IndexView;
 
@@ -53,10 +55,11 @@ public class DomainModelCategorizationCollector {
 			boolean areIdGeneratorsGlobal,
 			ClassDetailsRegistry classDetailsRegistry,
 			AnnotationDescriptorRegistry descriptorRegistry,
+			GlobalRegistrations globalRegistrations,
 			IndexView jandexIndex) {
 		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
 		this.jandexIndex = jandexIndex;
-		this.globalRegistrations = new GlobalRegistrationsImpl( classDetailsRegistry, descriptorRegistry );
+		this.globalRegistrations = (GlobalRegistrationsImpl) globalRegistrations;
 	}
 
 	public GlobalRegistrationsImpl getGlobalRegistrations() {
@@ -99,7 +102,8 @@ public class DomainModelCategorizationCollector {
 
 		getGlobalRegistrations().collectIdGenerators( jaxbRoot );
 
-		// todo : named queries
+		getGlobalRegistrations().collectQueryReferences( jaxbRoot );
+
 		// todo : named graphs
 	}
 

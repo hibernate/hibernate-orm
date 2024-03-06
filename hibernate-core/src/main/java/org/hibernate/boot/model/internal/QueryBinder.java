@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -33,6 +34,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.HibernateHints;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.type.BasicType;
@@ -50,7 +53,9 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.StoredProcedureParameter;
 
+import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOf;
 
 /**
@@ -65,15 +70,15 @@ public abstract class QueryBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryBinder.class.getName());
 
 	public static void bindQuery(
-			NamedQuery namedQuery,
+			AnnotationUsage<NamedQuery> namedQuery,
 			MetadataBuildingContext context,
 			boolean isDefault) {
 		if ( namedQuery == null ) {
 			return;
 		}
 
-		final String queryName = namedQuery.name();
-		final String queryString = namedQuery.query();
+		final String queryName = namedQuery.getString( "name" );
+		final String queryString = namedQuery.getString( "query" );
 
 		if ( queryName.isEmpty() ) {
 			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
@@ -83,7 +88,7 @@ public abstract class QueryBinder {
 			LOG.debugf( "Binding named query: %s => %s", queryName, queryString );
 		}
 
-		final QueryHintDefinition hints = new QueryHintDefinition( queryName, namedQuery.hints() );
+		final QueryHintDefinition hints = new QueryHintDefinition( queryName, namedQuery.getList( "hints" ) );
 
 		final NamedHqlQueryDefinition queryMapping = new NamedHqlQueryDefinitionImpl.Builder( queryName )
 				.setHqlString( queryString )
@@ -108,26 +113,27 @@ public abstract class QueryBinder {
 
 
 	public static void bindNativeQuery(
-			NamedNativeQuery namedNativeQuery,
+			AnnotationUsage<NamedNativeQuery> namedNativeQuery,
 			MetadataBuildingContext context,
 			boolean isDefault) {
 		if ( namedNativeQuery == null ) {
 			return;
 		}
 
-		final String registrationName = namedNativeQuery.name();
-		final String queryString = namedNativeQuery.query();
+		final String registrationName = namedNativeQuery.getString( "name" );
+		final String queryString = namedNativeQuery.getString( "query" );
 
 		if ( registrationName.isEmpty() ) {
 			throw new AnnotationException( "Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
 		}
 
-		final QueryHintDefinition hints = new QueryHintDefinition( registrationName, namedNativeQuery.hints() );
+		final QueryHintDefinition hints = new QueryHintDefinition( registrationName, namedNativeQuery.getList( "hints" ) );
 
-		final String resultSetMappingName = namedNativeQuery.resultSetMapping();
-		final String resultSetMappingClassName = void.class.equals( namedNativeQuery.resultClass() )
+		final String resultSetMappingName = namedNativeQuery.getString( "resultSetMapping" );
+		final ClassDetails resultClassDetails = namedNativeQuery.getClassDetails( "resultClass" );
+		final String resultSetMappingClassName = ClassDetails.VOID_CLASS_DETAILS == resultClassDetails
 				? null
-				: namedNativeQuery.resultClass().getName();
+				: resultClassDetails.getName();
 
 		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( registrationName )
 				.setSqlString( queryString )
@@ -161,24 +167,23 @@ public abstract class QueryBinder {
 
 	public static void bindNativeQuery(
 			String name,
-			SQLSelect sqlSelect,
-			XClass annotatedClass,
+			AnnotationUsage<SQLSelect> sqlSelect,
+			ClassDetails annotatedClass,
 			MetadataBuildingContext context) {
 		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( name )
 				.setFlushMode( FlushMode.MANUAL )
-				.setSqlString( sqlSelect.sql() )
-				.setQuerySpaces( setOf( sqlSelect.querySpaces() ) );
+				.setSqlString( sqlSelect.getString( "sql" ) )
+				.setQuerySpaces( setOf( sqlSelect.getList( "querySpaces" ) ) );
 
 		if ( annotatedClass != null ) {
 			builder.setResultSetMappingClassName( annotatedClass.getName() );
 		}
 
-		final SqlResultSetMapping resultSetMapping = sqlSelect.resultSetMapping();
-		if ( resultSetMapping.columns().length != 0
-				|| resultSetMapping.entities().length != 0
-				|| resultSetMapping.classes().length != 0) {
-			context.getMetadataCollector()
-					.addResultSetMapping( SqlResultSetMappingDescriptor.from( resultSetMapping, name ) );
+		final AnnotationUsage<SqlResultSetMapping> resultSetMapping = sqlSelect.getNestedUsage( "resultSetMapping" );
+		if ( !resultSetMapping.getList( "columns" ).isEmpty()
+				|| !resultSetMapping.getList( "entities" ).isEmpty()
+				|| !resultSetMapping.getList( "classes" ).isEmpty() ) {
+			context.getMetadataCollector().addResultSetMapping( SqlResultSetMappingDescriptor.from( resultSetMapping, name ) );
 			builder.setResultSetMappingName( name );
 		}
 
@@ -186,39 +191,47 @@ public abstract class QueryBinder {
 	}
 
 	public static void bindNativeQuery(
-			org.hibernate.annotations.NamedNativeQuery namedNativeQuery,
+			AnnotationUsage<org.hibernate.annotations.NamedNativeQuery> namedNativeQuery,
 			MetadataBuildingContext context) {
 		if ( namedNativeQuery == null ) {
 			return;
 		}
 
-		final String registrationName = namedNativeQuery.name();
+		final String registrationName = namedNativeQuery.getString( "name" );
 
 		//ResultSetMappingDefinition mappingDefinition = mappings.getJdbcValuesMappingProducer( queryAnn.resultSetMapping() );
 		if ( registrationName.isEmpty() ) {
 			throw new AnnotationException( "Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
 		}
 
-		final String resultSetMappingName = namedNativeQuery.resultSetMapping();
-		final String resultSetMappingClassName = void.class.equals( namedNativeQuery.resultClass() )
+		final String resultSetMappingName = namedNativeQuery.getString( "resultSetMapping" );
+		final ClassDetails resultClassDetails = namedNativeQuery.getClassDetails( "resultClass" );
+		final String resultSetMappingClassName = ClassDetails.VOID_CLASS_DETAILS == resultClassDetails
 				? null
-				: namedNativeQuery.resultClass().getName();
+				: resultClassDetails.getName();
+
+		final Integer timeout = namedNativeQuery.getInteger( "timeout" );
+		final Integer fetchSize = namedNativeQuery.getInteger( "fetchSize" );
+
+		final List<String> querySpacesList = namedNativeQuery.getList( "querySpaces" );
+		final HashSet<String> querySpaces = new HashSet<>( determineProperSizing( querySpacesList.size() ) );
+		querySpaces.addAll( querySpacesList );
 
 		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( registrationName )
-				.setSqlString( namedNativeQuery.query() )
+				.setSqlString( namedNativeQuery.getString( "query" ) )
 				.setResultSetMappingName( resultSetMappingName )
 				.setResultSetMappingClassName( resultSetMappingClassName )
-				.setCacheable( namedNativeQuery.cacheable() )
-				.setCacheRegion( nullIfEmpty( namedNativeQuery.cacheRegion() ) )
-				.setCacheMode(  getCacheMode( namedNativeQuery )  )
-				.setTimeout( namedNativeQuery.timeout() < 0 ? null : namedNativeQuery.timeout() )
-				.setFetchSize( namedNativeQuery.fetchSize() < 0 ? null : namedNativeQuery.fetchSize() )
-				.setFlushMode( getFlushMode( namedNativeQuery.flushMode() ) )
-				.setReadOnly( namedNativeQuery.readOnly() )
-				.setQuerySpaces( setOf( namedNativeQuery.querySpaces() ) )
-				.setComment( nullIfEmpty( namedNativeQuery.comment() ) );
+				.setCacheable( namedNativeQuery.getBoolean( "cacheable" ) )
+				.setCacheRegion( nullIfEmpty( namedNativeQuery.getString( "cacheRegion" ) ) )
+				.setCacheMode( getCacheMode( namedNativeQuery )  )
+				.setTimeout( timeout < 0 ? null : timeout )
+				.setFetchSize( fetchSize < 0 ? null : fetchSize )
+				.setFlushMode( getFlushMode( namedNativeQuery.getEnum( "flushMode" ) ) )
+				.setReadOnly( namedNativeQuery.getBoolean( "readOnly" ) )
+				.setQuerySpaces( querySpaces )
+				.setComment( nullIfEmpty( namedNativeQuery.getString( "comment" ) ) );
 
-		if ( namedNativeQuery.callable() ) {
+		if ( TRUE == namedNativeQuery.getBoolean( "callable" ) ) {
 			final NamedProcedureCallDefinition definition =
 					createStoredProcedure( builder, context, () -> illegalCallSyntax( namedNativeQuery ) );
 			context.getMetadataCollector().addNamedProcedureCallDefinition( definition );
@@ -320,71 +333,83 @@ public abstract class QueryBinder {
 		return new NamedProcedureCallDefinitionImpl( AnnotationFactory.create( descriptor ) );
 	}
 
-	public static void bindQueries(NamedQueries namedQueries, MetadataBuildingContext context, boolean isDefault) {
-		if ( namedQueries != null ) {
-			for ( NamedQuery namedQuery : namedQueries.value() ) {
-				bindQuery( namedQuery, context, isDefault );
-			}
+	public static void bindQueries(AnnotationUsage<NamedQueries> namedQueries, MetadataBuildingContext context, boolean isDefault) {
+		if ( namedQueries == null ) {
+			return;
+		}
+
+		final List<AnnotationUsage<NamedQuery>> nestedValues = namedQueries.getList( "value" );
+		for ( AnnotationUsage<NamedQuery> nestedValue : nestedValues ) {
+			bindQuery( nestedValue, context, isDefault );
 		}
 	}
 
 	public static void bindNativeQueries(
-			NamedNativeQueries namedNativeQueries,
+			AnnotationUsage<NamedNativeQueries> namedNativeQueries,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		if ( namedNativeQueries != null ) {
-			for ( NamedNativeQuery namedNativeQuery : namedNativeQueries.value() ) {
-				bindNativeQuery( namedNativeQuery, context, isDefault );
-			}
+		if ( namedNativeQueries == null ) {
+			return;
+		}
+
+		final List<AnnotationUsage<NamedNativeQuery>> nestedValues = namedNativeQueries.getList( "value" );
+		for ( AnnotationUsage<NamedNativeQuery> nestedValue : nestedValues ) {
+			bindNativeQuery( nestedValue, context, isDefault );
 		}
 	}
 
 	public static void bindNativeQueries(
-			org.hibernate.annotations.NamedNativeQueries namedNativeQueries,
+			AnnotationUsage<org.hibernate.annotations.NamedNativeQueries> namedNativeQueries,
 			MetadataBuildingContext context) {
-		if ( namedNativeQueries != null ) {
-			for ( org.hibernate.annotations.NamedNativeQuery namedNativeQuery : namedNativeQueries.value() ) {
-				bindNativeQuery( namedNativeQuery, context );
-			}
+		if ( namedNativeQueries == null ) {
+			return;
+		}
+
+		final List<AnnotationUsage<org.hibernate.annotations.NamedNativeQuery>> nestedValues = namedNativeQueries.getList( "value" );
+		for ( AnnotationUsage<org.hibernate.annotations.NamedNativeQuery> nestedValue : nestedValues ) {
+			bindNativeQuery( nestedValue, context );
 		}
 	}
 
 	public static void bindQuery(
 			String name,
-			HQLSelect hqlSelect,
+			AnnotationUsage<HQLSelect> hqlSelect,
 			MetadataBuildingContext context) {
 		final NamedHqlQueryDefinition hqlQueryDefinition = new NamedHqlQueryDefinition.Builder( name )
 				.setFlushMode( FlushMode.MANUAL )
-				.setHqlString( hqlSelect.query() )
+				.setHqlString( hqlSelect.getString( "query" ) )
 				.build();
 
 		context.getMetadataCollector().addNamedQuery( hqlQueryDefinition );
 	}
 
 	public static void bindQuery(
-			org.hibernate.annotations.NamedQuery namedQuery,
+			AnnotationUsage<org.hibernate.annotations.NamedQuery> namedQuery,
 			MetadataBuildingContext context) {
 		if ( namedQuery == null ) {
 			return;
 		}
 
-		final String registrationName = namedQuery.name();
+		final String registrationName = namedQuery.getString( "name" );
 
 		//ResultSetMappingDefinition mappingDefinition = mappings.getJdbcValuesMappingProducer( namedQuery.resultSetMapping() );
 		if ( registrationName.isEmpty() ) {
 			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
 		}
 
+		final Integer timeout = namedQuery.getInteger( "timeout" );
+		final Integer fetchSize = namedQuery.getInteger( "fetchSize" );
+
 		final NamedHqlQueryDefinition.Builder builder = new NamedHqlQueryDefinition.Builder( registrationName )
-				.setHqlString( namedQuery.query() )
-				.setCacheable( namedQuery.cacheable() )
-				.setCacheRegion(nullIfEmpty(namedQuery.cacheRegion()))
+				.setHqlString( namedQuery.getString( "query" ) )
+				.setCacheable( namedQuery.getBoolean( "cacheable" ) )
+				.setCacheRegion( nullIfEmpty( namedQuery.getString( "cacheRegion" ) ) )
 				.setCacheMode( getCacheMode( namedQuery ) )
-				.setTimeout( namedQuery.timeout() < 0 ? null : namedQuery.timeout() )
-				.setFetchSize( namedQuery.fetchSize() < 0 ? null : namedQuery.fetchSize() )
-				.setFlushMode( getFlushMode( namedQuery.flushMode() ) )
-				.setReadOnly( namedQuery.readOnly() )
-				.setComment( nullIfEmpty( namedQuery.comment() ) );
+				.setTimeout( timeout < 0 ? null : timeout )
+				.setFetchSize( fetchSize < 0 ? null : fetchSize )
+				.setFlushMode( getFlushMode( namedQuery.getEnum( "flushMode" ) ) )
+				.setReadOnly( namedQuery.getBoolean( "readOnly" ) )
+				.setComment( nullIfEmpty( namedQuery.getString( "comment" ) ) );
 
 		final NamedHqlQueryDefinitionImpl hqlQueryDefinition = builder.build();
 
@@ -395,14 +420,14 @@ public abstract class QueryBinder {
 		context.getMetadataCollector().addNamedQuery( hqlQueryDefinition );
 	}
 
-	private static CacheMode getCacheMode(org.hibernate.annotations.NamedQuery namedQuery) {
-		CacheMode cacheMode = CacheMode.fromJpaModes( namedQuery.cacheRetrieveMode(), namedQuery.cacheStoreMode() );
-		return cacheMode == null || cacheMode == CacheMode.NORMAL ? getCacheMode( namedQuery.cacheMode() ) : cacheMode;
-	}
-
-	private static CacheMode getCacheMode(org.hibernate.annotations.NamedNativeQuery namedNativeQuery) {
-		CacheMode cacheMode = CacheMode.fromJpaModes( namedNativeQuery.cacheRetrieveMode(), namedNativeQuery.cacheStoreMode() );
-		return cacheMode == null || cacheMode == CacheMode.NORMAL ? getCacheMode( namedNativeQuery.cacheMode() ) : cacheMode;
+	private static CacheMode getCacheMode(AnnotationUsage<?> namedQuery) {
+		final CacheMode cacheMode = CacheMode.fromJpaModes(
+				namedQuery.getEnum( "cacheRetrieveMode" ),
+				namedQuery.getEnum( "cacheStoreMode" )
+		);
+		return cacheMode == null || cacheMode == CacheMode.NORMAL
+				? interpretCacheMode( namedQuery.getEnum( "cacheMode" ) )
+				: cacheMode;
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {
@@ -422,7 +447,7 @@ public abstract class QueryBinder {
 		}
 	}
 
-	private static CacheMode getCacheMode(CacheModeType cacheModeType) {
+	private static CacheMode interpretCacheMode(CacheModeType cacheModeType) {
 		switch ( cacheModeType ) {
 			case GET:
 				return CacheMode.GET;
@@ -441,21 +466,24 @@ public abstract class QueryBinder {
 
 
 	public static void bindQueries(
-			org.hibernate.annotations.NamedQueries namedQueries,
+			AnnotationUsage<org.hibernate.annotations.NamedQueries> namedQueries,
 			MetadataBuildingContext context) {
-		if ( namedQueries != null ) {
-			for (org.hibernate.annotations.NamedQuery namedQuery : namedQueries.value()) {
-				bindQuery( namedQuery, context );
-			}
+		if ( namedQueries == null ) {
+			return;
+		}
+
+		final List<AnnotationUsage<org.hibernate.annotations.NamedQuery>> nestedValues = namedQueries.getList( "value" );
+		for ( AnnotationUsage<org.hibernate.annotations.NamedQuery> nestedValue : nestedValues ) {
+			bindQuery( nestedValue, context );
 		}
 	}
 
 	public static void bindNamedStoredProcedureQuery(
-			NamedStoredProcedureQuery namedStoredProcedureQuery,
+			AnnotationUsage<NamedStoredProcedureQuery> namedStoredProcedureQuery,
 			MetadataBuildingContext context,
 			boolean isDefault) {
 		if ( namedStoredProcedureQuery != null ) {
-			if ( namedStoredProcedureQuery.name().isEmpty() ) {
+			if ( namedStoredProcedureQuery.getString( "name" ).isEmpty() ) {
 				throw new AnnotationException( "Class or package level '@NamedStoredProcedureQuery' annotation must specify a 'name'" );
 			}
 
@@ -471,22 +499,25 @@ public abstract class QueryBinder {
 	}
 
 	public static void bindSqlResultSetMappings(
-			SqlResultSetMappings resultSetMappings,
+			AnnotationUsage<SqlResultSetMappings> resultSetMappings,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		if ( resultSetMappings != null ) {
-			for ( SqlResultSetMapping resultSetMapping : resultSetMappings.value() ) {
-				bindSqlResultSetMapping( resultSetMapping, context, isDefault );
-			}
+		if ( resultSetMappings == null ) {
+			return;
+		}
+
+		final List<AnnotationUsage<SqlResultSetMapping>> mappings = resultSetMappings.getList( "value" );
+		for ( AnnotationUsage<SqlResultSetMapping> mapping : mappings ) {
+			bindSqlResultSetMapping( mapping, context, isDefault );
 		}
 	}
 
 	public static void bindSqlResultSetMapping(
-			SqlResultSetMapping resultSetMapping,
+			AnnotationUsage<SqlResultSetMapping> resultSetMappingAnn,
 			MetadataBuildingContext context,
 			boolean isDefault) {
 		//no need to handle inSecondPass
-		context.getMetadataCollector().addSecondPass( new ResultSetMappingSecondPass( resultSetMapping, context, isDefault ) );
+		context.getMetadataCollector().addSecondPass( new ResultSetMappingSecondPass( resultSetMappingAnn, context, isDefault ) );
 	}
 
 	private static class JdbcCall {
@@ -631,8 +662,8 @@ public abstract class QueryBinder {
 		return i;
 	}
 
-	private static AnnotationException illegalCallSyntax(org.hibernate.annotations.NamedNativeQuery queryAnn) {
-		return new AnnotationException( "Callable 'NamedNativeQuery' named '" + queryAnn.name()
+	private static AnnotationException illegalCallSyntax(AnnotationUsage<org.hibernate.annotations.NamedNativeQuery> queryAnn) {
+		return new AnnotationException( "Callable 'NamedNativeQuery' named '" + queryAnn.getString( "name" )
 				+ "' does not use the JDBC call syntax" );
 	}
 }

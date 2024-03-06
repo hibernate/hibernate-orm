@@ -8,6 +8,12 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 
+import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.MutableAnnotationUsage;
+
 import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.ForeignKey;
@@ -21,8 +27,35 @@ import jakarta.persistence.MapKeyJoinColumn;
 public class MapKeyJoinColumnDelegator implements JoinColumn {
 	private final MapKeyJoinColumn column;
 
+	public MapKeyJoinColumnDelegator(AnnotationUsage<MapKeyJoinColumn> column) {
+		this( column.toAnnotation() );
+	}
+
 	public MapKeyJoinColumnDelegator(MapKeyJoinColumn column) {
 		this.column = column;
+	}
+
+	public static MutableAnnotationUsage<JoinColumn> fromMapKeyJoinColumn(
+			AnnotationUsage<MapKeyJoinColumn> mapKeyJoinColumn,
+			MemberDetails attributeMember,
+			MetadataBuildingContext context) {
+		final MutableAnnotationUsage<JoinColumn> joinColumn = JpaAnnotations.JOIN_COLUMN.createUsage(
+				attributeMember,
+				context.getMetadataCollector().getSourceModelBuildingContext()
+		);
+
+		joinColumn.setAttributeValue( "name", mapKeyJoinColumn.getAttributeValue( "name" ) );
+		joinColumn.setAttributeValue( "table", mapKeyJoinColumn.getAttributeValue( "table" ) );
+		joinColumn.setAttributeValue( "unique", mapKeyJoinColumn.getAttributeValue( "unique" ) );
+		joinColumn.setAttributeValue( "nullable", mapKeyJoinColumn.getAttributeValue( "nullable" ) );
+		joinColumn.setAttributeValue( "insertable", mapKeyJoinColumn.getAttributeValue( "insertable" ) );
+		joinColumn.setAttributeValue( "referencedColumnName", mapKeyJoinColumn.getAttributeValue( "referencedColumnName" ) );
+		joinColumn.setAttributeValue( "columnDefinition", mapKeyJoinColumn.getAttributeValue( "columnDefinition" ) );
+		joinColumn.setAttributeValue( "options", mapKeyJoinColumn.getAttributeValue( "options" ) );
+//		joinColumn.setAttributeValue( "comment", mapKeyJoinColumn.getAttributeValue( "comment" ) );
+		joinColumn.setAttributeValue( "foreignKey", mapKeyJoinColumn.getAttributeValue( "foreignKey" ) );
+
+		return joinColumn;
 	}
 
 	@Override

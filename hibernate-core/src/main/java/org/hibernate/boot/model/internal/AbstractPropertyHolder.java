@@ -15,27 +15,28 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.annotations.common.reflection.XAnnotatedElement;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.models.spi.AnnotationTarget;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.AssociationOverride;
-import jakarta.persistence.AssociationOverrides;
 import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -55,25 +56,27 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private static final Logger log = CoreLogging.logger( AbstractPropertyHolder.class );
 
-	protected AbstractPropertyHolder parent;
-	private Map<String, Column[]> holderColumnOverride;
-	private Map<String, Column[]> currentPropertyColumnOverride;
-	private Map<String, ColumnTransformer> holderColumnTransformerOverride;
-	private Map<String, ColumnTransformer> currentPropertyColumnTransformerOverride;
-	private Map<String, JoinColumn[]> holderJoinColumnOverride;
-	private Map<String, JoinColumn[]> currentPropertyJoinColumnOverride;
-	private Map<String, JoinTable> holderJoinTableOverride;
-	private Map<String, JoinTable> currentPropertyJoinTableOverride;
-	private Map<String, ForeignKey> holderForeignKeyOverride;
-	private Map<String, ForeignKey> currentPropertyForeignKeyOverride;
 	private final String path;
+	protected final AbstractPropertyHolder parent;
 	private final MetadataBuildingContext context;
+
 	private Boolean isInIdClass;
+
+	private Map<String, List<AnnotationUsage<Column>>> holderColumnOverride;
+	private Map<String, List<AnnotationUsage<Column>>> currentPropertyColumnOverride;
+	private Map<String, AnnotationUsage<ColumnTransformer>> holderColumnTransformerOverride;
+	private Map<String, AnnotationUsage<ColumnTransformer>> currentPropertyColumnTransformerOverride;
+	private Map<String, List<AnnotationUsage<JoinColumn>>> holderJoinColumnOverride;
+	private Map<String, List<AnnotationUsage<JoinColumn>>> currentPropertyJoinColumnOverride;
+	private Map<String, AnnotationUsage<JoinTable>> holderJoinTableOverride;
+	private Map<String, AnnotationUsage<JoinTable>> currentPropertyJoinTableOverride;
+	private Map<String, AnnotationUsage<ForeignKey>> holderForeignKeyOverride;
+	private Map<String, AnnotationUsage<ForeignKey>> currentPropertyForeignKeyOverride;
 
 	AbstractPropertyHolder(
 			String path,
 			PropertyHolder parent,
-			XClass clazzToProcess,
+			ClassDetails clazzToProcess,
 			MetadataBuildingContext context) {
 		this.path = path;
 		this.parent = (AbstractPropertyHolder) parent;
@@ -84,12 +87,12 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected abstract String normalizeCompositePathForLogging(String attributeName);
 	protected abstract String normalizeCompositePath(String attributeName);
 
-	protected abstract AttributeConversionInfo locateAttributeConversionInfo(XProperty property);
+	protected abstract AttributeConversionInfo locateAttributeConversionInfo(MemberDetails attributeMember);
 	protected abstract AttributeConversionInfo locateAttributeConversionInfo(String path);
 
 	@Override
-	public ConverterDescriptor resolveAttributeConverterDescriptor(XProperty property) {
-		AttributeConversionInfo info = locateAttributeConversionInfo( property );
+	public ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails attributeMember) {
+		AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
 				return null;
@@ -104,12 +107,12 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 		}
 
-		log.debugf( "Attempting to locate auto-apply AttributeConverter for property [%s:%s]", path, property.getName() );
+		log.debugf( "Attempting to locate auto-apply AttributeConverter for attributeMember [%s:%s]", path, attributeMember.getName() );
 
 		return context.getMetadataCollector()
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
-				.findAutoApplyConverterForAttribute( property, context );
+				.findAutoApplyConverterForAttribute( attributeMember, context );
 	}
 
 	protected IllegalStateException buildExceptionFromInstantiationError(AttributeConversionInfo info, Exception e) {
@@ -179,10 +182,12 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	/**
 	 * Set the property to be processed.  property can be null
 	 *
-	 * @param property The property
+	 * @param attributeMember The property
 	 */
-	protected void setCurrentProperty(XProperty property) {
-		if ( property == null ) {
+	protected void setCurrentProperty(MemberDetails attributeMember) {
+		// todo (jpa32) : some of this (association override handling esp) does the same work multiple times - consolidate
+
+		if ( attributeMember == null ) {
 			this.currentPropertyColumnOverride = null;
 			this.currentPropertyColumnTransformerOverride = null;
 			this.currentPropertyJoinColumnOverride = null;
@@ -190,27 +195,27 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			this.currentPropertyForeignKeyOverride = null;
 		}
 		else {
-			this.currentPropertyColumnOverride = buildColumnOverride( property, getPath(), context );
+			this.currentPropertyColumnOverride = buildColumnOverride( attributeMember, getPath(), context );
 			if ( this.currentPropertyColumnOverride.isEmpty() ) {
 				this.currentPropertyColumnOverride = null;
 			}
 
-			this.currentPropertyColumnTransformerOverride = buildColumnTransformerOverride( property );
+			this.currentPropertyColumnTransformerOverride = buildColumnTransformerOverride( attributeMember );
 			if ( this.currentPropertyColumnTransformerOverride.isEmpty() ) {
 				this.currentPropertyColumnTransformerOverride = null;
 			}
 
-			this.currentPropertyJoinColumnOverride = buildJoinColumnOverride( property, getPath() );
+			this.currentPropertyJoinColumnOverride = buildJoinColumnOverride( attributeMember, getPath() );
 			if ( this.currentPropertyJoinColumnOverride.isEmpty() ) {
 				this.currentPropertyJoinColumnOverride = null;
 			}
 
-			this.currentPropertyJoinTableOverride = buildJoinTableOverride( property, getPath() );
+			this.currentPropertyJoinTableOverride = buildJoinTableOverride( attributeMember, getPath() );
 			if ( this.currentPropertyJoinTableOverride.isEmpty() ) {
 				this.currentPropertyJoinTableOverride = null;
 			}
 
-			this.currentPropertyForeignKeyOverride = buildForeignKeyOverride( property, getPath() );
+			this.currentPropertyForeignKeyOverride = buildForeignKeyOverride( attributeMember, getPath() );
 			if ( this.currentPropertyForeignKeyOverride.isEmpty() ) {
 				this.currentPropertyForeignKeyOverride = null;
 			}
@@ -224,46 +229,55 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	@Override
-	public Column[] getOverriddenColumn(String propertyName) {
-		Column[] result = getExactOverriddenColumn( propertyName );
-		if ( result == null && propertyName.contains(".collection&&element.") ) {
-			//support for non map collections where no prefix is needed
-			result = getExactOverriddenColumn( propertyName.replace(".collection&&element.", ".") );
+	public List<AnnotationUsage<Column>> getOverriddenColumn(String propertyName) {
+		final List<AnnotationUsage<Column>> result = getExactOverriddenColumn( propertyName );
+		if ( result == null ) {
+			if ( propertyName.contains( ".collection&&element." ) ) {
+				//support for non map collections where no prefix is needed
+				//TODO cache the underlying regexp
+				return getExactOverriddenColumn( propertyName.replace( ".collection&&element.", "."  ) );
+			}
 		}
 		return result;
 	}
 
 	@Override
-	public ColumnTransformer getOverriddenColumnTransformer(String logicalColumnName) {
-		ColumnTransformer override = null;
+	public AnnotationUsage<ColumnTransformer> getOverriddenColumnTransformer(String logicalColumnName) {
+		AnnotationUsage<ColumnTransformer> result = null;
 		if ( parent != null ) {
-			override = parent.getOverriddenColumnTransformer( logicalColumnName );
+			result = parent.getOverriddenColumnTransformer( logicalColumnName );
 		}
-		if ( override == null && currentPropertyColumnTransformerOverride != null ) {
-			override = currentPropertyColumnTransformerOverride.get( logicalColumnName );
+
+		if ( result == null && currentPropertyColumnTransformerOverride != null ) {
+			result = currentPropertyColumnTransformerOverride.get( logicalColumnName );
 		}
-		if ( override == null && holderColumnTransformerOverride != null ) {
-			override = holderColumnTransformerOverride.get( logicalColumnName );
+
+		if ( result == null && holderColumnTransformerOverride != null ) {
+			result = holderColumnTransformerOverride.get( logicalColumnName );
 		}
-		return override;
+
+		return result;
 	}
 
 	/**
 	 * Get column overriding, property first, then parent, then holder
 	 * find the overridden rules from the exact property name.
 	 */
-	private Column[] getExactOverriddenColumn(String propertyName) {
-		Column[] override = null;
+	private List<AnnotationUsage<Column>> getExactOverriddenColumn(String propertyName) {
+		List<AnnotationUsage<Column>> result = null;
 		if ( parent != null ) {
-			override = parent.getExactOverriddenColumn( propertyName );
+			result = parent.getExactOverriddenColumn( propertyName );
 		}
-		if ( override == null && currentPropertyColumnOverride != null ) {
-			override = currentPropertyColumnOverride.get( propertyName );
+
+		if ( result == null && currentPropertyColumnOverride != null ) {
+			result = currentPropertyColumnOverride.get( propertyName );
 		}
-		if ( override == null && holderColumnOverride != null ) {
-			override = holderColumnOverride.get( propertyName );
+
+		if ( result == null && holderColumnOverride != null ) {
+			result = holderColumnOverride.get( propertyName );
 		}
-		return override;
+
+		return result;
 	}
 
 	/**
@@ -273,12 +287,12 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	@Override
-	public JoinColumn[] getOverriddenJoinColumn(String propertyName) {
-		JoinColumn[] result = getExactOverriddenJoinColumn( propertyName );
+	public List<AnnotationUsage<JoinColumn>> getOverriddenJoinColumn(String propertyName) {
+		final List<AnnotationUsage<JoinColumn>> result = getExactOverriddenJoinColumn( propertyName );
 		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
-			result = getExactOverriddenJoinColumn( propertyName.replace( ".collection&&element.", "."  ) );
+			return getExactOverriddenJoinColumn( propertyName.replace( ".collection&&element.", "."  ) );
 		}
 		return result;
 	}
@@ -286,43 +300,62 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	/**
 	 * Get column overriding, property first, then parent, then holder
 	 */
-	private JoinColumn[] getExactOverriddenJoinColumn(String propertyName) {
-		JoinColumn[] override = null;
+	private List<AnnotationUsage<JoinColumn>> getExactOverriddenJoinColumn(String propertyName) {
+		List<AnnotationUsage<JoinColumn>> result = null;
 		if ( parent != null ) {
-			override = parent.getExactOverriddenJoinColumn( propertyName );
+			result = parent.getExactOverriddenJoinColumn( propertyName );
 		}
-		if ( override == null && currentPropertyJoinColumnOverride != null ) {
-			override = currentPropertyJoinColumnOverride.get( propertyName );
+
+		if ( result == null && currentPropertyJoinColumnOverride != null ) {
+			result = currentPropertyJoinColumnOverride.get( propertyName );
 		}
-		if ( override == null && holderJoinColumnOverride != null ) {
-			override = holderJoinColumnOverride.get( propertyName );
+
+		if ( result == null && holderJoinColumnOverride != null ) {
+			result = holderJoinColumnOverride.get( propertyName );
 		}
-		return override;
+
+		return result;
 	}
 
 	@Override
-	public ForeignKey getOverriddenForeignKey(String propertyName) {
-		ForeignKey result = getExactOverriddenForeignKey( propertyName );
+	public AnnotationUsage<ForeignKey> getOverriddenForeignKey(String propertyName) {
+		final AnnotationUsage<ForeignKey> result = getExactOverriddenForeignKey( propertyName );
 		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
-			result = getExactOverriddenForeignKey( propertyName.replace( ".collection&&element.", "." ) );
+			return getExactOverriddenForeignKey( propertyName.replace( ".collection&&element.", "." ) );
 		}
 		return result;
 	}
 
-	private ForeignKey getExactOverriddenForeignKey(String propertyName) {
-		ForeignKey override = null;
+	private AnnotationUsage<ForeignKey> getExactOverriddenForeignKey(String propertyName) {
+		AnnotationUsage<ForeignKey> result = null;
 		if ( parent != null ) {
-			override = parent.getExactOverriddenForeignKey( propertyName );
+			result = parent.getExactOverriddenForeignKey( propertyName );
 		}
-		if ( override == null && currentPropertyForeignKeyOverride != null ) {
-			override = currentPropertyForeignKeyOverride.get( propertyName );
+		if ( result == null && currentPropertyForeignKeyOverride != null ) {
+			result = currentPropertyForeignKeyOverride.get( propertyName );
 		}
-		if ( override == null && holderForeignKeyOverride != null ) {
-			override = holderForeignKeyOverride.get( propertyName );
+		if ( result == null && holderForeignKeyOverride != null ) {
+			result = holderForeignKeyOverride.get( propertyName );
 		}
-		return override;
+		return result;
+	}
+
+	/**
+	 * Get column overriding, property first, then parent, then holder
+	 * replace the placeholder 'collection&amp;&amp;element' with nothing
+	 * <p>
+	 * These rules are here to support both JPA 2 and legacy overriding rules.
+	 */
+	@Override
+	public AnnotationUsage<JoinTable> getJoinTable(MemberDetails attributeMember) {
+		final String propertyName = qualify( getPath(), attributeMember.getName() );
+		final AnnotationUsage<JoinTable> result = getOverriddenJoinTable( propertyName );
+		if ( result == null ) {
+			return attributeMember.getAnnotationUsage( JoinTable.class );
+		}
+		return result;
 	}
 
 	/**
@@ -331,28 +364,12 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
-	@Override
-	public JoinTable getJoinTable(XProperty property) {
-		final String propertyName = qualify( getPath(), property.getName() );
-		JoinTable result = getOverriddenJoinTable( propertyName );
-		if (result == null) {
-			result = property.getAnnotation( JoinTable.class );
-		}
-		return result;
-	}
-
-	/**
-	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&amp;&amp;element' with nothing
-	 *
-	 * These rules are here to support both JPA 2 and legacy overriding rules.
-	 */
-	public JoinTable getOverriddenJoinTable(String propertyName) {
-		JoinTable result = getExactOverriddenJoinTable( propertyName );
+	public AnnotationUsage<JoinTable> getOverriddenJoinTable(String propertyName) {
+		final AnnotationUsage<JoinTable> result = getExactOverriddenJoinTable( propertyName );
 		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
-			result = getExactOverriddenJoinTable( propertyName.replace( ".collection&&element.", "."  ) );
+			return getExactOverriddenJoinTable( propertyName.replace( ".collection&&element.", "."  ) );
 		}
 		return result;
 	}
@@ -360,8 +377,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	/**
 	 * Get column overriding, property first, then parent, then holder
 	 */
-	private JoinTable getExactOverriddenJoinTable(String propertyName) {
-		JoinTable override = null;
+	private AnnotationUsage<JoinTable> getExactOverriddenJoinTable(String propertyName) {
+		AnnotationUsage<JoinTable> override = null;
 		if ( parent != null ) {
 			override = parent.getExactOverriddenJoinTable( propertyName );
 		}
@@ -374,24 +391,23 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return override;
 	}
 
-	private void buildHierarchyColumnOverride(XClass element) {
-		XClass current = element;
-		Map<String, Column[]> columnOverride = new HashMap<>();
-		Map<String, ColumnTransformer> columnTransformerOverride = new HashMap<>();
-		Map<String, JoinColumn[]> joinColumnOverride = new HashMap<>();
-		Map<String, JoinTable> joinTableOverride = new HashMap<>();
-		Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
-		XClass objectClass = context.getBootstrapContext().getReflectionManager().toXClass(Object.class);
-		while ( current != null && !objectClass.equals( current ) ) {
-			if ( current.isAnnotationPresent( Entity.class )
-					|| current.isAnnotationPresent( MappedSuperclass.class )
-					|| current.isAnnotationPresent( Embeddable.class ) ) {
+	private void buildHierarchyColumnOverride(ClassDetails element) {
+		ClassDetails current = element;
+		Map<String, List<AnnotationUsage<Column>>> columnOverride = new HashMap<>();
+		Map<String, AnnotationUsage<ColumnTransformer>> columnTransformerOverride = new HashMap<>();
+		Map<String, List<AnnotationUsage<JoinColumn>>> joinColumnOverride = new HashMap<>();
+		Map<String, AnnotationUsage<JoinTable>> joinTableOverride = new HashMap<>();
+		Map<String, AnnotationUsage<ForeignKey>> foreignKeyOverride = new HashMap<>();
+		while ( current != null && !ClassDetails.OBJECT_CLASS_DETAILS.equals( current ) ) {
+			if ( current.hasAnnotationUsage( Entity.class )
+					|| current.hasAnnotationUsage( MappedSuperclass.class )
+					|| current.hasAnnotationUsage( Embeddable.class ) ) {
 				//FIXME is embeddable override?
-				Map<String, Column[]> currentOverride = buildColumnOverride( current, getPath(), context );
-				Map<String, ColumnTransformer> currentTransformerOverride = buildColumnTransformerOverride( current );
-				Map<String, JoinColumn[]> currentJoinOverride = buildJoinColumnOverride( current, getPath() );
-				Map<String, JoinTable> currentJoinTableOverride = buildJoinTableOverride( current, getPath() );
-				Map<String, ForeignKey> currentForeignKeyOverride = buildForeignKeyOverride( current, getPath() );
+				Map<String, List<AnnotationUsage<Column>>> currentOverride = buildColumnOverride( current, getPath(), context );
+				Map<String, AnnotationUsage<ColumnTransformer>> currentTransformerOverride = buildColumnTransformerOverride( current );
+				Map<String, List<AnnotationUsage<JoinColumn>>> currentJoinOverride = buildJoinColumnOverride( current, getPath() );
+				Map<String, AnnotationUsage<JoinTable>> currentJoinTableOverride = buildJoinTableOverride( current, getPath() );
+				Map<String, AnnotationUsage<ForeignKey>> currentForeignKeyOverride = buildForeignKeyOverride( current, getPath() );
 				currentOverride.putAll( columnOverride ); //subclasses have precedence over superclasses
 				currentTransformerOverride.putAll( columnTransformerOverride ); //subclasses have precedence over superclasses
 				currentJoinOverride.putAll( joinColumnOverride ); //subclasses have precedence over superclasses
@@ -403,7 +419,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				joinTableOverride = currentJoinTableOverride;
 				foreignKeyOverride = currentForeignKeyOverride;
 			}
-			current = current.getSuperclass();
+			current = current.getSuperClass();
 		}
 
 		holderColumnOverride = !columnOverride.isEmpty() ? columnOverride : null;
@@ -413,109 +429,102 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		holderForeignKeyOverride = !foreignKeyOverride.isEmpty() ? foreignKeyOverride : null;
 	}
 
-	private static Map<String, Column[]> buildColumnOverride(
-			XAnnotatedElement element,
+	private static Map<String, List<AnnotationUsage<Column>>> buildColumnOverride(
+			AnnotationTarget element,
 			String path,
 			MetadataBuildingContext context) {
-		final Map<String, Column[]> columnOverride = new HashMap<>();
-		if ( element != null ) {
-			AttributeOverride singleOverride = element.getAnnotation( AttributeOverride.class );
-			AttributeOverrides multipleOverrides = element.getAnnotation( AttributeOverrides.class );
-			AttributeOverride[] overrides;
-			if ( singleOverride != null ) {
-				overrides = new AttributeOverride[]{ singleOverride };
-			}
-			else if ( multipleOverrides != null ) {
-				overrides = multipleOverrides.value();
-			}
-			else {
-				overrides = null;
-			}
+		final Map<String, List<AnnotationUsage<Column>>> columnOverrideMap = new HashMap<>();
+		if ( element == null ) {
+			return columnOverrideMap;
+		}
 
-			if ( overrides != null ) {
-				final Map<String, List<Column>> columnOverrideList = new HashMap<>();
+		final List<AnnotationUsage<AttributeOverride>> overrides = element.getRepeatedAnnotationUsages( AttributeOverride.class );
+		if ( CollectionHelper.isNotEmpty( overrides ) ) {
+			final Map<String, List<AnnotationUsage<Column>>> columnOverrideList = new HashMap<>();
+			for ( AnnotationUsage<AttributeOverride> depAttr : overrides ) {
+				final String qualifiedName = StringHelper.qualify( path, depAttr.getString( "name" ) );
+				final AnnotationUsage<Column> column = depAttr.getNestedUsage( "column" );
 
-				for ( AttributeOverride depAttr : overrides ) {
-					final String qualifiedName = qualify( path, depAttr.name() );
-
-					if ( columnOverrideList.containsKey( qualifiedName ) ) {
-						columnOverrideList.get( qualifiedName ).add( depAttr.column() );
-					}
-					else {
-						List<Column> list = new ArrayList<>();
-						list.add( depAttr.column() );
-						columnOverrideList.put( qualifiedName, list );
-					}
-				}
-
-				for ( Map.Entry<String, List<Column>> entry : columnOverrideList.entrySet() ) {
-					columnOverride.put( entry.getKey(), entry.getValue().toArray( new Column[0] ) );
-				}
-			}
-			else if ( useColumnForTimeZoneStorage( element, context ) ) {
-				final Column column = createTemporalColumn( element, path, context );
-				if ( isOffsetTimeClass( element ) ) {
-					columnOverride.put(
-							path + "." + OffsetTimeCompositeUserType.LOCAL_TIME_NAME,
-							new Column[] { column }
-					);
+				if ( columnOverrideList.containsKey( qualifiedName ) ) {
+					// already an entry, just add to that List
+					columnOverrideList.get( qualifiedName ).add( column );
 				}
 				else {
-					columnOverride.put(
-							path + "." + AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME,
-							new Column[] { column }
-					);
+					// not yet an entry, create the list and add
+					final List<AnnotationUsage<Column>> list = new ArrayList<>();
+					list.add( column );
+					columnOverrideList.put( qualifiedName, list );
 				}
-				final Column offsetColumn = createTimeZoneColumn( element, column );
-				columnOverride.put(
-						path + "." + AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME,
-						new Column[]{ offsetColumn }
+			}
+		}
+		else if ( useColumnForTimeZoneStorage( element, context ) ) {
+			final AnnotationUsage<Column> column = createTemporalColumn( element, path, context );
+			if ( isOffsetTimeClass( element ) ) {
+				columnOverrideMap.put(
+						path + "." + OffsetTimeCompositeUserType.LOCAL_TIME_NAME,
+						List.of( column )
 				);
 			}
-		}
-		return columnOverride;
-	}
-
-	private static Column createTimeZoneColumn(XAnnotatedElement element, Column column) {
-		final TimeZoneColumn timeZoneColumn = element.getAnnotation( TimeZoneColumn.class );
-		if ( timeZoneColumn != null ) {
-			return new ColumnImpl(
-				timeZoneColumn.name(),
-				false,
-				column.nullable(),
-				timeZoneColumn.insertable(),
-				timeZoneColumn.updatable(),
-				timeZoneColumn.columnDefinition(),
-				timeZoneColumn.table(),
-				0
+			else {
+				columnOverrideMap.put(
+						path + "." + AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME,
+						List.of( column )
+				);
+			}
+			final AnnotationUsage<Column> offsetColumn = createTimeZoneColumn( element, column, context );
+			columnOverrideMap.put(
+					path + "." + AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME,
+					List.of( offsetColumn )
 			);
 		}
-		else {
-			return new ColumnImpl(
-					column.name() + "_tz",
-					false,
-					column.nullable(),
-					column.insertable(),
-					column.updatable(),
-					"",
-					column.table(),
-					0
-			);
-		}
+		return columnOverrideMap;
 	}
 
-	private static Column createTemporalColumn(XAnnotatedElement element, String path, MetadataBuildingContext context) {
+	private static AnnotationUsage<Column> createTimeZoneColumn(
+			AnnotationTarget element,
+			AnnotationUsage<Column> column,
+			MetadataBuildingContext context) {
+		final AnnotationUsage<TimeZoneColumn> timeZoneColumn = element.getAnnotationUsage( TimeZoneColumn.class );
+		return JpaAnnotations.COLUMN.createUsage(
+				element,
+				(created) -> {
+					final String columnName = timeZoneColumn != null
+							? timeZoneColumn.getString( "name" )
+							: column.getString( "name" ) + "_tz";
+					created.setAttributeValue( "name", columnName );
+					created.setAttributeValue( "nullable", column.getBoolean( "nullable" ) );
+
+					final AnnotationUsage<?> source = timeZoneColumn != null
+							? timeZoneColumn
+							: column;
+					created.setAttributeValue( "table", source.getAttributeValue( "table" ) );
+					created.setAttributeValue( "insertable", source.getAttributeValue( "insertable" ) );
+					created.setAttributeValue( "updatable", source.getAttributeValue( "updatable" ) );
+
+					if ( timeZoneColumn != null ) {
+						created.setAttributeValue( "columnDefinition", timeZoneColumn.getAttributeValue( "columnDefinition" ) );
+					}
+				},
+				context.getMetadataCollector().getSourceModelBuildingContext()
+		);
+	}
+
+	private static AnnotationUsage<Column> createTemporalColumn(
+			AnnotationTarget element,
+			String path,
+			MetadataBuildingContext context) {
 		int precision;
-		final Column annotatedColumn = element.getAnnotation( Column.class );
+		final AnnotationUsage<Column> annotatedColumn = element.getAnnotationUsage( Column.class );
 		if ( annotatedColumn != null ) {
-			if ( !annotatedColumn.name().isEmpty() ) {
+			if ( StringHelper.isNotEmpty( annotatedColumn.getString( "name" ) ) ) {
 				return annotatedColumn;
 			}
-			precision = annotatedColumn.precision();
+			precision = annotatedColumn.getInteger( "precision" );
 		}
 		else {
 			precision = 0;
 		}
+
 		// Base the name of the synthetic dateTime field on the name of the original attribute
 		final Identifier implicitName = context.getObjectNameNormalizer().normalizeIdentifierQuoting(
 				context.getBuildingOptions().getImplicitNamingStrategy().determineBasicColumnName(
@@ -539,108 +548,76 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 						}
 				)
 		);
-		return new ColumnImpl(
-				implicitName.getText(),
-				false,
-				true,
-				true,
-				true,
-				"",
-				"",
-				precision
+
+		return JpaAnnotations.COLUMN.createUsage(
+				element,
+				(created) -> {
+					created.setAttributeValue( "name", implicitName.getText() );
+					created.setAttributeValue( "precision", precision );
+				},
+				context.getMetadataCollector().getSourceModelBuildingContext()
 		);
 	}
 
-	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(XAnnotatedElement element) {
-		Map<String, ColumnTransformer> columnOverride = new HashMap<>();
+	private static Map<String, AnnotationUsage<ColumnTransformer>> buildColumnTransformerOverride(AnnotationTarget element) {
+		final Map<String, AnnotationUsage<ColumnTransformer>> columnOverride = new HashMap<>();
 		if ( element != null ) {
-			ColumnTransformer singleOverride = element.getAnnotation( ColumnTransformer.class );
-			ColumnTransformers multipleOverrides = element.getAnnotation( ColumnTransformers.class );
-			ColumnTransformer[] overrides;
-			if ( singleOverride != null ) {
-				overrides = new ColumnTransformer[]{ singleOverride };
-			}
-			else if ( multipleOverrides != null ) {
-				overrides = multipleOverrides.value();
-			}
-			else {
-				overrides = null;
-			}
+			element.forEachAnnotationUsage( ColumnTransformer.class, (usage) -> {
+				columnOverride.put( usage.getString( "forColumn" ), usage );
+			} );
+		}
+		return columnOverride;
+	}
 
-			if ( overrides != null ) {
-				for ( ColumnTransformer depAttr : overrides ) {
-					columnOverride.put(
-							depAttr.forColumn(),
-							depAttr
-					);
-				}
+	private static Map<String, List<AnnotationUsage<JoinColumn>>> buildJoinColumnOverride(AnnotationTarget element, String path) {
+		final Map<String, List<AnnotationUsage<JoinColumn>>> columnOverride = new HashMap<>();
+		if ( element != null ) {
+			final List<AnnotationUsage<AssociationOverride>> overrides = buildAssociationOverrides( element, path );
+			for ( AnnotationUsage<AssociationOverride> override : overrides ) {
+				columnOverride.put(
+						qualify( path, override.getString( "name" ) ),
+						override.getList( "joinColumns" )
+				);
 			}
 		}
 		return columnOverride;
 	}
 
-	private static Map<String, JoinColumn[]> buildJoinColumnOverride(XAnnotatedElement element, String path) {
-		Map<String, JoinColumn[]> columnOverride = new HashMap<>();
+	private static Map<String, AnnotationUsage<ForeignKey>> buildForeignKeyOverride(AnnotationTarget element, String path) {
+		final Map<String, AnnotationUsage<ForeignKey>> foreignKeyOverride = new HashMap<>();
 		if ( element != null ) {
-			AssociationOverride[] overrides = buildAssociationOverrides( element, path );
-			if ( overrides != null ) {
-				for ( AssociationOverride depAttr : overrides ) {
-					columnOverride.put(
-							qualify( path, depAttr.name() ),
-							depAttr.joinColumns()
-					);
-				}
-			}
-		}
-		return columnOverride;
-	}
-
-	private static Map<String, ForeignKey> buildForeignKeyOverride(XAnnotatedElement element, String path) {
-		Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
-		if ( element != null ) {
-			AssociationOverride[] overrides = buildAssociationOverrides( element, path );
-			if ( overrides != null ) {
-				for ( AssociationOverride depAttr : overrides ) {
-					foreignKeyOverride.put( qualify( path, depAttr.name() ), depAttr.foreignKey() );
-				}
+			final List<AnnotationUsage<AssociationOverride>> overrides = buildAssociationOverrides( element, path );
+			for ( AnnotationUsage<AssociationOverride> override : overrides ) {
+				foreignKeyOverride.put(
+						qualify( path, override.getString( "name" ) ),
+						override.getNestedUsage( "foreignKey" )
+				);
 			}
 		}
 		return foreignKeyOverride;
 	}
 
-	private static AssociationOverride[] buildAssociationOverrides(XAnnotatedElement element, String path) {
-		AssociationOverride singleOverride = element.getAnnotation( AssociationOverride.class );
-		AssociationOverrides pluralOverrides = element.getAnnotation( AssociationOverrides.class );
-
-		AssociationOverride[] overrides;
-		if ( singleOverride != null ) {
-			overrides = new AssociationOverride[] { singleOverride };
-		}
-		else if ( pluralOverrides != null ) {
-			overrides = pluralOverrides.value();
-		}
-		else {
-			overrides = null;
-		}
+	private static List<AnnotationUsage<AssociationOverride>> buildAssociationOverrides(AnnotationTarget element, String path) {
+		final List<AnnotationUsage<AssociationOverride>> overrides = new ArrayList<>();
+		element.forEachAnnotationUsage( AssociationOverride.class, overrides::add );
 		return overrides;
 	}
 
-	private static Map<String, JoinTable> buildJoinTableOverride(XAnnotatedElement element, String path) {
-		Map<String, JoinTable> tableOverride = new HashMap<>();
+	private static Map<String, AnnotationUsage<JoinTable>> buildJoinTableOverride(AnnotationTarget element, String path) {
+		final Map<String, AnnotationUsage<JoinTable>> result = new HashMap<>();
 		if ( element != null ) {
-			AssociationOverride[] overrides = buildAssociationOverrides( element, path );
-			if ( overrides != null ) {
-				for ( AssociationOverride depAttr : overrides ) {
-					if ( depAttr.joinColumns().length == 0 ) {
-						tableOverride.put(
-								qualify( path, depAttr.name() ),
-								depAttr.joinTable()
-						);
-					}
+			final List<AnnotationUsage<AssociationOverride>> overrides = buildAssociationOverrides( element, path );
+			for ( AnnotationUsage<AssociationOverride> override : overrides ) {
+				final List<AnnotationUsage<JoinColumn>> joinColumns = override.getList( "joinColumns" );
+				if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
+					result.put(
+							qualify( path, override.getString( "name" ) ),
+							override.getNestedUsage( "joinTable" )
+					);
 				}
 			}
 		}
-		return tableOverride;
+		return result;
 	}
 
 	@Override

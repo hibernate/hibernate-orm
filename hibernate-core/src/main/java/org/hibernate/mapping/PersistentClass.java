@@ -419,10 +419,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public abstract boolean hasEmbeddedIdentifier();
 
-	public abstract Class<? extends EntityPersister> getEntityPersisterClass();
-
-	public abstract void setEntityPersisterClass(Class<? extends EntityPersister> classPersisterClass);
-
 	public abstract Table getRootTable();
 
 	public abstract RootClass getRootClass();

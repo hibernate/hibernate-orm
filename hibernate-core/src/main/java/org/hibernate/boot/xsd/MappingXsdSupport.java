@@ -30,7 +30,7 @@ public class MappingXsdSupport {
 	);
 
 	public static final XsdDescriptor _320 = LocalXsdResolver.buildXsdDescriptor(
-			"org/hibernate/xsd/mapping/mapping-3.2.0.xsd",
+			"org/hibernate/xsd/mapping/mapping-7.0.xsd",
 			"3.2",
 			"http://www.hibernate.org/xsd/orm/mapping"
 	);

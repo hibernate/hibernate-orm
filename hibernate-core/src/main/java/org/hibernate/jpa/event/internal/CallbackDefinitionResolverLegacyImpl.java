@@ -6,18 +6,11 @@
  */
 package org.hibernate.jpa.event.internal;
 
-import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.ExcludeDefaultListeners;
-import jakarta.persistence.ExcludeSuperclassListeners;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PersistenceException;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -26,9 +19,19 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.Property;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.property.access.spi.Getter;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.ExcludeDefaultListeners;
+import jakarta.persistence.ExcludeSuperclassListeners;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PersistenceException;
 
 /**
  * Resolves JPA callback definitions using a HCANN ReflectionManager.
@@ -40,66 +43,70 @@ import org.jboss.logging.Logger;
 public final class CallbackDefinitionResolverLegacyImpl {
 	private static final Logger log = Logger.getLogger( CallbackDefinitionResolverLegacyImpl.class );
 
-	public static List<CallbackDefinition> resolveEntityCallbacks(ReflectionManager reflectionManager,
-			XClass entityClass, CallbackType callbackType) {
+	public static List<CallbackDefinition> resolveEntityCallbacks(
+			ReflectionManager reflectionManager,
+			ClassDetails entityClass,
+			CallbackType callbackType) {
 		List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		List<String> callbacksMethodNames = new ArrayList<>();
 		List<Class<?>> orderedListeners = new ArrayList<>();
-		XClass currentClazz = entityClass;
+		ClassDetails currentClazz = entityClass;
 		boolean stopListeners = false;
 		boolean stopDefaultListeners = false;
 		do {
 			CallbackDefinition callbackDefinition = null;
-			List<XMethod> methods = currentClazz.getDeclaredMethods();
-			for ( final XMethod xMethod : methods ) {
-				if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
-					Method method = reflectionManager.toMethod( xMethod );
-					final String methodName = method.getName();
-					if ( !callbacksMethodNames.contains( methodName ) ) {
-						//overridden method, remove the superclass overridden method
-						if ( callbackDefinition == null ) {
-							callbackDefinition = new EntityCallback.Definition( method, callbackType );
-							Class<?> returnType = method.getReturnType();
-							Class<?>[] args = method.getParameterTypes();
-							if ( returnType != Void.TYPE || args.length != 0 ) {
-								throw new RuntimeException(
-										"Callback methods annotated on the bean class must return void and take no arguments: "
-												+ callbackType.getCallbackAnnotation().getName() + " - " + xMethod
-								);
-							}
-							ReflectHelper.ensureAccessibility( method );
-							if ( log.isDebugEnabled() ) {
-								log.debugf(
-										"Adding %s as %s callback for entity %s",
-										methodName,
-										callbackType.getCallbackAnnotation().getSimpleName(),
-										entityClass.getName()
-								);
-							}
-							callbackDefinitions.add( 0, callbackDefinition ); //superclass first
-							callbacksMethodNames.add( 0, methodName );
-						}
-						else {
-							throw new PersistenceException(
-									"You can only annotate one callback method with "
-											+ callbackType.getCallbackAnnotation().getName() + " in bean class: " + entityClass.getName()
-							);
-						}
+			final List<MethodDetails> methodsDetailsList = currentClazz.getMethods();
+			for ( MethodDetails methodDetails : methodsDetailsList ) {
+				if ( !methodDetails.hasAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
+					continue;
+				}
+				if ( callbacksMethodNames.contains( methodDetails.getName() ) ) {
+					continue;
+				}
+
+				//overridden method, remove the superclass overridden method
+				if ( callbackDefinition == null ) {
+					final Method javaMethod = (Method) methodDetails.toJavaMember();
+					callbackDefinition = new EntityCallback.Definition( javaMethod, callbackType );
+					Class<?> returnType = javaMethod.getReturnType();
+					Class<?>[] args = javaMethod.getParameterTypes();
+					if ( returnType != Void.TYPE || args.length != 0 ) {
+						throw new RuntimeException(
+								"Callback methods annotated on the bean class must return void and take no arguments: "
+										+ callbackType.getCallbackAnnotation().getName() + " - " + methodDetails
+						);
 					}
+					ReflectHelper.ensureAccessibility( javaMethod );
+					if ( log.isDebugEnabled() ) {
+						log.debugf(
+								"Adding %s as %s callback for entity %s",
+								methodDetails.getName(),
+								callbackType.getCallbackAnnotation().getSimpleName(),
+								entityClass.getName()
+						);
+					}
+					callbackDefinitions.add( 0, callbackDefinition ); //superclass first
+					callbacksMethodNames.add( 0, methodDetails.getName() );
+				}
+				else {
+					throw new PersistenceException(
+							"You can only annotate one callback method with "
+									+ callbackType.getCallbackAnnotation().getName() + " in bean class: " + entityClass.getName()
+					);
 				}
 			}
 			if ( !stopListeners ) {
-				getListeners( currentClazz, orderedListeners );
-				stopListeners = currentClazz.isAnnotationPresent( ExcludeSuperclassListeners.class );
-				stopDefaultListeners = currentClazz.isAnnotationPresent( ExcludeDefaultListeners.class );
+				applyListeners( currentClazz, orderedListeners );
+				stopListeners = currentClazz.hasAnnotationUsage( ExcludeSuperclassListeners.class );
+				stopDefaultListeners = currentClazz.hasAnnotationUsage( ExcludeDefaultListeners.class );
 			}
 
 			do {
-				currentClazz = currentClazz.getSuperclass();
+				currentClazz = currentClazz.getSuperClass();
 			}
 			while ( currentClazz != null
-					&& !( currentClazz.isAnnotationPresent( Entity.class )
-					|| currentClazz.isAnnotationPresent( MappedSuperclass.class ) )
+					&& !( currentClazz.hasAnnotationUsage( Entity.class )
+					|| currentClazz.hasAnnotationUsage( MappedSuperclass.class ) )
 					);
 		}
 		while ( currentClazz != null );
@@ -246,25 +253,22 @@ public final class CallbackDefinitionResolverLegacyImpl {
 		}
 	}
 
-	private static void getListeners(XClass currentClazz, List<Class<?>> orderedListeners) {
-		EntityListeners entityListeners = currentClazz.getAnnotation( EntityListeners.class );
+	private static void applyListeners(ClassDetails currentClazz, List<Class<?>> listOfListeners) {
+		final AnnotationUsage<EntityListeners> entityListeners = currentClazz.getAnnotationUsage( EntityListeners.class );
 		if ( entityListeners != null ) {
-			Class<?>[] classes = entityListeners.value();
-			int size = classes.length;
-			for ( int index = size - 1; index >= 0; index-- ) {
-				orderedListeners.add( classes[index] );
+			final List<ClassDetails> listeners = entityListeners.getList( "value" );
+			for ( ClassDetails listener : listeners ) {
+				listOfListeners.add( listener.toJavaClass() );
 			}
 		}
+
 		if ( useAnnotationAnnotatedByListener ) {
-			Annotation[] annotations = currentClazz.getAnnotations();
-			for ( Annotation annot : annotations ) {
-				entityListeners = annot.getClass().getAnnotation( EntityListeners.class );
-				if ( entityListeners != null ) {
-					Class<?>[] classes = entityListeners.value();
-					int size = classes.length;
-					for ( int index = size - 1; index >= 0; index-- ) {
-						orderedListeners.add( classes[index] );
-					}
+			final List<AnnotationUsage<?>> metaAnnotatedUsageList = currentClazz.getMetaAnnotated( EntityListeners.class );
+			for ( AnnotationUsage<?> metaAnnotatedUsage : metaAnnotatedUsageList ) {
+				final AnnotationUsage<EntityListeners> metaAnnotatedListeners = metaAnnotatedUsage.getAnnotationDescriptor().getAnnotationUsage( EntityListeners.class );
+				final List<ClassDetails> listeners = metaAnnotatedListeners.getList( "value" );
+				for ( ClassDetails listener : listeners ) {
+					listOfListeners.add( listener.toJavaClass() );
 				}
 			}
 		}

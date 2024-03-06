@@ -442,27 +442,6 @@ public class ModelBinder {
 		entityDescriptor.setBatchSize( entitySource.getBatchSize() );
 		entityDescriptor.setSelectBeforeUpdate( entitySource.isSelectBeforeUpdate() );
 
-		if ( isNotEmpty( entitySource.getCustomPersisterClassName() ) ) {
-			try {
-				entityDescriptor.setEntityPersisterClass(
-						sourceDocument.getBootstrapContext()
-								.getClassLoaderAccess()
-								.classForName( entitySource.getCustomPersisterClassName() )
-				);
-			}
-			catch (ClassLoadingException e) {
-				throw new MappingException(
-						String.format(
-								Locale.ENGLISH,
-								"Unable to load specified persister class : %s",
-								entitySource.getCustomPersisterClassName()
-						),
-						e,
-						sourceDocument.getOrigin()
-				);
-			}
-		}
-
 		bindCustomSql( entitySource, entityDescriptor );
 
 		final JdbcEnvironment jdbcEnvironment = sourceDocument.getMetadataCollector().getDatabase().getJdbcEnvironment();
@@ -1418,10 +1397,10 @@ public class ModelBinder {
 		binding.setOptimisticLocked( source.isIncludedInOptimisticLocking() );
 
 		if ( source.getCustomPersisterClassName() != null ) {
-			binding.setCollectionPersisterClass(
-					mappingDocument.getBootstrapContext().getClassLoaderAccess().classForName(
-							mappingDocument.qualifyClassName( source.getCustomPersisterClassName() )
-					)
+			DEPRECATION_LOGGER.debugf(
+					"Custom CollectionPersister impls are no longer supported - %s (%s)",
+					binding.getRole(),
+					mappingDocument.getOrigin().getName()
 			);
 		}
 

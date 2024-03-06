@@ -7,16 +7,17 @@
 package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.internal.MutableAnnotationUsage;
-import org.hibernate.models.internal.MutableClassDetails;
-import org.hibernate.models.internal.MutableMemberDetails;
 import org.hibernate.models.spi.AnnotationDescriptor;
+import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.MutableClassDetails;
+import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
 import jakarta.persistence.OneToMany;
@@ -76,7 +77,9 @@ public class OneToManyAttributeProcessing {
 		}
 
 		if ( jaxbOneToMany.getNotFound() != null ) {
-			XmlProcessingHelper.getOrMakeAnnotation( NotFound.class, memberDetails, xmlDocumentContext ).setAttributeValue( "action", jaxbOneToMany.getNotFound() );
+			if ( jaxbOneToMany.getNotFound() != NotFoundAction.EXCEPTION ) {
+				XmlProcessingHelper.getOrMakeAnnotation( NotFound.class, memberDetails, xmlDocumentContext ).setAttributeValue( "action", jaxbOneToMany.getNotFound() );
+			}
 		}
 
 		return memberDetails;

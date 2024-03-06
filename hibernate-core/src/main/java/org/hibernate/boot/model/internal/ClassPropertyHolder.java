@@ -16,8 +16,6 @@ import java.util.function.Consumer;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
@@ -34,9 +32,14 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.MethodDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.Convert;
-import jakarta.persistence.Converts;
 import jakarta.persistence.JoinTable;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -50,16 +53,16 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	private Map<String, Join> joins;
 	private transient Map<String, Join> joinsPerRealTableName;
 	private EntityBinder entityBinder;
-	private final Map<XClass, InheritanceState> inheritanceStatePerClass;
+	private final Map<ClassDetails, InheritanceState> inheritanceStatePerClass;
 
 	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
 
 	public ClassPropertyHolder(
 			PersistentClass persistentClass,
-			XClass entityXClass,
+			ClassDetails entityXClass,
 			Map<String, Join> joins,
 			MetadataBuildingContext context,
-			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
 		super( persistentClass.getEntityName(), null, entityXClass, context );
 		this.persistentClass = persistentClass;
 		this.joins = joins;
@@ -70,10 +73,10 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	public ClassPropertyHolder(
 			PersistentClass persistentClass,
-			XClass entityXClass,
+			ClassDetails entityXClass,
 			EntityBinder entityBinder,
 			MetadataBuildingContext context,
-			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
 		this( persistentClass, entityXClass, entityBinder.getSecondaryTables(), context, inheritanceStatePerClass );
 		this.entityBinder = entityBinder;
 	}
@@ -88,54 +91,39 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return getEntityName() + '.' + attributeName;
 	}
 
-	protected Map<String, AttributeConversionInfo> buildAttributeConversionInfoMap(XClass entityXClass) {
+	protected Map<String, AttributeConversionInfo> buildAttributeConversionInfoMap(ClassDetails entityClassDetails) {
 		final HashMap<String, AttributeConversionInfo> map = new HashMap<>();
-		collectAttributeConversionInfo( map, entityXClass );
+		collectAttributeConversionInfo( map, entityClassDetails );
 		return map;
 	}
 
-	private void collectAttributeConversionInfo(Map<String, AttributeConversionInfo> infoMap, XClass xClass) {
-		if ( xClass == null ) {
+	private void collectAttributeConversionInfo(Map<String, AttributeConversionInfo> infoMap, ClassDetails entityClassDetails) {
+		if ( entityClassDetails == null ) {
 			// typically indicates we have reached the end of the inheritance hierarchy
 			return;
 		}
 
 		// collect superclass info first
-		collectAttributeConversionInfo( infoMap, xClass.getSuperclass() );
+		collectAttributeConversionInfo( infoMap, entityClassDetails.getSuperClass() );
 
-		final boolean canContainConvert = xClass.isAnnotationPresent( jakarta.persistence.Entity.class )
-				|| xClass.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class )
-				|| xClass.isAnnotationPresent( jakarta.persistence.Embeddable.class );
+		final boolean canContainConvert = entityClassDetails.hasAnnotationUsage( jakarta.persistence.Entity.class )
+				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class )
+				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.Embeddable.class );
 		if ( ! canContainConvert ) {
 			return;
 		}
 
-		{
-			final Convert convertAnnotation = xClass.getAnnotation( Convert.class );
-			if ( convertAnnotation != null ) {
-				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, xClass );
-				if ( isEmpty( info.getAttributeName() ) ) {
-					throw new IllegalStateException( "@Convert placed on @Entity/@MappedSuperclass must define attributeName" );
-				}
-				infoMap.put( info.getAttributeName(), info );
+		entityClassDetails.forEachAnnotationUsage( Convert.class, (usage) -> {
+			final AttributeConversionInfo info = new AttributeConversionInfo( usage, entityClassDetails );
+			if ( isEmpty( info.getAttributeName() ) ) {
+				throw new IllegalStateException( "@Convert placed on @Entity/@MappedSuperclass must define attributeName" );
 			}
-		}
-		{
-			final Converts convertsAnnotation = xClass.getAnnotation( Converts.class );
-			if ( convertsAnnotation != null ) {
-				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
-					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, xClass );
-					if ( isEmpty( info.getAttributeName() ) ) {
-						throw new IllegalStateException( "@Converts placed on @Entity/@MappedSuperclass must define attributeName" );
-					}
-					infoMap.put( info.getAttributeName(), info );
-				}
-			}
-		}
+			infoMap.put( info.getAttributeName(), info );
+		} );
 	}
 
 	@Override
-	public void startingProperty(XProperty property) {
+	public void startingProperty(MemberDetails property) {
 		if ( property == null ) {
 			return;
 		}
@@ -145,39 +133,20 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			return;
 		}
 
-		{
-			// @Convert annotation on the Embeddable attribute
-			final Convert convertAnnotation = property.getAnnotation( Convert.class );
-			if ( convertAnnotation != null ) {
-				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, property );
-				if ( isEmpty( info.getAttributeName() ) ) {
-					attributeConversionInfoMap.put( propertyName, info );
-				}
-				else {
-					attributeConversionInfoMap.put( propertyName + '.' + info.getAttributeName(), info );
-				}
+		property.forEachAnnotationUsage( Convert.class, (usage) -> {
+			final AttributeConversionInfo info = new AttributeConversionInfo( usage, property );
+			if ( isEmpty( info.getAttributeName() ) ) {
+				attributeConversionInfoMap.put( propertyName, info );
 			}
-		}
-		{
-			// @Converts annotation on the Embeddable attribute
-			final Converts convertsAnnotation = property.getAnnotation( Converts.class );
-			if ( convertsAnnotation != null ) {
-				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
-					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, property );
-					if ( isEmpty( info.getAttributeName() ) ) {
-						attributeConversionInfoMap.put( propertyName, info );
-					}
-					else {
-						attributeConversionInfoMap.put( propertyName + '.' + info.getAttributeName(), info );
-					}
-				}
+			else {
+				attributeConversionInfoMap.put( propertyName + '.' + info.getAttributeName(), info );
 			}
-		}
+		} );
 	}
 
 	@Override
-	protected AttributeConversionInfo locateAttributeConversionInfo(XProperty property) {
-		return locateAttributeConversionInfo( property.getName() );
+	protected AttributeConversionInfo locateAttributeConversionInfo(MemberDetails attributeMember) {
+		return locateAttributeConversionInfo( attributeMember.getName() );
 	}
 
 	@Override
@@ -191,53 +160,53 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void addProperty(Property prop, AnnotatedColumns columns, XClass declaringClass) {
+	public void addProperty(Property prop, MemberDetails memberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
 		//AnnotatedColumn.checkPropertyConsistency( ); //already called earlier
 		if ( columns != null ) {
 			if ( columns.isSecondary() ) {
-				addPropertyToJoin( prop, declaringClass, columns.getJoin() );
+				addPropertyToJoin( prop, memberDetails, declaringClass, columns.getJoin() );
 			}
 			else {
-				addProperty( prop, declaringClass );
+				addProperty( prop, memberDetails, declaringClass );
 			}
 		}
 		else {
-			addProperty( prop, declaringClass );
+			addProperty( prop, memberDetails,  declaringClass );
 		}
 	}
 
 	@Override
-	public void addProperty(Property prop, XClass declaringClass) {
+	public void addProperty(Property prop, MemberDetails memberDetails, ClassDetails declaringClass) {
 		if ( prop.getValue() instanceof Component ) {
 			//TODO handle quote and non quote table comparison
 			String tableName = prop.getValue().getTable().getName();
 			if ( getJoinsPerRealTableName().containsKey( tableName ) ) {
 				final Join join = getJoinsPerRealTableName().get( tableName );
-				addPropertyToJoin( prop, declaringClass, join );
+				addPropertyToJoin( prop, memberDetails, declaringClass, join );
 			}
 			else {
-				addPropertyToPersistentClass( prop, declaringClass );
+				addPropertyToPersistentClass( prop, memberDetails, declaringClass );
 			}
 		}
 		else {
-			addPropertyToPersistentClass( prop, declaringClass );
+			addPropertyToPersistentClass( prop, memberDetails, declaringClass );
 		}
 	}
 
 	@Override
-	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
-		final Join join = entityBinder.addJoin( joinTableAnn, this, noDelayInPkColumnCreation );
+	public Join addJoin(AnnotationUsage<JoinTable> joinTableAnn, boolean noDelayInPkColumnCreation) {
+		final Join join = entityBinder.addJoinTable( joinTableAnn, this, noDelayInPkColumnCreation );
 		joins = entityBinder.getSecondaryTables();
 		return join;
 	}
 
 	@Override
-	public Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation) {
+	public Join addJoin(AnnotationUsage<JoinTable> joinTable, Table table, boolean noDelayInPkColumnCreation) {
 		final Join join = entityBinder.createJoin(
 				this,
 				noDelayInPkColumnCreation,
 				false,
-				joinTable.joinColumns(),
+				joinTable.getList( "joinColumns" ),
 				table.getQualifiedTableName(),
 				table
 		);
@@ -251,7 +220,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	 * as generic, to later be able to resolve its concrete type, and creating a new component
 	 * with correctly typed sub-properties for the metamodel.
 	 */
-	public static void handleGenericComponentProperty(Property property, MetadataBuildingContext context) {
+	public static void handleGenericComponentProperty(Property property, MemberDetails memberDetails, MetadataBuildingContext context) {
 		final Value value = property.getValue();
 		if ( value instanceof Component ) {
 			final Component component = (Component) value;
@@ -265,7 +234,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				for ( Property prop : component.getProperties() ) {
 					prepareActualProperty(
 							prop,
-							component.getComponentClass(),
+							memberDetails,
 							true,
 							context,
 							copy::addProperty
@@ -276,8 +245,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	private void addPropertyToPersistentClass(Property property, XClass declaringClass) {
-		handleGenericComponentProperty( property, getContext() );
+	private void addPropertyToPersistentClass(Property property, MemberDetails memberDetails, ClassDetails declaringClass) {
+		handleGenericComponentProperty( property, memberDetails, getContext() );
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
@@ -287,7 +256,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
 				persistentClass.addMappedSuperclassProperty( property );
-				addPropertyToMappedSuperclass( property, declaringClass );
+				addPropertyToMappedSuperclass( property, memberDetails, declaringClass );
 			}
 			else {
 				persistentClass.addProperty( property );
@@ -298,143 +267,178 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	private void addPropertyToMappedSuperclass(Property prop, XClass declaringClass) {
-		final Class<?> type = getContext().getBootstrapContext().getReflectionManager().toClass( declaringClass );
-		final MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( type );
-		prepareActualProperty( prop, type, true, getContext(), superclass::addDeclaredProperty );
+	private void addPropertyToMappedSuperclass(Property prop, MemberDetails memberDetails, ClassDetails declaringClass) {
+		final MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
+		prepareActualProperty( prop, memberDetails, true, getContext(), superclass::addDeclaredProperty );
 	}
 
 	static void prepareActualProperty(
 			Property prop,
-			Class<?> type,
+			MemberDetails memberDetails,
 			boolean allowCollections,
 			MetadataBuildingContext context,
 			Consumer<Property> propertyConsumer) {
-		if ( type.getTypeParameters().length == 0 ) {
+		final ClassDetails declaringType = memberDetails.getDeclaringType();
+		if ( CollectionHelper.isEmpty( declaringType.getTypeParameters() ) ) {
 			propertyConsumer.accept( prop );
+			return;
 		}
-		else {
-			// If the type has type parameters, we have to look up the XClass and actual property again
-			// because the given XClass has a TypeEnvironment based on the type variable assignments of a subclass
-			// and that might result in a wrong property type being used for a property which uses a type variable
-			final XClass actualDeclaringClass = context.getBootstrapContext().getReflectionManager().toXClass( type );
-			for ( XProperty declaredProperty : getDeclaredProperties( actualDeclaringClass, prop.getPropertyAccessorName() ) ) {
-				if ( prop.getName().equals( declaredProperty.getName() ) ) {
-					final PropertyData inferredData = new PropertyInferredData(
-							actualDeclaringClass,
-							declaredProperty,
-							null,
-							context.getBootstrapContext().getReflectionManager()
-					);
-					if ( declaredProperty.isTypeResolved() ) {
-						// Avoid copying when the property doesn't depend on a type variable
-						propertyConsumer.accept( prop );
-						return;
-					}
-					// If the property depends on a type variable, we have to copy it and the Value
-					final Property actualProperty = prop.copy();
-					actualProperty.setGeneric( true );
-					actualProperty.setReturnedClassName( inferredData.getTypeName() );
-					final Value value = actualProperty.getValue().copy();
-					if ( value instanceof Collection ) {
-						if ( !allowCollections ) {
-							throw new AssertionFailure( "Collections are not allowed as identifier properties" );
-						}
-						final Collection collection = (Collection) value;
-						// The owner is a MappedSuperclass which is not a PersistentClass, so set it to null
+
+		// no idea what this code should be doing
+		final TypeDetails typeDetails = memberDetails.getType();
+		if ( typeDetails.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+
+		}
+		else if ( typeDetails.getTypeKind() == TypeDetails.Kind.TYPE_VARIABLE ) {
+
+		}
+
+		applyGenerics2( prop, memberDetails, typeDetails, allowCollections, propertyConsumer, context );
+		//applyGenerics( prop, typeDetails, allowCollections, propertyConsumer, context );
+	}
+
+	private static void applyGenerics2(
+			Property prop,
+			MemberDetails memberDetails,
+			TypeDetails typeDetails,
+			boolean allowCollections,
+			Consumer<Property> propertyConsumer,
+			MetadataBuildingContext context) {
+		if ( typeDetails.determineRawClass().getTypeParameters().isEmpty() ) {
+			propertyConsumer.accept( prop );
+			return;
+		}
+
+		final ClassDetails declaringClassDetails = memberDetails.getDeclaringType();
+		final List<MemberDetails> declaredAttributeMembers = getDeclaredAttributeMembers( declaringClassDetails, prop.getPropertyAccessorName() );
+		members_loop: for ( MemberDetails attributeMember : declaredAttributeMembers ) {
+			if ( !prop.getName().equals( attributeMember.resolveAttributeName() ) ) {
+				continue;
+			}
+
+			final PropertyData inferredData = new PropertyInferredData(
+					declaringClassDetails,
+					attributeMember,
+					null,
+					context
+			);
+			final Value originalValue = prop.getValue();
+
+			// If the property depends on a type variable, we have to copy it and the Value
+			final Property actualProperty = prop.copy();
+			actualProperty.setGeneric( true );
+			actualProperty.setReturnedClassName( inferredData.getTypeName() );
+			final Value value = actualProperty.getValue().copy();
+			if ( value instanceof Collection collection ) {
+				if ( !allowCollections ) {
+					throw new AssertionFailure( "Collections are not allowed as identifier properties" );
+				}
+				// The owner is a MappedSuperclass which is not a PersistentClass, so set it to null
 //						collection.setOwner( null );
-						collection.setRole( type.getName() + "." + prop.getName() );
-						// To copy the element and key values, we need to defer setting the type name until the CollectionBinder ran
-						final Value originalValue = prop.getValue();
-						context.getMetadataCollector().addSecondPass(
-								new SecondPass() {
-									@Override
-									public void doSecondPass(Map persistentClasses) throws MappingException {
-										final Collection initializedCollection = (Collection) originalValue;
-										final Value element = initializedCollection.getElement().copy();
-										setTypeName( element, inferredData.getProperty().getElementClass().getName() );
-										if ( initializedCollection instanceof IndexedCollection ) {
-											final Value index = ( (IndexedCollection) initializedCollection ).getIndex().copy();
-											if ( inferredData.getProperty().getMapKey() != null ) {
-												setTypeName( index, inferredData.getProperty().getMapKey().getName() );
-											}
-											( (IndexedCollection) collection ).setIndex( index );
-										}
-										collection.setElement( element );
+				collection.setRole( typeDetails.getName() + "." + prop.getName() );
+				// To copy the element and key values, we need to defer setting the type name until the CollectionBinder ran
+				final Value originalValue = prop.getValue();context.getMetadataCollector().addSecondPass(
+						new SecondPass() {
+							@Override
+							public void doSecondPass(Map persistentClasses) throws MappingException {
+								final Collection initializedCollection = (Collection) originalValue;
+								final Value element = initializedCollection.getElement().copy();
+								setTypeName( element, inferredData.getAttributeMember().getElementType().getName() );
+								if ( initializedCollection instanceof IndexedCollection ) {
+									final Value index = ( (IndexedCollection) initializedCollection ).getIndex().copy();
+									if ( inferredData.getAttributeMember().getMapKeyType() != null ) {
+										setTypeName( index, inferredData.getAttributeMember().getMapKeyType().getName() );
 									}
+									( (IndexedCollection) collection ).setIndex( index );
 								}
-						);
+								collection.setElement( element );
+							}
+						}
+				);
+			}
+			else {
+				setTypeName( value, inferredData.getTypeName() );
+			}
+
+			if ( value instanceof Component component ) {
+				final Class<?> componentClass = component.getComponentClass();
+				if ( component.isGeneric() ) {
+					actualProperty.setValue( context.getMetadataCollector().getGenericComponent( componentClass ) );
+				}
+				else {
+					if ( componentClass == Object.class ) {
+						// Object is not a valid component class, but that is what we get when using a type variable
+						component.clearProperties();
 					}
 					else {
-						setTypeName( value, inferredData.getTypeName() );
-					}
-					if ( value instanceof Component ) {
-						final Component component = ( (Component) value );
-						final Class<?> componentClass = component.getComponentClass();
-						if ( component.isGeneric() ) {
-							actualProperty.setValue( context.getMetadataCollector().getGenericComponent( componentClass ) );
-						}
-						else {
-							if ( componentClass == Object.class ) {
-								// Object is not a valid component class, but that is what we get when using a type variable
-								component.clearProperties();
+						final Iterator<Property> propertyIterator = component.getProperties().iterator();
+						while ( propertyIterator.hasNext() ) {
+							try {
+								propertyIterator.next().getGetter( componentClass );
 							}
-							else {
-								final Iterator<Property> propertyIterator = component.getPropertyIterator();
-								while ( propertyIterator.hasNext() ) {
-									try {
-										propertyIterator.next().getGetter( componentClass );
-									}
-									catch (PropertyNotFoundException e) {
-										propertyIterator.remove();
-									}
-								}
+							catch (PropertyNotFoundException e) {
+								propertyIterator.remove();
 							}
 						}
 					}
-					actualProperty.setValue( value );
-					propertyConsumer.accept( actualProperty );
-					break;
 				}
 			}
+			actualProperty.setValue( value );
+			propertyConsumer.accept( actualProperty );
+
+			// avoid the rest of the iteration
+			//noinspection UnnecessaryLabelOnBreakStatement
+			break members_loop;
 		}
 	}
 
-	private static List<XProperty> getDeclaredProperties(XClass declaringClass, String accessType) {
-		final List<XProperty> properties = new ArrayList<>();
-		XClass superclass = declaringClass;
+	private static List<MemberDetails> getDeclaredAttributeMembers(
+			ClassDetails declaringType,
+			String propertyAccessorName) {
+		final List<MemberDetails> members = new ArrayList<>();
+		ClassDetails superclass = declaringType;
 		while ( superclass != null ) {
-			properties.addAll( superclass.getDeclaredProperties( accessType ) );
-			superclass = superclass.getSuperclass();
+			applyAttributeMembers( superclass, propertyAccessorName, members );
+			superclass = superclass.getSuperClass();
 		}
-		return properties;
+		return members;
 	}
 
-	private static String getTypeName(Property property) {
-		final String typeName = getTypeName( property.getValue() );
-		return typeName != null ? typeName : property.getReturnedClassName();
-	}
 
-	private static String getTypeName(Value value) {
-		if ( value instanceof Component ) {
-			final Component component = (Component) value;
-			final String typeName = component.getTypeName();
-			if ( typeName != null ) {
-				return typeName;
+	public static final String ACCESS_PROPERTY = "property";
+	public static final String ACCESS_FIELD = "field";
+	public static final String ACCESS_RECORD = "record";
+
+	@SuppressWarnings("RedundantLabeledSwitchRuleCodeBlock")
+	private static void applyAttributeMembers(ClassDetails classDetails, String accessType, List<MemberDetails> members) {
+		switch ( accessType ) {
+			case ACCESS_FIELD -> {
+				for ( FieldDetails field : classDetails.getFields() ) {
+					if ( field.isPersistable() ) {
+						members.add( field );
+					}
+				}
 			}
-			return component.getComponentClassName();
+			case ACCESS_PROPERTY -> {
+				for ( MethodDetails methodDetails : classDetails.getMethods() ) {
+					if ( methodDetails.isPersistable() ) {
+						members.add( methodDetails );
+					}
+				}
+			}
+			case ACCESS_RECORD -> {
+				members.addAll( classDetails.getRecordComponents() );
+			}
 		}
-		return ( (SimpleValue) value ).getTypeName();
+		throw new IllegalArgumentException( "Unknown access type " + accessType );
 	}
 
 	private static void setTypeName(Value value, String typeName) {
-		if ( value instanceof ToOne ) {
-			final ToOne toOne = (ToOne) value;
+		if ( value instanceof ToOne toOne ) {
 			toOne.setReferencedEntityName( typeName );
 			toOne.setTypeName( typeName );
 		}
-		else if ( value instanceof Component ) {
-			final Component component = (Component) value;
+		else if ( value instanceof Component component ) {
 			// Avoid setting type name for generic components
 			if ( !component.isGeneric() ) {
 				component.setComponentClassName( typeName );
@@ -448,7 +452,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	private void addPropertyToJoin(Property property, XClass declaringClass, Join join) {
+	private void addPropertyToJoin(Property property, MemberDetails memberDetails, ClassDetails declaringClass, Join join) {
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
@@ -458,7 +462,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
 				join.addMappedSuperclassProperty( property );
-				addPropertyToMappedSuperclass( property, declaringClass );
+				addPropertyToMappedSuperclass( property, memberDetails, declaringClass );
 			}
 			else {
 				join.addProperty( property );

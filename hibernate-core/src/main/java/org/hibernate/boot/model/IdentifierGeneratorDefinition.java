@@ -7,7 +7,6 @@
 package org.hibernate.boot.model;
 
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,16 +16,17 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.boot.internal.GenerationStrategyInterpreter;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.models.spi.MutableAnnotationUsage;
 
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Index;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.UniqueConstraint;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -150,126 +150,19 @@ public class IdentifierGeneratorDefinition implements Serializable {
 
 	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretTableGenerator(
-				new TableGenerator() {
-					@Override
-					public String name() {
-						return name;
-					}
-
-					@Override
-					public String table() {
-						return "";
-					}
-
-					@Override
-					public int initialValue() {
-						return 0;
-					}
-
-					@Override
-					public int allocationSize() {
-						return 50;
-					}
-
-					@Override
-					public String catalog() {
-						return "";
-					}
-
-					@Override
-					public String schema() {
-						return "";
-					}
-
-					@Override
-					public String pkColumnName() {
-						return "";
-					}
-
-					@Override
-					public String valueColumnName() {
-						return "";
-					}
-
-					@Override
-					public String pkColumnValue() {
-						return "";
-					}
-
-					@Override
-					public UniqueConstraint[] uniqueConstraints() {
-						return new UniqueConstraint[0];
-					}
-
-					@Override
-					public Index[] indexes() {
-						return new Index[0];
-					}
-
-					@Override
-					public String options() {
-						return "";
-					}
-
-					@Override
-					public Class<? extends Annotation> annotationType() {
-						return TableGenerator.class;
-					}
-				},
-				builder
-		);
-
+		final MutableAnnotationUsage<TableGenerator> tableGeneratorUsage = TABLE_GENERATOR.createUsage( null, null );
+		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretTableGenerator( tableGeneratorUsage, builder );
 		return builder.build();
 	}
 
 	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretSequenceGenerator(
-				new SequenceGenerator() {
-					@Override
-					public String name() {
-						return name;
-					}
-
-					@Override
-					public String sequenceName() {
-						return "";
-					}
-
-					@Override
-					public String catalog() {
-						return "";
-					}
-
-					@Override
-					public String schema() {
-						return "";
-					}
-
-					@Override
-					public int initialValue() {
-						return 1;
-					}
-
-					@Override
-					public int allocationSize() {
-						return 50;
-					}
-
-					@Override
-					public String options() {
-						return "";
-					}
-
-					@Override
-					public Class<? extends Annotation> annotationType() {
-						return SequenceGenerator.class;
-					}
-				},
-				builder
+		final MutableAnnotationUsage<SequenceGenerator> sequenceGeneratorUsage = JpaAnnotations.SEQUENCE_GENERATOR.createUsage(
+				null,
+				null
 		);
-
+		sequenceGeneratorUsage.setAttributeValue( "name", name );
+		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretSequenceGenerator( sequenceGeneratorUsage, builder );
 		return builder.build();
 	}
 

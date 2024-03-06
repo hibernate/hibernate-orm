@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.GenericGenerator;
@@ -21,20 +22,33 @@ import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeRegistrationImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConfigurationParameterImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbConstructorResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableInstantiatorRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityResultImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbFieldResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterDefImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJavaTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJdbcTypeRegistrationImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryBase;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHint;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlResultSetMappingImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbStoredProcedureParameterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeRegistrationImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.CollectionTypeRegistration;
 import org.hibernate.boot.models.categorize.spi.CompositeUserTypeRegistration;
 import org.hibernate.boot.models.categorize.spi.ConversionRegistration;
@@ -47,24 +61,38 @@ import org.hibernate.boot.models.categorize.spi.JavaTypeRegistration;
 import org.hibernate.boot.models.categorize.spi.JdbcTypeRegistration;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
+import org.hibernate.boot.models.categorize.spi.NamedNativeQueryRegistration;
+import org.hibernate.boot.models.categorize.spi.NamedQueryRegistration;
+import org.hibernate.boot.models.categorize.spi.NamedStoredProcedureQueryRegistration;
 import org.hibernate.boot.models.categorize.spi.SequenceGeneratorRegistration;
+import org.hibernate.boot.models.categorize.spi.SqlResultSetMappingRegistration;
 import org.hibernate.boot.models.categorize.spi.TableGeneratorRegistration;
 import org.hibernate.boot.models.categorize.spi.UserTypeRegistration;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.AvailableHints;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.models.internal.MutableAnnotationUsage;
-import org.hibernate.models.internal.dynamic.DynamicAnnotationUsage;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.SourceModelContext;
 
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.QueryHint;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.TableGenerator;
 
 import static java.util.Collections.emptyList;
@@ -78,6 +106,7 @@ import static org.hibernate.boot.models.HibernateAnnotations.FILTER_DEF;
 import static org.hibernate.boot.models.HibernateAnnotations.JAVA_TYPE_REG;
 import static org.hibernate.boot.models.HibernateAnnotations.JDBC_TYPE_REG;
 import static org.hibernate.boot.models.HibernateAnnotations.TYPE_REG;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -103,6 +132,11 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private Map<String, GenericGeneratorRegistration> genericGeneratorRegistrations;
 
 	private Set<ConverterRegistration> jpaConverters;
+
+	private Map<String, SqlResultSetMappingRegistration> sqlResultSetMappingRegistrations;
+	private Map<String, NamedQueryRegistration> namedQueryRegistrations;
+	private Map<String, NamedNativeQueryRegistration> namedNativeQueryRegistrations;
+	private Map<String, NamedStoredProcedureQueryRegistration> namedStoredProcedureQueryRegistrations;
 
 	public GlobalRegistrationsImpl(SourceModelContext sourceModelContext) {
 		this( sourceModelContext.getClassDetailsRegistry(), sourceModelContext.getAnnotationDescriptorRegistry() );
@@ -181,6 +215,26 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	@Override
 	public Set<ConverterRegistration> getJpaConverters() {
 		return jpaConverters == null ? emptySet() : jpaConverters;
+	}
+
+	@Override
+	public Map<String, SqlResultSetMappingRegistration> getSqlResultSetMappingRegistrations() {
+		return sqlResultSetMappingRegistrations == null ? emptyMap() : sqlResultSetMappingRegistrations;
+	}
+
+	@Override
+	public Map<String, NamedQueryRegistration > getNamedQueryRegistrations() {
+		return namedQueryRegistrations == null ? emptyMap() : namedQueryRegistrations;
+	}
+
+	@Override
+	public Map<String, NamedNativeQueryRegistration> getNamedNativeQueryRegistrations() {
+		return namedNativeQueryRegistrations == null ? emptyMap() : namedNativeQueryRegistrations;
+	}
+
+	@Override
+	public Map<String, NamedStoredProcedureQueryRegistration> getNamedStoredProcedureQueryRegistrations() {
+		return namedStoredProcedureQueryRegistrations== null ? emptyMap() : namedStoredProcedureQueryRegistrations;
 	}
 
 
@@ -581,7 +635,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		sequenceGenerators.forEach( (generator) -> {
-			final MutableAnnotationUsage<SequenceGenerator> annotationUsage = makeAnnotation( SequenceGenerator.class );
+			final MutableAnnotationUsage<SequenceGenerator> annotationUsage = makeAnnotation( JpaAnnotations.SEQUENCE_GENERATOR );
 			annotationUsage.setAttributeValue( "name", generator.getName() );
 			annotationUsage.setAttributeValue( "sequenceName", generator.getSequenceName() );
 			annotationUsage.setAttributeValue( "catalog", generator.getCatalog() );
@@ -593,9 +647,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		} );
 	}
 
-	private <A extends Annotation> MutableAnnotationUsage<A> makeAnnotation(Class<A> annotationType) {
-		final AnnotationDescriptor<A> descriptor = descriptorRegistry.getDescriptor( annotationType );
-		return new DynamicAnnotationUsage<>( descriptor );
+	private <A extends Annotation> MutableAnnotationUsage<A> makeAnnotation(AnnotationDescriptor<A> annotationDescriptor) {
+		return annotationDescriptor.createUsage( null, null );
 	}
 
 	public void collectSequenceGenerator(AnnotationUsage<SequenceGenerator> usage) {
@@ -607,7 +660,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			sequenceGeneratorRegistrations = new HashMap<>();
 		}
 
-		sequenceGeneratorRegistrations.put( generatorRegistration.getName(), generatorRegistration );
+		sequenceGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
 	}
 
 
@@ -620,7 +673,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		tableGenerators.forEach( (generator) -> {
-			final MutableAnnotationUsage<TableGenerator> annotationUsage = makeAnnotation( TableGenerator.class );
+			final MutableAnnotationUsage<TableGenerator> annotationUsage = makeAnnotation( JpaAnnotations.TABLE_GENERATOR );
 			annotationUsage.setAttributeValue( "name", generator.getName() );
 			annotationUsage.setAttributeValue( "table", generator.getTable() );
 			annotationUsage.setAttributeValue( "catalog", generator.getCatalog() );
@@ -644,7 +697,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			tableGeneratorRegistrations = new HashMap<>();
 		}
 
-		tableGeneratorRegistrations.put( generatorRegistration.getName(), generatorRegistration );
+		tableGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
 	}
 
 
@@ -657,7 +710,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		genericGenerators.forEach( (generator) -> {
-			final MutableAnnotationUsage<GenericGenerator> annotationUsage = makeAnnotation( GenericGenerator.class );
+			final MutableAnnotationUsage<GenericGenerator> annotationUsage = makeAnnotation( HibernateAnnotations.GENERIC_GENERATOR );
 			annotationUsage.setAttributeValue( "name", generator.getName() );
 			annotationUsage.setAttributeValue( "strategy", generator.getClazz() );
 
@@ -676,7 +729,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			genericGeneratorRegistrations = new HashMap<>();
 		}
 
-		genericGeneratorRegistrations.put( generatorRegistration.getName(), generatorRegistration );
+		genericGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
 	}
 
 
@@ -708,5 +761,318 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 			jpaConverters.add( new ConverterRegistration( converterType, autoApply ) );
 		} );
+	}
+
+	public void collectQueryReferences(JaxbEntityMappingsImpl jaxbRoot) {
+		collectNamedSqlResultSetMappings( jaxbRoot.getSqlResultSetMappings() );
+		collectNamedQueries( jaxbRoot.getNamedQueries() );
+		collectNamedNativeQueries( jaxbRoot.getNamedNativeQueries() );
+		collectStoredProcedureQueries( jaxbRoot.getNamedProcedureQueries() );
+	}
+
+	private void collectNamedSqlResultSetMappings(List<JaxbSqlResultSetMappingImpl> jaxbSqlResultSetMappings) {
+		if ( isEmpty( jaxbSqlResultSetMappings ) ) {
+			return;
+		}
+
+		if ( sqlResultSetMappingRegistrations == null ) {
+			sqlResultSetMappingRegistrations = new HashMap<>();
+		}
+
+		jaxbSqlResultSetMappings.forEach( (jaxbMapping) -> {
+			final MutableAnnotationUsage<SqlResultSetMapping> mappingAnnotation = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage( null, null );
+			mappingAnnotation.setAttributeValue( "name", jaxbMapping.getName() );
+
+			sqlResultSetMappingRegistrations.put(
+					jaxbMapping.getName(),
+					new SqlResultSetMappingRegistration( jaxbMapping.getName(), mappingAnnotation )
+			);
+
+			applyEntityResults(
+					jaxbMapping.getEntityResult(),
+					(results) -> mappingAnnotation.setAttributeValue( "entities", results )
+			);
+
+			applyConstructorResults(
+					jaxbMapping.getConstructorResult(),
+					(results) -> mappingAnnotation.setAttributeValue( "classes", results )
+			);
+
+			applyColumnResults(
+					jaxbMapping.getColumnResult(),
+					(columnResults) -> mappingAnnotation.setAttributeValue( "columns", columnResults )
+			);
+		} );
+	}
+
+	private void applyEntityResults(
+			List<JaxbEntityResultImpl> jaxbEntityResults,
+			Consumer<List<AnnotationUsage<EntityResult>>> annotationListConsumer) {
+		if ( jaxbEntityResults.isEmpty() ) {
+			return;
+		}
+
+		final List<AnnotationUsage<EntityResult>> entityResults = arrayList( jaxbEntityResults.size() );
+
+		for ( JaxbEntityResultImpl jaxbEntityResult : jaxbEntityResults ) {
+			final MutableAnnotationUsage<EntityResult> entityResultAnnotation = makeAnnotation( JpaAnnotations.ENTITY_RESULT );
+			entityResults.add( entityResultAnnotation );
+
+			entityResultAnnotation.setAttributeValue( "entityClass", classDetailsRegistry.resolveClassDetails( jaxbEntityResult.getEntityClass() ) );
+			entityResultAnnotation.setAttributeValue( "lockMode", jaxbEntityResult.getLockMode() );
+			entityResultAnnotation.setAttributeValue( "discriminatorColumn", jaxbEntityResult.getDiscriminatorColumn() );
+
+			if ( !jaxbEntityResult.getFieldResult().isEmpty() ) {
+				final List<AnnotationUsage<FieldResult>> fieldResults = arrayList( jaxbEntityResult.getFieldResult().size() );
+				entityResultAnnotation.setAttributeValue( "fields", fieldResults );
+
+				for ( JaxbFieldResultImpl jaxbFieldResult : jaxbEntityResult.getFieldResult() ) {
+					final MutableAnnotationUsage<FieldResult> fieldResultAnnotation = makeAnnotation( JpaAnnotations.FIELD_RESULT );
+					fieldResultAnnotation.setAttributeValue( "name", jaxbFieldResult.getName() );
+					fieldResultAnnotation.setAttributeValue( "column", jaxbFieldResult.getColumn() );
+				}
+			}
+		}
+		annotationListConsumer.accept( entityResults );
+	}
+
+	private void applyConstructorResults(
+			List<JaxbConstructorResultImpl> jaxbConstructorResults,
+			Consumer<List<AnnotationUsage<ConstructorResult>>> annotationListConsumer) {
+		if ( isEmpty( jaxbConstructorResults ) ) {
+			return;
+		}
+
+		final List<AnnotationUsage<ConstructorResult>> results = arrayList( jaxbConstructorResults.size() );
+		for ( JaxbConstructorResultImpl jaxbConstructorResult : jaxbConstructorResults ) {
+			final MutableAnnotationUsage<ConstructorResult> result = makeAnnotation( JpaAnnotations.CONSTRUCTOR_RESULT );
+			results.add( result );
+
+			result.setAttributeValue(
+					"entityClass",
+					classDetailsRegistry.resolveClassDetails( jaxbConstructorResult.getTargetClass() )
+			);
+
+			if ( !jaxbConstructorResult.getColumns().isEmpty() ) {
+				applyColumnResults(
+						jaxbConstructorResult.getColumns(),
+						(columnResults) -> result.setAttributeValue( "columns", columnResults )
+				);
+			}
+		}
+	}
+
+	private void applyColumnResults(
+			List<JaxbColumnResultImpl> jaxbColumnResults,
+			Consumer<List<AnnotationUsage<ColumnResult>>> annotationListConsumer) {
+		if ( isEmpty( jaxbColumnResults ) ) {
+			return;
+		}
+
+		final List<AnnotationUsage<ColumnResult>> columnResults = arrayList( jaxbColumnResults.size() );
+		for ( JaxbColumnResultImpl jaxbColumn : jaxbColumnResults ) {
+			final MutableAnnotationUsage<ColumnResult> columnResultAnnotation = makeAnnotation( JpaAnnotations.COLUMN_RESULT );
+			columnResults.add( columnResultAnnotation );
+
+			columnResultAnnotation.setAttributeValue( "name", jaxbColumn.getName() );
+			columnResultAnnotation.setAttributeValue( "type", classDetailsRegistry.resolveClassDetails( jaxbColumn.getClazz() ) );
+		}
+		annotationListConsumer.accept( columnResults );
+	}
+
+	private void collectNamedQueries(List<JaxbNamedQueryImpl> jaxbNamedQueries) {
+		if ( isEmpty( jaxbNamedQueries ) ) {
+			return;
+		}
+
+		if ( namedQueryRegistrations == null ) {
+			namedQueryRegistrations = new HashMap<>();
+		}
+
+		for ( JaxbNamedQueryImpl jaxbNamedQuery : jaxbNamedQueries ) {
+			final MutableAnnotationUsage<NamedQuery> queryAnnotation = makeAnnotation( JpaAnnotations.NAMED_QUERY );
+			namedQueryRegistrations.put(
+					jaxbNamedQuery.getName(),
+					new NamedQueryRegistration( jaxbNamedQuery.getName(), queryAnnotation )
+			);
+
+			queryAnnotation.setAttributeValue( "name", jaxbNamedQuery.getName() );
+			queryAnnotation.setAttributeValue( "query", jaxbNamedQuery.getQuery() );
+			queryAnnotation.setAttributeValue( "lockMode", jaxbNamedQuery.getLockMode() );
+
+			final List<AnnotationUsage<QueryHint>> hints = extractQueryHints( jaxbNamedQuery );
+			queryAnnotation.setAttributeValue( "hints", hints );
+
+			if ( jaxbNamedQuery.isCacheable() == Boolean.TRUE ) {
+				final MutableAnnotationUsage<QueryHint> cacheableHint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+				cacheableHint.setAttributeValue( "name", AvailableHints.HINT_CACHEABLE );
+				cacheableHint.setAttributeValue( "value", Boolean.TRUE.toString() );
+
+				if ( jaxbNamedQuery.getCacheMode() != null ) {
+					final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+					hint.setAttributeValue( "name", AvailableHints.HINT_CACHE_MODE );
+					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheMode().name() );
+				}
+
+				if ( StringHelper.isNotEmpty( jaxbNamedQuery.getCacheRegion() ) ) {
+					final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+					hint.setAttributeValue( "name", AvailableHints.HINT_CACHE_REGION );
+					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheRegion() );
+				}
+			}
+
+			if ( StringHelper.isNotEmpty( jaxbNamedQuery.getComment() ) ) {
+				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+				hint.setAttributeValue( "name", AvailableHints.HINT_COMMENT );
+				hint.setAttributeValue( "value", jaxbNamedQuery.getComment() );
+			}
+
+			if ( jaxbNamedQuery.getFetchSize() != null ) {
+				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+				hint.setAttributeValue( "name", AvailableHints.HINT_FETCH_SIZE );
+				hint.setAttributeValue( "value", jaxbNamedQuery.getFetchSize().toString() );
+			}
+
+			if ( jaxbNamedQuery.isReadOnly() == Boolean.TRUE ) {
+				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+				hint.setAttributeValue( "name", AvailableHints.HINT_READ_ONLY );
+				hint.setAttributeValue( "value", Boolean.TRUE.toString() );
+			}
+
+			if ( jaxbNamedQuery.getFlushMode() != null ) {
+				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+				hint.setAttributeValue( "name", AvailableHints.HINT_FLUSH_MODE );
+				hint.setAttributeValue( "value", jaxbNamedQuery.getFlushMode().name() );
+			}
+		}
+	}
+
+	private void collectNamedNativeQueries(List<JaxbNamedNativeQueryImpl> namedNativeQueries) {
+		if ( isEmpty( namedNativeQueries ) ) {
+			return;
+		}
+
+		if ( namedNativeQueryRegistrations == null ) {
+			namedNativeQueryRegistrations = new HashMap<>();
+		}
+
+		for ( JaxbNamedNativeQueryImpl jaxbNamedQuery : namedNativeQueries ) {
+			final MutableAnnotationUsage<NamedNativeQuery> queryAnnotation = makeAnnotation( JpaAnnotations.NAMED_NATIVE_QUERY );
+			namedNativeQueryRegistrations.put(
+					jaxbNamedQuery.getName(),
+					new NamedNativeQueryRegistration( jaxbNamedQuery.getName(), queryAnnotation )
+			);
+
+			queryAnnotation.setAttributeValue( "name", jaxbNamedQuery.getName() );
+			queryAnnotation.setAttributeValue( "query", jaxbNamedQuery.getQuery() );
+
+			if ( StringHelper.isNotEmpty( jaxbNamedQuery.getResultClass() ) ) {
+				queryAnnotation.setAttributeValue( "resultClass", classDetailsRegistry.resolveClassDetails( jaxbNamedQuery.getResultClass() ) );
+			}
+
+			if ( StringHelper.isNotEmpty( jaxbNamedQuery.getResultSetMapping() ) ) {
+				queryAnnotation.setAttributeValue( "resultSetMapping", jaxbNamedQuery.getResultSetMapping() );
+			}
+
+			applyEntityResults(
+					jaxbNamedQuery.getEntityResult(),
+					(results) -> queryAnnotation.setAttributeValue( "entities", results )
+			);
+
+			applyConstructorResults(
+					jaxbNamedQuery.getConstructorResult(),
+					(results) -> queryAnnotation.setAttributeValue( "classes", results )
+			);
+
+			applyColumnResults(
+					jaxbNamedQuery.getColumnResult(),
+					(columnResults) -> queryAnnotation.setAttributeValue( "columns", columnResults )
+			);
+
+			final List<AnnotationUsage<QueryHint>> hints = extractQueryHints( jaxbNamedQuery );
+			queryAnnotation.setAttributeValue( "hints", hints );
+
+			if ( jaxbNamedQuery.isCacheable() == Boolean.TRUE ) {
+				final MutableAnnotationUsage<QueryHint> cacheableHint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+				cacheableHint.setAttributeValue( "name", AvailableHints.HINT_CACHEABLE );
+				cacheableHint.setAttributeValue( "value", Boolean.TRUE.toString() );
+
+				if ( jaxbNamedQuery.getCacheMode() != null ) {
+					final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+					hint.setAttributeValue( "name", AvailableHints.HINT_CACHE_MODE );
+					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheMode().name() );
+				}
+
+				if ( StringHelper.isNotEmpty( jaxbNamedQuery.getCacheRegion() ) ) {
+					final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+					hint.setAttributeValue( "name", AvailableHints.HINT_CACHE_REGION );
+					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheRegion() );
+				}
+			}
+
+			if ( jaxbNamedQuery.isReadOnly() == Boolean.TRUE ) {
+				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+				hint.setAttributeValue( "name", AvailableHints.HINT_READ_ONLY );
+				hint.setAttributeValue( "value", Boolean.TRUE.toString() );
+			}
+
+			if ( StringHelper.isNotEmpty( jaxbNamedQuery.getComment() ) ) {
+				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+				hint.setAttributeValue( "name", AvailableHints.HINT_COMMENT );
+				hint.setAttributeValue( "value", jaxbNamedQuery.getComment() );
+			}
+		}
+	}
+
+	private void collectStoredProcedureQueries(List<JaxbNamedStoredProcedureQueryImpl> namedProcedureQueries) {
+		if ( isEmpty( namedProcedureQueries ) ) {
+			return;
+		}
+
+		if ( namedStoredProcedureQueryRegistrations == null ) {
+			namedStoredProcedureQueryRegistrations = new HashMap<>();
+		}
+
+		for ( JaxbNamedStoredProcedureQueryImpl jaxbQuery : namedProcedureQueries ) {
+			final MutableAnnotationUsage<NamedStoredProcedureQuery> queryAnnotation = makeAnnotation( JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY );
+			namedStoredProcedureQueryRegistrations.put(
+					jaxbQuery.getName(),
+					new NamedStoredProcedureQueryRegistration( jaxbQuery.getName(), queryAnnotation )
+			);
+
+			queryAnnotation.setAttributeValue( "name", jaxbQuery.getName() );
+			queryAnnotation.setAttributeValue( "procedureName", jaxbQuery.getProcedureName() );
+
+			final ArrayList<ClassDetails> resultClasses = arrayList( jaxbQuery.getResultClasses().size() );
+			queryAnnotation.setAttributeValue( "resultClasses", resultClasses );
+			for ( String resultClassName : jaxbQuery.getResultClasses() ) {
+				resultClasses.add( classDetailsRegistry.resolveClassDetails( resultClassName ) );
+			}
+
+			queryAnnotation.setAttributeValue( "resultSetMappings", jaxbQuery.getResultSetMappings() );
+
+			queryAnnotation.setAttributeValue( "hints", extractQueryHints( jaxbQuery ) );
+
+			final ArrayList<AnnotationUsage<StoredProcedureParameter>> parameters = arrayList( jaxbQuery.getProcedureParameters().size() );
+			queryAnnotation.setAttributeValue( "parameters", parameters );
+			for ( JaxbStoredProcedureParameterImpl jaxbProcedureParameter : jaxbQuery.getProcedureParameters() ) {
+				final MutableAnnotationUsage<StoredProcedureParameter> parameterAnnotation = makeAnnotation( JpaAnnotations.STORED_PROCEDURE_PARAMETER );
+				parameters.add( parameterAnnotation );
+
+				parameterAnnotation.setAttributeValue( "name", jaxbProcedureParameter.getName() );
+				parameterAnnotation.setAttributeValue( "mode", jaxbProcedureParameter.getMode() );
+				parameterAnnotation.setAttributeValue( "type", classDetailsRegistry.resolveClassDetails( jaxbProcedureParameter.getClazz() ) );
+			}
+		}
+	}
+
+	private List<AnnotationUsage<QueryHint>> extractQueryHints(JaxbNamedQueryBase jaxbQuery) {
+		final List<AnnotationUsage<QueryHint>> hints = new ArrayList<>();
+		for ( JaxbQueryHint jaxbHint : jaxbQuery.getHints() ) {
+			final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
+			hint.setAttributeValue( "name", jaxbHint.getName() );
+			hint.setAttributeValue( "value", jaxbHint.getValue() );
+		}
+		return hints;
 	}
 }

@@ -351,7 +351,7 @@
             <xsd:choice minOccurs="0">
                 <xsd:element name="discriminator-column" type="orm:discriminator-column" />
                 <!-- hbm: support for Hibernate formula mapping -->
-                <xsd:element name="discriminator-formula" type="xsd:string" />
+                <xsd:element name="discriminator-formula" type="orm:discriminator-formula" />
             </xsd:choice>
 
             <xsd:element name="sequence-generator" type="orm:sequence-generator"
@@ -910,6 +910,27 @@
         <xsd:attribute name="column-definition" type="xsd:string"/>
         <xsd:attribute name="options" type="xsd:string"/>
         <xsd:attribute name="length" type="xsd:int"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="discriminator-formula">
+        <xsd:annotation>
+            <xsd:documentation>
+
+                @interface DiscriminatorFormula {
+                    /** The fragment */
+                    String value();
+                    DiscriminatorType discriminatorType() default STRING;
+                }
+
+                @interface DiscriminatorOptions {
+                    boolean force() default false;
+                    ...
+                }
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="fragment" type="xsd:string"/>
+        <xsd:attribute name="discriminator-type" type="orm:discriminator-type"/>
+        <xsd:attribute name="force-selection" type="xsd:boolean" default="false"/>
     </xsd:complexType>
 
 

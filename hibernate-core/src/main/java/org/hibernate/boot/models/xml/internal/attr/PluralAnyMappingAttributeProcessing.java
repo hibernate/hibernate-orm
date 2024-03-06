@@ -8,8 +8,8 @@ package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAnyMappingImpl;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.internal.MutableClassDetails;
-import org.hibernate.models.internal.MutableMemberDetails;
+import org.hibernate.models.spi.MutableClassDetails;
+import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
 

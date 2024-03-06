@@ -89,8 +89,8 @@ public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
 	JaxbDiscriminatorColumnImpl getDiscriminatorColumn();
 	void setDiscriminatorColumn(JaxbDiscriminatorColumnImpl value);
 
-	String getDiscriminatorFormula();
-	void setDiscriminatorFormula(String value);
+	JaxbDiscriminatorFormulaImpl getDiscriminatorFormula();
+	void setDiscriminatorFormula(JaxbDiscriminatorFormulaImpl value);
 
 	JaxbSequenceGeneratorImpl getSequenceGenerators();
 

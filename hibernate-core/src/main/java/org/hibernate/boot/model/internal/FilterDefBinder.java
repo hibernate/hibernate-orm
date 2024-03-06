@@ -6,13 +6,17 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.AttributeConverter;
+import java.lang.reflect.ParameterizedType;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -20,6 +24,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.models.spi.AnnotationTarget;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -34,10 +41,7 @@ import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
-import java.lang.reflect.ParameterizedType;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import jakarta.persistence.AttributeConverter;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
@@ -53,48 +57,53 @@ class FilterDefBinder {
 
 	private static final CoreMessageLogger LOG = messageLogger( FilterDefBinder.class );
 
-	public static void bindFilterDef(FilterDef filterDef, MetadataBuildingContext context) {
-		final String name = filterDef.name();
+	public static void bindFilterDef(AnnotationUsage<FilterDef> filterDef, MetadataBuildingContext context) {
+		final String name = filterDef.getString( "name" );
 		if ( context.getMetadataCollector().getFilterDefinition( name ) != null ) {
 			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
 		}
 
-		final Map<String, JdbcMapping> explicitParamJaMappings;
+		final Map<String, JdbcMapping> paramJdbcMappings;
 		final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolvers;
-		if ( filterDef.parameters().length == 0 ) {
-			explicitParamJaMappings = emptyMap();
+		final List<AnnotationUsage<ParamDef>> explicitParameters = filterDef.getList( "parameters" );
+		if ( explicitParameters.isEmpty() ) {
+			paramJdbcMappings = emptyMap();
 			parameterResolvers = emptyMap();
 		}
 		else {
-			explicitParamJaMappings = new HashMap<>();
+			paramJdbcMappings = new HashMap<>();
 			parameterResolvers = new HashMap<>();
-			for ( ParamDef paramDef : filterDef.parameters() ) {
-				final JdbcMapping jdbcMapping = resolveFilterParamType( paramDef.type(), context );
+			for ( AnnotationUsage<ParamDef> explicitParameter : explicitParameters ) {
+				final String parameterName = explicitParameter.getString( "name" );
+				final ClassDetails typeClassDetails = explicitParameter.getClassDetails( "type" );
+				final JdbcMapping jdbcMapping = resolveFilterParamType( typeClassDetails.toJavaClass(), context );
 				if ( jdbcMapping == null ) {
 					throw new MappingException(
 							String.format(
 									Locale.ROOT,
 									"Unable to resolve type specified for parameter (%s) defined for @FilterDef (%s)",
-									paramDef.name(),
+									parameterName,
 									name
 							)
 					);
 				}
-				explicitParamJaMappings.put( paramDef.name(), jdbcMapping );
+				paramJdbcMappings.put( parameterName, jdbcMapping );
 
 				if ( paramDef.resolver() != Supplier.class ) {
 					parameterResolvers.put( paramDef.name(), resolveParamResolver( paramDef, context ) );
 				}
 			}
 		}
+
 		final FilterDefinition filterDefinition = new FilterDefinition(
 				name,
-				filterDef.defaultCondition(),
-				explicitParamJaMappings,
+				filterDef.getString( "defaultCondition" ),
+				paramJdbcMappings,
 				parameterResolvers,
-				filterDef.autoEnabled(),
+				filterDef.getBoolean( "autoEnabled" ),
 				filterDef.applyToLoadByKey()
 		);
+
 		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}
@@ -245,14 +254,15 @@ class FilterDefBinder {
 		}
 	}
 
-	public static void bindFilterDefs(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
-		final FilterDef filterDef = annotatedElement.getAnnotation( FilterDef.class );
-		final FilterDefs filterDefs = getOverridableAnnotation( annotatedElement, FilterDefs.class, context );
+	public static void bindFilterDefs(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
+		final AnnotationUsage<FilterDef> filterDef = annotatedElement.getAnnotationUsage( FilterDef.class );
+		final AnnotationUsage<FilterDefs> filterDefs = getOverridableAnnotation( annotatedElement, FilterDefs.class, context );
 		if ( filterDef != null ) {
 			bindFilterDef( filterDef, context );
 		}
 		if ( filterDefs != null ) {
-			for ( FilterDef def : filterDefs.value() ) {
+			final List<AnnotationUsage<FilterDef>> nestedDefs = filterDefs.getList( "value" );
+			for ( AnnotationUsage<FilterDef> def : nestedDefs ) {
 				bindFilterDef( def, context );
 			}
 		}

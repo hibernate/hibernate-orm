@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.spi.AnnotationUsage;
 
 import jakarta.persistence.SqlResultSetMapping;
 
@@ -21,11 +22,11 @@ import jakarta.persistence.SqlResultSetMapping;
 public class ResultSetMappingSecondPass implements QuerySecondPass {
 //	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsetMappingSecondPass.class );
 
-	private final SqlResultSetMapping annotation;
+	private final AnnotationUsage<SqlResultSetMapping> annotation;
 	private final MetadataBuildingContext context;
 	private final boolean isDefault;
 
-	public ResultSetMappingSecondPass(SqlResultSetMapping annotation, MetadataBuildingContext context, boolean isDefault) {
+	public ResultSetMappingSecondPass(AnnotationUsage<SqlResultSetMapping> annotation, MetadataBuildingContext context, boolean isDefault) {
 		this.annotation = annotation;
 		this.context = context;
 		this.isDefault = isDefault;

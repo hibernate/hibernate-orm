@@ -19,12 +19,15 @@ import org.hibernate.boot.models.bind.internal.BindingContextImpl;
 import org.hibernate.boot.models.bind.internal.BindingOptionsImpl;
 import org.hibernate.boot.models.bind.internal.BindingStateImpl;
 import org.hibernate.boot.models.bind.spi.BindingCoordinator;
+import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.models.internal.SourceModelBuildingContextImpl;
 
 /**
  * @author Steve Ebersole

@@ -6,9 +6,8 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinTable;
+import java.util.Locale;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Cascade;
@@ -16,14 +15,17 @@ import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.Property;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.MemberDetails;
 
-import java.util.Locale;
+import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
@@ -38,12 +40,12 @@ public class AnyBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
-			XProperty property,
+			MemberDetails property,
 			AnnotatedJoinColumns joinColumns,
 			boolean forcePersist) {
 
 		//check validity
-		if (  property.isAnnotationPresent( Columns.class ) ) {
+		if (  property.hasAnnotationUsage( Columns.class ) ) {
 			throw new AnnotationException(
 					String.format(
 							Locale.ROOT,
@@ -54,9 +56,9 @@ public class AnyBinder {
 			);
 		}
 
-		final Cascade hibernateCascade = property.getAnnotation( Cascade.class );
-		final OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
-		final JoinTable assocTable = propertyHolder.getJoinTable(property);
+		final AnnotationUsage<Cascade> hibernateCascade = property.getAnnotationUsage( Cascade.class );
+		final AnnotationUsage<OnDelete> onDeleteAnn = property.getAnnotationUsage( OnDelete.class );
+		final AnnotationUsage<JoinTable> assocTable = propertyHolder.getJoinTable( property );
 		if ( assocTable != null ) {
 			final Join join = propertyHolder.addJoin( assocTable, false );
 			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
@@ -67,7 +69,7 @@ public class AnyBinder {
 				getCascadeStrategy( null, hibernateCascade, false, forcePersist ),
 				//@Any has no cascade attribute
 				joinColumns,
-				onDeleteAnn == null ? null : onDeleteAnn.action(),
+				onDeleteAnn == null ? null : onDeleteAnn.getEnum( "action" ),
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -87,16 +89,16 @@ public class AnyBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context) {
-		final XProperty property = inferredData.getProperty();
-		final org.hibernate.annotations.Any any = property.getAnnotation( org.hibernate.annotations.Any.class );
+		final MemberDetails property = inferredData.getAttributeMember();
+		final AnnotationUsage<org.hibernate.annotations.Any> any = property.getAnnotationUsage( org.hibernate.annotations.Any.class );
 		if ( any == null ) {
 			throw new AssertionFailure( "Missing @Any annotation: " + getPath( propertyHolder, inferredData ) );
 		}
 
-		final boolean lazy = any.fetch() == FetchType.LAZY;
-		final boolean optional = any.optional();
+		final boolean lazy = any.getEnum( "fetch" ) == FetchType.LAZY;
+		final boolean optional = any.getBoolean( "optional" );
 		final Any value = BinderHelper.buildAnyValue(
-				property.getAnnotation( Column.class ),
+				property.getAnnotationUsage( Column.class ),
 				getOverridableAnnotation( property, Formula.class, context ),
 				columns,
 				inferredData,
@@ -127,7 +129,7 @@ public class AnyBinder {
 		Property prop = binder.makeProperty();
 		prop.setOptional( optional && value.isNullable() );
 		//composite FK columns are in the same table, so it's OK
-		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
+		propertyHolder.addProperty( prop, inferredData.getAttributeMember(), columns, inferredData.getDeclaringClass() );
 		binder.callAttributeBindersInSecondPass( prop );
 	}
 }

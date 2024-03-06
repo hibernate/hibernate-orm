@@ -10,6 +10,7 @@ import java.util.EnumSet;
 
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.MultipleAttributeNaturesException;
@@ -98,7 +99,7 @@ public class CategorizationHelper {
 
 		if ( embedded != null
 				|| embeddedId != null
-				|| ( backingMember.getType() != null && backingMember.getType().getAnnotationUsage( JpaAnnotations.EMBEDDABLE ) != null ) ) {
+				|| ( backingMember.getType() != null && backingMember.getType().determineRawClass().getAnnotationUsage( JpaAnnotations.EMBEDDABLE ) != null ) ) {
 			natures.add( EMBEDDED );
 		}
 
@@ -142,7 +143,7 @@ public class CategorizationHelper {
 				|| backingMember.getAnnotationUsage( HibernateAnnotations.TZ_COLUMN ) != null
 				|| backingMember.getAnnotationUsage( HibernateAnnotations.TZ_STORAGE ) != null
 				|| backingMember.getAnnotationUsage( HibernateAnnotations.TYPE ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.TENANT_ID ) != null
+				|| backingMember.getAnnotationUsage( TenantId.class ) != null
 				|| backingMember.getAnnotationUsage( HibernateAnnotations.JAVA_TYPE ) != null
 				|| backingMember.getAnnotationUsage( HibernateAnnotations.JDBC_TYPE_CODE ) != null
 				|| backingMember.getAnnotationUsage( HibernateAnnotations.JDBC_TYPE ) != null;

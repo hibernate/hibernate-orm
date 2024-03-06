@@ -6,7 +6,7 @@
         extensionBindingPrefixes="inheritance"
         version="3.0">
 
-    <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-3.2.0.xsd" node="/xsd:schema">
+    <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-7.0.xsd" node="/xsd:schema">
         <schemaBindings>
             <package name="org.hibernate.boot.jaxb.mapping.spi" />
             <nameXmlTransform>
@@ -580,13 +580,20 @@
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback</inheritance:implements>
         </bindings>
 
+
+        <bindings node="//xsd:complexType[@name='query-hint']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHint</inheritance:implements>
+        </bindings>
+
         <bindings node="//xsd:complexType[@name='named-query']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryBase</inheritance:implements>
             <bindings node=".//xsd:element[@name='hint']">
                 <property name="hints"/>
             </bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='named-native-query']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryBase</inheritance:implements>
             <bindings node=".//xsd:element[@name='synchronize']">
                 <property name="synchronizations"/>
             </bindings>
@@ -596,6 +603,7 @@
         </bindings>
 
         <bindings node="//xsd:complexType[@name='named-stored-procedure-query']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryBase</inheritance:implements>
             <bindings node=".//xsd:element[@name='hint']">
                 <property name="hints"/>
             </bindings>
@@ -604,6 +612,9 @@
             </bindings>
             <bindings node=".//xsd:element[@name='result-set-mapping']">
                 <property name="resultSetMappings"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='parameter']">
+                <property name="procedureParameters"/>
             </bindings>
         </bindings>
 

@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
@@ -18,14 +18,18 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.LockModeConverter;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
+import org.hibernate.models.spi.AnnotationUsage;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * @author Strong Liu
@@ -34,15 +38,15 @@ public class QueryHintDefinition {
 	private final String queryName;
 	private final Map<String, Object> hintsMap;
 
-	public QueryHintDefinition(String queryName, final QueryHint[] hints) {
+	public QueryHintDefinition(String queryName, final List<AnnotationUsage<QueryHint>> hints) {
 		this.queryName = queryName;
-		if ( hints == null || hints.length == 0 ) {
+		if ( CollectionHelper.isEmpty( hints ) ) {
 			hintsMap = Collections.emptyMap();
 		}
 		else {
-			final Map<String, Object> hintsMap = new HashMap<>();
-			for ( QueryHint hint : hints ) {
-				hintsMap.put( hint.name(), hint.value() );
+			final Map<String, Object> hintsMap = mapOfSize( hints.size() );
+			for ( AnnotationUsage<QueryHint> hint : hints ) {
+				hintsMap.put( hint.getString( "name" ), hint.getString( "value" ) );
 			}
 			this.hintsMap = hintsMap;
 		}
@@ -149,8 +153,8 @@ public class QueryHintDefinition {
 		}
 	}
 
-	public LockOptions determineLockOptions(NamedQuery namedQueryAnnotation) {
-		final LockModeType lockModeType = namedQueryAnnotation.lockMode();
+	public LockOptions determineLockOptions(AnnotationUsage<NamedQuery> namedQueryAnnotation) {
+		final LockModeType lockModeType = namedQueryAnnotation.getEnum( "lockMode" );
 		final Integer lockTimeoutHint = specLockTimeout();
 		final Boolean followOnLocking = getBooleanWrapper( HibernateHints.HINT_FOLLOW_ON_LOCKING );
 

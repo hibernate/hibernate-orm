@@ -6,8 +6,8 @@
  */
 package org.hibernate.boot.model.convert.spi;
 
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.spi.MemberDetails;
 
 /**
  * Contract for handling auto-apply checks for JPA AttributeConverters
@@ -15,7 +15,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  * @author Steve Ebersole
  */
 public interface AutoApplicableConverterDescriptor {
-	ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(XProperty xProperty, MetadataBuildingContext context);
-	ConverterDescriptor getAutoAppliedConverterDescriptorForCollectionElement(XProperty xProperty, MetadataBuildingContext context);
-	ConverterDescriptor getAutoAppliedConverterDescriptorForMapKey(XProperty xProperty, MetadataBuildingContext context);
+	ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(MemberDetails memberDetails, MetadataBuildingContext context);
+	ConverterDescriptor getAutoAppliedConverterDescriptorForCollectionElement(MemberDetails memberDetails, MetadataBuildingContext context);
+	ConverterDescriptor getAutoAppliedConverterDescriptorForMapKey(MemberDetails memberDetails, MetadataBuildingContext context);
 }

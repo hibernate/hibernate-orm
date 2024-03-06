@@ -49,10 +49,8 @@ import org.hibernate.boot.model.source.internal.hbm.HbmMetadataSourceProcessorIm
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
-import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
-import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -75,7 +73,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.internal.SourceModelBuildingContextImpl;
 import org.hibernate.models.internal.jandex.JandexClassDetails;
 import org.hibernate.models.internal.jandex.JandexIndexerHelper;
 import org.hibernate.models.internal.jdk.JdkBuilders;
@@ -194,14 +191,17 @@ public class MetadataBuildingProcess {
 			final ManagedResources managedResources,
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
-		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
-				bootstrapContext,
-				options
-		);
+
+		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
 
 		handleTypes( bootstrapContext, options, metadataCollector );
 
-		final DomainModelSource domainModelSource = processManagedResources( managedResources, bootstrapContext );
+		final DomainModelSource domainModelSource = processManagedResources(
+				managedResources,
+				metadataCollector,
+				bootstrapContext
+		);
 
 		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
 				"orm",
@@ -218,14 +218,12 @@ public class MetadataBuildingProcess {
 		// Set up the processors and start binding
 		//		NOTE : this becomes even more simplified after we move purely
 		// 		to unified model
-		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 		final IndexView jandexView = domainModelSource.getJandexIndex();
 
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
-			private final MetadataSourceProcessor hbmProcessor =
-						options.isXmlMappingEnabled()
-							? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
-							: new NoOpMetadataSourceProcessorImpl();
+			private final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
+					? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
+					: new NoOpMetadataSourceProcessorImpl();
 
 			private final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
 					managedResources,
@@ -375,11 +373,8 @@ public class MetadataBuildingProcess {
 	@Internal
 	public static DomainModelSource processManagedResources(
 			ManagedResources managedResources,
+			InFlightMetadataCollector metadataCollector,
 			BootstrapContext bootstrapContext) {
-		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
-		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
-
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// 	- pre-process the XML
 		// 	- collect all known classes
@@ -396,6 +391,7 @@ public class MetadataBuildingProcess {
 		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
 		//		- sourceModelBuildingContext
 
+		final SourceModelBuildingContext sourceModelBuildingContext = metadataCollector.getSourceModelBuildingContext();
 		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources( managedResources );
 
 		//noinspection unchecked
@@ -406,7 +402,7 @@ public class MetadataBuildingProcess {
 		);
 		managedResources.getAnnotatedPackageNames().forEach( (packageName) -> {
 			try {
-				final Class<?> packageInfoClass = classLoading.classForName( packageName + ".package-info" );
+				final Class<?> packageInfoClass = sourceModelBuildingContext.getClassLoading().classForName( packageName + ".package-info" );
 				allKnownClassNames.add( packageInfoClass.getName() );
 			}
 			catch (ClassLoadingException classLoadingException) {
@@ -417,13 +413,7 @@ public class MetadataBuildingProcess {
 
 		// At this point we know all managed class names across all sources.
 		// Resolve the Jandex Index and build the SourceModelBuildingContext.
-		final IndexView jandexIndex = resolveJandexIndex( allKnownClassNames, bootstrapContext.getJandexView(), classLoading );
-		final SourceModelBuildingContextImpl sourceModelBuildingContext = new SourceModelBuildingContextImpl(
-				classLoading,
-				jandexIndex,
-				ManagedResourcesProcessor::preFillRegistries
-		);
-
+		final IndexView jandexIndex = resolveJandexIndex( allKnownClassNames, bootstrapContext.getJandexView(), sourceModelBuildingContext.getClassLoading() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// 	- process metadata-complete XML
@@ -449,6 +439,7 @@ public class MetadataBuildingProcess {
 				areIdGeneratorsGlobal,
 				classDetailsRegistry,
 				descriptorRegistry,
+				metadataCollector.getGlobalRegistrations(),
 				jandexIndex
 		);
 
@@ -473,6 +464,7 @@ public class MetadataBuildingProcess {
 		return new DomainModelSource(
 				classDetailsRegistry.makeImmutableCopy(),
 				jandexIndex,
+				allKnownClassNames,
 				modelCategorizationCollector.getGlobalRegistrations(),
 				xmlPreProcessingResult.getPersistenceUnitMetadata()
 		);
@@ -495,9 +487,10 @@ public class MetadataBuildingProcess {
 			ClassDetailsRegistry classDetailsRegistry,
 			DomainModelCategorizationCollector modelCategorizationCollector) {
 		modelCategorizationCollector.apply( classDetails );
-		if ( classDetails.getSuperType() != null ) {
-			if ( categorizedClassNames.add( classDetails.getSuperType().getClassName() ) ) {
-				applyKnownClass( classDetails.getSuperType(), categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+		if ( classDetails.getSuperClass() != null
+				&& classDetails.getSuperClass() != ClassDetails.OBJECT_CLASS_DETAILS ) {
+			if ( categorizedClassNames.add( classDetails.getSuperClass().getClassName() ) ) {
+				applyKnownClass( classDetails.getSuperClass(), categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		}
 	}

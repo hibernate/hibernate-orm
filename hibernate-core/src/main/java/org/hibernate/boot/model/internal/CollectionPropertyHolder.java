@@ -14,8 +14,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyType;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
@@ -26,9 +24,12 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.Convert;
-import jakarta.persistence.Converts;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -60,8 +61,8 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	public CollectionPropertyHolder(
 			Collection collection,
 			String path,
-			XClass clazzToProcess,
-			XProperty property,
+			ClassDetails clazzToProcess,
+			MemberDetails property,
 			PropertyHolder parentPropertyHolder,
 			MetadataBuildingContext context) {
 		super( path, parentPropertyHolder, clazzToProcess, context );
@@ -77,7 +78,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private void buildAttributeConversionInfoMaps(
-			XProperty collectionProperty,
+			MemberDetails collectionProperty,
 			boolean isComposite,
 			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
 			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
@@ -86,38 +87,20 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			return;
 		}
 
-		{
-			final Convert convertAnnotation = collectionProperty.getAnnotation( Convert.class );
-			if ( convertAnnotation != null ) {
-				applyLocalConvert(
-						convertAnnotation,
-						collectionProperty,
-						isComposite,
-						elementAttributeConversionInfoMap,
-						keyAttributeConversionInfoMap
-				);
-			}
-		}
-
-		{
-			final Converts convertsAnnotation = collectionProperty.getAnnotation( Converts.class );
-			if ( convertsAnnotation != null ) {
-				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
-					applyLocalConvert(
-							convertAnnotation,
-							collectionProperty,
-							isComposite,
-							elementAttributeConversionInfoMap,
-							keyAttributeConversionInfoMap
-					);
-				}
-			}
-		}
+		collectionProperty.forEachAnnotationUsage( Convert.class, (usage) -> {
+			applyLocalConvert(
+					usage,
+					collectionProperty,
+					isComposite,
+					elementAttributeConversionInfoMap,
+					keyAttributeConversionInfoMap
+			);
+		} );
 	}
 
 	private void applyLocalConvert(
-			Convert convertAnnotation,
-			XProperty collectionProperty,
+			AnnotationUsage<Convert> convertAnnotation,
+			MemberDetails collectionProperty,
 			boolean isComposite,
 			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
 			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
@@ -241,12 +224,12 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void startingProperty(XProperty property) {
+	public void startingProperty(MemberDetails property) {
 		// for now, nothing to do...
 	}
 
 	@Override
-	protected AttributeConversionInfo locateAttributeConversionInfo(XProperty property) {
+	protected AttributeConversionInfo locateAttributeConversionInfo(MemberDetails attributeMember) {
 		// nothing to do
 		return null;
 	}
@@ -282,7 +265,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void addProperty(Property prop, XClass declaringClass) {
+	public void addProperty(Property prop, MemberDetails memberDetails, ClassDetails declaringClass) {
 		throw new AssertionFailure( "Cannot add property to a collection" );
 	}
 
@@ -322,18 +305,18 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void addProperty(Property prop, AnnotatedColumns columns, XClass declaringClass) {
+	public void addProperty(Property prop, MemberDetails memberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		throw new AssertionFailure( "addProperty to a join table of a collection: does it make sense?" );
 	}
 
 	@Override
-	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
+	public Join addJoin(AnnotationUsage<JoinTable> joinTableAnn, boolean noDelayInPkColumnCreation) {
 		throw new AssertionFailure( "Add join in a second pass" );
 	}
 
 	@Override
-	public Join addJoin(JoinTable joinTableAnn, Table table, boolean noDelayInPkColumnCreation) {
+	public Join addJoin(AnnotationUsage<JoinTable> joinTableAnn, Table table, boolean noDelayInPkColumnCreation) {
 		throw new AssertionFailure( "Add join in a second pass" );
 	}
 
@@ -344,7 +327,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	boolean prepared;
 
-	public void prepare(XProperty collectionProperty, boolean isComposite) {
+	public void prepare(MemberDetails collectionProperty, boolean isComposite) {
 		// fugly
 		if ( prepared ) {
 			return;
@@ -357,16 +340,16 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		prepared = true;
 
 		if ( collection.isMap() ) {
-			if ( collectionProperty.isAnnotationPresent( MapKeyEnumerated.class ) ) {
+			if ( collectionProperty.hasAnnotationUsage( MapKeyEnumerated.class ) ) {
 				canKeyBeConverted = false;
 			}
-			else if ( collectionProperty.isAnnotationPresent( MapKeyTemporal.class ) ) {
+			else if ( collectionProperty.hasAnnotationUsage( MapKeyTemporal.class ) ) {
 				canKeyBeConverted = false;
 			}
-			else if ( collectionProperty.isAnnotationPresent( MapKeyClass.class ) ) {
+			else if ( collectionProperty.hasAnnotationUsage( MapKeyClass.class ) ) {
 				canKeyBeConverted = false;
 			}
-			else if ( collectionProperty.isAnnotationPresent( MapKeyType.class ) ) {
+			else if ( collectionProperty.hasAnnotationUsage( MapKeyType.class ) ) {
 				canKeyBeConverted = false;
 			}
 		}
@@ -374,22 +357,22 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			canKeyBeConverted = false;
 		}
 
-		if ( collectionProperty.isAnnotationPresent( ManyToAny.class ) ) {
+		if ( collectionProperty.hasAnnotationUsage( ManyToAny.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.isAnnotationPresent( OneToMany.class ) ) {
+		else if ( collectionProperty.hasAnnotationUsage( OneToMany.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.isAnnotationPresent( ManyToMany.class ) ) {
+		else if ( collectionProperty.hasAnnotationUsage( ManyToMany.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.isAnnotationPresent( Enumerated.class ) ) {
+		else if ( collectionProperty.hasAnnotationUsage( Enumerated.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.isAnnotationPresent( Temporal.class ) ) {
+		else if ( collectionProperty.hasAnnotationUsage( Temporal.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.isAnnotationPresent( CollectionType.class ) ) {
+		else if ( collectionProperty.hasAnnotationUsage( CollectionType.class ) ) {
 			canElementBeConverted = false;
 		}
 
@@ -405,7 +388,9 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	public ConverterDescriptor resolveElementAttributeConverterDescriptor(XProperty collectionXProperty, XClass elementXClass) {
+	public ConverterDescriptor resolveElementAttributeConverterDescriptor(
+			MemberDetails memberDetails,
+			ClassDetails classDetails) {
 		AttributeConversionInfo info = locateAttributeConversionInfo( "element" );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
@@ -431,10 +416,12 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		return getContext().getMetadataCollector()
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
-				.findAutoApplyConverterForCollectionElement( collectionXProperty, getContext() );
+				.findAutoApplyConverterForCollectionElement( memberDetails, getContext() );
 	}
 
-	public ConverterDescriptor mapKeyAttributeConverterDescriptor(XProperty mapXProperty, XClass keyXClass) {
+	public ConverterDescriptor mapKeyAttributeConverterDescriptor(
+			MemberDetails memberDetails,
+			TypeDetails keyTypeDetails) {
 		AttributeConversionInfo info = locateAttributeConversionInfo( "key" );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
@@ -460,7 +447,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		return getContext().getMetadataCollector()
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
-				.findAutoApplyConverterForMapKey( mapXProperty, getContext() );
+				.findAutoApplyConverterForMapKey( memberDetails, getContext() );
 	}
 
 }

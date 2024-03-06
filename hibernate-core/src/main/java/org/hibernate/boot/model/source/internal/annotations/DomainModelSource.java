@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.source.internal.annotations;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -14,6 +13,7 @@ import org.hibernate.boot.models.categorize.spi.ConversionRegistration;
 import org.hibernate.boot.models.categorize.spi.ConverterRegistration;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
 import org.jboss.jandex.IndexView;
@@ -24,18 +24,21 @@ import org.jboss.jandex.IndexView;
 public class DomainModelSource {
 	private final ClassDetailsRegistry classDetailsRegistry;
 	private final IndexView jandexIndex;
-	private final GlobalRegistrations globalRegistrations;
 	private final PersistenceUnitMetadata persistenceUnitMetadata;
+	private final GlobalRegistrations globalRegistrations;
+	private final List<String> allKnownClassNames;
 
 	public DomainModelSource(
 			ClassDetailsRegistry classDetailsRegistry,
 			IndexView jandexIndex,
+			List<String> allKnownClassNames,
 			GlobalRegistrations globalRegistrations,
 			PersistenceUnitMetadata persistenceUnitMetadata) {
 		this.classDetailsRegistry = classDetailsRegistry;
 		this.jandexIndex = jandexIndex;
-		this.globalRegistrations = globalRegistrations;
 		this.persistenceUnitMetadata = persistenceUnitMetadata;
+		this.globalRegistrations = globalRegistrations;
+		this.allKnownClassNames = allKnownClassNames;
 	}
 
 	public ClassDetailsRegistry getClassDetailsRegistry() {
@@ -44,6 +47,10 @@ public class DomainModelSource {
 
 	public IndexView getJandexIndex() {
 		return jandexIndex;
+	}
+
+	public PersistenceUnitMetadata getPersistenceUnitMetadata() {
+		return persistenceUnitMetadata;
 	}
 
 	public GlobalRegistrations getGlobalRegistrations() {
@@ -58,7 +65,7 @@ public class DomainModelSource {
 		return globalRegistrations.getJpaConverters();
 	}
 
-	public PersistenceUnitMetadata getPersistenceUnitMetadata() {
-		return persistenceUnitMetadata;
+	public List<String> getManagedClassNames() {
+		return allKnownClassNames;
 	}
 }

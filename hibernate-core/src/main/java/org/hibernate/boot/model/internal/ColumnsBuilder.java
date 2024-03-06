@@ -18,9 +18,10 @@ import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -33,6 +34,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromNoAnnotation;
@@ -54,7 +56,7 @@ class ColumnsBuilder {
 
 	private final PropertyHolder propertyHolder;
 	private final Nullability nullability;
-	private final XProperty property;
+	private final MemberDetails property;
 	private final PropertyData inferredData;
 	private final EntityBinder entityBinder;
 	private final MetadataBuildingContext buildingContext;
@@ -64,7 +66,7 @@ class ColumnsBuilder {
 	public ColumnsBuilder(
 			PropertyHolder propertyHolder,
 			Nullability nullability,
-			XProperty property,
+			MemberDetails property,
 			PropertyData inferredData,
 			EntityBinder entityBinder,
 			MetadataBuildingContext buildingContext) {
@@ -88,12 +90,13 @@ class ColumnsBuilder {
 		columns = null;
 		joinColumns = buildExplicitJoinColumns( property, inferredData );
 
-
-//		Comment comment = property.getAnnotation(Comment.class);
-		if ( property.isAnnotationPresent( Column.class ) ) {
+		final AnnotationUsage<Column> columnAnn = property.getAnnotationUsage( Column.class );
+		final AnnotationUsage<Formula> formulaAnn = property.getAnnotationUsage( Formula.class );
+		final AnnotationUsage<Columns> columnsAnn = property.getAnnotationUsage( Columns.class );
+		if ( columnAnn != null ) {
 			columns = buildColumnFromAnnotation(
-					property.getAnnotation( Column.class ),
-					property.getAnnotation( FractionalSeconds.class ),
+					property.getAnnotationUsage( Column.class ),
+					property.getAnnotationUsage( FractionalSeconds.class ),
 //					comment,
 					nullability,
 					propertyHolder,
@@ -102,10 +105,9 @@ class ColumnsBuilder {
 					buildingContext
 			);
 		}
-		else if ( property.isAnnotationPresent( Formula.class ) ) {
+		else if ( formulaAnn != null ) {
 			columns = buildFormulaFromAnnotation(
 					getOverridableAnnotation( property, Formula.class, buildingContext ),
-//					comment,
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -113,11 +115,10 @@ class ColumnsBuilder {
 					buildingContext
 			);
 		}
-		else if ( property.isAnnotationPresent( Columns.class ) ) {
+		else if ( columnsAnn != null ) {
 			columns = buildColumnsFromAnnotations(
-					property.getAnnotation( Columns.class ).columns(),
+					columnsAnn.getList( "columns" ),
 					null,
-//					comment,
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -128,18 +129,18 @@ class ColumnsBuilder {
 
 		//set default values if needed
 		if ( joinColumns == null
-				&& ( property.isAnnotationPresent( ManyToOne.class )
-						|| property.isAnnotationPresent( OneToOne.class ) ) ) {
+				&& ( property.hasAnnotationUsage( ManyToOne.class )
+						|| property.hasAnnotationUsage( OneToOne.class ) ) ) {
 			joinColumns = buildDefaultJoinColumnsForToOne( property, inferredData );
 		}
 		else if ( joinColumns == null
-				&& ( property.isAnnotationPresent( OneToMany.class )
-						|| property.isAnnotationPresent( ElementCollection.class ) ) ) {
-			OneToMany oneToMany = property.getAnnotation( OneToMany.class );
+				&& ( property.hasAnnotationUsage( OneToMany.class )
+						|| property.hasAnnotationUsage( ElementCollection.class ) ) ) {
+			AnnotationUsage<OneToMany> oneToMany = property.getAnnotationUsage( OneToMany.class );
 			joinColumns = AnnotatedJoinColumns.buildJoinColumns(
 					null,
 //					comment,
-					oneToMany == null ? null : nullIfEmpty( oneToMany.mappedBy() ),
+					oneToMany == null ? null : nullIfEmpty( oneToMany.getString( "mappedBy" ) ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
 					inferredData,
@@ -147,14 +148,14 @@ class ColumnsBuilder {
 			);
 		}
 		else if ( joinColumns == null
-				&& property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
+				&& property.hasAnnotationUsage( org.hibernate.annotations.Any.class ) ) {
 			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
 					+ "' is annotated '@Any' and must declare at least one '@JoinColumn'" );
 		}
-		if ( columns == null && !property.isAnnotationPresent( ManyToMany.class ) ) {
+		if ( columns == null && !property.hasAnnotationUsage( ManyToMany.class ) ) {
 			//useful for collection of embedded elements
 			columns = buildColumnFromNoAnnotation(
-					property.getAnnotation( FractionalSeconds.class ),
+					property.getAnnotationUsage( FractionalSeconds.class ),
 //					comment,
 					nullability,
 					propertyHolder,
@@ -173,12 +174,14 @@ class ColumnsBuilder {
 		return this;
 	}
 
-	private AnnotatedJoinColumns buildDefaultJoinColumnsForToOne(XProperty property, PropertyData inferredData) {
-		final JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
+	private AnnotatedJoinColumns buildDefaultJoinColumnsForToOne(
+			MemberDetails property,
+			PropertyData inferredData) {
+		final AnnotationUsage<JoinTable> joinTableAnn = propertyHolder.getJoinTable( property );
 //		final Comment comment = property.getAnnotation(Comment.class);
 		if ( joinTableAnn != null ) {
 			return AnnotatedJoinColumns.buildJoinColumns(
-					joinTableAnn.inverseJoinColumns(),
+					joinTableAnn.getList( "inverseJoinColumns" ),
 //					comment,
 					null,
 					entityBinder.getSecondaryTables(),
@@ -188,11 +191,11 @@ class ColumnsBuilder {
 			);
 		}
 		else {
-			final OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
+			final AnnotationUsage<OneToOne> oneToOneAnn = property.getAnnotationUsage( OneToOne.class );
 			return AnnotatedJoinColumns.buildJoinColumns(
 					null,
 //					comment,
-					oneToOneAnn == null ? null : nullIfEmpty( oneToOneAnn.mappedBy() ),
+					oneToOneAnn == null ? null : nullIfEmpty( oneToOneAnn.getString( "mappedBy" ) ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
 					inferredData,
@@ -201,13 +204,12 @@ class ColumnsBuilder {
 		}
 	}
 
-	private AnnotatedJoinColumns buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
+	private AnnotatedJoinColumns buildExplicitJoinColumns(MemberDetails property, PropertyData inferredData) {
 		// process @JoinColumns before @Columns to handle collection of entities properly
-		final JoinColumn[] joinColumnAnnotations = getJoinColumnAnnotations( property, inferredData );
+		final List<AnnotationUsage<JoinColumn>> joinColumnAnnotations = getJoinColumnAnnotations( property, inferredData );
 		if ( joinColumnAnnotations != null ) {
 			return AnnotatedJoinColumns.buildJoinColumns(
 					joinColumnAnnotations,
-//					property.getAnnotation( Comment.class ),
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -216,7 +218,7 @@ class ColumnsBuilder {
 			);
 		}
 
-		final JoinColumnOrFormula[] joinColumnOrFormulaAnnotations = joinColumnOrFormulaAnnotations( property, inferredData );
+		final List<AnnotationUsage<JoinColumnOrFormula>> joinColumnOrFormulaAnnotations = joinColumnOrFormulaAnnotations( property, inferredData );
 		if ( joinColumnOrFormulaAnnotations != null ) {
 			return AnnotatedJoinColumns.buildJoinColumnsOrFormulas(
 					joinColumnOrFormulaAnnotations,
@@ -228,8 +230,8 @@ class ColumnsBuilder {
 			);
 		}
 
-		if ( property.isAnnotationPresent( JoinFormula.class) ) {
-			final JoinFormula joinFormula = getOverridableAnnotation( property, JoinFormula.class, buildingContext );
+		if ( property.hasAnnotationUsage( JoinFormula.class) ) {
+			final AnnotationUsage<JoinFormula> joinFormula = getOverridableAnnotation( property, JoinFormula.class, buildingContext );
 			return AnnotatedJoinColumns.buildJoinColumnsWithFormula(
 					joinFormula,
 					entityBinder.getSecondaryTables(),
@@ -242,58 +244,63 @@ class ColumnsBuilder {
 		return null;
 	}
 
-	private JoinColumnOrFormula[] joinColumnOrFormulaAnnotations(XProperty property, PropertyData inferredData) {
-		if ( property.isAnnotationPresent( JoinColumnOrFormula.class ) ) {
-			return new JoinColumnOrFormula[] { property.getAnnotation( JoinColumnOrFormula.class ) };
+	private List<AnnotationUsage<JoinColumnOrFormula>> joinColumnOrFormulaAnnotations(MemberDetails property, PropertyData inferredData) {
+		if ( property.hasAnnotationUsage( JoinColumnOrFormula.class ) ) {
+			return List.of( property.getAnnotationUsage( JoinColumnOrFormula.class ) );
 		}
-		else if ( property.isAnnotationPresent( JoinColumnsOrFormulas.class ) ) {
-			final JoinColumnsOrFormulas joinColumnsOrFormulas = property.getAnnotation( JoinColumnsOrFormulas.class );
-			final JoinColumnOrFormula[] joinColumnOrFormula = joinColumnsOrFormulas.value();
-			if ( joinColumnOrFormula.length == 0 ) {
+
+		if ( property.hasAnnotationUsage( JoinColumnsOrFormulas.class ) ) {
+			final AnnotationUsage<JoinColumnsOrFormulas> joinColumnsOrFormulas = property.getAnnotationUsage( JoinColumnsOrFormulas.class );
+			final List<AnnotationUsage<JoinColumnOrFormula>> joinColumnOrFormulaList = joinColumnsOrFormulas.getList( "value" );
+			if ( joinColumnOrFormulaList.isEmpty() ) {
 				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData)
 						+ "' has an empty '@JoinColumnsOrFormulas' annotation" );
 			}
-			return joinColumnOrFormula;
+			return joinColumnOrFormulaList;
 		}
-		else {
-			return null;
-		}
+
+		return null;
 	}
 
-	private JoinColumn[] getJoinColumnAnnotations(XProperty property, PropertyData inferredData) {
-		if ( property.isAnnotationPresent( JoinColumn.class ) ) {
-			return new JoinColumn[] { property.getAnnotation( JoinColumn.class ) };
+	private List<AnnotationUsage<JoinColumn>> getJoinColumnAnnotations(MemberDetails property, PropertyData inferredData) {
+		if ( property.hasAnnotationUsage( JoinColumn.class ) ) {
+			return List.of( property.getAnnotationUsage( JoinColumn.class ) );
 		}
-		else if ( property.isAnnotationPresent( JoinColumns.class ) ) {
-			final JoinColumns joinColumns = property.getAnnotation( JoinColumns.class );
-			final JoinColumn[] joinColumn = joinColumns.value();
-			if ( joinColumn.length == 0 ) {
+
+		if ( property.hasAnnotationUsage( JoinColumns.class ) ) {
+			final AnnotationUsage<JoinColumns> joinColumns = property.getAnnotationUsage( JoinColumns.class );
+			final List<AnnotationUsage<JoinColumn>> joinColumnsList = joinColumns.getList( "value" );
+			if ( joinColumnsList.isEmpty() ) {
 				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData)
 						+ "' has an empty '@JoinColumns' annotation" );
 			}
-			return joinColumn;
+			return joinColumnsList;
 		}
-		else if ( property.isAnnotationPresent( MapsId.class ) ) {
+
+		if ( property.hasAnnotationUsage( MapsId.class ) ) {
 			// inelegant solution to HHH-16463, let the PrimaryKeyJoinColumn
 			// masquerade as a regular JoinColumn (when a @OneToOne maps to
 			// the primary key of the child table, it's more elegant and more
 			// spec-compliant to map the association with @PrimaryKeyJoinColumn)
-			if ( property.isAnnotationPresent( PrimaryKeyJoinColumn.class ) ) {
-				final PrimaryKeyJoinColumn column = property.getAnnotation( PrimaryKeyJoinColumn.class );
-				return new JoinColumn[] { new JoinColumnAdapter( column ) };
+			if ( property.hasAnnotationUsage( PrimaryKeyJoinColumn.class ) ) {
+//				final AnnotationUsage<PrimaryKeyJoinColumn> nested = property.getAnnotationUsage( PrimaryKeyJoinColumn.class );
+//				return new JoinColumn[] { new JoinColumnAdapter( column ) };
+				throw new UnsupportedOperationException( "Not yet implemented" );
 			}
-			else if ( property.isAnnotationPresent( PrimaryKeyJoinColumns.class ) ) {
-				final PrimaryKeyJoinColumns primaryKeyJoinColumns = property.getAnnotation( PrimaryKeyJoinColumns.class );
-				final JoinColumn[] joinColumns = new JoinColumn[primaryKeyJoinColumns.value().length];
-				final PrimaryKeyJoinColumn[] columns = primaryKeyJoinColumns.value();
-				if ( columns.length == 0 ) {
-					throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData)
-							+ "' has an empty '@PrimaryKeyJoinColumns' annotation" );
-				}
-				for ( int i = 0; i < columns.length; i++ ) {
-					joinColumns[i] = new JoinColumnAdapter( columns[i] );
-				}
-				return joinColumns;
+			else if ( property.hasAnnotationUsage( PrimaryKeyJoinColumns.class ) ) {
+//				final AnnotationUsage<PrimaryKeyJoinColumns> primaryKeyJoinColumns = property.getAnnotationUsage( PrimaryKeyJoinColumns.class );
+//				final List<PrimaryKeyJoinColumn> nested = primaryKeyJoinColumns.getList( "value" );
+//				final JoinColumn[] joinColumns = new JoinColumn[primaryKeyJoinColumns.value().length];
+//				final PrimaryKeyJoinColumn[] columns = primaryKeyJoinColumns.value();
+//				if ( columns.length == 0 ) {
+//					throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData)
+//							+ "' has an empty '@PrimaryKeyJoinColumns' annotation" );
+//				}
+//				for ( int i = 0; i < columns.length; i++ ) {
+//					joinColumns[i] = new JoinColumnAdapter( columns[i] );
+//				}
+//				return joinColumns;
+				throw new UnsupportedOperationException( "Not yet implemented" );
 			}
 			else {
 				return null;
@@ -311,9 +318,9 @@ class ColumnsBuilder {
 		final PropertyData override =
 				getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.getName(), buildingContext );
 		if ( override != null ) {
-			final AnnotatedJoinColumns joinColumns = buildExplicitJoinColumns( override.getProperty(), override );
+			final AnnotatedJoinColumns joinColumns = buildExplicitJoinColumns( override.getAttributeMember(), override );
 			return joinColumns == null
-					? buildDefaultJoinColumnsForToOne( override.getProperty(), override )
+					? buildDefaultJoinColumnsForToOne( override.getAttributeMember(), override )
 					: joinColumns;
 		}
 		else {
@@ -375,11 +382,6 @@ class ColumnsBuilder {
 		}
 
 		@Override
-		public CheckConstraint[] check() {
-			return new CheckConstraint[0];
-		}
-
-		@Override
 		public String comment() {
 			return "";
 		}
@@ -387,6 +389,11 @@ class ColumnsBuilder {
 		@Override
 		public ForeignKey foreignKey() {
 			return column.foreignKey();
+		}
+
+		@Override
+		public CheckConstraint[] check() {
+			return new CheckConstraint[0];
 		}
 
 		@Override

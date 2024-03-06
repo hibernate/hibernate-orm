@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.boot.models.categorize.spi.NamedQueryRegistration;
+
 
 /**
  * Registrations which are considered global, collected across annotations
@@ -46,6 +48,13 @@ public interface GlobalRegistrations {
 
 	Set<ConverterRegistration> getJpaConverters();
 
+	Map<String, SqlResultSetMappingRegistration> getSqlResultSetMappingRegistrations();
+
+	Map<String, NamedQueryRegistration> getNamedQueryRegistrations();
+
+	Map<String, NamedNativeQueryRegistration> getNamedNativeQueryRegistrations();
+
+	Map<String, NamedStoredProcedureQueryRegistration> getNamedStoredProcedureQueryRegistrations();
+
 	// todo : named entity graphs
-	// todo : named queries
 }

@@ -62,10 +62,17 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
+import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
+import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
+import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
+import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
+import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -81,6 +88,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -99,6 +107,10 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.models.internal.SourceModelBuildingContextImpl;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -114,6 +126,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
 
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * The implementation of the {@linkplain InFlightMetadataCollector in-flight
@@ -131,6 +144,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingOptions options;
 
+	private final GlobalRegistrations globalRegistrations;
+	private final PersistenceUnitMetadata persistenceUnitMetadata;
+
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
 
 	private final UUID uuid;
@@ -138,7 +154,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final List<Component> composites = new ArrayList<>();
 	private final Map<Class<?>, Component> genericComponentsMap = new HashMap<>();
-	private final Map<XClass, List<XClass>> embeddableSubtypes = new HashMap<>();
+	private final Map<ClassDetails, List<ClassDetails>> embeddableSubtypes = new HashMap<>();
 	private final Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
@@ -168,19 +184,27 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<>();
 	private final Set<String> defaultNamedProcedureNames = new HashSet<>();
 	private Map<Class<?>, MappedSuperclass> mappedSuperClasses;
-	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
-	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
+	private Map<ClassDetails, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
+	private Map<ClassDetails, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Set<DelayedPropertyReferenceHandler> delayedPropertyReferenceHandlers;
 	private List<Function<MetadataBuildingContext, Boolean>> valueResolvers;
 
+	private final SourceModelBuildingContext sourceModelBuildingContext;
+
 	public InFlightMetadataCollectorImpl(
 			BootstrapContext bootstrapContext,
+			SourceModelBuildingContext sourceModelBuildingContext,
 			MetadataBuildingOptions options) {
 		this.bootstrapContext = bootstrapContext;
-		this.uuid = UUID.randomUUID();
+		this.sourceModelBuildingContext = sourceModelBuildingContext;
 		this.options = options;
+
+		this.uuid = UUID.randomUUID();
+
+		this.globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext );
+		this.persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
 
 		for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {
@@ -192,6 +216,26 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 
 		bootstrapContext.getAuxiliaryDatabaseObjectList().forEach( getDatabase()::addAuxiliaryDatabaseObject );
+	}
+
+	public InFlightMetadataCollectorImpl(
+			BootstrapContext bootstrapContext,
+			MetadataBuildingOptions options) {
+		this(
+				bootstrapContext,
+				buildContext( bootstrapContext ),
+				options
+		);
+	}
+
+	private static SourceModelBuildingContext buildContext(BootstrapContext bootstrapContext) {
+		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
+		return new SourceModelBuildingContextImpl(
+				classLoading,
+				bootstrapContext.getJandexView(),
+				ManagedResourcesProcessor::preFillRegistries
+		);
 	}
 
 	@Override
@@ -207,6 +251,21 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	@Override
 	public BootstrapContext getBootstrapContext() {
 		return bootstrapContext;
+	}
+
+	@Override
+	public SourceModelBuildingContext getSourceModelBuildingContext() {
+		return sourceModelBuildingContext;
+	}
+
+	@Override
+	public GlobalRegistrations getGlobalRegistrations() {
+		return globalRegistrations;
+	}
+
+	@Override
+	public PersistenceUnitMetadata getPersistenceUnitMetadata() {
+		return persistenceUnitMetadata;
 	}
 
 	@Override
@@ -290,13 +349,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void registerEmbeddableSubclass(XClass superclass, XClass subclass) {
+	public void registerEmbeddableSubclass(ClassDetails superclass, ClassDetails subclass) {
 		embeddableSubtypes.computeIfAbsent( superclass, c -> new ArrayList<>() ).add( subclass );
 	}
 
 	@Override
-	public List<XClass> getEmbeddableSubclasses(XClass superclass) {
-		final List<XClass> subclasses = embeddableSubtypes.get( superclass );
+	public List<ClassDetails> getEmbeddableSubclasses(ClassDetails superclass) {
+		final List<ClassDetails> subclasses = embeddableSubtypes.get( superclass );
 		return subclasses != null ? subclasses : List.of();
 	}
 
@@ -490,9 +549,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
 
 	@Override
-	public void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation) {
+	public void addCollectionTypeRegistration(AnnotationUsage<CollectionTypeRegistration> registrationAnnotation) {
 		addCollectionTypeRegistration(
-				registrationAnnotation.classification(),
+				registrationAnnotation.getEnum( "classification" ),
 				toDescriptor( registrationAnnotation )
 		);
 	}
@@ -514,19 +573,25 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		return collectionTypeRegistrations.get( classification );
 	}
 
-	private CollectionTypeRegistrationDescriptor toDescriptor(CollectionTypeRegistration registrationAnnotation) {
-		final Map<String,String> parameters;
-		if ( registrationAnnotation.parameters().length > 0 ) {
-			parameters = new HashMap<>();
-			for ( Parameter parameter : registrationAnnotation.parameters() ) {
-				parameters.put( parameter.name(), parameter.value() );
-			}
-		}
-		else {
-			parameters = null;
-		}
-		return new CollectionTypeRegistrationDescriptor( registrationAnnotation.type(), parameters );
+	private CollectionTypeRegistrationDescriptor toDescriptor(AnnotationUsage<CollectionTypeRegistration> registrationAnnotation) {
+		return new CollectionTypeRegistrationDescriptor(
+				registrationAnnotation.getClassDetails( "type" ).toJavaClass(),
+				extractParameters( registrationAnnotation.getList( "parameters" ) )
+		);
 	}
+
+	private Map<String,String> extractParameters(List<AnnotationUsage<Parameter>> annotationUsages) {
+		if ( CollectionHelper.isEmpty( annotationUsages ) ) {
+			return null;
+		}
+
+		final Map<String,String> result = mapOfSize( annotationUsages.size() );
+		for ( AnnotationUsage<Parameter> parameter : annotationUsages ) {
+			result.put( parameter.getString( "name" ), parameter.getString( "value" ) );
+		}
+		return result;
+	}
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1298,6 +1363,43 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
+	public AnnotatedClassType addClassType(ClassDetails classDetails) {
+		final AnnotatedClassType type = getAnnotatedClassType2( classDetails );
+		annotatedClassTypeMap.put( classDetails.getName(), type );
+		return type;
+	}
+
+	private static AnnotatedClassType getAnnotatedClassType2(ClassDetails classDetails) {
+		if ( classDetails.hasAnnotationUsage( Entity.class ) ) {
+			return AnnotatedClassType.ENTITY;
+		}
+		else if ( classDetails.hasAnnotationUsage( Embeddable.class ) ) {
+			return AnnotatedClassType.EMBEDDABLE;
+		}
+		else if ( classDetails.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
+			return AnnotatedClassType.MAPPED_SUPERCLASS;
+		}
+		else if ( classDetails.hasAnnotationUsage( Imported.class ) ) {
+			return AnnotatedClassType.IMPORTED;
+		}
+		else {
+			return AnnotatedClassType.NONE;
+		}
+	}
+
+	@Override
+	public AnnotatedClassType getClassType(ClassDetails classDetails) {
+		final AnnotatedClassType type = annotatedClassTypeMap.get( classDetails.getName() );
+		if ( type == null ) {
+			return addClassType( classDetails );
+		}
+		else {
+			return type;
+		}
+	}
+
+
+	@Override
 	public void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass) {
 		if ( mappedSuperClasses == null ) {
 			mappedSuperClasses = new HashMap<>();
@@ -1314,7 +1416,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public PropertyData getPropertyAnnotatedWithMapsId(XClass entityType, String propertyName) {
+	public PropertyData getPropertyAnnotatedWithMapsId(ClassDetails entityType, String propertyName) {
 		if ( propertiesAnnotatedWithMapsId == null ) {
 			return null;
 		}
@@ -1324,35 +1426,36 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void addPropertyAnnotatedWithMapsId(XClass entityType, PropertyData property) {
+	public void addPropertyAnnotatedWithMapsId(ClassDetails entityType, PropertyData property) {
 		if ( propertiesAnnotatedWithMapsId == null ) {
 			propertiesAnnotatedWithMapsId = new HashMap<>();
 		}
 
-		Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
-		if ( map == null ) {
-			map = new HashMap<>();
-			propertiesAnnotatedWithMapsId.put( entityType, map );
-		}
-		map.put( property.getProperty().getAnnotation( MapsId.class ).value(), property );
+		final Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.computeIfAbsent(
+				entityType,
+				k -> new HashMap<>()
+		);
+		map.put(
+				property.getAttributeMember().getAnnotationUsage( MapsId.class ).getString( "value" ),
+				property
+		);
 	}
 
 	@Override
-	public void addPropertyAnnotatedWithMapsIdSpecj(XClass entityType, PropertyData property, String mapsIdValue) {
+	public void addPropertyAnnotatedWithMapsIdSpecj(ClassDetails entityType, PropertyData property, String mapsIdValue) {
 		if ( propertiesAnnotatedWithMapsId == null ) {
 			propertiesAnnotatedWithMapsId = new HashMap<>();
 		}
 
-		Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
-		if ( map == null ) {
-			map = new HashMap<>();
-			propertiesAnnotatedWithMapsId.put( entityType, map );
-		}
+		final Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.computeIfAbsent(
+				entityType,
+				k -> new HashMap<>()
+		);
 		map.put( mapsIdValue, property );
 	}
 
 	@Override
-	public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass entityType, String propertyName) {
+	public PropertyData getPropertyAnnotatedWithIdAndToOne(ClassDetails entityType, String propertyName) {
 		if ( propertiesAnnotatedWithIdAndToOne == null ) {
 			return null;
 		}
@@ -1362,16 +1465,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void addToOneAndIdProperty(XClass entityType, PropertyData property) {
+	public void addToOneAndIdProperty(ClassDetails entityType, PropertyData property) {
 		if ( propertiesAnnotatedWithIdAndToOne == null ) {
 			propertiesAnnotatedWithIdAndToOne = new HashMap<>();
 		}
 
-		Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.get( entityType );
-		if ( map == null ) {
-			map = new HashMap<>();
-			propertiesAnnotatedWithIdAndToOne.put( entityType, map );
-		}
+		final Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.computeIfAbsent(
+				entityType,
+				k -> new HashMap<>()
+		);
 		map.put( property.getPropertyName(), property );
 	}
 

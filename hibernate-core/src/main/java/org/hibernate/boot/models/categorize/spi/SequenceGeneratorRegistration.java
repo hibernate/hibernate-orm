@@ -15,20 +15,5 @@ import jakarta.persistence.SequenceGenerator;
  *
  * @author Steve Ebersole
  */
-public class SequenceGeneratorRegistration {
-	private final String name;
-	private final AnnotationUsage<SequenceGenerator> configuration;
-
-	public SequenceGeneratorRegistration(String name, AnnotationUsage<SequenceGenerator> configuration) {
-		this.name = name;
-		this.configuration = configuration;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public AnnotationUsage<SequenceGenerator> getConfiguration() {
-		return configuration;
-	}
+public record SequenceGeneratorRegistration(String name, AnnotationUsage<SequenceGenerator> configuration) {
 }

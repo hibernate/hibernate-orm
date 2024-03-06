@@ -9,6 +9,7 @@ package org.hibernate.boot.model.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.spi.AnnotationUsage;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -43,32 +44,32 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 	}
 
 	public static AnnotatedDiscriminatorColumn buildDiscriminatorColumn(
-			DiscriminatorColumn discriminatorColumn,
-			DiscriminatorFormula discriminatorFormula,
+			AnnotationUsage<DiscriminatorColumn> discriminatorColumn,
+			AnnotationUsage<DiscriminatorFormula> discriminatorFormula,
 			MetadataBuildingContext context) {
 		final AnnotatedColumns parent = new AnnotatedColumns();
 		parent.setBuildingContext( context );
 		final AnnotatedDiscriminatorColumn column = new AnnotatedDiscriminatorColumn();
 		final DiscriminatorType discriminatorType;
 		if ( discriminatorFormula != null ) {
-			final DiscriminatorType type = discriminatorFormula.discriminatorType();
+			final DiscriminatorType type = discriminatorFormula.getEnum( "discriminatorType" );
 			if ( type == DiscriminatorType.STRING ) {
-				discriminatorType = discriminatorColumn == null ? type : discriminatorColumn.discriminatorType();
+				discriminatorType = discriminatorColumn == null ? type : discriminatorColumn.getEnum( "discriminatorType" );
 			}
 			else {
 				discriminatorType = type;
 			}
 			column.setImplicit( false );
-			column.setFormula( discriminatorFormula.value() );
+			column.setFormula( discriminatorFormula.getString( "value" ) );
 		}
 		else if ( discriminatorColumn != null ) {
-			discriminatorType = discriminatorColumn.discriminatorType();
+			discriminatorType = discriminatorColumn.getEnum( "discriminatorType" );
 			column.setImplicit( false );
-			if ( !discriminatorColumn.columnDefinition().isEmpty() ) {
-				column.setSqlType( discriminatorColumn.columnDefinition() );
+			if ( !discriminatorColumn.getString( "columnDefinition" ).isEmpty() ) {
+				column.setSqlType( discriminatorColumn.getString( "columnDefinition" ) );
 			}
-			if ( !discriminatorColumn.name().isEmpty() ) {
-				column.setLogicalColumnName( discriminatorColumn.name() );
+			if ( !discriminatorColumn.getString( "name" ).isEmpty() ) {
+				column.setLogicalColumnName( discriminatorColumn.getString( "name" ) );
 			}
 			column.setNullable( false );
 		}
@@ -84,7 +85,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 
 	private static void setDiscriminatorType(
 			DiscriminatorType type,
-			DiscriminatorColumn discriminatorColumn,
+			AnnotationUsage<DiscriminatorColumn> discriminatorColumn,
 			AnnotatedDiscriminatorColumn column) {
 		if ( type == null ) {
 			column.setDiscriminatorTypeName( "string" );
@@ -103,7 +104,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 				case STRING:
 					column.setDiscriminatorTypeName( "string" );
 					if ( discriminatorColumn != null ) {
-						column.setLength( (long) discriminatorColumn.length() );
+						column.setLength( (long) discriminatorColumn.getInteger( "length" ) );
 					}
 					break;
 				default:

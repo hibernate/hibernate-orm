@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -21,10 +22,9 @@ import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
-
-import jakarta.persistence.Column;
 
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 
@@ -51,7 +51,7 @@ public class IdBagBinder extends BagBinder {
 	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
 		boolean result = super.bindStarToManySecondPass( persistentClasses );
 
-		final CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
+		final AnnotationUsage<CollectionId> collectionIdAnn = property.getAnnotationUsage( CollectionId.class );
 		if ( collectionIdAnn == null ) {
 			throw new MappingException( "idbag mapping missing '@CollectionId' annotation" );
 		}
@@ -62,13 +62,13 @@ public class IdBagBinder extends BagBinder {
 						property,
 						//default access should not be useful
 						null,
-						buildingContext.getBootstrapContext().getReflectionManager()
+						buildingContext
 				),
 				"id"
 		);
 
 		final AnnotatedColumns idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
-				new Column[] { collectionIdAnn.column() },
+				List.of( collectionIdAnn.getNestedUsage( "column" ) ),
 //				null,
 				null,
 				Nullability.FORCED_NOT_NULL,
@@ -100,7 +100,7 @@ public class IdBagBinder extends BagBinder {
 		final BasicValue id = valueBinder.make();
 		( (IdentifierCollection) collection ).setIdentifier( id );
 
-		final String namedGenerator = collectionIdAnn.generator();
+		final String namedGenerator = collectionIdAnn.getString( "generator" );
 
 		switch (namedGenerator) {
 			case "identity": {

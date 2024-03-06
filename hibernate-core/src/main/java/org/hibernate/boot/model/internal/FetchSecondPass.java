@@ -15,6 +15,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.spi.AnnotationUsage;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
@@ -23,13 +24,13 @@ import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
  * @author Gavin King
  */
 public class FetchSecondPass implements SecondPass {
-	private final FetchProfileOverride fetch;
+	private final AnnotationUsage<FetchProfileOverride> fetch;
 	private final PropertyHolder propertyHolder;
 	private final String propertyName;
 	private final MetadataBuildingContext buildingContext;
 
 	public FetchSecondPass(
-			FetchProfileOverride fetch,
+			AnnotationUsage<FetchProfileOverride> fetch,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
@@ -41,21 +42,20 @@ public class FetchSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-
-		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( fetch.profile() );
+		final String profileName = fetch.getString( "profile" );
+		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( profileName );
 		if ( profile == null ) {
 			throw new AnnotationException( "Property '" + qualify( propertyHolder.getPath(), propertyName )
-					+ "' refers to an unknown fetch profile named '" + fetch.profile() + "'" );
+												   + "' refers to an unknown fetch profile named '" + profileName + "'" );
 		}
+
 		if ( profile.getSource() == ANNOTATIONS ) {
-			profile.addFetch(
-					new FetchProfile.Fetch(
-							propertyHolder.getEntityName(),
-							propertyName,
-							fetch.mode(),
-							fetch.fetch()
-					)
-			);
+			profile.addFetch( new FetchProfile.Fetch(
+					propertyHolder.getEntityName(),
+					propertyName,
+					fetch.getEnum( "mode" ),
+					fetch.getEnum( "fetch" )
+			) );
 		}
 		// otherwise, it's a fetch profile defined in XML, and it overrides
 		// the annotations, so we simply ignore this annotation completely

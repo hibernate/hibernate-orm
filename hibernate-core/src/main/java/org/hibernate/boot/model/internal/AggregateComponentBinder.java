@@ -11,8 +11,6 @@ import java.util.List;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Struct;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -22,6 +20,10 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -38,10 +40,10 @@ public final class AggregateComponentBinder {
 			Component component,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			XClass returnedClassOrElement,
+			ClassDetails returnedClassOrElement,
 			AnnotatedColumns columns,
 			MetadataBuildingContext context) {
-		if ( isAggregate( inferredData.getProperty(), inferredData.getClassOrElement() ) ) {
+		if ( isAggregate( inferredData.getAttributeMember(), inferredData.getClassOrElementType(), context ) ) {
 			validateComponent( component, BinderHelper.getPath( propertyHolder, inferredData ) );
 
 			final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
@@ -64,8 +66,8 @@ public final class AggregateComponentBinder {
 			basicValueBinder.setColumns( columns );
 			basicValueBinder.setPersistentClassName( propertyHolder.getClassName() );
 			basicValueBinder.setType(
-					inferredData.getProperty(),
-					inferredData.getPropertyClass(),
+					inferredData.getAttributeMember(),
+					inferredData.getPropertyType(),
 					inferredData.getDeclaringClass().getName(),
 					null
 			);
@@ -114,62 +116,78 @@ public final class AggregateComponentBinder {
 	private static String determineStructName(
 			AnnotatedColumns columns,
 			PropertyData inferredData,
-			XClass returnedClassOrElement) {
-		final XProperty property = inferredData.getProperty();
+			ClassDetails returnedClassOrElement) {
+		final MemberDetails property = inferredData.getAttributeMember();
 		if ( property != null ) {
-			final Struct struct = property.getAnnotation( Struct.class );
+			final AnnotationUsage<Struct> struct = property.getAnnotationUsage( Struct.class );
 			if ( struct != null ) {
-				return struct.name();
+				return struct.getString( "name" );
 			}
-			final JdbcTypeCode jdbcTypeCode = property.getAnnotation( JdbcTypeCode.class );
-			if ( jdbcTypeCode != null && jdbcTypeCode.value() == SqlTypes.STRUCT && columns != null ) {
-				final List<AnnotatedColumn> columnList = columns.getColumns();
-				if ( columnList.size() == 1 && columnList.get( 0 ).getSqlType() != null ) {
-					return columnList.get( 0 ).getSqlType();
+
+			final AnnotationUsage<JdbcTypeCode> jdbcTypeCodeAnn = property.getAnnotationUsage( JdbcTypeCode.class );
+			if ( jdbcTypeCodeAnn != null && columns != null ) {
+				final Integer jdbcTypeCode = jdbcTypeCodeAnn.getInteger( "value" );
+				if ( jdbcTypeCode == SqlTypes.STRUCT ) {
+					final List<AnnotatedColumn> columnList = columns.getColumns();
+					if ( columnList.size() == 1 && columnList.get( 0 ).getSqlType() != null ) {
+						return columnList.get( 0 ).getSqlType();
+					}
 				}
 			}
 		}
-		final Struct struct = returnedClassOrElement.getAnnotation( Struct.class );
+
+		final AnnotationUsage<Struct> struct = returnedClassOrElement.getAnnotationUsage( Struct.class );
 		if ( struct != null ) {
-			return struct.name();
+			return struct.getString( "name" );
 		}
+
 		return null;
 	}
 
-	private static String[] determineStructAttributeNames(PropertyData inferredData, XClass returnedClassOrElement) {
-		final XProperty property = inferredData.getProperty();
+	private static String[] determineStructAttributeNames(PropertyData inferredData, ClassDetails returnedClassOrElement) {
+		final MemberDetails property = inferredData.getAttributeMember();
 		if ( property != null ) {
-			final Struct struct = property.getAnnotation( Struct.class );
+			final AnnotationUsage<Struct> struct = property.getAnnotationUsage( Struct.class );
 			if ( struct != null ) {
-				return struct.attributes();
+				final List<String> attributes = struct.getList( "attributes" );
+				return attributes.toArray( new String[0] );
 			}
 		}
-		final Struct struct = returnedClassOrElement.getAnnotation( Struct.class );
+
+		final AnnotationUsage<Struct> struct = returnedClassOrElement.getAnnotationUsage( Struct.class );
 		if ( struct != null ) {
-			return struct.attributes();
+			final List<String> attributes = struct.getList( "attributes" );
+			return attributes.toArray( new String[0] );
 		}
+
 		return null;
 	}
 
-	private static boolean isAggregate(XProperty property, XClass returnedClass) {
+	private static boolean isAggregate(
+			MemberDetails property,
+			TypeDetails returnedClass,
+			MetadataBuildingContext context) {
 		if ( property != null ) {
-			final Struct struct = property.getAnnotation( Struct.class );
-			if ( struct != null ) {
+			if ( property.hasAnnotationUsage( Struct.class ) ) {
 				return true;
 			}
-			final JdbcTypeCode jdbcTypeCode = property.getAnnotation( JdbcTypeCode.class );
+
+			final AnnotationUsage<JdbcTypeCode> jdbcTypeCode = property.getAnnotationUsage( JdbcTypeCode.class );
 			if ( jdbcTypeCode != null ) {
-				switch ( jdbcTypeCode.value() ) {
+				switch ( jdbcTypeCode.getInteger( "value" ) ) {
 					case SqlTypes.STRUCT:
 					case SqlTypes.JSON:
-					case SqlTypes.SQLXML:
+					case SqlTypes.SQLXML: {
 						return true;
+					}
 				}
 			}
 		}
+
 		if ( returnedClass != null ) {
-			return returnedClass.isAnnotationPresent( Struct.class );
+			return returnedClass.determineRawClass().hasAnnotationUsage( Struct.class );
 		}
+
 		return false;
 	}
 }

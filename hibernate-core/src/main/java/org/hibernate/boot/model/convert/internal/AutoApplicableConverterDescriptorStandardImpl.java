@@ -15,6 +15,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.spi.MemberDetails;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.members.ResolvedMember;
@@ -37,9 +38,9 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 
 	@Override
 	public ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(
-			XProperty xProperty,
+			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
-		final ResolvedType attributeType = resolveAttributeType( xProperty, context );
+		final ResolvedType attributeType = resolveAttributeType( memberDetails, context );
 
 		return typesMatch( linkedConverterDescriptor.getDomainValueResolvedType(), attributeType )
 				? linkedConverterDescriptor
@@ -48,9 +49,9 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 
 	@Override
 	public ConverterDescriptor getAutoAppliedConverterDescriptorForCollectionElement(
-			XProperty xProperty,
+			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
-		final ResolvedMember<?> collectionMember = resolveMember( xProperty, context );
+		final ResolvedMember<?> collectionMember = resolveMember( memberDetails, context );
 
 		final ResolvedType elementType;
 		Class<?> erasedType = collectionMember.getType().getErasedType();
@@ -82,10 +83,10 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 
 	@Override
 	public ConverterDescriptor getAutoAppliedConverterDescriptorForMapKey(
-			XProperty xProperty,
+			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 
-		final ResolvedMember<?> collectionMember = resolveMember( xProperty, context );
+		final ResolvedMember<?> collectionMember = resolveMember( memberDetails, context );
 		final ResolvedType keyType;
 
 		if ( Map.class.isAssignableFrom( collectionMember.getType().getErasedType() ) ) {

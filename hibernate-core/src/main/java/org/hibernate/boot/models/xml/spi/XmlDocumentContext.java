@@ -7,7 +7,7 @@
 package org.hibernate.boot.models.xml.spi;
 
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
-import org.hibernate.models.internal.MutableClassDetails;
+import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 /**

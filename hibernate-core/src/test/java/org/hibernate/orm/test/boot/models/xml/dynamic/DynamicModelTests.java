@@ -74,14 +74,14 @@ public class DynamicModelTests {
 			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( "SimpleEntity" );
 
 			final FieldDetails idField = rootEntity.getClassDetails().findFieldByName( "id" );
-			assertThat( idField.getType().getClassName() ).isEqualTo( Integer.class.getName() );
+			assertThat( idField.getType().determineRawClass().getClassName() ).isEqualTo( Integer.class.getName() );
 
 			final FieldDetails nameField = rootEntity.getClassDetails().findFieldByName( "name" );
-			assertThat( nameField.getType().getClassName() ).isEqualTo( Object.class.getName() );
+			assertThat( nameField.getType().determineRawClass().getClassName() ).isEqualTo( Object.class.getName() );
 			assertThat( nameField.getAnnotationUsage( JavaType.class ) ).isNotNull();
 
 			final FieldDetails qtyField = rootEntity.getClassDetails().findFieldByName( "quantity" );
-			assertThat( qtyField.getType().getClassName() ).isEqualTo( int.class.getName() );
+			assertThat( qtyField.getType().determineRawClass().getClassName() ).isEqualTo( int.class.getName() );
 		}
 	}
 
@@ -107,18 +107,18 @@ public class DynamicModelTests {
 			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( "Contact" );
 
 			final FieldDetails idField = rootEntity.getClassDetails().findFieldByName( "id" );
-			assertThat( idField.getType().getClassName() ).isEqualTo( Integer.class.getName() );
+			assertThat( idField.getType().determineRawClass().getClassName() ).isEqualTo( Integer.class.getName() );
 
 			final FieldDetails nameField = rootEntity.getClassDetails().findFieldByName( "name" );
-			assertThat( nameField.getType().getClassName() ).isNull();
+			assertThat( nameField.getType().determineRawClass().getClassName() ).isNull();
 			assertThat( nameField.getType().getName() ).isEqualTo( "Name" );
 			assertThat( nameField.getAnnotationUsage( Target.class ) ).isNotNull();
 			assertThat( nameField.getAnnotationUsage( Target.class ).getString( "value" ) ).isEqualTo( "Name" );
 
-			assertThat( nameField.getType().getFields() ).hasSize( 2 );
+			assertThat( nameField.getType().determineRawClass().getFields() ).hasSize( 2 );
 
 			final FieldDetails labels = rootEntity.getClassDetails().findFieldByName( "labels" );
-			assertThat( labels.getType().getClassName() ).isEqualTo( Set.class.getName() );
+			assertThat( labels.getType().determineRawClass().getClassName() ).isEqualTo( Set.class.getName() );
 			final AnnotationUsage<ElementCollection> elementCollection = labels.getAnnotationUsage( ElementCollection.class );
 			assertThat( elementCollection.<ClassDetails>getAttributeValue( "targetClass" ).getName() ).isEqualTo( String.class.getName() );
 			final AnnotationUsage<CollectionClassification> collectionClassification = labels.getAnnotationUsage( CollectionClassification.class );
@@ -179,7 +179,7 @@ public class DynamicModelTests {
 			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( Employee.class.getName() );
 
 			final FieldDetails oneToMany = rootEntity.getClassDetails().findFieldByName( "oneToMany" );
-			assertThat( oneToMany.getType().getClassName() ).isEqualTo( List.class.getName() );
+			assertThat( oneToMany.getType().determineRawClass().getClassName() ).isEqualTo( List.class.getName() );
 			final AnnotationUsage<OneToMany> oneToManyAnn = oneToMany.getAnnotationUsage( OneToMany.class );
 			assertThat( oneToManyAnn.<FetchType>getAttributeValue( "fetch" ) ).isEqualTo( FetchType.EAGER );
 			assertThat( oneToMany.getAnnotationUsage( NotFound.class )

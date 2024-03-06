@@ -16,13 +16,13 @@ import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.models.internal.jdk.VoidClassDetails;
 import org.hibernate.models.spi.MethodDetails;
 
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.models.spi.ClassDetails.VOID_CLASS_DETAILS;
 
 /**
  * @author Steve Ebersole
@@ -50,7 +50,7 @@ public class JpaEventListenerTests {
 			final JpaEventListener registration = registrations.get( 0 );
 			final MethodDetails postPersistMethod = registration.getPostPersistMethod();
 			assertThat( postPersistMethod ).isNotNull();
-			assertThat( postPersistMethod.getReturnType() ).isEqualTo( VoidClassDetails.VOID_CLASS_DETAILS );
+			assertThat( postPersistMethod.getReturnType() ).isEqualTo( VOID_CLASS_DETAILS );
 			assertThat( postPersistMethod.getArgumentTypes() ).hasSize( 1 );
 		}
 	}

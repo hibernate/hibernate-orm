@@ -8,6 +8,7 @@ package org.hibernate.persister.internal;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -67,15 +68,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			EntityDataAccess entityCacheAccessStrategy,
 			NaturalIdDataAccess naturalIdCacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
-		// If the metadata for the entity specified an explicit persister class, use it...
-		Class<? extends EntityPersister> persisterClass = entityBinding.getEntityPersisterClass();
-		if ( persisterClass == null ) {
-			// Otherwise, use the persister class indicated by the PersisterClassResolver service
-			persisterClass = persisterClassResolver.getEntityPersisterClass( entityBinding );
-		}
-
 		return createEntityPersister(
-				persisterClass,
+				persisterClassResolver.getEntityPersisterClass( entityBinding ),
 				entityBinding,
 				entityCacheAccessStrategy,
 				naturalIdCacheAccessStrategy,
@@ -102,11 +96,27 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 				throw (HibernateException) target;
 			}
 			else {
-				throw new MappingException( "Could not instantiate persister " + persisterClass.getName(), target );
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Could not instantiate persister %s (%s)",
+								persisterClass.getName(),
+								entityBinding.getEntityName()
+						),
+						target
+				);
 			}
 		}
 		catch (Exception e) {
-			throw new MappingException( "Could not instantiate persister " + persisterClass.getName(), e );
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Could not instantiate persister %s (%s)",
+							persisterClass.getName(),
+							entityBinding.getEntityName()
+					),
+					e
+			);
 		}
 	}
 
@@ -147,14 +157,12 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			Collection collectionBinding,
 			@Nullable CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
-		// If the metadata for the collection specified an explicit persister class, use it
-		Class<? extends CollectionPersister> persisterClass = collectionBinding.getCollectionPersisterClass();
-		if ( persisterClass == null ) {
-			// Otherwise, use the persister class indicated by the PersisterClassResolver service
-			persisterClass = persisterClassResolver.getCollectionPersisterClass( collectionBinding );
-		}
-
-		return createCollectionPersister( persisterClass, collectionBinding, cacheAccessStrategy, creationContext );
+		return createCollectionPersister(
+				persisterClassResolver.getCollectionPersisterClass( collectionBinding ),
+				collectionBinding,
+				cacheAccessStrategy,
+				creationContext
+		);
 	}
 
 	private CollectionPersister createCollectionPersister(

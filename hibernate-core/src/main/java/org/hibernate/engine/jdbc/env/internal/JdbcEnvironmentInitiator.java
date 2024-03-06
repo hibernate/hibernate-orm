@@ -59,12 +59,14 @@ import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCO
 import static org.hibernate.cfg.JdbcSettings.DIALECT;
 import static org.hibernate.cfg.JdbcSettings.DIALECT_DB_VERSION;
 import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_DB_VERSION;
+import static org.hibernate.cfg.JdbcSettings.ALLOW_METADATA_ON_BOOT;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBooleanWrapper;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
@@ -115,7 +117,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			}
 		}
 
-		if ( useJdbcMetadata( configurationValues ) ) {
+		if ( allowJdbcMetadataAccess( configurationValues ) ) {
 			return getJdbcEnvironmentUsingJdbcMetadata(
 					configurationValues,
 					registry,
@@ -179,15 +181,23 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return new JdbcEnvironmentImpl( registry, dialect );
 	}
 
-	// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
-	// The need for it is intended to be alleviated with future development, thus it is
-	// not defined as an Environment constant...
-	//
-	// it is used to control whether we should consult the JDBC metadata to determine
-	// certain default values; it is useful to *not* do this when the database
-	// may not be available (mainly in tools usage).
-	private static boolean useJdbcMetadata(Map<String, Object> configurationValues) {
-		return getBoolean(USE_JDBC_METADATA_DEFAULTS, configurationValues, true );
+	// `hibernate.boot.allow_jdbc_metadata_access` defines whether we can access JDBC DatabaseMetaData
+	// 		- we also check for the deprecated `hibernate.temp.use_jdbc_metadata_defaults` setting
+
+	private static boolean allowJdbcMetadataAccess(Map<String, Object> configurationValues) {
+		final Boolean allow = getBooleanWrapper( ALLOW_METADATA_ON_BOOT, configurationValues, null );
+		if ( allow != null ) {
+			return allow;
+		}
+
+		final Boolean use = getBooleanWrapper( USE_JDBC_METADATA_DEFAULTS, configurationValues, null );
+		if ( use != null ) {
+			DEPRECATION_LOGGER.deprecatedSetting( USE_JDBC_METADATA_DEFAULTS, ALLOW_METADATA_ON_BOOT );
+			return use;
+		}
+
+		// allow by default
+		return true;
 	}
 
 	private static String getExplicitDatabaseVersion(

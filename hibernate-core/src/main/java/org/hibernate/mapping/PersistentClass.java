@@ -414,6 +414,8 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.lazy = lazy;
 	}
 
+	public abstract boolean isConcreteProxy();
+
 	public abstract boolean hasEmbeddedIdentifier();
 
 	public abstract Class<? extends EntityPersister> getEntityPersisterClass();

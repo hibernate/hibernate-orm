@@ -29,6 +29,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
+import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -1303,6 +1304,7 @@ public class EntityBinder {
 		bindOptimisticLocking();
 		bindPolymorphism();
 		bindProxy();
+		bindConcreteProxy();
 		bindWhere();
 		bindCache();
 		bindNaturalIdCache();
@@ -1589,6 +1591,17 @@ public class EntityBinder {
 		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
 		final XClass proxyClass = reflectionManager.toXClass( proxy.proxyClass() );
 		return isDefault( proxyClass, context ) ? annotatedClass : proxyClass;
+	}
+
+	public void bindConcreteProxy() {
+		final ConcreteProxy concreteProxy = annotatedClass.getAnnotation( ConcreteProxy.class );
+		if ( concreteProxy != null ) {
+			if ( persistentClass.getSuperclass() != null ) {
+				throw new AnnotationException( "Entity class '" + persistentClass.getClassName()
+						+  "' is annotated '@ConcreteProxy' but it is not the root of the entity inheritance hierarchy" );
+			}
+			persistentClass.getRootClass().setConcreteProxy( true );
+		}
 	}
 
 	public void bindWhere() {

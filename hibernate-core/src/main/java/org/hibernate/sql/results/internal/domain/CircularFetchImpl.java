@@ -14,9 +14,11 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.internal.AbstractNonJoinedEntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
@@ -41,8 +43,19 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 			FetchParent fetchParent,
 			boolean selectByUniqueKey,
 			NavigablePath referencedNavigablePath,
-			DomainResult<?> keyResult) {
-		super( navigablePath, referencedModelPart, fetchParent, keyResult, selectByUniqueKey );
+			DomainResult<?> keyResult,
+			DomainResultCreationState creationState) {
+		super(
+				navigablePath,
+				referencedModelPart,
+				fetchParent,
+				keyResult,
+				timing == FetchTiming.DELAYED && referencedModelPart.getEntityMappingType()
+						.getEntityPersister()
+						.isConcreteProxy(),
+				selectByUniqueKey,
+				creationState
+		);
 		this.timing = timing;
 		this.referencedNavigablePath = referencedNavigablePath;
 	}
@@ -53,6 +66,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 				original.getFetchedMapping(),
 				original.getFetchParent(),
 				original.getKeyResult(),
+				original.getDiscriminatorFetch(),
 				original.isSelectByUniqueKey()
 		);
 		this.timing = original.timing;
@@ -103,7 +117,10 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 					getNavigablePath(),
 					getFetchedMapping(),
 					isSelectByUniqueKey(),
-					getKeyResult().createResultAssembler( parentAccess, creationState )
+					getKeyResult().createResultAssembler( parentAccess, creationState ),
+					getDiscriminatorFetch() != null
+							? (BasicResultAssembler<?>) getDiscriminatorFetch().createResultAssembler( parentAccess, creationState )
+							: null
 			);
 		}
 	}
@@ -132,13 +149,15 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 			NavigablePath referencedPath,
 			ToOneAttributeMapping fetchable,
 			boolean selectByUniqueKey,
-			DomainResultAssembler<?> resultAssembler) {
+			DomainResultAssembler<?> resultAssembler,
+			BasicResultAssembler<?> discriminatorAssembler) {
 		return new EntityDelayedFetchInitializer(
 				parentAccess,
 				referencedPath,
 				fetchable,
 				selectByUniqueKey,
-				resultAssembler
+				resultAssembler,
+				discriminatorAssembler
 		);
 	}
 

@@ -29,8 +29,8 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey,
-			@SuppressWarnings("unused") DomainResultCreationState creationState) {
-		super( navigablePath, fetchedAttribute, fetchParent, keyResult, selectByUniqueKey );
+			DomainResultCreationState creationState) {
+		super( navigablePath, fetchedAttribute, fetchParent, keyResult, false, selectByUniqueKey, creationState );
 	}
 
 	/**
@@ -42,6 +42,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 				original.getFetchedMapping(),
 				original.getFetchParent(),
 				original.getKeyResult(),
+				original.getDiscriminatorFetch(),
 				original.isSelectByUniqueKey()
 		);
 	}

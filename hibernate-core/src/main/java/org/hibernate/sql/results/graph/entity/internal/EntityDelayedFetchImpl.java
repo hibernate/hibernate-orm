@@ -11,8 +11,10 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -20,14 +22,22 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
  * @author Steve Ebersole
  */
 public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
-
 	public EntityDelayedFetchImpl(
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
-			boolean selectByUniqueKey) {
-		super( navigablePath, fetchedAttribute, fetchParent, keyResult, selectByUniqueKey );
+			boolean selectByUniqueKey,
+			DomainResultCreationState creationState) {
+		super(
+				navigablePath,
+				fetchedAttribute,
+				fetchParent,
+				keyResult,
+				fetchedAttribute.getEntityMappingType().getEntityPersister().isConcreteProxy(),
+				selectByUniqueKey,
+				creationState
+		);
 	}
 
 	@Override
@@ -42,7 +52,10 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 				getNavigablePath(),
 				getEntityValuedModelPart(),
 				isSelectByUniqueKey(),
-				getKeyResult().createResultAssembler( parentAccess, creationState )
+				getKeyResult().createResultAssembler( parentAccess, creationState ),
+				getDiscriminatorFetch() != null
+						? (BasicResultAssembler<?>) getDiscriminatorFetch().createResultAssembler( parentAccess, creationState )
+						: null
 		);
 	}
 }

@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
@@ -28,6 +29,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
@@ -76,6 +78,17 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		return false;
 	}
 
+	@SuppressWarnings( "rawtypes" )
+	@Override
+	public DomainResult createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		resolveSubTypeTableReferences( tableGroup, navigablePath );
+		return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
+	}
+
 	@Override
 	public BasicFetch<?> generateFetch(
 			FetchParent fetchParent,
@@ -88,16 +101,21 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
 				fetchParent.getNavigablePath()
 		);
-		// Since the expression is lazy, based on the available table reference joins,
-		// we need to force the initialization in case this is a fetch
-		tableDiscriminatorDetailsMap.forEach(
-				(tableName, tableDiscriminatorDetails) -> tableGroup.getTableReference(
-						fetchablePath,
-						tableName,
-						true
-				)
-		);
+		resolveSubTypeTableReferences( tableGroup, fetchablePath );
 		return super.generateFetch( fetchParent, fetchablePath, fetchTiming, selected, resultVariable, creationState );
+	}
+
+	private void resolveSubTypeTableReferences(TableGroup tableGroup, NavigablePath navigablePath) {
+		final EntityMappingType entityDescriptor = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
+		// Since the expression is lazy, based on the available table reference joins,
+		// we need to force the initialization in case this is selected
+		for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
+			tableGroup.getTableReference(
+					navigablePath,
+					subMappingType.getMappedTableDetails().getTableName(),
+					true
+			);
+		}
 	}
 
 	@Override

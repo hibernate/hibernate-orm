@@ -25,7 +25,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
-import java.util.Arrays;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -247,19 +248,15 @@ public class HibernateProcessor extends AbstractProcessor {
 				createMetaModelClasses();
 			}
 			catch (Exception e) {
-				final StringBuffer b = new StringBuffer();
-				Arrays.stream(e.getStackTrace())
-						.forEach(stackTraceElement -> {
-							b.append(stackTraceElement);
-							b.append('\n');
-						});
+				final StringWriter stack = new StringWriter();
+				e.printStackTrace( new PrintWriter( stack) );
 				final Throwable cause = e.getCause();
 				final String message =
 						cause != null && cause != e
 								? e.getMessage() + " caused by " + cause.getMessage()
 								: e.getMessage();
-				context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel: " + message );
-				context.logMessage( Diagnostic.Kind.ERROR, b.toString() );
+				context.logMessage( Diagnostic.Kind.ERROR, "Error running Hibernate processor: " + message );
+				context.logMessage( Diagnostic.Kind.ERROR, stack.toString() );
 			}
 		}
 		return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;

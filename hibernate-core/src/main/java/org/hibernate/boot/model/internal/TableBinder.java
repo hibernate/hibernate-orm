@@ -863,20 +863,11 @@ public class TableBinder {
 		}
 	}
 
-	static void addJpaIndexes(Table table, List<AnnotationUsage<jakarta.persistence.Index>> indexes, MetadataBuildingContext context) {
-		for ( AnnotationUsage<jakarta.persistence.Index> indexUsage : indexes ) {
-			final String name = indexUsage.getString( "name" );
-			final String columnList = indexUsage.getString( "columnList" );
-			final String[] columnFragments = columnList.split(",");
-
-			//no need to handle inSecondPass here since it is only called from EntityBinder
-			context.getMetadataCollector().addSecondPass( new IndexOrUniqueKeySecondPass(
-					table,
-					name,
-					columnFragments,
-					context
-			) );
-		}
+	static void addJpaIndexes(
+			Table table,
+			List<AnnotationUsage<jakarta.persistence.Index>> indexes,
+			MetadataBuildingContext context) {
+		new IndexBinder( context ).bindIndexes( table, indexes );
 	}
 
 	public void setDefaultName(

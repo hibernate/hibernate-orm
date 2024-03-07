@@ -9,10 +9,15 @@ package org.hibernate.orm.tooling.gradle.enhance;
 import javax.inject.Inject;
 
 import org.gradle.api.Project;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSetContainer;
 
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * DSL extension for configuring bytecode enhancement - available as `project.hibernateOrm.enhancement`
@@ -28,6 +33,7 @@ public class EnhancementSpec {
 	private final Property<Boolean> enableDirtyTracking;
 	private final Property<Boolean> enableAssociationManagement;
 	private final Property<Boolean> enableExtendedEnhancement;
+	private final ListProperty<String> classNames;
 
 
 	@Inject
@@ -38,6 +44,7 @@ public class EnhancementSpec {
 		enableDirtyTracking = makeProperty( project ).convention( true );
 		enableAssociationManagement = makeProperty( project ).convention( false );
 		enableExtendedEnhancement = makeProperty( project ).convention( false );
+		classNames = project.getObjects().listProperty(String.class).convention(new ArrayList<>());
 	}
 
 	@SuppressWarnings( "UnstableApiUsage" )
@@ -81,6 +88,13 @@ public class EnhancementSpec {
 	 */
 	public Property<Boolean> getEnableExtendedEnhancement() {
 		return enableExtendedEnhancement;
+	}
+
+	/**
+	 * Returns the classes on which enhancement needs to be done
+	 */
+	public ListProperty<String> getClassNames() {
+		return classNames;
 	}
 
 
@@ -194,5 +208,17 @@ public class EnhancementSpec {
 	@Deprecated(forRemoval = true)
 	public void extendedEnhancement(boolean enable) {
 		setEnableExtendedEnhancement( enable );
+	}
+
+	public void setClassNames(List<String> classNames) {
+		this.classNames.set(classNames);
+	}
+
+	public void setClassNames(Provider<List<String>> classNames) {
+		this.classNames.set(classNames);
+	}
+
+	public void includeClassName(String className) {
+		this.classNames.add(className);
 	}
 }

@@ -1635,6 +1635,7 @@ rollup
 	| FETCH
 	| FILTER
 	| FIRST
+	| FK
 	| FOLLOWING
 	| FOR
 	| FORMAT

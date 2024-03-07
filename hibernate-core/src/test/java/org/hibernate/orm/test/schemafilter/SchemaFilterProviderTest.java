@@ -14,6 +14,7 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.SchemaToolingSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
@@ -28,6 +29,7 @@ import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -44,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17763" )
+@RequiresDialect(H2Dialect.class)
 public class SchemaFilterProviderTest {
 	@Test
 	public void testValidationDefaultProvider() {

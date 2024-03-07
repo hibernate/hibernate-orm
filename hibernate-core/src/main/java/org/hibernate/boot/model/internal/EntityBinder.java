@@ -1225,6 +1225,14 @@ public class EntityBinder {
 		persistentClass.setDynamicInsert( dynamicInsertAnn != null && dynamicInsertAnn.value() );
 		final DynamicUpdate dynamicUpdateAnn = annotatedClass.getAnnotation( DynamicUpdate.class );
 		persistentClass.setDynamicUpdate( dynamicUpdateAnn != null && dynamicUpdateAnn.value() );
+
+		if ( persistentClass.useDynamicInsert() && annotatedClass.isAnnotationPresent( SQLInsert.class ) ) {
+			throw new AnnotationException( "Entity '" + name + "' is annotated both '@DynamicInsert' and '@SQLInsert'" );
+		}
+		if ( persistentClass.useDynamicUpdate() && annotatedClass.isAnnotationPresent( SQLUpdate.class ) ) {
+			throw new AnnotationException( "Entity '" + name + "' is annotated both '@DynamicUpdate' and '@SQLUpdate'" );
+		}
+
 		final SelectBeforeUpdate selectBeforeUpdateAnn = annotatedClass.getAnnotation( SelectBeforeUpdate.class );
 		persistentClass.setSelectBeforeUpdate( selectBeforeUpdateAnn != null && selectBeforeUpdateAnn.value() );
 	}

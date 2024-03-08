@@ -84,7 +84,8 @@ class FilterDefinitionBinder {
 				new FilterDefinition(
 						jaxbFilterDefinitionMapping.getName(),
 						condition,
-						parameterMap
+						parameterMap,
+						jaxbFilterDefinitionMapping.isAppliedOnFind()
 				)
 		);
 

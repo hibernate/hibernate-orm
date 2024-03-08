@@ -36,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.internal.util.collections.CollectionHelper.toMap;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -97,7 +98,8 @@ public class TenantIdTest implements SessionFactoryProducer {
 
         currentTenant = "yours";
         scope.inTransaction( session -> {
-            assertNotNull( session.find(Account.class, acc.id) );
+            //HHH-16830 Sessions applies tenantId filter on find()
+            assertNull( session.find(Account.class, acc.id) );
             assertEquals( 0, session.createQuery("from Account").getResultList().size() );
             session.disableFilter(TenantIdBinder.FILTER_NAME);
             assertNotNull( session.find(Account.class, acc.id) );
@@ -193,9 +195,9 @@ public class TenantIdTest implements SessionFactoryProducer {
             Record r = em.find( Record.class, record.id );
             assertEquals( "mine", r.state.tenantId );
 
-            // Session seems to not apply tenant-id on #find
+            // HHH-16830 Session applies tenant-id on #find
             Record yours = em.find( Record.class, record2.id );
-            assertEquals( "yours", yours.state.tenantId );
+            assertNull(yours);
 
 
             em.createQuery( "from Record where id = :id", Record.class )

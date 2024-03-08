@@ -79,7 +79,8 @@ public class TenantLongIdTest implements SessionFactoryProducer {
 
         currentTenant = yours;
         scope.inTransaction( session -> {
-            assertNotNull( session.find(Account.class, acc.id) );
+            //HHH-16830 Sessions applies tenantId filter on find()
+            assertNull( session.find(Account.class, acc.id) );
             assertEquals( 0, session.createQuery("from Account").getResultList().size() );
             session.disableFilter(TenantIdBinder.FILTER_NAME);
             assertNotNull( session.find(Account.class, acc.id) );

@@ -87,4 +87,12 @@ public interface Filter {
 	 * @throws HibernateException If the state is not currently valid.
 	 */
 	void validate() throws HibernateException;
+
+	/**
+	 * Get the associated {@link FilterDefinition appliedOnFilter} of this
+	 * named filter.
+	 *
+	 * @return The flag value
+	 */
+	boolean isAppliedOnFind();
 }

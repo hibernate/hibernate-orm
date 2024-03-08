@@ -30,6 +30,7 @@ public class FilterImpl implements Filter, Serializable {
 	private transient FilterDefinition definition;
 	private final String filterName;
 	private final Map<String,Object> parameters = new HashMap<>();
+	private final boolean appliedOnFind;
 	
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition( filterName );
@@ -44,6 +45,7 @@ public class FilterImpl implements Filter, Serializable {
 	public FilterImpl(FilterDefinition configuration) {
 		this.definition = configuration;
 		filterName = definition.getFilterName();
+		this.appliedOnFind = definition.isAppliedOnFind();
 	}
 
 	public FilterDefinition getFilterDefinition() {
@@ -58,7 +60,17 @@ public class FilterImpl implements Filter, Serializable {
 	public String getName() {
 		return definition.getFilterName();
 	}
-	
+
+	/**
+	 * Get a flag that defines if the filter should be applied
+	 * on direct fetches or not.
+	 *
+	 * @return The flag value.
+	 */
+	public boolean isAppliedOnFind() {
+		return appliedOnFind;
+	}
+
 	public Map<String,?> getParameters() {
 		return parameters;
 	}

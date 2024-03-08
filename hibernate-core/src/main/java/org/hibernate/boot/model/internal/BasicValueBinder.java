@@ -8,8 +8,8 @@ package org.hibernate.boot.model.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +78,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -771,11 +772,30 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private void prepareBasicAttribute(
 			String declaringClassName,
 			MemberDetails attributeMember,
-			TypeDetails attributeType) {
-		
-		final Class<Object> javaTypeClass = attributeType.determineRawClass().toJavaClass();
+			TypeDetails attributeTypeDetails) {
+		final Class<Object> javaTypeClass = attributeTypeDetails.determineRawClass().toJavaClass();
 
-		implicitJavaTypeAccess = typeConfiguration -> attributeType.determineRawClass().toJavaClass();
+		implicitJavaTypeAccess = ( typeConfiguration -> {
+			final java.lang.reflect.Type attributeType = attributeTypeDetails.determineRawClass().toJavaClass();
+			if ( attributeTypeDetails instanceof ParameterizedTypeDetails ) {
+				final List<TypeDetails> arguments = attributeTypeDetails.asParameterizedType().getArguments();
+				final int argumentsSize = arguments.size();
+				final java.lang.reflect.Type[] argumentTypes = new java.lang.reflect.Type[argumentsSize];
+				for ( int i = 0; i < argumentsSize; i++ ) {
+					argumentTypes[i] = arguments.get( i ).determineRawClass().toJavaClass();
+				}
+				final TypeDetails owner = attributeTypeDetails.asParameterizedType().getOwner();
+				final java.lang.reflect.Type ownerType;
+				if ( owner != null ) {
+					ownerType = owner.determineRawClass().toJavaClass();
+				}
+				else {
+					ownerType = null;
+				}
+				return new ParameterizedTypeImpl( attributeType, argumentTypes, ownerType );
+			}
+			return attributeType;
+		} );
 
 		//noinspection deprecation
 		final var temporalAnn = attributeMember.getAnnotationUsage( Temporal.class );
@@ -797,7 +817,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		final AnnotationUsage<Enumerated> enumeratedAnn = attributeMember.getAnnotationUsage( Enumerated.class );
 		if ( enumeratedAnn != null ) {
 			this.enumType = enumeratedAnn.getEnum( "value" );
-			if ( canUseEnumerated( attributeType, javaTypeClass ) ) {
+			if ( canUseEnumerated( attributeTypeDetails, javaTypeClass ) ) {
 				if ( this.enumType == null ) {
 					throw new IllegalStateException(
 							"jakarta.persistence.EnumType was null on @jakarta.persistence.Enumerated " +
@@ -811,7 +831,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 								"Property '%s.%s' is annotated '@Enumerated' but its type '%s' is not an enum",
 								declaringClassName,
 								attributeMember.getName(),
-								attributeType.getName()
+								attributeTypeDetails.getName()
 						)
 				);
 			}
@@ -827,11 +847,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( javaTypeClass.isEnum() || javaTypeClass.isArray() && javaTypeClass.getComponentType().isEnum() ) {
 			return true;
 		}
-		if ( javaType.isImplementor( org.hibernate.mapping.Collection.class ) ) {
+		if ( javaType.isImplementor( Collection.class ) ) {
 			final ParameterizedTypeDetails parameterizedType = javaType.asParameterizedType();
 			final List<TypeDetails> typeArguments = parameterizedType.getArguments();
 			if ( !typeArguments.isEmpty() ) {
-				return typeArguments.get( 0 ).isImplementor( Enumeration.class );
+				return typeArguments.get( 0 ).isImplementor( Enum.class );
 			}
 		}
 		return false;

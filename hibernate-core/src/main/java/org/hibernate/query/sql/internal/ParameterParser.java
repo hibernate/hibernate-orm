@@ -7,10 +7,10 @@
 package org.hibernate.query.sql.internal;
 
 import java.util.BitSet;
-
 import java.util.Map;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -177,9 +177,14 @@ public class ParameterParser {
 	}
 
 	private static String preprocessing(String sqlString) {
-		final Map<String, String> preprocessingExchangeMap = Map.of("::=", ":=");
-		for(Map.Entry<String, String> entry: preprocessingExchangeMap.entrySet()) {
-			sqlString = sqlString.replace(entry.getKey(), entry.getValue());
+		final Map<String, String> preprocessingExchangeMap = Map.of("::=", ":=", "::::", "::");
+		for (Map.Entry<String, String> entry : preprocessingExchangeMap.entrySet()) {
+			final String preprocessedSqlString = sqlString.replace(entry.getKey(), entry.getValue());
+			if (!sqlString.equals(preprocessedSqlString)) {
+				DeprecationLogger.DEPRECATION_LOGGER.warn(
+						String.format("An unconventional syntax has been used in the SQL statement. It is recommended to use '%s' instead of '%s'.", entry.getValue(), entry.getKey()));
+				sqlString = preprocessedSqlString;
+			}
 		}
 		return sqlString;
 	}

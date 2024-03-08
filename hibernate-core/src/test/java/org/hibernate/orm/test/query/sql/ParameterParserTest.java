@@ -198,11 +198,19 @@ public class ParameterParserTest {
             @Override
             public void complete() {
             }
+
         };
-        String sqlString = "SELECT column_name::text FROM table_name";
-        ParameterParser.parse(sqlString, recognizer);
+        String expectedQuery = "SELECT column_name::text FROM table_name";
+
+        ParameterParser.parse("SELECT column_name::text FROM table_name", recognizer);
         recognizer.complete();
-        assertEquals(sqlString, captured.toString());
+        assertEquals(expectedQuery, captured.toString());
+
+		captured.setLength(0); // clear for new test
+
+		ParameterParser.parse("SELECT column_name::::text FROM table_name", recognizer);
+		recognizer.complete();
+		assertEquals(expectedQuery, captured.toString());
     }
 
     @Test

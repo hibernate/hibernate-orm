@@ -767,29 +767,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private void prepareBasicAttribute(
 			String declaringClassName,
 			MemberDetails attributeMember,
-			TypeDetails attributeTypeDetails) {
-		final Class<Object> javaTypeClass = attributeTypeDetails.determineRawClass().toJavaClass();
-
+			TypeDetails attributeType) {
+		final Class<Object> javaTypeClass = attributeType.determineRawClass().toJavaClass();
 		implicitJavaTypeAccess = ( typeConfiguration -> {
-			final java.lang.reflect.Type attributeType = attributeTypeDetails.determineRawClass().toJavaClass();
-			if ( attributeTypeDetails instanceof ParameterizedTypeDetails ) {
-				final List<TypeDetails> arguments = attributeTypeDetails.asParameterizedType().getArguments();
-				final int argumentsSize = arguments.size();
-				final java.lang.reflect.Type[] argumentTypes = new java.lang.reflect.Type[argumentsSize];
-				for ( int i = 0; i < argumentsSize; i++ ) {
-					argumentTypes[i] = arguments.get( i ).determineRawClass().toJavaClass();
-				}
-				final TypeDetails owner = attributeTypeDetails.asParameterizedType().getOwner();
-				final java.lang.reflect.Type ownerType;
-				if ( owner != null ) {
-					ownerType = owner.determineRawClass().toJavaClass();
-				}
-				else {
-					ownerType = null;
-				}
-				return new ParameterizedTypeImpl( attributeType, argumentTypes, ownerType );
+			if ( attributeType.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+				return ParameterizedTypeImpl.from( attributeType.asParameterizedType() );
 			}
-			return attributeType;
+			return attributeType.determineRawClass().toJavaClass();
 		} );
 
 		//noinspection deprecation
@@ -812,7 +796,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		final AnnotationUsage<Enumerated> enumeratedAnn = attributeMember.getAnnotationUsage( Enumerated.class );
 		if ( enumeratedAnn != null ) {
 			this.enumType = enumeratedAnn.getEnum( "value" );
-			if ( canUseEnumerated( attributeTypeDetails, javaTypeClass ) ) {
+			if ( canUseEnumerated( attributeType, javaTypeClass ) ) {
 				if ( this.enumType == null ) {
 					throw new IllegalStateException(
 							"jakarta.persistence.EnumType was null on @jakarta.persistence.Enumerated " +
@@ -826,7 +810,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 								"Property '%s.%s' is annotated '@Enumerated' but its type '%s' is not an enum",
 								declaringClassName,
 								attributeMember.getName(),
-								attributeTypeDetails.getName()
+								attributeType.getName()
 						)
 				);
 			}

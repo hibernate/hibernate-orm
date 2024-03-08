@@ -9,8 +9,12 @@ package org.hibernate.type.internal;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
+
+import org.hibernate.models.spi.ParameterizedTypeDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 public class ParameterizedTypeImpl implements ParameterizedType {
 
@@ -22,6 +26,26 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 		this.substTypeArgs = substTypeArgs;
 		this.rawType = rawType;
 		this.ownerType = ownerType;
+	}
+
+	public static ParameterizedTypeImpl from(ParameterizedTypeDetails typeDetails) {
+		final java.lang.reflect.Type attributeType = typeDetails.determineRawClass().toJavaClass();
+
+		final List<TypeDetails> arguments = typeDetails.asParameterizedType().getArguments();
+		final int argumentsSize = arguments.size();
+		final java.lang.reflect.Type[] argumentTypes = new java.lang.reflect.Type[argumentsSize];
+		for ( int i = 0; i < argumentsSize; i++ ) {
+			argumentTypes[i] = arguments.get( i ).determineRawClass().toJavaClass();
+		}
+		final TypeDetails owner = typeDetails.asParameterizedType().getOwner();
+		final java.lang.reflect.Type ownerType;
+		if ( owner != null ) {
+			ownerType = owner.determineRawClass().toJavaClass();
+		}
+		else {
+			ownerType = null;
+		}
+		return new ParameterizedTypeImpl( attributeType, argumentTypes, ownerType );
 	}
 
 	public Type[] getActualTypeArguments() {

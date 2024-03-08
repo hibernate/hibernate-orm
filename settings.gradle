@@ -292,13 +292,15 @@ if ( !JavaVersion.current().java11Compatible ) {
 buildCache {
     local {
         // do not use local build cache for CI jobs, period!
-        enabled = !settings.ext.isCiEnvironment
+        // enabled = !settings.ext.isCiEnvironment
+        enabled = false
     }
     remote(gradleEnterprise.buildCache) {
         enabled = true
         // Check access key presence to avoid build cache errors on PR builds when access key is not present
         def accessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY")
         push = settings.ext.populateRemoteBuildCache && accessKey
+        path = "cache/exp-4-1"
     }
 }
 

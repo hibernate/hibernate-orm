@@ -45,6 +45,7 @@ public class MavenEnhancePluginTest {
 
         setVariableValueToObject( plugin, "base", baseDir.getAbsolutePath() );
         setVariableValueToObject( plugin, "dir", baseDir.getAbsolutePath() );
+        setVariableValueToObject( plugin, "classNames", "" );
 
         setVariableValueToObject( plugin, "failOnError", true );
         setVariableValueToObject( plugin, "enableLazyInitialization", true );

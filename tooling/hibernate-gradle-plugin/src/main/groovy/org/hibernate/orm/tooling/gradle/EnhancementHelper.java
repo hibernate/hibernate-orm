@@ -82,10 +82,18 @@ public class EnhancementHelper {
 
 		final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
 
+		List<String> classesToEnhance = options.getClassNames();
+
 		for ( File classesDir: sourceSet.getOutput().getClassesDirs() ) {
 			final FileTree fileTree = project.fileTree( classesDir );
 			for ( File file : fileTree ) {
 				if ( !file.getName().endsWith( ".class" ) ) {
+					continue;
+				}
+
+				String className = determineClassName(classesDir, file);
+
+				if(! (classesToEnhance.size()==0 || classesToEnhance.contains(className))) {
 					continue;
 				}
 

@@ -15,10 +15,8 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.nio.file.Path;
+import java.util.*;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
@@ -65,6 +63,9 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	@Parameter(property = "dir", defaultValue = "${project.build.outputDirectory}")
 	private String dir;
 
+	@Parameter(property = "classNames", defaultValue = "")
+	private String classNames;
+
 	@Parameter(property = "failOnError", defaultValue = "true")
 	private boolean failOnError = true;
 
@@ -106,6 +107,11 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		if ( sourceSet.isEmpty() ) {
 			log.info( "Skipping Hibernate enhancement plugin execution since there are no classes to enhance on " + dir );
 			return;
+		}
+
+		List<String> classesToEnhance = new ArrayList<>();
+		if(classNames.length() >= 1) {
+			classesToEnhance = Arrays.asList(classNames.split(","));
 		}
 
 		log.info( "Starting Hibernate enhancement for classes on " + dir );
@@ -151,7 +157,13 @@ public class MavenEnhancePlugin extends AbstractMojo {
 
 		for ( File file : sourceSet ) {
 
-			final byte[] enhancedBytecode = doEnhancement( file, enhancer );
+				String className = determineClassName(root, file);
+
+				if(! (classesToEnhance.size()==0 || classesToEnhance.contains(className))) {
+					continue;
+				}
+
+				final byte[] enhancedBytecode = doEnhancement( file, enhancer );
 
 			if ( enhancedBytecode == null ) {
 				continue;
@@ -304,5 +316,15 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			catch (IOException ignore) {
 			}
 		}
+	}
+
+	private String determineClassName(File root, File javaClassFile) {
+		final Path relativeClassPath = root.toPath().relativize( javaClassFile.toPath() );
+		final String relativeClassPathString = relativeClassPath.toString();
+		final String classNameBase = relativeClassPathString.substring(
+				0,
+				relativeClassPathString.length() - ".class".length()
+		);
+		return classNameBase.replace( File.separatorChar, '.' );
 	}
 }

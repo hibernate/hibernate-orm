@@ -17,6 +17,7 @@ class EnhanceExtension implements Serializable {
 	def boolean enableDirtyTracking = false
 	def boolean enableAssociationManagement = false
 	def boolean enableExtendedEnhancement = false
+	def List<String> classNames = []
 
 	boolean shouldApply() {
 		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableExtendedEnhancement;

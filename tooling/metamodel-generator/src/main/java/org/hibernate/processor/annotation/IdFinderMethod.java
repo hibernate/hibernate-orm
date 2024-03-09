@@ -85,11 +85,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append("\t\t\t.load(")
 				.append(paramName)
-				.append(");");
-		if (dataRepository) {
-			declaration
-					.append("\n");
-		}
+				.append(");\n");
 	}
 
 	private void findWithNoFetchProfiles(StringBuilder declaration) {
@@ -98,11 +94,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class, ")
 				.append(paramName)
-				.append(");");
-		if (dataRepository) {
-			declaration
-					.append("\n");
-		}
+				.append(");\n");
 	}
 
 	private static void nullCheck(StringBuilder declaration, String parameterName) {

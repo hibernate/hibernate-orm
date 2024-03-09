@@ -89,7 +89,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration, returnType );
 		createQuery( declaration );
-		setParameters( declaration, paramTypes );
+		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
 		boolean unwrapped = specialNeeds( declaration );
 		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
@@ -127,7 +127,8 @@ public class QueryMethod extends AbstractQueryMethod {
 				&& isUsingEntityManager() ) {
 			// EntityManager.createNativeQuery() does not return TypedQuery,
 			// so we need to cast to the entity type
-			declaration.append("(")
+			declaration
+					.append("(")
 					.append(returnType)
 					.append(") ");
 		}
@@ -139,10 +140,11 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append("\t\t\t")
 					.append(".executeUpdate()");
 			if ( "boolean".equals(returnTypeName) ) {
-				declaration.append(" > 0");
+				declaration
+						.append(" > 0");
 			}
 			declaration
-					.append(';');
+					.append(";\n");
 		}
 		else {
 			final boolean mustUnwrap =
@@ -150,23 +152,21 @@ public class QueryMethod extends AbstractQueryMethod {
 							|| isNative && returnTypeName != null;
 			executeSelect( declaration, paramTypes, containerType, unwrapped, mustUnwrap );
 		}
-		if ( dataRepository ) {
-			declaration
-					.append('\n');
-		}
 	}
 
 	@Override
-	void setParameters(StringBuilder declaration, List<String> paramTypes) {
+	void setParameters(StringBuilder declaration, List<String> paramTypes, String indent) {
 		for ( int i = 0; i < paramNames.size(); i++ ) {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
 			if ( !isSpecialParam(paramType) ) {
 				final int ordinal = i+1;
 				if ( queryString.contains(":" + paramName) ) {
+					declaration.append(indent);
 					setNamedParameter( declaration, paramName );
 				}
 				else if ( queryString.contains("?" + ordinal) ) {
+					declaration.append(indent);
 					setOrdinalParameter( declaration, ordinal, paramName );
 				}
 			}

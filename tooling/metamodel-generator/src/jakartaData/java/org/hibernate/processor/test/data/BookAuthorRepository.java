@@ -3,11 +3,9 @@ package org.hibernate.processor.test.data;
 import jakarta.data.Limit;
 import jakarta.data.Order;
 import jakarta.data.Sort;
+import jakarta.data.page.CursoredPage;
 import jakarta.data.page.PageRequest;
 import jakarta.data.page.Page;
-import jakarta.data.page.Slice;
-import jakarta.data.page.KeysetAwarePage;
-import jakarta.data.page.KeysetAwareSlice;
 import jakarta.data.repository.By;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Find;
@@ -115,28 +113,28 @@ public interface BookAuthorRepository {
 	List<Book> everyBook3(PageRequest<? super Book> pageRequest);
 
 	@Find
-	KeysetAwareSlice<Book> everyBook4(PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook4(PageRequest<Book> pageRequest);
 
 	@Find
-	KeysetAwareSlice<Book> everyBook5(String title, PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook5(String title, PageRequest<Book> pageRequest);
 
 	@Query("from Book")
-	KeysetAwareSlice<Book> everyBook6(PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook6(PageRequest<Book> pageRequest);
 
 	@Query("from Book where title like :titlePattern")
-	KeysetAwareSlice<Book> everyBook7(String titlePattern, PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook7(String titlePattern, PageRequest<Book> pageRequest);
 
 	@Find
-	KeysetAwarePage<Book> everyBook8(String title, PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook8(String title, PageRequest<Book> pageRequest);
 
 	@Query("from Book where title like :titlePattern")
-	KeysetAwarePage<Book> everyBook9(String titlePattern, PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook9(String titlePattern, PageRequest<Book> pageRequest);
 
 	@Find
 	Page<Book> booksByTitle1(String title, PageRequest<Book> pageRequest);
 
 	@Query("from Book where title like :titlePattern")
-	Slice<Book> booksByTitle2(String titlePattern, PageRequest<Book> pageRequest);
+	Page<Book> booksByTitle2(String titlePattern, PageRequest<Book> pageRequest);
 
 	@Find
 	List<Book> allBooksWithLotsOfSorting(Sort<? super Book> s1, Order<? super Book> order, Sort<? super Book>... s3);

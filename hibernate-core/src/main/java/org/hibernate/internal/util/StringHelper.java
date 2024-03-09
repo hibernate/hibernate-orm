@@ -742,7 +742,7 @@ public final class StringHelper {
 		final char first = name.charAt( 0 );
 		final char last = name.charAt( name.length() - 1 );
 
-		return ( ( first == last ) && ( first == '`' || first == '"' ) );
+		return first == last && ( first == '`' || first == '"' );
 	}
 
 	/**

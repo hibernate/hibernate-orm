@@ -112,10 +112,6 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		final boolean mustUnwrap =
 				containerType != null && containerType.startsWith("org.hibernate");
 		executeSelect( declaration, paramTypes, containerType, unwrapped, mustUnwrap );
-		if ( dataRepository ) {
-			declaration
-					.append('\n');
-		}
 	}
 
 	private void createCriteriaQuery(StringBuilder declaration) {

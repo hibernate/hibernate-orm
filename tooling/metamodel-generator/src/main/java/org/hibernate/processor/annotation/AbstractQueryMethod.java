@@ -376,7 +376,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(MAKE_KEYED_PAGE
 							.replace("pageRequest",
 									parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-							.replace("Entity", annotationMetaEntity.importType(returnTypeName)));
+							.replace("Entity", annotationMetaEntity.importType(returnTypeName)))
+					.append('\n');
 		}
 	}
 
@@ -646,7 +647,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 							.append(annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord"))
 							.append('(')
 							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-							.append(", _results, _totalResults);\n");
+							.append(", _results, _totalResults);");
 					break;
 				case JD_CURSORED_PAGE:
 					if ( returnTypeName == null ) {

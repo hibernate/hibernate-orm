@@ -721,9 +721,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String typeName = typeElement.getQualifiedName().toString();
 		switch ( typeName ) {
 			case JD_PAGE:
-			case JD_SLICE:
-			case JD_KEYED_PAGE:
-			case JD_KEYED_SLICE:
+			case JD_CURSORED_PAGE:
 				if ( method.getParameters().stream()
 						.noneMatch(param -> param.asType().toString()
 								.startsWith(JD_PAGE_REQUEST))) {
@@ -788,7 +786,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static final Set<String> LEGAL_GENERIC_RESULT_TYPES
 			= Set.of(LIST, STREAM, OPTIONAL,
 					TYPED_QUERY, HIB_QUERY, HIB_SELECTION_QUERY, HIB_KEYED_RESULT_LIST,
-					JD_SLICE, JD_PAGE, JD_KEYED_SLICE, JD_KEYED_PAGE);
+					JD_PAGE, JD_CURSORED_PAGE);
 
 	private void addQueryMethod(
 			ExecutableElement method,

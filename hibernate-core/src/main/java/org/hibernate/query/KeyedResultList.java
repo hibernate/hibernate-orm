@@ -16,6 +16,38 @@ import java.util.List;
  * An instance of this class represent a page of results returned
  * by {@link SelectionQuery#getKeyedResultList(KeyedPage)}. The
  * actual query results are held in {@link #getResultList()}.
+ * <p>
+ * An idiom for iterating pages of keyed results is:
+ * <pre>
+ * var query =
+ *         session.createQuery("where title like :title", Book.class)
+ *                 .setParameter("title", "%Hibernate%");
+ * var resultList =
+ *         query.getKeyedResultList(first(10).keyedBy(asc(Book_.isbn)));
+ * var results = resultList.getResultList();
+ * ...
+ * while ( !resultList.isLastPage() ) {
+ *     resultList = query.getKeyedResultList(resultList.getNextPage());
+ *     results = resultList.getResultList();
+ *     ...
+ * }
+ * </pre>
+ * <p>
+ * When {@code KeyedResultList} is the declared return type of a
+ * {@linkplain org.hibernate.annotations.processing.Find finder
+ * method} or {@linkplain org.hibernate.annotations.processing.HQL
+ * HQL query method}, the idiom may be written:
+ * <pre>
+ * var resultList =
+ *         books.byTitle("%Hibernate%", first(10).keyedBy(asc(Book_.isbn)));
+ * var results = resultList.getResultList();
+ * ...
+ * while ( !resultList.isLastPage() ) {
+ *     resultList = books.byTitle("%Hibernate%", resultList.getNextPage());
+ *     results = resultList.getResultList();
+ *     ...
+ * }
+ * </pre>
  *
  * @since 6.5
  *

@@ -411,25 +411,25 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			customSQLInsert[jk] = currentClass.getCustomSQLInsert();
 			insertCallable[jk] = customSQLInsert[jk] != null && currentClass.isCustomInsertCallable();
 			insertExpectations[jk] = appropriateExpectation(
-					currentClass.getCustomSQLInsertCheckStyle() == null
+					currentClass.getInsertCheckStyle() == null
 							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[jk], insertCallable[jk] )
-							: currentClass.getCustomSQLInsertCheckStyle()
+							: currentClass.getInsertCheckStyle()
 			);
 
 			customSQLUpdate[jk] = currentClass.getCustomSQLUpdate();
 			updateCallable[jk] = customSQLUpdate[jk] != null && currentClass.isCustomUpdateCallable();
 			updateExpectations[jk] = appropriateExpectation(
-					currentClass.getCustomSQLUpdateCheckStyle() == null
+					currentClass.getUpdateCheckStyle() == null
 							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[jk], updateCallable[jk] )
-							: currentClass.getCustomSQLUpdateCheckStyle()
+							: currentClass.getUpdateCheckStyle()
 			);
 
 			customSQLDelete[jk] = currentClass.getCustomSQLDelete();
 			deleteCallable[jk] = customSQLDelete[jk] != null && currentClass.isCustomDeleteCallable();
 			deleteExpectations[jk] = appropriateExpectation(
-					currentClass.getCustomSQLDeleteCheckStyle() == null
+					currentClass.getDeleteCheckStyle() == null
 					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[jk], deleteCallable[jk] )
-					: currentClass.getCustomSQLDeleteCheckStyle()
+					: currentClass.getDeleteCheckStyle()
 			);
 
 			jk--;
@@ -448,25 +448,25 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			customSQLInsert[j] = join.getCustomSQLInsert();
 			insertCallable[j] = customSQLInsert[j] != null && join.isCustomInsertCallable();
 			insertExpectations[j] = appropriateExpectation(
-					join.getCustomSQLInsertCheckStyle() == null
+					join.getInsertCheckStyle() == null
 							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
-							: join.getCustomSQLInsertCheckStyle()
+							: join.getInsertCheckStyle()
 			);
 
 			customSQLUpdate[j] = join.getCustomSQLUpdate();
 			updateCallable[j] = customSQLUpdate[j] != null && join.isCustomUpdateCallable();
 			updateExpectations[j] = appropriateExpectation(
-					join.getCustomSQLUpdateCheckStyle() == null
+					join.getUpdateCheckStyle() == null
 							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
-							: join.getCustomSQLUpdateCheckStyle()
+							: join.getUpdateCheckStyle()
 			);
 
 			customSQLDelete[j] = join.getCustomSQLDelete();
 			deleteCallable[j] = customSQLDelete[j] != null && join.isCustomDeleteCallable();
 			deleteExpectations[j] = appropriateExpectation(
-					join.getCustomSQLDeleteCheckStyle() == null
+					join.getDeleteCheckStyle() == null
 							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
-							: join.getCustomSQLDeleteCheckStyle()
+							: join.getDeleteCheckStyle()
 			);
 
 			j++;

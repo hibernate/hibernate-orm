@@ -20,6 +20,21 @@ import static org.hibernate.query.KeyedPage.KeyInterpretation.NO_KEY;
  * Support for pagination based on a unique key of the result
  * set instead of the {@link Page#getFirstResult() offset}.
  * <p>
+ * In this context, a <em>key</em> is a unique key of the
+ * query result set which imposes a total order on the results.
+ * It is represented as a {@code List<Order<? super R>>} where
+ * {@code R} is the result type of the query. For example, a
+ * unique key for paginating a query result set containing
+ * {@code Book}s might be:
+ * <pre>
+ * var key = List.of(asc(Book_.title), asc(Book_.publicationDate), asc(Book_.publisher));
+ * </pre>
+ * <p>
+ * When key-based pagination is used, Hibernate modifies the
+ * original HQL or criteria query to incorporate the key in
+ * the {@code order by}, {@code where}, and {@code select}
+ * clauses.
+ * <p>
  * A specification for an initial page may be obtained from
  * an instance of {@link Page}.
  * <pre>

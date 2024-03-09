@@ -22,6 +22,7 @@ import java.lang.annotation.Annotation;
  * custom mapping annotation}.
  *
  * @see org.hibernate.annotations.AttributeBinderType
+ * @see TypeBinder
  *
  * @author Gavin King
  */

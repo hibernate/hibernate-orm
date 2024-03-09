@@ -82,7 +82,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			}
 		}
 		declaration
-				.append("\t\t\t.load();");
+				.append("\t\t\t.load();\n");
 	}
 
 	private void findReactively(StringBuilder declaration) {
@@ -130,7 +130,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if (composite) {
 			declaration.append("\n\t\t\t)\n\t");
 		}
-		declaration.append(");");
+		declaration.append(");\n");
 	}
 
 	private boolean isComposite() {

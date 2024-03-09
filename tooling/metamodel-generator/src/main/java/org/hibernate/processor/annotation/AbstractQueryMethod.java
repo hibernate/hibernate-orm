@@ -209,14 +209,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	void chainSessionEnd(boolean isUpdate, StringBuilder declaration) {
 		if ( isReactiveSession() ) {
-			declaration.append("\n\t})");
+			declaration.append("\t})");
 			// here we're checking for a boxed void and not Uni<Void> because the returnType has already
 			// been checked, and is ununi-ed
 			if ( isUpdate && returnTypeName != null && returnTypeName.equals(BOXED_VOID) ) {
-				declaration.append(".replaceWithVoid();");
+				declaration.append(".replaceWithVoid();\n");
 			}
 			else {
-				declaration.append(";");
+				declaration.append(";\n");
 			}
 		}
 	}
@@ -317,7 +317,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	abstract boolean singleResult();
 
 	static void closingBrace(StringBuilder declaration) {
-		declaration.append("\n}");
+		declaration.append("}");
 	}
 
 	void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
@@ -391,9 +391,9 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			"\t\t\t\t\t\t.sortBy(pageRequest.sorts())\n" +
 			"\t\t\t\t\t\t.size(pageRequest.size())\n" +
 			"\t\t\t\t\t\t.page(pageRequest.page() + 1);\n" +
-			"\t\treturn new CursoredPageRecord<>( _results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
+			"\t\treturn new CursoredPageRecord<>(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
 			"\t\t\t\t_results.isLastPage() ? null : _page.afterKey(_results.getNextPage().getKey().toArray()),\n" +
-			"\t\t\t\t_results.isFirstPage() ? null : _page.beforeKey(_results.getPreviousPage().getKey().toArray()) );\n";
+			"\t\t\t\t_results.isFirstPage() ? null : _page.beforeKey(_results.getPreviousPage().getKey().toArray()));";
 
 	static final String MAKE_KEYED_PAGE
 			= "\tvar _unkeyedPage =\n" +
@@ -404,16 +404,16 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			"\t\t\t\t\t.map(_cursor -> {\n" +
 			"\t\t\t\t\t\t@SuppressWarnings(\"unchecked\")\n" +
 			"\t\t\t\t\t\tvar _elements = (List<Comparable<?>>) _cursor.elements();\n" +
-			"\t\t\t\t\t\treturn switch ( pageRequest.mode() ) {\n" +
+			"\t\t\t\t\t\treturn switch (pageRequest.mode()) {\n" +
 			"\t\t\t\t\t\t\tcase CURSOR_NEXT -> _unkeyedPage.withKey(_elements, KEY_OF_LAST_ON_PREVIOUS_PAGE);\n" +
 			"\t\t\t\t\t\t\tcase CURSOR_PREVIOUS -> _unkeyedPage.withKey(_elements, KEY_OF_FIRST_ON_NEXT_PAGE);\n" +
 			"\t\t\t\t\t\t\tdefault -> _unkeyedPage;\n" +
 			"\t\t\t\t\t\t};\n" +
-			"\t\t\t\t\t}).orElse(_unkeyedPage);\n";
+			"\t\t\t\t\t}).orElse(_unkeyedPage);";
 
 	void createQuery(StringBuilder declaration) {}
 
-	void setParameters(StringBuilder declaration, List<String> paramTypes) {}
+	void setParameters(StringBuilder declaration, List<String> paramTypes, String indent) {}
 
 	void tryReturn(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
 		if ( isJakartaCursoredPage(containerType) ) {
@@ -465,12 +465,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	private void totalResults(StringBuilder declaration, List<String> paramTypes) {
 		declaration
-				.append("\tlong _totalResults = ");
+				.append("\tlong _totalResults = \n\t\t\t\t")
+				.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
+				.append(".requestTotal()\n\t\t\t\t\t\t? ");
 		createQuery( declaration );
-		setParameters( declaration, paramTypes );
+		setParameters( declaration, paramTypes, "\t\t\t\t\t");
 		unwrapQuery( declaration, !isUsingEntityManager() );
 		declaration
-				.append("\t\t\t.getResultCount();\n");
+				.append("\t\t\t\t\t\t\t\t.getResultCount()\n\t\t\t\t\t\t: -1;\n");
 	}
 
 	void collectOrdering(StringBuilder declaration, List<String> paramTypes) {
@@ -679,6 +681,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 			}
 		}
+		declaration.append('\n');
 	}
 
 	private static String parameterName(String paramType, List<String> paramTypes, List<String> paramNames) {

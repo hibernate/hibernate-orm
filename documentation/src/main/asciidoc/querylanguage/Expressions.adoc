@@ -876,12 +876,16 @@ Its BNF is given by:
 [discrete]
 ===== Collations
 
-Selects a collation to be used for its string-valued argument.
+The `collate()` function selects a collation to be used for its string-valued argument.
 Collations are useful for <<relational-comparisons,binary comparisons>> with `<` or `>`, and in the <<order-by,order by clause>>.
 
 For example, `collate(p.name as ucs_basic)` specifies the SQL standard collation `ucs_basic`.
 
 IMPORTANT: Collations aren't very portable between databases.
+
+TIP: Some PostgreSQL collation names must be quoted with backticks, for example, ``collate(name as \`zh_TW.UTF-8`)``.
+
+TIP: The `@Collate` annotation may be used to specify the collation of a column, which is usually more convenient than using the `collate()` function.
 
 [[functions-numeric]]
 ==== Numeric functions

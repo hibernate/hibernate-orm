@@ -53,6 +53,12 @@ public class CollateTests {
 	public void testCollatePostgreSQL(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					session.createQuery("from EntityOfBasics e where e.theString is not null order by collate(e.theString as `ucs_basic`)").getResultList();
+					assertThat( session.createQuery("select collate('bar' as `ucs_basic`) < 'foo'").getSingleResult(), is(true) );
+				}
+		);
+		scope.inTransaction(
+				session -> {
 					session.createQuery("from EntityOfBasics e where e.theString is not null order by collate(e.theString as ucs_basic)").getResultList();
 					assertThat( session.createQuery("select collate('bar' as ucs_basic) < 'foo'").getSingleResult(), is(true) );
 				}

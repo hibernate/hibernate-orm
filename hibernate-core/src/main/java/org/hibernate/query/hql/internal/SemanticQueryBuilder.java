@@ -39,7 +39,6 @@ import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.CharSequenceHelper;
-import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
@@ -247,7 +246,10 @@ import static org.hibernate.grammars.hql.HqlParser.INTERSECT;
 import static org.hibernate.grammars.hql.HqlParser.ListaggFunctionContext;
 import static org.hibernate.grammars.hql.HqlParser.OnOverflowClauseContext;
 import static org.hibernate.grammars.hql.HqlParser.PLUS;
+import static org.hibernate.grammars.hql.HqlParser.QUOTED_IDENTIFIER;
 import static org.hibernate.grammars.hql.HqlParser.UNION;
+import static org.hibernate.internal.util.QuotingHelper.unquoteIdentifier;
+import static org.hibernate.internal.util.QuotingHelper.unquoteJavaStringLiteral;
 import static org.hibernate.internal.util.QuotingHelper.unquoteStringLiteral;
 import static org.hibernate.query.hql.internal.SqmTreeCreationHelper.extractJpaCompliantAlias;
 import static org.hibernate.query.sqm.TemporalUnit.DATE;
@@ -1953,8 +1955,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public String visitNakedIdentifier(HqlParser.NakedIdentifierContext ctx) {
 		final TerminalNode node = (TerminalNode) ctx.getChild( 0 );
 		final String text = node.getText();
-		return node.getSymbol().getType() == HqlParser.QUOTED_IDENTIFIER
-				? QuotingHelper.unquoteIdentifier( text )
+		return node.getSymbol().getType() == QUOTED_IDENTIFIER
+				? unquoteIdentifier( text )
 				: text;
 	}
 
@@ -3166,9 +3168,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitCollation(HqlParser.CollationContext ctx) {
-		return new SqmCollation(
-				ctx.simplePath().getText(),
-				null,
+		final StringBuilder collation = new StringBuilder();
+		final HqlParser.SimplePathContext simplePathContext = ctx.simplePath();
+		final boolean quoted = simplePathContext.getStart().getType() == QUOTED_IDENTIFIER;
+		if ( quoted ) {
+			collation.append("\"");
+		}
+		collation.append( visitIdentifier( simplePathContext.identifier() ) );
+		for ( HqlParser.SimplePathElementContext pathElementContext
+				: simplePathContext.simplePathElement() ) {
+			collation.append( visitIdentifier( pathElementContext.identifier() ) );
+		}
+		if ( quoted ) {
+			collation.append("\"");
+		}
+		return new SqmCollation( collation.toString(), null,
 				creationContext.getNodeBuilder() );
 	}
 
@@ -3721,7 +3735,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmLiteral<String> javaStringLiteral(String text) {
-		String unquoted = QuotingHelper.unquoteJavaStringLiteral( text );
+		String unquoted = unquoteJavaStringLiteral( text );
 		return new SqmLiteral<>(
 				unquoted,
 				resolveExpressibleTypeBasic( String.class ),

@@ -259,7 +259,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	boolean applyOrder(
 			StringBuilder declaration, List<String> paramTypes,
 			@Nullable String containerType, boolean unwrapped) {
-		if ( !isJakartaKeyedSlice(containerType) && hasOrdering(paramTypes) ) {
+		if ( !isJakartaCursoredPage(containerType) && hasOrdering(paramTypes) ) {
 			unwrapQuery( declaration, unwrapped );
 			declaration
 					.append("\t\t\t.setOrder(_orders)\n");
@@ -271,7 +271,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	void handlePageParameters(
 			StringBuilder declaration, List<String> paramTypes,
 			@Nullable String containerType) {
-		if ( !isJakartaKeyedSlice(containerType) ) {
+		if ( !isJakartaCursoredPage(containerType) ) {
 			for ( int i = 0; i < paramNames.size(); i ++ ) {
 				final String paramName = paramNames.get(i);
 				final String paramType = paramTypes.get(i);
@@ -354,14 +354,12 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			|| parameterType.startsWith(JD_PAGE_REQUEST);
 	}
 
-	static boolean isJakartaKeyedSlice(@Nullable String containerType) {
-		return JD_KEYED_SLICE.equals(containerType)
-			|| JD_KEYED_PAGE.equals(containerType);
+	static boolean isJakartaCursoredPage(@Nullable String containerType) {
+		return JD_CURSORED_PAGE.equals(containerType);
 	}
 
-	static boolean isJakartaSlice(@Nullable String containerType) {
-		return JD_SLICE.equals(containerType)
-			|| JD_PAGE.equals(containerType);
+	static boolean isJakartaPage(@Nullable String containerType) {
+		return JD_PAGE.equals(containerType);
 	}
 
 	void makeKeyedPage(StringBuilder declaration, List<String> paramTypes) {
@@ -386,16 +384,16 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			= "\t\tvar _cursors =\n" +
 			"\t\t\t\t_results.getKeyList()\n" +
 			"\t\t\t\t\t\t.stream()\n" +
-			"\t\t\t\t\t\t.map(_key -> Cursor.forKeyset(_key.toArray()))\n" +
+			"\t\t\t\t\t\t.map(_key -> Cursor.forKey(_key.toArray()))\n" +
 			"\t\t\t\t\t\t.collect(toList());\n" +
 			"\t\tvar _page =\n" +
 			"\t\t\t\tPageRequest.of(Entity.class)\n" +
 			"\t\t\t\t\t\t.sortBy(pageRequest.sorts())\n" +
 			"\t\t\t\t\t\t.size(pageRequest.size())\n" +
 			"\t\t\t\t\t\t.page(pageRequest.page() + 1);\n" +
-			"\t\treturn new KeysetAwareSliceRecord<>( _results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
-			"\t\t\t\t_results.isLastPage() ? null : _page.afterKeyset(_results.getNextPage().getKey().toArray()),\n" +
-			"\t\t\t\t_results.isFirstPage() ? null : _page.beforeKeyset(_results.getPreviousPage().getKey().toArray()) );\n";
+			"\t\treturn new CursoredPageRecord<>( _results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
+			"\t\t\t\t_results.isLastPage() ? null : _page.afterKey(_results.getNextPage().getKey().toArray()),\n" +
+			"\t\t\t\t_results.isFirstPage() ? null : _page.beforeKey(_results.getPreviousPage().getKey().toArray()) );\n";
 
 	static final String MAKE_KEYED_PAGE
 			= "\tvar _unkeyedPage =\n" +
@@ -418,14 +416,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	void setParameters(StringBuilder declaration, List<String> paramTypes) {}
 
 	void tryReturn(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
-		if ( isJakartaKeyedSlice(containerType) ) {
+		if ( isJakartaCursoredPage(containerType) ) {
 			makeKeyedPage( declaration, paramTypes );
 		}
 		if ( dataRepository ) {
 			declaration
 					.append("\ttry {\n");
 		}
-		if ( JD_KEYED_PAGE.equals(containerType)
+		if ( JD_CURSORED_PAGE.equals(containerType)
 				|| JD_PAGE.equals(containerType) ) {
 			if ( dataRepository ) {
 				declaration
@@ -439,8 +437,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		}
 		declaration
 				.append('\t');
-		if ( isJakartaKeyedSlice(containerType)
-				|| isJakartaSlice(containerType) ) {
+		if ( isJakartaCursoredPage(containerType)
+				|| isJakartaPage(containerType) ) {
 			if ( returnTypeName != null && isUsingEntityManager() ) {
 				// this is necessary to avoid losing the type
 				// after unwrapping the Query object
@@ -589,7 +587,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	boolean unwrapIfNecessary(StringBuilder declaration, @Nullable String containerType, boolean unwrapped) {
-		if ( OPTIONAL.equals(containerType) || isJakartaKeyedSlice(containerType) ) {
+		if ( OPTIONAL.equals(containerType) || isJakartaCursoredPage(containerType) ) {
 			unwrapQuery( declaration, unwrapped );
 			unwrapped = true;
 		}
@@ -639,26 +637,16 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 							.append(parameterName(HIB_KEYED_PAGE, paramTypes, paramNames))
 							.append(");");
 					break;
-				case JD_SLICE:
-					declaration
-							.append(".getResultList();\n")
-							.append("\t\treturn new ")
-							.append(implType(containerType))
-							.append('(')
-							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-							.append(", _results);\n");
-					break;
 				case JD_PAGE:
 					declaration
 							.append(".getResultList();\n")
 							.append("\t\treturn new ")
-							.append(implType(containerType))
+							.append(annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord"))
 							.append('(')
 							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 							.append(", _results, _totalResults);\n");
 					break;
-				case JD_KEYED_SLICE:
-				case JD_KEYED_PAGE:
+				case JD_CURSORED_PAGE:
 					if ( returnTypeName == null ) {
 						throw new AssertionFailure("entity class cannot be null");
 					}
@@ -667,14 +655,12 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 								.append(".getKeyedResultList(_keyedPage);\n");
 						annotationMetaEntity.importType("jakarta.data.page.PageRequest");
 						annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
+						annotationMetaEntity.importType("jakarta.data.page.impl.CursoredPageRecord");
 						String fragment = MAKE_KEYED_SLICE
 								.replace("pageRequest",
 										parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-								.replace("Entity", annotationMetaEntity.importType(returnTypeName))
-								.replace("KeysetAwareSliceRecord", implType(containerType));
-						if ( JD_KEYED_SLICE.equals(containerType) ) {
-							fragment = fragment.replace("_totalResults, ", "");
-						}
+								.replace("Entity",
+										annotationMetaEntity.importType(returnTypeName));
 						declaration
 								.append(fragment);
 					}
@@ -702,20 +688,5 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			}
 		}
 		throw new AssertionFailure("could not find parameter");
-	}
-
-	private String implType(String containerType) {
-		switch (containerType) {
-			case JD_SLICE:
-				return annotationMetaEntity.importType("jakarta.data.page.impl.SliceRecord");
-			case JD_PAGE:
-				return annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord");
-			case JD_KEYED_SLICE:
-				return annotationMetaEntity.importType("jakarta.data.page.impl.KeysetAwareSliceRecord");
-			case JD_KEYED_PAGE:
-				return annotationMetaEntity.importType("jakarta.data.page.impl.KeysetAwarePageRecord");
-			default:
-				throw new AssertionFailure("unrecognized slice type");
-		}
 	}
 }

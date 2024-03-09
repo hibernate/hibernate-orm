@@ -140,7 +140,7 @@ dependencyResolutionManagement {
             def elVersion = version "el", "5.0.0"
             def injectVersion = version "inject", "2.0.1"
             def interceptorsVersion = version "interceptors", "2.1.0"
-            def dataVersion = version "data", "1.0.0-M3"
+            def dataVersion = version "data", "1.0.0-SNAPSHOT"
             def jaccVersion = version "jacc", "2.1.0"
             def jaxbApiVersion = version "jaxbApi", "4.0.0"
             def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.2"

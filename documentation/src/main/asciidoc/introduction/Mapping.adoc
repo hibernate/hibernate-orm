@@ -797,6 +797,7 @@ Here we summarize the ones we've just seen in the second half of this chapter, a
 | `@Struct` | Map an embeddable to a SQL UDT with the given name
 | `@TimeZoneStorage` | Specify how the time zone information should be persisted
 | `@JdbcType` or `@JdbcTypeCode` | Use an implementation of `JdbcType` to map an arbitrary SQL type
+| `@Collate` | Specify a collation for a column
 |===
 
 In addition, there are some configuration properties which have a _global_ affect on how basic types map to SQL column types:

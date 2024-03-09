@@ -132,9 +132,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		callable = sql != null && persistentClass.isCustomInsertCallable();
 		checkStyle = sql == null
 				? ExecuteUpdateResultCheckStyle.COUNT
-				: persistentClass.getCustomSQLInsertCheckStyle() == null
+				: persistentClass.getInsertCheckStyle() == null
 				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: persistentClass.getCustomSQLInsertCheckStyle();
+				: persistentClass.getInsertCheckStyle();
 		customSQLInsert = new String[] {sql};
 		insertCallable = new boolean[] {callable};
 		insertExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
@@ -143,9 +143,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		callable = sql != null && persistentClass.isCustomUpdateCallable();
 		checkStyle = sql == null
 				? ExecuteUpdateResultCheckStyle.COUNT
-				: persistentClass.getCustomSQLUpdateCheckStyle() == null
+				: persistentClass.getUpdateCheckStyle() == null
 				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: persistentClass.getCustomSQLUpdateCheckStyle();
+				: persistentClass.getUpdateCheckStyle();
 		customSQLUpdate = new String[] {sql};
 		updateCallable = new boolean[] {callable};
 		updateExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
@@ -154,9 +154,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		callable = sql != null && persistentClass.isCustomDeleteCallable();
 		checkStyle = sql == null
 				? ExecuteUpdateResultCheckStyle.COUNT
-				: persistentClass.getCustomSQLDeleteCheckStyle() == null
+				: persistentClass.getDeleteCheckStyle() == null
 				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: persistentClass.getCustomSQLDeleteCheckStyle();
+				: persistentClass.getDeleteCheckStyle();
 		customSQLDelete = new String[] {sql};
 		deleteCallable = new boolean[] {callable};
 		deleteExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };

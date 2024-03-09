@@ -232,7 +232,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	public boolean hasSubclasses() {
-		return subclasses.size() > 0;
+		return !subclasses.isEmpty();
 	}
 
 	public int getSubclassSpan() {
@@ -817,6 +817,18 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customInsertCallable;
 	}
 
+	public void setInsertCheckStyle(ExecuteUpdateResultCheckStyle insertCheckStyle) {
+		this.insertCheckStyle = insertCheckStyle;
+	}
+
+	public ExecuteUpdateResultCheckStyle getInsertCheckStyle() {
+		return insertCheckStyle;
+	}
+
+	/**
+	 * @deprecated use {@link #getInsertCheckStyle()}
+	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public ExecuteUpdateResultCheckStyle getCustomSQLInsertCheckStyle() {
 		return insertCheckStyle;
 	}
@@ -845,6 +857,18 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customUpdateCallable;
 	}
 
+	public void setUpdateCheckStyle(ExecuteUpdateResultCheckStyle updateCheckStyle) {
+		this.updateCheckStyle = updateCheckStyle;
+	}
+
+	public ExecuteUpdateResultCheckStyle getUpdateCheckStyle() {
+		return updateCheckStyle;
+	}
+
+	/**
+	 * @deprecated use {@link #getUpdateCheckStyle()}
+	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
 		return updateCheckStyle;
 	}
@@ -873,6 +897,18 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customDeleteCallable;
 	}
 
+	public void setDeleteCheckStyle(ExecuteUpdateResultCheckStyle deleteCheckStyle) {
+		this.deleteCheckStyle = deleteCheckStyle;
+	}
+
+	public ExecuteUpdateResultCheckStyle getDeleteCheckStyle() {
+		return deleteCheckStyle;
+	}
+
+	/**
+	 * @deprecated use {@link #getDeleteCheckStyle()}
+	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
 		return deleteCheckStyle;
 	}

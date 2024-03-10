@@ -6,10 +6,8 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
@@ -26,8 +24,6 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfile.FetchOverride;
 import org.hibernate.annotations.FetchProfiles;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.Imported;
@@ -35,7 +31,6 @@ import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JavaTypeRegistrations;
 import org.hibernate.annotations.JdbcTypeRegistration;
 import org.hibernate.annotations.JdbcTypeRegistrations;
-import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.TypeRegistration;
 import org.hibernate.annotations.TypeRegistrations;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -43,33 +38,16 @@ import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
 import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.internal.ConvertedBasicTypeImpl;
-import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.UserType;
 
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Inheritance;
@@ -89,9 +67,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.TableGenerators;
 
-import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
-import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
@@ -637,184 +614,6 @@ public final class AnnotationBinder {
 								context
 						)
 				);
-	}
-
-	public static void bindFilterDefs(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
-		final FilterDef filterDef = annotatedElement.getAnnotation( FilterDef.class );
-		final FilterDefs filterDefs = getOverridableAnnotation( annotatedElement, FilterDefs.class, context );
-		if ( filterDef != null ) {
-			bindFilterDef( filterDef, context );
-		}
-		if ( filterDefs != null ) {
-			for ( FilterDef def : filterDefs.value() ) {
-				bindFilterDef( def, context );
-			}
-		}
-	}
-
-	private static void bindFilterDef(FilterDef filterDef, MetadataBuildingContext context) {
-		final String name = filterDef.name();
-		if ( context.getMetadataCollector().getFilterDefinition( name ) != null ) {
-			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
-		}
-		final Map<String, JdbcMapping> explicitParamJaMappings;
-		if ( filterDef.parameters().length == 0 ) {
-			explicitParamJaMappings = emptyMap();
-		}
-		else {
-			explicitParamJaMappings = new HashMap<>();
-			for ( ParamDef paramDef : filterDef.parameters() ) {
-				final JdbcMapping jdbcMapping = resolveFilterParamType( paramDef.type(), context );
-				if ( jdbcMapping == null ) {
-					throw new MappingException(
-							String.format(
-									Locale.ROOT,
-									"Unable to resolve type specified for parameter (%s) defined for @FilterDef (%s)",
-									paramDef.name(),
-									name
-							)
-					);
-				}
-				explicitParamJaMappings.put( paramDef.name(), jdbcMapping );
-			}
-		}
-		final FilterDefinition filterDefinition =
-				new FilterDefinition( name, filterDef.defaultCondition(), explicitParamJaMappings );
-		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
-		context.getMetadataCollector().addFilterDefinition( filterDefinition );
-	}
-
-	@SuppressWarnings("unchecked")
-	private static JdbcMapping resolveFilterParamType(Class<?> type, MetadataBuildingContext context) {
-		if ( UserType.class.isAssignableFrom( type ) ) {
-			return resolveUserType( (Class<UserType<?>>) type, context );
-		}
-		else if ( AttributeConverter.class.isAssignableFrom( type ) ) {
-			return resolveAttributeConverter( (Class<AttributeConverter<?,?>>) type, context );
-		}
-		else if ( JavaType.class.isAssignableFrom( type ) ) {
-			return resolveJavaType( (Class<JavaType<?>>) type, context );
-		}
-		else {
-			return resolveBasicType( type, context );
-		}
-	}
-
-	private static BasicType<Object> resolveBasicType(Class<?> type, MetadataBuildingContext context) {
-		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-		final JavaType<Object> jtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
-		if ( jtd != null ) {
-			final JdbcType jdbcType = jtd.getRecommendedJdbcType(
-					new JdbcTypeIndicators() {
-						@Override
-						public TypeConfiguration getTypeConfiguration() {
-							return typeConfiguration;
-						}
-
-						@Override
-						public int getPreferredSqlTypeCodeForBoolean() {
-							return context.getPreferredSqlTypeCodeForBoolean();
-						}
-
-						@Override
-						public int getPreferredSqlTypeCodeForDuration() {
-							return context.getPreferredSqlTypeCodeForDuration();
-						}
-
-						@Override
-						public int getPreferredSqlTypeCodeForUuid() {
-							return context.getPreferredSqlTypeCodeForUuid();
-						}
-
-						@Override
-						public int getPreferredSqlTypeCodeForInstant() {
-							return context.getPreferredSqlTypeCodeForInstant();
-						}
-
-						@Override
-						public int getPreferredSqlTypeCodeForArray() {
-							return context.getPreferredSqlTypeCodeForArray();
-						}
-
-						@Override
-						public Dialect getDialect() {
-							return context.getMetadataCollector().getDatabase().getDialect();
-						}
-					}
-			);
-			return typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
-		}
-		else {
-			return null;
-		}
-	}
-
-	private static JdbcMapping resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
-		final UserType<?> userType = !context.getBuildingOptions().isAllowExtensionsInCdi()
-				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass )
-				: context.getBootstrapContext().getServiceRegistry()
-						.requireService( ManagedBeanRegistry.class )
-						.getBean( userTypeClass ).getBeanInstance();
-		return new CustomType<>( userType, context.getBootstrapContext().getTypeConfiguration() );
-	}
-
-	private static JdbcMapping resolveAttributeConverter(Class<AttributeConverter<?, ?>> type, MetadataBuildingContext context) {
-		final BootstrapContext bootstrapContext = context.getBootstrapContext();
-		final ManagedBeanRegistry beanRegistry =
-				bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class );
-		final ManagedBean<AttributeConverter<?, ?>> bean = beanRegistry.getBean( type );
-
-		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
-		final JavaType<? extends AttributeConverter<?,?>> converterJtd = jtdRegistry.resolveDescriptor( bean.getBeanClass() );
-
-		final ParameterizedType converterParameterizedType = GenericsHelper.extractParameterizedType( bean.getBeanClass() );
-		final Class<?> domainJavaClass = GenericsHelper.extractClass( converterParameterizedType.getActualTypeArguments()[0] );
-		final Class<?> relationalJavaClass = GenericsHelper.extractClass( converterParameterizedType.getActualTypeArguments()[1] );
-
-		final JavaType<?> domainJtd = jtdRegistry.resolveDescriptor( domainJavaClass );
-		final JavaType<?> relationalJtd = jtdRegistry.resolveDescriptor( relationalJavaClass );
-
-		@SuppressWarnings({"rawtypes", "unchecked"})
-		final JpaAttributeConverterImpl<?,?> valueConverter =
-				new JpaAttributeConverterImpl( bean, converterJtd, domainJtd, relationalJtd );
-		return new ConvertedBasicTypeImpl<>(
-				ConverterDescriptor.TYPE_NAME_PREFIX
-						+ valueConverter.getConverterJavaType().getTypeName(),
-				String.format(
-						"BasicType adapter for AttributeConverter<%s,%s>",
-						domainJtd.getTypeName(),
-						relationalJtd.getTypeName()
-				),
-				relationalJtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() ),
-				valueConverter
-		);
-	}
-
-	private static JdbcMapping resolveJavaType(Class<JavaType<?>> type, MetadataBuildingContext context) {
-		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-		final JavaType<?> jtd = getJavaType( type, context, typeConfiguration );
-		final JdbcType jdbcType = jtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-		return typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
-	}
-
-	private static JavaType<?> getJavaType(
-			Class<JavaType<?>> javaTypeClass,
-			MetadataBuildingContext context,
-			TypeConfiguration typeConfiguration) {
-		final JavaType<?> registeredJtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( javaTypeClass );
-		if ( registeredJtd != null ) {
-			return registeredJtd;
-		}
-
-		if ( !context.getBuildingOptions().isAllowExtensionsInCdi() ) {
-			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
-		}
-
-		return context.getBootstrapContext().getServiceRegistry()
-				.requireService( ManagedBeanRegistry.class )
-				.getBean( javaTypeClass )
-				.getBeanInstance();
 	}
 
 	public static void bindFetchProfilesForClass(XClass annotatedClass, MetadataBuildingContext context) {

@@ -108,7 +108,6 @@ public class SingleTableWithEmbeddableTest {
 	}
 
 	@Entity(name = "Employee")
-	@Table(name = "employees")
 	public static class Employee extends Person {
 		private Integer employeeNumber;
 

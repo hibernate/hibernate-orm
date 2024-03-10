@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Properties;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
@@ -294,7 +293,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "UnqualifiedMissingEntity")
 	public static class UnqualifiedMissingEntity {
 
@@ -311,7 +309,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "MissingEntity", catalog = "SomeCatalog", schema = "SomeSchema")
 	public static class MissingEntity {
 
@@ -328,7 +325,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "ColumnEntity", schema = "SomeSchema")
 	public static class NoNameColumn {
 
@@ -345,7 +341,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "ColumnEntity", schema = "SomeSchema")
 	public static class NameColumn {
 
@@ -372,7 +367,6 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@PrimaryKeyJoinColumn
 	@Table(name = "ColumnEntity", schema = "SomeSchema")
 	public static class IntegerNameColumn {
 

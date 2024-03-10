@@ -34,7 +34,6 @@ public class JoinOrderTest {
 	}
 
 	@Entity(name = "TaskLocation")
-	@Table(name = "vin_task_location")
 	public class TaskLocation extends Location {
 		@Id @GeneratedValue Long id;
 

@@ -14,14 +14,12 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -33,6 +31,8 @@ import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.model.internal.HCANNHelper.hasAnnotation;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
  * {@link PropertyHolder} for composites (Embeddable/Embedded).
@@ -238,7 +238,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(String path) {
-		final String embeddedPath = StringHelper.qualifyConditionally( embeddedAttributeName, path );
+		final String embeddedPath = qualifyConditionally( embeddedAttributeName, path );
 		final AttributeConversionInfo fromParent = parent.locateAttributeConversionInfo( embeddedPath );
 		if ( fromParent != null ) {
 			return fromParent;
@@ -357,7 +357,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			}
 		}
 		if ( result == null ) {
-			String userPropertyName = extractUserPropertyName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY, propertyName );
+			String userPropertyName = extractUserPropertyName( IDENTIFIER_MAPPER_PROPERTY, propertyName );
 			if ( userPropertyName != null ) {
 				result = super.getOverriddenColumn( userPropertyName );
 			}

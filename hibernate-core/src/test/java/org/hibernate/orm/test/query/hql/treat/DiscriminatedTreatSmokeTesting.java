@@ -128,7 +128,6 @@ public class DiscriminatedTreatSmokeTesting {
 	}
 
 	@Entity( name = "ExtendedVolume" )
-	@Table( name = "treated_extended_volume" )
 	@DiscriminatorValue( "E" )
 	public static class ExtendedVolume extends Volume {
 		private String strategy;

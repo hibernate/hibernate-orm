@@ -8,7 +8,6 @@ package org.hibernate.orm.test.envers.entities.onetomany.detached;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 import org.hibernate.envers.Audited;
 
@@ -19,7 +18,6 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-@Table(name = "ListJoinColBiInhRefEdChild")
 @DiscriminatorValue("2")
 @Audited
 public class ListJoinColumnBidirectionalInheritanceRefEdChildEntity

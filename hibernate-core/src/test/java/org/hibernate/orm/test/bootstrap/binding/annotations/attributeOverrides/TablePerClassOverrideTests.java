@@ -48,10 +48,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @ServiceRegistry
 @SessionFactory
+@Disabled("@AttributeOverrides is not supported for inheritance.")
 public class TablePerClassOverrideTests {
 
 	@Test
-	@Disabled("@AttributeOverrides is not supported for inheritance. See CoreMessageLogger#unsupportedAttributeOverrideWithEntityInheritance")
 	public void testSchema(SessionFactoryScope scope) {
 		MetadataImplementor metadata = scope.getMetadataImplementor();
 		assertTrue( SchemaUtil.isColumnPresent( "CUSTOMER", "STREET", metadata ) );

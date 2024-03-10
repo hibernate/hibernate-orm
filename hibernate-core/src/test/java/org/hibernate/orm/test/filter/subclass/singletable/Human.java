@@ -8,14 +8,12 @@ package org.hibernate.orm.test.filter.subclass.singletable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
 @Entity
-@Table(name="ZOOLOGY_HUMAN")
 @FilterDef(name="iqRange", parameters=
 {
 		@ParamDef(name="min", type=Integer.class),

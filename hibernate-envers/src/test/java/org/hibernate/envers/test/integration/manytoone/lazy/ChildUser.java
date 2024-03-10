@@ -12,14 +12,12 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 import java.util.List;
 
 /**
  * @author Luke Chen
  */
 @Entity
-@Table(name = "child_user")
 public class ChildUser extends User {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)

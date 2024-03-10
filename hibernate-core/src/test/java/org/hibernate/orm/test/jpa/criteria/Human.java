@@ -13,6 +13,5 @@ import jakarta.persistence.Table;
  * Human
  */
 @Entity
-@Table(name = "HUMAN")
 public class Human extends Animal {
 }

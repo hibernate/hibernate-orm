@@ -254,15 +254,15 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Override
 	public Package packageForNameOrNull(String packageName) {
 		try {
-			Class<?> aClass = Class.forName( packageName + ".package-info", true, getAggregatedClassLoader() );
-			return aClass == null ? null : aClass.getPackage();
+			return Class.forName( packageName + ".package-info", true, getAggregatedClassLoader() )
+					.getPackage();
 		}
 		catch (ClassNotFoundException e) {
 			log.packageNotFound( packageName );
 			return null;
 		}
 		catch (LinkageError e) {
-			log.warn( "LinkageError while attempting to load Package named " + packageName, e );
+			log.linkageError( packageName, e );
 			return null;
 		}
 	}

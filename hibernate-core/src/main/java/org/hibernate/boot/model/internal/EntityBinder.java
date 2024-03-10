@@ -17,6 +17,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AssociationOverrides;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -85,6 +89,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
@@ -109,8 +114,6 @@ import org.hibernate.spi.NavigablePath;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.Access;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
@@ -120,7 +123,6 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.NamedEntityGraph;
@@ -132,6 +134,7 @@ import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.UniqueConstraint;
 
+import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERCLASS;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
@@ -217,9 +220,9 @@ public class EntityBinder {
 
 		final InheritanceState inheritanceState = inheritanceStates.get( clazzToProcess );
 		final PersistentClass superEntity = getSuperEntity( clazzToProcess, inheritanceStates, context, inheritanceState );
-		detectedAttributeOverrideProblem( clazzToProcess, superEntity );
-
 		final PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context );
+		checkOverrides( clazzToProcess, superEntity );
+
 		final EntityBinder entityBinder = new EntityBinder( clazzToProcess, persistentClass, context );
 		entityBinder.bindEntity();
 		entityBinder.handleClassTable( inheritanceState, superEntity );
@@ -252,6 +255,53 @@ public class EntityBinder {
 		entityBinder.processComplementaryTableDefinitions();
 		bindCallbacks( clazzToProcess, persistentClass, context );
 		entityBinder.callTypeBinders( persistentClass );
+	}
+
+	private static void checkOverrides(XClass clazzToProcess, PersistentClass superEntity) {
+		if ( superEntity != null ) {
+			//TODO: correctly handle compound paths (embeddables)
+			{
+				AttributeOverrides overrides = clazzToProcess.getAnnotation(AttributeOverrides.class);
+				if ( overrides != null ) {
+					for ( AttributeOverride override : overrides.value() ) {
+						checkOverride( superEntity, override.name(), clazzToProcess, AttributeOverride.class );
+					}
+				}
+				AttributeOverride override = clazzToProcess.getAnnotation(AttributeOverride.class);
+				if ( override != null ) {
+					checkOverride( superEntity, override.name(), clazzToProcess, AttributeOverride.class );
+				}
+			}
+			{
+				AssociationOverrides overrides = clazzToProcess.getAnnotation(AssociationOverrides.class);
+				if ( overrides != null ) {
+					for ( AssociationOverride override : overrides.value() ) {
+						checkOverride( superEntity, override.name(), clazzToProcess, AssociationOverride.class );
+					}
+				}
+				AssociationOverride override = clazzToProcess.getAnnotation(AssociationOverride.class);
+				if ( override != null ) {
+					checkOverride( superEntity, override.name(), clazzToProcess, AssociationOverride.class );
+				}
+			}
+		}
+	}
+
+	/**
+	 * The rule is that an entity can override a field declared by a @MappedSuperclass
+	 * if there is no intervening entity which also inherits the field. A wrinkle is
+	 * that a mapped superclass can occur in between the root class and a subclass of
+	 * an entity hierarchy, and then the subclass can override fields declared by the
+	 * mapped superclass even though it cannot override any fields of the root class.
+	 */
+	private static void checkOverride(
+			PersistentClass superEntity, String name, XClass clazzToProcess, Class<?> overrideClass) {
+		if ( superEntity.hasProperty( StringHelper.root(name) ) ) {
+			throw new AnnotationException("Property '" + name
+					+ "' is inherited from entity '" + superEntity.getEntityName()
+					+ "' and may not be overridden using '@" + overrideClass.getSimpleName()
+					+ "' in entity subclass '" + clazzToProcess.getName() + "'");
+		}
 	}
 
 	private static void bindSoftDelete(
@@ -369,14 +419,6 @@ public class EntityBinder {
 		processComplementaryTableDefinitions( annotatedClass.getAnnotation( org.hibernate.annotations.Table.class ) );
 		processComplementaryTableDefinitions( annotatedClass.getAnnotation( org.hibernate.annotations.Tables.class ) );
 		processComplementaryTableDefinitions( annotatedClass.getAnnotation( jakarta.persistence.Table.class ) );
-	}
-
-	private static void detectedAttributeOverrideProblem(XClass clazzToProcess, PersistentClass superEntity) {
-		if ( superEntity != null && (
-				clazzToProcess.isAnnotationPresent( AttributeOverride.class ) ||
-						clazzToProcess.isAnnotationPresent( AttributeOverrides.class ) ) ) {
-			LOG.unsupportedAttributeOverrideWithEntityInheritance( clazzToProcess.getName() );
-		}
 	}
 
 	private Set<String> handleIdClass(
@@ -718,11 +760,12 @@ public class EntityBinder {
 		}
 		else {
 			if ( hasTableAnnotation ) {
-				//TODO: why is this not an error?!
-				LOG.invalidTableAnnotation( annotatedClass.getName() );
+				throw new AnnotationException( "Entity '" + annotatedClass.getName()
+						+ "' is a subclass in a 'SINGLE_TABLE' hierarchy and may not be annotated '@Table'"
+						+ " (the root class declares the table mapping for the hierarchy)");
 			}
 
-			if ( inheritanceState.getType() == InheritanceType.SINGLE_TABLE ) {
+			if ( inheritanceState.getType() == SINGLE_TABLE ) {
 				// we at least need to properly set up the EntityTableXref
 				bindTableForDiscriminatedSubclass( collector.getEntityTableXref( superEntity.getEntityName() ) );
 			}
@@ -776,11 +819,8 @@ public class EntityBinder {
 		bindDiscriminatorValue();
 
 		if ( !isJoinedSubclass ) {
-			checkNoJoinColumns( annotatedClass );
-			if ( annotatedClass.isAnnotationPresent( OnDelete.class ) ) {
-				//TODO: why is this not an error!??
-				LOG.invalidOnDeleteAnnotation( propertyHolder.getEntityName() );
-			}
+			checkNoJoinColumns();
+			checkNoOnDelete();
 		}
 	}
 
@@ -833,11 +873,18 @@ public class EntityBinder {
 		}
 	}
 
-	private static void checkNoJoinColumns(XClass clazzToProcess) {
-		if ( clazzToProcess.isAnnotationPresent( PrimaryKeyJoinColumns.class )
-				|| clazzToProcess.isAnnotationPresent( PrimaryKeyJoinColumn.class ) ) {
-			//TODO: why is this not an error?!
-			LOG.invalidPrimaryKeyJoinColumnAnnotation( clazzToProcess.getName() );
+	private void checkNoJoinColumns() {
+		if ( annotatedClass.isAnnotationPresent( PrimaryKeyJoinColumns.class )
+				|| annotatedClass.isAnnotationPresent( PrimaryKeyJoinColumn.class ) ) {
+			throw new AnnotationException( "Entity class '" + annotatedClass.getName()
+					+ "' may not specify a '@PrimaryKeyJoinColumn'" );
+		}
+	}
+
+	private void checkNoOnDelete() {
+		if ( annotatedClass.isAnnotationPresent( OnDelete.class ) ) {
+			throw new AnnotationException( "Entity class '" + annotatedClass.getName()
+					+ "' may not be annotated '@OnDelete'" );
 		}
 	}
 
@@ -1017,7 +1064,7 @@ public class EntityBinder {
 				}
 				else {
 					boolean subclassAndSingleTableStrategy =
-							inheritanceState.getType() == InheritanceType.SINGLE_TABLE
+							inheritanceState.getType() == SINGLE_TABLE
 									&& inheritanceState.hasParents();
 					if ( !hasIdAnnotation && property.isAnnotationPresent( GeneratedValue.class ) ) {
 						throw new AnnotationException(
@@ -1274,7 +1321,9 @@ public class EntityBinder {
 			bindRootEntity();
 		}
 		else if ( !isMutable() ) {
-			LOG.immutableAnnotationOnNonRoot( annotatedClass.getName() );
+			throw new AnnotationException("Entity class '" + annotatedClass.getName()
+					+ "' is annotated '@Immutable' but it is a subclass in an entity inheritance hierarchy"
+					+ " (only root classes may declare mutability)");
 		}
 
 		ensureNoMutabilityPlan();

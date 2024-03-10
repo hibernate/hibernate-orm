@@ -55,7 +55,7 @@ import java.lang.annotation.Annotation;
 public interface TypeBinder<A extends Annotation> {
 	/**
 	 * Perform some custom configuration of the model relating to the given annotated
-	 * {@link PersistentClass entity class}.
+	 * {@linkplain PersistentClass entity class}.
 	 *
 	 * @param annotation an annotation of the entity class that is declared as an
 	 *                   {@link org.hibernate.annotations.TypeBinderType}
@@ -64,7 +64,7 @@ public interface TypeBinder<A extends Annotation> {
 	void bind(A annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass);
 	/**
 	 * Perform some custom configuration of the model relating to the given annotated
-	 * {@link Component embeddable class}.
+	 * {@linkplain Component embeddable class}.
 	 *
 	 * @param annotation an annotation of the embeddable class that is declared as an
 	 *                   {@link org.hibernate.annotations.TypeBinderType}

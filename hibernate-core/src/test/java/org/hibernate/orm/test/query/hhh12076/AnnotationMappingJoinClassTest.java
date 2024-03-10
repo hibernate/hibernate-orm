@@ -348,7 +348,6 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 	}
 
     @Entity(name = "EwtAssessmentExtension")
-	@Table(name = "claimsettlement_ext_i3_ewt")
 	public static class EwtAssessmentExtension extends SettlementExtension {
 		public static final long serialVersionUID = 1L;
 
@@ -630,7 +629,6 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 	}
 
     @Entity(name = "GapAssessmentExtension")
-	@Table(name = "claim_settlement_ext_gap")
 	public static class GapAssessmentExtension extends SettlementExtension {
 
 		private Double insuredsObligation = 0.0;

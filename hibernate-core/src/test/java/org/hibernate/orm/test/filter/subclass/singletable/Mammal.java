@@ -16,10 +16,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="ZOOLOGY_MAMMAL")
 @FilterDef(name="pregnantOnly")
 @Filter(name="pregnantOnly", condition="IS_PREGNANT = 1")
-public class Mammal extends Animal{
+public class Mammal extends Animal {
 	
 	@Column(name="IS_PREGNANT")
 	@Convert( converter = NumericBooleanConverter.class )

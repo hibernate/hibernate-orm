@@ -17,7 +17,7 @@
  * <p>
  * The classes {@link org.hibernate.query.Order}, {@link org.hibernate.query.Page},
  * {@link org.hibernate.query.KeyedPage}, and {@link org.hibernate.query.KeyedResultList}
- * define an API for dynamic ordering and key-based pagination. These are
+ * define an API for dynamic ordering and key-based pagination. These
  * classes are especially useful as parameters of generated
  * {@link org.hibernate.annotations.processing.Find @Find} and
  * {@link org.hibernate.annotations.processing.HQL @HQL} methods.

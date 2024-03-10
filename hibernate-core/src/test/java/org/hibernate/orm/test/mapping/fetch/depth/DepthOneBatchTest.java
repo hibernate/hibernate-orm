@@ -153,7 +153,6 @@ public class DepthOneBatchTest {
 
 		@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 		@PrimaryKeyJoinColumn(name = "AGENCY_ID")
-		@BatchSize(size = 2)
 		public AgencyDetail getAgencyDetail() {
 			return agencyDetail;
 		}

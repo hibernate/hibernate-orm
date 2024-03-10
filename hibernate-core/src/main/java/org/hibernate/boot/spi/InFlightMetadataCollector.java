@@ -64,7 +64,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
 
 	/**
-	 * Add the PersistentClass for an entity mapping.
+	 * Add the {@link PersistentClass} for an entity mapping.
 	 *
 	 * @param persistentClass The entity metadata
 	 *
@@ -74,7 +74,8 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void addEntityBinding(PersistentClass persistentClass) throws DuplicateMappingException;
 
 	/**
-	 * Needed for SecondPass handling
+	 * A map of {@link PersistentClass} by entity name.
+	 * Needed for {@link SecondPass} handling.
 	 */
 	Map<String, PersistentClass> getEntityBindingMap();
 

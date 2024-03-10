@@ -112,6 +112,7 @@ public class OneToOneSecondPass implements SecondPass {
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setBuildingContext( buildingContext );
+		binder.setHolder( propertyHolder );
 
 		final LazyGroup lazyGroupAnnotation = property.getAnnotation( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {

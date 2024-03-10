@@ -47,7 +47,6 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -629,15 +628,15 @@ public final class AnnotationBinder {
 	}
 
 	private static void handleConverterRegistration(ConverterRegistration registration, MetadataBuildingContext context) {
-		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
-		metadataCollector.getConverterRegistry().addRegisteredConversion(
-				new RegisteredConversion(
-						registration.domainType(),
-						registration.converter(),
-						registration.autoApply(),
-						context
-				)
-		);
+		context.getMetadataCollector().getConverterRegistry()
+				.addRegisteredConversion(
+						new RegisteredConversion(
+								registration.domainType(),
+								registration.converter(),
+								registration.autoApply(),
+								context
+						)
+				);
 	}
 
 	public static void bindFilterDefs(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {

@@ -20,7 +20,6 @@ import java.util.Set;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CacheLayout;
@@ -1270,7 +1269,6 @@ public class EntityBinder {
 		bindOptimisticLocking();
 		bindPolymorphism();
 		bindProxy();
-		bindBatchSize();
 		bindWhere();
 		bindCache();
 		bindNaturalIdCache();
@@ -1550,11 +1548,6 @@ public class EntityBinder {
 			default:
 				throw new AssertionFailure( "Unknown polymorphism type: " + type );
 		}
-	}
-
-	public void bindBatchSize() {
-		final BatchSize batchSize = annotatedClass.getAnnotation( BatchSize.class );
-		persistentClass.setBatchSize(batchSize != null ? batchSize.size() : -1 );
 	}
 
 	public void bindProxy() {

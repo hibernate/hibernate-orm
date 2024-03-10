@@ -41,7 +41,6 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
-import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -602,18 +601,21 @@ public class EntityMetamodel implements Serializable {
 
 	private static boolean indicatesOwnedCollection(Type type, MetadataImplementor metadata) {
 		if ( type.isCollectionType() ) {
-			String role = ( (CollectionType) type ).getRole();
-			return !metadata.getCollectionBinding( role ).isInverse();
+			final CollectionType collectionType = (CollectionType) type;
+			return !metadata.getCollectionBinding( collectionType.getRole() ).isInverse();
 		}
 		else if ( type.isComponentType() ) {
-			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
-			for ( Type subtype : subtypes ) {
+			final CompositeType compositeType = (CompositeType) type;
+			for ( Type subtype : compositeType.getSubtypes() ) {
 				if ( indicatesOwnedCollection( subtype, metadata ) ) {
 					return true;
 				}
 			}
+			return false;
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -675,9 +677,6 @@ public class EntityMetamodel implements Serializable {
 	public Integer getPropertyIndexOrNull(String propertyName) {
 		return propertyIndexes.get( propertyName );
 	}
-
-
-
 
 	public boolean hasCollections() {
 		return hasCollections;

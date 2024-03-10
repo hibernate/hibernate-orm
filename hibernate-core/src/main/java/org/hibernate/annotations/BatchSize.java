@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.binder.internal.BatchSizeBinder;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -54,6 +56,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
+@AttributeBinderType(binder = BatchSizeBinder.class)
+@TypeBinderType(binder = BatchSizeBinder.class)
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface BatchSize {

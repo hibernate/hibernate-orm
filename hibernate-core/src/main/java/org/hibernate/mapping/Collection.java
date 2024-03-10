@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
@@ -352,8 +351,8 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return batchSize;
 	}
 
-	public void setBatchSize(int i) {
-		batchSize = i;
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
 	}
 
 	public FetchMode getFetchMode() {

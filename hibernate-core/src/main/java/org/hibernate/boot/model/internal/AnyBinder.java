@@ -121,6 +121,9 @@ public class AnyBinder {
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setCascade( cascadeStrategy );
 		binder.setBuildingContext( context );
+		binder.setHolder( propertyHolder );
+		binder.setProperty( property );
+		binder.setEntityBinder( entityBinder );
 		Property prop = binder.makeProperty();
 		prop.setOptional( optional && value.isNullable() );
 		//composite FK columns are in the same table, so it's OK

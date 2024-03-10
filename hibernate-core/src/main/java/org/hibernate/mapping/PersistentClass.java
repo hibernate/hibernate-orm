@@ -463,7 +463,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 * Includes properties defined in superclasses of the mapping inheritance.
 	 * Includes all properties defined as part of a join.
 	 *
-	 * @see #getReferencedProperty for a discussion of "referenceable"
+	 * @see #getReferencedProperty
 	 * @return The referenceable property iterator.
 	 */
 	public List<Property> getReferenceableProperties() {

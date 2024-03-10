@@ -6,6 +6,8 @@
  */
 // $Id$
 package org.hibernate.annotations;
+import org.hibernate.binder.internal.DiscriminatorOptionsBinder;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -19,6 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Hardy Ferentschik
  */
+@TypeBinderType(binder = DiscriminatorOptionsBinder.class)
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface DiscriminatorOptions {

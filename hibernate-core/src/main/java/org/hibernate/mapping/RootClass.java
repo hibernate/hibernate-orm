@@ -7,7 +7,6 @@
 package org.hibernate.mapping;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -105,6 +104,10 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	@Override
 	public boolean hasIdentifierProperty() {
 		return identifierProperty != null;
+	}
+
+	public boolean hasDiscriminator() {
+		return discriminator != null;
 	}
 
 	@Override

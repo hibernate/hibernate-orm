@@ -26,7 +26,6 @@ import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.DiscriminatorFormula;
-import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
@@ -178,8 +177,6 @@ public class EntityBinder {
 	private String name;
 	private XClass annotatedClass;
 	private PersistentClass persistentClass;
-	private Boolean forceDiscriminator;
-	private Boolean insertableDiscriminator;
 	private PolymorphismType polymorphismType;
 	private boolean lazy;
 	private XClass proxyClass;
@@ -769,8 +766,11 @@ public class EntityBinder {
 				singleTableInheritance( inheritanceState, propertyHolder );
 				isJoinedSubclass = false;
 				break;
-			default:
+			case TABLE_PER_CLASS:
 				isJoinedSubclass = false;
+				break;
+			default:
+				throw new AssertionFailure( "Unrecognized InheritanceType" );
 		}
 
 		bindDiscriminatorValue();
@@ -785,21 +785,21 @@ public class EntityBinder {
 	}
 
 	private void singleTableInheritance(InheritanceState inheritanceState, PropertyHolder holder) {
-		processDiscriminatorOptions();
-		final AnnotatedDiscriminatorColumn discriminatorColumn = processSingleTableDiscriminatorProperties( inheritanceState );
+		final AnnotatedDiscriminatorColumn discriminatorColumn =
+				processSingleTableDiscriminatorProperties( inheritanceState );
 		if ( !inheritanceState.hasParents() ) { // todo : sucks that this is separate from RootClass distinction
 			final RootClass rootClass = (RootClass) persistentClass;
 			if ( inheritanceState.hasSiblings()
 					|| discriminatorColumn != null && !discriminatorColumn.isImplicit() ) {
 				bindDiscriminatorColumnToRootPersistentClass( rootClass, discriminatorColumn, holder );
-				rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
+				if ( context.getBuildingOptions().shouldImplicitlyForceDiscriminatorInSelect() ) {
+					rootClass.setForceDiscriminator( true );
+				}
 			}
 		}
 	}
 
 	private void joinedInheritance(InheritanceState state, PersistentClass superEntity, PropertyHolder holder) {
-		processDiscriminatorOptions();
-
 		if ( state.hasParents() ) {
 			final AnnotatedJoinColumns joinColumns = subclassJoinColumns( annotatedClass, superEntity, context );
 			final JoinedSubclass jsc = (JoinedSubclass) persistentClass;
@@ -821,17 +821,13 @@ public class EntityBinder {
 			// the class we're processing is the root of the hierarchy, so
 			// let's see if we had a discriminator column (it's perfectly
 			// valid for joined inheritance to not have a discriminator)
-			if ( discriminatorColumn == null ) {
-				if ( isForceDiscriminatorInSelects() ) {
-					throw new AnnotationException( "Entity '" + rootClass.getEntityName()
-							+ "' with 'JOINED' inheritance is annotated '@DiscriminatorOptions(force=true)' but has no discriminator column" );
-				}
-			}
-			else {
+			if ( discriminatorColumn != null ) {
 				// we do have a discriminator column
 				if ( state.hasSiblings() || !discriminatorColumn.isImplicit() ) {
 					bindDiscriminatorColumnToRootPersistentClass( rootClass, discriminatorColumn, holder );
-					rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
+					if ( context.getBuildingOptions().shouldImplicitlyForceDiscriminatorInSelect() ) {
+						rootClass.setForceDiscriminator( true );
+					}
 				}
 			}
 		}
@@ -910,17 +906,6 @@ public class EntityBinder {
 			context.getMetadataCollector().addSecondPass(
 					new NullableDiscriminatorColumnSecondPass( rootClass.getEntityName() )
 			);
-		}
-		if ( insertableDiscriminator != null ) {
-			rootClass.setDiscriminatorInsertable( insertableDiscriminator );
-		}
-	}
-
-	private void processDiscriminatorOptions() {
-		final DiscriminatorOptions discriminatorOptions = annotatedClass.getAnnotation( DiscriminatorOptions.class );
-		if ( discriminatorOptions != null ) {
-			forceDiscriminator = discriminatorOptions.force();
-			insertableDiscriminator = discriminatorOptions.insert();
 		}
 	}
 
@@ -1341,12 +1326,6 @@ public class EntityBinder {
 			rootClass.setLazyPropertiesCacheable( cacheLazyProperty );
 		}
 		rootClass.setNaturalIdCacheRegionName( naturalIdCacheRegion );
-	}
-
-	private boolean isForceDiscriminatorInSelects() {
-		return forceDiscriminator == null
-				? context.getBuildingOptions().shouldImplicitlyForceDiscriminatorInSelect()
-				: forceDiscriminator;
 	}
 
 	private void bindCustomSql() {

@@ -80,10 +80,21 @@ public class CreateTableUniqueDelegate extends AlterTableUniqueDelegate {
 	}
 
 	private static boolean isSingleColumnUnique(Table table, UniqueKey uniqueKey) {
-		return uniqueKey.getColumns().size() == 1
-				// Since columns are created on demand in IndexBinder.createColumn,
-				// we also have to check if the "real" column is unique to be safe
-				&& ( uniqueKey.getColumn( 0 ).isUnique() || table.getColumn( uniqueKey.getColumn( 0 ) ).isUnique() );
+		if ( uniqueKey.getColumns().size() == 1)  {
+			// Since columns are created on demand in IndexBinder.createColumn,
+			// we also have to check if the "real" column is unique to be safe
+			final Column uniqueKeyColumn = uniqueKey.getColumn(0);
+			if ( uniqueKeyColumn.isUnique() ) {
+				return true;
+			}
+			else {
+				final Column column = table.getColumn( uniqueKeyColumn );
+				return column != null && column.isUnique();
+			}
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override

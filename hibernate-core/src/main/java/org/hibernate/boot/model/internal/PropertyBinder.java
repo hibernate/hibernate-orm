@@ -46,6 +46,9 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -70,6 +73,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.jboss.logging.Logger;
 
 import static jakarta.persistence.FetchType.LAZY;
+import static java.util.Collections.singletonList;
 import static org.hibernate.boot.model.internal.AnyBinder.bindAny;
 import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
@@ -93,9 +97,9 @@ import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnota
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
-import static org.hibernate.mapping.Constraint.hashedName;
 
 /**
  * A stateful binder responsible for creating {@link Property} objects.
@@ -811,7 +815,7 @@ public class PropertyBinder {
 				propertyBinder
 		);
 		addIndexes( inSecondPass, property, columns, joinColumns );
-		addNaturalIds( inSecondPass, property, columns, joinColumns );
+		addNaturalIds( inSecondPass, property, columns, joinColumns, context );
 	}
 
 	private static AnnotatedColumns bindProperty(
@@ -1262,21 +1266,67 @@ public class PropertyBinder {
 			boolean inSecondPass,
 			XProperty property,
 			AnnotatedColumns columns,
-			AnnotatedJoinColumns joinColumns) {
+			AnnotatedJoinColumns joinColumns,
+			MetadataBuildingContext context) {
 		// Natural ID columns must reside in one single UniqueKey within the Table.
 		// For now, simply ensure consistent naming.
 		// TODO: AFAIK, there really isn't a reason for these UKs to be created
 		// on the SecondPass. This whole area should go away...
 		final NaturalId naturalId = property.getAnnotation( NaturalId.class );
 		if ( naturalId != null ) {
+			final Database database = context.getMetadataCollector().getDatabase();
 			if ( joinColumns != null ) {
-				final String keyName = "UK_" + hashedName( joinColumns.getTable().getName() + "_NaturalID" );
+				final Identifier name = context.getBuildingOptions().getImplicitNamingStrategy()
+						.determineUniqueKeyName(new ImplicitUniqueKeyNameSource() {
+							@Override
+							public Identifier getTableName() {
+								return joinColumns.getTable().getNameIdentifier();
+							}
+
+							@Override
+							public List<Identifier> getColumnNames() {
+								return singletonList(toIdentifier("_NaturalID"));
+							}
+
+							@Override
+							public Identifier getUserProvidedIdentifier() {
+								return null;
+							}
+
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
+						});
+				final String keyName = name.render( database.getDialect() );
 				for ( AnnotatedColumn column : joinColumns.getColumns() ) {
 					column.addUniqueKey( keyName, inSecondPass );
 				}
 			}
 			else {
-				final String keyName = "UK_" + hashedName( columns.getTable().getName() + "_NaturalID" );
+				final Identifier name = context.getBuildingOptions().getImplicitNamingStrategy()
+						.determineUniqueKeyName(new ImplicitUniqueKeyNameSource() {
+							@Override
+							public Identifier getTableName() {
+								return columns.getTable().getNameIdentifier();
+							}
+
+							@Override
+							public List<Identifier> getColumnNames() {
+								return singletonList(toIdentifier("_NaturalID"));
+							}
+
+							@Override
+							public Identifier getUserProvidedIdentifier() {
+								return null;
+							}
+
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
+						});
+				final String keyName = name.render( database.getDialect() );
 				for ( AnnotatedColumn column : columns.getColumns() ) {
 					column.addUniqueKey( keyName, inSecondPass );
 				}

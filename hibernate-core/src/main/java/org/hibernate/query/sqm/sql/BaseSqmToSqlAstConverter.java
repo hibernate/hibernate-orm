@@ -3047,7 +3047,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			TableGroup tableGroup,
 			EntityNameUse entityNameUse,
 			String hibernateEntityName) {
-		registerEntityNameUsage( tableGroup, entityNameUse, hibernateEntityName, false );
+		registerEntityNameUsage(
+				tableGroup,
+				entityNameUse,
+				hibernateEntityName,
+				entityNameUse.getKind() == EntityNameUse.UseKind.PROJECTION
+		);
 	}
 
 	private void registerEntityNameUsage(

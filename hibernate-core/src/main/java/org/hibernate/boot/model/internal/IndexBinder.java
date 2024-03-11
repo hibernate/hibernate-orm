@@ -8,10 +8,7 @@ package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -28,9 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
-import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * Responsible for interpreting {@link jakarta.persistence.Index} and
@@ -233,57 +228,4 @@ class IndexBinder {
 			}
 		}
 	}
-
-	private class IndexOrUniqueKeyNameSource implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
-		private final MetadataBuildingContext buildingContext;
-		private final Table table;
-		private final String[] columnNames;
-		private final String originalKeyName;
-
-		public IndexOrUniqueKeyNameSource(MetadataBuildingContext buildingContext, Table table, String[] columnNames, String originalKeyName) {
-			this.buildingContext = buildingContext;
-			this.table = table;
-			this.columnNames = columnNames;
-			this.originalKeyName = originalKeyName;
-		}
-
-		@Override
-		public MetadataBuildingContext getBuildingContext() {
-			return buildingContext;
-		}
-
-		@Override
-		public Identifier getTableName() {
-			return table.getNameIdentifier();
-		}
-
-		private List<Identifier> columnNameIdentifiers;
-
-		@Override
-		public List<Identifier> getColumnNames() {
-			// be lazy about building these
-			if ( columnNameIdentifiers == null ) {
-				columnNameIdentifiers = toIdentifiers( columnNames );
-			}
-			return columnNameIdentifiers;
-		}
-
-		@Override
-		public Identifier getUserProvidedIdentifier() {
-			return originalKeyName != null ? Identifier.toIdentifier( originalKeyName ) : null;
-		}
-	}
-
-	private List<Identifier> toIdentifiers(String[] names) {
-		if ( names == null ) {
-			return emptyList();
-		}
-
-		final List<Identifier> columnNames = arrayList( names.length );
-		for ( String name : names ) {
-			columnNames.add( getDatabase().toIdentifier( name ) );
-		}
-		return columnNames;
-	}
-
 }

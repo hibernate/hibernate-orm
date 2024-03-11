@@ -155,6 +155,9 @@ public class RelationalObjectBinder {
 		column.setNullable( interpretNullability( columnSource.isNullable(), areColumnsNullableByDefault ) );
 
 		column.setUnique( columnSource.isUnique() );
+		if ( columnSource.isUnique() && table != null ) {
+			table.createUniqueKey( column, simpleValue.getBuildingContext() );
+		}
 
 		String checkCondition = columnSource.getCheckCondition();
 		if ( checkCondition != null ) {

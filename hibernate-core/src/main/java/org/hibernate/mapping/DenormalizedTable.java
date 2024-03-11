@@ -12,8 +12,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.Internal;
+import org.hibernate.boot.internal.ForeignKeyNameSource;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.JoinedList;
 
 /**
@@ -59,15 +61,20 @@ public class DenormalizedTable extends Table {
 	}
 
 	@Override
-	public void createForeignKeys() {
-		includedTable.createForeignKeys();
+	public void createForeignKeys(MetadataBuildingContext context) {
+		includedTable.createForeignKeys( context );
 		for ( ForeignKey foreignKey : includedTable.getForeignKeys().values() ) {
+			final PersistentClass referencedClass =
+					foreignKey.resolveReferencedClass( context.getMetadataCollector() );
+			// the ForeignKeys created in the first pass did not have their referenced table initialized
+			if ( foreignKey.getReferencedTable() == null ) {
+				foreignKey.setReferencedTable( referencedClass.getTable() );
+			}
 			createForeignKey(
-					Constraint.generateName(
-							foreignKey.generatedConstraintNamePrefix(),
-							this,
-							foreignKey.getColumns()
-					),
+					context.getBuildingOptions()
+							.getImplicitNamingStrategy()
+							.determineForeignKeyName( new ForeignKeyNameSource( foreignKey, this, context ) )
+							.render( context.getMetadataCollector().getDatabase().getDialect() ),
 					foreignKey.getColumns(),
 					foreignKey.getReferencedEntityName(),
 					foreignKey.getKeyDefinition(),
@@ -105,7 +112,7 @@ public class DenormalizedTable extends Table {
 		return includedTable.getPrimaryKey();
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated(forRemoval = true)
 	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		if ( !includedTable.isPhysicalTable() ) {
 			for ( UniqueKey uniqueKey : includedTable.getUniqueKeys().values() ) {

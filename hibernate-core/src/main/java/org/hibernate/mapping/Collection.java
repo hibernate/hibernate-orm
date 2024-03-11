@@ -499,7 +499,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	}
 
 	@Override
-	public void createUniqueKey() {
+	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 
 	public boolean isSimpleValue() {

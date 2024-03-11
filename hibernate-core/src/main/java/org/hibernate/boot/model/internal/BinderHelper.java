@@ -350,7 +350,7 @@ public class BinderHelper {
 		else {
 			ownerEntity.addProperty( result );
 		}
-		embeddedComponent.createUniqueKey(); //make it unique
+		embeddedComponent.createUniqueKey( context ); //make it unique
 		return result;
 	}
 

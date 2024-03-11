@@ -9,7 +9,6 @@ package org.hibernate.tool.schema.internal;
 import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -32,6 +31,8 @@ import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 
 /**
  * Base implementation of {@link SchemaValidator}.
@@ -139,7 +140,9 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 		}
 
 		for ( Column column : table.getColumns() ) {
-			final ColumnInformation existingColumn = tableInformation.getColumn( Identifier.toIdentifier( column.getQuotedName() ) );
+			final ColumnInformation existingColumn =
+					//QUESTION: should this use metadata.getDatabase().toIdentifier( column.getQuotedName() )
+					tableInformation.getColumn( toIdentifier( column.getQuotedName() ) );
 			if ( existingColumn == null ) {
 				throw new SchemaManagementException(
 						String.format(

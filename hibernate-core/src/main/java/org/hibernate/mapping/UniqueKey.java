@@ -47,6 +47,7 @@ public class UniqueKey extends Constraint {
 		return columnOrderMap;
 	}
 
+	@Deprecated(forRemoval = true)
 	public String generatedConstraintNamePrefix() {
 		return "UK_";
 	}

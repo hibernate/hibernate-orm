@@ -11,7 +11,10 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
  * Implementation of the {@link ImplicitNamingStrategy} contract, generally
@@ -47,12 +50,12 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	protected String transformEntityName(EntityNaming entityNaming) {
 		// prefer the JPA entity name, if specified...
-		if ( StringHelper.isNotEmpty( entityNaming.getJpaEntityName() ) ) {
+		if ( isNotEmpty( entityNaming.getJpaEntityName() ) ) {
 			return entityNaming.getJpaEntityName();
 		}
 		else {
 			// otherwise, use the Hibernate entity name
-			return StringHelper.unqualify( entityNaming.getEntityName() );
+			return unqualify( entityNaming.getEntityName() );
 		}
 	}
 
@@ -67,7 +70,6 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 		final String name = source.getOwningPhysicalTableName()
 				+ '_'
 				+ source.getNonOwningPhysicalTableName();
-
 		return toIdentifier( name, source.getBuildingContext() );
 	}
 
@@ -80,12 +82,9 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 		// aka:
 		//     if owning entity has a JPA entity name: {OWNER JPA ENTITY NAME}_{COLLECTION ATTRIBUTE NAME}
 		//     otherwise: {OWNER ENTITY NAME}_{COLLECTION ATTRIBUTE NAME}
-		final String entityName = transformEntityName( source.getOwningEntityNaming() );
-
-		final String name = entityName
+		final String name = transformEntityName( source.getOwningEntityNaming() )
 				+ '_'
 				+ transformAttributePath( source.getOwningAttributePath() );
-
 		return toIdentifier( name, source.getBuildingContext() );
 	}
 
@@ -141,16 +140,15 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 		final String name;
 
-		if ( source.getNature() == ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION
+		String referencedColumnName = source.getReferencedColumnName().getText();
+		if ( source.getNature() == ELEMENT_COLLECTION
 				|| source.getAttributePath() == null ) {
 			name = transformEntityName( source.getEntityNaming() )
-					+ '_'
-					+ source.getReferencedColumnName().getText();
+					+ '_' + referencedColumnName;
 		}
 		else {
 			name = transformAttributePath( source.getAttributePath() )
-					+ '_'
-					+ source.getReferencedColumnName().getText();
+					+ '_' + referencedColumnName;
 		}
 
 		return toIdentifier( name, source.getBuildingContext() );
@@ -165,17 +163,21 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	@Override
 	public Identifier determineAnyDiscriminatorColumnName(ImplicitAnyDiscriminatorColumnNameSource source) {
+		final MetadataBuildingContext buildingContext = source.getBuildingContext();
 		return toIdentifier(
-				transformAttributePath( source.getAttributePath() ) + "_" + source.getBuildingContext().getMappingDefaults().getImplicitDiscriminatorColumnName(),
-				source.getBuildingContext()
+				transformAttributePath( source.getAttributePath() )
+						+ "_" + buildingContext.getMappingDefaults().getImplicitDiscriminatorColumnName(),
+				buildingContext
 		);
 	}
 
 	@Override
 	public Identifier determineAnyKeyColumnName(ImplicitAnyKeyColumnNameSource source) {
+		final MetadataBuildingContext buildingContext = source.getBuildingContext();
 		return toIdentifier(
-				transformAttributePath( source.getAttributePath() ) + "_" + source.getBuildingContext().getMappingDefaults().getImplicitIdColumnName(),
-				source.getBuildingContext()
+				transformAttributePath( source.getAttributePath() )
+						+ "_" + buildingContext.getMappingDefaults().getImplicitIdColumnName(),
+				buildingContext
 		);
 	}
 
@@ -198,41 +200,35 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	@Override
 	public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
-		Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
+		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
+		final MetadataBuildingContext buildingContext = source.getBuildingContext();
 		return userProvidedIdentifier != null ? userProvidedIdentifier : toIdentifier(
-				NamingHelper.withCharset( source.getBuildingContext().getBuildingOptions().getSchemaCharset() ).generateHashedFkName(
-						"FK",
-						source.getTableName(),
-						source.getReferencedTableName(),
-						source.getColumnNames()
-				),
-				source.getBuildingContext()
+				NamingHelper.withCharset( buildingContext.getBuildingOptions().getSchemaCharset() )
+						.generateHashedFkName( "FK", source.getTableName(),
+								source.getReferencedTableName(), source.getColumnNames() ),
+				buildingContext
 		);
 	}
 
 	@Override
 	public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
-		Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
+		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
+		final MetadataBuildingContext buildingContext = source.getBuildingContext();
 		return userProvidedIdentifier != null ? userProvidedIdentifier : toIdentifier(
-				NamingHelper.withCharset( source.getBuildingContext().getBuildingOptions().getSchemaCharset() ).generateHashedConstraintName(
-						"UK",
-						source.getTableName(),
-						source.getColumnNames()
-				),
-				source.getBuildingContext()
+				NamingHelper.withCharset( buildingContext.getBuildingOptions().getSchemaCharset() )
+						.generateHashedConstraintName( "UK", source.getTableName(), source.getColumnNames() ),
+				buildingContext
 		);
 	}
 
 	@Override
 	public Identifier determineIndexName(ImplicitIndexNameSource source) {
-		Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
+		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
+		final MetadataBuildingContext buildingContext = source.getBuildingContext();
 		return userProvidedIdentifier != null ? userProvidedIdentifier : toIdentifier(
-				NamingHelper.withCharset( source.getBuildingContext().getBuildingOptions().getSchemaCharset() ).generateHashedConstraintName(
-						"IDX",
-						source.getTableName(),
-						source.getColumnNames()
-				),
-				source.getBuildingContext()
+				NamingHelper.withCharset( buildingContext.getBuildingOptions().getSchemaCharset() )
+						.generateHashedConstraintName( "IDX", source.getTableName(), source.getColumnNames() ),
+				buildingContext
 		);
 	}
 

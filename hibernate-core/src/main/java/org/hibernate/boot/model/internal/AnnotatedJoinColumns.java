@@ -610,7 +610,8 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 						)
 				);
 			}
-			return database.toIdentifier( ( (Column) selectable ).getQuotedName() );
+			final Column column = (Column) selectable;
+			return column.getNameIdentifier( getBuildingContext() );
 		}
 
 		@Override

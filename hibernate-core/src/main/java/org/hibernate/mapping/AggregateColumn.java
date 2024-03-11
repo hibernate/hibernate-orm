@@ -29,6 +29,7 @@ public class AggregateColumn extends Column {
 		setName( column.getQuotedName() );
 		setNullable( column.isNullable() );
 		setUnique( column.isUnique() );
+		setUniqueKeyName( column.getUniqueKeyName() );
 		setSqlType( column.getSqlType() );
 		setSqlTypeCode( column.getSqlTypeCode() );
 		uniqueInteger = column.uniqueInteger; //usually useless

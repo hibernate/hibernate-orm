@@ -16,6 +16,8 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 
+import static java.util.Comparator.comparing;
+
 /**
  * @author Steve Ebersole
  */
@@ -48,19 +50,13 @@ public class NamingHelper {
 			Identifier tableName,
 			Identifier referencedTableName,
 			List<Identifier> columnNames) {
-		final Identifier[] columnNamesArray;
-		if ( columnNames == null || columnNames.isEmpty() ) {
-			columnNamesArray = new Identifier[0];
-		}
-		else {
-			columnNamesArray = columnNames.toArray( new Identifier[ columnNames.size() ] );
-		}
-
 		return generateHashedFkName(
 				prefix,
 				tableName,
 				referencedTableName,
-				columnNamesArray
+				columnNames == null || columnNames.isEmpty()
+						? new Identifier[0]
+						: columnNames.toArray( new Identifier[0] )
 		);
 	}
 
@@ -118,15 +114,7 @@ public class NamingHelper {
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
 		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort(
-				alphabeticalColumns,
-				new Comparator<Identifier>() {
-					@Override
-					public int compare(Identifier o1, Identifier o2) {
-						return o1.getCanonicalName().compareTo( o2.getCanonicalName() );
-					}
-				}
-		);
+		Arrays.sort( alphabeticalColumns, comparing(Identifier::getCanonicalName) );
 		for ( Identifier columnName : alphabeticalColumns ) {
 			sb.append( "column`" ).append( columnName ).append( "`" );
 		}

@@ -568,7 +568,7 @@ public class TableBinder {
 		}
 		value.createForeignKey( referencedEntity, joinColumns );
 		if ( unique ) {
-			value.createUniqueKey();
+			value.createUniqueKey( buildingContext );
 		}
 	}
 

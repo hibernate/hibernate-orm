@@ -100,7 +100,8 @@ public class PrimaryKey extends Constraint {
 		}
 		return buf.append(')').toString();
 	}
-	
+
+	@Deprecated(forRemoval = true)
 	public String generatedConstraintNamePrefix() {
 		return "PK_";
 	}

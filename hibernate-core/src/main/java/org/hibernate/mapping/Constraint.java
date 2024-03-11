@@ -47,7 +47,10 @@ public abstract class Constraint implements Exportable, Serializable {
 	 * They're cached, keyed by name, in multiple locations.
 	 *
 	 * @return String The generated name
+	 *
+	 * @deprecated This method does not respect the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}
 	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public static String generateName(String prefix, Table table, Column... columns) {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
@@ -69,7 +72,10 @@ public abstract class Constraint implements Exportable, Serializable {
 	 * Helper method for {@link #generateName(String, Table, Column...)}.
 	 *
 	 * @return String The generated name
+	 *
+	 * @deprecated This method does not respect the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}
 	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public static String generateName(String prefix, Table table, List<Column> columns) {
 		// N.B. legacy APIs are involved: can't trust that the columns List is actually
 		// containing Column instances - the generic type isn't consistently enforced.
@@ -89,7 +95,10 @@ public abstract class Constraint implements Exportable, Serializable {
 	 *
 	 * @param name The name to be hashed.
 	 * @return String The hashed name.
+	 *
+	 * @deprecated Only used from deprecated methods
 	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public static String hashedName(String name) {
 		try {
 			final MessageDigest md = MessageDigest.getInstance( "MD5" );
@@ -147,6 +156,10 @@ public abstract class Constraint implements Exportable, Serializable {
 		this.table = table;
 	}
 
+	/**
+	 * @deprecated No longer used
+	 */
+	@Deprecated(forRemoval = true)
 	public boolean isGenerated(Dialect dialect) {
 		return true;
 	}
@@ -172,6 +185,8 @@ public abstract class Constraint implements Exportable, Serializable {
 	/**
 	 * @return String The prefix to use in generated constraint names.  Examples:
 	 * "UK_", "FK_", and "PK_".
+	 * @deprecated No longer used, should be removed
 	 */
+	@Deprecated(since="6.5", forRemoval = true)
 	public abstract String generatedConstraintNamePrefix();
 }

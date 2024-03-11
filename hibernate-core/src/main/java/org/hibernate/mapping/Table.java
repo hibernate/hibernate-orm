@@ -23,12 +23,14 @@ import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.ContributableDatabaseObject;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
@@ -36,9 +38,11 @@ import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 
 /**
  * A mapping model object representing a relational database {@linkplain jakarta.persistence.Table table}.
@@ -151,7 +155,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public void setName(String name) {
-		this.name = Identifier.toIdentifier( name );
+		this.name = toIdentifier( name );
 	}
 
 	public String getName() {
@@ -193,7 +197,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public void setSchema(String schema) {
-		this.schema = Identifier.toIdentifier( schema );
+		this.schema = toIdentifier( schema );
 	}
 
 	public String getSchema() {
@@ -213,7 +217,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public void setCatalog(String catalog) {
-		this.catalog = Identifier.toIdentifier( catalog );
+		this.catalog = toIdentifier( catalog );
 	}
 
 	public String getCatalog() {
@@ -321,7 +325,10 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return unmodifiableMap( indexes );
 	}
 
-	@Deprecated(since = "6.0")
+	/**
+	 * @deprecated No longer used, should be removed
+	 */
+	@Deprecated(since = "6.0", forRemoval = true)
 	public Iterator<ForeignKey> getForeignKeyIterator() {
 		return getForeignKeys().values().iterator();
 	}
@@ -330,7 +337,10 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return unmodifiableMap( foreignKeys );
 	}
 
-	@Deprecated(since = "6.0")
+	/**
+	 * @deprecated No longer used, should be removed
+	 */
+	@Deprecated(since = "6.0", forRemoval = true)
 	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		return getUniqueKeys().values().iterator();
 	}
@@ -509,9 +519,83 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	/**
+	 * Mark the given column unique.
+	 */
+	public void createUniqueKey(Column column, MetadataBuildingContext context) {
+		final String keyName = context.getBuildingOptions().getImplicitNamingStrategy()
+				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
+					@Override
+					public Identifier getTableName() {
+						return name;
+					}
+
+					@Override
+					public List<Identifier> getColumnNames() {
+						return singletonList( column.getNameIdentifier( context ) );
+					}
+
+					@Override
+					public Identifier getUserProvidedIdentifier() {
+						return null;
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return context;
+					}
+				} )
+				.render( context.getMetadataCollector().getDatabase().getDialect() );
+		column.setUniqueKeyName( keyName );
+		column.setUnique( true );
+	}
+
+	/**
 	 * If there is one given column, mark it unique, otherwise
 	 * create a {@link UniqueKey} comprising the given columns.
 	 */
+	public void createUniqueKey(List<Column> keyColumns, MetadataBuildingContext context) {
+		if ( keyColumns.size() == 1 ) {
+			createUniqueKey( keyColumns.get(0), context );
+		}
+		else {
+			final String keyName = context.getBuildingOptions().getImplicitNamingStrategy()
+					.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
+						@Override
+						public Identifier getTableName() {
+							return name;
+						}
+
+						@Override
+						public List<Identifier> getColumnNames() {
+							return keyColumns.stream()
+									.map( column -> column.getNameIdentifier( context ) )
+									.collect(toList());
+						}
+
+						@Override
+						public Identifier getUserProvidedIdentifier() {
+							return null;
+						}
+
+						@Override
+						public MetadataBuildingContext getBuildingContext() {
+							return context;
+						}
+					} )
+					.render( context.getMetadataCollector().getDatabase().getDialect() );
+			final UniqueKey uniqueKey = getOrCreateUniqueKey( keyName );
+			for ( Column keyColumn : keyColumns ) {
+				uniqueKey.addColumn( keyColumn );
+			}
+		}
+	}
+
+	/**
+	 * If there is one given column, mark it unique, otherwise
+	 * create a {@link UniqueKey} comprising the given columns.
+	 * @deprecated Use {@link #createUniqueKey(List, MetadataBuildingContext)}
+	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public void createUniqueKey(List<Column> keyColumns) {
 		if ( keyColumns.size() == 1 ) {
 			keyColumns.get(0).setUnique( true );
@@ -540,7 +624,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return uniqueKey;
 	}
 
-	public void createForeignKeys() {
+	public void createForeignKeys(MetadataBuildingContext context) {
 	}
 
 	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition) {
@@ -699,12 +783,18 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		this.comment = comment;
 	}
 
-	@Deprecated(since = "6.0")
+	/**
+	 * @deprecated No longer used, should be removed
+	 */
+	@Deprecated(since = "6.0", forRemoval = true)
 	public Iterator<String> getCheckConstraintsIterator() {
 		return getCheckConstraints().iterator();
 	}
 
-	@Deprecated(since = "6.2")
+	/**
+	 * @deprecated No longer used, should be removed
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
 	public List<String> getCheckConstraints() {
 		return checkConstraints.stream().map( CheckConstraint::getConstraint ).collect( toList() );
 	}

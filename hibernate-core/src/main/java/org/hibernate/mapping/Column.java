@@ -13,17 +13,19 @@ import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TruthValue;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.internal.TypecheckUtil;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
@@ -61,6 +63,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String name;
 	private boolean nullable = true;
 	private boolean unique;
+	private String uniqueKeyName;
 	private String sqlTypeName;
 	private Integer sqlTypeCode;
 	private Boolean sqlTypeLob;
@@ -124,6 +127,12 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		else {
 			this.name = name;
 		}
+	}
+
+	@Internal
+	public Identifier getNameIdentifier(MetadataBuildingContext buildingContext) {
+		return buildingContext.getMetadataCollector().getDatabase()
+				.toIdentifier( getQuotedName() );
 	}
 
 	public boolean isExplicit() {
@@ -566,6 +575,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		this.unique = unique;
 	}
 
+	public String getUniqueKeyName() {
+		return uniqueKeyName;
+	}
+
+	public void setUniqueKeyName(String keyName) {
+		uniqueKeyName = keyName;
+	}
+
 	public boolean isQuoted() {
 		return quoted;
 	}
@@ -778,6 +795,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.quoted = quoted;
 		copy.nullable = nullable;
 		copy.unique = unique;
+		copy.uniqueKeyName = uniqueKeyName;
 		copy.sqlTypeName = sqlTypeName;
 		copy.sqlTypeCode = sqlTypeCode;
 		copy.uniqueInteger = uniqueInteger; //usually useless
@@ -792,5 +810,4 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.columnSize = columnSize;
 		return copy;
 	}
-
 }

@@ -94,9 +94,9 @@ public class OneToOne extends ToOne {
 	}
 
 	@Override
-	public void createUniqueKey() {
+	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( !hasFormula() && getColumnSpan()>0  ) {
-			getTable().createUniqueKey( getConstraintColumns() );
+			getTable().createUniqueKey( getConstraintColumns(), context );
 		}
 	}
 

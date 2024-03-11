@@ -10,8 +10,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 
@@ -232,7 +234,25 @@ public class ForeignKey extends Constraint {
 
 	}
 
+	@Deprecated(forRemoval = true)
 	public String generatedConstraintNamePrefix() {
 		return "FK_";
+	}
+
+	@Internal
+	public PersistentClass resolveReferencedClass(Metadata metadata) {
+		final String referencedEntityName = getReferencedEntityName();
+		if ( referencedEntityName == null ) {
+			throw new MappingException( "An association from the table '" + getTable().getName() +
+					"' does not specify the referenced entity" );
+		}
+
+		final PersistentClass referencedClass = metadata.getEntityBinding( referencedEntityName );
+		if ( referencedClass == null ) {
+			throw new MappingException( "An association from the table '" + getTable().getName() +
+					"' refers to an unmapped class '" + referencedEntityName + "'" );
+		}
+
+		return referencedClass;
 	}
 }

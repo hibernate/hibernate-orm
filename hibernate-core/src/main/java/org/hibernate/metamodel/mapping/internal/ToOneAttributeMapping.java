@@ -60,6 +60,7 @@ import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -1300,6 +1301,12 @@ public class ToOneAttributeMapping
 				final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 				final TableGroup tableGroup = fromClauseAccess.getTableGroup( referencedNavigablePath );
 				fromClauseAccess.registerTableGroup( fetchablePath, tableGroup );
+				// Register a PROJECTION usage as we're effectively selecting the bidirectional association
+				creationState.getSqlAstCreationState().registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.PROJECTION,
+						entityMappingType.getEntityName()
+				);
 				return buildEntityFetchJoined(
 						fetchParent,
 						this,

@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.process.internal;
 
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
@@ -20,6 +21,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.internal.AttributeConverterMutabilityPlanImpl;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -28,6 +30,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.CustomMutabilityConvertedBasicTypeImpl;
+import org.hibernate.type.internal.CustomMutabilityConvertedPrimitiveBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -40,6 +43,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			Function<TypeConfiguration, BasicJavaType> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
+			Type resolvedJavaType,
 			JdbcTypeIndicators sqlTypeIndicators,
 			JpaAttributeConverterCreationContext converterCreationContext,
 			MetadataBuildingContext context) {
@@ -48,6 +52,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				explicitStdAccess,
 				explicitMutabilityPlanAccess,
 				converter( converterCreationContext, converterDescriptor ),
+				resolvedJavaType,
 				sqlTypeIndicators,
 				context
 		);
@@ -76,6 +81,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				explicitStdAccess,
 				explicitMutabilityPlanAccess,
 				converter( converterCreationContext, converterDescriptor ),
+				null,
 				sqlTypeIndicators,
 				context
 		);
@@ -93,6 +99,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JpaAttributeConverter<T,?> converter,
+			Type resolvedJavaType,
 			JdbcTypeIndicators sqlTypeIndicators,
 			MetadataBuildingContext context) {
 		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
@@ -122,12 +129,18 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				domainJtd
 		);
 
+		//noinspection unchecked
+		final Class<T> primitiveClass = resolvedJavaType instanceof Class<?> && ( (Class<?>) resolvedJavaType ).isPrimitive()
+				? (Class<T>) resolvedJavaType
+				: null;
+
 		return new NamedConverterResolution<>(
 				domainJtd,
 				relationalJtd,
 				jdbcType,
 				converter,
 				mutabilityPlan,
+				primitiveClass,
 				context.getBootstrapContext().getTypeConfiguration()
 		);
 	}
@@ -182,6 +195,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			JdbcType jdbcType,
 			JpaAttributeConverter<J,?> valueConverter,
 			MutabilityPlan<J> mutabilityPlan,
+			Class<J> primitiveClass,
 			TypeConfiguration typeConfiguration) {
 		assert domainJtd != null;
 		this.domainJtd = domainJtd;
@@ -198,7 +212,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		assert mutabilityPlan != null;
 		this.mutabilityPlan = mutabilityPlan;
 
-		this.legacyResolvedType = new CustomMutabilityConvertedBasicTypeImpl<>(
+		this.legacyResolvedType = legacyResolvedType(
 				ConverterDescriptor.TYPE_NAME_PREFIX
 						+ valueConverter.getConverterJavaType().getTypeName(),
 				String.format(
@@ -208,9 +222,39 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				),
 				jdbcType,
 				valueConverter,
+				primitiveClass,
 				mutabilityPlan
 		);
 		this.jdbcMapping = legacyResolvedType;
+	}
+
+	private static <J> BasicType<J> legacyResolvedType(
+			String name,
+			String description,
+			JdbcType jdbcType,
+			BasicValueConverter<J, ?> converter,
+			Class<J> primitiveClass,
+			MutabilityPlan<J> mutabilityPlan) {
+		if ( primitiveClass != null ) {
+			assert primitiveClass.isPrimitive();
+			return new CustomMutabilityConvertedPrimitiveBasicTypeImpl<>(
+					name,
+					description,
+					jdbcType,
+					converter,
+					primitiveClass,
+					mutabilityPlan
+			);
+		}
+		else {
+			return new CustomMutabilityConvertedBasicTypeImpl<>(
+					name,
+					description,
+					jdbcType,
+					converter,
+					mutabilityPlan
+			);
+		}
 	}
 
 	@Override

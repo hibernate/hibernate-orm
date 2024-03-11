@@ -114,7 +114,12 @@ class ColumnDefinitions {
 			Dialect dialect,
 			SqlStringGenerationContext context) {
 		if ( column.isUnique() && !table.isPrimaryKey( column ) ) {
-			final String keyName = Constraint.generateName( "UK_", table, column);
+			String uniqueKeyName = column.getUniqueKeyName();
+			final String keyName = uniqueKeyName == null
+					// fallback in case the ImplicitNamingStrategy name was not assigned
+					// (we don't have access to the ImplicitNamingStrategy here)
+					? Constraint.generateName( "UK_", table, column )
+					: uniqueKeyName;
 			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
 			uniqueKey.addColumn( column );
 			definition.append( dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment( column, context ) );

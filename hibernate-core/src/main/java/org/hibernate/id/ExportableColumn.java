@@ -139,7 +139,7 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
-		public void createUniqueKey() {
+		public void createUniqueKey(MetadataBuildingContext context) {
 		}
 
 		@Override

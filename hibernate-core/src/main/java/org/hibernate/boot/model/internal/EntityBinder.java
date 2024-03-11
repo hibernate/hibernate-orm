@@ -489,10 +489,11 @@ public class EntityBinder {
 			final Class<?> idClassValue = classWithIdClass.getAnnotationUsage( IdClass.class ).getClassDetails( "value" ).toJavaClass();
 			final ClassDetails compositeClass = context.getMetadataCollector().getSourceModelBuildingContext().getClassDetailsRegistry().resolveClassDetails( idClassValue.getName() );
 			final TypeDetails compositeType = new ClassTypeDetailsImpl( compositeClass, TypeDetails.Kind.CLASS );
+			final TypeDetails classWithIdType = new ClassTypeDetailsImpl( classWithIdClass, TypeDetails.Kind.CLASS );
 
 			final AccessType accessType = getPropertyAccessType();
 			final PropertyData inferredData = new PropertyPreloadedData( accessType, "id", compositeType );
-			final PropertyData baseInferredData = new PropertyPreloadedData( accessType, "id", compositeType );
+			final PropertyData baseInferredData = new PropertyPreloadedData( accessType, "id", classWithIdType );
 			final AccessType propertyAccessor = getPropertyAccessor( compositeClass );
 
 			// In JPA 2, there is a shortcut if the IdClass is the Pk of the associated class pointed to by the id

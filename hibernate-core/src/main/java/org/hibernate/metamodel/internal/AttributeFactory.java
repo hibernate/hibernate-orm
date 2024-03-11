@@ -319,17 +319,18 @@ public class AttributeFactory {
 		);
 	}
 
+	@SuppressWarnings( "unchecked" )
 	private static <Y> DomainType<Y> basicDomainType(ValueContext typeContext, MetadataContext context) {
-		if ( typeContext.getJpaBindableType().isPrimitive() ) {
-			// Special BasicDomainType necessary for primitive types in the JPA metamodel
-			@SuppressWarnings("unchecked")
+		final Value hibernateValue = typeContext.getHibernateValue();
+		if ( typeContext.getJpaBindableType().isPrimitive()
+				&& ( (SimpleValue) hibernateValue ).getJpaAttributeConverterDescriptor() == null ) {
+			// Special BasicDomainType necessary for primitive types in the JPA metamodel.
+			// When a converted is applied to the attribute we already resolve to the correct type
 			final Class<Y> type = (Class<Y>) typeContext.getJpaBindableType();
-			return context.resolveBasicType(type);
+			return context.resolveBasicType( type );
 		}
 		else {
-			@SuppressWarnings("unchecked")
-			final DomainType<Y> type = (DomainType<Y>) typeContext.getHibernateValue().getType();
-			return type;
+			return (DomainType<Y>) hibernateValue.getType();
 		}
 	}
 

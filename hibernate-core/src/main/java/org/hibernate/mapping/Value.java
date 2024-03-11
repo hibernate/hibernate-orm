@@ -7,7 +7,6 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -142,7 +141,7 @@ public interface Value extends Serializable {
 	// called when this is the foreign key of a
 	// @OneToOne with a FK, or a @OneToMany with
 	// a join table
-	void createUniqueKey();
+	void createUniqueKey(MetadataBuildingContext context);
 
 	boolean isSimpleValue();
 

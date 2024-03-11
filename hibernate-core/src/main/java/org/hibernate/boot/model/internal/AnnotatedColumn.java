@@ -301,7 +301,9 @@ public class AnnotatedColumn {
 			mappingColumn.setArrayLength( arrayLength );
 			mappingColumn.setNullable( nullable );
 			mappingColumn.setSqlType( sqlType );
-			mappingColumn.setUnique( unique );
+			if ( unique ) {
+				getParent().getTable().createUniqueKey( mappingColumn, getBuildingContext() );
+			}
 			for ( CheckConstraint constraint : checkConstraints ) {
 				mappingColumn.addCheckConstraint( constraint );
 			}

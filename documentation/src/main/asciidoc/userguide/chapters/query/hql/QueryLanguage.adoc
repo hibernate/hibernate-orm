@@ -947,7 +947,7 @@ Naturally, there are a good number of functions for working with strings.
 | `substring()` | Substring of a string (JPQL-style) | `substring(s, i)`, `substring(s, i, l)` | &check; / &cross;
 | `substring()` | Substring of a string (ANSI SQL-style)
 | `substring(string from start)`, `substring(string from start for length)` | &cross; / &check;
-| `trim()` | Trim characters from string | See below | &check; / &check;
+| `trim()` | Trim characters from string | `trim(string)`, `trim(leading from string)`, `trim(trailing from string)`, or `trim(leading character from string)` | &check; / &check;
 | `overlay()` | For replacing a substring
 | `overlay(string placing replacement from start)`, `overlay(string placing replacement from start for length)` | &cross; / &check;
 | `pad()` | Pads a string with whitespace, or with a specified character
@@ -955,7 +955,7 @@ Naturally, there are a good number of functions for working with strings.
 | `left()` | The leftmost characters of a string | `left(string, length)` | &cross; / &cross;
 | `right()` | The rightmost characters of a string | `right(string, length)`  | &cross; / &cross;
 | `replace()` | Replace every occurrence of a pattern in a string | `replace(string, pattern, replacement)` | &cross; / &cross;
-| `repeat()` | Concatenate a string with itself multiple times | `replace(string, times)` | &cross; / &cross;
+| `repeat()` | Concatenate a string with itself multiple times | `repeat(string, times)` | &cross; / &cross;
 | `collate()` | Select a collation | `collate(p.name as collation)` | &cross; / &cross;
 |===
 

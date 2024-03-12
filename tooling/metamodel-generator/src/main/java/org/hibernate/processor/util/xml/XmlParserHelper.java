@@ -25,11 +25,8 @@ import javax.xml.validation.SchemaFactory;
 
 import org.hibernate.boot.jaxb.cfg.spi.ObjectFactory;
 
-import org.hibernate.jpamodelgen.Context;
-import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.NullnessUtil;
-import org.hibernate.processor.xml.jaxb.ObjectFactory;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;

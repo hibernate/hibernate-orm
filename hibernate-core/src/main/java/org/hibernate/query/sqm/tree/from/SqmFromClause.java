@@ -152,9 +152,9 @@ public class SqmFromClause implements Serializable {
 				}
 				appendJoins( sqmJoin, sb );
 			}
-			else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
-				sb.append( ( (SqmCrossJoin<?>) sqmJoin ).getEntityName() );
-				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
+			else if ( sqmJoin instanceof SqmCrossJoin<?> sqmCrossJoin ) {
+				sb.append( sqmCrossJoin.getEntityName() );
+				sb.append( ' ' ).append( sqmCrossJoin.resolveAlias() );
 				appendJoins( sqmJoin, sb );
 			}
 			else if ( sqmJoin instanceof SqmEntityJoin<?, ?> sqmEntityJoin ) {

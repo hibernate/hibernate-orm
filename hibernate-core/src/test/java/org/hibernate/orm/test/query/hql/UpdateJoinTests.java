@@ -83,7 +83,7 @@ public class UpdateJoinTests {
 					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					final JpaCriteriaUpdate<BasicEntity> criteriaUpdate = cb.createCriteriaUpdate( BasicEntity.class );
 					final JpaRoot<BasicEntity> b = criteriaUpdate.from( BasicEntity.class );
-					final JpaEntityJoin<Contact> c = b.join( Contact.class, SqmJoinType.LEFT );
+					final JpaEntityJoin<BasicEntity,Contact> c = b.join( Contact.class, SqmJoinType.LEFT );
 					c.on( b.get( "id" ).equalTo( c.get( "id" ) ) );
 					criteriaUpdate.set( b.<String>get( "data" ), c.get( "name" ).get( "first" ) );
 					criteriaUpdate.where( c.get( "id" ).isNotNull() );

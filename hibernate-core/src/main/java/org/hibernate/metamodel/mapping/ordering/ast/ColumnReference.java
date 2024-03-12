@@ -106,7 +106,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 				collation,
 				creationState
 		);
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
 	}
 
 	TableReference getTableReference(TableGroup tableGroup) {

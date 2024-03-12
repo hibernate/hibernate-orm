@@ -13,6 +13,7 @@ import org.hibernate.Session;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaEntityJoin;
+import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 
@@ -63,13 +64,13 @@ public class SubqueryCorrelatedEntityJoinTest {
 			final HibernateCriteriaBuilder cb = em.unwrap( Session.class ).getCriteriaBuilder();
 			final JpaCriteriaQuery<Tuple> query = cb.createTupleQuery();
 			final JpaRoot<Primary> primary = query.from( Primary.class );
-			final JpaEntityJoin<Secondary> secondaryJoin = primary.join( Secondary.class );
+			final JpaEntityJoin<Primary,Secondary> secondaryJoin = primary.join( Secondary.class );
 			secondaryJoin.on(
 					cb.equal( primary.get( "secondaryFk" ), secondaryJoin.get( "id" ) )
 			);
 			final JpaSubQuery<String> subquery = query.subquery( String.class );
 			final JpaRoot<Tertiary> tertiary = subquery.from( Tertiary.class );
-			final JpaEntityJoin<Secondary> correlatedSecondaryJoin = subquery.correlate( secondaryJoin );
+			final JpaJoin<Primary,Secondary> correlatedSecondaryJoin = subquery.correlate( secondaryJoin );
 			subquery.select( tertiary.get( "name" ) ).where( cb.equal(
 					tertiary.get( "secondaryFk" ),
 					correlatedSecondaryJoin.get( "id" )

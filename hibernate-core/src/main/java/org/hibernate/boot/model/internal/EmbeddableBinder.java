@@ -96,7 +96,7 @@ public class EmbeddableBinder {
 			final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
 					propertyBinder.isId(),
 					propertyHolder,
-					property.getName(),
+					property.resolveAttributeName(),
 					context
 			);
 			referencedEntityName = mapsIdProperty.getClassOrElementName();

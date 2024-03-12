@@ -722,6 +722,11 @@ The `format()` function formats a date, time, or datetime according to a pattern
 
 The pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
 
+[source, hql]
+----
+select format(local datetime as 'yyyy-MM-dd HH:mm:ss')
+----
+
 For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
 
 [[function-trunc-datetime]]
@@ -734,6 +739,11 @@ The `truncate()` function truncates the precision of a date, time, or datetime t
 - Its second argument is a date/time field type, specifying the precision of the truncated value.
 
 Supported temporal units are: `year`, `month`, `day`, `hour`, `minute` or `second`.
+
+[source, hql]
+----
+select trunc(local datetime, hour)
+----
 
 Truncating a date, time or datetime value means obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
 For hours, minutes and second this means setting them to `00`. For months and days, this means setting them to `01`.
@@ -759,7 +769,11 @@ Naturally, there are a good number of functions for working with strings.
 | `substring()` | Substring of a string (ANSI SQL-style)
 | `substring(str from start)`, +
 `substring(str from start for len)` | ✖ / ✔
-| `trim()` | Trim characters from string | See below | ✔ / ✔
+| `trim()` | Trim characters from string
+| `trim(str)`, +
+`trim(leading from str)`, +
+`trim(trailing from str)`, or +
+`trim(leading char from str)` | ✔ / ✔
 | `overlay()` | For replacing a substring
 | `overlay(str placing rep from start)`, +
 `overlay(str placing rep from start for len)` | ✖ / ✔
@@ -771,7 +785,7 @@ Naturally, there are a good number of functions for working with strings.
 | `left()` | The leftmost characters of a string | `left(str, len)` | ✖ / ✖
 | `right()` | The rightmost characters of a string | `right(str, len)`  | ✖ / ✖
 | `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✖ / ✖
-| `repeat()` | Concatenate a string with itself multiple times | `replace(str, times)` | ✖ / ✖
+| `repeat()` | Concatenate a string with itself multiple times | `repeat(str, times)` | ✖ / ✖
 | `collate()` | Select a collation | `collate(p.name as collation)` | ✖ / ✖
 |===
 

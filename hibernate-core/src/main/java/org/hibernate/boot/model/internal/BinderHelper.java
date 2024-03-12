@@ -829,15 +829,16 @@ public class BinderHelper {
 	private static void processAnyDiscriminatorValues(
 			MemberDetails property,
 			Consumer<AnnotationUsage<AnyDiscriminatorValue>> consumer) {
-		final AnnotationUsage<AnyDiscriminatorValue> valueAnn = property.locateAnnotationUsage( AnyDiscriminatorValue.class );
-		if ( valueAnn != null ) {
-			consumer.accept( valueAnn );
-		}
-
 		final AnnotationUsage<AnyDiscriminatorValues> valuesAnn = property.locateAnnotationUsage( AnyDiscriminatorValues.class );
 		if ( valuesAnn != null ) {
 			final List<AnnotationUsage<AnyDiscriminatorValue>> nestedList = valuesAnn.getList( "value" );
 			nestedList.forEach( consumer );
+			return;
+		}
+
+		final AnnotationUsage<AnyDiscriminatorValue> valueAnn = property.locateAnnotationUsage( AnyDiscriminatorValue.class );
+		if ( valueAnn != null ) {
+			consumer.accept( valueAnn );
 		}
 	}
 

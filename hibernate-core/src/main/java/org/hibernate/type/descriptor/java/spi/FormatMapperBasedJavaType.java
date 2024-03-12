@@ -24,6 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * or {@link org.hibernate.type.SqlTypes#SQLXML} mapped types.
  *
  * @author Christian Beikov
+ * @author Yanming Zhou
  */
 @Incubating
 public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> implements MutabilityPlan<T> {
@@ -107,16 +108,16 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 
 	@Override
 	public T deepCopy(T value) {
-		return fromString( toString( value ) );
+		return value == null ? null : fromString( toString( value ) );
 	}
 
 	@Override
 	public Serializable disassemble(T value, SharedSessionContract session) {
-		return toString( value );
+		return value == null ? null : toString( value );
 	}
 
 	@Override
 	public T assemble(Serializable cached, SharedSessionContract session) {
-		return fromString( (CharSequence) cached );
+		return cached == null ? null : fromString( (CharSequence) cached );
 	}
 }

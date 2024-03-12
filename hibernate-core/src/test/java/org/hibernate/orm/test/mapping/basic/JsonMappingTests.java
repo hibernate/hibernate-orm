@@ -12,16 +12,19 @@ import java.sql.Clob;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -47,6 +50,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.isA;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 /**
  * @author Christian Beikov
@@ -140,6 +144,28 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.stringMap, is( stringMap ) );
 					assertThat( entityWithJson.objectMap, is( objectMap ) );
 					assertThat( entityWithJson.list, is( list ) );
+					assertThat( entityWithJson.jsonNode, is( nullValue() ));
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialect(PostgreSQLDialect.class)
+	public void verifyMergeWorks(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					session.merge( new EntityWithJson( 2, null, null, null, null ) );
+				}
+		);
+
+		scope.inTransaction(
+				(session) -> {
+					EntityWithJson entityWithJson = session.find( EntityWithJson.class, 2 );
+					assertThat( entityWithJson.stringMap, is( nullValue() ) );
+					assertThat( entityWithJson.objectMap, is( nullValue() ) );
+					assertThat( entityWithJson.list, is( nullValue() ) );
+					assertThat( entityWithJson.jsonString, is( nullValue() ) );
+					assertThat( entityWithJson.jsonNode, is( nullValue() ));
 				}
 		);
 	}
@@ -233,6 +259,9 @@ public abstract class JsonMappingTests {
 
 		@JdbcTypeCode( SqlTypes.JSON )
 		private String jsonString;
+
+		@JdbcTypeCode( SqlTypes.JSON )
+		private JsonNode jsonNode;
 
 		public EntityWithJson() {
 		}

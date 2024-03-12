@@ -105,7 +105,7 @@ public class FunctionExpression implements OrderingExpression, FunctionRenderer 
 				collation,
 				creationState
 		);
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
 	}
 
 	@Override

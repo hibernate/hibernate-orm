@@ -218,8 +218,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
-		return criteriaBuilder.unionAll( query1, queries );
+	public <T> JpaSubQuery<T> unionAll(JpaSubQuery<? extends T> query1, JpaSubQuery<? extends T> query2) {
+		return criteriaBuilder.unionAll( query1, query2 );
 	}
 
 	@Override
@@ -1303,6 +1303,20 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder) {
 		return criteriaBuilder.sort( sortExpression, sortOrder );
+	}
+
+	@Override
+	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
+		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public JpaOrder sort(
+			JpaExpression<?> sortExpression,
+			SortDirection sortOrder,
+			Nulls nullPrecedence,
+			boolean ignoreCase) {
+		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 	}
 
 	@Override

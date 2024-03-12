@@ -37,7 +37,7 @@ public class SqmSortSpecification implements JpaOrder {
 	public SqmSortSpecification(
 				SqmExpression sortExpression,
 				SortDirection sortOrder,
-				NullPrecedence nullPrecedence,
+				Nulls nullPrecedence,
 				boolean ignoreCase) {
 		assert sortExpression != null;
 		assert sortOrder != null;

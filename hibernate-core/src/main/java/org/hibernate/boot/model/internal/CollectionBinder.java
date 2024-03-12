@@ -212,7 +212,7 @@ public abstract class CollectionBinder {
 	protected String propertyName;
 	protected PropertyHolder propertyHolder;
 	private String mappedBy;
-	private ClassDetails declaringClass;
+	protected ClassDetails declaringClass;
 	protected MemberDetails property;
 	private TypeDetails collectionElementType;
 	private TypeDetails targetEntity;
@@ -2496,6 +2496,7 @@ public abstract class CollectionBinder {
 		//Make sure that collTyp is never used during the @ManyToAny branch: it will be set to void.class
 		final PropertyData inferredData = new PropertyInferredData(
 				null,
+				declaringClass,
 				property,
 				"unsupported",
 				buildingContext

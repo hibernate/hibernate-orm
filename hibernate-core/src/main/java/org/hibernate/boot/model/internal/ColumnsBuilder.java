@@ -6,11 +6,10 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.CheckConstraint;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.PrimaryKeyJoinColumns;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
@@ -20,21 +19,27 @@ import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.models.spi.AnnotationDescriptor;
+import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-
-import java.lang.annotation.Annotation;
-import java.util.List;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumns;
 
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromNoAnnotation;
@@ -282,33 +287,55 @@ class ColumnsBuilder {
 			// masquerade as a regular JoinColumn (when a @OneToOne maps to
 			// the primary key of the child table, it's more elegant and more
 			// spec-compliant to map the association with @PrimaryKeyJoinColumn)
-			if ( property.hasAnnotationUsage( PrimaryKeyJoinColumn.class ) ) {
-//				final AnnotationUsage<PrimaryKeyJoinColumn> nested = property.getAnnotationUsage( PrimaryKeyJoinColumn.class );
-//				return new JoinColumn[] { new JoinColumnAdapter( column ) };
-				throw new UnsupportedOperationException( "Not yet implemented" );
-			}
-			else if ( property.hasAnnotationUsage( PrimaryKeyJoinColumns.class ) ) {
-//				final AnnotationUsage<PrimaryKeyJoinColumns> primaryKeyJoinColumns = property.getAnnotationUsage( PrimaryKeyJoinColumns.class );
-//				final List<PrimaryKeyJoinColumn> nested = primaryKeyJoinColumns.getList( "value" );
-//				final JoinColumn[] joinColumns = new JoinColumn[primaryKeyJoinColumns.value().length];
-//				final PrimaryKeyJoinColumn[] columns = primaryKeyJoinColumns.value();
-//				if ( columns.length == 0 ) {
-//					throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData)
-//							+ "' has an empty '@PrimaryKeyJoinColumns' annotation" );
-//				}
-//				for ( int i = 0; i < columns.length; i++ ) {
-//					joinColumns[i] = new JoinColumnAdapter( columns[i] );
-//				}
-//				return joinColumns;
-				throw new UnsupportedOperationException( "Not yet implemented" );
+			//
+			// todo : another option better leveraging hibernate-models would be to simply use an untyped AnnotationUsage
+			if ( property.hasAnnotationUsage( PrimaryKeyJoinColumns.class ) ) {
+				final List<AnnotationUsage<JoinColumn>> adapters = new ArrayList<>();
+				property.forEachAnnotationUsage( PrimaryKeyJoinColumn.class, (usage) -> {
+					adapters.add( makePrimaryKeyJoinColumnAdapter( usage, property ) );
+				} );
+				return adapters;
 			}
 			else {
-				return null;
+				final AnnotationUsage<PrimaryKeyJoinColumn> pkJoinColumnAnn = property.getAnnotationUsage( PrimaryKeyJoinColumn.class );
+				if ( pkJoinColumnAnn != null ) {
+					return List.of( makePrimaryKeyJoinColumnAdapter( pkJoinColumnAnn, property ) );
+				}
+				else {
+					return null;
+				}
 			}
 		}
 		else {
 			return null;
 		}
+	}
+
+	private AnnotationUsage<JoinColumn> makePrimaryKeyJoinColumnAdapter(
+			AnnotationUsage<PrimaryKeyJoinColumn> pkJoinColumnAnn,
+			MemberDetails property) {
+		final SourceModelBuildingContext hibernateModelsContext = buildingContext.getMetadataCollector().getSourceModelBuildingContext();
+		final AnnotationDescriptorRegistry descriptorRegistry = hibernateModelsContext.getAnnotationDescriptorRegistry();
+		final AnnotationDescriptor<JoinColumn> joinColumnDescriptor = descriptorRegistry.getDescriptor( JoinColumn.class );
+		return joinColumnDescriptor.createUsage(
+				property,
+				(usage) -> {
+					transferAttribute( "name", pkJoinColumnAnn, usage );
+					transferAttribute( "referencedColumnName", pkJoinColumnAnn, usage );
+					transferAttribute( "columnDefinition", pkJoinColumnAnn, usage );
+					transferAttribute( "options", pkJoinColumnAnn, usage );
+					transferAttribute( "foreignKey", pkJoinColumnAnn, usage );
+				},
+				hibernateModelsContext
+		);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void transferAttribute(
+			String attributeName,
+			AnnotationUsage source,
+			MutableAnnotationUsage target) {
+		target.setAttributeValue( attributeName, source.getAttributeValue( attributeName ) );
 	}
 
 	/**

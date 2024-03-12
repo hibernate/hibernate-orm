@@ -113,6 +113,7 @@ import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -153,6 +154,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.makeNestedAnnotation;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -348,7 +350,7 @@ public class XmlAnnotationHelper {
 
 		List<AnnotationUsage<Parameter>> parameterAnnList = new ArrayList<>( jaxbParameters.size() );
 		jaxbParameters.forEach( (jaxbParam) -> {
-			final MutableAnnotationUsage<Parameter> annotationUsage = XmlProcessingHelper.makeNestedAnnotation( Parameter.class, target, xmlDocumentContext );
+			final MutableAnnotationUsage<Parameter> annotationUsage = makeNestedAnnotation( Parameter.class, target, xmlDocumentContext );
 			parameterAnnList.add( annotationUsage );
 			annotationUsage.setAttributeValue( "name", jaxbParam.getName() );
 			annotationUsage.setAttributeValue( "value", jaxbParam.getValue() );
@@ -765,15 +767,33 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
+		final MutableAnnotationUsage<AttributeOverrides> attributeOverridesAnn = XmlProcessingHelper.makeAnnotation(
+				AttributeOverrides.class,
+				memberDetails,
+				xmlDocumentContext
+		);
+		memberDetails.addAnnotationUsage( attributeOverridesAnn );
+
+		final ArrayList<MutableAnnotationUsage<AttributeOverride>> overrideAnnList = CollectionHelper.arrayList( jaxbOverrides.size() );
+		attributeOverridesAnn.setAttributeValue( "value", overrideAnnList );
+
 		jaxbOverrides.forEach( (jaxbOverride) -> {
-			final MutableAnnotationUsage<AttributeOverride> annotationUsage = XmlProcessingHelper.makeAnnotation(
+			final MutableAnnotationUsage<AttributeOverride> attributeOverrideAnn = XmlProcessingHelper.makeNestedAnnotation(
 					AttributeOverride.class,
 					memberDetails,
 					xmlDocumentContext
 			);
-			memberDetails.addAnnotationUsage( annotationUsage );
-			annotationUsage.setAttributeValue( "name", prefixIfNotAlready( jaxbOverride.getName(), namePrefix ) );
-			annotationUsage.setAttributeValue( "column", createColumnAnnotation( jaxbOverride.getColumn(), memberDetails, xmlDocumentContext ) );
+			overrideAnnList.add( attributeOverrideAnn );
+
+			attributeOverrideAnn.setAttributeValue( "name", prefixIfNotAlready( jaxbOverride.getName(), namePrefix ) );
+
+			final MutableAnnotationUsage<Column> columnAnn = makeNestedAnnotation(
+					Column.class,
+					memberDetails,
+					xmlDocumentContext
+			);
+			attributeOverrideAnn.setAttributeValue( "column", columnAnn );
+			ColumnProcessing.applyColumnDetails( jaxbOverride.getColumn(), memberDetails, columnAnn, xmlDocumentContext );
 		} );
 	}
 
@@ -1209,7 +1229,7 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final List<AnnotationUsage<SqlFragmentAlias>> sqlFragmentAliases = new ArrayList<>( aliases.size() );
 		for ( JaxbHbmFilterImpl.JaxbAliasesImpl alias : aliases ) {
-			final MutableAnnotationUsage<SqlFragmentAlias> aliasAnn = XmlProcessingHelper.makeNestedAnnotation( SqlFragmentAlias.class, target, xmlDocumentContext );
+			final MutableAnnotationUsage<SqlFragmentAlias> aliasAnn = makeNestedAnnotation( SqlFragmentAlias.class, target, xmlDocumentContext );
 			aliasAnn.setAttributeValue( "alias", alias.getAlias() );
 			applyAttributeIfSpecified( aliasAnn, "table", alias.getTable() );
 			if ( StringHelper.isNotEmpty( alias.getEntity() ) ) {
@@ -1491,7 +1511,7 @@ public class XmlAnnotationHelper {
 		final List<MutableAnnotationUsage<NamedAttributeNode>> namedAttributeNodeAnnotations =
 				new ArrayList<>( namedAttributeNodes.size() );
 		for ( JaxbNamedAttributeNodeImpl namedAttributeNode : namedAttributeNodes ) {
-			final MutableAnnotationUsage<NamedAttributeNode> namedAttributeNodeAnn = XmlProcessingHelper.makeNestedAnnotation(
+			final MutableAnnotationUsage<NamedAttributeNode> namedAttributeNodeAnn = makeNestedAnnotation(
 					NamedAttributeNode.class,
 					target,
 					xmlDocumentContext

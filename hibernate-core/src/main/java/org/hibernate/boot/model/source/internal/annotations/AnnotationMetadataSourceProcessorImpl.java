@@ -45,10 +45,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
 
 import static org.hibernate.boot.jaxb.SourceType.OTHER;
-import static org.hibernate.boot.model.internal.AnnotationBinder.resolveAttributeConverter;
-import static org.hibernate.boot.model.internal.AnnotationBinder.resolveBasicType;
-import static org.hibernate.boot.model.internal.AnnotationBinder.resolveJavaType;
-import static org.hibernate.boot.model.internal.AnnotationBinder.resolveUserType;
+import static org.hibernate.boot.model.internal.AnnotationHelper.resolveAttributeConverter;
+import static org.hibernate.boot.model.internal.AnnotationHelper.resolveBasicType;
+import static org.hibernate.boot.model.internal.AnnotationHelper.resolveJavaType;
+import static org.hibernate.boot.model.internal.AnnotationHelper.resolveUserType;
 import static org.hibernate.models.spi.ClassDetails.VOID_CLASS_DETAILS;
 import static org.hibernate.models.spi.ClassDetails.VOID_OBJECT_CLASS_DETAILS;
 

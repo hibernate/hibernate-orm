@@ -6,9 +6,9 @@
  */
 package org.hibernate.processor.annotation;
 
+import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
-import org.hibernate.processor.util.AccessType;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.util.NullnessUtil;

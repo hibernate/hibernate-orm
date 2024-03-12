@@ -124,7 +124,7 @@ public class AnyBinder {
 		binder.setCascade( cascadeStrategy );
 		binder.setBuildingContext( context );
 		binder.setHolder( propertyHolder );
-		binder.setProperty( property );
+		binder.setMemberDetails( property );
 		binder.setEntityBinder( entityBinder );
 		Property prop = binder.makeProperty();
 		prop.setOptional( optional && value.isNullable() );

@@ -27,10 +27,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
-import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.processor.model.Metamodel;
-import org.hibernate.processor.util.AccessType;
 import org.hibernate.processor.util.AccessTypeInformation;
 
 import jakarta.persistence.AccessType;

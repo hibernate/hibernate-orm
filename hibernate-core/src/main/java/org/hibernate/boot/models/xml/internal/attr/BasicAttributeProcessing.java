@@ -48,7 +48,7 @@ public class BasicAttributeProcessing {
 			final MutableAnnotationUsage<Formula> formulaAnn = XmlProcessingHelper.getOrMakeAnnotation( Formula.class, memberDetails, xmlDocumentContext );
 			formulaAnn.setAttributeValue( "value", jaxbBasic.getFormula() );
 		}
-		else {
+		else if ( jaxbBasic.getColumn() != null ) {
 			final MutableAnnotationUsage<Column> columnAnn = XmlProcessingHelper.getOrMakeAnnotation( Column.class, memberDetails, xmlDocumentContext );
 			ColumnProcessing.applyColumnDetails( jaxbBasic.getColumn(), memberDetails, columnAnn, xmlDocumentContext );
 		}

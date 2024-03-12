@@ -394,6 +394,12 @@ public class PropertyContainer {
 			return true;
 		}
 
+		if ( memberDetails.getType().determineRawClass().isImplementor( Class.class ) ) {
+			// specialized case for @Basic attributes of type Class (or Class<?>, etc.).
+			// we only really care about the Class part
+			return true;
+		}
+
 		return false;
 	}
 

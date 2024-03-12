@@ -334,7 +334,6 @@ By specifying `false`, any `EntityNotFoundException` will be be ignored unless t
 The following configuration options have been added recently and should be regarded as experimental:
 
 .  `org.hibernate.envers.track_entities_changed_in_revision`
-.  `org.hibernate.envers.using_modified_flag`
 .  `org.hibernate.envers.modified_flag_suffix`
 .  `org.hibernate.envers.modified_column_naming_strategy`
 .  `org.hibernate.envers.original_id_prop_name`

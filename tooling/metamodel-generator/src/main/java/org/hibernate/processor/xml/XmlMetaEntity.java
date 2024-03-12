@@ -33,17 +33,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
-import org.hibernate.jpamodelgen.Context;
-import org.hibernate.jpamodelgen.ImportContextImpl;
-import org.hibernate.jpamodelgen.MetaModelGenerationException;
-import org.hibernate.jpamodelgen.model.ImportContext;
-import org.hibernate.jpamodelgen.model.MetaAttribute;
-import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.AccessTypeInformation;
-import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.jpamodelgen.util.NullnessUtil;
-import org.hibernate.jpamodelgen.util.StringUtil;
-import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.ImportContextImpl;
 import org.hibernate.processor.MetaModelGenerationException;
@@ -55,21 +44,6 @@ import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.util.NullnessUtil;
 import org.hibernate.processor.util.StringUtil;
 import org.hibernate.processor.util.TypeUtils;
-import org.hibernate.processor.xml.jaxb.Attributes;
-import org.hibernate.processor.xml.jaxb.Basic;
-import org.hibernate.processor.xml.jaxb.ElementCollection;
-import org.hibernate.processor.xml.jaxb.Embeddable;
-import org.hibernate.processor.xml.jaxb.EmbeddableAttributes;
-import org.hibernate.processor.xml.jaxb.Embedded;
-import org.hibernate.processor.xml.jaxb.EmbeddedId;
-import org.hibernate.processor.xml.jaxb.Entity;
-import org.hibernate.processor.xml.jaxb.Id;
-import org.hibernate.processor.xml.jaxb.ManyToMany;
-import org.hibernate.processor.xml.jaxb.ManyToOne;
-import org.hibernate.processor.xml.jaxb.MapKeyClass;
-import org.hibernate.processor.xml.jaxb.MappedSuperclass;
-import org.hibernate.processor.xml.jaxb.OneToMany;
-import org.hibernate.processor.xml.jaxb.OneToOne;
 
 import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -82,7 +56,6 @@ import static org.hibernate.processor.util.StringUtil.determineFullyQualifiedCla
 import static org.hibernate.processor.util.TypeUtils.extractClosestRealTypeAsString;
 import static org.hibernate.processor.util.TypeUtils.findMappedSuperClass;
 import static org.hibernate.processor.util.TypeUtils.getElementKindForAccessType;
-import static org.hibernate.processor.xml.jaxb.AccessType.*;
 
 /**
  * Collects XML-based meta information about an annotated type (entity, embeddable or mapped superclass).

@@ -1029,7 +1029,7 @@ public class PropertyBinder {
 			final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
 					propertyBinder.isId(),
 					propertyHolder,
-					property.getName(),
+					property.resolveAttributeName(),
 					context
 			);
 			if ( overridingProperty != null ) {
@@ -1133,7 +1133,7 @@ public class PropertyBinder {
 		final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
 				propertyBinder.isId(),
 				propertyHolder,
-				property.getName(),
+				property.resolveAttributeName(),
 				context
 		);
 		final IdentifierGeneratorDefinition foreignGenerator = createForeignGenerator( mapsIdProperty );
@@ -1181,7 +1181,7 @@ public class PropertyBinder {
 			final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
 					propertyBinder.isId(),
 					propertyHolder,
-					property.getName(),
+					property.resolveAttributeName(),
 					context
 			);
 			propertyBinder.setReferencedEntityName( mapsIdProperty.getClassOrElementName() );

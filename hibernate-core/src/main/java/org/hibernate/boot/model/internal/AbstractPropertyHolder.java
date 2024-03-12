@@ -609,7 +609,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			final List<AnnotationUsage<AssociationOverride>> overrides = buildAssociationOverrides( element, path );
 			for ( AnnotationUsage<AssociationOverride> override : overrides ) {
 				final List<AnnotationUsage<JoinColumn>> joinColumns = override.getList( "joinColumns" );
-				if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
+				if ( CollectionHelper.isEmpty( joinColumns ) ) {
 					result.put(
 							qualify( path, override.getString( "name" ) ),
 							override.getNestedUsage( "joinTable" )

@@ -440,20 +440,19 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 		final List<AnnotationUsage<AttributeOverride>> overrides = element.getRepeatedAnnotationUsages( AttributeOverride.class );
 		if ( CollectionHelper.isNotEmpty( overrides ) ) {
-			final Map<String, List<AnnotationUsage<Column>>> columnOverrideList = new HashMap<>();
 			for ( AnnotationUsage<AttributeOverride> depAttr : overrides ) {
 				final String qualifiedName = StringHelper.qualify( path, depAttr.getString( "name" ) );
 				final AnnotationUsage<Column> column = depAttr.getNestedUsage( "column" );
 
-				if ( columnOverrideList.containsKey( qualifiedName ) ) {
+				if ( columnOverrideMap.containsKey( qualifiedName ) ) {
 					// already an entry, just add to that List
-					columnOverrideList.get( qualifiedName ).add( column );
+					columnOverrideMap.get( qualifiedName ).add( column );
 				}
 				else {
 					// not yet an entry, create the list and add
 					final List<AnnotationUsage<Column>> list = new ArrayList<>();
 					list.add( column );
-					columnOverrideList.put( qualifiedName, list );
+					columnOverrideMap.put( qualifiedName, list );
 				}
 			}
 		}

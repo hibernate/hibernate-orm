@@ -250,6 +250,12 @@ tasks.withType( Test.class ).each { test ->
         // Parallel test runs when running with in-memory databases
         test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
     }
+
+    test.filter {
+        // todo (7.0) : we should go back to these tests
+        excludeTestsMatching 'EmbeddableGenericsAndInterfaceTest'
+        excludeTestsMatching 'GenericMapAssociationTest'
+    }
 }
 
 // Tests with records

@@ -15,6 +15,7 @@ import java.util.StringJoiner;
 
 import org.hibernate.models.spi.ParameterizedTypeDetails;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.models.spi.TypeVariableScope;
 
 public class ParameterizedTypeImpl implements ParameterizedType {
 
@@ -37,7 +38,7 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 		for ( int i = 0; i < argumentsSize; i++ ) {
 			argumentTypes[i] = arguments.get( i ).determineRawClass().toJavaClass();
 		}
-		final TypeDetails owner = typeDetails.asParameterizedType().getOwner();
+		final TypeVariableScope owner = typeDetails.asParameterizedType().getOwner();
 		final java.lang.reflect.Type ownerType;
 		if ( owner != null ) {
 			ownerType = owner.determineRawClass().toJavaClass();

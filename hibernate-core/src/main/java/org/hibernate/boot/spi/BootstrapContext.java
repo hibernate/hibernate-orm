@@ -164,8 +164,11 @@ public interface BootstrapContext {
 	 * @apiNote Supported for internal use only. This method will go away as
 	 *          we migrate away from Hibernate Commons Annotations to Jandex for
 	 *          annotation handling and XMl to annotation merging.
+	 *
+	 * @deprecated HCANN is deprecated in favor of hibernate-models
 	 */
 	@Internal
+	@Deprecated
 	ReflectionManager getReflectionManager();
 
 	/**

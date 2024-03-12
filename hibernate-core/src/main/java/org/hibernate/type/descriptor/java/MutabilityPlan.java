@@ -10,6 +10,8 @@ import java.io.Serializable;
 
 import org.hibernate.SharedSessionContract;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Describes the mutability aspects of a given Java type.
  * <p>
@@ -65,7 +67,7 @@ public interface MutabilityPlan<T> extends Serializable {
 	 *
 	 * @return The deep copy.
 	 */
-	T deepCopy(T value);
+	@Nullable T deepCopy(@Nullable T value);
 
 	/**
 	 * Return a disassembled representation of the value.
@@ -76,7 +78,7 @@ public interface MutabilityPlan<T> extends Serializable {
 	 *
 	 * @see #assemble
 	 */
-	Serializable disassemble(T value, SharedSessionContract session);
+	@Nullable Serializable disassemble(@Nullable T value, SharedSessionContract session);
 
 	/**
 	 * Assemble a previously {@linkplain #disassemble disassembled} value.
@@ -87,5 +89,5 @@ public interface MutabilityPlan<T> extends Serializable {
 	 *
 	 * @see #disassemble
 	 */
-	T assemble(Serializable cached, SharedSessionContract session);
+	@Nullable T assemble(@Nullable Serializable cached, SharedSessionContract session);
 }

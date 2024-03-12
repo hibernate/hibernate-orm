@@ -13,6 +13,8 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Represents a literal value in the sqm, e.g.<ul>
  *     <li>1</li>
@@ -75,13 +77,18 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		appendHqlString( sb, getJavaTypeDescriptor(), getLiteralValue() );
 	}
 
-	public static <T> void appendHqlString(StringBuilder sb, JavaType<T> javaType, T value) {
-		final String string = javaType.toString( value );
-		if ( javaType.getJavaTypeClass() == String.class ) {
-			QueryLiteralHelper.appendStringLiteral( sb, string );
+	public static <T> void appendHqlString(StringBuilder sb, JavaType<T> javaType, @Nullable T value) {
+		if ( value == null ) {
+			sb.append( "null" );
 		}
 		else {
-			sb.append( string );
+			final String string = javaType.toString( value );
+			if ( javaType.getJavaTypeClass() == String.class ) {
+				QueryLiteralHelper.appendStringLiteral( sb, string );
+			}
+			else {
+				sb.append( string );
+			}
 		}
 	}
 

@@ -16,6 +16,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
  * '{@code ? format json}' write expression for H2.
  *
  * @author Marco Belladelli
+ * @deprecated Use {@link org.hibernate.dialect.H2JsonJdbcType} instead
  */
 public class H2FormatJsonJdbcType extends JsonJdbcType {
 	/**

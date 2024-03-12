@@ -30,13 +30,23 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 	public String toString(Object[] value) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( '(' );
-		sb.append( components[0].toString( value[0] ) );
+		append( sb, components, value, 0 );
 		for ( int i = 1; i < components.length; i++ ) {
 			sb.append( ", " );
-			sb.append( components[i].toString( value[i] ) );
+			append( sb, components, value, i );
 		}
 		sb.append( ')' );
 		return sb.toString();
+	}
+
+	private void append(StringBuilder sb, JavaType[] components, Object[] value, int i) {
+		final Object o = value[i];
+		if (o == null ) {
+			sb.append( "null" );
+		}
+		else {
+			sb.append( components[i].toString( o ) );
+		}
 	}
 
 	@Override

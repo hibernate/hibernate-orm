@@ -70,7 +70,6 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLe
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
-import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeAsTimestampWithTimeZoneJdbcType;
@@ -294,7 +293,7 @@ public class H2LegacyDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		}
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
 		}
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );

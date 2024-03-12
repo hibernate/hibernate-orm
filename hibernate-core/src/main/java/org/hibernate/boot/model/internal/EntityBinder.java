@@ -628,7 +628,7 @@ public class EntityBinder {
 		final List<PropertyData> baseClassElements = new ArrayList<>();
 		final PropertyContainer propContainer = new PropertyContainer(
 				baseInferredData.getClassOrElementType().determineRawClass(),
-				inferredData.getPropertyType().determineRawClass(),
+				inferredData.getPropertyType(),
 				propertyAccessor
 		);
 		addElementsOfClass( baseClassElements, propContainer, context );

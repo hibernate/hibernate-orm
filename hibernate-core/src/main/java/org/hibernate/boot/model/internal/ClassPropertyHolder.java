@@ -12,12 +12,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
@@ -34,9 +34,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.Convert;
@@ -222,23 +220,33 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	 */
 	public static void handleGenericComponentProperty(Property property, MemberDetails memberDetails, MetadataBuildingContext context) {
 		final Value value = property.getValue();
-		if ( value instanceof Component ) {
-			final Component component = (Component) value;
-			if ( component.isGeneric() && context.getMetadataCollector()
-					.getGenericComponent( component.getComponentClass() ) == null ) {
+		if ( value instanceof final Component component ) {
+			if ( component.isGeneric() && component.getPropertySpan() > 0
+					&& context.getMetadataCollector().getGenericComponent( component.getComponentClass() ) == null ) {
 				// If we didn't already, register the generic component to use it later
 				// as the metamodel type for generic embeddable attributes
 				final Component copy = component.copy();
 				copy.setGeneric( false );
 				copy.getProperties().clear();
+				final Map<String, MemberDetails> declaredMembers = getDeclaredAttributeMembers(
+						memberDetails.getType().determineRawClass(),
+						component.getProperty( 0 ).getPropertyAccessorName()
+				);
 				for ( Property prop : component.getProperties() ) {
-					prepareActualProperty(
-							prop,
-							memberDetails,
-							true,
-							context,
-							copy::addProperty
-					);
+					final MemberDetails declaredMember = declaredMembers.get( prop.getName() );
+					if ( declaredMember == null ) {
+						// This can happen for generic custom composite user types
+						copy.addProperty( prop );
+					}
+					else {
+						prepareActualProperty(
+								prop,
+								declaredMember,
+								true,
+								context,
+								copy::addProperty
+						);
+					}
 				}
 				context.getMetadataCollector().registerGenericComponent( copy );
 			}
@@ -278,159 +286,111 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			boolean allowCollections,
 			MetadataBuildingContext context,
 			Consumer<Property> propertyConsumer) {
-		final ClassDetails declaringType = memberDetails.getDeclaringType();
-		if ( CollectionHelper.isEmpty( declaringType.getTypeParameters() ) ) {
+		if ( memberDetails.getDeclaringType().getGenericSuperType() == null ) {
 			propertyConsumer.accept( prop );
 			return;
 		}
 
-		// no idea what this code should be doing
-		final TypeDetails typeDetails = memberDetails.getType();
-		if ( typeDetails.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
-
-		}
-		else if ( typeDetails.getTypeKind() == TypeDetails.Kind.TYPE_VARIABLE ) {
-
-		}
-
-		applyGenerics2( prop, memberDetails, typeDetails, allowCollections, propertyConsumer, context );
-		//applyGenerics( prop, typeDetails, allowCollections, propertyConsumer, context );
-	}
-
-	private static void applyGenerics2(
-			Property prop,
-			MemberDetails memberDetails,
-			TypeDetails typeDetails,
-			boolean allowCollections,
-			Consumer<Property> propertyConsumer,
-			MetadataBuildingContext context) {
-		if ( typeDetails.determineRawClass().getTypeParameters().isEmpty() ) {
+		final TypeDetails.Kind kind = memberDetails.getType().getTypeKind();
+		if ( kind != TypeDetails.Kind.TYPE_VARIABLE && kind != TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+			// Avoid copying when the property doesn't depend on a type variable
 			propertyConsumer.accept( prop );
 			return;
 		}
 
-		final ClassDetails declaringClassDetails = memberDetails.getDeclaringType();
-		final List<MemberDetails> declaredAttributeMembers = getDeclaredAttributeMembers( declaringClassDetails, prop.getPropertyAccessorName() );
-		members_loop: for ( MemberDetails attributeMember : declaredAttributeMembers ) {
-			if ( !prop.getName().equals( attributeMember.resolveAttributeName() ) ) {
-				continue;
+		// If the property depends on a type variable, we have to copy it and the Value
+		final Property actualProperty = prop.copy();
+		actualProperty.setGeneric( true );
+		actualProperty.setReturnedClassName( memberDetails.getType().getName() );
+		final Value value = actualProperty.getValue().copy();
+		if ( value instanceof Collection collection ) {
+			if ( !allowCollections ) {
+				throw new AssertionFailure( "Collections are not allowed as identifier properties" );
 			}
-
-			final PropertyData inferredData = new PropertyInferredData(
-					declaringClassDetails,
-					attributeMember,
-					null,
-					context
-			);
-			final Value originalValue = prop.getValue();
-
-			// If the property depends on a type variable, we have to copy it and the Value
-			final Property actualProperty = prop.copy();
-			actualProperty.setGeneric( true );
-			actualProperty.setReturnedClassName( inferredData.getTypeName() );
-			final Value value = actualProperty.getValue().copy();
-			if ( value instanceof Collection collection ) {
-				if ( !allowCollections ) {
-					throw new AssertionFailure( "Collections are not allowed as identifier properties" );
-				}
-				// The owner is a MappedSuperclass which is not a PersistentClass, so set it to null
+			// The owner is a MappedSuperclass which is not a PersistentClass, so set it to null
 //						collection.setOwner( null );
-				collection.setRole( typeDetails.getName() + "." + prop.getName() );
-				// To copy the element and key values, we need to defer setting the type name until the CollectionBinder ran
-				final Value originalValue = prop.getValue();context.getMetadataCollector().addSecondPass(
-						new SecondPass() {
-							@Override
-							public void doSecondPass(Map persistentClasses) throws MappingException {
-								final Collection initializedCollection = (Collection) originalValue;
-								final Value element = initializedCollection.getElement().copy();
-								setTypeName( element, inferredData.getAttributeMember().getElementType().getName() );
-								if ( initializedCollection instanceof IndexedCollection ) {
-									final Value index = ( (IndexedCollection) initializedCollection ).getIndex().copy();
-									if ( inferredData.getAttributeMember().getMapKeyType() != null ) {
-										setTypeName( index, inferredData.getAttributeMember().getMapKeyType().getName() );
-									}
-									( (IndexedCollection) collection ).setIndex( index );
+			collection.setRole( memberDetails.getDeclaringType().getName() + "." + prop.getName() );
+			// To copy the element and key values, we need to defer setting the type name until the CollectionBinder ran
+			final Value originalValue = prop.getValue();
+			context.getMetadataCollector().addSecondPass(
+					new SecondPass() {
+						@Override
+						public void doSecondPass(Map persistentClasses) throws MappingException {
+							final Collection initializedCollection = (Collection) originalValue;
+							final Value element = initializedCollection.getElement().copy();
+							setTypeName( element, memberDetails.getElementType().getName() );
+							if ( initializedCollection instanceof IndexedCollection ) {
+								final Value index = ( (IndexedCollection) initializedCollection ).getIndex().copy();
+								if ( memberDetails.getMapKeyType() != null ) {
+									setTypeName( index, memberDetails.getMapKeyType().getName() );
 								}
-								collection.setElement( element );
+								( (IndexedCollection) collection ).setIndex( index );
 							}
+							collection.setElement( element );
 						}
-				);
+					}
+			);
+		}
+		else {
+			setTypeName( value, memberDetails.getType().getName() );
+		}
+
+		if ( value instanceof Component component ) {
+			final Class<?> componentClass = component.getComponentClass();
+			if ( component.isGeneric() ) {
+				actualProperty.setValue( context.getMetadataCollector().getGenericComponent( componentClass ) );
 			}
 			else {
-				setTypeName( value, inferredData.getTypeName() );
-			}
-
-			if ( value instanceof Component component ) {
-				final Class<?> componentClass = component.getComponentClass();
-				if ( component.isGeneric() ) {
-					actualProperty.setValue( context.getMetadataCollector().getGenericComponent( componentClass ) );
+				if ( componentClass == Object.class ) {
+					// Object is not a valid component class, but that is what we get when using a type variable
+					component.getProperties().clear();
 				}
 				else {
-					if ( componentClass == Object.class ) {
-						// Object is not a valid component class, but that is what we get when using a type variable
-						component.getProperties().clear();
-					}
-					else {
-						final Iterator<Property> propertyIterator = component.getProperties().iterator();
-						while ( propertyIterator.hasNext() ) {
-							try {
-								propertyIterator.next().getGetter( componentClass );
-							}
-							catch (PropertyNotFoundException e) {
-								propertyIterator.remove();
-							}
+					final Iterator<Property> propertyIterator = component.getProperties().iterator();
+					while ( propertyIterator.hasNext() ) {
+						try {
+							propertyIterator.next().getGetter( componentClass );
+						}
+						catch (PropertyNotFoundException e) {
+							propertyIterator.remove();
 						}
 					}
 				}
 			}
-			actualProperty.setValue( value );
-			propertyConsumer.accept( actualProperty );
-
-			// avoid the rest of the iteration
-			//noinspection UnnecessaryLabelOnBreakStatement
-			break members_loop;
 		}
+		actualProperty.setValue( value );
+		propertyConsumer.accept( actualProperty );
 	}
 
-	private static List<MemberDetails> getDeclaredAttributeMembers(
+	private static Map<String, MemberDetails> getDeclaredAttributeMembers(
 			ClassDetails declaringType,
-			String propertyAccessorName) {
-		final List<MemberDetails> members = new ArrayList<>();
+			String accessType) {
+		final Map<String, MemberDetails> members = new HashMap<>();
 		ClassDetails superclass = declaringType;
 		while ( superclass != null ) {
-			applyAttributeMembers( superclass, propertyAccessorName, members );
+			applyAttributeMembers( superclass, accessType, members );
 			superclass = superclass.getSuperClass();
 		}
 		return members;
 	}
 
-
 	public static final String ACCESS_PROPERTY = "property";
 	public static final String ACCESS_FIELD = "field";
 	public static final String ACCESS_RECORD = "record";
 
-	@SuppressWarnings("RedundantLabeledSwitchRuleCodeBlock")
-	private static void applyAttributeMembers(ClassDetails classDetails, String accessType, List<MemberDetails> members) {
-		switch ( accessType ) {
-			case ACCESS_FIELD -> {
-				for ( FieldDetails field : classDetails.getFields() ) {
-					if ( field.isPersistable() ) {
-						members.add( field );
-					}
-				}
-			}
-			case ACCESS_PROPERTY -> {
-				for ( MethodDetails methodDetails : classDetails.getMethods() ) {
-					if ( methodDetails.isPersistable() ) {
-						members.add( methodDetails );
-					}
-				}
-			}
-			case ACCESS_RECORD -> {
-				members.addAll( classDetails.getRecordComponents() );
-			}
-		}
-		throw new IllegalArgumentException( "Unknown access type " + accessType );
+	private static void applyAttributeMembers(
+			ClassDetails classDetails,
+			String accessType,
+			Map<String, MemberDetails> members) {
+		final List<MemberDetails> collectedMembers = new ArrayList<>( switch ( accessType ) {
+			case ACCESS_FIELD -> classDetails.getFields();
+			case ACCESS_PROPERTY -> classDetails.getMethods();
+			case ACCESS_RECORD -> classDetails.getRecordComponents();
+			default -> throw new IllegalArgumentException( "Unknown access type " + accessType );
+		} );
+		members.putAll( collectedMembers.stream()
+								.filter( MemberDetails::isPersistable )
+								.collect( Collectors.toMap( MemberDetails::resolveAttributeName, item -> item ) ) );
 	}
 
 	private static void setTypeName(Value value, String typeName) {

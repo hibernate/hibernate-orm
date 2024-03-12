@@ -61,10 +61,9 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
-import org.hibernate.query.results.TableGroupImpl;
+import org.hibernate.query.internal.NullPrecedenceHelper;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -3320,8 +3319,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case LONG:
 				return castNumberToString( expression, 19, 0 );
 			case FIXED:
-				if ( expression.getExpressionType() instanceof SqlTypedMapping ) {
-					final SqlTypedMapping sqlTypedMapping = (SqlTypedMapping) expression.getExpressionType();
+				if ( expression.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping ) {
 					if ( sqlTypedMapping.getPrecision() != null && sqlTypedMapping.getScale() != null ) {
 						return castNumberToString(
 								expression,
@@ -3946,8 +3944,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( expression instanceof Literal ) {
 			appendSql( "()" );
 		}
-		else if ( expression instanceof Summarization ) {
-			Summarization summarization = (Summarization) expression;
+		else if ( expression instanceof Summarization summarization ) {
 			appendSql( summarization.getKind().sqlText() );
 			appendSql( OPEN_PARENTHESIS );
 			renderCommaSeparated( summarization.getGroupings() );
@@ -5691,7 +5688,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							new SortSpecification(
 									new SqlSelectionExpression( sqlSelections.get( i ) ),
 									SortDirection.ASCENDING,
-									NullPrecedence.NONE
+									Nulls.NONE
 							)
 					);
 				}

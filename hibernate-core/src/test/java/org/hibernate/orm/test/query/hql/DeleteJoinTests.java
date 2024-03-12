@@ -82,7 +82,7 @@ public class DeleteJoinTests {
 					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					final JpaCriteriaDelete<BasicEntity> criteriaDelete = cb.createCriteriaDelete( BasicEntity.class );
 					final JpaRoot<BasicEntity> b = criteriaDelete.from( BasicEntity.class );
-					final JpaEntityJoin<Contact> c = b.join( Contact.class, SqmJoinType.LEFT );
+					final JpaEntityJoin<BasicEntity, Contact> c = b.join( Contact.class, SqmJoinType.LEFT );
 					c.on( b.get( "id" ).equalTo( c.get( "id" ) ) );
 					criteriaDelete.where( c.get( "id" ).isNotNull() );
 					int updated = session.createMutationQuery( criteriaDelete ).executeUpdate();

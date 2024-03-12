@@ -27,8 +27,16 @@ public class SortSpecification implements SqlAstNode {
 		this( sortExpression, sortOrder, Nulls.NONE, false );
 	}
 
+	public SortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
+		this( sortExpression, sortOrder, nullPrecedence, false );
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #SortSpecification(Expression, SortDirection, Nulls)} instead
+	 */
+	@Deprecated
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
-		this( sortExpression, sortOrder, nullPrecedence.getJpaValue(), false );
+		this( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
 	}
 
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence, boolean ignoreCase) {

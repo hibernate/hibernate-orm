@@ -114,3 +114,10 @@ test.dependsOn quarkusOrmPanacheTestTask
 
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
+
+compileTestJava {
+	options.compilerArgs += [
+			"-proc:none",
+			"-AsuppressJakartaDataMetamodel=true"
+	]
+}

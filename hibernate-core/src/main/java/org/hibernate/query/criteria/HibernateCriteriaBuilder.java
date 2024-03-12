@@ -189,8 +189,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
 
-	default <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
-		return union( true, query1, queries );
+	default <T> JpaSubQuery<T> unionAll(JpaSubQuery<? extends T> query1, JpaSubQuery<? extends T> query2) {
+		return union( true, query1, query2 );
 	}
 
 	@Override
@@ -1035,15 +1035,34 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Ordering
 
-	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase);
-	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence);
 
-	default JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
-		return sort( sortExpression, sortOrder, NullPrecedence.fromJpaValue( nullPrecedence ) );
-	}
+	JpaOrder sort(JpaExpression<?> sortExpression);
 
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
-	JpaOrder sort(JpaExpression<?> sortExpression);
+
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence);
+
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence, boolean ignoreCase);
+
+	/**
+	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls)} instead
+	 */
+	@Deprecated
+	default JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls, boolean)} instead
+	 */
+	@Deprecated
+	default JpaOrder sort(
+			JpaExpression<?> sortExpression,
+			SortDirection sortOrder,
+			NullPrecedence nullPrecedence,
+			boolean ignoreCase) {
+		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue(), ignoreCase );
+	}
 
 	@Override
 	JpaOrder asc(Expression<?> x);

@@ -203,7 +203,7 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		final boolean fullyAnnotationConfigured = handleSettings( processingEnvironment );
 		if ( !fullyAnnotationConfigured ) {
-			new JpaDescriptorParser( context ).parseXml();
+			new JpaDescriptorParser( context ).parseMappingXml();
 			if ( context.isFullyXmlConfigured() ) {
 				createMetaModelClasses();
 			}

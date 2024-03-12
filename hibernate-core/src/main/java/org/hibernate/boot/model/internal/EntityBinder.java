@@ -63,7 +63,6 @@ import org.hibernate.annotations.Tables;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
 import org.hibernate.annotations.Where;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -74,6 +73,7 @@ import org.hibernate.boot.model.naming.ImplicitEntityNameSource;
 import org.hibernate.boot.model.naming.NamingStrategyHelper;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -85,6 +85,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.event.internal.CallbackDefinitionResolver;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
@@ -166,8 +167,6 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
-import static org.hibernate.jpa.event.internal.CallbackDefinitionResolverLegacyImpl.resolveEmbeddableCallbacks;
-import static org.hibernate.jpa.event.internal.CallbackDefinitionResolverLegacyImpl.resolveEntityCallbacks;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 
@@ -652,7 +651,7 @@ public class EntityBinder {
 					propertyAccessor,
 					context
 			);
-			final InheritanceState state = inheritanceStates.get( idPropertyOnBaseClass.getClassOrElementType() );
+			final InheritanceState state = inheritanceStates.get( idPropertyOnBaseClass.getClassOrElementType().determineRawClass() );
 			if ( state == null ) {
 				return false; //while it is likely a user error, let's consider it is something that might happen
 			}
@@ -684,11 +683,10 @@ public class EntityBinder {
 
 		// Fill simple value and property since and Id is a property
 		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
-		if ( !(persistentClass instanceof RootClass) ) {
+		if ( !( persistentClass instanceof RootClass rootClass ) ) {
 			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
 					+ "' is a subclass in an entity inheritance hierarchy and may not redefine the identifier of the root entity" );
 		}
-		final RootClass rootClass = (RootClass) persistentClass;
 		final Component id = fillEmbeddable(
 				propertyHolder,
 				inferredData,
@@ -1224,17 +1222,29 @@ public class EntityBinder {
 		}
 	}
 
+	/**
+	 * See {@link JpaEventListener} for a better (?) alternative
+	 */
 	private static void bindCallbacks(ClassDetails entityClass, PersistentClass persistentClass, MetadataBuildingContext context) {
-		final ReflectionManager reflection = context.getBootstrapContext().getReflectionManager();
 		for ( CallbackType callbackType : CallbackType.values() ) {
-			persistentClass.addCallbackDefinitions( resolveEntityCallbacks( reflection, entityClass, callbackType ) );
+			persistentClass.addCallbackDefinitions( CallbackDefinitionResolver.resolveEntityCallbacks(
+					context,
+					entityClass,
+					callbackType
+			) );
 		}
+
 		context.getMetadataCollector().addSecondPass( persistentClasses -> {
 			for ( Property property : persistentClass.getDeclaredProperties() ) {
 				final Class<?> mappedClass = persistentClass.getMappedClass();
 				if ( property.isComposite() ) {
 					for ( CallbackType type : CallbackType.values() ) {
-						property.addCallbackDefinitions( resolveEmbeddableCallbacks( reflection, mappedClass, property, type ) );
+						property.addCallbackDefinitions( CallbackDefinitionResolver.resolveEmbeddableCallbacks(
+								context,
+								mappedClass,
+								property,
+								type
+						) );
 					}
 				}
 			}
@@ -2098,39 +2108,6 @@ public class EntityBinder {
 			}
 		}
 		return null;
-	}
-
-	private static <T extends Annotation> String tableMember(Class<T> annotationType, T sqlAnnotation) {
-		if (SQLInsert.class == annotationType) {
-			return ((SQLInsert) sqlAnnotation).table();
-		}
-		else if (SQLUpdate.class == annotationType) {
-			return ((SQLUpdate) sqlAnnotation).table();
-		}
-		else if (SQLDelete.class == annotationType) {
-			return ((SQLDelete) sqlAnnotation).table();
-		}
-		else if (SQLDeleteAll.class == annotationType) {
-			return ((SQLDeleteAll) sqlAnnotation).table();
-		}
-		else {
-			throw new AssertionFailure("Unknown annotation type");
-		}
-	}
-
-	private static <T extends Annotation> Annotation[] valueMember(Class<T> repeatableType, T sqlAnnotation) {
-		if (SQLInserts.class == repeatableType) {
-			return ((SQLInserts) sqlAnnotation).value();
-		}
-		else if (SQLUpdates.class == repeatableType) {
-			return ((SQLUpdates) sqlAnnotation).value();
-		}
-		else if (SQLDeletes.class == repeatableType) {
-			return ((SQLDeletes) sqlAnnotation).value();
-		}
-		else {
-			throw new AssertionFailure("Unknown annotation type");
-		}
 	}
 
 	//Used for @*ToMany @JoinTable

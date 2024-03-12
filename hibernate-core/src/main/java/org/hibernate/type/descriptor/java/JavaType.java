@@ -26,6 +26,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Descriptor for the Java side of a value mapping. A {@code JavaType} is always
  * coupled with a {@link JdbcType} to describe the typing aspects of an attribute
@@ -228,12 +230,12 @@ public interface JavaType<T> extends Serializable {
 	 *
 	 * @return The loggable representation
 	 */
-	default String extractLoggableRepresentation(T value) {
-		return toString( value );
+	default String extractLoggableRepresentation(@Nullable T value) {
+		return value == null ? "null" : toString( value );
 	}
 
 	default String toString(T value) {
-		return value == null ? "null" : value.toString();
+		return value.toString();
 	}
 
 	T fromString(CharSequence string);

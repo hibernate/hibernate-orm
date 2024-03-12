@@ -296,7 +296,7 @@ public class EnumType<T extends Enum<T>>
 	@Override @SuppressWarnings("unchecked")
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		verifyConfigured();
-		return enumJavaType.toString( (T) value );
+		return enumJavaType.extractLoggableRepresentation( (T) value );
 	}
 
 	public boolean isOrdinal() {

@@ -281,7 +281,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 				collation,
 				creationState
 		);
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
 	}
 
 	private static boolean selectClauseDoesNotContainOrderExpression(Expression expression, SelectClause selectClause) {

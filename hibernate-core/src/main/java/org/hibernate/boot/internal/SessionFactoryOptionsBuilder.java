@@ -57,6 +57,7 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.internal.NullPrecedenceHelper;
@@ -386,8 +387,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.maximumFetchDepth = getInteger( MAX_FETCH_DEPTH, configurationSettings );
 
 		final Object defaultNullPrecedence = configurationSettings.get( DEFAULT_NULL_ORDERING );
-		if ( defaultNullPrecedence instanceof NullPrecedence ) {
-			this.defaultNullPrecedence = (NullPrecedence) defaultNullPrecedence;
+		if ( defaultNullPrecedence instanceof Nulls jpaValue ) {
+			this.defaultNullPrecedence = jpaValue;
+		}
+		else if ( defaultNullPrecedence instanceof NullPrecedence hibernateValue ) {
+			this.defaultNullPrecedence = hibernateValue.getJpaValue();
 		}
 		else if ( defaultNullPrecedence instanceof String ) {
 			this.defaultNullPrecedence = NullPrecedenceHelper.parse( (String) defaultNullPrecedence );

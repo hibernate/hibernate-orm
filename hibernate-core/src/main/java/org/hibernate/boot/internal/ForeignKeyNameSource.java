@@ -16,21 +16,22 @@ import org.hibernate.mapping.Table;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 public class ForeignKeyNameSource implements ImplicitForeignKeyNameSource {
 
-	final List<Identifier> columnNames;
+	private final List<Identifier> columnNames;
 	private final ForeignKey foreignKey;
 	private final Table table;
 	private final MetadataBuildingContext buildingContext;
-	List<Identifier> referencedColumnNames;
+	private List<Identifier> referencedColumnNames;
 
 	public ForeignKeyNameSource(ForeignKey foreignKey, Table table, MetadataBuildingContext buildingContext) {
 		this.foreignKey = foreignKey;
 		this.table = table;
 		this.buildingContext = buildingContext;
-		columnNames = extractColumnNames(foreignKey.getColumns());
+		columnNames = extractColumnNames( foreignKey.getColumns() );
 		referencedColumnNames = null;
 	}
 
@@ -59,7 +60,8 @@ public class ForeignKeyNameSource implements ImplicitForeignKeyNameSource {
 
 	@Override
 	public Identifier getUserProvidedIdentifier() {
-		return foreignKey.getName() != null ? Identifier.toIdentifier(foreignKey.getName()) : null;
+		String name = foreignKey.getName();
+		return name != null ? toIdentifier(name) : null;
 	}
 
 	@Override

@@ -341,12 +341,12 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 					return (Selection<? extends T>) selectionList.get( 0 );
 				}
 				default: {
-					return (Selection<? extends T>) nodeBuilder().array( selectionList );
+					return (Selection<? extends T>) nodeBuilder().array( (List) selectionList );
 				}
 			}
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			return (Selection<? extends T>) nodeBuilder().tuple( selectionList );
+			return (Selection<? extends T>) nodeBuilder().tuple( (List) selectionList );
 		}
 		else if ( resultType.isArray() ) {
 			return nodeBuilder().array( resultType, selections );
@@ -524,7 +524,5 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			query.select( nodeBuilder().count() );
 			return query;
 		}
-
-		querySpec.getSelectClause().setSelection( (SqmSelectableNode<?>) nodeBuilder.tuple( subSelections ) );
 	}
 }

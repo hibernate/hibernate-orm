@@ -63,7 +63,7 @@ public class SelfRenderingOrderingExpression extends SelfRenderingSqlFragmentExp
 				creationState
 		);
 
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
 	}
 
 	@Override

@@ -80,10 +80,23 @@ import org.hibernate.graph.GraphSemantic;
  * </ul>
  * <p>
  * The special built-in fetch profile named
- * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds
- * a fetch join for every {@link jakarta.persistence.FetchType#EAGER eager}
- * {@code @ManyToOne} or {@code @OneToOne} association belonging to an entity
- * returned by the query.
+ * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds a fetch join for
+ * every {@link jakarta.persistence.FetchType#EAGER eager} {@code @ManyToOne} or
+ * {@code @OneToOne} association belonging to an entity returned by the query.
+ * <p>
+ * Finally, two alternative approaches to pagination are available:
+ * <ol>
+ * <li>
+ * The operations and {@link #setOrder(List)} and {@link #setPage(Page)}, together
+ * with {@link Order} and {@link Page}, provide a streamlined API for offset-based
+ * pagination, at a slightly higher semantic level than the ancient but dependable
+ * {@link #setFirstResult(int)} and {@link #setMaxResults(int)}.
+ * <li>
+ * On the other hand, {@link KeyedPage} and {@link KeyedResultList}, along with
+ * {@link #getKeyedResultList(KeyedPage)}, provide for <em>key-based pagination</em>,
+ * which can help eliminate missed or duplicate results when data is modified
+ * between page requests.
+ * </ol>
  *
  * @author Steve Ebersole
  */

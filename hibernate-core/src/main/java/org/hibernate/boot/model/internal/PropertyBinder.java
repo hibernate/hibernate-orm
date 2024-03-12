@@ -56,6 +56,7 @@ import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.models.spi.TypeVariableScope;
 import org.hibernate.usertype.CompositeUserType;
 
 import org.jboss.logging.Logger;
@@ -145,7 +146,7 @@ public class PropertyBinder {
 	// property can be null
 	// prefer propertyName to property.getName() since some are overloaded
 	private MemberDetails memberDetails;
-	private ClassDetails returnedClass;
+	private TypeDetails returnedClass;
 	private boolean isId;
 	private Map<ClassDetails, InheritanceState> inheritanceStatePerClass;
 
@@ -211,7 +212,7 @@ public class PropertyBinder {
 		this.memberDetails = memberDetails;
 	}
 
-	public void setReturnedClass(ClassDetails returnedClass) {
+	public void setReturnedClass(TypeDetails returnedClass) {
 		this.returnedClass = returnedClass;
 	}
 
@@ -259,7 +260,7 @@ public class PropertyBinder {
 		basicValueBinder.setPersistentClassName( containerClassName );
 		basicValueBinder.setType(
 				memberDetails,
-				memberDetails.getType(),
+				returnedClass,
 				containerClassName,
 				holder.resolveAttributeConverterDescriptor( memberDetails )
 		);
@@ -367,7 +368,7 @@ public class PropertyBinder {
 					new PropertyPreloadedData(),
 					true,
 					false,
-					resolveCustomInstantiator( memberDetails, returnedClass ),
+					resolveCustomInstantiator( memberDetails, returnedClass.determineRawClass() ),
 					buildingContext
 			);
 			rootClass.setIdentifier( identifier );
@@ -576,10 +577,11 @@ public class PropertyBinder {
 		}
 
 		final ClassDetails declaringClass = propertyContainer.getDeclaringClass();
-		final ClassDetails entity = propertyContainer.getEntityAtStake();
+		final TypeVariableScope ownerType = propertyContainer.getTypeAtStake();
 		int idPropertyCounter = 0;
 		final PropertyData propertyAnnotatedElement = new PropertyInferredData(
 				declaringClass,
+				ownerType,
 				property,
 				propertyContainer.getClassLevelAccessType().getType(),
 				context
@@ -590,9 +592,9 @@ public class PropertyBinder {
 		final MemberDetails element = propertyAnnotatedElement.getAttributeMember();
 		if ( hasIdAnnotation( element ) ) {
 			inFlightPropertyDataList.add( 0, propertyAnnotatedElement );
-			handleIdProperty( propertyContainer, context, declaringClass, entity, element );
+			handleIdProperty( propertyContainer, context, declaringClass, ownerType, element );
 			if ( hasToOneAnnotation( element ) ) {
-				context.getMetadataCollector().addToOneAndIdProperty( entity, propertyAnnotatedElement );
+				context.getMetadataCollector().addToOneAndIdProperty( ownerType.determineRawClass(), propertyAnnotatedElement );
 			}
 			idPropertyCounter++;
 		}
@@ -600,7 +602,7 @@ public class PropertyBinder {
 			inFlightPropertyDataList.add( propertyAnnotatedElement );
 		}
 		if ( element.hasAnnotationUsage( MapsId.class ) ) {
-			context.getMetadataCollector().addPropertyAnnotatedWithMapsId( entity, propertyAnnotatedElement );
+			context.getMetadataCollector().addPropertyAnnotatedWithMapsId( ownerType.determineRawClass(), propertyAnnotatedElement );
 		}
 
 		return idPropertyCounter;
@@ -625,7 +627,7 @@ public class PropertyBinder {
 			PropertyContainer propertyContainer,
 			MetadataBuildingContext context,
 			ClassDetails declaringClass,
-			ClassDetails entity,
+			TypeVariableScope ownerType,
 			MemberDetails element) {
 		// The property must be put in hibernate.properties as it's a system wide property. Fixable?
 		//TODO support true/false/default on the property instead of present / not present
@@ -638,9 +640,10 @@ public class PropertyBinder {
 					if ( !element.hasAnnotationUsage( MapsId.class ) && isJoinColumnPresent( columnName, element ) ) {
 						//create a PropertyData for the specJ property holding the mapping
 						context.getMetadataCollector().addPropertyAnnotatedWithMapsIdSpecj(
-								entity,
+								ownerType.determineRawClass(),
 								new PropertyInferredData(
 										declaringClass,
+										ownerType,
 										//same dec
 										element,
 										// the actual @XToOne property
@@ -777,7 +780,7 @@ public class PropertyBinder {
 		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
 		propertyBinder.setHolder( propertyHolder );
 		propertyBinder.setMemberDetails( property );
-		propertyBinder.setReturnedClass( attributeClassDetails );
+		propertyBinder.setReturnedClass( attributeTypeDetails );
 		propertyBinder.setBuildingContext( context );
 		if ( isIdentifierMapper ) {
 			propertyBinder.setInsertable( false );

@@ -59,6 +59,7 @@ public class IdBagBinder extends BagBinder {
 		final PropertyData propertyData = new WrappedInferredData(
 				new PropertyInferredData(
 						null,
+						declaringClass,
 						property,
 						//default access should not be useful
 						null,

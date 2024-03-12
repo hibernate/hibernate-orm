@@ -962,7 +962,9 @@ public abstract class SimpleValue implements KeyValue {
 
 	private static Annotation[] getAnnotations(MemberDetails memberDetails) {
 		final Annotation[] annotations;
-		final Collection<AnnotationUsage<?>> allAnnotationUsages = memberDetails.getAllAnnotationUsages();
+		final Collection<AnnotationUsage<?>> allAnnotationUsages = memberDetails != null
+				? memberDetails.getAllAnnotationUsages() :
+				null;
 		if ( allAnnotationUsages == null ) {
 			annotations = new Annotation[0];
 		}

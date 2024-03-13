@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
@@ -24,6 +26,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCachingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
@@ -39,6 +42,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTenantIdImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicIdAttributeProcessing;
@@ -66,6 +70,7 @@ import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
@@ -463,6 +468,7 @@ public class ManagedTypeProcessor {
 		XmlAnnotationHelper.applyEntity( jaxbEntity, classDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyInheritance( jaxbEntity, classDetails, xmlDocumentContext );
 		classDetails.addAnnotationUsage( XmlAnnotationHelper.createAccessAnnotation( classAccessType, classDetails, xmlDocumentContext ) );
+		applyCaching( jaxbEntity, classDetails, xmlDocumentContext );
 
 		if ( jaxbEntity.isAbstract() != null ) {
 			XmlProcessingHelper.makeAnnotation( Abstract.class, classDetails, xmlDocumentContext );
@@ -546,6 +552,37 @@ public class ManagedTypeProcessor {
 				xmlDocumentContext
 		);
 		// todo : secondary-tables
+	}
+
+	private static void applyCaching(
+			JaxbEntityImpl jaxbEntity,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbEntity.isCacheable() == Boolean.TRUE ) {
+			final MutableAnnotationUsage<Cacheable> cacheableUsage = JpaAnnotations.CACHEABLE.createUsage(
+					classDetails,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			classDetails.addAnnotationUsage( cacheableUsage );
+		}
+
+		final JaxbCachingImpl jaxbCaching = jaxbEntity.getCaching();
+		if ( jaxbCaching != null ) {
+			final MutableAnnotationUsage<Cache> cacheableUsage = HibernateAnnotations.CACHE.createUsage(
+					classDetails,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			classDetails.addAnnotationUsage( cacheableUsage );
+			XmlProcessingHelper.setIf( jaxbCaching.getRegion(), "region", cacheableUsage );
+			XmlProcessingHelper.setIf( convertCacheAccessType( jaxbCaching.getAccess() ), "access", cacheableUsage );
+		}
+	}
+
+	private static CacheConcurrencyStrategy convertCacheAccessType(org.hibernate.cache.spi.access.AccessType accessType) {
+		if ( accessType == null ) {
+			return null;
+		}
+		return CacheConcurrencyStrategy.fromAccessType( accessType );
 	}
 
 	private static void applyTenantId(

@@ -381,9 +381,9 @@ public class EntityBinder {
 	}
 
 	private void applyTypeBinder(AnnotationUsage<?> metaAnnotated, PersistentClass persistentClass) {
-		final AnnotationUsage<TypeBinderType> metaAnnotation = metaAnnotated.getAnnotationDescriptor().getAnnotationUsage( TypeBinderType.class );
-		final ClassDetails binderClassDetails = metaAnnotation.getClassDetails( "binder" );
-		final Class<TypeBinder<?>> binderClass = binderClassDetails.toJavaClass();
+		final Class<? extends TypeBinder<?>> binderClass = metaAnnotated.getAnnotationType()
+				.getAnnotation( TypeBinderType.class )
+				.binder();
 
 		final Annotation containingAnnotation = metaAnnotated.toAnnotation();
 

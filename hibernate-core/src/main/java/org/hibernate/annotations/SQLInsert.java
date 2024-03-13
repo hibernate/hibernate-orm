@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.jdbc.Expectation;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -58,8 +60,20 @@ public @interface SQLInsert {
 	boolean callable() default false;
 
 	/**
-	 * For persistence operation what style of determining results (success/failure) is to be used.
+	 * An {@link Expectation} class used to verify that the operation was successful.
+	 *
+	 * @see Expectation.None
+	 * @see Expectation.RowCount
+	 * @see Expectation.OutParameter
 	 */
+	Class<? extends Expectation> verify() default Expectation.class;
+
+	/**
+	 * A {@link ResultCheckStyle} used to verify that the operation was successful.
+	 *
+	 * @deprecated use {@link #verify()} with an {@link Expectation} class
+	 */
+	@Deprecated(since = "6.5")
 	ResultCheckStyle check() default ResultCheckStyle.NONE;
 
 	/**

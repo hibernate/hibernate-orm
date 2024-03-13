@@ -7,7 +7,6 @@
 package org.hibernate.persister.entity;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,7 +22,6 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -52,7 +50,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -61,8 +58,6 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CompositeType;
@@ -78,7 +73,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
-import static org.hibernate.jdbc.Expectations.appropriateExpectation;
+import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildEncapsulatedCompositeIdentifierMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
@@ -162,7 +157,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	// Span of the tables directly mapped by this entity and super-classes, if any
 	private final int coreTableSpan;
 	private final int subclassCoreTableSpan;
-	// only contains values for SecondaryTables, ie. not tables part of the "coreTableSpan"
+	// only contains values for SecondaryTables, i.e. not tables part of the "coreTableSpan"
 	private final boolean[] isNullableTable;
 	private final boolean[] isInverseTable;
 
@@ -409,28 +404,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			isInverseTable[jk] = false;
 
 			customSQLInsert[jk] = currentClass.getCustomSQLInsert();
-			insertCallable[jk] = customSQLInsert[jk] != null && currentClass.isCustomInsertCallable();
-			insertExpectations[jk] = appropriateExpectation(
-					currentClass.getInsertCheckStyle() == null
-							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[jk], insertCallable[jk] )
-							: currentClass.getInsertCheckStyle()
-			);
+			insertCallable[jk] = currentClass.isCustomInsertCallable();
+			insertExpectations[jk] = createExpectation( currentClass.getInsertExpectation(), insertCallable[jk] );
 
 			customSQLUpdate[jk] = currentClass.getCustomSQLUpdate();
-			updateCallable[jk] = customSQLUpdate[jk] != null && currentClass.isCustomUpdateCallable();
-			updateExpectations[jk] = appropriateExpectation(
-					currentClass.getUpdateCheckStyle() == null
-							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[jk], updateCallable[jk] )
-							: currentClass.getUpdateCheckStyle()
-			);
+			updateCallable[jk] = currentClass.isCustomUpdateCallable();
+			updateExpectations[jk] = createExpectation( currentClass.getUpdateExpectation(), updateCallable[jk] );
 
 			customSQLDelete[jk] = currentClass.getCustomSQLDelete();
-			deleteCallable[jk] = customSQLDelete[jk] != null && currentClass.isCustomDeleteCallable();
-			deleteExpectations[jk] = appropriateExpectation(
-					currentClass.getDeleteCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[jk], deleteCallable[jk] )
-					: currentClass.getDeleteCheckStyle()
-			);
+			deleteCallable[jk] = currentClass.isCustomDeleteCallable();
+			deleteExpectations[jk] = createExpectation( currentClass.getDeleteExpectation(), deleteCallable[jk] );
 
 			jk--;
 			currentClass = currentClass.getSuperclass();
@@ -446,28 +429,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			isNullableTable[j] = join.isOptional();
 
 			customSQLInsert[j] = join.getCustomSQLInsert();
-			insertCallable[j] = customSQLInsert[j] != null && join.isCustomInsertCallable();
-			insertExpectations[j] = appropriateExpectation(
-					join.getInsertCheckStyle() == null
-							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
-							: join.getInsertCheckStyle()
-			);
+			insertCallable[j] = join.isCustomInsertCallable();
+			insertExpectations[j] = createExpectation( join.getInsertExpectation(), insertCallable[j] );
 
 			customSQLUpdate[j] = join.getCustomSQLUpdate();
-			updateCallable[j] = customSQLUpdate[j] != null && join.isCustomUpdateCallable();
-			updateExpectations[j] = appropriateExpectation(
-					join.getUpdateCheckStyle() == null
-							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
-							: join.getUpdateCheckStyle()
-			);
+			updateCallable[j] = join.isCustomUpdateCallable();
+			updateExpectations[j] = createExpectation( join.getUpdateExpectation(), updateCallable[j] );
 
 			customSQLDelete[j] = join.getCustomSQLDelete();
-			deleteCallable[j] = customSQLDelete[j] != null && join.isCustomDeleteCallable();
-			deleteExpectations[j] = appropriateExpectation(
-					join.getDeleteCheckStyle() == null
-							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
-							: join.getDeleteCheckStyle()
-			);
+			deleteCallable[j] = join.isCustomDeleteCallable();
+			deleteExpectations[j] = createExpectation( join.getDeleteExpectation(), deleteCallable[j] );
 
 			j++;
 		}

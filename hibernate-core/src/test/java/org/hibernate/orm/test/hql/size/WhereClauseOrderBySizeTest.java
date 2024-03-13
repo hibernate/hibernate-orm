@@ -28,6 +28,7 @@ import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
@@ -141,7 +142,8 @@ public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Entity(name = "Book")
-	@SQLDelete(sql = "UPDATE Book SET deleted = true WHERE id = ?", check = ResultCheckStyle.COUNT)
+	@SQLDelete(sql = "UPDATE Book SET deleted = true WHERE id = ?",
+			verify = Expectation.RowCount.class)
 	@SQLRestriction("deleted = false")
 	public static class Book {
 		@Id

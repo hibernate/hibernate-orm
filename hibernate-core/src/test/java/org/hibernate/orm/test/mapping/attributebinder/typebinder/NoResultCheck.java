@@ -3,6 +3,7 @@ package org.hibernate.orm.test.mapping.attributebinder.typebinder;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 
@@ -11,7 +12,6 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.NONE;
 
 @TypeBinderType(binder = NoResultCheck.Binder.class)
 @Retention(RUNTIME)
@@ -20,9 +20,9 @@ public @interface NoResultCheck {
 	class Binder implements TypeBinder<NoResultCheck> {
 		@Override
 		public void bind(NoResultCheck annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass) {
-			persistentClass.setInsertCheckStyle(NONE);
-			persistentClass.setUpdateCheckStyle(NONE);
-			persistentClass.setDeleteCheckStyle(NONE);
+			persistentClass.setInsertExpectation(Expectation.None.class);
+			persistentClass.setUpdateExpectation(Expectation.None.class);
+			persistentClass.setDeleteExpectation(Expectation.None.class);
 		}
 
 		@Override

@@ -12,7 +12,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.Alias;
+
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationClass;
 
 /**
  * A mapping model object representing some sort of auxiliary table, for
@@ -46,6 +49,10 @@ public class Join implements AttributeContainer, Serializable {
 	private String customSQLDelete;
 	private boolean customDeleteCallable;
 	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
+
+	private Class<? extends Expectation> insertExpectation;
+	private Class<? extends Expectation> updateExpectation;
+	private Class<? extends Expectation> deleteExpectation;
 
 	@Override
 	public void addProperty(Property property) {
@@ -133,6 +140,7 @@ public class Join implements AttributeContainer, Serializable {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
 		this.insertCheckStyle = checkStyle;
+		this.insertExpectation = expectationClass( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -143,16 +151,8 @@ public class Join implements AttributeContainer, Serializable {
 		return customInsertCallable;
 	}
 
-	public void setInsertCheckStyle(ExecuteUpdateResultCheckStyle insertCheckStyle) {
-		this.insertCheckStyle = insertCheckStyle;
-	}
-
-	public ExecuteUpdateResultCheckStyle getInsertCheckStyle() {
-		return insertCheckStyle;
-	}
-
 	/**
-	 * @deprecated use {@link #getInsertCheckStyle()}
+	 * @deprecated use {@link #getInsertExpectation()}
 	 */
 	@Deprecated(since = "6.5", forRemoval = true)
 	public ExecuteUpdateResultCheckStyle getCustomSQLInsertCheckStyle() {
@@ -163,6 +163,7 @@ public class Join implements AttributeContainer, Serializable {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
 		this.updateCheckStyle = checkStyle;
+		this.updateExpectation = expectationClass( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -173,16 +174,8 @@ public class Join implements AttributeContainer, Serializable {
 		return customUpdateCallable;
 	}
 
-	public void setUpdateCheckStyle(ExecuteUpdateResultCheckStyle updateCheckStyle) {
-		this.updateCheckStyle = updateCheckStyle;
-	}
-
-	public ExecuteUpdateResultCheckStyle getUpdateCheckStyle() {
-		return updateCheckStyle;
-	}
-
 	/**
-	 * @deprecated use {@link #getUpdateCheckStyle()}
+	 * @deprecated use {@link #getUpdateExpectation()}
 	 */
 	@Deprecated(since = "6.5", forRemoval = true)
 	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
@@ -193,6 +186,7 @@ public class Join implements AttributeContainer, Serializable {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
 		this.deleteCheckStyle = checkStyle;
+		this.deleteExpectation = expectationClass( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {
@@ -203,16 +197,8 @@ public class Join implements AttributeContainer, Serializable {
 		return customDeleteCallable;
 	}
 
-	public void setDeleteCheckStyle(ExecuteUpdateResultCheckStyle deleteCheckStyle) {
-		this.deleteCheckStyle = deleteCheckStyle;
-	}
-
-	public ExecuteUpdateResultCheckStyle getDeleteCheckStyle() {
-		return deleteCheckStyle;
-	}
-
 	/**
-	 * @deprecated use {@link #getDeleteCheckStyle()}
+	 * @deprecated use {@link #getDeleteExpectation()}
 	 */
 	@Deprecated(since = "6.5", forRemoval = true)
 	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
@@ -243,7 +229,32 @@ public class Join implements AttributeContainer, Serializable {
 	public boolean isOptional() {
 		return optional;
 	}
+
 	public void setOptional(boolean nullable) {
 		this.optional = nullable;
+	}
+
+	public Class<? extends Expectation> getInsertExpectation() {
+		return insertExpectation;
+	}
+
+	public void setInsertExpectation(Class<? extends Expectation> insertExpectation) {
+		this.insertExpectation = insertExpectation;
+	}
+
+	public Class<? extends Expectation> getUpdateExpectation() {
+		return updateExpectation;
+	}
+
+	public void setUpdateExpectation(Class<? extends Expectation> updateExpectation) {
+		this.updateExpectation = updateExpectation;
+	}
+
+	public Class<? extends Expectation> getDeleteExpectation() {
+		return deleteExpectation;
+	}
+
+	public void setDeleteExpectation(Class<? extends Expectation> deleteExpectation) {
+		this.deleteExpectation = deleteExpectation;
 	}
 }

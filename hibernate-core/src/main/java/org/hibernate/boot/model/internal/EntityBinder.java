@@ -90,6 +90,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
@@ -1387,7 +1388,9 @@ public class EntityBinder {
 					sqlInsert.callable(),
 					fromResultCheckStyle( sqlInsert.check() )
 			);
-
+			if ( sqlInsert.verify() != Expectation.class ) {
+				persistentClass.setInsertExpectation( sqlInsert.verify() );
+			}
 		}
 
 		final SQLUpdate sqlUpdate = findMatchingSqlAnnotation( "", SQLUpdate.class, SQLUpdates.class );
@@ -1397,6 +1400,9 @@ public class EntityBinder {
 					sqlUpdate.callable(),
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
+			if ( sqlUpdate.verify() != Expectation.class ) {
+				persistentClass.setUpdateExpectation( sqlUpdate.verify() );
+			}
 		}
 
 		final SQLDelete sqlDelete = findMatchingSqlAnnotation( "", SQLDelete.class, SQLDeletes.class );
@@ -1406,6 +1412,9 @@ public class EntityBinder {
 					sqlDelete.callable(),
 					fromResultCheckStyle( sqlDelete.check() )
 			);
+			if ( sqlDelete.verify() != Expectation.class ) {
+				persistentClass.setDeleteExpectation( sqlDelete.verify() );
+			}
 		}
 
 		final SQLDeleteAll sqlDeleteAll = annotatedClass.getAnnotation( SQLDeleteAll.class );
@@ -2265,6 +2274,9 @@ public class EntityBinder {
 					sqlInsert.callable(),
 					fromResultCheckStyle( sqlInsert.check() )
 			);
+			if ( sqlInsert.verify() != Expectation.class ) {
+				join.setInsertExpectation( sqlInsert.verify() );
+			}
 		}
 		else if ( matchingTable != null ) {
 			final String insertSql = matchingTable.sqlInsert().sql();
@@ -2284,6 +2296,9 @@ public class EntityBinder {
 					sqlUpdate.callable(),
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
+			if ( sqlUpdate.verify() != Expectation.class ) {
+				join.setUpdateExpectation( sqlUpdate.verify() );
+			}
 		}
 		else if ( matchingTable != null ) {
 			final String updateSql = matchingTable.sqlUpdate().sql();
@@ -2303,6 +2318,9 @@ public class EntityBinder {
 					sqlDelete.callable(),
 					fromResultCheckStyle( sqlDelete.check() )
 			);
+			if ( sqlDelete.verify() != Expectation.class ) {
+				join.setDeleteExpectation( sqlDelete.verify() );
+			}
 		}
 		else if ( matchingTable != null ) {
 			final String deleteSql = matchingTable.sqlDelete().sql();

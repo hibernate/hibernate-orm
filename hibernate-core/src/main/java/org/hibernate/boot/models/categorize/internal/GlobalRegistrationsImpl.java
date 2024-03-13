@@ -80,6 +80,7 @@ import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.SourceModelContext;
 
 import jakarta.persistence.ColumnResult;
@@ -583,7 +584,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EntityListenerRegistration
 
-	public void collectEntityListenerRegistrations(List<JaxbEntityListenerImpl> listeners) {
+	public void collectEntityListenerRegistrations(List<JaxbEntityListenerImpl> listeners, SourceModelBuildingContext modelsContext) {
 		if ( CollectionHelper.isEmpty( listeners ) ) {
 			return;
 		}
@@ -593,7 +594,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			final JpaEventListener listener = JpaEventListener.from(
 					JpaEventListenerStyle.LISTENER,
 					classDetails,
-					jaxbEntityListener
+					jaxbEntityListener,
+					modelsContext
 			);
 			addJpaEventListener( listener );
 		} );

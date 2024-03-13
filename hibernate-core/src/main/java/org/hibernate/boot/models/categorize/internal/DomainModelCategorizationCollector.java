@@ -46,6 +46,7 @@ public class DomainModelCategorizationCollector {
 	private final IndexView jandexIndex;
 
 	private final GlobalRegistrationsImpl globalRegistrations;
+	private final SourceModelBuildingContext modelsContext;
 
 	private final Set<ClassDetails> rootEntities = new HashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
@@ -53,13 +54,13 @@ public class DomainModelCategorizationCollector {
 
 	public DomainModelCategorizationCollector(
 			boolean areIdGeneratorsGlobal,
-			ClassDetailsRegistry classDetailsRegistry,
-			AnnotationDescriptorRegistry descriptorRegistry,
 			GlobalRegistrations globalRegistrations,
-			IndexView jandexIndex) {
+			IndexView jandexIndex,
+			SourceModelBuildingContext modelsContext) {
 		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
 		this.jandexIndex = jandexIndex;
 		this.globalRegistrations = (GlobalRegistrationsImpl) globalRegistrations;
+		this.modelsContext = modelsContext;
 	}
 
 	public GlobalRegistrationsImpl getGlobalRegistrations() {
@@ -95,7 +96,7 @@ public class DomainModelCategorizationCollector {
 			if ( persistenceUnitDefaults != null ) {
 				final JaxbEntityListenerContainerImpl listenerContainer = persistenceUnitDefaults.getEntityListenerContainer();
 				if ( listenerContainer != null ) {
-					getGlobalRegistrations().collectEntityListenerRegistrations( listenerContainer.getEntityListeners() );
+					getGlobalRegistrations().collectEntityListenerRegistrations( listenerContainer.getEntityListeners(), modelsContext );
 				}
 			}
 		}

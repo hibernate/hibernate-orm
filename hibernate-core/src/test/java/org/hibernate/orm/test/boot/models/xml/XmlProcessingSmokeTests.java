@@ -126,10 +126,9 @@ public class XmlProcessingSmokeTests {
 
 		final DomainModelCategorizationCollector collector = new DomainModelCategorizationCollector(
 				false,
-				buildingContext.getClassDetailsRegistry(),
-				buildingContext.getAnnotationDescriptorRegistry(),
 				new GlobalRegistrationsImpl( buildingContext ),
-				null
+				null,
+				buildingContext
 		);
 		collectedXmlResources.getDocuments().forEach( collector::apply );
 

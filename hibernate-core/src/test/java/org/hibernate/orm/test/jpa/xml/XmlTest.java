@@ -10,6 +10,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -41,9 +42,10 @@ public class XmlTest {
 
 	@Test
 	public void testXmlMappingWithCacheable(EntityManagerFactoryScope scope) {
-		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
-		SharedSessionContractImplementor session = em.unwrap( SharedSessionContractImplementor.class );
-		EntityPersister entityPersister= session.getFactory().getMappingMetamodel().getEntityDescriptor( Lighter.class );
+		EntityPersister entityPersister = scope.getEntityManagerFactory()
+				.unwrap( SessionFactoryImplementor.class )
+				.getMappingMetamodel()
+				.getEntityDescriptor( Lighter.class );
 		Assertions.assertTrue(entityPersister.canReadFromCache());
 		Assertions.assertTrue(entityPersister.canWriteToCache());
 	}

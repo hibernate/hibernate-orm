@@ -905,7 +905,7 @@ public class EntityBinder {
 	}
 
 	private static void handleForeignKeys(ClassDetails clazzToProcess, MetadataBuildingContext context, DependantValue key) {
-		final AnnotationUsage<PrimaryKeyJoinColumn> pkJoinColumn = clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumn.class );
+		final AnnotationUsage<PrimaryKeyJoinColumn> pkJoinColumn = clazzToProcess.getSingleAnnotationUsage( PrimaryKeyJoinColumn.class );
 		final AnnotationUsage<PrimaryKeyJoinColumns> pkJoinColumns = clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumns.class );
 		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
 		if ( pkJoinColumn != null && noConstraint( pkJoinColumn.getNestedUsage( "foreignKey" ), noConstraintByDefault )

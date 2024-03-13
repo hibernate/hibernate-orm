@@ -7,16 +7,13 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.ContributableDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
@@ -24,10 +21,6 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.QualifiedTypeName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.tool.schema.extract.spi.ColumnInformation;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
-
-import org.jboss.logging.Logger;
 
 /**
  * A mapping model object representing a relational database {@linkplain org.hibernate.annotations.Struct UDT}.

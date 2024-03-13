@@ -686,12 +686,15 @@ public final class AnnotationBinder {
 			MetadataBuildingContext buildingContext) {
 		final Map<XClass, InheritanceState> inheritanceStatePerClass = new HashMap<>( orderedClasses.size() );
 		for ( XClass clazz : orderedClasses ) {
-			final InheritanceState superclassState = getSuperclassInheritanceState( clazz, inheritanceStatePerClass );
-			final InheritanceState state = new InheritanceState( clazz, inheritanceStatePerClass, buildingContext );
+			final InheritanceState superclassState =
+					getSuperclassInheritanceState( clazz, inheritanceStatePerClass );
+			final InheritanceState state =
+					new InheritanceState( clazz, inheritanceStatePerClass, buildingContext );
 			if ( superclassState != null ) {
 				//the classes are ordered thus preventing an NPE
 				superclassState.setHasSiblings( true );
-				final InheritanceState superEntityState = getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
+				final InheritanceState superEntityState =
+						getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
 				state.setHasParents( superEntityState != null );
 				logMixedInheritance( clazz, superclassState, state );
 				if ( superclassState.getType() != null ) {

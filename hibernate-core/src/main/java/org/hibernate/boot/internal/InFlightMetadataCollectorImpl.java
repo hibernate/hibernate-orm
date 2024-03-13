@@ -110,6 +110,8 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
 
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+
 /**
  * The implementation of the {@linkplain InFlightMetadataCollector in-flight
  * metadata collector contract}.
@@ -1505,32 +1507,30 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 		@Override
 		public void addSecondaryTable(QualifiedTableName logicalQualifiedTableName, Join secondaryTableJoin) {
-			Identifier logicalName = logicalQualifiedTableName.getTableName();
 			if ( Identifier.areEqual(
-				Identifier.toIdentifier(
+				toIdentifier(
 					new QualifiedTableName(
-						Identifier.toIdentifier( primaryTable.getCatalog() ),
-						Identifier.toIdentifier( primaryTable.getSchema() ),
+						toIdentifier( primaryTable.getCatalog() ),
+						toIdentifier( primaryTable.getSchema() ),
 						primaryTableLogicalName
 					).render()
 				),
-				Identifier.toIdentifier( logicalQualifiedTableName.render() ) ) ) {
-				throw new DuplicateSecondaryTableException( logicalName );
+				toIdentifier( logicalQualifiedTableName.render() ) ) ) {
+				throw new DuplicateSecondaryTableException( logicalQualifiedTableName.getTableName() );
 			}
-
 
 			if ( secondaryTableJoinMap == null ) {
 				//secondaryTableJoinMap = new HashMap<Identifier,Join>();
 				//secondaryTableJoinMap.put( logicalName, secondaryTableJoin );
 				secondaryTableJoinMap = new HashMap<>();
-				secondaryTableJoinMap.put( logicalName.getCanonicalName(), secondaryTableJoin );
+				secondaryTableJoinMap.put( logicalQualifiedTableName.getTableName().getCanonicalName(), secondaryTableJoin );
 			}
 			else {
 				//final Join existing = secondaryTableJoinMap.put( logicalName, secondaryTableJoin );
-				final Join existing = secondaryTableJoinMap.put( logicalName.getCanonicalName(), secondaryTableJoin );
+				final Join existing = secondaryTableJoinMap.put( logicalQualifiedTableName.getTableName().getCanonicalName(), secondaryTableJoin );
 
 				if ( existing != null ) {
-					throw new DuplicateSecondaryTableException( logicalName );
+					throw new DuplicateSecondaryTableException( logicalQualifiedTableName.getTableName() );
 				}
 			}
 		}

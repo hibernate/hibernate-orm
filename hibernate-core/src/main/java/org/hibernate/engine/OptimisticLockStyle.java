@@ -37,6 +37,21 @@ public enum OptimisticLockStyle {
 	 */
 	ALL;
 
+	public static OptimisticLockStyle fromLockType(OptimisticLockType type) {
+		switch ( type ) {
+			case VERSION:
+				return VERSION;
+			case NONE:
+				return NONE;
+			case DIRTY:
+				return DIRTY;
+			case ALL:
+				return ALL;
+			default:
+				throw new AssertionFailure( "Unrecognized OptimisticLockType" );
+		}
+	}
+
 	public boolean isAllOrDirty() {
 		return isAll() || isDirty();
 	}

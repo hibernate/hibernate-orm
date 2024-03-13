@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.exception.GenericJDBCException;
 
 import static org.hibernate.jdbc.Expectations.checkBatched;
@@ -92,6 +93,20 @@ public interface Expectation {
 	}
 
 	/**
+	 * Check that this implementation is compatible with the kind of
+	 * {@link PreparedStatement} it will be called with. Implementors
+	 * should throw a {@link MappingException} if the configuration
+	 * is not supported.
+	 *
+	 * @param callable true if this {@code Expectation} will be called
+	 *                 with a {@link CallableStatement}.
+	 *
+	 * @since 6.5
+	 */
+	default void validate(boolean callable) throws MappingException {
+	}
+
+	/**
 	 * No return code checking. Might mean that no checks are required, or that
 	 * failure is indicated by a {@link java.sql.SQLException} being thrown, for
 	 * example, by a {@link java.sql.CallableStatement stored procedure} which
@@ -156,6 +171,13 @@ public interface Expectation {
 			}
 			else {
 				checkBatched( expectedRowCount(), result, batchPosition, sql );
+			}
+		}
+
+		@Override
+		public void validate(boolean callable) throws MappingException {
+			if ( !callable ) {
+				throw new MappingException( "Expectation.OutParameter operates exclusively on CallableStatements" );
 			}
 		}
 

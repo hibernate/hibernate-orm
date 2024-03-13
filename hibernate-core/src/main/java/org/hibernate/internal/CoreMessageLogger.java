@@ -418,11 +418,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			String name,
 			@Cause JndiNameException e);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Mixing inheritance strategy in a entity hierarchy is not allowed, ignoring sub strategy in: %s",
-			id = 138)
-	void invalidSubStrategy(String className);
-
 	@LogMessage(level = INFO)
 	@Message(value = "JACC contextID: %s", id = 140)
 	void jaccContextId(String contextId);
@@ -1764,10 +1759,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The [%s] property of the [%s] entity was modified, but it won't be updated because the property is immutable.", id = 502)
 	void ignoreImmutablePropertyModification(String propertyName, String entityName);
-
-	@LogMessage(level = WARN)
-	@Message(value = "A class should not be annotated with both @Inheritance and @MappedSuperclass. @Inheritance will be ignored for: %s.", id = 503)
-	void unsupportedMappedSuperclassWithEntityInheritance(String entityName);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'.", id = 504)

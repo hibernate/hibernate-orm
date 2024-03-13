@@ -746,7 +746,7 @@ public class PropertyBinder {
 
 	private static void handleParentProperty(PropertyHolder holder, PropertyData data, MemberDetails property) {
 		if ( holder.isComponent() ) {
-			holder.setParentProperty( property.getName() );
+			holder.setParentProperty( property.resolveAttributeName() );
 		}
 		else {
 			throw new AnnotationException( "Property '" + getPath( holder, data )

@@ -916,15 +916,17 @@ public class AnnotatedColumn {
 	}
 
 	private void processColumnTransformerExpressions(AnnotationUsage<ColumnTransformer> annotation) {
-		if ( annotation == null
-				// "" is the default value for annotations
-				|| isEmpty( annotation.getString( "forColumn" ) )
-				|| annotation.getString( "forColumn" ).equals( logicalColumnName != null ? logicalColumnName : "" ) ) {
+		if ( annotation == null ) {
+			// nothing to process
 			return;
 		}
 
-		readExpression = nullIfEmpty( annotation.getString( "read" ) );
-		writeExpression = nullIfEmpty( annotation.getString( "write" ) );
+		final String targetColumnName = annotation.getString( "forColumn" );
+		if ( isEmpty( targetColumnName )
+				|| targetColumnName.equals( logicalColumnName != null ? logicalColumnName : "" ) ) {
+			readExpression = nullIfEmpty( annotation.getString( "read" ) );
+			writeExpression = nullIfEmpty( annotation.getString( "write" ) );
+		}
 	}
 
 	private static AnnotatedColumns buildImplicitColumn(

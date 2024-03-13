@@ -8,10 +8,13 @@ package org.hibernate.boot.models.categorize.spi;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
+import org.hibernate.models.spi.MutableMemberDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
@@ -22,10 +25,10 @@ import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
 
 /**
- * JPA-style event listener with support for resolving callback methods
- * {@linkplain #from(JpaEventListenerStyle, ClassDetails, JaxbEntityListenerImpl) by name} (from XML)
- * or by {@linkplain #from(JpaEventListenerStyle, ClassDetails) annotation}.
- *
+ * JPA-style event listener with support for resolving callback methods from
+ * {@linkplain #from(JpaEventListenerStyle, ClassDetails, JaxbEntityListenerImpl, SourceModelBuildingContext) XML}
+ * or from {@linkplain #from(JpaEventListenerStyle, ClassDetails) annotation}.
+ * <p/>
  * Represents a global entity listener defined in the persistence unit
  *
  * @see JaxbPersistenceUnitDefaultsImpl#getEntityListenerContainer()
@@ -117,7 +120,8 @@ public class JpaEventListener {
 	public static JpaEventListener from(
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
-			JaxbEntityListenerImpl jaxbMapping) {
+			JaxbEntityListenerImpl jaxbMapping,
+			SourceModelBuildingContext modelsContext) {
 		final MutableObject<MethodDetails> prePersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postPersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> preRemoveMethod = new MutableObject<>();
@@ -135,36 +139,78 @@ public class JpaEventListener {
 					&& methodDetails.getName().equals( jaxbMapping.getPrePersist().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				prePersistMethod.set( methodDetails );
+				( (MutableMemberDetails) methodDetails ).addAnnotationUsage(
+						JpaAnnotations.PRE_PERSIST.createUsage(
+								methodDetails,
+								modelsContext
+						)
+				);
 			}
 			else if ( jaxbMapping.getPostPersist() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPostPersist().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postPersistMethod.set( methodDetails );
+				( (MutableMemberDetails) methodDetails ).addAnnotationUsage(
+						JpaAnnotations.POST_PERSIST.createUsage(
+								methodDetails,
+								modelsContext
+						)
+				);
 			}
 			else if ( jaxbMapping.getPreRemove() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPreRemove().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				preRemoveMethod.set( methodDetails );
+				( (MutableMemberDetails) methodDetails ).addAnnotationUsage(
+						JpaAnnotations.PRE_REMOVE.createUsage(
+								methodDetails,
+								modelsContext
+						)
+				);
 			}
 			else if ( jaxbMapping.getPostRemove() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPostRemove().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postRemoveMethod.set( methodDetails );
+				( (MutableMemberDetails) methodDetails ).addAnnotationUsage(
+						JpaAnnotations.POST_REMOVE.createUsage(
+								methodDetails,
+								modelsContext
+						)
+				);
 			}
 			else if ( jaxbMapping.getPreUpdate() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPreUpdate().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				preUpdateMethod.set( methodDetails );
+				( (MutableMemberDetails) methodDetails ).addAnnotationUsage(
+						JpaAnnotations.PRE_UPDATE.createUsage(
+								methodDetails,
+								modelsContext
+						)
+				);
 			}
 			else if ( jaxbMapping.getPostUpdate() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPostUpdate().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postUpdateMethod.set( methodDetails );
+				( (MutableMemberDetails) methodDetails ).addAnnotationUsage(
+						JpaAnnotations.POST_UPDATE.createUsage(
+								methodDetails,
+								modelsContext
+						)
+				);
 			}
 			else if ( jaxbMapping.getPostLoad() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPostLoad().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postLoadMethod.set( methodDetails );
+				( (MutableMemberDetails) methodDetails ).addAnnotationUsage(
+						JpaAnnotations.POST_LOAD.createUsage(
+								methodDetails,
+								modelsContext
+						)
+				);
 			}
 		} );
 

@@ -128,10 +128,9 @@ public class ManagedResourcesProcessor {
 		final GlobalRegistrationsImpl globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext );
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
-				classDetailsRegistry,
-				descriptorRegistry,
 				globalRegistrations,
-				jandexIndex
+				jandexIndex,
+				sourceModelBuildingContext
 		);
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml( xmlPreProcessingResult, modelCategorizationCollector, sourceModelBuildingContext );

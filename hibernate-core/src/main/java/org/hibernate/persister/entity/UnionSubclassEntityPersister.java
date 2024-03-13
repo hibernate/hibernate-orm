@@ -30,7 +30,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
@@ -65,7 +64,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
-import static org.hibernate.jdbc.Expectations.appropriateExpectation;
+import static org.hibernate.jdbc.Expectations.createExpectation;
 
 /**
  * An {@link EntityPersister} implementing the
@@ -125,41 +124,20 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		subclassTableNames = new String[]{tableName};
 		//Custom SQL
 
-		String sql;
-		boolean callable;
-		ExecuteUpdateResultCheckStyle checkStyle;
-		sql = persistentClass.getCustomSQLInsert();
-		callable = sql != null && persistentClass.isCustomInsertCallable();
-		checkStyle = sql == null
-				? ExecuteUpdateResultCheckStyle.COUNT
-				: persistentClass.getInsertCheckStyle() == null
-				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: persistentClass.getInsertCheckStyle();
-		customSQLInsert = new String[] {sql};
-		insertCallable = new boolean[] {callable};
-		insertExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
+		customSQLInsert = new String[] { persistentClass.getCustomSQLInsert() };
+		insertCallable = new boolean[] { persistentClass.isCustomInsertCallable() };
+		insertExpectations = new Expectation[] { createExpectation( persistentClass.getInsertExpectation(),
+				persistentClass.isCustomInsertCallable() ) };
 
-		sql = persistentClass.getCustomSQLUpdate();
-		callable = sql != null && persistentClass.isCustomUpdateCallable();
-		checkStyle = sql == null
-				? ExecuteUpdateResultCheckStyle.COUNT
-				: persistentClass.getUpdateCheckStyle() == null
-				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: persistentClass.getUpdateCheckStyle();
-		customSQLUpdate = new String[] {sql};
-		updateCallable = new boolean[] {callable};
-		updateExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
+		customSQLUpdate = new String[] { persistentClass.getCustomSQLUpdate() };
+		updateCallable = new boolean[] { persistentClass.isCustomUpdateCallable() };
+		updateExpectations = new Expectation[] { createExpectation( persistentClass.getUpdateExpectation(),
+				persistentClass.isCustomUpdateCallable() ) };
 
-		sql = persistentClass.getCustomSQLDelete();
-		callable = sql != null && persistentClass.isCustomDeleteCallable();
-		checkStyle = sql == null
-				? ExecuteUpdateResultCheckStyle.COUNT
-				: persistentClass.getDeleteCheckStyle() == null
-				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-				: persistentClass.getDeleteCheckStyle();
-		customSQLDelete = new String[] {sql};
-		deleteCallable = new boolean[] {callable};
-		deleteExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
+		customSQLDelete = new String[] { persistentClass.getCustomSQLDelete() };
+		deleteCallable = new boolean[] { persistentClass.isCustomDeleteCallable() };
+		deleteExpectations = new Expectation[] { createExpectation( persistentClass.getDeleteExpectation(),
+				persistentClass.isCustomDeleteCallable() ) };
 
 		discriminatorValue = persistentClass.getSubclassId();
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );

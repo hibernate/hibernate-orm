@@ -45,7 +45,6 @@ import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -58,7 +57,6 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
 import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
@@ -137,6 +135,7 @@ import org.hibernate.type.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
@@ -1688,72 +1687,36 @@ public abstract class AbstractCollectionPersister
 				collectionBootDescriptor.isInverse(),
 				new MutationDetails(
 						MutationType.INSERT,
-						determineExpectation(
-								collectionBootDescriptor.getCustomSQLInsertCheckStyle(),
-								collectionBootDescriptor.getCustomSQLInsert(),
-								collectionBootDescriptor.isCustomInsertCallable()
-						),
+						createExpectation( collectionBootDescriptor.getInsertExpectation(),
+								collectionBootDescriptor.isCustomInsertCallable()),
 						collectionBootDescriptor.getCustomSQLInsert(),
 						collectionBootDescriptor.isCustomInsertCallable()
 				),
 				new MutationDetails(
 						MutationType.UPDATE,
-						determineExpectation(
-								collectionBootDescriptor.getCustomSQLUpdateCheckStyle(),
-								collectionBootDescriptor.getCustomSQLUpdate(),
-								collectionBootDescriptor.isCustomUpdateCallable()
-						),
+						createExpectation( collectionBootDescriptor.getUpdateExpectation(),
+								collectionBootDescriptor.isCustomUpdateCallable()),
 						collectionBootDescriptor.getCustomSQLUpdate(),
 						collectionBootDescriptor.isCustomUpdateCallable()
 				),
 				collectionBootDescriptor.getKey().isCascadeDeleteEnabled(),
 				new MutationDetails(
 						MutationType.DELETE,
-						determineExpectation(
-								collectionBootDescriptor.getCustomSQLDeleteAllCheckStyle(),
-								collectionBootDescriptor.getCustomSQLDeleteAll(),
-								collectionBootDescriptor.isCustomDeleteAllCallable(),
-								Expectations.NONE
-						),
+						collectionBootDescriptor.isCustomDeleteAllCallable() || collectionBootDescriptor.getDeleteAllExpectation() != null
+								? createExpectation( collectionBootDescriptor.getDeleteAllExpectation(),
+										collectionBootDescriptor.isCustomDeleteAllCallable() )
+								: new Expectation.None(),
 						collectionBootDescriptor.getCustomSQLDeleteAll(),
 						collectionBootDescriptor.isCustomDeleteAllCallable()
 				),
 				new MutationDetails(
 						MutationType.DELETE,
-						determineExpectation(
-								collectionBootDescriptor.getCustomSQLDeleteCheckStyle(),
-								collectionBootDescriptor.getCustomSQLDelete(),
-								collectionBootDescriptor.isCustomDeleteCallable()
-						),
+						createExpectation( collectionBootDescriptor.getDeleteExpectation(),
+								collectionBootDescriptor.isCustomDeleteCallable()),
 						collectionBootDescriptor.getCustomSQLDelete(),
 						collectionBootDescriptor.isCustomDeleteCallable()
 				)
 		);
-	}
-
-	private static Expectation determineExpectation(
-			ExecuteUpdateResultCheckStyle explicitStyle,
-			String customSql,
-			boolean customSqlCallable,
-			Expectation fallback) {
-		if ( explicitStyle != null ) {
-			return Expectations.appropriateExpectation( explicitStyle );
-		}
-
-		if ( customSql == null ) {
-			return fallback;
-		}
-
-		return Expectations.appropriateExpectation(
-				ExecuteUpdateResultCheckStyle.determineDefault( customSql, customSqlCallable )
-		);
-	}
-
-	private static Expectation determineExpectation(
-			ExecuteUpdateResultCheckStyle explicitStyle,
-			String customSql,
-			boolean customSqlCallable) {
-		return determineExpectation( explicitStyle, customSql, customSqlCallable, Expectations.BASIC );
 	}
 
 	protected JdbcMutationOperation buildDeleteAllOperation(MutatingTableReference tableReference) {

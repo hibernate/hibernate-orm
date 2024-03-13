@@ -11,7 +11,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.InstantiationException;
+import org.hibernate.Internal;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
@@ -27,78 +30,33 @@ import org.hibernate.internal.CoreMessageLogger;
 public class Expectations {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Expectations.class );
 
-	private static final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper( false );
-
-	public static final int USUAL_EXPECTED_COUNT = 1;
-	public static final int USUAL_PARAM_POSITION = 1;
-
+	static final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper( false );
 
 	// Base Expectation impls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * @deprecated Use {@link RowCount}
+	 */
+	@Deprecated(since = "6.5")
 	public static class BasicExpectation implements Expectation {
-		private final int expectedRowCount;
+		private final int expected;
 
 		protected BasicExpectation(int expectedRowCount) {
-			this.expectedRowCount = expectedRowCount;
+			expected = expectedRowCount;
 			if ( expectedRowCount < 0 ) {
 				throw new IllegalArgumentException( "Expected row count must be greater than zero" );
 			}
 		}
 
-		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String statementSQL) {
-			rowCount = determineRowCount( rowCount, statement );
+		@Override
+		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String sql) {
+			final int result = determineRowCount( rowCount, statement );
 			if ( batchPosition < 0 ) {
-				checkNonBatched( rowCount, statementSQL );
+				checkNonBatched( expected, result, sql );
 			}
 			else {
-				checkBatched( rowCount, batchPosition, statementSQL );
+				checkBatched( expected, result, batchPosition, sql );
 			}
-		}
-
-		private void checkBatched(int rowCount, int batchPosition, String statementSQL) {
-			if ( rowCount == -2 ) {
-				LOG.debugf( "Success of batch update unknown: %s", batchPosition );
-			}
-			else if ( rowCount == -3 ) {
-				throw new BatchFailedException( "Batch update failed: " + batchPosition );
-			}
-			else {
-				if ( expectedRowCount > rowCount ) {
-					throw new StaleStateException(
-							"Batch update returned unexpected row count from update ["
-									+ batchPosition + "]; actual row count: " + rowCount
-									+ "; expected: " + expectedRowCount + "; statement executed: "
-									+ statementSQL
-					);
-				}
-				if ( expectedRowCount < rowCount ) {
-					String msg = "Batch update returned unexpected row count from update [" +
-							batchPosition + "]; actual row count: " + rowCount +
-							"; expected: " + expectedRowCount;
-					throw new BatchedTooManyRowsAffectedException( msg, expectedRowCount, rowCount, batchPosition );
-				}
-			}
-		}
-
-		private void checkNonBatched(int rowCount, String statementSQL) {
-			if ( expectedRowCount > rowCount ) {
-				throw new StaleStateException(
-						"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount
-						+ "; statement executed: " + statementSQL
-				);
-			}
-			if ( expectedRowCount < rowCount ) {
-				String msg = "Unexpected row count: " + rowCount + "; expected: " + expectedRowCount;
-				throw new TooManyRowsAffectedException( msg, expectedRowCount, rowCount );
-			}
-		}
-
-		public int prepare(PreparedStatement statement) throws SQLException, HibernateException {
-			return 0;
-		}
-
-		public boolean canBeBatched() {
-			return true;
 		}
 
 		protected int determineRowCount(int reportedRowCount, PreparedStatement statement) {
@@ -106,6 +64,10 @@ public class Expectations {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link OutParameter}
+	 */
+	@Deprecated(since = "6.5")
 	public static class BasicParamExpectation extends BasicExpectation {
 		private final int parameterPosition;
 
@@ -140,39 +102,88 @@ public class Expectations {
 				throw new GenericJDBCException( "could not extract row counts from CallableStatement", sqle );
 			}
 		}
+	}
 
-		private CallableStatement toCallableStatement(PreparedStatement statement) {
-			if ( !(statement instanceof CallableStatement) ) {
-				throw new HibernateException(
-						"BasicParamExpectation operates exclusively on CallableStatements : " + statement.getClass()
-				);
-			}
+	static CallableStatement toCallableStatement(PreparedStatement statement) {
+		if ( statement instanceof CallableStatement ) {
 			return (CallableStatement) statement;
+		}
+		else {
+			throw new HibernateException( "Expectation.OutParameter operates exclusively on CallableStatements: "
+					+ statement.getClass() );
 		}
 	}
 
+	static void checkBatched(int expected, int rowCount, int batchPosition, String sql) {
+		if ( rowCount == -2 ) {
+			LOG.debugf( "Success of batch update unknown: %s", batchPosition );
+		}
+		else if ( rowCount == -3 ) {
+			throw new BatchFailedException( "Batch update failed: " + batchPosition );
+		}
+		else if ( expected > rowCount ) {
+			throw new StaleStateException(
+					"Batch update returned unexpected row count from update ["
+							+ batchPosition + "]; actual row count: " + rowCount
+							+ "; expected: " + 1 + "; statement executed: "
+							+ sql
+			);
+		}
+		else if ( expected < rowCount ) {
+			String msg = "Batch update returned unexpected row count from update [" +
+					batchPosition + "]; actual row count: " + rowCount +
+					"; expected: " + 1;
+			throw new BatchedTooManyRowsAffectedException( msg, 1, rowCount, batchPosition );
+		}
+	}
+
+	static void checkNonBatched(int expected, int rowCount, String sql) {
+		if ( expected > rowCount ) {
+			throw new StaleStateException(
+					"Unexpected row count: " + rowCount + "; expected: " + 1
+							+ "; statement executed: " + sql
+			);
+		}
+		if ( expected < rowCount ) {
+			String msg = "Unexpected row count: " + rowCount + "; expected: " + 1;
+			throw new TooManyRowsAffectedException( msg, 1, rowCount );
+		}
+	}
 
 	// Various Expectation instances ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public static final Expectation NONE = new Expectation() {
-		public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String statementSQL) {
-			// explicitly doAfterTransactionCompletion no checking...
+	/**
+	 * @deprecated Use {@link Expectation.None}
+	 */
+	@Deprecated(since = "6.5")
+	public static final Expectation NONE = new Expectation.None();
+
+	/**
+	 * @deprecated Use {@link Expectation.RowCount}
+	 */
+	@Deprecated(since = "6.5")
+	public static final Expectation BASIC = new Expectation.RowCount();
+
+	/**
+	 * @deprecated Use {@link Expectation.OutParameter}
+	 */
+	@Deprecated(since = "6.5")
+	public static final Expectation PARAM = new Expectation.OutParameter();
+
+	@Internal
+	public static Expectation createExpectation(Class<? extends Expectation> expectation, boolean callable) {
+		if ( expectation == null ) {
+			expectation = callable ? Expectation.OutParameter.class : Expectation.RowCount.class;
 		}
-
-		public int prepare(PreparedStatement statement) {
-			return 0;
+		try {
+			return expectation.newInstance();
 		}
-
-		public boolean canBeBatched() {
-			return true;
+		catch ( Exception e ) {
+			throw new InstantiationException( "Could not instantiate Expectation", expectation, e );
 		}
-	};
+	}
 
-	public static final Expectation BASIC = new BasicExpectation( USUAL_EXPECTED_COUNT );
-
-	public static final Expectation PARAM = new BasicParamExpectation( USUAL_EXPECTED_COUNT, USUAL_PARAM_POSITION );
-
-
+	@Deprecated(since = "6.5", forRemoval = true)
 	public static Expectation appropriateExpectation(ExecuteUpdateResultCheckStyle style) {
 		switch ( style ) {
 			case NONE:
@@ -182,10 +193,19 @@ public class Expectations {
 			case PARAM:
 				return PARAM;
 			default:
-				throw new HibernateException( "unknown check style : " + style );
+				throw new AssertionFailure( "unknown result check style: " + style );
 		}
 	}
 
 	private Expectations() {
 	}
+
+	// Unused, for removal ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Deprecated(since = "6.5", forRemoval = true)
+	public static final int USUAL_EXPECTED_COUNT = 1;
+
+	@Deprecated(since = "6.5", forRemoval = true)
+	public static final int USUAL_PARAM_POSITION = 1;
+
 }

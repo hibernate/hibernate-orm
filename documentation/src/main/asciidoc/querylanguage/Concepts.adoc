@@ -441,7 +441,8 @@ Note that the `on constraint` variant accepting the name of a unique constraint 
 ----
 insert Person (ssn, name, phone)
     values ('116-76-1234', 'Jane Doe', '404 888 4319')
-    on conflict (ssn) set phone = excluded.phone
+    on conflict (ssn) do update
+        set phone = excluded.phone
 ----
 
 

@@ -12,6 +12,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -20,6 +21,7 @@ import java.util.function.Consumer;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
@@ -951,6 +953,25 @@ public class BinderHelper {
 		return results;
 	}
 
+	public static <A extends Annotation, O extends Annotation> Class<O> getOverrideAnnotation(Class<A> annotationType) {
+		final Class<O> overrideAnnotation = findOverrideAnnotation( annotationType );
+		if ( overrideAnnotation != null ) {
+			return overrideAnnotation;
+		}
+		throw new HibernateException(
+				String.format(
+						Locale.ROOT,
+						"Specified Annotation type (%s) does not have an override form",
+						annotationType.getName()
+				)
+		);
+	}
+
+	public static <A extends Annotation, O extends Annotation> Class<O> findOverrideAnnotation(Class<A> annotationType) {
+		//noinspection unchecked
+		return (Class<O>) ANN_OVRD_MAP.get( annotationType );
+	}
+
 	public static <T extends Annotation> AnnotationUsage<T> getOverridableAnnotation(
 			AnnotationTarget element,
 			Class<T> annotationType,
@@ -963,17 +984,7 @@ public class BinderHelper {
 
 			final List<? extends AnnotationUsage<? extends Annotation>> overrides = element.getRepeatedAnnotationUsages( overrideAnnotation );
 			for ( AnnotationUsage<? extends Annotation> override : overrides ) {
-				final ClassDetails overrideDialect = override.getClassDetails( "dialect" );
-				final Class<? extends Dialect> overrideDialectJavaType = overrideDialect.toJavaClass();
-				if ( !overrideDialectJavaType.isAssignableFrom( dialect.getClass() ) ) {
-					continue;
-				}
-
-				final AnnotationUsage<DialectOverride.Version> beforeAnn = override.getNestedUsage( "before" );
-				final AnnotationUsage<DialectOverride.Version> sameOrAfterAnn = override.getNestedUsage( "sameOrAfter" );
-
-				if ( version.isBefore( beforeAnn.getInteger( "major" ), beforeAnn.getInteger( "minor" ) )
-						&& version.isSameOrAfter( sameOrAfterAnn.getInteger( "major" ), sameOrAfterAnn.getInteger( "minor" ) ) ) {
+				if ( overrideMatchesDialect( override, dialect ) ) {
 					// we found an override match...
 					// the override's `override` attribute is the thing to return
 					return override.getNestedUsage( "override" );
@@ -983,6 +994,25 @@ public class BinderHelper {
 
 		// no override was found.  return the base annotation (if one)
 		return element.getAnnotationUsage( annotationType );
+	}
+
+	public static boolean overrideMatchesDialect(AnnotationUsage<? extends Annotation> override, Dialect dialect) {
+		final ClassDetails overrideDialect = override.getClassDetails( "dialect" );
+		final Class<? extends Dialect> overrideDialectJavaType = overrideDialect.toJavaClass();
+		if ( !overrideDialectJavaType.isAssignableFrom( dialect.getClass() ) ) {
+			return false;
+		}
+
+		final AnnotationUsage<DialectOverride.Version> beforeAnn = override.getNestedUsage( "before" );
+		final AnnotationUsage<DialectOverride.Version> sameOrAfterAnn = override.getNestedUsage( "sameOrAfter" );
+		final DatabaseVersion version = dialect.getVersion();
+
+		if ( version.isBefore( beforeAnn.getInteger( "major" ), beforeAnn.getInteger( "minor" ) )
+				&& version.isSameOrAfter( sameOrAfterAnn.getInteger( "major" ), sameOrAfterAnn.getInteger( "minor" ) ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public static FetchMode getFetchMode(FetchType fetch) {

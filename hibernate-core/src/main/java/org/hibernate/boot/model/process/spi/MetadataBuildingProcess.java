@@ -437,10 +437,9 @@ public class MetadataBuildingProcess {
 		final AnnotationDescriptorRegistry descriptorRegistry = sourceModelBuildingContext.getAnnotationDescriptorRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
-				classDetailsRegistry,
-				descriptorRegistry,
 				metadataCollector.getGlobalRegistrations(),
-				jandexIndex
+				jandexIndex,
+				sourceModelBuildingContext
 		);
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml( xmlPreProcessingResult, modelCategorizationCollector, sourceModelBuildingContext );

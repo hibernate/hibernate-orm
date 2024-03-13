@@ -172,6 +172,9 @@ public class PropertyContainer {
 		return results;
 	}
 
+	/**
+	 * Collects members "backing" an attribute based on any local `@Access` annotation
+	 */
 	private static void collectPersistentAttributesUsingLocalAccessType(
 			ClassDetails classDetails,
 			Map<String, MemberDetails> persistentAttributeMap,
@@ -233,6 +236,9 @@ public class PropertyContainer {
 		}
 	}
 
+	/**
+	 * Collects members "backing" an attribute based on the Class's "default" access-type
+	 */
 	private static void collectPersistentAttributesUsingClassLevelAccessType(
 			ClassDetails classDetails,
 			AccessType classLevelAccessType,
@@ -256,11 +262,11 @@ public class PropertyContainer {
 		else {
 			for ( int i = 0; i < getters.size(); i++ ) {
 				final MethodDetails getterDetails = getters.get( i );
-				final String name = getterDetails.getName();
+				final String name = getterDetails.resolveAttributeName();
 
 				// HHH-10242 detect registration of the same property getter twice - eg boolean isId() + UUID getId()
 				final MethodDetails previous = persistentAttributesFromGetters.get( name );
-				if ( previous != null ) {
+				if ( previous != null && getterDetails != previous ) {
 					throw new org.hibernate.boot.MappingException(
 							LOG.ambiguousPropertyMethods(
 									classDetails.getName(),
@@ -275,7 +281,7 @@ public class PropertyContainer {
 					continue;
 				}
 
-				persistentAttributeMap.put( getterDetails.getName(), getterDetails );
+				persistentAttributeMap.put( name, getterDetails );
 				persistentAttributesFromGetters.put( name, getterDetails );
 			}
 
@@ -291,7 +297,6 @@ public class PropertyContainer {
 
 				persistentAttributeMap.put( name, componentDetails );
 				persistentAttributesFromComponents.put( name, componentDetails );
-
 			}
 		}
 	}

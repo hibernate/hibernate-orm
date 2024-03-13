@@ -155,6 +155,7 @@ import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -760,16 +761,18 @@ public class EntityBinder {
 			createTable( inheritanceState, superEntity, schema, table, catalog, uniqueConstraints, collector );
 		}
 		else {
+			// must be a SINGLE_TABLE mapping for a subclass
 			if ( hasTableAnnotation ) {
-				throw new AnnotationException( "Entity '" + annotatedClass.getName()
-						+ "' is a subclass in a 'SINGLE_TABLE' hierarchy and may not be annotated '@Table'"
-						+ " (the root class declares the table mapping for the hierarchy)");
+				final Table superTable = persistentClass.getRootClass().getTable();
+				if ( !logicalTableName( table, schema, catalog )
+						.equals( superTable.getQualifiedTableName() ) ) {
+					throw new AnnotationException( "Entity '" + annotatedClass.getName()
+							+ "' is a subclass in a 'SINGLE_TABLE' hierarchy and may not be annotated '@Table'"
+							+ " (the root class declares the table mapping for the hierarchy)");
+				}
 			}
-
-			if ( inheritanceState.getType() == SINGLE_TABLE ) {
-				// we at least need to properly set up the EntityTableXref
-				bindTableForDiscriminatedSubclass( collector.getEntityTableXref( superEntity.getEntityName() ) );
-			}
+			// we at least need to properly set up the EntityTableXref
+			bindTableForDiscriminatedSubclass( collector.getEntityTableXref( superEntity.getEntityName() ) );
 		}
 	}
 
@@ -2174,15 +2177,7 @@ public class EntityBinder {
 			String catalog,
 			Object joinColumns,
 			UniqueConstraint[] uniqueConstraints) {
-		final QualifiedTableName logicalName = new QualifiedTableName(
-				Identifier.toIdentifier( catalog ),
-				Identifier.toIdentifier( schema ),
-				context.getMetadataCollector()
-						.getDatabase()
-						.getJdbcEnvironment()
-						.getIdentifierHelper()
-						.toIdentifier(name)
-		);
+		final QualifiedTableName logicalName = logicalTableName( name, schema, catalog );
 		return createJoin(
 				propertyHolder,
 				noDelayInPkColumnCreation,
@@ -2197,6 +2192,18 @@ public class EntityBinder {
 						uniqueConstraints,
 						context
 				)
+		);
+	}
+
+	private QualifiedTableName logicalTableName(String name, String schema, String catalog) {
+		return new QualifiedTableName(
+				toIdentifier( catalog ),
+				toIdentifier( schema ),
+				context.getMetadataCollector()
+						.getDatabase()
+						.getJdbcEnvironment()
+						.getIdentifierHelper()
+						.toIdentifier( name )
 		);
 	}
 

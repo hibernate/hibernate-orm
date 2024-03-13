@@ -10,6 +10,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ResultCheckStyle;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.jdbc.Expectation;
 
 /**
  * For persistence operations (INSERT, UPDATE, DELETE) what style of
@@ -21,7 +22,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *           new {@code org.hibernate.ResultCheck} enum.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use an {@link org.hibernate.jdbc.Expectation} class
  */
+@Deprecated(since = "6.5", forRemoval = true)
 public enum ExecuteUpdateResultCheckStyle {
 	/**
 	 * Do not perform checking.  Either user simply does not want checking, or is
@@ -84,5 +88,27 @@ public enum ExecuteUpdateResultCheckStyle {
 
 	public static ExecuteUpdateResultCheckStyle determineDefault(@Nullable String customSql, boolean callable) {
 		return customSql != null && callable ? PARAM : COUNT;
+	}
+
+	public static @Nullable Class<? extends Expectation> expectationClass(@Nullable ExecuteUpdateResultCheckStyle style) {
+		if ( style == null ) {
+			return null;
+		}
+		else {
+			return style.expectationClass();
+		}
+	}
+
+	public Class<? extends Expectation> expectationClass() {
+		switch (this) {
+			case NONE:
+				return Expectation.None.class;
+			case COUNT:
+				return Expectation.RowCount.class;
+			case PARAM:
+				return Expectation.OutParameter.class;
+			default:
+				throw new AssertionFailure( "Unrecognized ExecuteUpdateResultCheckStyle");
+		}
 	}
 }

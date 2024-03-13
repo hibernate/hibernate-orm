@@ -82,11 +82,11 @@ public class InheritanceState {
 	}
 
 	public boolean hasTable() {
-		return !hasParents() || !SINGLE_TABLE.equals( getType() );
+		return !hasParents() || SINGLE_TABLE != getType();
 	}
 
 	public boolean hasDenormalizedTable() {
-		return hasParents() && TABLE_PER_CLASS.equals( getType() );
+		return hasParents() && TABLE_PER_CLASS == getType();
 	}
 
 	public static InheritanceState getInheritanceStateOfSuperEntity(XClass clazz, Map<XClass, InheritanceState> states) {

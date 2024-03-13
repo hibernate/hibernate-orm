@@ -203,6 +203,14 @@ public interface HibernateAnnotations {
 	AnnotationDescriptor<DialectOverride.FilterDefs> DIALECT_OVERRIDE_FILTER_DEFS = createOrmDescriptor( DialectOverride.FilterDefs.class, DIALECT_OVERRIDE_FILTER_DEF_OVERRIDES );
 	AnnotationDescriptor<DialectOverride.Version> DIALECT_OVERRIDE_VERSION = createOrmDescriptor( DialectOverride.Version.class );
 
+	AnnotationDescriptor<DialectOverride.SQLInserts> DIALECT_OVERRIDE_SQL_INSERTS = createOrmDescriptor( DialectOverride.SQLInserts.class );
+	AnnotationDescriptor<DialectOverride.SQLInsert> DIALECT_OVERRIDE_SQL_INSERT = createOrmDescriptor( DialectOverride.SQLInsert.class, DIALECT_OVERRIDE_SQL_INSERTS );
+	AnnotationDescriptor<DialectOverride.SQLUpdates> DIALECT_OVERRIDE_SQL_UPDATES = createOrmDescriptor( DialectOverride.SQLUpdates.class );
+	AnnotationDescriptor<DialectOverride.SQLUpdate> DIALECT_OVERRIDE_SQL_UPDATE = createOrmDescriptor( DialectOverride.SQLUpdate.class, DIALECT_OVERRIDE_SQL_UPDATES );
+	AnnotationDescriptor<DialectOverride.SQLDeletes> DIALECT_OVERRIDE_SQL_DELETES = createOrmDescriptor( DialectOverride.SQLDeletes.class );
+	AnnotationDescriptor<DialectOverride.SQLDelete> DIALECT_OVERRIDE_SQL_DELETE = createOrmDescriptor( DialectOverride.SQLDelete.class, DIALECT_OVERRIDE_SQL_DELETES );
+	AnnotationDescriptor<DialectOverride.SQLDeleteAlls> DIALECT_OVERRIDE_SQL_DELETE_ALLS = createOrmDescriptor( DialectOverride.SQLDeleteAlls.class );
+	AnnotationDescriptor<DialectOverride.SQLDeleteAll> DIALECT_OVERRIDE_SQL_DELETE_ALL = createOrmDescriptor( DialectOverride.SQLDeleteAll.class, DIALECT_OVERRIDE_SQL_DELETE_ALLS );
 
 	static void forEachAnnotation(Consumer<AnnotationDescriptor<? extends Annotation>> consumer) {
 		OrmAnnotationHelper.forEachOrmAnnotation( HibernateAnnotations.class, consumer );

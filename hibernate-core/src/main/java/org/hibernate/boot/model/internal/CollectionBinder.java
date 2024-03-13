@@ -65,6 +65,7 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.QueryCacheLayout;
+import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -95,6 +96,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
@@ -1321,6 +1324,7 @@ public abstract class CollectionBinder {
 		propertyHolder.addProperty( prop, declaringClass );
 	}
 
+	@SuppressWarnings("deprecation")
 	private void bindLoader() {
 		//SQL overriding
 
@@ -1331,7 +1335,9 @@ public abstract class CollectionBinder {
 					sqlInsert.callable(),
 					fromResultCheckStyle( sqlInsert.check() )
 			);
-
+			if ( sqlInsert.verify() != Expectation.class ) {
+				collection.setInsertExpectation( sqlInsert.verify() );
+			}
 		}
 
 		final SQLUpdate sqlUpdate = property.getAnnotation( SQLUpdate.class );
@@ -1341,6 +1347,9 @@ public abstract class CollectionBinder {
 					sqlUpdate.callable(),
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
+			if ( sqlUpdate.verify() != Expectation.class ) {
+				collection.setUpdateExpectation( sqlUpdate.verify() );
+			}
 		}
 
 		final SQLDelete sqlDelete = property.getAnnotation( SQLDelete.class );
@@ -1350,6 +1359,9 @@ public abstract class CollectionBinder {
 					sqlDelete.callable(),
 					fromResultCheckStyle( sqlDelete.check() )
 			);
+			if ( sqlDelete.verify() != Expectation.class ) {
+				collection.setDeleteExpectation( sqlDelete.verify() );
+			}
 		}
 
 		final SQLDeleteAll sqlDeleteAll = property.getAnnotation( SQLDeleteAll.class );
@@ -1359,6 +1371,9 @@ public abstract class CollectionBinder {
 					sqlDeleteAll.callable(),
 					fromResultCheckStyle( sqlDeleteAll.check() )
 			);
+			if ( sqlDeleteAll.verify() != Expectation.class ) {
+				collection.setDeleteAllExpectation( sqlDeleteAll.verify() );
+			}
 		}
 
 		final SQLSelect sqlSelect = property.getAnnotation( SQLSelect.class );

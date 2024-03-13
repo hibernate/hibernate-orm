@@ -305,7 +305,8 @@ For this we can use link:{doc-javadoc-url}org/hibernate/annotations/SQLInsert.ht
 [source,java]
 ----
 @Entity
-@SQLInsert(sql = "insert into person (name, id, valid) values (?, ?, true)", check = COUNT)
+@SQLInsert(sql = "insert into person (name, id, valid) values (?, ?, true)",
+           verify = Expectation.RowCount.class)
 @SQLUpdate(sql = "update person set name = ? where id = ?")
 @SQLDelete(sql = "update person set valid = false where id = ?")
 @SQLSelect(sql = "select id, name from person where id = ? and valid = true")
@@ -337,6 +338,15 @@ However, the `@Column` annotation does lend some flexibility here:
 
 - if a column should not be written as part of the custom `insert` statement, and has no corresponding JDBC parameter in the custom SQL, map it `@Column(insertable=false)`, or
 - if a column should not be written as part of the custom `update` statement, and has no corresponding JDBC parameter in the custom SQL, map it `@Column(updatable=false)`.
+
+The `verify` member of these annotations specifies a class implementing `Expectation`, allowing customized logic for checking the success of an operation executed via JDBC.
+There are three built-in implementations:
+
+- `Expectation.None`, which performs no checks,
+- `Expectation.RowCount`, which is what Hibernate usually uses when executing its own generated SQL,
+- and `Expectation.OutParameter`, which is useful for checking an output parameter of a stored procedure.
+
+You can write your own implementation of `Expectation` if none of these options is suitable.
 
 [TIP]
 ====

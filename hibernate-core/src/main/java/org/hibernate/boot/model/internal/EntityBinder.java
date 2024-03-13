@@ -1581,13 +1581,21 @@ public class EntityBinder {
 		final AnnotationUsage<Proxy> proxy = annotatedClass.getAnnotationUsage( Proxy.class );
 		if ( proxy != null ) {
 			lazy = proxy.getBoolean( "lazy" );
-			proxyClass = lazy ? proxy.getClassDetails( "proxyClass" ) : null;
+			proxyClass = lazy ? resolveProxyClass( proxy, annotatedClass ) : null;
 		}
 		else {
 			//needed to allow association lazy loading.
 			lazy = true;
 			proxyClass = annotatedClass;
 		}
+	}
+
+	private static ClassDetails resolveProxyClass(AnnotationUsage<Proxy> proxy, ClassDetails annotatedClass) {
+		final ClassDetails proxyClass = proxy.getClassDetails( "proxyClass" );
+		if ( proxyClass == ClassDetails.VOID_CLASS_DETAILS ) {
+			return annotatedClass;
+		}
+		return proxyClass;
 	}
 
 	public void bindWhere() {

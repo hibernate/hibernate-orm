@@ -70,6 +70,7 @@ import jakarta.persistence.TableGenerators;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
 import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
+import static org.hibernate.boot.model.internal.GeneratorBinder.buildIdGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -99,7 +100,7 @@ public final class AnnotationBinder {
 			List<SequenceGenerator> generators = ( List<SequenceGenerator> ) defaults.get( SequenceGenerator.class );
 			if ( generators != null ) {
 				for ( SequenceGenerator sequenceGenerator : generators ) {
-					final IdentifierGeneratorDefinition idGen = GeneratorBinder.buildIdGenerator( sequenceGenerator, context );
+					final IdentifierGeneratorDefinition idGen = buildIdGenerator( sequenceGenerator, context );
 					if ( idGen != null ) {
 						context.getMetadataCollector().addDefaultIdentifierGenerator( idGen );
 					}
@@ -111,7 +112,7 @@ public final class AnnotationBinder {
 			List<TableGenerator> generators = ( List<TableGenerator> ) defaults.get( TableGenerator.class );
 			if ( generators != null ) {
 				for ( TableGenerator tableGenerator : generators ) {
-					final IdentifierGeneratorDefinition idGen = GeneratorBinder.buildIdGenerator( tableGenerator, context );
+					final IdentifierGeneratorDefinition idGen = buildIdGenerator( tableGenerator, context );
 					if ( idGen != null ) {
 						context.getMetadataCollector().addDefaultIdentifierGenerator( idGen );
 					}
@@ -125,7 +126,7 @@ public final class AnnotationBinder {
 			if ( generators != null ) {
 				generators.forEach( tableGenerators -> {
 					for ( TableGenerator tableGenerator : tableGenerators.value() ) {
-						final IdentifierGeneratorDefinition idGen = GeneratorBinder.buildIdGenerator( tableGenerator, context );
+						final IdentifierGeneratorDefinition idGen = buildIdGenerator( tableGenerator, context );
 						if ( idGen != null ) {
 							context.getMetadataCollector().addDefaultIdentifierGenerator( idGen );
 						}
@@ -140,7 +141,7 @@ public final class AnnotationBinder {
 			if ( generators != null ) {
 				generators.forEach( sequenceGenerators -> {
 					for ( SequenceGenerator sequenceGenerator : sequenceGenerators.value() ) {
-						final IdentifierGeneratorDefinition idGen = GeneratorBinder.buildIdGenerator( sequenceGenerator, context );
+						final IdentifierGeneratorDefinition idGen = buildIdGenerator( sequenceGenerator, context );
 						if ( idGen != null ) {
 							context.getMetadataCollector().addDefaultIdentifierGenerator( idGen );
 						}
@@ -229,7 +230,7 @@ public final class AnnotationBinder {
 	private static void handleIdGenerators(XPackage annotatedPackage, MetadataBuildingContext context) {
 		if ( annotatedPackage.isAnnotationPresent( SequenceGenerator.class ) ) {
 			final SequenceGenerator sequenceGenerator = annotatedPackage.getAnnotation( SequenceGenerator.class );
-			IdentifierGeneratorDefinition idGen = GeneratorBinder.buildIdGenerator( sequenceGenerator, context );
+			IdentifierGeneratorDefinition idGen = buildIdGenerator( sequenceGenerator, context );
 			context.getMetadataCollector().addIdentifierGenerator( idGen );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Add sequence generator with name: {0}", idGen.getName() );
@@ -238,19 +239,19 @@ public final class AnnotationBinder {
 		if ( annotatedPackage.isAnnotationPresent( SequenceGenerators.class ) ) {
 			final SequenceGenerators sequenceGenerators = annotatedPackage.getAnnotation( SequenceGenerators.class );
 			for ( SequenceGenerator tableGenerator : sequenceGenerators.value() ) {
-				context.getMetadataCollector().addIdentifierGenerator( GeneratorBinder.buildIdGenerator( tableGenerator, context ) );
+				context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( tableGenerator, context ) );
 			}
 		}
 
 		if ( annotatedPackage.isAnnotationPresent( TableGenerator.class ) ) {
 			final TableGenerator tableGenerator = annotatedPackage.getAnnotation( TableGenerator.class );
-			IdentifierGeneratorDefinition idGen = GeneratorBinder.buildIdGenerator( tableGenerator, context );
+			IdentifierGeneratorDefinition idGen = buildIdGenerator( tableGenerator, context );
 			context.getMetadataCollector().addIdentifierGenerator( idGen );
 		}
 		if ( annotatedPackage.isAnnotationPresent( TableGenerators.class ) ) {
 			final TableGenerators tableGenerators = annotatedPackage.getAnnotation( TableGenerators.class );
 			for ( TableGenerator tableGenerator : tableGenerators.value() ) {
-				context.getMetadataCollector().addIdentifierGenerator( GeneratorBinder.buildIdGenerator( tableGenerator, context ) );
+				context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( tableGenerator, context ) );
 			}
 		}
 	}
@@ -269,7 +270,7 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindGenericGenerator(GenericGenerator def, MetadataBuildingContext context) {
-		context.getMetadataCollector().addIdentifierGenerator( GeneratorBinder.buildIdGenerator( def, context ) );
+		context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( def, context ) );
 	}
 
 	private static void bindNamedJpaQueries(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
@@ -420,7 +421,8 @@ public final class AnnotationBinder {
 						+ "' may not specify a '@Table'" );
 			}
 			if ( annotatedClass.isAnnotationPresent( Inheritance.class ) ) {
-				LOG.unsupportedMappedSuperclassWithEntityInheritance( annotatedClass.getName() );
+				throw new AnnotationException( "Mapped superclass '" + annotatedClass.getName()
+						+ "' may not specify an '@Inheritance' mapping strategy" );
 			}
 		}
 	}
@@ -716,8 +718,10 @@ public final class AnnotationBinder {
 			final boolean nonDefault = InheritanceType.SINGLE_TABLE != state.getType();
 			final boolean mixingStrategy = state.getType() != superclassState.getType();
 			if ( nonDefault && mixingStrategy ) {
-				//TODO: why on earth is this not an error!
-				LOG.invalidSubStrategy( clazz.getName() );
+				throw new AnnotationException( "Entity '" + clazz.getName()
+						+ "' may not override the inheritance mapping strategy '" + superclassState.getType()
+						+ "' of its hierarchy"
+						+ "' (each entity hierarchy has a single inheritance mapping strategy)" );
 			}
 		}
 	}

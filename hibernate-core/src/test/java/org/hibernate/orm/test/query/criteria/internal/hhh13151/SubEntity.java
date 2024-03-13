@@ -13,7 +13,6 @@ import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
 public class SubEntity extends SuperEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)

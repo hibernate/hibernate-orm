@@ -46,13 +46,10 @@ import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
-import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLInserts;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
 import org.hibernate.annotations.SelectBeforeUpdate;
@@ -147,7 +144,9 @@ import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInherit
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.BinderHelper.getOverrideAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
+import static org.hibernate.boot.model.internal.BinderHelper.overrideMatchesDialect;
 import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
@@ -167,6 +166,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 
@@ -1405,9 +1405,9 @@ public class EntityBinder {
 	private void bindCustomSql() {
 		final String primaryTableName = persistentClass.getTable().getName();
 
-		AnnotationUsage<SQLInsert> sqlInsert = findMatchingSqlAnnotation( primaryTableName, SQLInsert.class, SQLInserts.class );
+		AnnotationUsage<SQLInsert> sqlInsert = resolveCustomSqlAnnotation( annotatedClass, SQLInsert.class, primaryTableName );
 		if ( sqlInsert == null ) {
-			sqlInsert = findMatchingSqlAnnotation( "", SQLInsert.class, SQLInserts.class );
+			sqlInsert = resolveCustomSqlAnnotation( annotatedClass, SQLInsert.class, "" );
 		}
 		if ( sqlInsert != null ) {
 			persistentClass.setCustomSQLInsert(
@@ -1421,9 +1421,9 @@ public class EntityBinder {
 			}
 		}
 
-		AnnotationUsage<SQLUpdate> sqlUpdate = findMatchingSqlAnnotation( primaryTableName, SQLUpdate.class, SQLUpdates.class );
+		AnnotationUsage<SQLUpdate> sqlUpdate = resolveCustomSqlAnnotation( annotatedClass, SQLUpdate.class, primaryTableName );
 		if ( sqlUpdate == null ) {
-			sqlUpdate = findMatchingSqlAnnotation( "", SQLUpdate.class, SQLUpdates.class );
+			sqlUpdate = resolveCustomSqlAnnotation( annotatedClass, SQLUpdate.class, "" );
 		}
 		if ( sqlUpdate != null ) {
 			persistentClass.setCustomSQLUpdate(
@@ -1437,9 +1437,9 @@ public class EntityBinder {
 			}
 		}
 
-		AnnotationUsage<SQLDelete> sqlDelete = findMatchingSqlAnnotation( primaryTableName, SQLDelete.class, SQLDeletes.class );
+		AnnotationUsage<SQLDelete> sqlDelete = resolveCustomSqlAnnotation( annotatedClass, SQLDelete.class, primaryTableName );
 		if ( sqlDelete == null ) {
-			sqlDelete = findMatchingSqlAnnotation( "", SQLDelete.class, SQLDeletes.class );
+			sqlDelete = resolveCustomSqlAnnotation( annotatedClass, SQLDelete.class, "" );
 		}
 		if ( sqlDelete != null ) {
 			persistentClass.setCustomSQLDelete(
@@ -1453,7 +1453,7 @@ public class EntityBinder {
 			}
 		}
 
-		final AnnotationUsage<SQLDeleteAll> sqlDeleteAll = annotatedClass.getAnnotationUsage( SQLDeleteAll.class );
+		final AnnotationUsage<SQLDeleteAll> sqlDeleteAll = resolveCustomSqlAnnotation( annotatedClass, SQLDeleteAll.class, "" );
 		if ( sqlDeleteAll != null ) {
 			throw new AnnotationException("@SQLDeleteAll does not apply to entities: "
 					+ persistentClass.getEntityName());
@@ -1486,6 +1486,33 @@ public class EntityBinder {
 		if ( subselect != null ) {
 			this.subselect = subselect.getString( "value" );
 		}
+	}
+
+	private <A extends Annotation> AnnotationUsage<A> resolveCustomSqlAnnotation(
+			ClassDetails annotatedClass,
+			Class<A> annotationType,
+			String tableName) {
+		final Class<Annotation> overrideAnnotation = getOverrideAnnotation( annotationType );
+		final List<AnnotationUsage<Annotation>> dialectOverrides = annotatedClass.getRepeatedAnnotationUsages( overrideAnnotation );
+		if ( isNotEmpty( dialectOverrides ) ) {
+			for ( AnnotationUsage<Annotation> dialectOverride : dialectOverrides ) {
+				if ( !overrideMatchesDialect( dialectOverride, context.getMetadataCollector().getDatabase().getDialect() ) ) {
+					continue;
+				}
+
+				final AnnotationUsage<A> override = dialectOverride.getNestedUsage( "override" );
+				if ( isEmpty( tableName )
+						&& isEmpty( override.getString( "table" ) ) ) {
+					return override;
+				}
+				else if ( isNotEmpty( tableName )
+						&& tableName.equals( override.getString( "table" ) ) ) {
+					return override;
+				}
+			}
+		}
+
+		return annotatedClass.getNamedAnnotationUsage( annotationType, tableName, "table" );
 	}
 
 	private void bindFilters() {
@@ -2244,8 +2271,9 @@ public class EntityBinder {
 		final String tableName = join.getTable().getQuotedName();
 		final AnnotationUsage<org.hibernate.annotations.Table> matchingTable =
 				findMatchingComplementaryTableAnnotation( tableName );
+
 		final AnnotationUsage<SQLInsert> sqlInsert =
-				findMatchingSqlAnnotation( tableName, SQLInsert.class, SQLInserts.class );
+				resolveCustomSqlAnnotation( annotatedClass, SQLInsert.class, tableName );
 		if ( sqlInsert != null ) {
 			join.setCustomSQLInsert(
 					sqlInsert.getString( "sql" ).trim(),
@@ -2270,7 +2298,7 @@ public class EntityBinder {
 		}
 
 		final AnnotationUsage<SQLUpdate> sqlUpdate =
-				findMatchingSqlAnnotation( tableName, SQLUpdate.class, SQLUpdates.class );
+				resolveCustomSqlAnnotation( annotatedClass, SQLUpdate.class, tableName );
 		if ( sqlUpdate != null ) {
 			join.setCustomSQLUpdate(
 					sqlUpdate.getString( "sql" ).trim(),
@@ -2295,7 +2323,7 @@ public class EntityBinder {
 		}
 
 		final AnnotationUsage<SQLDelete> sqlDelete =
-				findMatchingSqlAnnotation( tableName, SQLDelete.class, SQLDeletes.class );
+				resolveCustomSqlAnnotation( annotatedClass, SQLDelete.class, tableName );
 		if ( sqlDelete != null ) {
 			join.setCustomSQLDelete(
 					sqlDelete.getString( "sql" ).trim(),

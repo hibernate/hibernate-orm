@@ -8,8 +8,6 @@ package org.hibernate.jdbc;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -18,12 +16,14 @@ import org.hibernate.Internal;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
+import static java.sql.Statement.EXECUTE_FAILED;
+import static java.sql.Statement.SUCCESS_NO_INFO;
+
 /**
- * Holds various often used {@link Expectation} definitions.
+ * Useful operations for dealing with {@link Expectation}s.
  *
  * @author Steve Ebersole
  */
@@ -32,76 +32,28 @@ public class Expectations {
 
 	static final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper( false );
 
-	// Base Expectation impls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 	/**
-	 * @deprecated Use {@link RowCount}
+	 * Create an instance of the given class implementing {@link Expectation}.
+	 * @param expectation a class which implements {@code Expectation}
+	 * @param callable true if the {@code Expectation} will be called with {@link CallableStatement}s.
+	 * @return a new instance of the given class
+	 *
+	 * @since 6.5
 	 */
-	@Deprecated(since = "6.5")
-	public static class BasicExpectation implements Expectation {
-		private final int expected;
-
-		protected BasicExpectation(int expectedRowCount) {
-			expected = expectedRowCount;
-			if ( expectedRowCount < 0 ) {
-				throw new IllegalArgumentException( "Expected row count must be greater than zero" );
-			}
+	@Internal
+	public static Expectation createExpectation(Class<? extends Expectation> expectation, boolean callable) {
+		if ( expectation == null ) {
+			expectation = callable ? Expectation.OutParameter.class : Expectation.RowCount.class;
 		}
-
-		@Override
-		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String sql) {
-			final int result = determineRowCount( rowCount, statement );
-			if ( batchPosition < 0 ) {
-				checkNonBatched( expected, result, sql );
-			}
-			else {
-				checkBatched( expected, result, batchPosition, sql );
-			}
+		final Expectation instance;
+		try {
+			instance = expectation.newInstance();
 		}
-
-		protected int determineRowCount(int reportedRowCount, PreparedStatement statement) {
-			return reportedRowCount;
+		catch ( Exception e ) {
+			throw new InstantiationException( "Could not instantiate Expectation", expectation, e );
 		}
-	}
-
-	/**
-	 * @deprecated Use {@link OutParameter}
-	 */
-	@Deprecated(since = "6.5")
-	public static class BasicParamExpectation extends BasicExpectation {
-		private final int parameterPosition;
-
-		protected BasicParamExpectation(int expectedRowCount, int parameterPosition) {
-			super( expectedRowCount );
-			this.parameterPosition = parameterPosition;
-		}
-
-		@Override
-		public int getNumberOfParametersUsed() {
-			return 1;
-		}
-
-		@Override
-		public int prepare(PreparedStatement statement) throws SQLException, HibernateException {
-			toCallableStatement( statement ).registerOutParameter( parameterPosition, Types.NUMERIC );
-			return 1;
-		}
-
-		@Override
-		public boolean canBeBatched() {
-			return false;
-		}
-
-		@Override
-		protected int determineRowCount(int reportedRowCount, PreparedStatement statement) {
-			try {
-				return toCallableStatement( statement ).getInt( parameterPosition );
-			}
-			catch ( SQLException sqle ) {
-				sqlExceptionHelper.logExceptions( sqle, "could not extract row counts from CallableStatement" );
-				throw new GenericJDBCException( "could not extract row counts from CallableStatement", sqle );
-			}
-		}
+		instance.validate(callable);
+		return instance;
 	}
 
 	static CallableStatement toCallableStatement(PreparedStatement statement) {
@@ -114,39 +66,90 @@ public class Expectations {
 		}
 	}
 
-	static void checkBatched(int expected, int rowCount, int batchPosition, String sql) {
-		if ( rowCount == -2 ) {
-			LOG.debugf( "Success of batch update unknown: %s", batchPosition );
-		}
-		else if ( rowCount == -3 ) {
-			throw new BatchFailedException( "Batch update failed: " + batchPosition );
-		}
-		else if ( expected > rowCount ) {
-			throw new StaleStateException(
-					"Batch update returned unexpected row count from update ["
-							+ batchPosition + "]; actual row count: " + rowCount
-							+ "; expected: " + 1 + "; statement executed: "
-							+ sql
-			);
-		}
-		else if ( expected < rowCount ) {
-			String msg = "Batch update returned unexpected row count from update [" +
-					batchPosition + "]; actual row count: " + rowCount +
-					"; expected: " + 1;
-			throw new BatchedTooManyRowsAffectedException( msg, 1, rowCount, batchPosition );
+	static void checkBatched(int expectedRowCount, int rowCount, int batchPosition, String sql) {
+		switch (rowCount) {
+			case EXECUTE_FAILED:
+				throw new BatchFailedException( "Batch update failed: " + batchPosition );
+			case SUCCESS_NO_INFO:
+				LOG.debugf( "Success of batch update unknown: %s", batchPosition );
+				break;
+			default:
+				if ( expectedRowCount > rowCount ) {
+					throw new StaleStateException(
+							"Batch update returned unexpected row count from update ["
+									+ batchPosition + "]; actual row count: " + rowCount
+									+ "; expected: " + expectedRowCount + "; statement executed: "
+									+ sql
+					);
+				}
+				else if ( expectedRowCount < rowCount ) {
+					throw new BatchedTooManyRowsAffectedException(
+							"Batch update returned unexpected row count from update [" +
+							batchPosition + "]; actual row count: " + rowCount +
+							"; expected: " + expectedRowCount,
+							expectedRowCount, rowCount, batchPosition );
+				}
 		}
 	}
 
-	static void checkNonBatched(int expected, int rowCount, String sql) {
-		if ( expected > rowCount ) {
+	static void checkNonBatched(int expectedRowCount, int rowCount, String sql) {
+		if ( expectedRowCount > rowCount ) {
 			throw new StaleStateException(
-					"Unexpected row count: " + rowCount + "; expected: " + 1
+					"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount
 							+ "; statement executed: " + sql
 			);
 		}
-		if ( expected < rowCount ) {
-			String msg = "Unexpected row count: " + rowCount + "; expected: " + 1;
-			throw new TooManyRowsAffectedException( msg, 1, rowCount );
+		if ( expectedRowCount < rowCount ) {
+			throw new TooManyRowsAffectedException(
+					"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount,
+					1, rowCount
+			);
+		}
+	}
+
+	// Base Expectation impls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * @deprecated Use {@link RowCount}, creating a custom subclass if necessary
+	 */
+	@Deprecated(since = "6.5")
+	public static class BasicExpectation extends Expectation.RowCount {
+		private final int expectedRowCount;
+
+		protected BasicExpectation(int expectedRowCount) {
+			this.expectedRowCount = expectedRowCount;
+			if ( expectedRowCount < 0 ) {
+				throw new IllegalArgumentException( "Expected row count must be greater than zero" );
+			}
+		}
+
+		@Override
+		protected int expectedRowCount() {
+			return expectedRowCount;
+		}
+	}
+
+	/**
+	 * @deprecated Use {@link OutParameter}, creating a custom subclass if necessary
+	 */
+	@Deprecated(since = "6.5")
+	public static class BasicParamExpectation extends Expectation.OutParameter {
+		private final int parameterPosition;
+		private final int expectedRowCount;
+
+		protected BasicParamExpectation(int expectedRowCount, int parameterPosition) {
+			this.expectedRowCount = expectedRowCount;
+			this.parameterPosition = parameterPosition;
+		}
+
+		@Override
+		protected int expectedRowCount() {
+			return expectedRowCount;
+		}
+
+		@Override
+		protected int parameterIndex() {
+			return parameterPosition;
 		}
 	}
 
@@ -169,19 +172,6 @@ public class Expectations {
 	 */
 	@Deprecated(since = "6.5")
 	public static final Expectation PARAM = new Expectation.OutParameter();
-
-	@Internal
-	public static Expectation createExpectation(Class<? extends Expectation> expectation, boolean callable) {
-		if ( expectation == null ) {
-			expectation = callable ? Expectation.OutParameter.class : Expectation.RowCount.class;
-		}
-		try {
-			return expectation.newInstance();
-		}
-		catch ( Exception e ) {
-			throw new InstantiationException( "Could not instantiate Expectation", expectation, e );
-		}
-	}
 
 	@Deprecated(since = "6.5", forRemoval = true)
 	public static Expectation appropriateExpectation(ExecuteUpdateResultCheckStyle style) {

@@ -2258,12 +2258,12 @@ public abstract class CollectionBinder {
 		// 'holder' is the CollectionPropertyHolder.
 		// 'property' is the collection XProperty
 
-		final ClassDetails elementClass = isPrimitive( elementType.getName() )
+		final boolean isPrimitive = isPrimitive( elementType.getName() );
+		final ClassDetails elementClass = isPrimitive
 				? null
 				: elementType.determineRawClass();
-		final AnnotatedClassType classType = annotatedElementType( isEmbedded, property, elementClass );
-		final boolean primitive = classType == NONE;
-		if ( !primitive ) {
+		final AnnotatedClassType classType = annotatedElementType( isEmbedded, isPrimitive, property, elementClass );
+		if ( !isPrimitive ) {
 			propertyHolder.startingProperty( property );
 		}
 
@@ -2387,9 +2387,10 @@ public abstract class CollectionBinder {
 
 	private AnnotatedClassType annotatedElementType(
 			boolean isEmbedded,
+			boolean isPrimitive,
 			MemberDetails property,
 			ClassDetails elementClass) {
-		if ( isPrimitive( elementClass.getName() ) ) {
+		if ( isPrimitive ) {
 			return NONE;
 		}
 		else {

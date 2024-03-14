@@ -45,6 +45,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * loses synchronization with the database after the update is executed unless
  * {@link Generated @Generated(event=UPDATE, writable=true)} is specified, again
  * forcing Hibernate to reread the state of the entity after each update.
+ * <p>
+ * If an entity has {@linkplain jakarta.persistence.SecondaryTable secondary
+ * tables}, it may have a {@code @SQLUpdate} annotation for each secondary table.
+ * The {@link #table} member must specify the name of the secondary table.
  *
  * @author Laszlo Benke
  */
@@ -80,10 +84,12 @@ public @interface SQLUpdate {
 	ResultCheckStyle check() default ResultCheckStyle.NONE;
 
 	/**
-	 * The name of the table in the case of an entity with {@link jakarta.persistence.SecondaryTable
-	 * secondary tables}, defaults to the primary table.
+	 * The name of the table affected by the update statement. Required when the
+	 * statement affects a {@linkplain jakarta.persistence.SecondaryTable secondary
+	 * table} of an entity. Not required for collections nor when the insert statement
+	 * affects the primary table of an entity.
 	 *
-	 * @return the name of the table
+	 * @return the name of the secondary table
 	 *
 	 * @since 6.2
 	 */

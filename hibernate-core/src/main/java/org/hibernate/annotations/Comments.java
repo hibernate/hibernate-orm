@@ -7,7 +7,6 @@
 package org.hibernate.annotations;
 
 import org.hibernate.Remove;
-import org.hibernate.binder.internal.CommentBinder;
 import org.hibernate.binder.internal.CommentsBinder;
 
 import java.lang.annotation.Retention;

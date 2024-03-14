@@ -36,7 +36,7 @@ import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoImpl;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
@@ -54,19 +54,26 @@ import org.jboss.logging.Logger;
  * @see SessionFactoryExtension
  */
 public class EntityManagerFactoryExtension
-		implements TestInstancePostProcessor, AfterAllCallback, TestExecutionExceptionHandler {
+		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
 
 	private static final Logger log = Logger.getLogger( EntityManagerFactoryExtension.class );
 	private static final String EMF_KEY = EntityManagerFactoryScope.class.getName();
 
-	private static ExtensionContext.Store locateExtensionStore(Object testInstance, ExtensionContext context) {
-		return JUnitHelper.locateExtensionStore( EntityManagerFactoryExtension.class, context, testInstance );
+	private static ExtensionContext.Store locateExtensionStore(Object testScope, ExtensionContext context) {
+		return JUnitHelper.locateExtensionStore( EntityManagerFactoryExtension.class, context, testScope );
 	}
 
 	public static EntityManagerFactoryScope findEntityManagerFactoryScope(
-			Object testInstance,
+			Object testScope,
+			Optional<Jpa> emfAnnWrapper,
 			ExtensionContext context) {
-		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
+
+		if ( emfAnnWrapper.isEmpty() ) {
+			// No annotation on the test class, should be on the test methods
+			return null;
+		}
+
+		final ExtensionContext.Store store = locateExtensionStore( testScope, context );
 		final EntityManagerFactoryScope existing = (EntityManagerFactoryScope) store.get( EMF_KEY );
 		if ( existing != null ) {
 			return existing;
@@ -75,12 +82,7 @@ public class EntityManagerFactoryExtension
 		if ( !context.getElement().isPresent() ) {
 			throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
 		}
-
-		final Optional<Jpa> emfAnnWrapper = AnnotationSupport.findAnnotation(
-				context.getElement().get(),
-				Jpa.class
-		);
-		final Jpa emfAnn = emfAnnWrapper.orElseThrow( () -> new RuntimeException( "Could not locate @EntityManagerFactory" ) );
+		final Jpa emfAnn = emfAnnWrapper.get();
 
 		final PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( emfAnn.persistenceUnitName() );
 		( (Map<Object, Object>) Environment.getProperties() ).forEach(
@@ -196,7 +198,7 @@ public class EntityManagerFactoryExtension
 		ServiceRegistryUtil.applySettings( integrationSettings );
 		final EntityManagerFactoryScopeImpl scope = new EntityManagerFactoryScopeImpl( pui, integrationSettings );
 
-		locateExtensionStore( testInstance, context ).put( EMF_KEY, scope );
+		store.put( EMF_KEY, scope );
 
 		return scope;
 	}
@@ -267,29 +269,31 @@ public class EntityManagerFactoryExtension
 	}
 
 	@Override
-	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
-		log.tracef( "#postProcessTestInstance(%s, %s)", testInstance, context.getDisplayName() );
+	public void beforeEach(ExtensionContext context) {
+		log.tracef( "#beforeEach(%s)", context.getDisplayName() );
+		final Optional<Jpa> emfAnnWrapper = AnnotationSupport.findAnnotation(
+				context.getRequiredTestMethod(),
+				Jpa.class
+		);
 
-		findEntityManagerFactoryScope( testInstance, context );
+		if ( emfAnnWrapper.isEmpty() ) {
+			// assume the annotation is defined on the class-level...
+			return;
+		}
+
+		findEntityManagerFactoryScope( context.getRequiredTestMethod(), emfAnnWrapper, context );
 	}
 
 	@Override
-	public void afterAll(ExtensionContext context) {
-		log.tracef( "#afterAll(%s)", context.getDisplayName() );
+	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
+		log.tracef( "#postProcessTestInstance(%s, %s)", testInstance, context.getDisplayName() );
 
-		final Object testInstance = context.getRequiredTestInstance();
+		final Optional<Jpa> emfAnnWrapper = AnnotationSupport.findAnnotation(
+				context.getRequiredTestClass(),
+				Jpa.class
+		);
 
-		if ( testInstance instanceof SessionFactoryScopeAware ) {
-			( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( null );
-		}
-
-		final EntityManagerFactoryScopeImpl removed = (EntityManagerFactoryScopeImpl) locateExtensionStore(
-				testInstance,
-				context
-		).remove( EMF_KEY );
-		if ( removed != null ) {
-			removed.close();
-		}
+		findEntityManagerFactoryScope( testInstance, emfAnnWrapper, context );
 	}
 
 	@Override

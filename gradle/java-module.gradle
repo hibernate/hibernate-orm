@@ -33,6 +33,7 @@ apply plugin: 'org.hibernate.orm.build.java-module'
 
 apply plugin: 'org.checkerframework'
 
+apply plugin: "jacoco"
 apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'

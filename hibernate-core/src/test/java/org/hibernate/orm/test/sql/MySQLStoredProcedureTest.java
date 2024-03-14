@@ -43,6 +43,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -92,6 +93,15 @@ public class MySQLStoredProcedureTest {
 									"END"
 					);
 					//end::sql-sp-no-out-mysql-example[]
+					//tag::sql-sp-inout-mysql-example[]
+					statement.executeUpdate(
+							"CREATE PROCEDURE sp_inout_phones(INOUT phoneId INT) " +
+									"BEGIN " +
+									"    SELECT MAX(id) INTO phoneId FROM Phone WHERE id > phoneId; " +
+									"    SELECT * FROM Phone LIMIT 2;  " +
+									"END  "
+					);
+					//end::sql-sp-inout-mysql-example[]
 					//tag::sql-function-mysql-example[]
 					statement.executeUpdate(
 							"CREATE FUNCTION fn_count_phones(personId integer)  " +
@@ -161,6 +171,16 @@ public class MySQLStoredProcedureTest {
 			session.doWork( connection -> {
 				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( "DROP FUNCTION IF EXISTS fn_count_phones" );
+				}
+				catch (SQLException ignore) {
+				}
+			} );
+		} );
+		scope.inTransaction( entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP PROCEDURE IF EXISTS sp_inout_phones" );
 				}
 				catch (SQLException ignore) {
 				}
@@ -273,6 +293,26 @@ public class MySQLStoredProcedureTest {
 			} );
 			//end::sql-call-function-mysql-example[]
 			assertEquals( Integer.valueOf( 2 ), phoneCount.get() );
+		} );
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testStoredProcedureInOutParameterAndResultList(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			//tag::sql-jpa-call-sp-inout-with-result-list-mysql-example[]
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_inout_phones", Phone.class);
+			query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.INOUT );
+			query.setParameter( 1, 1L );
+			query.execute();
+
+			Long maxId = (Long) query.getOutputParameterValue(1);
+			List supposedToBePhone = query.getResultList();
+			assertEquals(2, maxId);
+			//end::sql-jpa-call-sp-inout-with-result-list-mysql-example[]
+			// now let's see how the JDBC ResultSet is extracted
+			// this test should fail as of Hibernate 6.4.1, each item in the result set is an array: [Phone, Long]
+            assertInstanceOf(Phone.class, supposedToBePhone.get(0));
 		} );
 	}
 }

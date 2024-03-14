@@ -219,6 +219,16 @@ public class XmlAnnotationHelper {
 		return createJoinColumnAnnotation( jaxbJoinColumn, memberDetails, JoinColumn.class, xmlDocumentContext );
 	}
 
+	public static MutableAnnotationUsage<JoinColumn> applyJoinColumn(
+			JaxbJoinColumnImpl jaxbJoinColumn,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbJoinColumn == null ) {
+			return null;
+		}
+
+		return createJoinColumnAnnotation( jaxbJoinColumn, JoinColumn.class, xmlDocumentContext );
+	}
+
 	public static <A extends Annotation> MutableAnnotationUsage<A> createJoinColumnAnnotation(
 			JaxbColumnJoined jaxbJoinColumn,
 			MutableMemberDetails memberDetails,
@@ -239,6 +249,31 @@ public class XmlAnnotationHelper {
 			joinColumnAnn.setAttributeValue(
 					"foreignKey",
 					createForeignKeyAnnotation( jaxbForeignKey, memberDetails, xmlDocumentContext )
+			);
+		}
+
+		return joinColumnAnn;
+	}
+
+	public static <A extends Annotation> MutableAnnotationUsage<A> createJoinColumnAnnotation(
+			JaxbColumnJoined jaxbJoinColumn,
+			Class<A> annotationType,
+			XmlDocumentContext xmlDocumentContext) {
+		final MutableAnnotationUsage<A> joinColumnAnn = XmlProcessingHelper.getOrMakeAnnotation( annotationType, xmlDocumentContext );
+		final AnnotationDescriptor<A> joinColumnDescriptor = xmlDocumentContext
+				.getModelBuildingContext()
+				.getAnnotationDescriptorRegistry()
+				.getDescriptor( annotationType );
+
+		ColumnProcessing.applyColumnDetails( jaxbJoinColumn, joinColumnAnn, xmlDocumentContext );
+
+		applyOr( jaxbJoinColumn, JaxbColumnJoined::getReferencedColumnName, "referencedColumnName", joinColumnAnn, joinColumnDescriptor );
+
+		final JaxbForeignKeyImpl jaxbForeignKey = jaxbJoinColumn.getForeignKey();
+		if ( jaxbForeignKey != null ) {
+			joinColumnAnn.setAttributeValue(
+					"foreignKey",
+					createForeignKeyAnnotation( jaxbForeignKey, xmlDocumentContext )
 			);
 		}
 
@@ -276,6 +311,19 @@ public class XmlAnnotationHelper {
 		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
 		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
 			joinColumns.add( applyJoinColumn( jaxbJoinColumn, memberDetails, xmlDocumentContext ) );
+		} );
+		return joinColumns;
+	}
+
+	public static List<AnnotationUsage<JoinColumn>> createJoinColumns(
+			List<JaxbJoinColumnImpl> jaxbJoinColumns,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
+			return Collections.emptyList();
+		}
+		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
+		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
+			joinColumns.add( applyJoinColumn( jaxbJoinColumn, xmlDocumentContext ) );
 		} );
 		return joinColumns;
 	}
@@ -416,6 +464,23 @@ public class XmlAnnotationHelper {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final MutableAnnotationUsage<ForeignKey> foreignKeyAnn = XmlProcessingHelper.getOrMakeAnnotation( ForeignKey.class, memberDetails, xmlDocumentContext );
+		final AnnotationDescriptor<ForeignKey> foreignKeyDescriptor = xmlDocumentContext
+				.getModelBuildingContext()
+				.getAnnotationDescriptorRegistry()
+				.getDescriptor( ForeignKey.class );
+
+		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getName, "name", foreignKeyAnn, foreignKeyDescriptor );
+		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getConstraintMode, "value", foreignKeyAnn, foreignKeyDescriptor );
+		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getForeignKeyDefinition, "foreignKeyDefinition", foreignKeyAnn, foreignKeyDescriptor );
+		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getOptions, "options", foreignKeyAnn, foreignKeyDescriptor );
+
+		return foreignKeyAnn;
+	}
+
+	public static MutableAnnotationUsage<ForeignKey> createForeignKeyAnnotation(
+			JaxbForeignKeyImpl jaxbForeignKey,
+			XmlDocumentContext xmlDocumentContext) {
+		final MutableAnnotationUsage<ForeignKey> foreignKeyAnn = XmlProcessingHelper.getOrMakeAnnotation( ForeignKey.class, xmlDocumentContext );
 		final AnnotationDescriptor<ForeignKey> foreignKeyDescriptor = xmlDocumentContext
 				.getModelBuildingContext()
 				.getAnnotationDescriptorRegistry()
@@ -613,6 +678,26 @@ public class XmlAnnotationHelper {
 					.getDescriptor( CheckConstraint.class );
 			for ( JaxbCheckConstraintImpl jaxbCheck : jaxbCheckable.getCheckConstraints() ) {
 				final MutableAnnotationUsage<CheckConstraint> checkAnn = XmlProcessingHelper.getOrMakeAnnotation( CheckConstraint.class, target, xmlDocumentContext );
+				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getName, "name", checkAnn, checkConstraintDescriptor );
+				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getConstraint, "constraint", checkAnn, checkConstraintDescriptor );
+				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getOptions, "options", checkAnn, checkConstraintDescriptor );
+				checks.add( checkAnn );
+			}
+			annotationUsage.setAttributeValue( "check", checks );
+		}
+	}
+
+	public static <A extends Annotation> void applyCheckConstraints(
+			JaxbCheckable jaxbCheckable,
+			MutableAnnotationUsage<A> annotationUsage,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isNotEmpty( jaxbCheckable.getCheckConstraints() ) ) {
+			final List<AnnotationUsage<CheckConstraint>> checks = new ArrayList<>( jaxbCheckable.getCheckConstraints().size() );
+			final AnnotationDescriptor<CheckConstraint> checkConstraintDescriptor = xmlDocumentContext.getModelBuildingContext()
+					.getAnnotationDescriptorRegistry()
+					.getDescriptor( CheckConstraint.class );
+			for ( JaxbCheckConstraintImpl jaxbCheck : jaxbCheckable.getCheckConstraints() ) {
+				final MutableAnnotationUsage<CheckConstraint> checkAnn = XmlProcessingHelper.getOrMakeAnnotation( CheckConstraint.class, xmlDocumentContext );
 				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getName, "name", checkAnn, checkConstraintDescriptor );
 				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getConstraint, "constraint", checkAnn, checkConstraintDescriptor );
 				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getOptions, "options", checkAnn, checkConstraintDescriptor );

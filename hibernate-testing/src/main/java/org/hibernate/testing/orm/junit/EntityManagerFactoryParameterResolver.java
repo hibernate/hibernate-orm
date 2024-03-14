@@ -6,12 +6,15 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.util.Optional;
+
 import jakarta.persistence.EntityManagerFactory;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.platform.commons.support.AnnotationSupport;
 
 import static org.hibernate.testing.orm.junit.EntityManagerFactoryExtension.findEntityManagerFactoryScope;
 
@@ -34,8 +37,31 @@ public class EntityManagerFactoryParameterResolver implements ParameterResolver 
 	public Object resolveParameter(
 			ParameterContext parameterContext,
 			ExtensionContext extensionContext) throws ParameterResolutionException {
+
+		// Fall back on the test class annotation in case the method isn't annotated or we're in a @Before/@After method
+		Optional<Jpa> emfAnnWrapper = AnnotationSupport.findAnnotation(
+				extensionContext.getRequiredTestClass(),
+				Jpa.class
+		);
+		Object testScope = extensionContext.getRequiredTestInstance();
+
+		// coming from a @Test
+		if (parameterContext.getDeclaringExecutable() instanceof java.lang.reflect.Method && !extensionContext.getTestMethod().isEmpty()) {
+
+			Optional<Jpa> testEmfAnnWrapper = AnnotationSupport.findAnnotation(
+					extensionContext.getRequiredTestMethod(),
+					Jpa.class
+			);
+			// @Jpa on the test, so override the class annotation
+			if ( !testEmfAnnWrapper.isEmpty() ) {
+				testScope = extensionContext.getRequiredTestMethod();
+				emfAnnWrapper = testEmfAnnWrapper;
+			}
+		}
+
 		final EntityManagerFactoryScope scope = findEntityManagerFactoryScope(
-				extensionContext.getRequiredTestInstance(),
+				testScope,
+				emfAnnWrapper,
 				extensionContext
 		);
 

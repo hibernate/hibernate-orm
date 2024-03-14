@@ -310,8 +310,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			// push back class transformation to the environment; for the time being this only has any effect in EE
-			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
 
 			final boolean dirtyTrackingEnabled;
 			Object propertyValue = configurationValues.remove( ENHANCER_ENABLE_DIRTY_TRACKING );
@@ -344,6 +342,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						associationManagementEnabled
 				);
 
+				// push back class transformation to the environment; for the time being this only has any effect in EE
+				// container situations, calling back into PersistenceUnitInfo#addClassTransformer
 				persistenceUnit.pushClassTransformer( enhancementContext );
 				final ClassTransformer classTransformer = persistenceUnit.getClassTransformer();
 				if ( classTransformer != null ) {

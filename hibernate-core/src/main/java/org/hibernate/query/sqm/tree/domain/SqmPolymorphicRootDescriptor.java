@@ -91,9 +91,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	public Set<EntityDomainType<?>> getImplementors() {
-		return implementors.stream()
-				.sorted(Comparator.comparing(EntityDomainType::getTypeName))
-				.collect(Collectors.toCollection(LinkedHashSet::new));
+		return implementors;
 	}
 
 	@Override

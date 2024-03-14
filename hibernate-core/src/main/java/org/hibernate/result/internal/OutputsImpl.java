@@ -170,22 +170,6 @@ public class OutputsImpl implements Outputs {
 		final ProcedureCallImpl<?> procedureCall = (ProcedureCallImpl<?>) context;
 		final ResultSetMapping resultSetMapping = procedureCall.getResultSetMapping();
 
-		final JavaTypeRegistry javaTypeRegistry = context.getSession()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry();
-		procedureCall.getParameterBindings().visitBindings( (parameterImplementor, queryParameterBinding) -> {
-			final ProcedureParameter<?> parameter = (ProcedureParameter<?>) parameterImplementor;
-			if ( parameter.getMode() == ParameterMode.INOUT ) {
-				final JavaType<?> basicType = javaTypeRegistry.getDescriptor( parameterImplementor.getParameterType() );
-				if ( basicType != null ) {
-					resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );
-				}
-				else {
-					throw new UnsupportedOperationException();
-				}
-			}
-		} );
-
 		final ExecutionContext executionContext = new OutputsExecutionContext( context.getSession() );
 
 		final JdbcValues jdbcValues = new JdbcValuesResultSetImpl(

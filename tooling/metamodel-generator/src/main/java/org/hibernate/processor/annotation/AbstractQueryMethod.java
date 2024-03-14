@@ -124,7 +124,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			declaration
 					.append(annotationMetaEntity.importType(importReturnTypeArgument(paramType)))
 					.append(" ")
-					.append(paramNames.get(i));
+					.append(paramNames.get(i).replace('.', '$'));
 		}
 		declaration
 				.append(")");
@@ -363,10 +363,10 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	void makeKeyedPage(StringBuilder declaration, List<String> paramTypes) {
-		annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
+		annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
+		annotationMetaEntity.staticImport(HIB_ORDER, "by");
+		annotationMetaEntity.staticImport(HIB_PAGE, "page");
 		annotationMetaEntity.staticImport("org.hibernate.query.KeyedPage.KeyInterpretation", "*");
-		annotationMetaEntity.staticImport("org.hibernate.query.Order", "by");
-		annotationMetaEntity.staticImport("org.hibernate.query.Page", "page");
 		annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
 		if ( returnTypeName == null ) {
 			throw new AssertionFailure("entity class cannot be null");
@@ -489,6 +489,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						.append(">>();\n");
 				// static orders declared using @OrderBy must come first
 				for ( OrderBy orderBy : orderBys ) {
+					annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 					declaration
 							.append("\t_orders.add(")
 							.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
@@ -528,7 +529,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 					else if ( type.startsWith(JD_ORDER)
 							|| type.startsWith(JD_PAGE_REQUEST) ) {
-						annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
+						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 						declaration
 								.append("\tfor (var _sort : ")
 								.append(name)
@@ -546,7 +547,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 					else if ( type.startsWith(JD_SORT) && type.endsWith("...") ) {
 						// almost identical
-						annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
+						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 						declaration
 								.append("\tfor (var _sort : ")
 								.append(name)
@@ -563,7 +564,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 								.append("\t}\n");
 					}
 					else if ( type.startsWith(JD_SORT) ) {
-						annotationMetaEntity.staticImport("org.hibernate.query.SortDirection", "*");
+						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 						declaration
 								.append("\t_orders.add(")
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))

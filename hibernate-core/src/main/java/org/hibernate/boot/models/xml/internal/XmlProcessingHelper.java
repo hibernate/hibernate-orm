@@ -125,6 +125,13 @@ public class XmlProcessingHelper {
 		return makeAnnotation( annotationType, target, xmlDocumentContext );
 	}
 
+	public static <A extends Annotation> MutableAnnotationUsage<A> getOrMakeAnnotation(
+			Class<A> annotationType,
+			XmlDocumentContext xmlDocumentContext) {
+
+		return makeAnnotation( annotationType,  xmlDocumentContext );
+	}
+
 	/**
 	 * Make a nested AnnotationUsage.  The usage is created with the given target,
 	 * but it is not added to the target's annotations.
@@ -141,6 +148,16 @@ public class XmlProcessingHelper {
 		);
 	}
 
+	public static <A extends Annotation> MutableAnnotationUsage<A> makeNestedAnnotation(
+			Class<A> annotationType,
+			XmlDocumentContext xmlDocumentContext) {
+		return new DynamicAnnotationUsage<>(
+				xmlDocumentContext.getModelBuildingContext()
+						.getAnnotationDescriptorRegistry()
+						.getDescriptor( annotationType )
+		);
+	}
+
 	/**
 	 * Make an AnnotationUsage.
 	 * Used when applying XML in complete mode or when {@linkplain #getOrMakeAnnotation}
@@ -152,6 +169,13 @@ public class XmlProcessingHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final MutableAnnotationUsage<A> created = makeNestedAnnotation( annotationType, target, xmlDocumentContext );
 		target.addAnnotationUsage( created );
+		return created;
+	}
+
+	public static <A extends Annotation> MutableAnnotationUsage<A> makeAnnotation(
+			Class<A> annotationType,
+			XmlDocumentContext xmlDocumentContext) {
+		final MutableAnnotationUsage<A> created = makeNestedAnnotation( annotationType, xmlDocumentContext );
 		return created;
 	}
 

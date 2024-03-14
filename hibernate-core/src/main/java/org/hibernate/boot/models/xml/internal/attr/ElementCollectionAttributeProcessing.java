@@ -48,15 +48,13 @@ public class ElementCollectionAttributeProcessing {
 				xmlDocumentContext
 		);
 		XmlProcessingHelper.setIf( jaxbElementCollection.getFetch(), "fetch", elementCollectionAnn );
-		if ( StringHelper.isNotEmpty( jaxbElementCollection.getTargetClass() ) ) {
-			elementCollectionAnn.setAttributeValue(
-					"targetClass",
-					XmlAnnotationHelper.resolveJavaType(
-							jaxbElementCollection.getTargetClass(),
-							xmlDocumentContext.getModelBuildingContext()
-					)
-			);
-		}
+		elementCollectionAnn.setAttributeValue(
+				"targetClass",
+				XmlAnnotationHelper.resolveJavaType(
+						jaxbElementCollection.getTargetClass(),
+						xmlDocumentContext.getModelBuildingContext()
+				)
+		);
 
 		CommonAttributeProcessing.applyAttributeBasics( jaxbElementCollection, memberDetails, elementCollectionAnn, accessType, xmlDocumentContext );
 
@@ -72,11 +70,6 @@ public class ElementCollectionAttributeProcessing {
 		XmlAnnotationHelper.applyNationalized( jaxbElementCollection.getNationalized(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyTemporal( jaxbElementCollection.getTemporal(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyBasicTypeComposition( jaxbElementCollection, memberDetails, xmlDocumentContext );
-
-		if ( StringHelper.isNotEmpty( jaxbElementCollection.getTargetClass() ) ) {
-			final MutableAnnotationUsage<Target> targetAnn = XmlProcessingHelper.getOrMakeAnnotation( Target.class, memberDetails, xmlDocumentContext );
-			targetAnn.setAttributeValue( "value", jaxbElementCollection.getTargetClass() );
-		}
 
 		jaxbElementCollection.getConverts().forEach( (jaxbConvert) -> {
 			XmlAnnotationHelper.applyConvert( jaxbConvert, memberDetails, xmlDocumentContext );
@@ -110,12 +103,12 @@ public class ElementCollectionAttributeProcessing {
 		XmlAnnotationHelper.applyOr( jaxbCollectionTable, JaxbCollectionTableImpl::getSchema, "schema", collectionTableAnn, collectionTableDescriptor );
 		XmlAnnotationHelper.applyOr( jaxbCollectionTable, JaxbCollectionTableImpl::getOptions, "options", collectionTableAnn, collectionTableDescriptor );
 
-		collectionTableAnn.setAttributeValue( "joinColumns", XmlAnnotationHelper.createJoinColumns( jaxbCollectionTable.getJoinColumns(), memberDetails, xmlDocumentContext ) );
+		collectionTableAnn.setAttributeValue( "joinColumns", XmlAnnotationHelper.createJoinColumns( jaxbCollectionTable.getJoinColumns(), xmlDocumentContext ) );
 
 		if ( jaxbCollectionTable.getForeignKeys() != null ) {
 			collectionTableAnn.setAttributeValue(
 					"foreignKey",
-					XmlAnnotationHelper.createForeignKeyAnnotation( jaxbCollectionTable.getForeignKeys(), memberDetails, xmlDocumentContext )
+					XmlAnnotationHelper.createForeignKeyAnnotation( jaxbCollectionTable.getForeignKeys(), xmlDocumentContext )
 			);
 		}
 

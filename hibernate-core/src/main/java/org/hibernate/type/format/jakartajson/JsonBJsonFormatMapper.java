@@ -16,6 +16,7 @@ import jakarta.json.bind.JsonbException;
 
 /**
  * @author Christian Beikov
+ * @author Yanming Zhou
  */
 public final class JsonBJsonFormatMapper implements FormatMapper {
 
@@ -33,6 +34,10 @@ public final class JsonBJsonFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> T fromString(CharSequence charSequence, JavaType<T> javaType, WrapperOptions wrapperOptions) {
+		if ( "null".contentEquals(charSequence) ) {
+			// prevent converting "null" to JsonValueImpl(null) if javaType.getJavaType() is JsonValue
+			return null;
+		}
 		if ( javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class ) {
 			return (T) charSequence.toString();
 		}

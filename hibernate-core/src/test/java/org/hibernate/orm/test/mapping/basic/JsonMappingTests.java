@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.json.JsonValue;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
@@ -54,6 +55,7 @@ import static org.hamcrest.Matchers.nullValue;
 
 /**
  * @author Christian Beikov
+ * @author Yanming Zhou
  */
 @DomainModel(annotatedClasses = JsonMappingTests.EntityWithJson.class)
 @SessionFactory
@@ -145,12 +147,12 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.objectMap, is( objectMap ) );
 					assertThat( entityWithJson.list, is( list ) );
 					assertThat( entityWithJson.jsonNode, is( nullValue() ));
+					assertThat( entityWithJson.jsonValue, is( nullValue() ));
 				}
 		);
 	}
 
 	@Test
-	@RequiresDialect(PostgreSQLDialect.class)
 	public void verifyMergeWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -166,6 +168,7 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.list, is( nullValue() ) );
 					assertThat( entityWithJson.jsonString, is( nullValue() ) );
 					assertThat( entityWithJson.jsonNode, is( nullValue() ));
+					assertThat( entityWithJson.jsonValue, is( nullValue() ));
 				}
 		);
 	}
@@ -262,6 +265,9 @@ public abstract class JsonMappingTests {
 
 		@JdbcTypeCode( SqlTypes.JSON )
 		private JsonNode jsonNode;
+
+		@JdbcTypeCode( SqlTypes.JSON )
+		private JsonValue jsonValue;
 
 		public EntityWithJson() {
 		}

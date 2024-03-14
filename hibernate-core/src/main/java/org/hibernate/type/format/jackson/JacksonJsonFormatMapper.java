@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Christian Beikov
+ * @author Yanming Zhou
  */
 public final class JacksonJsonFormatMapper implements FormatMapper {
 
@@ -32,6 +33,10 @@ public final class JacksonJsonFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> T fromString(CharSequence charSequence, JavaType<T> javaType, WrapperOptions wrapperOptions) {
+		if ( "null".contentEquals(charSequence) ) {
+			// prevent converting "null" to NullNode if javaType.getJavaType() is JsonNode
+			return null;
+		}
 		if ( javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class ) {
 			return (T) charSequence.toString();
 		}

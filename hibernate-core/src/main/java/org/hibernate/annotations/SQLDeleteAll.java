@@ -53,10 +53,9 @@ public @interface SQLDeleteAll {
 	ResultCheckStyle check() default ResultCheckStyle.NONE;
 
 	/**
-	 * The name of the table in the case of an entity with {@link jakarta.persistence.SecondaryTable
-	 * secondary tables}, defaults to the primary table.
+	 * The name of the table affected. Never required.
 	 *
-	 * @return the name of the table
+	 * @return the name of the secondary table
 	 *
 	 * @since 6.2
 	 */

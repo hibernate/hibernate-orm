@@ -143,7 +143,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private static void nullCheck(StringBuilder declaration, String paramName) {
 		declaration
 				.append("\tif (")
-				.append(paramName)
+				.append(paramName.replace('.', '$'))
 				.append(" == null) throw new IllegalArgumentException(\"Null ")
 				.append(paramName)
 				.append("\");\n");
@@ -174,9 +174,10 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private void parameter(StringBuilder declaration, int i, String paramName, String paramType) {
 		declaration
 				.append("\n\t\t\t");
+		final String parameterName = paramName.replace('.', '$');
 		if ( isNullable(i) && !isPrimitive(paramType) ) {
 			declaration
-					.append(paramName)
+					.append(parameterName)
 					.append("==null")
 					.append("\n\t\t\t\t? ")
 					.append("_entity");
@@ -191,12 +192,12 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append(", ")
 				//TODO: only safe if we are binding literals as parameters!!!
-				.append(paramName)
+				.append(parameterName)
 				.append(')');
 	}
 
 	private void path(StringBuilder declaration, String paramName) {
-		final StringTokenizer tokens = new StringTokenizer(paramName, "$");
+		final StringTokenizer tokens = new StringTokenizer(paramName, ".");
 		String typeName = entity;
 		while ( typeName!= null && tokens.hasMoreTokens() ) {
 			final String memberName = tokens.nextToken();

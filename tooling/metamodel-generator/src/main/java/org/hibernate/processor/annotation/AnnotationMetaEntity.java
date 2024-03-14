@@ -851,13 +851,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR );
 			}
 			else {
+				final String entity = parameterType.toString();
+				final String methodName = method.getSimpleName().toString();
 				putMember(
-						method.getSimpleName().toString()
-								+ '.' + operation,
+						methodName + '.' + entity,
 						new LifecycleMethod(
 								this,
-								parameterType.toString(),
-								method.getSimpleName().toString(),
+								entity,
+								methodName,
 								parameter.getSimpleName().toString(),
 								getSessionVariableName(),
 								operation,
@@ -1099,13 +1100,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final Boolean ignoreCaseOrNull = (Boolean) getAnnotationValue(orderBy, "ignoreCase");
 		final boolean descending = descendingOrNull != null && descendingOrNull;
 		final boolean ignoreCase = ignoreCaseOrNull != null && ignoreCaseOrNull;
-		if ( memberMatchingPath( entityType, fieldName ) == null ) {
+		final String path = fieldName
+				.replace('$', '.')
+				.replace('_', '.'); //Jakarta Data allows _ here
+		if ( memberMatchingPath( entityType, path ) == null ) {
 			context.message( method, orderBy,
 					"no matching field named '" + fieldName
 							+ "' in entity class '" + entityType.getQualifiedName() + "'",
 					Diagnostic.Kind.ERROR );
 		}
-		return new OrderBy( fieldName, descending, ignoreCase );
+		return new OrderBy( path, descending, ignoreCase );
 	}
 
 	private static @Nullable TypeMirror getTypeArgument(TypeMirror parameterType) {
@@ -1406,8 +1410,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 
 		context.message( param,
-				"no matching field named '"
-						+ parameterName( param ).replace('$', '.')
+				"no matching field named '" + parameterName( param )
 						+ "' in entity class '" + entityType + "'",
 				Diagnostic.Kind.ERROR );
 		return null;
@@ -1435,7 +1438,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable Element memberMatchingPath(TypeElement entityType, String path) {
-		final StringTokenizer tokens = new StringTokenizer( path, "$" );
+		final StringTokenizer tokens = new StringTokenizer( path, "." );
 		return memberMatchingPath( entityType, tokens );
 	}
 
@@ -1947,7 +1950,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( name.contains("<error>") ) {
 				throw new ProcessLaterException();
 			}
-			return name.replace('.', '$'); // since the rest of the code assumes $ as the path separator
+			return name
+					.replace('$', '.')
+					.replace('_', '.');
 		}
 		else if ( param != null ) {
 			final String name = (String) castNonNull(getAnnotationValue(param, "value"));
@@ -1957,7 +1962,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return name;
 		}
 		else {
-			return parameter.getSimpleName().toString();
+			return parameter.getSimpleName().toString()
+					.replace('$', '.')
+					.replace('_', '.');
 		}
 	}
 

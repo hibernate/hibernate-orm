@@ -111,8 +111,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 					}
 				}
 				count++;
-				final String path = paramNames.get(i)
-						.replace('$', '.');
+				final String path = paramNames.get(i);
 				declaration
 						.append("{@link ")
 						.append(annotationMetaEntity.importType(entity))
@@ -141,7 +140,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	}
 
 	String qualifier(String name) {
-		final int index = name.indexOf('$');
+		final int index = name.indexOf('.');
 		return index > 0 ? name.substring(0, index) : name;
 	}
 

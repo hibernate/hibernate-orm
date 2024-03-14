@@ -42,12 +42,12 @@ public class QualifiedNameParser {
 
 			StringBuilder buff = new StringBuilder();
 			if ( catalogName != null ) {
-				buff.append( catalogName.toString() ).append( '.' );
+				buff.append( catalogName ).append( '.' );
 			}
 			if ( schemaName != null ) {
-				buff.append( schemaName.toString() ).append( '.' );
+				buff.append( schemaName ).append( '.' );
 			}
-			buff.append( objectName.toString() );
+			buff.append( objectName );
 			qualifiedText = buff.toString();
 		}
 
@@ -89,8 +89,8 @@ public class QualifiedNameParser {
 			NameParts that = (NameParts) o;
 
 			return Objects.equals( this.getCatalogName(), that.getCatalogName() )
-					&& Objects.equals( this.getSchemaName(), that.getSchemaName() )
-					&& Objects.equals( this.getObjectName(), that.getObjectName() );
+				&& Objects.equals( this.getSchemaName(), that.getSchemaName() )
+				&& Objects.equals( this.getObjectName(), that.getObjectName() );
 		}
 
 		@Override

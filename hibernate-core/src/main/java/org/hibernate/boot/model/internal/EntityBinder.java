@@ -230,8 +230,11 @@ public class EntityBinder {
 
 		final EntityBinder entityBinder = new EntityBinder( clazzToProcess, persistentClass, context );
 		entityBinder.bindEntity();
-		entityBinder.handleClassTable( inheritanceState, superEntity );
-		entityBinder.handleSecondaryTables();
+		entityBinder.bindSubselect(); // has to happen before table binding
+		entityBinder.bindTables( inheritanceState, superEntity );
+		entityBinder.bindCustomSql(); // has to happen after table binding
+		entityBinder.bindSynchronize();
+		entityBinder.bindFilters();
 		entityBinder.handleCheckConstraints();
 		final PropertyHolder holder = buildPropertyHolder(
 				clazzToProcess,
@@ -246,7 +249,7 @@ public class EntityBinder {
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( persistentClass instanceof RootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( (RootClass) persistentClass ) );
-			bindSoftDelete( clazzToProcess, (RootClass) persistentClass, inheritanceState, context );
+			bindSoftDelete( clazzToProcess, (RootClass) persistentClass, context );
 		}
 		if ( persistentClass instanceof Subclass) {
 			assert superEntity != null;
@@ -260,6 +263,11 @@ public class EntityBinder {
 		entityBinder.processComplementaryTableDefinitions();
 		bindCallbacks( clazzToProcess, persistentClass, context );
 		entityBinder.callTypeBinders( persistentClass );
+	}
+
+	private void bindTables(InheritanceState inheritanceState, PersistentClass superEntity) {
+		handleClassTable( inheritanceState, superEntity );
+		handleSecondaryTables();
 	}
 
 	private static void checkOverrides(XClass clazzToProcess, PersistentClass superEntity) {
@@ -312,28 +320,24 @@ public class EntityBinder {
 	private static void bindSoftDelete(
 			XClass xClass,
 			RootClass rootClass,
-			InheritanceState inheritanceState,
 			MetadataBuildingContext context) {
 		// todo (soft-delete) : do we assume all package-level registrations are already available?
 		//		or should this be a "second pass"?
 
-		final SoftDelete softDelete = extractSoftDelete( xClass, rootClass, inheritanceState, context );
-		if ( softDelete == null ) {
-			return;
+		final SoftDelete softDelete = extractSoftDelete( xClass, rootClass, context );
+		if ( softDelete != null ) {
+			SoftDeleteHelper.bindSoftDeleteIndicator(
+					softDelete,
+					rootClass,
+					rootClass.getRootTable(),
+					context
+			);
 		}
-
-		SoftDeleteHelper.bindSoftDeleteIndicator(
-				softDelete,
-				rootClass,
-				rootClass.getRootTable(),
-				context
-		);
 	}
 
 	private static SoftDelete extractSoftDelete(
 			XClass xClass,
 			RootClass rootClass,
-			InheritanceState inheritanceState,
 			MetadataBuildingContext context) {
 		final SoftDelete fromClass = xClass.getAnnotation( SoftDelete.class );
 		if ( fromClass != null ) {
@@ -1332,9 +1336,7 @@ public class EntityBinder {
 		ensureNoMutabilityPlan();
 
 		bindCustomPersister();
-		bindCustomSql();
-		bindSynchronize();
-		bindFilters();
+		bindCustomLoader();
 
 		registerImportName();
 
@@ -1381,9 +1383,12 @@ public class EntityBinder {
 	}
 
 	private void bindCustomSql() {
-		//TODO: tolerate non-empty table() member here if it explicitly names the main table
+		final String primaryTableName = persistentClass.getTable().getName();
 
-		final SQLInsert sqlInsert = findMatchingSqlAnnotation( "", SQLInsert.class, SQLInserts.class );
+		SQLInsert sqlInsert = findMatchingSqlAnnotation( primaryTableName, SQLInsert.class, SQLInserts.class );
+		if ( sqlInsert == null ) {
+			sqlInsert = findMatchingSqlAnnotation( "", SQLInsert.class, SQLInserts.class );
+		}
 		if ( sqlInsert != null ) {
 			persistentClass.setCustomSQLInsert(
 					sqlInsert.sql().trim(),
@@ -1395,7 +1400,10 @@ public class EntityBinder {
 			}
 		}
 
-		final SQLUpdate sqlUpdate = findMatchingSqlAnnotation( "", SQLUpdate.class, SQLUpdates.class );
+		SQLUpdate sqlUpdate = findMatchingSqlAnnotation( primaryTableName, SQLUpdate.class, SQLUpdates.class );
+		if ( sqlUpdate == null ) {
+			sqlUpdate = findMatchingSqlAnnotation( "", SQLUpdate.class, SQLUpdates.class );
+		}
 		if ( sqlUpdate != null ) {
 			persistentClass.setCustomSQLUpdate(
 					sqlUpdate.sql().trim(),
@@ -1407,7 +1415,10 @@ public class EntityBinder {
 			}
 		}
 
-		final SQLDelete sqlDelete = findMatchingSqlAnnotation( "", SQLDelete.class, SQLDeletes.class );
+		SQLDelete sqlDelete = findMatchingSqlAnnotation( primaryTableName, SQLDelete.class, SQLDeletes.class );
+		if ( sqlDelete == null ) {
+			sqlDelete = findMatchingSqlAnnotation( "", SQLDelete.class, SQLDeletes.class );
+		}
 		if ( sqlDelete != null ) {
 			persistentClass.setCustomSQLDelete(
 					sqlDelete.sql().trim(),
@@ -1438,12 +1449,16 @@ public class EntityBinder {
 			persistentClass.setLoaderName( loaderName );
 			QueryBinder.bindQuery( loaderName, hqlSelect, context );
 		}
+	}
 
+	private void bindCustomLoader() {
 		final Loader loader = annotatedClass.getAnnotation( Loader.class );
 		if ( loader != null ) {
 			persistentClass.setLoaderName( loader.namedQuery() );
 		}
+	}
 
+	private void bindSubselect() {
 		final Subselect subselect = annotatedClass.getAnnotation( Subselect.class );
 		if ( subselect != null ) {
 			this.subselect = subselect.value();

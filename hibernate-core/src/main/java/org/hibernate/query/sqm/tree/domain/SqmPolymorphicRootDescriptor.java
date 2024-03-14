@@ -32,7 +32,9 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 			JavaType<T> polymorphicJavaType,
 			Set<EntityDomainType<? extends T>> implementors) {
 		this.polymorphicJavaType = polymorphicJavaType;
-		this.implementors = implementors;
+		this.implementors = implementors.stream()
+				.sorted(Comparator.comparing(EntityDomainType::getTypeName))
+				.collect(Collectors.toCollection(LinkedHashSet::new));
 		this.commonAttributes = unmodifiableMap( inferCommonAttributes( implementors ) );
 	}
 

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.function.Function;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -621,7 +622,11 @@ public class SqmUtil {
 					if ( !order.getEntityClass().isAssignableFrom( root.getJavaType() ) ) {
 						throw new IllegalQueryOperationException("Select item was of wrong entity type");
 					}
-					final SqmPath<Object> path = root.get( order.getAttributeName() );
+					final StringTokenizer tokens = new StringTokenizer( order.getAttributeName(), "." );
+					SqmPath<?> path = root;
+					while ( tokens.hasMoreTokens() ) {
+						path = path.get( tokens.nextToken() );
+					}
 					return builder.sort( path, order.getDirection(), order.getNullPrecedence(), order.isCaseInsensitive() );
 				}
 				else {

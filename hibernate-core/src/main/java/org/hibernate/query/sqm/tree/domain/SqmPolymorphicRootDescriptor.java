@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.function.Consumer;
 
 import static java.util.Collections.unmodifiableMap;
@@ -23,7 +24,7 @@ import static java.util.Collections.unmodifiableMap;
  * @author Steve Ebersole
  */
 public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
-	private final Set<EntityDomainType<? extends T>> implementors;
+	private final Set<EntityDomainType<?>> implementors;
 	private final Map<String, PersistentAttribute<? super T,?>> commonAttributes;
 
 	private final JavaType<T> polymorphicJavaType;

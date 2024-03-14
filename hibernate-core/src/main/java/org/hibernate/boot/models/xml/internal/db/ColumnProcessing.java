@@ -38,37 +38,57 @@ public class ColumnProcessing {
 			return;
 		}
 
-		applyColumnBasics( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnNullness( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnMutability( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnDefinition( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnUniqueness( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnComment( jaxbColumn, target, columnAnn, xmlDocumentContext );
+		applyColumnBasics( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnNullness( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnMutability( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnDefinition( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnUniqueness( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnComment( jaxbColumn, columnAnn, xmlDocumentContext );
 		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, target, columnAnn, xmlDocumentContext );
 
 		if ( jaxbColumn instanceof JaxbColumnSizable sizable ) {
-			applyColumnSizing( sizable, target, columnAnn, xmlDocumentContext );
+			applyColumnSizing( sizable, columnAnn, xmlDocumentContext );
 		}
 
 	}
 
 	public static <A extends Annotation> void applyColumnDetails(
-			JaxbColumnStandard jaxbColumn,
-			MutableAnnotationTarget target,
+			JaxbColumnCommon jaxbColumn,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbColumn == null ) {
 			return;
 		}
 
-		applyColumnBasics( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnNullness( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnMutability( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnDefinition( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnSizing( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnUniqueness( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		applyColumnComment( jaxbColumn, target, columnAnn, xmlDocumentContext );
-		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, target, columnAnn, xmlDocumentContext );
+		applyColumnBasics( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnNullness( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnMutability( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnDefinition( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnUniqueness( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnComment( jaxbColumn, columnAnn, xmlDocumentContext );
+		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, columnAnn, xmlDocumentContext );
+
+		if ( jaxbColumn instanceof JaxbColumnSizable sizable ) {
+			applyColumnSizing( sizable, columnAnn, xmlDocumentContext );
+		}
+	}
+
+	public static <A extends Annotation> void applyColumnDetails(
+			JaxbColumnStandard jaxbColumn,
+			MutableAnnotationUsage<A> columnAnn,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbColumn == null ) {
+			return;
+		}
+
+		applyColumnBasics( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnNullness( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnMutability( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnDefinition( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnSizing( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnUniqueness( jaxbColumn, columnAnn, xmlDocumentContext );
+		applyColumnComment( jaxbColumn, columnAnn, xmlDocumentContext );
+		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, columnAnn, xmlDocumentContext );
 	}
 
 	public static <A extends Annotation> void applyColumnDetails(
@@ -80,30 +100,30 @@ public class ColumnProcessing {
 			return;
 		}
 
-		applyColumnBasics( jaxbColumn, target, columnAnn, xmlDocumentContext );
+		applyColumnBasics( jaxbColumn, columnAnn, xmlDocumentContext );
 
 		if ( jaxbColumn instanceof JaxbColumnNullable nullable ) {
-			applyColumnNullness( nullable, target, columnAnn, xmlDocumentContext );
+			applyColumnNullness( nullable, columnAnn, xmlDocumentContext );
 		}
 
 		if ( jaxbColumn instanceof JaxbColumnMutable mutable ) {
-			applyColumnMutability( mutable, target, columnAnn, xmlDocumentContext );
+			applyColumnMutability( mutable, columnAnn, xmlDocumentContext );
 		}
 
 		if ( jaxbColumn instanceof JaxbColumnDefinable definable ) {
-			applyColumnDefinition( definable, target, columnAnn, xmlDocumentContext );
+			applyColumnDefinition( definable, columnAnn, xmlDocumentContext );
 		}
 
 		if ( jaxbColumn instanceof JaxbColumnSizable sizable ) {
-			applyColumnSizing( sizable, target, columnAnn, xmlDocumentContext );
+			applyColumnSizing( sizable, columnAnn, xmlDocumentContext );
 		}
 
 		if ( jaxbColumn instanceof JaxbColumnUniqueable uniqueable ) {
-			applyColumnUniqueness( uniqueable, target, columnAnn, xmlDocumentContext );
+			applyColumnUniqueness( uniqueable, columnAnn, xmlDocumentContext );
 		}
 
 		if ( jaxbColumn instanceof JaxbCommentable commentable ) {
-			applyColumnComment( commentable, target, columnAnn, xmlDocumentContext );
+			applyColumnComment( commentable, columnAnn, xmlDocumentContext );
 		}
 
 		if ( jaxbColumn instanceof JaxbCheckable checkable ) {
@@ -113,7 +133,6 @@ public class ColumnProcessing {
 
 	private static <A extends Annotation> void applyColumnBasics(
 			JaxbColumn jaxbColumn,
-			MutableAnnotationTarget target,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( StringHelper.isNotEmpty( jaxbColumn.getName() ) ) {
@@ -127,7 +146,6 @@ public class ColumnProcessing {
 
 	private static <A extends Annotation> void applyColumnNullness(
 			JaxbColumnNullable jaxbColumn,
-			MutableAnnotationTarget target,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbColumn.isNullable() != null ) {
@@ -137,7 +155,6 @@ public class ColumnProcessing {
 
 	private static <A extends Annotation> void applyColumnMutability(
 			JaxbColumnMutable jaxbColumn,
-			MutableAnnotationTarget target,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbColumn.isInsertable() != null ) {
@@ -151,7 +168,6 @@ public class ColumnProcessing {
 
 	private static <A extends Annotation> void applyColumnSizing(
 			JaxbColumnSizable jaxbColumn,
-			MutableAnnotationTarget target,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 
@@ -170,7 +186,6 @@ public class ColumnProcessing {
 
 	private static <A extends Annotation> void applyColumnUniqueness(
 			JaxbColumnUniqueable jaxbColumn,
-			MutableAnnotationTarget target,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbColumn.isUnique() != null ) {
@@ -180,7 +195,6 @@ public class ColumnProcessing {
 
 	private static <A extends Annotation> void applyColumnDefinition(
 			JaxbColumnDefinable jaxbColumn,
-			MutableAnnotationTarget target,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( StringHelper.isNotEmpty( jaxbColumn.getColumnDefinition() ) ) {
@@ -194,7 +208,6 @@ public class ColumnProcessing {
 
 	private static <A extends Annotation> void applyColumnComment(
 			JaxbCommentable jaxbColumn,
-			MutableAnnotationTarget target,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( StringHelper.isNotEmpty( jaxbColumn.getComment() ) ) {

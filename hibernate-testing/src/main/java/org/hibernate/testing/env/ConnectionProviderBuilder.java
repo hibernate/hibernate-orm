@@ -12,6 +12,7 @@ import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
 
@@ -26,7 +27,6 @@ import org.hibernate.internal.util.ReflectHelper;
 
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 /**
@@ -46,7 +46,14 @@ public class ConnectionProviderBuilder implements DialectCheck {
 	public static final String PASS = "";
 
 	public static Properties getConnectionProviderProperties(String dbName) {
+		return getConnectionProviderProperties( dbName, Collections.emptyMap() );
+	}
+
+	public static Properties getConnectionProviderProperties(String dbName, Map<String, String> environmentOverrides) {
 		final Properties globalProperties = Environment.getProperties();
+		// since returned global properties are a copy, we just add our overrides to them:
+		globalProperties.putAll( environmentOverrides );
+
 		assert globalProperties.getProperty( Environment.URL ).startsWith( "jdbc:h2:" )
 				: "Connection provider properties are only usable when running against H2";
 		final Properties props = new Properties( null );
@@ -93,6 +100,10 @@ public class ConnectionProviderBuilder implements DialectCheck {
 
 	public static ConnectionProvider buildConnectionProvider(String dbName) {
 		return buildConnectionProvider( getConnectionProviderProperties( dbName ), false );
+	}
+
+	public static ConnectionProvider buildConnectionProvider(String dbName, Map<String, String> environmentOverrides) {
+		return buildConnectionProvider( getConnectionProviderProperties( dbName, environmentOverrides ), false );
 	}
 
 	public static ConnectionProvider buildDataSourceConnectionProvider(String dbName) {

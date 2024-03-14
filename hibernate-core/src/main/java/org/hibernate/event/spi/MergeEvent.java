@@ -10,6 +10,7 @@ package org.hibernate.event.spi;
  * An event class for merge() and saveOrUpdateCopy()
  *
  * @author Gavin King
+ * @author Yanming Zhou
  */
 public class MergeEvent extends AbstractEvent {
 
@@ -18,6 +19,13 @@ public class MergeEvent extends AbstractEvent {
 	private String entityName;
 	private Object entity;
 	private Object result;
+	private boolean cascading;
+
+	public MergeEvent(String entityName, Object original, EventSource source, boolean cascading) {
+		this(original, source);
+		this.entityName = entityName;
+		this.cascading = cascading;
+	}
 
 	public MergeEvent(String entityName, Object original, EventSource source) {
 		this(original, source);
@@ -81,5 +89,9 @@ public class MergeEvent extends AbstractEvent {
 
 	public void setResult(Object result) {
 		this.result = result;
+	}
+
+	public boolean isCascading() {
+		return cascading;
 	}
 }

@@ -33,11 +33,13 @@ import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gavin King
+ * @author Yanming Zhou
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 public class MergeTest extends AbstractOperationTestCase {
@@ -769,7 +771,7 @@ public class MergeTest extends AbstractOperationTestCase {
 					session.clear();
 					jboss.setVers( 1 );
 					session.getTransaction().begin();
-					session.merge( jboss );
+					assertThrowsExactly( IllegalArgumentException.class, () -> session.merge( jboss ) );
 				}
 		);
 

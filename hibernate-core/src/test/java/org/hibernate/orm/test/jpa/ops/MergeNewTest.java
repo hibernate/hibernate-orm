@@ -12,9 +12,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 /**
  * @author Emmanuel Bernard
+ * @author Yanming Zhou
  */
 @Jpa(annotatedClasses = {
 		Workload.class
@@ -78,8 +80,7 @@ public class MergeNewTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.merge( load );
-					entityManager.flush();
+					assertThrowsExactly( IllegalArgumentException.class, () -> entityManager.merge( load ) );
 				}
 		);
 	}

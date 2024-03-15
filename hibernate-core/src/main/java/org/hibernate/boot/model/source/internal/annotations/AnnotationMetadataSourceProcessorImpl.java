@@ -250,6 +250,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				log.debugf( "Skipping annotated class processing of entity [%s], as it has already been processed", clazz );
 			}
 			else {
+				if ( clazz.getName().endsWith( ".package-info" ) ) {
+					continue;
+				}
 				AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
 				AnnotationBinder.bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
 				processedEntityNames.add( clazz.getName() );

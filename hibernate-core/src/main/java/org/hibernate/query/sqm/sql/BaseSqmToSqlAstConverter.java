@@ -485,7 +485,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	 */
 	private Map<NavigablePath, Map.Entry<Integer, List<SqlSelection>>> trackedFetchSelectionsForGroup = Collections.emptyMap();
 
-	private final Map<NavigablePath, PredicateCollector> collectionFilterPredicates = new IdentityHashMap<>();
 	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
@@ -2088,7 +2087,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					);
 					orderByFragments = null;
 				}
-				applyCollectionFilterPredicates( sqlQuerySpec );
 			}
 
 			// Look for treated SqmFrom registrations that have uses of the untreated SqmFrom.
@@ -2179,32 +2177,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private TableGroup findTableGroupByPath(NavigablePath navigablePath) {
 		return getFromClauseAccess().getTableGroup( navigablePath );
-	}
-
-	protected void applyCollectionFilterPredicates(QuerySpec sqlQuerySpec) {
-		if ( CollectionHelper.isNotEmpty( collectionFilterPredicates ) ) {
-			final FromClauseAccess fromClauseAccess = getFromClauseAccess();
-			OUTER:
-			for ( Map.Entry<NavigablePath, PredicateCollector> entry : collectionFilterPredicates.entrySet() ) {
-				final TableGroup parentTableGroup = fromClauseAccess.findTableGroup( entry.getKey().getParent() );
-				if ( parentTableGroup == null ) {
-					// Since we only keep a single map, this could return null for collections of subqueries
-					continue;
-				}
-				for ( TableGroupJoin tableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-					if ( tableGroupJoin.getJoinedGroup().getNavigablePath() == entry.getKey() ) {
-						tableGroupJoin.applyPredicate( entry.getValue().getPredicate() );
-						continue OUTER;
-					}
-				}
-				for ( TableGroupJoin tableGroupJoin : parentTableGroup.getNestedTableGroupJoins() ) {
-					if ( tableGroupJoin.getJoinedGroup().getNavigablePath() == entry.getKey() ) {
-						tableGroupJoin.applyPredicate( entry.getValue().getPredicate() );
-						continue OUTER;
-					}
-				}
-			}
-		}
 	}
 
 	@Override
@@ -8310,49 +8282,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
-		if ( fetchParent instanceof EagerCollectionFetch ) {
+		if ( fetchParent instanceof EagerCollectionFetch && currentQuerySpec().isRoot() ) {
 			final EagerCollectionFetch collectionFetch = (EagerCollectionFetch) fetchParent;
 			final PluralAttributeMapping pluralAttributeMapping = collectionFetch.getFetchedMapping();
 			final NavigablePath fetchablePath = collectionFetch.getNavigablePath();
-
 			final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
-
-			// Base restrictions have already been applied if this is an explicit fetch
-			if ( getFromClauseIndex().findFetchedJoinByPath( fetchablePath ) == null ) {
-				final Restrictable restrictable = pluralAttributeMapping
-						.getCollectionDescriptor()
-						.getCollectionType()
-						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
-				restrictable.applyBaseRestrictions(
-						(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
-						tableGroup,
-						true,
-						getLoadQueryInfluencers().getEnabledFilters(),
-						null,
-						this
-				);
-			}
-
-			pluralAttributeMapping.applyBaseManyToManyRestrictions(
-					(predicate) -> {
-						final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( collectionFetch.getFetchParent().getNavigablePath() );
-						final TableGroupJoin pluralTableGroupJoin = parentTableGroup.findTableGroupJoin( tableGroup );
-						assert pluralTableGroupJoin != null;
-
-						final TableGroupJoin joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( pluralTableGroupJoin );
-						joinForPredicate.applyPredicate( predicate );
-					},
-					tableGroup,
-					true,
-					getLoadQueryInfluencers().getEnabledFilters(),
-					null,
-					this
-			);
-
-			if ( currentQuerySpec().isRoot() ) {
-				assert tableGroup.getModelPart() == pluralAttributeMapping;
-				applyOrdering( tableGroup, pluralAttributeMapping );
-			}
+			assert tableGroup.getModelPart() == pluralAttributeMapping;
+			applyOrdering( tableGroup, pluralAttributeMapping );
 		}
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		final int keySize = referencedMappingContainer.getNumberOfKeyFetchables();
@@ -8427,16 +8363,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					),
 					e
 			);
-		}
-	}
-
-	private void addCollectionFilterPredicate(NavigablePath navigablePath, Predicate predicate) {
-		final PredicateCollector existing = collectionFilterPredicates.get( navigablePath );
-		if ( existing != null ) {
-			existing.applyPredicate( predicate );
-		}
-		else {
-			collectionFilterPredicates.put( navigablePath, new PredicateCollector( predicate ) );
 		}
 	}
 

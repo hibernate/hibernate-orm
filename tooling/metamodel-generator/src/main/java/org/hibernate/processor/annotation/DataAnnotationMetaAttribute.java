@@ -11,6 +11,7 @@ import org.hibernate.processor.model.Metamodel;
 
 import javax.lang.model.element.Element;
 
+import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
 
 /**
@@ -37,7 +38,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public boolean hasStringAttribute() {
-		return false;
+		return true;
 	}
 
 	private boolean isTextual() {
@@ -73,7 +74,17 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getAttributeNameDeclarationString(){
-		throw new UnsupportedOperationException("operation not supported");
+		return new StringBuilder()
+				.append("public static final ")
+				.append(parent.importType(String.class.getName()))
+				.append(" ")
+				.append(getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
+				.append(" = ")
+				.append("\"")
+				.append(getPropertyName())
+				.append("\"")
+				.append(";")
+				.toString();
 	}
 
 	@Override

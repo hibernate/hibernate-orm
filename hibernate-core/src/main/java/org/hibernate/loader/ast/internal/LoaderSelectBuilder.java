@@ -688,6 +688,8 @@ public class LoaderSelectBuilder {
 			SqlAstCreationState astCreationState) {
 		final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
 		if ( parentNavigablePath == null ) {
+			// Only apply restrictions for root table groups,
+			// because for table group joins the restriction is applied via PluralAttributeMappingImpl.createTableGroupJoin
 			pluralAttributeMapping.applyBaseRestrictions(
 					querySpec::applyPredicate,
 					tableGroup,
@@ -698,31 +700,6 @@ public class LoaderSelectBuilder {
 			);
 			pluralAttributeMapping.applyBaseManyToManyRestrictions(
 					querySpec::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-		}
-		else {
-			final TableGroup parentTableGroup = astCreationState.getFromClauseAccess().getTableGroup(
-					parentNavigablePath );
-			final TableGroupJoin pluralTableGroupJoin = parentTableGroup.findTableGroupJoin( tableGroup );
-			assert pluralTableGroupJoin != null;
-
-			final TableGroupJoin joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( pluralTableGroupJoin );
-
-			pluralAttributeMapping.applyBaseRestrictions(
-					joinForPredicate::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-			pluralAttributeMapping.applyBaseManyToManyRestrictions(
-					joinForPredicate::applyPredicate,
 					tableGroup,
 					true,
 					loadQueryInfluencers.getEnabledFilters(),

@@ -1096,6 +1096,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private OrderBy orderByExpression(AnnotationMirror orderBy, TypeElement entityType, ExecutableElement method) {
 		final String fieldName = (String) castNonNull( getAnnotationValue(orderBy, "value") );
+		if ( fieldName.equals("<error>") ) {
+			throw new ProcessLaterException();
+		}
 		final Boolean descendingOrNull = (Boolean) getAnnotationValue(orderBy, "descending");
 		final Boolean ignoreCaseOrNull = (Boolean) getAnnotationValue(orderBy, "ignoreCase");
 		final boolean descending = descendingOrNull != null && descendingOrNull;

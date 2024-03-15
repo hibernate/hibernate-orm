@@ -1346,8 +1346,9 @@ public abstract class CollectionBinder {
 					sqlInsert.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlInsert.getEnum( "check" ) )
 			);
-			if ( sqlInsert.verify() != Expectation.class ) {
-				collection.setInsertExpectation( getDefaultSupplier( sqlInsert.verify() ) );
+			final ClassDetails verifier = sqlInsert.getClassDetails( "verify" );
+			if ( !verifier.getName().equals( Expectation.class.getName() ) ) {
+				collection.setInsertExpectation( getDefaultSupplier( verifier.toJavaClass() ) );
 			}
 		}
 
@@ -1358,8 +1359,9 @@ public abstract class CollectionBinder {
 					sqlUpdate.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlUpdate.getEnum( "check" ) )
 			);
-			if ( sqlUpdate.verify() != Expectation.class ) {
-				collection.setUpdateExpectation( getDefaultSupplier( sqlUpdate.verify() ) );
+			final ClassDetails verifier = sqlUpdate.getClassDetails( "verify" );
+			if ( !verifier.getName().equals( Expectation.class.getName() ) ) {
+				collection.setUpdateExpectation( getDefaultSupplier( verifier.toJavaClass() ) );
 			}
 		}
 
@@ -1370,8 +1372,9 @@ public abstract class CollectionBinder {
 					sqlDelete.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlDelete.getEnum( "check" ) )
 			);
-			if ( sqlDelete.verify() != Expectation.class ) {
-				collection.setDeleteExpectation( getDefaultSupplier( sqlDelete.verify() ) );
+			final ClassDetails verifier = sqlDelete.getClassDetails( "verify" );
+			if ( !verifier.getName().equals( Expectation.class.getName() ) ) {
+				collection.setDeleteExpectation( getDefaultSupplier( verifier.toJavaClass() ) );
 			}
 		}
 
@@ -1382,8 +1385,9 @@ public abstract class CollectionBinder {
 					sqlDeleteAll.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlDeleteAll.getEnum( "check" ) )
 			);
-			if ( sqlDeleteAll.verify() != Expectation.class ) {
-				collection.setDeleteAllExpectation( getDefaultSupplier( sqlDeleteAll.verify() ) );
+			final ClassDetails verifier = sqlDeleteAll.getClassDetails( "verify" );
+			if ( !verifier.getName().equals( Expectation.class.getName() ) ) {
+				collection.setDeleteAllExpectation( getDefaultSupplier( verifier.toJavaClass() ) );
 			}
 		}
 

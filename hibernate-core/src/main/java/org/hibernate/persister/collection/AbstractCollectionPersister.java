@@ -302,7 +302,7 @@ public abstract class AbstractCollectionPersister
 
 		if ( StringHelper.isNotEmpty( collectionBootDescriptor.getWhere() ) ) {
 			hasWhere = true;
-			sqlWhereString = "(" + collectionBootDescriptor.getWhere() + ") ";
+			sqlWhereString = "(" + collectionBootDescriptor.getWhere() + ")";
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					sqlWhereString,
 					dialect,

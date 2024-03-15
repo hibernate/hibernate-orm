@@ -10,7 +10,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmJoinable;
@@ -93,12 +92,10 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 		return fetched;
 	}
 
-
-
 	@Override
-	public JpaSelection<R> alias(String name) {
+	public SqmAttributeJoin<L,R> alias(String name) {
 		validateFetchAlias( name );
-		return super.alias( name );
+		return (SqmAttributeJoin<L, R>) super.alias( name );
 	}
 
 	@Override

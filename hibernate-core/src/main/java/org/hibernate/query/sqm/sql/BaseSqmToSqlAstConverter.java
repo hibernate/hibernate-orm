@@ -268,6 +268,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
+import org.hibernate.sql.ast.internal.TableGroupJoinHelper;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
@@ -3381,13 +3382,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
+		// Implicit joins in the predicate might alter the nested table group joins,
+		// so defer determination of the join for predicate until after the predicate was visited
 		final TableGroupJoin joinForPredicate;
-		if ( !joinedTableGroup.getNestedTableGroupJoins().isEmpty() || joinedTableGroup.getTableGroupJoins().isEmpty() ) {
-			joinForPredicate = joinedTableGroupJoin;
-		}
-		else {
-			joinForPredicate = joinedTableGroup.getTableGroupJoins().get( joinedTableGroup.getTableGroupJoins().size() - 1 );
-		}
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -3398,6 +3395,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
 			final Predicate predicate = visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() );
+			joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( joinedTableGroupJoin );
 			// If translating the join predicate didn't initialize the table group,
 			// we can safely apply it on the collection table group instead
 			if ( joinForPredicate.getJoinedGroup().isInitialized() ) {
@@ -3407,6 +3405,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				joinedTableGroupJoin.applyPredicate( predicate );
 			}
 			currentlyProcessingJoin = oldJoin;
+		}
+		else {
+			joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( joinedTableGroupJoin );
 		}
 		// Since joins on treated paths will never cause table pruning, we need to add a join condition for the treat
 		if ( sqmJoin.getLhs() instanceof SqmTreatedPath<?, ?> ) {
@@ -8338,13 +8339,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						final TableGroupJoin pluralTableGroupJoin = parentTableGroup.findTableGroupJoin( tableGroup );
 						assert pluralTableGroupJoin != null;
 
-						final TableGroupJoin joinForPredicate;
-						if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
-							joinForPredicate = pluralTableGroupJoin;
-						}
-						else {
-							joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
-						}
+						final TableGroupJoin joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( pluralTableGroupJoin );
 						joinForPredicate.applyPredicate( predicate );
 					},
 					tableGroup,

@@ -49,6 +49,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.internal.TableGroupJoinHelper;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -763,13 +764,7 @@ public class PluralAttributeMappingImpl
 				collectionPredicateCollector.getPredicate()
 		);
 		if ( predicateCollector != collectionPredicateCollector ) {
-			final TableGroupJoin joinForPredicate;
-			if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
-				joinForPredicate = tableGroupJoin;
-			}
-			else {
-				joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
-			}
+			final TableGroupJoin joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( tableGroupJoin );
 			joinForPredicate.applyPredicate( predicateCollector.getPredicate() );
 		}
 		return tableGroupJoin;

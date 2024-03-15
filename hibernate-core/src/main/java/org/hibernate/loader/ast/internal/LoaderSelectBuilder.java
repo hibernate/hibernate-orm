@@ -48,6 +48,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.internal.TableGroupJoinHelper;
 import org.hibernate.sql.ast.spi.AliasCollector;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
@@ -710,13 +711,7 @@ public class LoaderSelectBuilder {
 			final TableGroupJoin pluralTableGroupJoin = parentTableGroup.findTableGroupJoin( tableGroup );
 			assert pluralTableGroupJoin != null;
 
-			final TableGroupJoin joinForPredicate;
-			if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
-				joinForPredicate = pluralTableGroupJoin;
-			}
-			else {
-				joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
-			}
+			final TableGroupJoin joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( pluralTableGroupJoin );
 
 			pluralAttributeMapping.applyBaseRestrictions(
 					joinForPredicate::applyPredicate,

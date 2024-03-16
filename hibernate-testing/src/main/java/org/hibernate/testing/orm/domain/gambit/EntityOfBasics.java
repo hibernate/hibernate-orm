@@ -17,6 +17,8 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.UUID;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -68,6 +70,7 @@ public class EntityOfBasics {
 	private Gender convertedGender;
 	private Gender ordinalGender;
 	private Duration theDuration;
+	private UUID theUuid;
 
 	private LocalDateTime theLocalDateTime;
 	private LocalDate theLocalDate;
@@ -76,6 +79,8 @@ public class EntityOfBasics {
 	private OffsetDateTime theOffsetDateTime;
 
 	private MutableValue mutableValue;
+
+	private String theField = "the string";
 
 	public EntityOfBasics() {
 	}
@@ -272,6 +277,15 @@ public class EntityOfBasics {
 		this.theDuration = theDuration;
 	}
 
+	@Column(name = "theuuid")
+	public UUID getTheUuid() {
+		return theUuid;
+	}
+
+	public void setTheUuid(UUID theUuid) {
+		this.theUuid = theUuid;
+	}
+
 	public Boolean isTheBoolean() {
 		return theBoolean;
 	}
@@ -296,6 +310,15 @@ public class EntityOfBasics {
 
 	public void setTheStringBoolean(Boolean theStringBoolean) {
 		this.theStringBoolean = theStringBoolean;
+	}
+
+	@Column(name = "the_column")
+	public String getTheField() {
+		return theField;
+	}
+
+	public void setTheField(String theField) {
+		this.theField = theField;
 	}
 
 	@Convert( converter = MutableValueConverter.class )

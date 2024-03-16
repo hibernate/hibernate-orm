@@ -212,7 +212,6 @@ import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -890,10 +889,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
-		final JdbcValuesMappingProducerProvider producerProvider = getSessionFactory()
+		return getSessionFactory()
 				.getFastSessionServices()
-				.getJdbcValuesMappingProducerProvider();
-		return producerProvider.buildMappingProducer( selectStatement, getSessionFactory() );
+				.getJdbcValuesMappingProducerProvider()
+				.buildMappingProducer( selectStatement, getSessionFactory() );
 	}
 
 	protected int getRowsToSkip(SelectStatement sqlAstSelect, JdbcParameterBindings jdbcParameterBindings) {

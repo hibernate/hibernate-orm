@@ -54,7 +54,7 @@ public class PropertyAccessStrategyBackRefImpl implements PropertyAccessStrategy
 	}
 
 	private static class PropertyAccessBackRefImpl implements PropertyAccess {
-		private PropertyAccessStrategyBackRefImpl strategy;
+		private final PropertyAccessStrategyBackRefImpl strategy;
 
 		private final GetterImpl getter;
 

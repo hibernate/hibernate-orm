@@ -254,8 +254,8 @@ public final class FastSessionServices {
 				: null;
 		this.classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		this.transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
-		this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
-		this.entityCopyObserverFactory = serviceRegistry.getService( EntityCopyObserverFactory.class );
+		this.jdbcServices = serviceRegistry.requireService( JdbcServices.class );
+		this.entityCopyObserverFactory = serviceRegistry.requireService( EntityCopyObserverFactory.class );
 		this.jdbcValuesMappingProducerProvider = serviceRegistry.getService( JdbcValuesMappingProducerProvider.class );
 
 
@@ -401,6 +401,7 @@ public final class FastSessionServices {
 		return preferredSqlTypeCodeForBoolean;
 	}
 
+	@Deprecated(forRemoval = true) //This seems no longer used - cleanup?
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return defaultTimeZoneStorageStrategy;
 	}
@@ -423,7 +424,7 @@ public final class FastSessionServices {
 		return xmlFormatMapper;
 	}
 
-	@Deprecated //This seems no longer used - cleanup?
+	@Deprecated(forRemoval = true) //This seems no longer used - cleanup?
 	public MutationExecutorService getMutationExecutorService() {
 		return mutationExecutorService;
 	}

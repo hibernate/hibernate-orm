@@ -158,6 +158,7 @@ BY					: [bB] [yY];
 CASE				: [cC] [aA] [sS] [eE];
 CAST				: [cC] [aA] [sS] [tT];
 COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
+COLUMN				: [cC] [oO] [lL] [uU] [mM] [nN];
 CONFLICT			: [cC] [oO] [nN] [fF] [lL] [iI] [cC] [tT];
 CONSTRAINT			: [cC] [oO] [nN] [sS] [tT] [rR] [aA] [iI] [nN] [tT];
 COUNT				: [cC] [oO] [uU] [nN] [tT];

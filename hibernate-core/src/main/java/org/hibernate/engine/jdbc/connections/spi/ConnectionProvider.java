@@ -62,7 +62,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * <p>
 	 * Typically, this is only true in managed environments where a container tracks connections
 	 * by transaction or thread.
-	 *
+	 * <p>
 	 * Note that JTA semantic depends on the fact that the underlying connection provider does
 	 * support aggressive release.
 	 *

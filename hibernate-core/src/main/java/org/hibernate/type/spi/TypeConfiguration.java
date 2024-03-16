@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -323,7 +324,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * <p>
 	 * The type names are not case-sensitive.
 	 */
-	public BasicValuedMapping resolveCastTargetType(String name) {
+	public BasicType<?> resolveCastTargetType(String name) {
 		switch ( name.toLowerCase() ) {
 			case "string": return getBasicTypeForJavaType( String.class );
 			case "character": return getBasicTypeForJavaType( Character.class );
@@ -346,6 +347,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "duration": return getBasicTypeForJavaType( Duration.class );
 			case "instant": return getBasicTypeForJavaType( Instant.class );
 			case "binary": return getBasicTypeForJavaType( byte[].class );
+			case "uuid": return getBasicTypeForJavaType( UUID.class );
 			//this one is very fragile ... works well for BIT or BOOLEAN columns only
 			//works OK, I suppose, for integer columns, but not at all for char columns
 			case "boolean": return getBasicTypeForJavaType( Boolean.class );
@@ -353,7 +355,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "yesno": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.YES_NO.getName() );
 			case "numericboolean": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.NUMERIC_BOOLEAN.getName() );
 			default: {
-				final BasicType<Object> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
+				final BasicType<?> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
 				if ( registeredBasicType != null ) {
 					return registeredBasicType;
 				}

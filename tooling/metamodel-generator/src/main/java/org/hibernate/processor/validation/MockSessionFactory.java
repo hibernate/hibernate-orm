@@ -135,6 +135,9 @@ public abstract class MockSessionFactory
 		implements SessionFactoryImplementor, QueryEngine, RuntimeModelCreationContext, MetadataBuildingOptions,
 				BootstrapContext, MetadataBuildingContext, FunctionContributions, SessionFactoryOptions, JdbcTypeIndicators {
 
+	private static final BasicTypeImpl<Object> OBJECT_BASIC_TYPE =
+			new BasicTypeImpl<>(new UnknownBasicJavaType<>(Object.class), ObjectJdbcType.INSTANCE);
+
 	// static so other things can get at it
 	// TODO: make a static instance of this whole object instead!
 	static TypeConfiguration typeConfiguration;
@@ -972,7 +975,7 @@ public abstract class MockSessionFactory
 			return (DomainType<?>) elementType;
 		}
 		else {
-			return new BasicTypeImpl<>(new UnknownBasicJavaType<>(Object.class), ObjectJdbcType.INSTANCE);
+			return OBJECT_BASIC_TYPE;
 		}
 	}
 

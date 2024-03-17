@@ -1114,15 +1114,56 @@ Finally, the following functions evaluate the id, version, or natural id of an e
 Useful with associations annotated `@NotFound`. | ✖
 |===
 
+[[embedding-sql]]
+==== Embedding SQL expressions
+
+The following special functions let us embed a call to a native SQL function, refer directly to a column, or evaluate an expression written in native SQL.
+
+[[sql-embedding-functions]]
+[cols="12,~,35,^15"]
+|===
+| Function | Purpose | Signature | JPA standard
+
+| `function()` | Call a SQL function
+| `function('fun', arg1, arg2)`
+| ✔
+| `function()` | Call a SQL function
+| `function(fun, arg1, arg2)`, +
+`function(fun as Type, arg1, arg2)`
+| ✖
+| `column()` | A column value | `column(entity.column)`, +
+`column(entity.column as Type)`
+| ✖
+| `sql()` | Evaluate a SQL expression
+| `sql('text', arg1, arg2)`
+| ✖
+|===
+
+TIP: Before using one of these functions, ask yourself if it might be better to just write the whole query in native SQL.
+
+[[column-references]]
+===== Direct column references
+
+The `column()` function lets us refer to an unmapped column of a table.
+The column name must be qualified by an identification variable or path expression.
+
+[source,hql]
+----
+select column(log.ctid as String)
+from Log log
+----
+
+Of course, the table itself must be mapped by an entity class.
+
 [[user-defined-functions]]
-==== Native and user-defined functions
+===== Native and user-defined functions
 
 The functions we've described above are the functions abstracted by HQL and made portable across databases.
 But, of course, HQL can't abstract every function in your database.
 
 There are several ways to call native or user-defined SQL functions.
 
-- A native or user-defined function may be called using JPQL's `function` syntax, for example, ``function('sinh', phi)``.
+- A native or user-defined function may be called using JPQL's `function` syntax, for example, ``function('sinh', phi)``, or HQL's extension to that syntax, for example ``function(sinh as Double, phi)``.
 (This is the easiest way, but not the best way.)
 - A user-written `FunctionContributor` may register user-defined functions.
 - A custom `Dialect` may register additional native functions by overriding `initializeFunctionRegistry()`.
@@ -1144,7 +1185,7 @@ Then at startup Hibernate will log a list of type signatures of all registered f
 
 
 [[function-sql]]
-==== Embedding native SQL in HQL
+===== Embedding native SQL in HQL
 
 The special function `sql()` allows the use of native SQL fragments inside an HQL query.
 

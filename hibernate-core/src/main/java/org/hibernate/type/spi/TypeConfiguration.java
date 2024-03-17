@@ -347,13 +347,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "duration": return getBasicTypeForJavaType( Duration.class );
 			case "instant": return getBasicTypeForJavaType( Instant.class );
 			case "binary": return getBasicTypeForJavaType( byte[].class );
-			case "uuid": return getBasicTypeForJavaType( UUID.class );
 			//this one is very fragile ... works well for BIT or BOOLEAN columns only
 			//works OK, I suppose, for integer columns, but not at all for char columns
 			case "boolean": return getBasicTypeForJavaType( Boolean.class );
 			case "truefalse": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.TRUE_FALSE.getName() );
 			case "yesno": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.YES_NO.getName() );
 			case "numericboolean": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.NUMERIC_BOOLEAN.getName() );
+			//really not sure about this one - it works well for casting from binary
+			//to UUID, but people will want to use it to cast from varchar, and that
+			//won't work at all without some special casing in the Dialects
+//			case "uuid": return getBasicTypeForJavaType( UUID.class );
 			default: {
 				final BasicType<?> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
 				if ( registeredBasicType != null ) {

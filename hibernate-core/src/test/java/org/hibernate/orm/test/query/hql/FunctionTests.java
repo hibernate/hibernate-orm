@@ -2293,8 +2293,8 @@ public class FunctionTests {
 		scope.inTransaction(s -> {
 			byte[] bytes = s.createSelectionQuery("select column(e.theuuid as binary) from EntityOfBasics e", byte[].class)
 					.getSingleResultOrNull();
-			UUID uuid = s.createSelectionQuery("select column(e.theuuid as UUID) from EntityOfBasics e", UUID.class)
-					.getSingleResultOrNull();
+//			UUID uuid = s.createSelectionQuery("select column(e.theuuid as UUID) from EntityOfBasics e", UUID.class)
+//					.getSingleResultOrNull();
 		});
 	}
 

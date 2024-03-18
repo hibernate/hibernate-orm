@@ -83,6 +83,7 @@ import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValueRef;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
+import static org.hibernate.processor.util.TypeUtils.propertyName;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -1007,7 +1008,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void createCriteriaFinder(
 			ExecutableElement method, TypeMirror returnType, @Nullable String containerType, TypeElement entity) {
 		final String methodName = method.getSimpleName().toString();
-		final List<String> paramNames = parameterNames( method );
+		final List<String> paramNames = parameterNames( method, entity );
 		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
@@ -1206,7 +1207,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void createMultipleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
 		final String methodName = method.getSimpleName().toString();
-		final List<String> paramNames = parameterNames( method );
+		final List<String> paramNames = parameterNames( method, entity );
 		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
@@ -1270,7 +1271,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				method.getParameters().stream()
 						.filter(AnnotationMetaEntity::isFinderParameterMappingToAttribute)
 						.findFirst().orElseThrow();
-		final List<String> paramNames = parameterNames( method );
+		final List<String> paramNames = parameterNames( method, entity );
 		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final FieldType fieldType = validateFinderParameter( entity, parameter );
@@ -1520,8 +1521,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final AccessType accessType = getAccessType(entityType);
 		final String nextToken = tokens.nextToken();
 		for ( Element member : entityType.getEnclosedElements() ) {
+			if ( "#id".equals(nextToken) && hasAnnotation( member, ID) ) {
+				return member;
+			}
 			final Element match =
-					memberMatchingPath(entityType, member, accessType, tokens, nextToken);
+					memberMatchingPath( entityType, member, accessType, tokens, nextToken );
 			if ( match != null ) {
 				return match;
 			}
@@ -2035,6 +2039,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static List<String> parameterTypes(ExecutableElement method) {
 		return method.getParameters().stream()
 				.map(param -> param.asType().toString())
+				.collect(toList());
+	}
+
+	private List<String> parameterNames(ExecutableElement method, TypeElement entity) {
+		final String idName =
+				// account for special @By("#id") hack in Jakarta Data
+				entity.getEnclosedElements().stream()
+						.filter(member -> hasAnnotation(member, ID))
+						.map(member -> propertyName(this, member))
+						.findFirst()
+						.orElse("id");
+		return method.getParameters().stream()
+				.map(AnnotationMetaEntity::parameterName)
+				.map(name -> "#id".equals(name) ? idName : name)
 				.collect(toList());
 	}
 

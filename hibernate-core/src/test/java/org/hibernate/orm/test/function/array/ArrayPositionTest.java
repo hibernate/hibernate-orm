@@ -8,6 +8,7 @@ package org.hibernate.orm.test.function.array;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
@@ -17,6 +18,7 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -82,6 +84,15 @@ public class ArrayPositionTest {
 					.getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17801")
+	public void testEnumPosition(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			em.createQuery( "from EntityWithArrays e where array_position(e.theLabels, e.theLabel) > 0", EntityWithArrays.class )
+					.getResultList();
 		} );
 	}
 

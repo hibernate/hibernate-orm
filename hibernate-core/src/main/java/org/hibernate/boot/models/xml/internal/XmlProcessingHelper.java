@@ -144,7 +144,8 @@ public class XmlProcessingHelper {
 				xmlDocumentContext.getModelBuildingContext()
 						.getAnnotationDescriptorRegistry()
 						.getDescriptor( annotationType ),
-				target
+				target,
+				xmlDocumentContext.getModelBuildingContext()
 		);
 	}
 
@@ -154,7 +155,9 @@ public class XmlProcessingHelper {
 		return new DynamicAnnotationUsage<>(
 				xmlDocumentContext.getModelBuildingContext()
 						.getAnnotationDescriptorRegistry()
-						.getDescriptor( annotationType )
+						.getDescriptor( annotationType ),
+				null,
+				xmlDocumentContext.getModelBuildingContext()
 		);
 	}
 

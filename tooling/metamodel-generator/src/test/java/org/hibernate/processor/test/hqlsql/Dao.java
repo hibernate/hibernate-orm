@@ -43,6 +43,9 @@ public interface Dao {
     @HQL("order by isbn asc, publicationDate desc")
     List<Book> allBooks();
 
+    @HQL("order by isbn asc, publicationDate desc")
+    Book[] allBooksAsArray();
+
     @SQL("select * from Book where isbn = :isbn")
     Book findByIsbnNative(String isbn);
 

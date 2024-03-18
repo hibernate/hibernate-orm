@@ -7,6 +7,7 @@
 package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.processor.util.Constants;
 
@@ -192,23 +193,31 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private StringBuilder returnType() {
-		StringBuilder type = new StringBuilder();
-		boolean returnsUni = isReactive()
-				&& (containerType == null || LIST.equals(containerType));
-		if ( returnsUni ) {
-			type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
-		}
-		if ( containerType != null ) {
-			type.append(annotationMetaEntity.importType(containerType));
-			if ( returnTypeName != null ) {
-				type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
+		final StringBuilder type = new StringBuilder();
+		if ( "[]".equals(containerType) ) {
+			if ( returnTypeName == null ) {
+				throw new AssertionFailure("array return type, but no type name");
 			}
+			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
 		}
-		else if ( returnTypeName != null )  {
-			type.append(annotationMetaEntity.importType(returnTypeName));
-		}
-		if ( returnsUni ) {
-			type.append('>');
+		else {
+			boolean returnsUni = isReactive()
+					&& (containerType == null || LIST.equals(containerType));
+			if ( returnsUni ) {
+				type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
+			}
+			if ( containerType != null ) {
+				type.append(annotationMetaEntity.importType(containerType));
+				if ( returnTypeName != null ) {
+					type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
+				}
+			}
+			else if ( returnTypeName != null )  {
+				type.append(annotationMetaEntity.importType(returnTypeName));
+			}
+			if ( returnsUni ) {
+				type.append('>');
+			}
 		}
 		return type;
 	}

@@ -107,8 +107,14 @@ public interface BookAuthorRepository {
 	@Query("from Book where title like :title")
 	List<Book> books3(String title, Limit limit, Sort<Book>... order);
 
+	@Query("from Book where title like :title")
+	Book[] books4(String title, Sort<Book> sort);
+
 	@Query("select title from Book where title like :title order by isbn")
-	Stream<String> titles(String title);
+	Stream<String> titles0(String title);
+
+	@Query("select title from Book where title like :title order by isbn")
+	String[] titles1(String title);
 
 	@Query("from Book")
 	List<Book> everyBook1(PageRequest<? super Book> pageRequest);

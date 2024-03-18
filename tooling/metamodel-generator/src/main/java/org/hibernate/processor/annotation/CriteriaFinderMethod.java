@@ -7,6 +7,7 @@
 package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.AssertionFailure;
 import org.hibernate.processor.util.Constants;
 
 import java.util.List;
@@ -199,8 +200,9 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					.append(".in(");
 			if ( paramType.endsWith("[]") ) {
 				declaration
-					//TODO: only safe if we are binding literals as parameters!!!
-					.append(parameterName);
+						.append("(Object[]) ")
+						//TODO: only safe if we are binding literals as parameters!!!
+						.append(parameterName);
 
 			}
 			else {
@@ -247,7 +249,10 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private StringBuilder returnType() {
 		final StringBuilder type = new StringBuilder();
 		if ( "[]".equals(containerType) ) {
-			type.append(returnTypeName).append("[]");
+			if ( returnTypeName == null ) {
+				throw new AssertionFailure("array return type, but no type name");
+			}
+			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
 		}
 		else {
 			boolean returnsUni = isReactive()

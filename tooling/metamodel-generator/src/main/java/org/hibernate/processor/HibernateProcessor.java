@@ -249,7 +249,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			}
 			catch (Exception e) {
 				final StringWriter stack = new StringWriter();
-				e.printStackTrace( new PrintWriter( stack) );
+				e.printStackTrace( new PrintWriter(stack) );
 				final Throwable cause = e.getCause();
 				final String message =
 						cause != null && cause != e

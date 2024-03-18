@@ -13,4 +13,6 @@ package org.hibernate.boot.jaxb.mapping.spi;
  * @author Steve Ebersole
  */
 public interface JaxbEmbeddedMapping extends JaxbSingularAttribute {
+	String getTarget();
+	void setTarget(String target);
 }

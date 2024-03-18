@@ -49,6 +49,9 @@ public interface BookAuthorRepository {
 	Book book(String isbn);
 
 	@Find
+	Optional<Book> bookMaybe(@By("#id") String id);
+
+	@Find
 	Book[] books(@By("isbn") String[] isbns);
 
 	@Find

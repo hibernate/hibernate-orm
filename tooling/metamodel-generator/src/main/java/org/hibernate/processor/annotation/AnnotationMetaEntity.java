@@ -43,6 +43,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
@@ -1445,6 +1446,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return false;
 			}
 			else {
+				if ( attributeType.getKind().isPrimitive() ) {
+					final PrimitiveType primitiveType = (PrimitiveType) attributeType;
+					attributeType = types.boxedClass( primitiveType ).asType();
+				}
 				final TypeKind kind = parameterType.getKind();
 				switch (kind) {
 					case TYPEVAR:
@@ -1467,7 +1472,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						return true;
 					default:
 						if ( kind.isPrimitive() ) {
-							if ( !types.isSameType( types.unboxedType(parameterType), attributeType) ) {
+							final PrimitiveType primitiveType = (PrimitiveType) parameterType;
+							if ( !types.isSameType( types.boxedClass(primitiveType).asType(), attributeType ) ) {
 								parameterTypeError( entityType, param, attributeType );
 							}
 							return false;

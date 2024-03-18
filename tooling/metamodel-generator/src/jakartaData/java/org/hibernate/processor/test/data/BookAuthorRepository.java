@@ -45,6 +45,9 @@ public interface BookAuthorRepository {
 	Book[] books(@By("isbn") String[] isbns);
 
 	@Find
+	List<Book> booksWithPages(Iterable<Integer> pages);
+
+	@Find
 	Optional<Book> bookIfAny(String isbn);
 
 	@Find

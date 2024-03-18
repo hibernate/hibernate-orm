@@ -9,6 +9,7 @@ package org.hibernate.boot.models.xml.internal;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 /**
@@ -18,14 +19,17 @@ public class XmlDocumentContextImpl implements XmlDocumentContext {
 	private final XmlDocument xmlDocument;
 	private final PersistenceUnitMetadata persistenceUnitMetadata;
 	private final SourceModelBuildingContext modelBuildingContext;
+	private final BootstrapContext bootstrapContext;
 
 	public XmlDocumentContextImpl(
 			XmlDocument xmlDocument,
 			PersistenceUnitMetadata persistenceUnitMetadata,
-			SourceModelBuildingContext modelBuildingContext) {
+			SourceModelBuildingContext modelBuildingContext,
+			BootstrapContext bootstrapContext) {
 		this.xmlDocument = xmlDocument;
 		this.persistenceUnitMetadata = persistenceUnitMetadata;
 		this.modelBuildingContext = modelBuildingContext;
+		this.bootstrapContext = bootstrapContext;
 	}
 
 	@Override
@@ -41,5 +45,10 @@ public class XmlDocumentContextImpl implements XmlDocumentContext {
 	@Override
 	public SourceModelBuildingContext getModelBuildingContext() {
 		return modelBuildingContext;
+	}
+
+	@Override
+	public BootstrapContext getBootstrapContext() {
+		return bootstrapContext;
 	}
 }

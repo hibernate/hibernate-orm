@@ -42,10 +42,16 @@ public interface BookAuthorRepository {
 	Book book(String isbn);
 
 	@Find
+	Book[] books(@By("isbn") String[] isbns);
+
+	@Find
 	Optional<Book> bookIfAny(String isbn);
 
 	@Find
 	Author author(String ssn);
+
+	@Find
+	List<Author> authors(@By("ssn") String[] ssns);
 
 	@Find
 	Book byTitleAndDate(String title, LocalDate publicationDate);

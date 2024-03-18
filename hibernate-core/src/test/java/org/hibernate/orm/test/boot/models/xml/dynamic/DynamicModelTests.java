@@ -77,7 +77,7 @@ public class DynamicModelTests {
 			assertThat( idField.getType().determineRawClass().getClassName() ).isEqualTo( Integer.class.getName() );
 
 			final FieldDetails nameField = rootEntity.getClassDetails().findFieldByName( "name" );
-			assertThat( nameField.getType().determineRawClass().getClassName() ).isEqualTo( Object.class.getName() );
+			assertThat( nameField.getType().determineRawClass().getClassName() ).isEqualTo( String.class.getName() );
 			assertThat( nameField.getAnnotationUsage( JavaType.class ) ).isNotNull();
 
 			final FieldDetails qtyField = rootEntity.getClassDetails().findFieldByName( "quantity" );

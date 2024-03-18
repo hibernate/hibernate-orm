@@ -374,81 +374,8 @@ public class ManagedTypeProcessor {
 	private static TypeDetails determineDynamicAttributeJavaType(
 			JaxbPersistentAttribute jaxbPersistentAttribute,
 			XmlDocumentContext xmlDocumentContext) {
-		final ClassDetailsRegistry classDetailsRegistry = xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry();
-
-		if ( jaxbPersistentAttribute instanceof JaxbIdImpl jaxbId ) {
-			final MutableClassDetails classDetails = xmlDocumentContext.resolveJavaType( jaxbId.getTarget() );
-			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
-		}
-
-		if ( jaxbPersistentAttribute instanceof JaxbEmbeddedIdImpl jaxbEmbeddedId ) {
-			final String target = jaxbEmbeddedId.getTarget();
-			if ( StringHelper.isEmpty( target ) ) {
-				return null;
-			}
-			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails(
-					target,
-					(name) -> new DynamicClassDetails( target, xmlDocumentContext.getModelBuildingContext() )
-			);
-			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
-		}
-
-		if ( jaxbPersistentAttribute instanceof JaxbBasicImpl jaxbBasic ) {
-			final MutableClassDetails classDetails = xmlDocumentContext.resolveJavaType( jaxbBasic.getTarget() );
-			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
-		}
-
-		if ( jaxbPersistentAttribute instanceof JaxbEmbeddedImpl jaxbEmbedded ) {
-			final String target = jaxbEmbedded.getTarget();
-			if ( StringHelper.isEmpty( target ) ) {
-				return null;
-			}
-			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails(
-					target,
-					(name) -> new DynamicClassDetails( target, xmlDocumentContext.getModelBuildingContext() )
-			);
-			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
-		}
-
-		if ( jaxbPersistentAttribute instanceof JaxbOneToOneImpl jaxbOneToOne ) {
-			final String target = jaxbOneToOne.getTargetEntity();
-			if ( StringHelper.isEmpty( target ) ) {
-				return null;
-			}
-			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails(
-					target,
-					(name) -> new DynamicClassDetails(
-							target,
-							null,
-							false,
-							null,
-							null,
-							xmlDocumentContext.getModelBuildingContext()
-					)
-			);
-			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
-		}
-
-		if ( jaxbPersistentAttribute instanceof JaxbAnyMappingImpl ) {
-			final ClassDetails classDetails = classDetailsRegistry.getClassDetails( Object.class.getName() );
-			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
-		}
-
-		if ( jaxbPersistentAttribute instanceof JaxbPluralAttribute jaxbPluralAttribute ) {
-			final LimitedCollectionClassification classification = nullif( jaxbPluralAttribute.getClassification(), LimitedCollectionClassification.BAG );
-			final ClassDetails collectionClassDetails;
-
-			collectionClassDetails = switch ( classification ) {
-				case BAG -> classDetailsRegistry.resolveClassDetails( Collection.class.getName() );
-				case LIST -> classDetailsRegistry.resolveClassDetails( List.class.getName() );
-				case SET -> classDetailsRegistry.resolveClassDetails( Set.class.getName() );
-				case MAP -> classDetailsRegistry.resolveClassDetails( Map.class.getName() );
-			};
-
-			return new ClassTypeDetailsImpl( collectionClassDetails, TypeDetails.Kind.CLASS );
-		}
-
-		throw new UnsupportedOperationException( "Resolution of dynamic attribute Java type not yet implemented for " + jaxbPersistentAttribute );
+		final MutableClassDetails classDetails = xmlDocumentContext.resolveDynamicJavaType( jaxbPersistentAttribute );
+		return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 	}
 
 	private static void adjustDynamicTypeMember(

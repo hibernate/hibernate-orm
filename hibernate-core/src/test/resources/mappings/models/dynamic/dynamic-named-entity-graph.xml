@@ -20,17 +20,26 @@
             </subgraph>
         </named-entity-graph>
         <attributes>
-            <id name="id"/>
-            <basic name="name"/>
-            <basic name="surname"/>
-<!--            <one-to-one name="address" fetch="LAZY"/>-->
+            <id name="id">
+                <target>integer</target>
+            </id>
+            <basic name="name">
+                <target>string</target>
+            </basic>
+            <basic name="surname">
+                <target>string</target>
+            </basic>
+            <one-to-one name="address" fetch="LAZY" target-entity="Address"/>
         </attributes>
     </entity>
-<!--    <entity name="Address" metadata-complete="true">-->
-<!--        <attributes>-->
-<!--            <id name="id"/>-->
-<!--            <basic name="city"/>-->
-
-<!--        </attributes>-->
-<!--    </entity>-->
+    <entity name="Address" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <target>integer</target>
+            </id>
+            <basic name="city">
+                <target>string</target>
+            </basic>
+        </attributes>
+    </entity>
 </entity-mappings>

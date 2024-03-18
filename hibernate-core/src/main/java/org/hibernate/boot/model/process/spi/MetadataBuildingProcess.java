@@ -442,7 +442,12 @@ public class MetadataBuildingProcess {
 				sourceModelBuildingContext
 		);
 
-		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml( xmlPreProcessingResult, modelCategorizationCollector, sourceModelBuildingContext );
+		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
+				xmlPreProcessingResult,
+				modelCategorizationCollector,
+				sourceModelBuildingContext,
+				bootstrapContext
+		);
 
 		final HashSet<String> categorizedClassNames = new HashSet<>();
 		allKnownClassNames.forEach( (className) -> applyKnownClass(

@@ -11,17 +11,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
@@ -72,6 +73,124 @@ public class SQLServerDialectPaginationTest extends BaseEntityManagerFunctionalT
 			// verify that the paginated query returned the right ids.
 			final List<Integer> ids = results.stream().map( SimpleEntity::getId ).collect( Collectors.toList() );
 			assertEquals( Arrays.asList( 10, 11, 12, 13, 14 ), ids );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-17700")
+	public void testParameterizedPaginatedNativeQueries() {
+		// prepare some test data
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			for ( int i = 1; i <= 20; ++i ) {
+				final SimpleEntity entity = new SimpleEntity( i, "Entity" + i );
+				entityManager.persist( entity );
+			}
+		} );
+
+		final String query1 = "\n"
+				+ "DECLARE @myParam1 VARCHAR(15);\n"
+				+ "DECLARE @myParam2 VARCHAR(15);\n"
+				+ "SET @myParam1 = :firstId ;\n"
+				+ "SELECT o.id FROM SimpleEntity o WHERE o.id >= @myParam1 ORDER BY o.id";
+
+		final String query2 = "\n"
+				+ "DECLARE @myParam1 VARCHAR(15);\n"
+				+ "DECLARE @myParam2 VARCHAR(15);\n"
+				+ "SET @myParam1 = :firstId ;\n"
+				+ "SELECT o.id FROM SimpleEntity o WHERE o.id >= @myParam1 ORDER BY o.id;";
+
+		final String query3 = "\n"
+				+ "DECLARE @myParam1 VARCHAR(15);\n"
+				+ "DECLARE @myParam2 VARCHAR(15);\n"
+				+ "SET @myParam1 = :firstId ;\n"
+				+ "SELECT o.id FROM SimpleEntity o WHERE o.id >= @myParam1 ORDER BY o.id  ;  ";
+
+		final String query4 = "\n"
+				+ "DECLARE @myParam1 VARCHAR(15);\n"
+				+ "DECLARE @myParam2 VARCHAR(15);\n"
+				+ "SET @myParam1 = :firstId ;\n"
+				+ "SELECT o.id FROM SimpleEntity o\n"
+				+ "WHERE o.id >= @myParam1 \n"
+				+ "ORDER BY o.id    ";
+
+		final String query5 = "\n"
+				+ "DECLARE @myParam1 VARCHAR(15)\n"
+				+ "DECLARE @myParam2 VARCHAR(15)\n"
+				+ "SET @myParam1 = :firstId \n"
+				+ "SELECT o.id FROM SimpleEntity o\n"
+				+ "WHERE o.id >= @myParam1 \n"
+				+ "ORDER BY o.id    ";
+
+		final String query6 = "\n"
+				+ "DECLARE @myParam1 VARCHAR(15)\n"
+				+ "DECLARE @myParam2 VARCHAR(15)\n"
+				+ "SET @myParam1 = :firstId \n"
+				+ "SELECT o.id FROM SimpleEntity o\n"
+				+ "WHERE o.id >= @myParam1 \n"
+				+ "ORDER BY o.id ;   ";
+
+		final String query7 = "\n"
+				+ "DECLARE @myParam1 VARCHAR(15)\n"
+				+ "DECLARE @myParam2 VARCHAR(15)\n"
+				+ "SET @myParam1 = :firstId \n"
+				+ "SELECT o.id FROM SimpleEntity o\n"
+				+ "WHERE o.id >= @myParam1 \n"
+				+ "ORDER BY o.id\n"
+				+ " ;   ";
+
+		// Verify the fix of SQLServerException: Incorrect syntax near 'offset'
+		doInHibernate( this::entityManagerFactory, entityManager -> {
+			for ( String query : List.of( query1, query2, query3, query4, query5, query6, query7 ) ) {
+				final List<Integer> results = entityManager
+						.createNativeQuery( query, Integer.class )
+						.setParameter( "firstId", 10 )
+						.setFirstResult( 0 )
+						.setMaxResults( 5 )
+						.getResultList();
+				// verify that the paginated query returned the right ids.
+				assertEquals( Arrays.asList( 10, 11, 12, 13, 14 ), results );
+			}
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-17700")
+	public void testPaginatedNativeQueries() {
+		// prepare some test data
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			for ( int i = 1; i <= 20; ++i ) {
+				final SimpleEntity entity = new SimpleEntity( i, "Entity" + i );
+				entityManager.persist( entity );
+			}
+		} );
+
+		final String query1 = "SELECT o.id FROM SimpleEntity o ORDER BY o.id";
+
+		final String query2 = "SELECT o.id FROM SimpleEntity o ORDER BY o.id;";
+
+		final String query3 = "SELECT o.id FROM SimpleEntity o ORDER BY o.id  ;  ";
+
+		final String query4 = "SELECT o.id FROM SimpleEntity o\n" +
+				"ORDER BY o.id    ";
+
+		final String query5 = "SELECT o.id FROM SimpleEntity o\n" +
+				"ORDER BY o.id  ;  ";
+
+		final String query6 = "SELECT o.id FROM SimpleEntity o\n"
+						+ "ORDER BY o.id\n"
+						+ ";  ";
+
+		// Verify the fix of SQLServerException: Incorrect syntax near 'offset'
+		doInHibernate( this::entityManagerFactory, entityManager -> {
+			for ( String query : List.of( query1, query2, query3, query4, query5, query6 ) ) {
+				final List<Integer> results = entityManager
+						.createNativeQuery( query, Integer.class )
+						.setFirstResult( 2 )
+						.setMaxResults( 5 )
+						.getResultList();
+				// verify that the paginated query returned the right ids.
+				assertEquals( Arrays.asList( 3, 4, 5, 6, 7 ), results );
+			}
 		} );
 	}
 

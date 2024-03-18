@@ -11,6 +11,8 @@ import org.hibernate.processor.util.Constants;
 
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
@@ -22,6 +24,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 
 	private final @Nullable String containerType;
 	private final List<Boolean> paramNullability;
+	private final List<Boolean> multivalued;
 
 	CriteriaFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -29,6 +32,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			@Nullable String containerType,
 			List<String> paramNames, List<String> paramTypes,
 			List<Boolean> paramNullability,
+			List<Boolean> multivalued,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
@@ -40,6 +44,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository );
 		this.containerType = containerType;
 		this.paramNullability = paramNullability;
+		this.multivalued = multivalued;
 	}
 
 	@Override
@@ -164,14 +169,14 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					declaration
 							.append(", ");
 				}
-				parameter(declaration, i, paramName, paramType );
+				condition(declaration, i, paramName, paramType );
 			}
 		}
 		declaration
 				.append("\n\t);");
 	}
 
-	private void parameter(StringBuilder declaration, int i, String paramName, String paramType) {
+	private void condition(StringBuilder declaration, int i, String paramName, String paramType) {
 		declaration
 				.append("\n\t\t\t");
 		final String parameterName = paramName.replace('.', '$');
@@ -186,14 +191,42 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					.append(".isNull()")
 					.append("\n\t\t\t\t: ");
 		}
-		declaration
-				.append("_builder.equal(_entity");
-		path( declaration, paramName );
-		declaration
-				.append(", ")
-				//TODO: only safe if we are binding literals as parameters!!!
-				.append(parameterName)
-				.append(')');
+		if ( multivalued.get(i) ) {
+			declaration
+					.append("_entity");
+			path( declaration, paramName );
+			declaration
+					.append(".in(");
+			if ( paramType.endsWith("[]") ) {
+				declaration
+					//TODO: only safe if we are binding literals as parameters!!!
+					.append(parameterName);
+
+			}
+			else {
+				declaration
+						.append(annotationMetaEntity.staticImport(StreamSupport.class.getName(), "stream"))
+						.append('(')
+						//TODO: only safe if we are binding literals as parameters!!!
+						.append(parameterName)
+						.append(".spliterator(), false).collect(") // ugh, very ugly!
+						.append(annotationMetaEntity.staticImport(Collectors.class.getName(), "toList"))
+						.append("())");
+			}
+			declaration
+					.append(")");
+		}
+		else {
+			//TODO: change to use Expression.equalTo() in JPA 3.2
+			declaration
+					.append("_builder.equal(_entity");
+			path( declaration, paramName );
+			declaration
+					.append(", ")
+					//TODO: only safe if we are binding literals as parameters!!!
+					.append(parameterName)
+					.append(')');
+		}
 	}
 
 	private void path(StringBuilder declaration, String paramName) {

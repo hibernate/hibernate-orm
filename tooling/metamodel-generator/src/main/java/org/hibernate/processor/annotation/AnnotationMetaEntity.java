@@ -45,6 +45,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -62,6 +63,7 @@ import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static javax.lang.model.element.ElementKind.CLASS;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -1002,11 +1004,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
+		final List<Boolean> multivalued = new ArrayList<>();
 		for ( VariableElement parameter : method.getParameters() ) {
 			if ( isFinderParameterMappingToAttribute( parameter ) ) {
-				validateFinderParameter( entity, parameter );
+				multivalued.add( validateFinderParameter( entity, parameter ) == FieldType.MULTIVALUED );
 			}
 			else {
+				multivalued.add( false );
 				final Types types = context.getTypeUtils();
 				final TypeMirror parameterType = parameter.asType();
 				final String type = parameterType.toString();
@@ -1044,6 +1048,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						paramNames,
 						paramTypes,
 						parameterNullability(method, entity),
+						multivalued,
 						repository,
 						sessionType[0],
 						sessionType[1],
@@ -1211,8 +1216,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
-		if (  !usingStatelessSession(sessionType[0]) // no byNaturalId() lookup API for SS
-				&& matchesNaturalKey( method, entity ) ) {
+		final List<Boolean> multivalued = new ArrayList<>();
+		final List<@Nullable FieldType> fieldTypes = new ArrayList<>();
+		for ( VariableElement parameter : method.getParameters() ) {
+			if ( isFinderParameterMappingToAttribute( parameter ) ) {
+				final FieldType fieldType = validateFinderParameter(entity, parameter);
+				fieldTypes.add( fieldType );
+				multivalued.add( fieldType == FieldType.MULTIVALUED );
+			}
+			else {
+				multivalued.add( false );
+			}
+		}
+		if ( !usingStatelessSession( sessionType[0] ) // no byNaturalId() lookup API for SS
+				&& matchesNaturalKey( entity, fieldTypes ) ) {
 			putMember( methodKey,
 					new NaturalIdFinderMethod(
 							this,
@@ -1240,6 +1257,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),
+							multivalued,
 							repository,
 							sessionType[0],
 							sessionType[1],
@@ -1302,6 +1320,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					);
 					break;
 				case BASIC:
+				case MULTIVALUED:
 					putMember( methodKey,
 							new CriteriaFinderMethod(
 									this,
@@ -1311,6 +1330,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									paramNames,
 									paramTypes,
 									parameterNullability(method, entity),
+									method.getParameters().stream()
+											.map(param -> isFinderParameterMappingToAttribute(param)
+													&& fieldType == FieldType.MULTIVALUED)
+											.collect(toList()),
 									repository,
 									sessionType[0],
 									sessionType[1],
@@ -1326,55 +1349,41 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private FieldType pickStrategy(FieldType fieldType, String sessionType, List<String> profiles) {
-		switch (fieldType) {
-			case ID:
-				// no byId() API for SS or M.S, only get()
-				return (usingStatelessSession(sessionType) || usingReactiveSession(sessionType)) && !profiles.isEmpty()
-						? FieldType.BASIC : FieldType.ID;
-			case NATURAL_ID:
-				// no byNaturalId() lookup API for SS
-				// no byNaturalId() in M.S, but we do have Identifier workaround
-				return usingStatelessSession(sessionType) || (usingReactiveSession(sessionType) && !profiles.isEmpty())
-						? FieldType.BASIC : FieldType.NATURAL_ID;
-			default:
-				return FieldType.BASIC;
+		if ( ( usingStatelessSession(sessionType) || usingReactiveSession(sessionType) )
+				&& !profiles.isEmpty() ) {
+			// no support for passing fetch profiles i.e. IdentifierLoadAccess
+			// in SS or M.S except via Query.enableFetchProfile()
+			return FieldType.BASIC;
+		}
+		else {
+			switch (fieldType) {
+				case ID:
+					// no byId() API for SS or M.S, only get()
+					return FieldType.ID;
+				case NATURAL_ID:
+					// no byNaturalId() lookup API for SS
+					// no byNaturalId() in M.S, but we do have Identifier workaround
+					return FieldType.NATURAL_ID;
+				default:
+					return FieldType.BASIC;
+			}
 		}
 	}
 
-	private boolean matchesNaturalKey(ExecutableElement method, TypeElement entity) {
-		boolean result = true;
-		final List<? extends VariableElement> parameters = method.getParameters();
-		int count = 0;
-		for ( VariableElement param : parameters ) {
-			if ( isFinderParameterMappingToAttribute( param ) ) {
-				count ++;
-				if ( validateFinderParameter( entity, param ) != FieldType.NATURAL_ID ) {
-					// no short-circuit here because we want to validate
-					// all of them and get the nice error report
-					result = false;
-				}
-			}
-		}
-		return result && countNaturalIdFields( entity ) == count;
+	private boolean matchesNaturalKey(TypeElement entity, List<@Nullable FieldType> fieldTypes) {
+		return fieldTypes.stream().allMatch(type -> type == FieldType.NATURAL_ID)
+			&& entity.getEnclosedElements().stream()
+				.filter(member -> hasAnnotation(member, NATURAL_ID))
+				.count() == fieldTypes.size();
 	}
 
 	enum FieldType {
-		ID, NATURAL_ID, BASIC
-	}
-
-	private int countNaturalIdFields(TypeElement entity) {
-		int count = 0;
-		for ( Element member : entity.getEnclosedElements() ) {
-			if ( containsAnnotation( member, Constants.NATURAL_ID ) ) {
-				count ++;
-			}
-		}
-		return count;
+		ID, NATURAL_ID, BASIC, MULTIVALUED
 	}
 
 	private @Nullable FieldType validateFinderParameter(TypeElement entityType, VariableElement param) {
 		final Element member = memberMatchingPath( entityType, parameterName( param ) );
-		if ( member != null) {
+		if ( member != null ) {
 			if ( containsAnnotation( member, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
 				context.message( param,
 						"matching field is a collection",
@@ -1382,16 +1391,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return null;
 			}
 
-			final String memberType = memberType( member ).toString();
-			final String paramType = param.asType().toString();
-			if ( !isLegalAssignment( paramType, memberType ) ) {
-				context.message( param,
-						"matching field has type '" + memberType
-								+ "' in entity class '" + entityType + "'",
-						Diagnostic.Kind.ERROR );
-			}
+			//			final String memberType = attributeType.toString();
+//			final String paramType = parameterType.toString();
+//			if ( !isLegalAssignment( paramType, memberType ) ) {
+//				context.message( param,
+//						"matching field has type '" + memberType
+//								+ "' in entity class '" + entityType + "'",
+//						Diagnostic.Kind.ERROR );
+//			}
 
-			if ( containsAnnotation( member, ID, EMBEDDED_ID ) ) {
+			if ( checkParameterType( entityType, param, memberType( member ) ) ) {
+				return FieldType.MULTIVALUED;
+			}
+			else if ( containsAnnotation( member, ID, EMBEDDED_ID ) ) {
 				return FieldType.ID;
 			}
 			else if ( containsAnnotation( member, NATURAL_ID ) ) {
@@ -1401,22 +1413,82 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return FieldType.BASIC;
 			}
 		}
+		else {
+			final AnnotationMirror idClass = getAnnotationMirror( entityType, ID_CLASS );
+			if ( idClass != null ) {
+				final Object value = getAnnotationValue( idClass, "value" );
+				if ( value instanceof TypeMirror ) {
+					if ( context.getTypeUtils().isSameType( param.asType(), (TypeMirror) value ) ) {
+						return FieldType.ID;
+					}
+				}
+			}
 
-		final AnnotationMirror idClass = getAnnotationMirror( entityType, ID_CLASS );
-		if ( idClass != null ) {
-			final Object value = getAnnotationValue( idClass, "value" );
-			if ( value instanceof TypeMirror ) {
-				if ( context.getTypeUtils().isSameType( param.asType(), (TypeMirror) value ) ) {
-					return FieldType.ID;
+			context.message( param,
+					"no matching field named '" + parameterName( param )
+							+ "' in entity class '" + entityType + "'",
+					Diagnostic.Kind.ERROR );
+			return null;
+		}
+	}
+
+	/**
+	 * Check the type of a parameter of a {@code @Find} method against the field type
+	 * in the entity class.
+	 * @return true if the parameter is multivalued (i.e. it's an {@code in} condition)
+	 */
+	private boolean checkParameterType(TypeElement entityType, VariableElement param, TypeMirror attributeType) {
+		final Types types = context.getTypeUtils();
+		if ( entityType.getKind() == CLASS ) { // do no checks if the entity type is a type variable
+			TypeMirror parameterType = param.asType();
+			if ( types.isSameType( parameterType, attributeType ) ) {
+				return false;
+			}
+			else {
+				final TypeKind kind = parameterType.getKind();
+				switch (kind) {
+					case TYPEVAR:
+						final TypeVariable typeVariable = (TypeVariable) parameterType;
+						parameterType = typeVariable.getUpperBound();
+						// INTENTIONAL FALL-THROUGH
+					case DECLARED:
+						final TypeElement iterable = context.getTypeElementForFullyQualifiedName(ITERABLE);
+						if ( types.isAssignable( parameterType, types.getDeclaredType( iterable, attributeType) ) ) {
+							return true;
+						}
+						else {
+							parameterTypeError( entityType, param, attributeType );
+							return false;
+						}
+					case ARRAY:
+						if ( !types.isSameType( parameterType, types.getArrayType(attributeType) ) ) {
+							parameterTypeError( entityType, param, attributeType );
+						}
+						return true;
+					default:
+						if ( kind.isPrimitive() ) {
+							if ( !types.isSameType( types.unboxedType(parameterType), attributeType) ) {
+								parameterTypeError( entityType, param, attributeType );
+							}
+							return false;
+						}
+						else {
+							// probably impossible
+							return false;
+						}
 				}
 			}
 		}
+		else {
+			return false;
+		}
+	}
 
-		context.message( param,
-				"no matching field named '" + parameterName( param )
+	private void parameterTypeError(TypeElement entityType, VariableElement param, TypeMirror attributeType) {
+		context.message(param,
+				"matching field has type '" + attributeType
 						+ "' in entity class '" + entityType + "'",
 				Diagnostic.Kind.ERROR );
-		return null;
 	}
 
 	private boolean finderParameterNullable(TypeElement entity, VariableElement param) {

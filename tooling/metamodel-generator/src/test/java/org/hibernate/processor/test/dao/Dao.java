@@ -23,6 +23,12 @@ public interface Dao {
     Book getBook(String isbn);
 
     @Find
+    Book[] getBooks(String[] isbn);
+
+    @Find
+    List<Book> getBooks(List<String> isbn);
+
+    @Find
     Optional<Book> getBookIfAny(String isbn);
 
     @Find(enabledFetchProfiles="Goodbye")

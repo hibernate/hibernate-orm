@@ -18,6 +18,7 @@ import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
 import org.hibernate.StatelessSession;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,12 @@ public interface BookAuthorRepository {
 	@Insert
 	void insertBooks2(Set<Book> books);
 
+	@Insert
+	List<Book> insertBooks3(List<Book> books);
+
+	@Insert
+	Book[] insertBooks4(Book[] books);
+
 	@Find
 	Book book(String isbn);
 
@@ -46,6 +53,9 @@ public interface BookAuthorRepository {
 
 	@Find
 	List<Book> booksWithPages(Iterable<Integer> pages);
+
+	@Find
+	List<Book> booksWithPages(int pages);
 
 	@Find
 	Optional<Book> bookIfAny(String isbn);
@@ -78,6 +88,9 @@ public interface BookAuthorRepository {
 	List<Book> byPubDate3(LocalDate publicationDate, Sort<? super Book>... order);
 
 	@Find
+	Stream<Book> byPubDate4(LocalDate publicationDate, Sort<? super Book> order);
+
+	@Find
 	Book[] bookArrayByTitle(String title);
 
 	@Insert
@@ -94,6 +107,9 @@ public interface BookAuthorRepository {
 
 	@Query("from Book where title = :title")
 	Book bookWithTitle(String title);
+
+	@Query("from Book where title = :title")
+	Optional<Book> bookWithTitleMaybe(String title);
 
 	@Query("from Book where title like :title")
 	List<Book> books0(String title);
@@ -115,6 +131,9 @@ public interface BookAuthorRepository {
 
 	@Query("select title from Book where title like :title order by isbn")
 	String[] titles1(String title);
+
+	@Query("from Book")
+	Stream<Book> everyBook0(Order<? super Book> order);
 
 	@Query("from Book")
 	List<Book> everyBook1(PageRequest<? super Book> pageRequest);
@@ -154,8 +173,20 @@ public interface BookAuthorRepository {
 	@Find
 	List<Book> allBooksWithLotsOfSorting(Sort<? super Book> s1, Order<? super Book> order, Sort<? super Book>... s3);
 
+	@Query("where price < ?1 and pages > ?2")
+	Book[] valueBooks0(BigDecimal maxPrice, int minPages);
+
+	@Query("where price < :maxPrice and pages > :minPages")
+	Book[] valueBooks1(BigDecimal maxPrice, int minPages);
+
+	@Query("where price < :price and pages > :pages")
+	Book[] valueBooks2(@Param("price") BigDecimal maxPrice, @Param("pages") int minPages);
+
 	@Save
 	Book write(Book book);
+
+	@Update
+	Book edit(Book book);
 
 	@Insert
 	Iterable<Book> createAll(Iterable<Book> books);

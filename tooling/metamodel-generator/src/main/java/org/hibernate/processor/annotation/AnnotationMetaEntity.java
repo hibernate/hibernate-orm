@@ -139,7 +139,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	/**
 	 * The type of the "session getter" method of a DAO-style repository.
 	 */
-	private String sessionType = Constants.ENTITY_MANAGER;
+	private String sessionType = ENTITY_MANAGER;
 
 	/**
 	 * The field or method call to obtain the session
@@ -456,34 +456,41 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean isPanacheType(TypeElement type) {
-		return isOrmPanacheType( type ) || isReactivePanacheType( type );
+		return isOrmPanacheType( type )
+			|| isReactivePanacheType( type );
 	}
 
 	private boolean isOrmPanacheType(TypeElement type) {
-		ProcessingEnvironment processingEnvironment = this.context.getProcessingEnvironment();
-		TypeElement panacheRepositorySuperType = processingEnvironment.getElementUtils().getTypeElement( Constants.PANACHE_ORM_REPOSITORY_BASE );
-		TypeElement panacheEntitySuperType = processingEnvironment.getElementUtils().getTypeElement( Constants.PANACHE_ORM_ENTITY_BASE );
+		final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
+		final Elements elements = processingEnvironment.getElementUtils();
+		final TypeElement panacheRepositorySuperType = elements.getTypeElement( PANACHE_ORM_REPOSITORY_BASE );
+		final TypeElement panacheEntitySuperType = elements.getTypeElement( PANACHE_ORM_ENTITY_BASE );
 		if ( panacheRepositorySuperType == null || panacheEntitySuperType == null ) {
 			return false;
 		}
-		Types types = processingEnvironment.getTypeUtils();
-		// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
-		return processingEnvironment.getTypeUtils().isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
-			|| processingEnvironment.getTypeUtils().isSubtype( type.asType(), panacheEntitySuperType.asType() );
+		else {
+			final Types types = processingEnvironment.getTypeUtils();
+			// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
+			return types.isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
+				|| types.isSubtype( type.asType(), panacheEntitySuperType.asType() );
+		}
 	}
 
 	private boolean isReactivePanacheType(TypeElement type) {
-		ProcessingEnvironment processingEnvironment = this.context.getProcessingEnvironment();
-		TypeElement panacheRepositorySuperType = processingEnvironment.getElementUtils().getTypeElement( Constants.PANACHE_REACTIVE_REPOSITORY_BASE );
-		TypeElement panacheEntitySuperType = processingEnvironment.getElementUtils().getTypeElement( Constants.PANACHE_REACTIVE_ENTITY_BASE );
+		final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
+		final Elements elements = processingEnvironment.getElementUtils();
+		final TypeElement panacheRepositorySuperType = elements.getTypeElement( PANACHE_REACTIVE_REPOSITORY_BASE );
+		final TypeElement panacheEntitySuperType = elements.getTypeElement( PANACHE_REACTIVE_ENTITY_BASE );
 
 		if ( panacheRepositorySuperType == null || panacheEntitySuperType == null ) {
 			return false;
 		}
-		Types types = processingEnvironment.getTypeUtils();
-		// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
-		return types.isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
-			|| types.isSubtype( type.asType(), panacheEntitySuperType.asType());
+		else {
+			final Types types = processingEnvironment.getTypeUtils();
+			// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
+			return types.isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
+				|| types.isSubtype( type.asType(), panacheEntitySuperType.asType() );
+		}
 	}
 
 	/**
@@ -546,7 +553,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							true
 					)
 			);
-			return Constants.ENTITY_MANAGER;
+			return ENTITY_MANAGER;
 		}
 		else {
 			importType( Constants.QUARKUS_SESSION_OPERATIONS );
@@ -570,10 +577,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( element.getKind() == ElementKind.INTERFACE ) {
 					final TypeElement typeElement = (TypeElement) element;
 					final Name name = typeElement.getQualifiedName();
-					return name.contentEquals(Constants.HIB_SESSION)
-						|| name.contentEquals(Constants.HIB_STATELESS_SESSION)
-						|| name.contentEquals(Constants.MUTINY_SESSION)
-						|| name.contentEquals(Constants.ENTITY_MANAGER);
+					return name.contentEquals(HIB_SESSION)
+						|| name.contentEquals(HIB_STATELESS_SESSION)
+						|| name.contentEquals(MUTINY_SESSION)
+						|| name.contentEquals(ENTITY_MANAGER);
 				}
 			}
 		}
@@ -655,7 +662,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean isPersistent(Element memberOfClass, AccessType membersKind) {
 		return ( entityAccessTypeInfo.getAccessType() == membersKind
 					|| determineAnnotationSpecifiedAccessType( memberOfClass ) != null )
-			&& !containsAnnotation( memberOfClass, Constants.TRANSIENT )
+			&& !containsAnnotation( memberOfClass, TRANSIENT )
 			&& !memberOfClass.getModifiers().contains( Modifier.TRANSIENT )
 			&& !memberOfClass.getModifiers().contains( Modifier.STATIC )
 			&& !( memberOfClass.getKind() == ElementKind.METHOD
@@ -1591,25 +1598,63 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeElement containerType,
 			AnnotationMirror mirror,
 			boolean isNative) {
+
 		final AnnotationValue value = getAnnotationValueRef( mirror, "value" );
 		if ( value != null ) {
 			final Object query = value.getValue();
 			if ( query instanceof String ) {
 				final String queryString = (String) query;
+
+				// The following is quite fragile!
+				final String containerTypeName;
+				if ( containerType == null ) {
+					if ( returnType != null && returnType.getKind() == TypeKind.ARRAY ) {
+						final ArrayType arrayType = (ArrayType) returnType;
+						final TypeMirror componentType = arrayType.getComponentType();
+						final TypeElement object = context.getElementUtils().getTypeElement(JAVA_OBJECT);
+						if ( !context.getTypeUtils().isSameType( object.asType(), componentType ) ) {
+							returnType = componentType;
+							containerTypeName = "[]";
+						}
+						else {
+							// assume it's returning a single tuple as Object[]
+							containerTypeName = null;
+						}
+					}
+					else {
+						containerTypeName = null;
+					}
+				}
+				else {
+					containerTypeName = containerType.getQualifiedName().toString();
+				}
+
 				final List<String> paramNames = parameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
+
+				if ( isNative ) {
+					validateSql( method, mirror, queryString, paramNames, value );
+				}
+				else {
+					validateHql( method, returnType, mirror, value, queryString, paramNames, paramTypes );
+				}
+
+				// now check that the query has a parameter for every method parameter
+				checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString );
+
 				final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 				final DeclaredType resultType = resultType( method, returnType, mirror, value );
 				final List<OrderBy> orderBys = resultType == null
 						? emptyList()
 						: orderByList( method, (TypeElement) resultType.asElement() );
+
 				final QueryMethod attribute =
 						new QueryMethod(
 								this,
 								method.getSimpleName().toString(),
 								queryString,
 								returnType == null ? null : returnType.toString(),
-								containerType == null ? null : containerType.getQualifiedName().toString(),
+								containerTypeName,
 								paramNames,
 								paramTypes,
 								isInsertUpdateDelete( queryString ),
@@ -1622,16 +1667,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								jakartaDataRepository
 						);
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
-
-				if ( isNative ) {
-					validateSql( method, mirror, queryString, paramNames, value );
-				}
-				else {
-					validateHql( method, returnType, mirror, value, queryString, paramNames, paramTypes );
-				}
-
-				// now check that the query has a parameter for every method parameter
-				checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString );
 			}
 		}
 	}
@@ -1710,9 +1745,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( reactive ) {
 			// for reactive calls, don't use the returnType param, which has been ununi-ed, we want to check the full one
 			final String returnTypeName = method.getReturnType().toString();
-			return returnTypeName.equals( Constants.UNI_VOID )
-				|| returnTypeName.equals( Constants.UNI_BOOLEAN )
-				|| returnTypeName.equals( Constants.UNI_INTEGER );
+			return returnTypeName.equals( UNI_VOID )
+				|| returnTypeName.equals( UNI_BOOLEAN )
+				|| returnTypeName.equals( UNI_INTEGER );
 			
 		}
 		else {
@@ -1833,9 +1868,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		final TypeElement typeElement = (TypeElement) returnType.asElement();
 		final Name qualifiedName = typeElement.getQualifiedName();
-		if ( qualifiedName.contentEquals(Constants.TUPLE)
-				|| qualifiedName.contentEquals(Constants.LIST)
-				|| qualifiedName.contentEquals(Constants.MAP) ) {
+		if ( qualifiedName.contentEquals(TUPLE)
+				|| qualifiedName.contentEquals(LIST)
+				|| qualifiedName.contentEquals(MAP) ) {
 			// these are exceptionally allowed
 			return true;
 		}
@@ -1903,7 +1938,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( componentType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) componentType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			return typeElement.getQualifiedName().contentEquals(Constants.JAVA_OBJECT);
+			return typeElement.getQualifiedName().contentEquals(JAVA_OBJECT);
 		}
 		else {
 			return false;
@@ -2114,11 +2149,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean usingReactiveSession(String sessionType) {
-		return Constants.MUTINY_SESSION.equals(sessionType)
+		return MUTINY_SESSION.equals(sessionType)
 			|| Constants.UNI_MUTINY_SESSION.equals(sessionType);
 	}
 
 	private boolean usingStatelessSession(String sessionType) {
-		return Constants.HIB_STATELESS_SESSION.equals(sessionType);
+		return HIB_STATELESS_SESSION.equals(sessionType);
 	}
 }

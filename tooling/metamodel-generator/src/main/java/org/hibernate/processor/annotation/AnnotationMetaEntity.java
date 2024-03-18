@@ -563,12 +563,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 */
 	private static boolean isSessionGetter(ExecutableElement method) {
 		if ( method.getParameters().isEmpty() ) {
-			final TypeMirror type = ununi( method.getReturnType() );
-			if ( type.getKind() == TypeKind.DECLARED ) {
-				final DeclaredType declaredType = (DeclaredType) type;
+			final TypeMirror returnType = method.getReturnType();
+			if ( returnType.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) ununi(returnType);
 				final Element element = declaredType.asElement();
 				if ( element.getKind() == ElementKind.INTERFACE ) {
-					final Name name = ((TypeElement) element).getQualifiedName();
+					final TypeElement typeElement = (TypeElement) element;
+					final Name name = typeElement.getQualifiedName();
 					return name.contentEquals(Constants.HIB_SESSION)
 						|| name.contentEquals(Constants.HIB_STATELESS_SESSION)
 						|| name.contentEquals(Constants.MUTINY_SESSION)
@@ -682,13 +683,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addQueryMethod(ExecutableElement method) {
-		final TypeMirror returnType = ununi( method.getReturnType() );
+		TypeMirror returnType = method.getReturnType();
 		final TypeKind kind = returnType.getKind();
 		if ( kind == TypeKind.VOID ||  kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) returnType;
+			final DeclaredType declaredType = (DeclaredType) ununi( returnType );
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -764,13 +765,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static TypeMirror ununi(TypeMirror returnType) {
-		if ( returnType.getKind() != TypeKind.DECLARED ) {
-			return returnType;
-		}
-		final DeclaredType declaredType = (DeclaredType) returnType;
-		final TypeElement typeElement = (TypeElement) declaredType.asElement();
-		if ( typeElement.getQualifiedName().contentEquals( Constants.UNI ) ) {
-			returnType = declaredType.getTypeArguments().get(0);
+		if ( returnType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			if ( typeElement.getQualifiedName().contentEquals(Constants.UNI) ) {
+				return declaredType.getTypeArguments().get(0);
+			}
 		}
 		return returnType;
 	}
@@ -920,7 +920,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			ExecutableElement method,
 			@Nullable TypeMirror returnType,
 			@Nullable TypeElement containerType) {
-		returnType = returnType != null ? ununi( returnType ) : null;
 		if ( returnType == null ) {
 			context.message( method,
 					"missing return type",
@@ -944,22 +943,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				else {
 					// multiple results, it has to be a criteria finder
-					createCriteriaFinder( method, returnType, containerType, entity );
+					createCriteriaFinder( method, arrayType.getComponentType(), "[]", entity );
 				}
 			}
 		}
 		else if ( returnType.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) returnType;
+			final DeclaredType declaredType = (DeclaredType) ununi( returnType );
 			final TypeElement entity = (TypeElement) declaredType.asElement();
 			if ( !containsAnnotation( entity, ENTITY ) ) {
 				context.message( method,
-						"incorrect return type '" + returnType + "' is not annotated '@Entity'",
+						"incorrect return type '" + declaredType + "' is not annotated '@Entity'",
 						Diagnostic.Kind.ERROR );
 			}
 			else {
 				if ( containerType != null ) {
 					// multiple results, it has to be a criteria finder
-					createCriteriaFinder( method, returnType, containerType, entity );
+					createCriteriaFinder( method, declaredType, containerType.toString(), entity );
 				}
 				else {
 					for ( VariableElement parameter : method.getParameters() ) {
@@ -980,10 +979,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							context.message( method, "missing parameter", Diagnostic.Kind.ERROR );
 							break;
 						case 1:
-							createSingleParameterFinder( method, returnType, entity );
+							createSingleParameterFinder( method, declaredType, entity );
 							break;
 						default:
-							createMultipleParameterFinder( method, returnType, entity );
+							createMultipleParameterFinder( method, declaredType, entity );
 					}
 				}
 			}
@@ -999,7 +998,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * Create a finder method which returns multiple results.
 	 */
 	private void createCriteriaFinder(
-			ExecutableElement method, TypeMirror returnType, @Nullable TypeElement containerType, TypeElement entity) {
+			ExecutableElement method, TypeMirror returnType, @Nullable String containerType, TypeElement entity) {
 		final String methodName = method.getSimpleName().toString();
 		final List<String> paramNames = parameterNames( method );
 		final List<String> paramTypes = parameterTypes( method );
@@ -1027,25 +1026,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 		}
-		// TODO: this is ugly, do something better
-		//       higher up in the call chain
-		final String containerTypeName;
-		final String entityTypeName;
-		if ( returnType.getKind() == TypeKind.ARRAY ) {
-			final ArrayType arrayType = (ArrayType) returnType;
-			entityTypeName = arrayType.getComponentType().toString();
-			containerTypeName = "[]";
-		}
-		else {
-			entityTypeName = returnType.toString();
-			containerTypeName = containerType == null ? null : containerType.toString();
-		}
 		putMember( methodKey,
 				new CriteriaFinderMethod(
 						this,
 						methodName,
-						entityTypeName,
-						containerTypeName,
+						returnType.toString(),
+						containerType,
 						paramNames,
 						paramTypes,
 						parameterNullability(method, entity),
@@ -1392,7 +1378,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return null;
 			}
 
-			//			final String memberType = attributeType.toString();
+//			final String memberType = attributeType.toString();
 //			final String paramType = parameterType.toString();
 //			if ( !isLegalAssignment( paramType, memberType ) ) {
 //				context.message( param,

@@ -8,7 +8,9 @@
                  version="3.2">
     <entity name="EntityWithoutTenantId" metadata-complete="true">
         <attributes>
-            <id name="id"/>
+            <id name="id">
+                <target>Long</target>
+            </id>
         </attributes>
     </entity>
 
@@ -17,10 +19,13 @@
 
         <tenant-id name="tenantId" fetch="EAGER" optional="true">
             <column name="TENANT_ID" insertable="false"/>
+            <target>String</target>
         </tenant-id>
 
         <attributes>
-            <id name="id"/>
+            <id name="id">
+                <target>Integer</target>
+            </id>
         </attributes>
     </entity>
 

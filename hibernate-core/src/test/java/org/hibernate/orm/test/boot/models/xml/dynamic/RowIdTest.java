@@ -57,7 +57,7 @@ public class RowIdTest {
 							assertThat( rowIdAnnotationUsage ).isNotNull();
 							final String value = rowIdAnnotationUsage.getString( "value" );
 							if ( entityName.equals( "EntityWithRowIdNoValue" ) ) {
-								assertThat( value ).isNull();
+								assertThat( value ).isEmpty();
 							}
 							else {
 								assertThat( value ).isEqualTo( "ROW_ID" );

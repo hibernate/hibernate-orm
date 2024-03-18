@@ -18,7 +18,7 @@ import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsStr
  */
 public class EgTest extends CompilationTest {
 	@Test
-	@WithClasses({ Publisher.class, Author.class, Book.class, Library.class })
+	@WithClasses({ Publisher.class, Author.class, Address.class, Book.class, Library.class })
 	public void test() {
 		System.out.println( getMetaModelSourceAsString( Author.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class ) );

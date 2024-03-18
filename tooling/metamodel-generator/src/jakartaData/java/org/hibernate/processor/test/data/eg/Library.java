@@ -2,6 +2,7 @@ package org.hibernate.processor.test.data.eg;
 
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.PageRequest;
+import jakarta.data.repository.By;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.Insert;
@@ -21,6 +22,9 @@ public interface Library {
 	Book book(String isbn);
 
 	@Find
+	List<Book> books(@By("isbn") List<String> isbns);
+
+	@Find
 	Book books(String title, LocalDate publicationDate);
 
 	@Find
@@ -38,14 +42,20 @@ public interface Library {
 	@Insert
 	void create(Book book);
 
+	@Insert
+	void create(Book[] book);
+
 	@Update
 	void update(Book book);
+
+	@Update
+	void update(Book[] books);
 
 	@Delete
 	void delete(Book book);
 
-	@Update
-	void update(Book[] books);
+	@Delete
+	void delete(Book[] book);
 
 	@Save
 	void upsert(Book book);
@@ -67,4 +77,10 @@ public interface Library {
 	@OrderBy("name")
 	@OrderBy("address.city") //not working currently
 	List<Author> authors();
+
+	@Find
+	List<Author> authorsByCity(@By("address.city") String city);
+
+	@Find
+	List<Author> authorsByCityAndPostcode(String address_city, String address_postcode);
 }

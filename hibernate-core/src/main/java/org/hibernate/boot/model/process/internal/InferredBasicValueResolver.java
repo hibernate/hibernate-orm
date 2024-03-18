@@ -295,7 +295,10 @@ public class InferredBasicValueResolver {
 		final JdbcType jdbcType = explicitJdbcType == null
 				? enumJavaType.getRecommendedJdbcType( stdIndicators )
 				: explicitJdbcType;
-		final BasicTypeImpl<E> basicType = new BasicTypeImpl<>( enumJavaType, jdbcType );
+		final BasicType<E> basicType = bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().resolve(
+				enumJavaType,
+				jdbcType
+		);
 		bootstrapContext.registerAdHocBasicType( basicType );
 		return new InferredBasicValueResolution<>(
 				basicType,

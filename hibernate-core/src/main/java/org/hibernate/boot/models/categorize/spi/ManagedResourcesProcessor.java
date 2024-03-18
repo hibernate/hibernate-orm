@@ -133,7 +133,12 @@ public class ManagedResourcesProcessor {
 				sourceModelBuildingContext
 		);
 
-		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml( xmlPreProcessingResult, modelCategorizationCollector, sourceModelBuildingContext );
+		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
+				xmlPreProcessingResult,
+				modelCategorizationCollector,
+				sourceModelBuildingContext,
+				bootstrapContext
+		);
 
 		allKnownClassNames.forEach( (className) -> {
 			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );

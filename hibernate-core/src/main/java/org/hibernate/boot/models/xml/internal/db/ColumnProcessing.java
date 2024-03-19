@@ -18,9 +18,10 @@ import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnSizable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnStandard;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnUniqueable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCommentable;
+import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
+import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 
@@ -135,83 +136,62 @@ public class ColumnProcessing {
 			JaxbColumn jaxbColumn,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isNotEmpty( jaxbColumn.getName() ) ) {
-			columnAnn.setAttributeValue( "name", jaxbColumn.getName() );
-		}
+		AnnotationUsageHelper.applyStringAttributeIfSpecified( "name", jaxbColumn.getName(), columnAnn );
 
-		if ( StringHelper.isNotEmpty( jaxbColumn.getTable() ) ) {
-			columnAnn.setAttributeValue( "table", jaxbColumn.getTable() );
-		}
+		AnnotationUsageHelper.applyStringAttributeIfSpecified( "table", jaxbColumn.getTable(), columnAnn );
 	}
 
 	private static <A extends Annotation> void applyColumnNullness(
 			JaxbColumnNullable jaxbColumn,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbColumn.isNullable() != null ) {
-			columnAnn.setAttributeValue( "unique", jaxbColumn.isNullable() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "unique", jaxbColumn.isNullable(), columnAnn );
 	}
 
 	private static <A extends Annotation> void applyColumnMutability(
 			JaxbColumnMutable jaxbColumn,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbColumn.isInsertable() != null ) {
-			columnAnn.setAttributeValue( "insertable", jaxbColumn.isInsertable() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "insertable", jaxbColumn.isInsertable(), columnAnn );
 
-		if ( jaxbColumn.isUpdatable() != null ) {
-			columnAnn.setAttributeValue( "updatable", jaxbColumn.isUpdatable() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "updatable", jaxbColumn.isUpdatable(), columnAnn );
 	}
 
 	private static <A extends Annotation> void applyColumnSizing(
 			JaxbColumnSizable jaxbColumn,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
+		XmlProcessingHelper.applyAttributeIfSpecified( "length", jaxbColumn.getLength(), columnAnn );
 
-		if ( jaxbColumn.getLength() != null ) {
-			columnAnn.setAttributeValue( "length", jaxbColumn.getLength() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "precision", jaxbColumn.getPrecision(), columnAnn );
 
-		if ( jaxbColumn.getPrecision() != null ) {
-			columnAnn.setAttributeValue( "precision", jaxbColumn.getPrecision() );
-		}
-
-		if ( jaxbColumn.getScale() != null ) {
-			columnAnn.setAttributeValue( "scale", jaxbColumn.getScale() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "scale", jaxbColumn.getScale(), columnAnn );
 	}
 
 	private static <A extends Annotation> void applyColumnUniqueness(
 			JaxbColumnUniqueable jaxbColumn,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbColumn.isUnique() != null ) {
-			columnAnn.setAttributeValue( "unique", jaxbColumn.isUnique() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "unique", jaxbColumn.isUnique(), columnAnn );
 	}
 
 	private static <A extends Annotation> void applyColumnDefinition(
 			JaxbColumnDefinable jaxbColumn,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isNotEmpty( jaxbColumn.getColumnDefinition() ) ) {
-			columnAnn.setAttributeValue( "columnDefinition", jaxbColumn.getColumnDefinition() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified(
+				"columnDefinition",
+				jaxbColumn.getColumnDefinition(),
+				columnAnn
+		);
 
-		if ( jaxbColumn.getOptions() != null ) {
-			columnAnn.setAttributeValue( "options", jaxbColumn.getOptions() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "options", jaxbColumn.getOptions(), columnAnn );
 	}
 
 	private static <A extends Annotation> void applyColumnComment(
 			JaxbCommentable jaxbColumn,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isNotEmpty( jaxbColumn.getComment() ) ) {
-			columnAnn.setAttributeValue( "comment", jaxbColumn.getComment() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "comment", jaxbColumn.getComment(), columnAnn );
 	}
 }

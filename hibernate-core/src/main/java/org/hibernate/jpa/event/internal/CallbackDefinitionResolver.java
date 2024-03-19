@@ -264,7 +264,10 @@ public final class CallbackDefinitionResolver {
 		final AnnotationUsage<EntityListeners> entityListeners = currentClazz.getAnnotationUsage( EntityListeners.class );
 		if ( entityListeners != null ) {
 			final List<ClassDetails> listeners = entityListeners.getList( "value" );
-			listOfListeners.addAll( listeners );
+			int size = listeners.size();
+			for ( int index = size - 1; index >= 0; index-- ) {
+				listOfListeners.add( listeners.get( index ) );
+			}
 		}
 
 		if ( useAnnotationAnnotatedByListener ) {
@@ -272,7 +275,10 @@ public final class CallbackDefinitionResolver {
 			for ( AnnotationUsage<?> metaAnnotatedUsage : metaAnnotatedUsageList ) {
 				final AnnotationUsage<EntityListeners> metaAnnotatedListeners = metaAnnotatedUsage.getAnnotationDescriptor().getAnnotationUsage( EntityListeners.class );
 				final List<ClassDetails> listeners = metaAnnotatedListeners.getList( "value" );
-				listOfListeners.addAll( listeners );
+				int size = listeners.size();
+				for ( int index = size - 1; index >= 0; index-- ) {
+					listOfListeners.add( listeners.get( index ) );
+				}
 			}
 		}
 	}

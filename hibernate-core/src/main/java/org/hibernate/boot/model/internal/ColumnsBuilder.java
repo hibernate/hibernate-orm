@@ -23,7 +23,6 @@ import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import jakarta.persistence.CheckConstraint;
@@ -48,6 +47,7 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFrom
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
+import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyAttributeIfSpecified;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
@@ -320,22 +320,34 @@ class ColumnsBuilder {
 		return joinColumnDescriptor.createUsage(
 				property,
 				(usage) -> {
-					transferAttribute( "name", pkJoinColumnAnn, usage );
-					transferAttribute( "referencedColumnName", pkJoinColumnAnn, usage );
-					transferAttribute( "columnDefinition", pkJoinColumnAnn, usage );
-					transferAttribute( "options", pkJoinColumnAnn, usage );
-					transferAttribute( "foreignKey", pkJoinColumnAnn, usage );
+					applyAttributeIfSpecified(
+							"name",
+							pkJoinColumnAnn.getAttributeValue( "name" ),
+							usage
+					);
+					applyAttributeIfSpecified(
+							"referencedColumnName",
+							pkJoinColumnAnn.getAttributeValue( "referencedColumnName" ),
+							usage
+					);
+					applyAttributeIfSpecified(
+							"columnDefinition",
+							pkJoinColumnAnn.getAttributeValue( "columnDefinition" ),
+							usage
+					);
+					applyAttributeIfSpecified(
+							"options",
+							pkJoinColumnAnn.getAttributeValue( "options" ),
+							usage
+					);
+					applyAttributeIfSpecified(
+							"foreignKey",
+							pkJoinColumnAnn.getAttributeValue( "foreignKey" ),
+							usage
+					);
 				},
 				hibernateModelsContext
 		);
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void transferAttribute(
-			String attributeName,
-			AnnotationUsage source,
-			MutableAnnotationUsage target) {
-		target.setAttributeValue( attributeName, source.getAttributeValue( attributeName ) );
 	}
 
 	/**

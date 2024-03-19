@@ -74,7 +74,7 @@ public class CommonAttributeProcessing {
 				.getClassDetailsRegistry()
 				.getClassDetails( attributeAccessor );
 		final MutableAnnotationUsage<AttributeAccessor> accessAnn = XmlProcessingHelper.makeAnnotation( AttributeAccessor.class, memberDetails, xmlDocumentContext );
-		accessAnn.setAttributeValue( "strategy", strategyClassDetails );
+		XmlProcessingHelper.applyAttributeIfSpecified( "strategy", strategyClassDetails, accessAnn );
 	}
 
 	public static <A extends Annotation> void applyOptionality(
@@ -105,9 +105,7 @@ public class CommonAttributeProcessing {
 			MutableAnnotationUsage<A> attributeAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		final FetchType fetchType = jaxbAttribute.getFetch();
-		if ( fetchType != null ) {
-			attributeAnn.setAttributeValue( "fetch", fetchType );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "fetch", fetchType, attributeAnn );
 
 		if ( jaxbAttribute instanceof JaxbSingularAssociationAttribute jaxbSingularAttribute ) {
 			final JaxbSingularFetchModeImpl jaxbFetchMode = jaxbSingularAttribute.getFetchMode();

@@ -138,7 +138,7 @@ dependencies {
 	reportAggregation project(':hibernate-vibur')
 	reportAggregation project(':hibernate-ant')
 	reportAggregation project(':hibernate-enhance-maven-plugin')
-	reportAggregation project(':hibernate-jpamodelgen')
+	reportAggregation project(':hibernate-processor')
 
 	asciidoctorGems 'rubygems:rouge:4.1.1'
 
@@ -172,8 +172,8 @@ dependencies {
 	jcache project( ':hibernate-jcache' )
 	javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
 
-	jpamodelgen project( ':hibernate-jpamodelgen' )
-	javadocSources project( path: ':hibernate-jpamodelgen', configuration: 'javadocSources' )
+	jpamodelgen project( ':hibernate-processor' )
+	javadocSources project( path: ':hibernate-processor', configuration: 'javadocSources' )
 
 	javadocClasspath libs.loggingAnnotations
 	javadocClasspath jakartaLibs.validation

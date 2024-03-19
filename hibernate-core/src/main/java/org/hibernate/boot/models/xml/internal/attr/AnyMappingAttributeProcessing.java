@@ -78,7 +78,7 @@ public class AnyMappingAttributeProcessing {
 		}
 
 		final DiscriminatorType discriminatorType = jaxbDiscriminator.getType();
-		anyDiscriminatorAnn.setAttributeValue( "value", discriminatorType );
+		XmlProcessingHelper.applyAttributeIfSpecified( "value", discriminatorType, anyDiscriminatorAnn );
 
 		final JaxbColumnImpl jaxbColumn = jaxbDiscriminator.getColumn();
 		final MutableAnnotationUsage<Column> columnAnn = XmlProcessingHelper.makeAnnotation( Column.class, memberDetails, xmlDocumentContext );

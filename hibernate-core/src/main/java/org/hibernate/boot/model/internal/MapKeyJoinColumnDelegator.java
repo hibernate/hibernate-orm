@@ -20,6 +20,10 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyJoinColumn;
 
+import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyAttributeIfSpecified;
+import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyStringAttributeIfSpecified;
+
+
 /**
  * @author Emmanuel Bernard
  */
@@ -44,16 +48,52 @@ public class MapKeyJoinColumnDelegator implements JoinColumn {
 				context.getMetadataCollector().getSourceModelBuildingContext()
 		);
 
-		joinColumn.setAttributeValue( "name", mapKeyJoinColumn.getAttributeValue( "name" ) );
-		joinColumn.setAttributeValue( "table", mapKeyJoinColumn.getAttributeValue( "table" ) );
-		joinColumn.setAttributeValue( "unique", mapKeyJoinColumn.getAttributeValue( "unique" ) );
-		joinColumn.setAttributeValue( "nullable", mapKeyJoinColumn.getAttributeValue( "nullable" ) );
-		joinColumn.setAttributeValue( "insertable", mapKeyJoinColumn.getAttributeValue( "insertable" ) );
-		joinColumn.setAttributeValue( "referencedColumnName", mapKeyJoinColumn.getAttributeValue( "referencedColumnName" ) );
-		joinColumn.setAttributeValue( "columnDefinition", mapKeyJoinColumn.getAttributeValue( "columnDefinition" ) );
-		joinColumn.setAttributeValue( "options", mapKeyJoinColumn.getAttributeValue( "options" ) );
+		applyStringAttributeIfSpecified(
+				"name",
+				mapKeyJoinColumn.getAttributeValue( "name" ),
+				joinColumn
+		);
+		applyStringAttributeIfSpecified(
+				"table",
+				mapKeyJoinColumn.getAttributeValue( "table" ),
+				joinColumn
+		);
+		applyAttributeIfSpecified(
+				"unique",
+				mapKeyJoinColumn.getAttributeValue( "unique" ),
+				joinColumn
+		);
+		applyAttributeIfSpecified(
+				"nullable",
+				mapKeyJoinColumn.getAttributeValue( "nullable" ),
+				joinColumn
+		);
+		applyAttributeIfSpecified(
+				"insertable",
+				mapKeyJoinColumn.getAttributeValue( "insertable" ),
+				joinColumn
+		);
+		applyStringAttributeIfSpecified(
+				"referencedColumnName",
+				mapKeyJoinColumn.getAttributeValue( "referencedColumnName" ),
+				joinColumn
+		);
+		applyStringAttributeIfSpecified(
+				"columnDefinition",
+				mapKeyJoinColumn.getAttributeValue( "columnDefinition" ),
+				joinColumn
+		);
+		applyStringAttributeIfSpecified(
+				"options",
+				mapKeyJoinColumn.getAttributeValue( "options" ),
+				joinColumn
+		);
 //		joinColumn.setAttributeValue( "comment", mapKeyJoinColumn.getAttributeValue( "comment" ) );
-		joinColumn.setAttributeValue( "foreignKey", mapKeyJoinColumn.getAttributeValue( "foreignKey" ) );
+		applyAttributeIfSpecified(
+				"foreignKey",
+				mapKeyJoinColumn.getAttributeValue( "foreignKey" ),
+				joinColumn
+		);
 
 		return joinColumn;
 	}

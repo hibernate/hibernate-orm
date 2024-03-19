@@ -1687,4 +1687,19 @@ public class XmlAnnotationHelper {
 			optionsAnn.setAttributeValue( "force", true );
 		}
 	}
+
+	public static String determineTargetName(String explicitName, XmlDocumentContext xmlDocumentContext) {
+		final String qualifiedName = StringHelper.qualifyConditionallyIfNot(
+				xmlDocumentContext.getXmlDocument().getDefaults().getPackage(),
+				explicitName
+		);
+		final ClassDetails classDetails = xmlDocumentContext.getModelBuildingContext()
+				.getClassDetailsRegistry()
+				.findClassDetails( qualifiedName );
+		if ( classDetails != null ) {
+			return classDetails.getName();
+		}
+
+		return explicitName;
+	}
 }

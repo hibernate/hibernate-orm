@@ -46,7 +46,7 @@ dependencies {
     implementation testLibs.junit5Engine
     implementation testLibs.junit5Launcher
 
-    annotationProcessor project( ':hibernate-jpamodelgen' )
+    annotationProcessor project( ':hibernate-processor' )
 }
 
 tasks.checkstyleMain {

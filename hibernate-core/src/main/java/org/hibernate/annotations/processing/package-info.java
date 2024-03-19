@@ -22,7 +22,7 @@
  * <p>
  * Annotations in this package control Hibernate's compile-time
  * tooling, and depend on the use of the annotation processors
- * in the {@code hibernate-jpamodelgen} or {@code query-validator}
+ * in the {@code hibernate-processor} or {@code query-validator}
  * modules. If the appropriate annotation processor is not enabled
  * at build time, these annotations have no effect.
  * <p>

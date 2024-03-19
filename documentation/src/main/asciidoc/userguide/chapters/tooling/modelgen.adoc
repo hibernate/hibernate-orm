@@ -14,7 +14,7 @@
 Jakarta Persistence defines a typesafe Criteria API which allows <<criteria,`Criteria`>>
 queries to be constructed in a strongly-typed manner, utilizing so-called static metamodel
 classes.  The Hibernate Static Metamodel Generator, available via the published
-`org.hibernate.orm:hibernate-jpamodelgen` artifact, is an link:{ann-proc}[annotation processor]
+`org.hibernate.orm:hibernate-processor` artifact, is an link:{ann-proc}[annotation processor]
 used to generate these static metamodel classes.
 
 [NOTE]

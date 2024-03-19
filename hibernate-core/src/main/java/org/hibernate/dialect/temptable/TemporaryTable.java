@@ -319,15 +319,17 @@ public class TemporaryTable implements Exportable, Contributable {
 						int idIdx = 0;
 						for ( Column column : entityBinding.getKey().getColumns() ) {
 							final JdbcMapping jdbcMapping = identifierMapping.getJdbcMapping( idIdx++ );
+							String sqlTypeName = "";
+							if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
+								sqlTypeName = column.getSqlType( runtimeModelCreationContext.getMetadata() ) + " ";
+							}
+							sqlTypeName = sqlTypeName + dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata() ) );
 							columns.add(
 									new TemporaryTableColumn(
 											temporaryTable,
 											ENTITY_TABLE_IDENTITY_COLUMN,
 											jdbcMapping,
-											column.getSqlType(
-													runtimeModelCreationContext.getMetadata()
-											) + " " +
-											dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata() ) ),
+											sqlTypeName,
 											column.getColumnSize(
 													dialect,
 													runtimeModelCreationContext.getMetadata()

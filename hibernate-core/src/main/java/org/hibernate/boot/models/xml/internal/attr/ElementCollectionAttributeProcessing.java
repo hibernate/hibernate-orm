@@ -50,14 +50,12 @@ public class ElementCollectionAttributeProcessing {
 				jaxbElementCollection.getFetch(),
 				elementCollectionAnn
 		);
+
 		final String targetClass = jaxbElementCollection.getTargetClass();
 		if ( targetClass != null ) {
 			XmlProcessingHelper.applyAttributeIfSpecified(
 					"targetClass",
-					XmlAnnotationHelper.resolveJavaType(
-							targetClass,
-							xmlDocumentContext.getModelBuildingContext()
-					).determineRawClass(),
+					XmlAnnotationHelper.resolveJavaType( targetClass, xmlDocumentContext.getModelBuildingContext() ).determineRawClass(),
 					elementCollectionAnn
 			);
 		}

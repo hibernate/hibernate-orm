@@ -2181,16 +2181,18 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			AnnotationDescriptor annSubgraphNode = new AnnotationDescriptor( NamedSubgraph.class );
 			copyAttribute( annSubgraphNode, "name", subgraphNode.getName(), true );
 			String clazzName = subgraphNode.getClazz();
-			final Class<?> clazz;
-			try {
-				clazz = classLoaderAccess.classForName(
-						XMLContext.buildSafeClassName( clazzName, defaults )
-				);
+			if ( StringHelper.isNotEmpty( clazzName ) ) {
+				final Class<?> clazz;
+				try {
+					clazz = classLoaderAccess.classForName(
+							XMLContext.buildSafeClassName( clazzName, defaults )
+					);
+				}
+				catch (ClassLoadingException e) {
+					throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
+				}
+				annSubgraphNode.setValue( "type", clazz );
 			}
-			catch (ClassLoadingException e) {
-				throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
-			}
-			annSubgraphNode.setValue( "type", clazz );
 			bindNamedAttributeNodes( subgraphNode.getNamedAttributeNode(), annSubgraphNode );
 			annSubgraphNodes.add( AnnotationFactory.create( annSubgraphNode ) );
 		}
@@ -2233,16 +2235,18 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 					parameterDescriptor.setValue( "mode", modeValue );
 				}
 				String clazzName = parameterElement.getClazz();
-				Class<?> clazz;
-				try {
-					clazz = classLoaderAccess.classForName(
-							XMLContext.buildSafeClassName( clazzName, defaults )
-					);
+				if ( StringHelper.isNotEmpty( clazzName ) ) {
+					Class<?> clazz;
+					try {
+						clazz = classLoaderAccess.classForName(
+								XMLContext.buildSafeClassName( clazzName, defaults )
+						);
+					}
+					catch (ClassLoadingException e) {
+						throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
+					}
+					parameterDescriptor.setValue( "type", clazz );
 				}
-				catch (ClassLoadingException e) {
-					throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
-				}
-				parameterDescriptor.setValue( "type", clazz );
 				storedProcedureParameters.add( AnnotationFactory.create( parameterDescriptor ) );
 			}
 

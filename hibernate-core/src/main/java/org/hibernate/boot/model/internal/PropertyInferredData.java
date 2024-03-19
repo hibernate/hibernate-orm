@@ -106,7 +106,7 @@ public class PropertyInferredData implements PropertyData {
 			return new ClassTypeDetailsImpl( legacyAnnotationUsage.getClassDetails( "value" ), TypeDetails.Kind.CLASS );
 		}
 
-		return propertyMember.getAssociatedType().determineRelativeType( ownerType );
+		return propertyMember.resolveRelativeAssociatedType( ownerType );
 	}
 
 	@Override

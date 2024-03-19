@@ -35,7 +35,9 @@
     </entity>
 
     <entity class="org.hibernate.orm.test.boot.models.xml.SimpleEntity" metadata-complete="true" access="FIELD">
-        <discriminator-formula>CASE WHEN VALUE1 IS NOT NULL THEN 1 WHEN VALUE2 IS NOT NULL THEN 2 END</discriminator-formula>
+        <discriminator-formula>
+            <fragment>CASE WHEN VALUE1 IS NOT NULL THEN 1 WHEN VALUE2 IS NOT NULL THEN 2 END</fragment>
+        </discriminator-formula>
         <attributes>
             <id name="id"/>
         </attributes>

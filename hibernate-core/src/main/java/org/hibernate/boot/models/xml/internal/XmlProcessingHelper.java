@@ -12,6 +12,7 @@ import java.lang.annotation.Annotation;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.models.MemberResolutionException;
+import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.internal.dynamic.DynamicAnnotationUsage;
@@ -152,13 +153,7 @@ public class XmlProcessingHelper {
 	public static <A extends Annotation> MutableAnnotationUsage<A> makeNestedAnnotation(
 			Class<A> annotationType,
 			XmlDocumentContext xmlDocumentContext) {
-		return new DynamicAnnotationUsage<>(
-				xmlDocumentContext.getModelBuildingContext()
-						.getAnnotationDescriptorRegistry()
-						.getDescriptor( annotationType ),
-				null,
-				xmlDocumentContext.getModelBuildingContext()
-		);
+		return makeNestedAnnotation( annotationType, null, xmlDocumentContext );
 	}
 
 	/**
@@ -178,8 +173,7 @@ public class XmlProcessingHelper {
 	public static <A extends Annotation> MutableAnnotationUsage<A> makeAnnotation(
 			Class<A> annotationType,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> created = makeNestedAnnotation( annotationType, xmlDocumentContext );
-		return created;
+		return makeNestedAnnotation( annotationType, xmlDocumentContext );
 	}
 
 	/**
@@ -233,36 +227,17 @@ public class XmlProcessingHelper {
 		return created;
 	}
 
-	public static <A extends Annotation> void setIf(
-			Object value,
-			String attributeName,
-			MutableAnnotationUsage<A> annotationUsage) {
-		if ( value == null ) {
-			return;
-		}
-
-		if ( value instanceof String && ( (String) value ).isBlank() ) {
-			return;
-		}
-
-		annotationUsage.setAttributeValue( attributeName, value );
-	}
-
 	public static <A extends Annotation> void applyAttributeIfSpecified(
 			String attributeName,
 			String value,
 			MutableAnnotationUsage<A> annotationUsage) {
-		if ( StringHelper.isNotEmpty( value ) ) {
-			annotationUsage.setAttributeValue( attributeName, value );
-		}
+		AnnotationUsageHelper.applyStringAttributeIfSpecified( attributeName, value, annotationUsage );
 	}
 
 	public static <A extends Annotation> void applyAttributeIfSpecified(
 			String attributeName,
 			Object value,
-			MutableAnnotationUsage<A> tableAnn) {
-		if ( value != null ) {
-			tableAnn.setAttributeValue( attributeName, value );
-		}
+			MutableAnnotationUsage<A> annotationUsage) {
+		AnnotationUsageHelper.applyAttributeIfSpecified( attributeName, value, annotationUsage );
 	}
 }

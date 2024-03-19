@@ -168,7 +168,7 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
 
     // JPA Metamodel Generator
-    annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:{fullVersion}'
+    annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
 
     // Compile-time checking for HQL
     //implementation 'org.hibernate:query-validator:2.0-SNAPSHOT'

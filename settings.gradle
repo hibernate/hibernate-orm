@@ -342,7 +342,7 @@ if ( "OpenJDK Runtime Environment".equals( System.getProperty( "java.runtime.nam
 
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
-project(':metamodel-generator').name = 'hibernate-jpamodelgen'
+project(':metamodel-generator').name = 'hibernate-processor'
 
 include 'hibernate-gradle-plugin'
 project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-gradle-plugin")

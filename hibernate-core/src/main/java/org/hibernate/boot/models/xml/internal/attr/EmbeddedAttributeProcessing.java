@@ -19,6 +19,7 @@ import org.hibernate.models.spi.MutableAnnotationUsage;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Embedded;
 
+import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeBasics;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
@@ -42,7 +43,7 @@ public class EmbeddedAttributeProcessing {
 
 		if ( StringHelper.isNotEmpty( jaxbEmbedded.getTarget() ) ) {
 			final MutableAnnotationUsage<Target> targetAnn = XmlProcessingHelper.getOrMakeAnnotation( Target.class, memberDetails, xmlDocumentContext );
-			targetAnn.setAttributeValue( "value", jaxbEmbedded.getTarget() );
+			targetAnn.setAttributeValue( "value", determineTargetName( jaxbEmbedded.getTarget(), xmlDocumentContext ) );
 		}
 
 		applyAttributeBasics( jaxbEmbedded, memberDetails, embeddedAnn, accessType, xmlDocumentContext );

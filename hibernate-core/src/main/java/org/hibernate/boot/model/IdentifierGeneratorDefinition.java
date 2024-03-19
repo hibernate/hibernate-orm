@@ -27,6 +27,7 @@ import jakarta.persistence.TableGenerator;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
+import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyStringAttributeIfSpecified;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -161,7 +162,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 				null,
 				null
 		);
-		sequenceGeneratorUsage.setAttributeValue( "name", name );
+		applyStringAttributeIfSpecified( "name", name, sequenceGeneratorUsage );
 		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretSequenceGenerator( sequenceGeneratorUsage, builder );
 		return builder.build();
 	}

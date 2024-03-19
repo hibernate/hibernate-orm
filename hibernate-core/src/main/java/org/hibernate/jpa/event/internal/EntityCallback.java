@@ -8,6 +8,7 @@ package org.hibernate.jpa.event.internal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Locale;
 
 import org.hibernate.jpa.event.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
@@ -68,5 +69,16 @@ public class EntityCallback extends AbstractCallback {
 		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				Locale.ROOT,
+				"EntityCallback([%s] %s.%s)",
+				getCallbackType().name(),
+				callbackMethod.getDeclaringClass().getName(),
+				callbackMethod.getName()
+		);
 	}
 }

@@ -20,7 +20,7 @@ dependencies {
 
     compileOnly libs.ant
 
-    annotationProcessor project( ':hibernate-jpamodelgen' )
+    annotationProcessor project( ':hibernate-processor' )
     compileOnly jakartaLibs.annotation
 
     testImplementation project( ':hibernate-testing' )

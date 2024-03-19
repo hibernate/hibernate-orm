@@ -102,7 +102,7 @@ or `org.slf4j:slf4j-jdk14`
 | A JDBC connection pool, for example, {agroal}[Agroal] |
 `org.hibernate.orm:hibernate-agroal` +
 and `io.agroal:agroal-pool`
-| The {generator}[Hibernate Metamodel Generator], especially if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
+| The {generator}[Hibernate Metamodel Generator], especially if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-processor`
 | The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
 | {validator}[Hibernate Validator], an implementation of {bean-validation}[Bean Validation] |
 `org.hibernate.validator:hibernate-validator` +

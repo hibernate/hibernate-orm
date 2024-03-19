@@ -87,9 +87,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
+import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
@@ -153,6 +153,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
+import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.makeNestedAnnotation;
 
@@ -1595,80 +1596,95 @@ public class XmlAnnotationHelper {
 	}
 
 	static void applyDiscriminatorColumn(
-			JaxbDiscriminatorColumnImpl discriminatorColumn,
+			JaxbDiscriminatorColumnImpl jaxbDiscriminatorColumn,
 			MutableClassDetails target,
-			XmlDocumentContext xmlDocumentContext){
-		if ( discriminatorColumn != null ) {
-			final MutableAnnotationUsage<DiscriminatorColumn> discriminatorColumnAnn = XmlProcessingHelper
-					.getOrMakeAnnotation( DiscriminatorColumn.class, target, xmlDocumentContext );
-			final AnnotationDescriptor<DiscriminatorColumn> discriminatorColumnDescriptor = xmlDocumentContext
-					.getModelBuildingContext()
-					.getAnnotationDescriptorRegistry()
-					.getDescriptor( DiscriminatorColumn.class );
-			applyOr(
-					discriminatorColumn,
-					JaxbDiscriminatorColumnImpl::getName,
-					"name",
-					discriminatorColumnAnn,
-					discriminatorColumnDescriptor
-			);
-
-			applyOr(
-					discriminatorColumn,
-					JaxbDiscriminatorColumnImpl::getDiscriminatorType,
-					"discriminatorType",
-					discriminatorColumnAnn,
-					discriminatorColumnDescriptor
-			);
-			applyOr(
-					discriminatorColumn,
-					JaxbDiscriminatorColumnImpl::getColumnDefinition,
-					"columnDefinition",
-					discriminatorColumnAnn,
-					discriminatorColumnDescriptor
-			);
-			applyOr(
-					discriminatorColumn,
-					JaxbDiscriminatorColumnImpl::getOptions,
-					"options",
-					discriminatorColumnAnn,
-					discriminatorColumnDescriptor
-			);
-			applyOr(
-					discriminatorColumn,
-					JaxbDiscriminatorColumnImpl::getLength,
-					"length",
-					discriminatorColumnAnn,
-					discriminatorColumnDescriptor
-			);
-
-			// todo : add force-selection attribute to @DiscriminatorColumn
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbDiscriminatorColumn == null ) {
+			return;
 		}
 
+		final MutableAnnotationUsage<DiscriminatorColumn> discriminatorColumnAnn = XmlProcessingHelper
+				.getOrMakeAnnotation( DiscriminatorColumn.class, target, xmlDocumentContext );
+		final AnnotationDescriptor<DiscriminatorColumn> discriminatorColumnDescriptor = xmlDocumentContext
+				.getModelBuildingContext()
+				.getAnnotationDescriptorRegistry()
+				.getDescriptor( DiscriminatorColumn.class );
+		AnnotationUsageHelper.applyStringAttributeIfSpecified(
+				"name",
+				jaxbDiscriminatorColumn.getName(),
+				discriminatorColumnAnn
+		);
+		AnnotationUsageHelper.applyAttributeIfSpecified(
+				"discriminatorType",
+				jaxbDiscriminatorColumn.getDiscriminatorType(),
+				discriminatorColumnAnn
+		);
+
+		applyOr(
+				jaxbDiscriminatorColumn,
+				JaxbDiscriminatorColumnImpl::getColumnDefinition,
+				"columnDefinition",
+				discriminatorColumnAnn,
+				discriminatorColumnDescriptor
+		);
+		applyOr(
+				jaxbDiscriminatorColumn,
+				JaxbDiscriminatorColumnImpl::getOptions,
+				"options",
+				discriminatorColumnAnn,
+				discriminatorColumnDescriptor
+		);
+		applyOr(
+				jaxbDiscriminatorColumn,
+				JaxbDiscriminatorColumnImpl::getLength,
+				"length",
+				discriminatorColumnAnn,
+				discriminatorColumnDescriptor
+		);
+
+		if ( jaxbDiscriminatorColumn.isForceSelection() || jaxbDiscriminatorColumn.isInsertable() == FALSE ) {
+			final MutableAnnotationUsage<DiscriminatorOptions> optionsAnn = XmlProcessingHelper.getOrMakeAnnotation(
+					DiscriminatorOptions.class,
+					target,
+					xmlDocumentContext
+			);
+
+			optionsAnn.setAttributeValue( "force", true );
+
+			AnnotationUsageHelper.applyAttributeIfSpecified(
+					"insert",
+					jaxbDiscriminatorColumn.isInsertable(),
+					discriminatorColumnAnn
+			);
+		}
 	}
 
 	public static void applyDiscriminatorFormula(
 			JaxbDiscriminatorFormulaImpl jaxbDiscriminatorFormula,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbDiscriminatorFormula == null || StringHelper.isEmpty( jaxbDiscriminatorFormula.getFragment() ) ) {
+		if ( jaxbDiscriminatorFormula == null ) {
+			return;
+		}
+		if ( StringHelper.isEmpty( jaxbDiscriminatorFormula.getFragment() ) ) {
 			return;
 		}
 
-		final MutableAnnotationUsage<DiscriminatorFormula> discriminatorFormulaAnn = HibernateAnnotations.DISCRIMINATOR_FORMULA.createUsage(
-				target,
-				xmlDocumentContext.getModelBuildingContext()
-		);
+		final MutableAnnotationUsage<DiscriminatorFormula> discriminatorFormulaAnn = XmlProcessingHelper.getOrMakeAnnotation( DiscriminatorFormula.class, target, xmlDocumentContext );
 
 		discriminatorFormulaAnn.setAttributeValue( "value", jaxbDiscriminatorFormula.getFragment() );
 		XmlProcessingHelper.applyAttributeIfSpecified( "discriminatorType", jaxbDiscriminatorFormula.getDiscriminatorType(), discriminatorFormulaAnn );
 
+
+
 		if ( jaxbDiscriminatorFormula.isForceSelection() ) {
-			final MutableAnnotationUsage<DiscriminatorOptions> existingOptionsAnnotation = (MutableAnnotationUsage<DiscriminatorOptions>) target.getAnnotationUsage( DiscriminatorOptions.class );
-			final MutableAnnotationUsage<DiscriminatorOptions> optionsAnnotation = existingOptionsAnnotation != null
-					? existingOptionsAnnotation
-					: HibernateAnnotations.DISCRIMINATOR_OPTIONS.createUsage( target, xmlDocumentContext.getModelBuildingContext() );
-			optionsAnnotation.setAttributeValue( "force", true );
+			final MutableAnnotationUsage<DiscriminatorOptions> optionsAnn = XmlProcessingHelper.getOrMakeAnnotation(
+					DiscriminatorOptions.class,
+					target,
+					xmlDocumentContext
+			);
+
+			optionsAnn.setAttributeValue( "force", true );
 		}
 	}
 }

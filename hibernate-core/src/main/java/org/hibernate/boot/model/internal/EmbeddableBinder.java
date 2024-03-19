@@ -316,6 +316,7 @@ public class EmbeddableBinder {
 				inferredData,
 				null,
 				propertyAccessor,
+				null,
 				isNullable,
 				entityBinder,
 				isComponentEmbedded,
@@ -335,6 +336,7 @@ public class EmbeddableBinder {
 			PropertyData inferredData,
 			PropertyData baseInferredData, //base inferred data correspond to the entity reproducing inferredData's properties (ie IdClass)
 			AccessType propertyAccessor,
+			ClassDetails entityAtStake,
 			boolean isNullable,
 			EntityBinder entityBinder,
 			boolean isComponentEmbedded,
@@ -432,7 +434,7 @@ public class EmbeddableBinder {
 		}
 
 		final List<PropertyData> baseClassElements =
-				collectBaseClassElements( baseInferredData, propertyAccessor, context, annotatedType );
+				collectBaseClassElements( baseInferredData, propertyAccessor, context, entityAtStake );
 		if ( baseClassElements != null
 				//useful to avoid breaking pre JPA 2 mappings
 				&& !hasAnnotationsOnIdClass( annotatedType ) ) {
@@ -725,7 +727,7 @@ public class EmbeddableBinder {
 			PropertyData baseInferredData,
 			AccessType propertyAccessor,
 			MetadataBuildingContext context,
-			TypeDetails annotatedClass) {
+			ClassDetails entityAtStake) {
 		if ( baseInferredData != null ) {
 			final List<PropertyData> baseClassElements = new ArrayList<>();
 			// iterate from base returned class up hierarchy to handle cases where the @Id attributes
@@ -734,7 +736,7 @@ public class EmbeddableBinder {
 			while ( !Object.class.getName().equals( baseReturnedClassOrElement.getName() ) ) {
 				final PropertyContainer container = new PropertyContainer(
 						baseReturnedClassOrElement.determineRawClass(),
-						annotatedClass,
+						entityAtStake,
 						propertyAccessor
 				);
 				addElementsOfClass( baseClassElements, container, context );

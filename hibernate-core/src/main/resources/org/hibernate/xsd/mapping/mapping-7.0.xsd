@@ -928,7 +928,9 @@
                 }
             </xsd:documentation>
         </xsd:annotation>
-        <xsd:attribute name="fragment" type="xsd:string"/>
+        <xsd:sequence>
+            <xsd:element name="fragment" type="xsd:string"/>
+        </xsd:sequence>
         <xsd:attribute name="discriminator-type" type="orm:discriminator-type"/>
         <xsd:attribute name="force-selection" type="xsd:boolean" default="false"/>
     </xsd:complexType>

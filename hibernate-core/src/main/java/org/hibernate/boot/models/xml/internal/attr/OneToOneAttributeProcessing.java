@@ -21,6 +21,7 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.OneToOne;
 
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCascading;
+import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
 import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.getOrMakeAnnotation;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeBasics;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
@@ -89,6 +90,7 @@ public class OneToOneAttributeProcessing {
 		}
 
 		final MutableAnnotationUsage<Target> targetAnn = XmlProcessingHelper.makeAnnotation( Target.class, memberDetails, xmlDocumentContext );
-		targetAnn.setAttributeValue( "value", targetEntityName );
+		targetAnn.setAttributeValue( "value", determineTargetName( targetEntityName, xmlDocumentContext ) );
 	}
+
 }

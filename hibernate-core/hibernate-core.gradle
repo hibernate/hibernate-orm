@@ -72,7 +72,7 @@ dependencies {
     testRuntimeOnly libs.jacksonXml
     testRuntimeOnly libs.jacksonJsr310
 
-    testAnnotationProcessor project( ':hibernate-jpamodelgen' )
+    testAnnotationProcessor project( ':hibernate-processor' )
 
     // NOTE: it seems like, since 4.10, the Antlr Tool no longer defines
     // transitive dep on the corresponding Antlr Runtime.  At least, I get

@@ -60,13 +60,13 @@ It also exposes the following method forms:
 ==== Static Metamodel Generation
 
 Static metamodel generation can be incorporated into Gradle builds via the
-annotation processor provided by the `org.hibernate.orm:hibernate-jpamodelgen` artifact.  Applying
+annotation processor provided by the `org.hibernate.orm:hibernate-processor` artifact.  Applying
 an annotation processor in Gradle is super easy -
 
 
 [source,gradle]
 ----
 dependencies {
-    annotationProcessor "org.hibernate.orm:hibernate-jpamodelgen:${hibernateVersion}"
+    annotationProcessor "org.hibernate.orm:hibernate-processor:${hibernateVersion}"
 }
 ----

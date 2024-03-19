@@ -22,6 +22,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
@@ -490,18 +491,27 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 					final String columnName = timeZoneColumn != null
 							? timeZoneColumn.getString( "name" )
 							: column.getString( "name" ) + "_tz";
-					created.setAttributeValue( "name", columnName );
-					created.setAttributeValue( "nullable", column.getBoolean( "nullable" ) );
+					AnnotationUsageHelper.applyStringAttributeIfSpecified( "name", columnName, created );
+					AnnotationUsageHelper.applyAttributeIfSpecified(
+							"nullable",
+							column.getBoolean( "nullable" ),
+							created
+					);
 
 					final AnnotationUsage<?> source = timeZoneColumn != null
 							? timeZoneColumn
 							: column;
-					created.setAttributeValue( "table", source.getAttributeValue( "table" ) );
-					created.setAttributeValue( "insertable", source.getAttributeValue( "insertable" ) );
-					created.setAttributeValue( "updatable", source.getAttributeValue( "updatable" ) );
+					AnnotationUsageHelper.applyStringAttributeIfSpecified( "table", source.getAttributeValue( "table" ), created );
+					AnnotationUsageHelper.applyAttributeIfSpecified( "insertable", source.getAttributeValue( "insertable" ), created );
+					AnnotationUsageHelper.applyAttributeIfSpecified( "updatable", source.getAttributeValue( "updatable" ), created );
 
 					if ( timeZoneColumn != null ) {
-						created.setAttributeValue( "columnDefinition", timeZoneColumn.getAttributeValue( "columnDefinition" ) );
+						AnnotationUsageHelper
+								.applyStringAttributeIfSpecified(
+										"columnDefinition",
+										timeZoneColumn.getAttributeValue( "columnDefinition" ),
+										created
+								);
 					}
 				},
 				context.getMetadataCollector().getSourceModelBuildingContext()
@@ -551,7 +561,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return JpaAnnotations.COLUMN.createUsage(
 				element,
 				(created) -> {
-					created.setAttributeValue( "name", implicitName.getText() );
+					AnnotationUsageHelper.applyStringAttributeIfSpecified( "name", implicitName.getText(), created );
 					created.setAttributeValue( "precision", precision );
 				},
 				context.getMetadataCollector().getSourceModelBuildingContext()

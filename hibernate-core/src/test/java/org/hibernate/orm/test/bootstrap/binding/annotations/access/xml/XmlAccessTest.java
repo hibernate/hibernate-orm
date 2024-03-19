@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AccessType;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -193,16 +194,14 @@ public class XmlAccessTest {
 		final Getter accessGetter = attributeMapping.getPropertyAccess().getGetter();
 
 		if ( AccessType.FIELD.equals( accessType ) ) {
-			assertTrue(
-					accessGetter instanceof GetterFieldImpl,
-					"Field access was expected."
-			);
+			assertThat( accessGetter )
+					.withFailMessage( "FIELD access was expected." )
+					.isInstanceOf( GetterFieldImpl.class );
 		}
 		else {
-			assertTrue(
-					accessGetter instanceof GetterMethodImpl,
-					"Property access was expected."
-			);
+			assertThat( accessGetter )
+					.withFailMessage( "PROPERTY (method) access was expected." )
+					.isInstanceOf( GetterMethodImpl.class );
 		}
 	}
 }

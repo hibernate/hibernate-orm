@@ -47,7 +47,7 @@ public class NamedEntityGraphTest {
 			);
 
 			final Set<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies();
-			assertThat( entityHierarchies ).hasSize( 1 );
+			assertThat( entityHierarchies ).hasSize( 2 );
 
 			entityHierarchies.forEach(
 					entityHierarchy -> {

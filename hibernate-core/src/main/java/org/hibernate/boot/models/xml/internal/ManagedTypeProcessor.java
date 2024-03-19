@@ -843,6 +843,8 @@ public class ManagedTypeProcessor {
 					.getClassDetailsRegistry()
 					.resolveClassDetails( className );
 
+			XmlProcessingHelper.getOrMakeAnnotation( Embeddable.class, classDetails, xmlDocumentContext );
+
 			AttributeProcessor.processAttributes(
 					jaxbEmbeddable.getAttributes(),
 					classDetails,

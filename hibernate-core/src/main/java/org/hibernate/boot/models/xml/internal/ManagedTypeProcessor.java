@@ -7,10 +7,7 @@
 package org.hibernate.boot.models.xml.internal;
 
 import java.lang.reflect.Modifier;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.annotations.Cache;
@@ -21,15 +18,11 @@ import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.internal.Abstract;
 import org.hibernate.boot.internal.Extends;
-import org.hibernate.boot.internal.LimitedCollectionClassification;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCachingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedIdImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
@@ -37,9 +30,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedEntityGraphImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTenantIdImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -78,7 +69,6 @@ import jakarta.persistence.MappedSuperclass;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
-import static org.hibernate.internal.util.NullnessHelper.nullif;
 
 /**
  * Helper for handling managed types defined in mapping XML, in either
@@ -500,8 +490,12 @@ public class ManagedTypeProcessor {
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addAnnotationUsage( cacheableUsage );
-			XmlProcessingHelper.setIf( jaxbCaching.getRegion(), "region", cacheableUsage );
-			XmlProcessingHelper.setIf( convertCacheAccessType( jaxbCaching.getAccess() ), "access", cacheableUsage );
+			XmlProcessingHelper.applyAttributeIfSpecified( "region", jaxbCaching.getRegion(), cacheableUsage );
+			XmlProcessingHelper.applyAttributeIfSpecified(
+					"access",
+					convertCacheAccessType( jaxbCaching.getAccess() ),
+					cacheableUsage
+			);
 		}
 	}
 

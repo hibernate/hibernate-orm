@@ -107,6 +107,8 @@ import static org.hibernate.boot.models.HibernateAnnotations.FILTER_DEF;
 import static org.hibernate.boot.models.HibernateAnnotations.JAVA_TYPE_REG;
 import static org.hibernate.boot.models.HibernateAnnotations.JDBC_TYPE_REG;
 import static org.hibernate.boot.models.HibernateAnnotations.TYPE_REG;
+import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyAttributeIfSpecified;
+import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyStringAttributeIfSpecified;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
@@ -638,12 +640,13 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 		sequenceGenerators.forEach( (generator) -> {
 			final MutableAnnotationUsage<SequenceGenerator> annotationUsage = makeAnnotation( JpaAnnotations.SEQUENCE_GENERATOR );
-			annotationUsage.setAttributeValue( "name", generator.getName() );
-			annotationUsage.setAttributeValue( "sequenceName", generator.getSequenceName() );
-			annotationUsage.setAttributeValue( "catalog", generator.getCatalog() );
-			annotationUsage.setAttributeValue( "schema", generator.getSchema() );
-			annotationUsage.setAttributeValue( "initialValue", generator.getInitialValue() );
-			annotationUsage.setAttributeValue( "allocationSize", generator.getAllocationSize() );
+			applyStringAttributeIfSpecified( "name", generator.getName(), annotationUsage );
+			applyStringAttributeIfSpecified( "sequenceName", generator.getSequenceName(), annotationUsage );
+			applyStringAttributeIfSpecified( "catalog", generator.getCatalog(), annotationUsage );
+			applyStringAttributeIfSpecified( "schema", generator.getSchema(), annotationUsage );
+			applyAttributeIfSpecified( "initialValue", generator.getInitialValue(), annotationUsage );
+			applyAttributeIfSpecified( "allocationSize", generator.getAllocationSize(), annotationUsage );
+			applyStringAttributeIfSpecified( "options", generator.getOptions(), annotationUsage );
 
 			collectSequenceGenerator( new SequenceGeneratorRegistration( generator.getName(), annotationUsage ) );
 		} );
@@ -676,15 +679,18 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 		tableGenerators.forEach( (generator) -> {
 			final MutableAnnotationUsage<TableGenerator> annotationUsage = makeAnnotation( JpaAnnotations.TABLE_GENERATOR );
-			annotationUsage.setAttributeValue( "name", generator.getName() );
-			annotationUsage.setAttributeValue( "table", generator.getTable() );
-			annotationUsage.setAttributeValue( "catalog", generator.getCatalog() );
-			annotationUsage.setAttributeValue( "schema", generator.getSchema() );
-			annotationUsage.setAttributeValue( "pkColumnName", generator.getPkColumnName() );
-			annotationUsage.setAttributeValue( "valueColumnName", generator.getValueColumnName() );
-			annotationUsage.setAttributeValue( "pkColumnValue", generator.getPkColumnValue() );
-			annotationUsage.setAttributeValue( "initialValue", generator.getInitialValue() );
-			annotationUsage.setAttributeValue( "allocationSize", generator.getAllocationSize() );
+			applyStringAttributeIfSpecified( "name", generator.getName(), annotationUsage );
+			applyStringAttributeIfSpecified( "table", generator.getTable(), annotationUsage );
+			applyStringAttributeIfSpecified( "catalog", generator.getCatalog(), annotationUsage );
+			applyStringAttributeIfSpecified( "schema", generator.getSchema(), annotationUsage );
+			applyStringAttributeIfSpecified( "pkColumnName", generator.getPkColumnName(), annotationUsage );
+			applyStringAttributeIfSpecified( "valueColumnName", generator.getValueColumnName(), annotationUsage );
+			applyStringAttributeIfSpecified( "pkColumnValue", generator.getPkColumnValue(), annotationUsage );
+			applyAttributeIfSpecified( "initialValue", generator.getInitialValue(), annotationUsage );
+			applyAttributeIfSpecified( "allocationSize", generator.getAllocationSize(), annotationUsage );
+			applyAttributeIfSpecified( "uniqueConstraints", generator.getUniqueConstraint(), annotationUsage );
+			applyAttributeIfSpecified( "indexes", generator.getIndex(), annotationUsage );
+			applyStringAttributeIfSpecified( "options", generator.getOptions(), annotationUsage );
 
 			collectTableGenerator( new TableGeneratorRegistration( generator.getName(), annotationUsage ) );
 		} );
@@ -713,11 +719,13 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 		genericGenerators.forEach( (generator) -> {
 			final MutableAnnotationUsage<GenericGenerator> annotationUsage = makeAnnotation( HibernateAnnotations.GENERIC_GENERATOR );
-			annotationUsage.setAttributeValue( "name", generator.getName() );
-			annotationUsage.setAttributeValue( "strategy", generator.getClazz() );
+			applyStringAttributeIfSpecified( "name", generator.getName(), annotationUsage );
+
+			applyStringAttributeIfSpecified( "strategy", generator.getClazz(), annotationUsage );
 
 			// todo : update the mapping.xsd to account for new @GenericGenerator definition
-
+			applyAttributeIfSpecified( "parameters", generator.getParameters(), annotationUsage );
+//			setValueIfNotNull( "type", generator.getType(), annotationUsage );
 			collectGenericGenerator( new GenericGeneratorRegistration( generator.getName(), annotationUsage ) );
 		} );
 	}
@@ -783,7 +791,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 		jaxbSqlResultSetMappings.forEach( (jaxbMapping) -> {
 			final MutableAnnotationUsage<SqlResultSetMapping> mappingAnnotation = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage( null, null );
-			mappingAnnotation.setAttributeValue( "name", jaxbMapping.getName() );
+			applyStringAttributeIfSpecified( "name", jaxbMapping.getName(), mappingAnnotation );
 
 			sqlResultSetMappingRegistrations.put(
 					jaxbMapping.getName(),
@@ -792,17 +800,17 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 			applyEntityResults(
 					jaxbMapping.getEntityResult(),
-					(results) -> mappingAnnotation.setAttributeValue( "entities", results )
+					(results) -> applyAttributeIfSpecified( "entities", results, mappingAnnotation )
 			);
 
 			applyConstructorResults(
 					jaxbMapping.getConstructorResult(),
-					(results) -> mappingAnnotation.setAttributeValue( "classes", results )
+					(results) -> applyAttributeIfSpecified( "classes", results, mappingAnnotation )
 			);
 
 			applyColumnResults(
 					jaxbMapping.getColumnResult(),
-					(columnResults) -> mappingAnnotation.setAttributeValue( "columns", columnResults )
+					(columnResults) -> applyAttributeIfSpecified( "columns", columnResults, mappingAnnotation )
 			);
 		} );
 	}
@@ -820,18 +828,18 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			final MutableAnnotationUsage<EntityResult> entityResultAnnotation = makeAnnotation( JpaAnnotations.ENTITY_RESULT );
 			entityResults.add( entityResultAnnotation );
 
-			entityResultAnnotation.setAttributeValue( "entityClass", classDetailsRegistry.resolveClassDetails( jaxbEntityResult.getEntityClass() ) );
-			entityResultAnnotation.setAttributeValue( "lockMode", jaxbEntityResult.getLockMode() );
-			entityResultAnnotation.setAttributeValue( "discriminatorColumn", jaxbEntityResult.getDiscriminatorColumn() );
+			applyAttributeIfSpecified( "entityClass", classDetailsRegistry.resolveClassDetails( jaxbEntityResult.getEntityClass() ), entityResultAnnotation );
+			applyAttributeIfSpecified( "lockMode", jaxbEntityResult.getLockMode(), entityResultAnnotation );
+			applyStringAttributeIfSpecified( "discriminatorColumn", jaxbEntityResult.getDiscriminatorColumn(), entityResultAnnotation );
 
 			if ( !jaxbEntityResult.getFieldResult().isEmpty() ) {
 				final List<AnnotationUsage<FieldResult>> fieldResults = arrayList( jaxbEntityResult.getFieldResult().size() );
-				entityResultAnnotation.setAttributeValue( "fields", fieldResults );
+				applyAttributeIfSpecified( "fields", fieldResults, entityResultAnnotation );
 
 				for ( JaxbFieldResultImpl jaxbFieldResult : jaxbEntityResult.getFieldResult() ) {
 					final MutableAnnotationUsage<FieldResult> fieldResultAnnotation = makeAnnotation( JpaAnnotations.FIELD_RESULT );
-					fieldResultAnnotation.setAttributeValue( "name", jaxbFieldResult.getName() );
-					fieldResultAnnotation.setAttributeValue( "column", jaxbFieldResult.getColumn() );
+					applyStringAttributeIfSpecified( "name", jaxbFieldResult.getName(), fieldResultAnnotation );
+					applyStringAttributeIfSpecified( "column", jaxbFieldResult.getColumn(), fieldResultAnnotation );
 				}
 			}
 		}
@@ -877,7 +885,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			columnResults.add( columnResultAnnotation );
 
 			columnResultAnnotation.setAttributeValue( "name", jaxbColumn.getName() );
-			columnResultAnnotation.setAttributeValue( "type", classDetailsRegistry.resolveClassDetails( jaxbColumn.getClazz() ) );
+			applyAttributeIfSpecified( "type", classDetailsRegistry.resolveClassDetails( jaxbColumn.getClazz() ), columnResultAnnotation );
 		}
 		annotationListConsumer.accept( columnResults );
 	}
@@ -898,12 +906,12 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 					new NamedQueryRegistration( jaxbNamedQuery.getName(), queryAnnotation )
 			);
 
-			queryAnnotation.setAttributeValue( "name", jaxbNamedQuery.getName() );
-			queryAnnotation.setAttributeValue( "query", jaxbNamedQuery.getQuery() );
-			queryAnnotation.setAttributeValue( "lockMode", jaxbNamedQuery.getLockMode() );
+			applyStringAttributeIfSpecified( "name", jaxbNamedQuery.getName(), queryAnnotation );
+			applyStringAttributeIfSpecified( "query", jaxbNamedQuery.getQuery(), queryAnnotation );
+			applyAttributeIfSpecified( "lockMode", jaxbNamedQuery.getLockMode(), queryAnnotation );
 
 			final List<AnnotationUsage<QueryHint>> hints = extractQueryHints( jaxbNamedQuery );
-			queryAnnotation.setAttributeValue( "hints", hints );
+			applyAttributeIfSpecified( "hints", hints, queryAnnotation );
 
 			if ( jaxbNamedQuery.isCacheable() == Boolean.TRUE ) {
 				final MutableAnnotationUsage<QueryHint> cacheableHint = makeAnnotation( JpaAnnotations.QUERY_HINT );
@@ -972,9 +980,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				queryAnnotation.setAttributeValue( "resultClass", classDetailsRegistry.resolveClassDetails( jaxbNamedQuery.getResultClass() ) );
 			}
 
-			if ( StringHelper.isNotEmpty( jaxbNamedQuery.getResultSetMapping() ) ) {
-				queryAnnotation.setAttributeValue( "resultSetMapping", jaxbNamedQuery.getResultSetMapping() );
-			}
+			applyStringAttributeIfSpecified( "resultSetMapping", jaxbNamedQuery.getResultSetMapping(), queryAnnotation );
 
 			applyEntityResults(
 					jaxbNamedQuery.getEntityResult(),
@@ -1046,24 +1052,24 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			queryAnnotation.setAttributeValue( "procedureName", jaxbQuery.getProcedureName() );
 
 			final ArrayList<ClassDetails> resultClasses = arrayList( jaxbQuery.getResultClasses().size() );
-			queryAnnotation.setAttributeValue( "resultClasses", resultClasses );
+			applyAttributeIfSpecified( "resultClasses", resultClasses, queryAnnotation );
 			for ( String resultClassName : jaxbQuery.getResultClasses() ) {
 				resultClasses.add( classDetailsRegistry.resolveClassDetails( resultClassName ) );
 			}
 
-			queryAnnotation.setAttributeValue( "resultSetMappings", jaxbQuery.getResultSetMappings() );
+			applyAttributeIfSpecified( "resultSetMappings", jaxbQuery.getResultSetMappings(), queryAnnotation );
 
-			queryAnnotation.setAttributeValue( "hints", extractQueryHints( jaxbQuery ) );
+			applyAttributeIfSpecified( "hints", extractQueryHints( jaxbQuery ), queryAnnotation );
 
 			final ArrayList<AnnotationUsage<StoredProcedureParameter>> parameters = arrayList( jaxbQuery.getProcedureParameters().size() );
-			queryAnnotation.setAttributeValue( "parameters", parameters );
+			applyAttributeIfSpecified( "parameters", parameters, queryAnnotation );
 			for ( JaxbStoredProcedureParameterImpl jaxbProcedureParameter : jaxbQuery.getProcedureParameters() ) {
 				final MutableAnnotationUsage<StoredProcedureParameter> parameterAnnotation = makeAnnotation( JpaAnnotations.STORED_PROCEDURE_PARAMETER );
 				parameters.add( parameterAnnotation );
 
-				parameterAnnotation.setAttributeValue( "name", jaxbProcedureParameter.getName() );
-				parameterAnnotation.setAttributeValue( "mode", jaxbProcedureParameter.getMode() );
-				parameterAnnotation.setAttributeValue( "type", classDetailsRegistry.resolveClassDetails( jaxbProcedureParameter.getClazz() ) );
+				applyStringAttributeIfSpecified( "name", jaxbProcedureParameter.getName(), parameterAnnotation );
+				applyAttributeIfSpecified( "mode", jaxbProcedureParameter.getMode(), parameterAnnotation );
+				applyAttributeIfSpecified( "type", classDetailsRegistry.resolveClassDetails( jaxbProcedureParameter.getClazz() ), parameterAnnotation );
 			}
 		}
 	}

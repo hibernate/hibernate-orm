@@ -6,13 +6,11 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
@@ -47,13 +45,18 @@ public class ElementCollectionAttributeProcessing {
 				memberDetails,
 				xmlDocumentContext
 		);
-		XmlProcessingHelper.setIf( jaxbElementCollection.getFetch(), "fetch", elementCollectionAnn );
-		elementCollectionAnn.setAttributeValue(
+		XmlProcessingHelper.applyAttributeIfSpecified(
+				"fetch",
+				jaxbElementCollection.getFetch(),
+				elementCollectionAnn
+		);
+		XmlProcessingHelper.applyAttributeIfSpecified(
 				"targetClass",
 				XmlAnnotationHelper.resolveJavaType(
 						jaxbElementCollection.getTargetClass(),
 						xmlDocumentContext.getModelBuildingContext()
-				)
+				).determineRawClass(),
+				elementCollectionAnn
 		);
 
 		CommonAttributeProcessing.applyAttributeBasics( jaxbElementCollection, memberDetails, elementCollectionAnn, accessType, xmlDocumentContext );

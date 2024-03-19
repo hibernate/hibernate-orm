@@ -382,15 +382,15 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			ClassDetails classDetails,
 			String accessType,
 			Map<String, MemberDetails> members) {
-		final List<MemberDetails> collectedMembers = new ArrayList<>( switch ( accessType ) {
+		final List<? extends MemberDetails> collectedMembers = switch ( accessType ) {
 			case ACCESS_FIELD -> classDetails.getFields();
 			case ACCESS_PROPERTY -> classDetails.getMethods();
 			case ACCESS_RECORD -> classDetails.getRecordComponents();
 			default -> throw new IllegalArgumentException( "Unknown access type " + accessType );
-		} );
-		members.putAll( collectedMembers.stream()
-								.filter( MemberDetails::isPersistable )
-								.collect( Collectors.toMap( MemberDetails::resolveAttributeName, item -> item ) ) );
+		};
+		collectedMembers.stream()
+				.filter( MemberDetails::isPersistable )
+				.forEach( member -> members.put( member.resolveAttributeName(), member ) );
 	}
 
 	private static void setTypeName(Value value, String typeName) {

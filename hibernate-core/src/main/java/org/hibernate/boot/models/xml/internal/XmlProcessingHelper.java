@@ -247,4 +247,22 @@ public class XmlProcessingHelper {
 
 		annotationUsage.setAttributeValue( attributeName, value );
 	}
+
+	public static <A extends Annotation> void applyAttributeIfSpecified(
+			String attributeName,
+			String value,
+			MutableAnnotationUsage<A> annotationUsage) {
+		if ( StringHelper.isNotEmpty( value ) ) {
+			annotationUsage.setAttributeValue( attributeName, value );
+		}
+	}
+
+	public static <A extends Annotation> void applyAttributeIfSpecified(
+			String attributeName,
+			Object value,
+			MutableAnnotationUsage<A> tableAnn) {
+		if ( value != null ) {
+			tableAnn.setAttributeValue( attributeName, value );
+		}
+	}
 }

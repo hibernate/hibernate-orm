@@ -162,6 +162,8 @@ public class ManagedTypeProcessor {
 							attributeJavaType,
 							classDetails,
 							MEMBER_MODIFIERS,
+							false,
+							false,
 							xmlDocumentContext.getModelBuildingContext()
 					);
 					classDetails.addField( member );
@@ -176,6 +178,8 @@ public class ManagedTypeProcessor {
 						attributeJavaType,
 						classDetails,
 						MEMBER_MODIFIERS,
+						false,
+						false,
 						xmlDocumentContext.getModelBuildingContext()
 				);
 				classDetails.addField( member );
@@ -193,6 +197,8 @@ public class ManagedTypeProcessor {
 							attributeJavaType,
 							classDetails,
 							MEMBER_MODIFIERS,
+							false,
+							false,
 							xmlDocumentContext.getModelBuildingContext()
 					);
 					classDetails.addField( member );
@@ -208,6 +214,8 @@ public class ManagedTypeProcessor {
 							attributeJavaType,
 							classDetails,
 							MEMBER_MODIFIERS,
+							false,
+							false,
 							xmlDocumentContext.getModelBuildingContext()
 					);
 					classDetails.addField( member );
@@ -220,6 +228,8 @@ public class ManagedTypeProcessor {
 							attributeJavaType,
 							classDetails,
 							MEMBER_MODIFIERS,
+							false,
+							false,
 							xmlDocumentContext.getModelBuildingContext()
 					);
 					classDetails.addField( member );
@@ -232,6 +242,8 @@ public class ManagedTypeProcessor {
 							attributeJavaType,
 							classDetails,
 							MEMBER_MODIFIERS,
+							false,
+							false,
 							xmlDocumentContext.getModelBuildingContext()
 					);
 					classDetails.addField( member );
@@ -250,6 +262,8 @@ public class ManagedTypeProcessor {
 						attributeJavaType,
 						classDetails,
 						MEMBER_MODIFIERS,
+						false,
+						false,
 						xmlDocumentContext.getModelBuildingContext()
 				);
 				classDetails.addField( member );
@@ -257,94 +271,120 @@ public class ManagedTypeProcessor {
 		}
 
 		final JaxbAttributesContainer attributes = jaxbManagedType.getAttributes();
+
+		// <basic/>
 		attributes.getBasicAttributes().forEach( (jaxbBasic) -> {
 			final DynamicFieldDetails member = new DynamicFieldDetails(
 					jaxbBasic.getName(),
 					determineDynamicAttributeJavaType( jaxbBasic, xmlDocumentContext ),
 					classDetails,
 					MEMBER_MODIFIERS,
+					false,
+					false,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addField( member );
 		} );
 
+		// <embedded/>
 		attributes.getEmbeddedAttributes().forEach( (jaxbEmbedded) -> {
 			final DynamicFieldDetails member = new DynamicFieldDetails(
 					jaxbEmbedded.getName(),
 					determineDynamicAttributeJavaType( jaxbEmbedded, xmlDocumentContext ),
 					classDetails,
 					MEMBER_MODIFIERS,
+					false,
+					false,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addField( member );
 		} );
 
+		// <one-to-one/>
 		attributes.getOneToOneAttributes().forEach( (jaxbOneToOne) -> {
 			final DynamicFieldDetails member = new DynamicFieldDetails(
 					jaxbOneToOne.getName(),
 					determineDynamicAttributeJavaType( jaxbOneToOne, xmlDocumentContext ),
 					classDetails,
 					MEMBER_MODIFIERS,
+					false,
+					false,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addField( member );
 		} );
 
+		// <many-to-one/>
 		attributes.getManyToOneAttributes().forEach( (jaxbManyToOne) -> {
 			final DynamicFieldDetails member = new DynamicFieldDetails(
 					jaxbManyToOne.getName(),
 					determineDynamicAttributeJavaType( jaxbManyToOne, xmlDocumentContext ),
 					classDetails,
 					MEMBER_MODIFIERS,
+					false,
+					false,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addField( member );
 		} );
 
+		// <any/>
 		attributes.getAnyMappingAttributes().forEach( (jaxbAnyMapping) -> {
 			final DynamicFieldDetails member = new DynamicFieldDetails(
 					jaxbAnyMapping.getName(),
 					determineDynamicAttributeJavaType( jaxbAnyMapping, xmlDocumentContext ),
 					classDetails,
 					MEMBER_MODIFIERS,
+					false,
+					false,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addField( member );
 		} );
 
+		// <element-collection/>
 		attributes.getElementCollectionAttributes().forEach( (jaxbElementCollection) -> {
 			final DynamicFieldDetails member = new DynamicFieldDetails(
 					jaxbElementCollection.getName(),
 					determineDynamicAttributeJavaType( jaxbElementCollection, xmlDocumentContext ),
 					classDetails,
 					MEMBER_MODIFIERS,
+					false,
+					true,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addField( member );
 		} );
 
+		// <one-to-many/>
 		attributes.getOneToManyAttributes().forEach( (jaxbOneToMany) -> {
 			final DynamicFieldDetails member = new DynamicFieldDetails(
 					jaxbOneToMany.getName(),
 					determineDynamicAttributeJavaType( jaxbOneToMany, xmlDocumentContext ),
 					classDetails,
 					MEMBER_MODIFIERS,
+					false,
+					true,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addField( member );
 		} );
 
+		// <many-to-many/>
 		attributes.getManyToManyAttributes().forEach( (jaxbManyToMany) -> {
 			final DynamicFieldDetails member = new DynamicFieldDetails(
 					jaxbManyToMany.getName(),
 					determineDynamicAttributeJavaType( jaxbManyToMany, xmlDocumentContext ),
 					classDetails,
 					MEMBER_MODIFIERS,
+					false,
+					true,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addField( member );
 		} );
 
+		// <many-to-any/>
 		attributes.getPluralAnyMappingAttributes().forEach( (jaxbPluralAnyMapping) -> {
 			final TypeDetails attributeType = determineDynamicAttributeJavaType(
 					jaxbPluralAnyMapping,
@@ -355,6 +395,8 @@ public class ManagedTypeProcessor {
 					attributeType,
 					classDetails,
 					MEMBER_MODIFIERS,
+					false,
+					true,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addField( member );

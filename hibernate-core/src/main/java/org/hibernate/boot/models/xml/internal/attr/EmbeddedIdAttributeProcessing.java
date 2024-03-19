@@ -6,10 +6,12 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
+import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedIdImpl;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.MutableAnnotationUsage;
@@ -17,6 +19,7 @@ import org.hibernate.models.spi.MutableAnnotationUsage;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.EmbeddedId;
 
+import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -38,6 +41,11 @@ public class EmbeddedIdAttributeProcessing {
 
 		final MutableAnnotationUsage<EmbeddedId> idAnn = XmlProcessingHelper.makeAnnotation( EmbeddedId.class, memberDetails, xmlDocumentContext );
 		CommonAttributeProcessing.applyAttributeBasics( jaxbEmbeddedId, memberDetails, idAnn, accessType, xmlDocumentContext );
+
+		if ( StringHelper.isNotEmpty( jaxbEmbeddedId.getTarget() ) ) {
+			final MutableAnnotationUsage<Target> targetAnn = XmlProcessingHelper.getOrMakeAnnotation( Target.class, memberDetails, xmlDocumentContext );
+			targetAnn.setAttributeValue( "value", determineTargetName( jaxbEmbeddedId.getTarget(), xmlDocumentContext ) );
+		}
 
 		XmlAnnotationHelper.applyAttributeOverrides( jaxbEmbeddedId.getAttributeOverrides(), memberDetails, xmlDocumentContext );
 

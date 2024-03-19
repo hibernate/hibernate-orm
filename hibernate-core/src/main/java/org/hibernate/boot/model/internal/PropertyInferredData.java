@@ -6,17 +6,17 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.Collection;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Target;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 
@@ -83,7 +83,15 @@ public class PropertyInferredData implements PropertyData {
 	public TypeDetails getPropertyType() throws MappingException {
 		final AnnotationUsage<org.hibernate.boot.internal.Target> targetAnnotation = propertyMember.getAnnotationUsage( org.hibernate.boot.internal.Target.class );
 		if ( targetAnnotation != null ) {
-			return new ClassTypeDetailsImpl( targetAnnotation.getClassDetails( "value" ), TypeDetails.Kind.CLASS );
+			final String targetName = targetAnnotation.getString( "value" );
+			final SourceModelBuildingContext sourceModelBuildingContext = buildingContext
+					.getMetadataCollector()
+					.getSourceModelBuildingContext();
+			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().resolveClassDetails(
+					targetName,
+					name -> new DynamicClassDetails( targetName, sourceModelBuildingContext )
+			);
+			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 		}
 
 		final AnnotationUsage<Target> legacyTargetAnnotation = propertyMember.getAnnotationUsage( Target.class );
@@ -98,7 +106,15 @@ public class PropertyInferredData implements PropertyData {
 	public TypeDetails getClassOrElementType() throws MappingException {
 		final AnnotationUsage<org.hibernate.boot.internal.Target> annotationUsage = propertyMember.getAnnotationUsage( org.hibernate.boot.internal.Target.class );
 		if ( annotationUsage != null ) {
-			return new ClassTypeDetailsImpl( annotationUsage.getClassDetails( "value" ), TypeDetails.Kind.CLASS );
+			final String targetName = annotationUsage.getString( "value" );
+			final SourceModelBuildingContext sourceModelBuildingContext = buildingContext
+					.getMetadataCollector()
+					.getSourceModelBuildingContext();
+			final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().resolveClassDetails(
+					targetName,
+					name -> new DynamicClassDetails( targetName, sourceModelBuildingContext )
+			);
+			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 		}
 
 		final AnnotationUsage<Target> legacyAnnotationUsage = propertyMember.getAnnotationUsage( Target.class );

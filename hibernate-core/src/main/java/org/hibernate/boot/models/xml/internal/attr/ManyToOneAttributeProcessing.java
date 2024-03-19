@@ -28,6 +28,7 @@ import org.hibernate.models.spi.MutableMemberDetails;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.ManyToOne;
 
+import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -126,7 +127,7 @@ public class ManyToOneAttributeProcessing {
 		}
 
 		final MutableAnnotationUsage<Target> targetAnn = XmlProcessingHelper.makeAnnotation( Target.class, memberDetails, xmlDocumentContext );
-		targetAnn.setAttributeValue( "value", targetEntityName );
+		targetAnn.setAttributeValue( "value", determineTargetName( targetEntityName, xmlDocumentContext ) );
 	}
 
 	private static <E extends Enum<E>> List<E> asList(EnumSet<E> enums) {

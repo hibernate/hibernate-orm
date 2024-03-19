@@ -155,7 +155,6 @@ import jakarta.persistence.UniqueConstraint;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.makeNestedAnnotation;
-import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
  * Helper for creating annotation from equivalent JAXB
@@ -173,9 +172,7 @@ public class XmlAnnotationHelper {
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final MutableAnnotationUsage<Entity> entityUsage = XmlProcessingHelper.getOrMakeAnnotation( Entity.class, classDetails, xmlDocumentContext );
-		if ( StringHelper.isNotEmpty( jaxbEntity.getName() ) ) {
-			entityUsage.setAttributeValue( "name", jaxbEntity.getName() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbEntity.getName(), entityUsage );
 	}
 
 	public static MutableAnnotationUsage<Access> createAccessAnnotation(
@@ -194,7 +191,7 @@ public class XmlAnnotationHelper {
 		final MutableAnnotationUsage<AttributeAccessor> accessorAnn = XmlProcessingHelper.makeAnnotation( AttributeAccessor.class, memberDetails, xmlDocumentContext );
 		memberDetails.addAnnotationUsage( accessorAnn );
 		// todo : this is the old, deprecated form
-		accessorAnn.setAttributeValue( "value", attributeAccessor );
+		XmlProcessingHelper.applyAttributeIfSpecified( "value", attributeAccessor, accessorAnn );
 	}
 
 	public static void applyColumn(
@@ -580,7 +577,8 @@ public class XmlAnnotationHelper {
 			final AnnotationDescriptor<UniqueConstraint> uniqueConstraintDescriptor = xmlDocumentContext.getModelBuildingContext()
 					.getAnnotationDescriptorRegistry()
 					.getDescriptor( UniqueConstraint.class );
-			applyOr( jaxbUniqueConstraint, JaxbUniqueConstraintImpl::getName, "name", uniqueConstraintAnn, uniqueConstraintDescriptor );
+			XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbUniqueConstraint.getName(), uniqueConstraintAnn );
+			XmlProcessingHelper.applyAttributeIfSpecified( "options", jaxbUniqueConstraint.getOptions(), uniqueConstraintAnn );
 			uniqueConstraintAnn.setAttributeValue( "columnNames", jaxbUniqueConstraint.getColumnName() );
 			uniqueConstraints.add( uniqueConstraintAnn );
 		} );
@@ -771,8 +769,8 @@ public class XmlAnnotationHelper {
 
 		final MutableAnnotationUsage<GeneratedValue> generatedValueAnn = XmlProcessingHelper.makeAnnotation( GeneratedValue.class, memberDetails, xmlDocumentContext );
 		memberDetails.addAnnotationUsage( generatedValueAnn );
-		generatedValueAnn.setAttributeValue( "strategy", jaxbGeneratedValue.getStrategy() );
-		generatedValueAnn.setAttributeValue( "generator", jaxbGeneratedValue.getGenerator() );
+		XmlProcessingHelper.applyAttributeIfSpecified( "strategy", jaxbGeneratedValue.getStrategy(), generatedValueAnn );
+		XmlProcessingHelper.applyAttributeIfSpecified( "generator", jaxbGeneratedValue.getGenerator(), generatedValueAnn );
 	}
 
 	public static void applySequenceGenerator(
@@ -790,14 +788,13 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext
 		);
 
-		if ( StringHelper.isNotEmpty( jaxbGenerator.getSequenceName() ) ) {
-			sequenceAnn.setAttributeValue( "sequenceName", jaxbGenerator.getSequenceName() );
-		}
+		XmlProcessingHelper.applyAttributeIfSpecified( "sequenceName", jaxbGenerator.getSequenceName(), sequenceAnn );
 
-		sequenceAnn.setAttributeValue( "catalog", jaxbGenerator.getCatalog() );
-		sequenceAnn.setAttributeValue( "schema", jaxbGenerator.getSchema() );
-		sequenceAnn.setAttributeValue( "initialValue", jaxbGenerator.getInitialValue() );
-		sequenceAnn.setAttributeValue( "allocationSize", jaxbGenerator.getInitialValue() );
+		XmlProcessingHelper.applyAttributeIfSpecified( "catalog", jaxbGenerator.getCatalog(), sequenceAnn );
+		XmlProcessingHelper.applyAttributeIfSpecified( "schema", jaxbGenerator.getSchema(), sequenceAnn );
+		XmlProcessingHelper.applyAttributeIfSpecified( "initialValue", jaxbGenerator.getInitialValue(), sequenceAnn );
+		XmlProcessingHelper.applyAttributeIfSpecified( "allocationSize", jaxbGenerator.getInitialValue(), sequenceAnn );
+		XmlProcessingHelper.applyAttributeIfSpecified( "options", jaxbGenerator.getOptions(), sequenceAnn );
 	}
 
 	public static void applyTableGenerator(
@@ -810,15 +807,15 @@ public class XmlAnnotationHelper {
 
 		final MutableAnnotationUsage<TableGenerator> annotationUsage = XmlProcessingHelper.makeAnnotation( TableGenerator.class, memberDetails, xmlDocumentContext );
 		memberDetails.addAnnotationUsage( annotationUsage );
-		annotationUsage.setAttributeValue( "name", jaxbGenerator.getName() );
-		annotationUsage.setAttributeValue( "table", jaxbGenerator.getTable() );
-		annotationUsage.setAttributeValue( "catalog", jaxbGenerator.getCatalog() );
-		annotationUsage.setAttributeValue( "schema", jaxbGenerator.getSchema() );
-		annotationUsage.setAttributeValue( "pkColumnName", jaxbGenerator.getPkColumnName() );
-		annotationUsage.setAttributeValue( "valueColumnName", jaxbGenerator.getValueColumnName() );
-		annotationUsage.setAttributeValue( "pkColumnValue", jaxbGenerator.getPkColumnValue() );
-		annotationUsage.setAttributeValue( "initialValue", jaxbGenerator.getInitialValue() );
-		annotationUsage.setAttributeValue( "allocationSize", jaxbGenerator.getInitialValue() );
+		XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbGenerator.getName(), annotationUsage );
+		XmlProcessingHelper.applyAttributeIfSpecified( "table", jaxbGenerator.getTable(), annotationUsage );
+		XmlProcessingHelper.applyAttributeIfSpecified( "catalog", jaxbGenerator.getCatalog(), annotationUsage );
+		XmlProcessingHelper.applyAttributeIfSpecified( "schema", jaxbGenerator.getSchema(), annotationUsage );
+		XmlProcessingHelper.applyAttributeIfSpecified( "pkColumnName", jaxbGenerator.getPkColumnName(), annotationUsage );
+		XmlProcessingHelper.applyAttributeIfSpecified( "valueColumnName", jaxbGenerator.getValueColumnName(), annotationUsage );
+		XmlProcessingHelper.applyAttributeIfSpecified( "pkColumnValue", jaxbGenerator.getPkColumnValue(), annotationUsage );
+		XmlProcessingHelper.applyAttributeIfSpecified( "initialValue", jaxbGenerator.getInitialValue(), annotationUsage );
+		XmlProcessingHelper.applyAttributeIfSpecified( "allocationSize", jaxbGenerator.getInitialValue(), annotationUsage );
 		applyUniqueConstraints( jaxbGenerator.getUniqueConstraint(), memberDetails, annotationUsage, xmlDocumentContext );
 		applyIndexes( jaxbGenerator.getIndex(), memberDetails, annotationUsage, xmlDocumentContext );
 	}
@@ -897,9 +894,9 @@ public class XmlAnnotationHelper {
 					xmlDocumentContext
 			);
 			memberDetails.addAnnotationUsage( annotationUsage );
-			annotationUsage.setAttributeValue( "name", jaxbOverride.getName() );
+			XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbOverride.getName(), annotationUsage );
 			final List<JaxbJoinColumnImpl> joinColumns = jaxbOverride.getJoinColumns();
-			if ( CollectionHelper.isNotEmpty(  joinColumns)) {
+			if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
 				annotationUsage.setAttributeValue( "joinColumns", createJoinColumns( joinColumns, memberDetails, xmlDocumentContext ) );
 			}
 			if ( jaxbOverride.getJoinTable() != null ) {
@@ -957,14 +954,15 @@ public class XmlAnnotationHelper {
 		final ClassDetails converter;
 		if ( StringHelper.isNotEmpty( jaxbConvert.getConverter() ) ) {
 			converter = classDetailsRegistry.resolveClassDetails( jaxbConvert.getConverter() );
+			annotationUsage.setAttributeValue( "converter", converter );
 		}
-		else {
-			// allowable for disable-conversion
-			converter = null;
-		}
-		annotationUsage.setAttributeValue( "converter", converter );
-		annotationUsage.setAttributeValue( "attributeName", prefixIfNotAlready( jaxbConvert.getAttributeName(), namePrefix ) );
-		annotationUsage.setAttributeValue( "disableConversion", jaxbConvert.isDisableConversion() );
+
+		XmlProcessingHelper.applyAttributeIfSpecified(
+				"attributeName",
+				prefixIfNotAlready( jaxbConvert.getAttributeName(), namePrefix ),
+				annotationUsage
+		);
+		XmlProcessingHelper.applyAttributeIfSpecified( "disableConversion", jaxbConvert.isDisableConversion(), annotationUsage );
 	}
 
 	public static void applyTable(
@@ -1010,34 +1008,6 @@ public class XmlAnnotationHelper {
 		applyCheckConstraints( jaxbTable, target, tableAnn, xmlDocumentContext );
 	}
 
-	private static <A extends Annotation> void applyAttributeIfSpecified(
-			MutableAnnotationUsage<A> annotationUsage,
-			String attributeName,
-			String value) {
-		if ( StringHelper.isNotEmpty( value ) ) {
-			annotationUsage.setAttributeValue( attributeName, value );
-		}
-	}
-
-	private static <A extends Annotation, V> void applyAttributeIfSpecified(
-			MutableAnnotationUsage<A> annotationUsage,
-			String attributeName,
-			V... values) {
-		final V coalesced = coalesce( values );
-		if ( coalesced != null ) {
-			annotationUsage.setAttributeValue( attributeName, coalesced );
-		}
-	}
-
-	private static <A extends Annotation> void applyAttributeIfSpecified(
-			MutableAnnotationUsage<A> tableAnn,
-			String attributeName,
-			Object value) {
-		if ( value != null ) {
-			tableAnn.setAttributeValue( attributeName, value );
-		}
-	}
-
 	public static void applyNaturalId(
 			JaxbNaturalId jaxbNaturalId,
 			MutableMemberDetails backingMember,
@@ -1070,7 +1040,7 @@ public class XmlAnnotationHelper {
 		classDetails.addAnnotationUsage( annotationUsage );
 
 		final JaxbCachingImpl jaxbCaching = jaxbNaturalId.getCaching();
-		annotationUsage.setAttributeValue( "region", jaxbCaching.getRegion() );
+		XmlProcessingHelper.applyAttributeIfSpecified( "region", jaxbCaching.getRegion(), annotationUsage );
 	}
 
 	public static void applyId(
@@ -1116,7 +1086,7 @@ public class XmlAnnotationHelper {
 				classDetails,
 				xmlDocumentContext
 		);
-		inheritanceAnn.setAttributeValue( "strategy", jaxbEntity.getInheritance().getStrategy() );
+		XmlProcessingHelper.applyAttributeIfSpecified( "strategy", jaxbEntity.getInheritance().getStrategy(), inheritanceAnn );
 	}
 
 	public static ClassDetails resolveJavaType(String value, XmlDocumentContext xmlDocumentContext) {
@@ -1299,8 +1269,8 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext
 		);
 
-		applyAttributeIfSpecified( filterAnn, "condition", jaxbFilter.getCondition() );
-		applyAttributeIfSpecified( filterAnn, "deduceAliasInjectionPoints", jaxbFilter.isAutoAliasInjection() );
+		XmlProcessingHelper.applyAttributeIfSpecified( "condition", jaxbFilter.getCondition(), filterAnn );
+		XmlProcessingHelper.applyAttributeIfSpecified( "deduceAliasInjectionPoints", jaxbFilter.isAutoAliasInjection(), filterAnn );
 
 		final List<JaxbHbmFilterImpl.JaxbAliasesImpl> aliases = jaxbFilter.getAliases();
 		if ( !CollectionHelper.isEmpty( aliases ) ) {
@@ -1316,7 +1286,7 @@ public class XmlAnnotationHelper {
 		for ( JaxbHbmFilterImpl.JaxbAliasesImpl alias : aliases ) {
 			final MutableAnnotationUsage<SqlFragmentAlias> aliasAnn = makeNestedAnnotation( SqlFragmentAlias.class, target, xmlDocumentContext );
 			aliasAnn.setAttributeValue( "alias", alias.getAlias() );
-			applyAttributeIfSpecified( aliasAnn, "table", alias.getTable() );
+			XmlProcessingHelper.applyAttributeIfSpecified( "table", alias.getTable(), aliasAnn );
 			if ( StringHelper.isNotEmpty( alias.getEntity() ) ) {
 				aliasAnn.setAttributeValue(
 						"entity",
@@ -1362,7 +1332,7 @@ public class XmlAnnotationHelper {
 			final MutableAnnotationUsage<A> annotation = XmlProcessingHelper.getOrMakeAnnotation( annotationType, target, xmlDocumentContext );
 			annotation.setAttributeValue( "sql", jaxbCustomSql.getValue() );
 			annotation.setAttributeValue( "callable", jaxbCustomSql.isCallable() );
-			applyAttributeIfSpecified( annotation, "table", jaxbCustomSql.getTable() );
+			XmlProcessingHelper.applyAttributeIfSpecified( "table", jaxbCustomSql.getTable(), annotation );
 			if ( jaxbCustomSql.getResultCheck() != null ) {
 				annotation.setAttributeValue( "check", getResultCheckStyle( jaxbCustomSql.getResultCheck() ) );
 			}
@@ -1474,7 +1444,7 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		if ( rowId != null ) {
 			final MutableAnnotationUsage<RowId> rowIdAnn = XmlProcessingHelper.getOrMakeAnnotation( RowId.class, target, xmlDocumentContext );
-			applyAttributeIfSpecified( rowIdAnn, "value", rowId );
+			XmlProcessingHelper.applyAttributeIfSpecified( "value", rowId, rowIdAnn );
 		}
 	}
 
@@ -1500,21 +1470,8 @@ public class XmlAnnotationHelper {
 			);
 
 			final AnnotationDescriptor<NamedEntityGraph> namedEntityGraphAnnotationDescriptor = namedEntityGraphAnn.getAnnotationDescriptor();
-			applyOr(
-					namedEntityGraph,
-					JaxbNamedEntityGraphImpl::getName,
-					"name",
-					namedEntityGraphAnn,
-					namedEntityGraphAnnotationDescriptor
-			);
-
-			applyOr(
-					namedEntityGraph,
-					JaxbNamedEntityGraphImpl::isIncludeAllAttributes,
-					"includeAllAttributes",
-					namedEntityGraphAnn,
-					namedEntityGraphAnnotationDescriptor
-			);
+			XmlProcessingHelper.applyAttributeIfSpecified( "name", namedEntityGraph.getName(), namedEntityGraphAnn );
+			XmlProcessingHelper.applyAttributeIfSpecified( "includeAllAttributes", namedEntityGraph.isIncludeAllAttributes(), namedEntityGraphAnn );
 
 			namedEntityGraphAnn.setAttributeValue(
 					"attributeNodes",
@@ -1557,7 +1514,7 @@ public class XmlAnnotationHelper {
 					target,
 					xmlDocumentContext
 			);
-			applyAttributeIfSpecified( namedSubgraphNodeAnn, "name", subGraphsNodeName );
+			XmlProcessingHelper.applyAttributeIfSpecified( "name", subGraphsNodeName, namedSubgraphNodeAnn );
 
 			final String clazz = subclassSubgraphNode.getClazz();
 			if ( clazz == null ) {
@@ -1601,7 +1558,7 @@ public class XmlAnnotationHelper {
 					target,
 					xmlDocumentContext
 			);
-			applyAttributeIfSpecified( namedAttributeNodeAnn, "value", namedAttributeNode.getName() );
+			XmlProcessingHelper.applyAttributeIfSpecified( "value", namedAttributeNode.getName(), namedAttributeNodeAnn );
 			final AnnotationDescriptor<NamedAttributeNode> namedAttributeNodeDescriptor = xmlDocumentContext
 					.getModelBuildingContext()
 					.getAnnotationDescriptorRegistry()
@@ -1633,7 +1590,7 @@ public class XmlAnnotationHelper {
 		if ( discriminatorValue != null ) {
 			final MutableAnnotationUsage<DiscriminatorValue> rowIdAnn = XmlProcessingHelper
 					.getOrMakeAnnotation( DiscriminatorValue.class, target, xmlDocumentContext );
-			applyAttributeIfSpecified( rowIdAnn, "value", discriminatorValue );
+			XmlProcessingHelper.applyAttributeIfSpecified( "value", discriminatorValue, rowIdAnn );
 		}
 	}
 
@@ -1704,7 +1661,7 @@ public class XmlAnnotationHelper {
 		);
 
 		discriminatorFormulaAnn.setAttributeValue( "value", jaxbDiscriminatorFormula.getFragment() );
-		discriminatorFormulaAnn.setAttributeValue( "discriminatorType", jaxbDiscriminatorFormula.getDiscriminatorType() );
+		XmlProcessingHelper.applyAttributeIfSpecified( "discriminatorType", jaxbDiscriminatorFormula.getDiscriminatorType(), discriminatorFormulaAnn );
 
 		if ( jaxbDiscriminatorFormula.isForceSelection() ) {
 			final MutableAnnotationUsage<DiscriminatorOptions> existingOptionsAnnotation = (MutableAnnotationUsage<DiscriminatorOptions>) target.getAnnotationUsage( DiscriminatorOptions.class );

@@ -86,6 +86,54 @@ class AnEntity {
 }
 ----
 
+[[auto-filters]]
+== Support for Auto Enabled Filters
+
+Filters can now be automatically enabled for each Session and StatelessSession
+
+[source,java]
+----
+@FilterDef(
+    name="active-filter",
+    condition="status = true",
+    autoEnabled=true
+)
+@Filter(name="active-filter")
+@Entity
+class DeletableEntity {
+    ...
+}
+----
+
+Can be combined with the ability to dynamically resolve condition parameters, e.g.
+
+[source,java]
+----
+class TenantIdResolver implements Supplier<String> {
+    @Override
+    public String get() {
+        return SomeContext.determineTenantId();
+    }
+}
+
+@FilterDef(
+    name="tenancy-filter",
+    condition="tenant_id = :tenantId",
+    autoEnabled=true,
+    parameter = @ParamDef(
+        name="tenantId",
+        type=String.class,
+        resolver=TenantIdResolver.class
+    )
+)
+@Filter(name="tenancy-filter")
+@Entity
+class SensitiveData {
+	...
+}
+----
+
+
 [[sqm-mutation-joins]]
 == Joined Mutation Queries
 

@@ -22,6 +22,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MutableClassDetails;
@@ -195,5 +196,16 @@ public interface XmlDocumentContext {
 		catch (Exception e) {
 			throw new HibernateException( "Unable to create instance from incoming ClassDetails - " + classDetails );
 		}
+	}
+
+	default String resolveClassName(String specifiedName) {
+		if ( specifiedName.contains( "." ) ) {
+			return specifiedName;
+		}
+
+		return StringHelper.qualifyConditionallyIfNot(
+				getXmlDocument().getDefaults().getPackage(),
+				specifiedName
+		);
 	}
 }

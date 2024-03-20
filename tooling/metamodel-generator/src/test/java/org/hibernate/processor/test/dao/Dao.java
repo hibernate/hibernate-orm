@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
+import org.hibernate.annotations.processing.Pattern;
 import org.hibernate.annotations.processing.SQL;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
@@ -35,7 +36,7 @@ public interface Dao {
     Book getBookFetching(String isbn);
 
     @Find
-    Book getBook(String title, String author);
+    Book getBook(@Pattern String title, String author);
 
     @Find(enabledFetchProfiles="Hello")
     Book getBookFetching(String title, String author);

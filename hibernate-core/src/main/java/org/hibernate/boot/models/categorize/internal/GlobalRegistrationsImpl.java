@@ -74,14 +74,11 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-import org.hibernate.models.spi.SourceModelContext;
 
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
@@ -116,8 +113,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Steve Ebersole
  */
 public class GlobalRegistrationsImpl implements GlobalRegistrations {
-	private final ClassDetailsRegistry classDetailsRegistry;
-	private final AnnotationDescriptorRegistry descriptorRegistry;
+	private final SourceModelBuildingContext sourceModelContext;
 
 	private List<JpaEventListener> jpaEventListeners;
 	private List<ConversionRegistration> converterRegistrations;
@@ -141,13 +137,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private Map<String, NamedNativeQueryRegistration> namedNativeQueryRegistrations;
 	private Map<String, NamedStoredProcedureQueryRegistration> namedStoredProcedureQueryRegistrations;
 
-	public GlobalRegistrationsImpl(SourceModelContext sourceModelContext) {
-		this( sourceModelContext.getClassDetailsRegistry(), sourceModelContext.getAnnotationDescriptorRegistry() );
-	}
-
-	public GlobalRegistrationsImpl(ClassDetailsRegistry classDetailsRegistry, AnnotationDescriptorRegistry descriptorRegistry) {
-		this.classDetailsRegistry = classDetailsRegistry;
-		this.descriptorRegistry = descriptorRegistry;
+	public GlobalRegistrationsImpl(SourceModelBuildingContext sourceModelContext) {
+		this.sourceModelContext = sourceModelContext;
 	}
 
 	@Override
@@ -257,8 +248,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		registrations.forEach( (reg) -> collectJavaTypeRegistration(
-				classDetailsRegistry.resolveClassDetails( reg.getClazz() ),
-				classDetailsRegistry.resolveClassDetails( reg.getDescriptor() )
+				sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getClazz() ),
+				sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getDescriptor() )
 		) );
 	}
 
@@ -291,7 +282,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 		registrations.forEach( (reg) -> collectJdbcTypeRegistration(
 				reg.getCode(),
-				classDetailsRegistry.resolveClassDetails( reg.getDescriptor() )
+				sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getDescriptor() )
 		) );
 	}
 
@@ -324,12 +315,12 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			final ClassDetails explicitDomainType;
 			final String explicitDomainTypeName = registration.getClazz();
 			if ( StringHelper.isNotEmpty( explicitDomainTypeName ) ) {
-				explicitDomainType = classDetailsRegistry.resolveClassDetails( explicitDomainTypeName );
+				explicitDomainType = sourceModelContext.getClassDetailsRegistry().resolveClassDetails( explicitDomainTypeName );
 			}
 			else {
 				explicitDomainType = null;
 			}
-			final ClassDetails converterType = classDetailsRegistry.resolveClassDetails( registration.getConverter() );
+			final ClassDetails converterType = sourceModelContext.getClassDetailsRegistry().resolveClassDetails( registration.getConverter() );
 			final boolean autoApply = registration.isAutoApply();
 			collectConverterRegistration( new ConversionRegistration( explicitDomainType, converterType, autoApply, CONVERTER_REG ) );
 		} );
@@ -359,8 +350,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		registrations.forEach( (reg) -> {
-			final ClassDetails domainTypeDetails = classDetailsRegistry.resolveClassDetails( reg.getClazz() );
-			final ClassDetails descriptorDetails = classDetailsRegistry.resolveClassDetails( reg.getDescriptor() );
+			final ClassDetails domainTypeDetails = sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getClazz() );
+			final ClassDetails descriptorDetails = sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getDescriptor() );
 			collectUserTypeRegistration( domainTypeDetails, descriptorDetails );
 		} );
 	}
@@ -389,8 +380,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		registrations.forEach( (reg) -> collectCompositeUserTypeRegistration(
-				classDetailsRegistry.resolveClassDetails( reg.getClazz() ),
-				classDetailsRegistry.resolveClassDetails( reg.getDescriptor() )
+				sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getClazz() ),
+				sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getDescriptor() )
 		) );
 	}
 
@@ -433,7 +424,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 		registrations.forEach( (reg) -> collectCollectionTypeRegistration(
 				reg.getClassification(),
-				classDetailsRegistry.resolveClassDetails( reg.getDescriptor() ),
+				sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getDescriptor() ),
 				extractParameterMap( reg.getParameters() )
 		) );
 	}
@@ -475,8 +466,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		registrations.forEach( (reg) -> collectEmbeddableInstantiatorRegistration(
-				classDetailsRegistry.resolveClassDetails( reg.getEmbeddableClass() ),
-				classDetailsRegistry.resolveClassDetails( reg.getInstantiator() )
+				sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getEmbeddableClass() ),
+				sourceModelContext.getClassDetailsRegistry().resolveClassDetails( reg.getInstantiator() )
 		) );
 	}
 
@@ -536,7 +527,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			// should resolve to Object - let's see how that reacts
 			final ClassDetails targetClassDetails = XmlAnnotationHelper.resolveJavaType(
 					parameter.getType(),
-					classDetailsRegistry
+					sourceModelContext.getClassDetailsRegistry()
 			);
 			result.put( parameter.getName(), targetClassDetails );
 		}
@@ -592,7 +583,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		listeners.forEach( (jaxbEntityListener) -> {
-			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( jaxbEntityListener.getClazz() );
+			final ClassDetails classDetails = sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbEntityListener.getClazz() );
 			final JpaEventListener listener = JpaEventListener.from(
 					JpaEventListenerStyle.LISTENER,
 					classDetails,
@@ -653,7 +644,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	private <A extends Annotation> MutableAnnotationUsage<A> makeAnnotation(AnnotationDescriptor<A> annotationDescriptor) {
-		return annotationDescriptor.createUsage( null, null );
+		return annotationDescriptor.createUsage( null, sourceModelContext );
 	}
 
 	public void collectSequenceGenerator(AnnotationUsage<SequenceGenerator> usage) {
@@ -766,7 +757,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		converters.forEach( (jaxbConverter) -> {
 			final String converterClassName = jaxbConverter.getClazz();
 			assert converterClassName != null;
-			final ClassDetails converterType = classDetailsRegistry.resolveClassDetails( converterClassName );
+			final ClassDetails converterType = sourceModelContext.getClassDetailsRegistry().resolveClassDetails( converterClassName );
 			final boolean autoApply = jaxbConverter.isAutoApply();
 
 			jpaConverters.add( new ConverterRegistration( converterType, autoApply ) );
@@ -828,7 +819,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			final MutableAnnotationUsage<EntityResult> entityResultAnnotation = makeAnnotation( JpaAnnotations.ENTITY_RESULT );
 			entityResults.add( entityResultAnnotation );
 
-			applyAttributeIfSpecified( "entityClass", classDetailsRegistry.resolveClassDetails( jaxbEntityResult.getEntityClass() ), entityResultAnnotation );
+			applyAttributeIfSpecified( "entityClass", sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbEntityResult.getEntityClass() ), entityResultAnnotation );
 			applyAttributeIfSpecified( "lockMode", jaxbEntityResult.getLockMode(), entityResultAnnotation );
 			applyStringAttributeIfSpecified( "discriminatorColumn", jaxbEntityResult.getDiscriminatorColumn(), entityResultAnnotation );
 
@@ -860,7 +851,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 			result.setAttributeValue(
 					"entityClass",
-					classDetailsRegistry.resolveClassDetails( jaxbConstructorResult.getTargetClass() )
+					sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbConstructorResult.getTargetClass() )
 			);
 
 			if ( !jaxbConstructorResult.getColumns().isEmpty() ) {
@@ -885,7 +876,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			columnResults.add( columnResultAnnotation );
 
 			columnResultAnnotation.setAttributeValue( "name", jaxbColumn.getName() );
-			applyAttributeIfSpecified( "type", classDetailsRegistry.resolveClassDetails( jaxbColumn.getClazz() ), columnResultAnnotation );
+			applyAttributeIfSpecified( "type", sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbColumn.getClazz() ), columnResultAnnotation );
 		}
 		annotationListConsumer.accept( columnResults );
 	}
@@ -977,7 +968,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			queryAnnotation.setAttributeValue( "query", jaxbNamedQuery.getQuery() );
 
 			if ( StringHelper.isNotEmpty( jaxbNamedQuery.getResultClass() ) ) {
-				queryAnnotation.setAttributeValue( "resultClass", classDetailsRegistry.resolveClassDetails( jaxbNamedQuery.getResultClass() ) );
+				queryAnnotation.setAttributeValue( "resultClass", sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbNamedQuery.getResultClass() ) );
 			}
 
 			applyStringAttributeIfSpecified( "resultSetMapping", jaxbNamedQuery.getResultSetMapping(), queryAnnotation );
@@ -1054,7 +1045,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			final ArrayList<ClassDetails> resultClasses = arrayList( jaxbQuery.getResultClasses().size() );
 			applyAttributeIfSpecified( "resultClasses", resultClasses, queryAnnotation );
 			for ( String resultClassName : jaxbQuery.getResultClasses() ) {
-				resultClasses.add( classDetailsRegistry.resolveClassDetails( resultClassName ) );
+				resultClasses.add( sourceModelContext.getClassDetailsRegistry().resolveClassDetails( resultClassName ) );
 			}
 
 			applyAttributeIfSpecified( "resultSetMappings", jaxbQuery.getResultSetMappings(), queryAnnotation );
@@ -1069,7 +1060,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 				applyStringAttributeIfSpecified( "name", jaxbProcedureParameter.getName(), parameterAnnotation );
 				applyAttributeIfSpecified( "mode", jaxbProcedureParameter.getMode(), parameterAnnotation );
-				applyAttributeIfSpecified( "type", classDetailsRegistry.resolveClassDetails( jaxbProcedureParameter.getClazz() ), parameterAnnotation );
+				applyAttributeIfSpecified( "type", sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbProcedureParameter.getClazz() ), parameterAnnotation );
 			}
 		}
 	}

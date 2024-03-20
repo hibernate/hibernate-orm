@@ -69,6 +69,7 @@ import jakarta.persistence.MappedSuperclass;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * Helper for handling managed types defined in mapping XML, in either
@@ -461,14 +462,14 @@ public class ManagedTypeProcessor {
 			XmlDocumentContext xmlDocumentContext) {
 		XmlAnnotationHelper.applyEntity( jaxbEntity, classDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyInheritance( jaxbEntity, classDetails, xmlDocumentContext );
-		classDetails.addAnnotationUsage( XmlAnnotationHelper.createAccessAnnotation( classAccessType, classDetails, xmlDocumentContext ) );
+		applyAccessAnnotation( classAccessType, classDetails, xmlDocumentContext );
 		applyCaching( jaxbEntity, classDetails, xmlDocumentContext );
 
 		if ( jaxbEntity.isAbstract() != null ) {
 			XmlProcessingHelper.makeAnnotation( Abstract.class, classDetails, xmlDocumentContext );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbEntity.getExtends() ) ) {
+		if ( isNotEmpty( jaxbEntity.getExtends() ) ) {
 			final MutableAnnotationUsage<Extends> extendsAnn = HibernateAnnotations.EXTENDS.createUsage(
 					classDetails,
 					xmlDocumentContext.getModelBuildingContext()
@@ -504,6 +505,10 @@ public class ManagedTypeProcessor {
 					xmlDocumentContext
 			);
 		}
+
+		QueryProcessing.applyNamedQueries( jaxbEntity, classDetails, xmlDocumentContext );
+		QueryProcessing.applyNamedNativeQueries( jaxbEntity, classDetails, jaxbRoot, xmlDocumentContext );
+		QueryProcessing.applyNamedProcedureQueries( jaxbEntity, classDetails, xmlDocumentContext );
 
 		jaxbEntity.getFilters().forEach( jaxbFilter -> XmlAnnotationHelper.applyFilter(
 				jaxbFilter,
@@ -548,6 +553,15 @@ public class ManagedTypeProcessor {
 		// todo : secondary-tables
 	}
 
+	private static void applyAccessAnnotation(
+			AccessType accessType,
+			MutableClassDetails target,
+			XmlDocumentContext xmlDocumentContext) {
+		final MutableAnnotationUsage<Access> annotationUsage = XmlProcessingHelper.makeAnnotation( Access.class, target, xmlDocumentContext );
+		annotationUsage.setAttributeValue( "value", accessType );
+		target.addAnnotationUsage( annotationUsage );
+	}
+
 	private static void applyCaching(
 			JaxbEntityImpl jaxbEntity,
 			MutableClassDetails classDetails,
@@ -569,7 +583,7 @@ public class ManagedTypeProcessor {
 			classDetails.addAnnotationUsage( cacheableUsage );
 			XmlProcessingHelper.applyAttributeIfSpecified( "region", jaxbCaching.getRegion(), cacheableUsage );
 			XmlProcessingHelper.applyAttributeIfSpecified(
-					"access",
+					"usage",
 					convertCacheAccessType( jaxbCaching.getAccess() ),
 					cacheableUsage
 			);

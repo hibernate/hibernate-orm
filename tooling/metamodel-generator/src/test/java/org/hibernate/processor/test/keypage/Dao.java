@@ -3,7 +3,6 @@ package org.hibernate.processor.test.keypage;
 import jakarta.persistence.EntityManager;
 import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
-import org.hibernate.processor.test.hqlsql.Book;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 

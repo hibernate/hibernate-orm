@@ -40,16 +40,17 @@ hibernate.type.prefer_java_type_jdbc_types=true
 It is expected the default will flip for 7.0.
 
 [[query-cache-layout]]
-== Query cache layout change
+== Configurable Query Cache Layout
 
 In Hibernate ORM 6.0 the query cache layout changed from a "shallow" representation of entities and collections,
-to a "full" representation. This was done to enable to re-materialize join fetched data from just the query cache data.
-
-Storing the full data in the query cache leads to a higher memory consumption,
+to a "full" representation. This was done to support re-materializing join fetched data from the query cache data
+without hitting the database.  Storing the full data in the query cache leads to a higher memory consumption,
 which in turn might also hurt application throughput due to a higher garbage collection activity.
 
-Hibernate ORM 6.5 introduces means to configure the query cache layout globally via the `hibernate.cache.query_cache_layout`
-property, and also for an entity type or persistent collection with the `@QueryCacheLayout` annotation.
+6.5 adds the ability to configure the format in which query results are stored in the query cache, either
+
+* globally via the `hibernate.cache.query_cache_layout` setting
+* per entity or collection via the `@QueryCacheLayout` annotation
 
 The global `hibernate.cache.query_cache_layout` setting defaults to the `AUTO` value,
 which will automatically choose `SHALLOW` or `FULL` for an entity/collection,
@@ -60,11 +61,16 @@ the global property `hibernate.cache.query_cache_layout=FULL`.
 Applications that want the cache layout that Hibernate ORM 5 and older versions used should configure
 the global property `hibernate.cache.query_cache_layout=SHALLOW`.
 
-Note that even with the shallow cache layout, the association eagerness implied through join fetches will be respected,
-and associations will be eagerly initialized, so there is no change of behavior when choosing a different cache layout.
+[NOTE]
+====
+Even with the `SHALLOW` cache layout, the association eagerness implied through join fetches will be respected,
+and associations will be eagerly initialized. So there is no change of behavior when choosing a different cache layout.
+
+With `SHALLOW`, Hibernate might need to hit the database to materialize the associated data *if it does not exist in the second level cache*.
+====
 
 [[ddl-implicit-datatype-enum]]
-== Datatype for enums
+== Datatype for enums (H2)
 
 Hibernate ORM 6.5 now uses the `ENUM` datatype for `@Enumerated(EnumType.STRING)` enumeration mappings by default on H2,
 just like link:{docsBase}/6.2/migration-guide/migration-guide.html#ddl-implicit-datatype-enum[ORM 6.2 already started doing for MySQL/MariaDB].
@@ -90,13 +96,39 @@ explicit settings for this configuration.  At a minimum this includes:
 * `jakarta.persistence.database-product-version` to indicate the database version
 
 
+[[query-result-validation]]
+== Validation of Query Result Type
+
+6.5 does more stringent checks that the reported query result type (if one) matches the actual query return type.
+This will show up as a `org.hibernate.TypeMismatchException`.
+
 
 [[sql-expectation]]
 == SQL Execution Expectation
 
 6.5 moves away from an enumeration approach to specifying the expected outcome of specific SQL executions to
-a more flexible approach of directly specifying the `Expectation` implementation to use.
+a more extendable approach of directly specifying the `Expectation` implementation to use.
 `ExecuteUpdateResultCheckStyle` and `ResultCheckStyle` approaches are still available, though deprecated.
+
+The enumerated values are replaced by -
+
+* `org.hibernate.jdbc.Expectation.None`
+* `org.hibernate.jdbc.Expectation.RowCount`
+* `org.hibernate.jdbc.Expectation.OutParameter`
+
+To update, change e.g.
+
+[source,java]
+----
+@SQLInsert(check=ResultCheckStyle.COUNT)
+----
+
+to
+
+[source,java]
+----
+@SQLInsert(verify=Expectation.RowCount.class)
+----
 
 
 [[uk-naming]]

@@ -87,6 +87,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.internal.AnnotationUsageHelper;
@@ -155,6 +156,7 @@ import jakarta.persistence.UniqueConstraint;
 
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.models.JpaAnnotations.NAMED_ATTRIBUTE_NODE;
 import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.makeNestedAnnotation;
 
 /**
@@ -308,7 +310,13 @@ public class XmlAnnotationHelper {
 		}
 		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
 		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
-			joinColumns.add( applyJoinColumn( jaxbJoinColumn, memberDetails, xmlDocumentContext ) );
+			final MutableAnnotationUsage<JoinColumn> annotationUsage = createJoinColumnAnnotation(
+					jaxbJoinColumn,
+					memberDetails,
+					JoinColumn.class,
+					xmlDocumentContext
+			);
+			joinColumns.add( annotationUsage );
 		} );
 		return joinColumns;
 	}
@@ -1554,10 +1562,9 @@ public class XmlAnnotationHelper {
 		final List<MutableAnnotationUsage<NamedAttributeNode>> namedAttributeNodeAnnotations =
 				new ArrayList<>( namedAttributeNodes.size() );
 		for ( JaxbNamedAttributeNodeImpl namedAttributeNode : namedAttributeNodes ) {
-			final MutableAnnotationUsage<NamedAttributeNode> namedAttributeNodeAnn = makeNestedAnnotation(
-					NamedAttributeNode.class,
+			final MutableAnnotationUsage<NamedAttributeNode> namedAttributeNodeAnn = NAMED_ATTRIBUTE_NODE.createUsage(
 					target,
-					xmlDocumentContext
+					xmlDocumentContext.getModelBuildingContext()
 			);
 			XmlProcessingHelper.applyAttributeIfSpecified( "value", namedAttributeNode.getName(), namedAttributeNodeAnn );
 			final AnnotationDescriptor<NamedAttributeNode> namedAttributeNodeDescriptor = xmlDocumentContext

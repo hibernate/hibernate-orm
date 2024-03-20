@@ -7,7 +7,7 @@
 package org.hibernate.boot.models.xml;
 
 /**
- * Generally indicates a problem locating or table an XML resource
+ * Generally indicates a problem locating an XML resource
  *
  * @author Steve Ebersole
  */

@@ -7,6 +7,8 @@
 package org.hibernate.orm.test.annotations.idclass.xml;
 
 
+import java.util.List;
+
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.query.Query;
 
@@ -41,7 +43,8 @@ public class IdClassXmlTest {
 					session.persist( link );
 
 					Query q = session.getNamedQuery( "testQuery" );
-					assertEquals( 1, q.list().size() );
+					final List<HabitatSpeciesLink> list = q.list();
+					assertEquals( 1, list.size() );
 				}
 		);
 	}

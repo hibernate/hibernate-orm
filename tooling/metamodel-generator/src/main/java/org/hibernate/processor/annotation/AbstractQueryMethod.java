@@ -471,6 +471,10 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				.append(".requestTotal()\n\t\t\t\t\t\t? ");
 		createQuery( declaration );
 		setParameters( declaration, paramTypes, "\t\t\t\t\t");
+		if ( isUsingEntityManager() ) {
+			declaration
+					.append("\t\t\t\t\t");
+		}
 		unwrapQuery( declaration, !isUsingEntityManager() );
 		declaration
 				.append("\t\t\t\t\t\t\t\t.getResultCount()\n\t\t\t\t\t\t: -1;\n");
@@ -604,11 +608,9 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			@Nullable String containerType,
 			boolean unwrapped,
 			boolean mustUnwrap) {
-		declaration
-				.append("\t\t\t");
 		if ( containerType == null ) {
 			declaration
-					.append(".getSingleResult();");
+					.append("\t\t\t.getSingleResult();");
 		}
 		else {
 			switch (containerType) {
@@ -618,32 +620,33 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 					else {
 						declaration
-								.append(".getResultList()\n\t\t\t.toArray(new ")
+								.append("\t\t\t.getResultList()\n\t\t\t.toArray(new ")
 								.append(annotationMetaEntity.importType(returnTypeName))
 								.append("[0]);");
 					}
 					break;
 				case OPTIONAL:
 					declaration
-							.append(".uniqueResultOptional();");
+							.append("\t\t\t.uniqueResultOptional();");
 					break;
 				case STREAM:
 					declaration
-							.append(".getResultStream();");
+							.append("\t\t\t.getResultStream();");
 					break;
 				case LIST:
 					declaration
-							.append(".getResultList();");
+							.append("\t\t\t.getResultList();");
 					break;
 				case HIB_KEYED_RESULT_LIST:
+					unwrapQuery(declaration, unwrapped);
 					declaration
-							.append(".getKeyedResultList(")
+							.append("\t\t\t.getKeyedResultList(")
 							.append(parameterName(HIB_KEYED_PAGE, paramTypes, paramNames))
 							.append(");");
 					break;
 				case JD_PAGE:
 					declaration
-							.append(".getResultList();\n")
+							.append("\t\t\t.getResultList();\n")
 							.append("\t\treturn new ")
 							.append(annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord"))
 							.append('(')
@@ -655,8 +658,9 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						throw new AssertionFailure("entity class cannot be null");
 					}
 					else {
+						unwrapQuery(declaration, unwrapped);
 						declaration
-								.append(".getKeyedResultList(_keyedPage);\n");
+								.append("\t\t\t.getKeyedResultList(_keyedPage);\n");
 						annotationMetaEntity.importType("jakarta.data.page.PageRequest");
 						annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
 						annotationMetaEntity.importType("jakarta.data.page.impl.CursoredPageRecord");
@@ -672,13 +676,16 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				default:
 					if ( isUsingEntityManager() && !unwrapped && mustUnwrap ) {
 						declaration
-								.append("\t\t\t")
-								.append(".unwrap(")
+								.append("\t\t\t.unwrap(")
 								.append(annotationMetaEntity.importType(containerType))
 								.append(".class);");
 
 					}
 					else {
+						final int lastIndex = declaration.length() - 1;
+						if ( declaration.charAt(lastIndex) == '\n' )  {
+							declaration.setLength(lastIndex);
+						}
 						declaration.append(';');
 					}
 			}

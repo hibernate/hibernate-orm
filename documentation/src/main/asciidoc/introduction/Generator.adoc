@@ -487,6 +487,14 @@ The natural syntax would be a parameter declaration like `String publisher.name`
 List<Book> getBooksByPublisherName(String publisher$name);
 ----
 
+The `@Pattern` annotation may be applied to a parameter of type `String`, indicating that the argument is a wildcarded pattern which will be compared using `like`.
+
+[source,java]
+----
+@Find
+List<Book> getBooksByTitle(@Pattern String title, Type type);
+----
+
 A finder method may specify <<fetch-profiles,fetch profiles>>, for example:
 
 [source,java]

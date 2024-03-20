@@ -26,6 +26,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private final @Nullable String containerType;
 	private final List<Boolean> paramNullability;
 	private final List<Boolean> multivalued;
+	private final List<Boolean> paramPatterns;
 
 	CriteriaFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -34,6 +35,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			List<String> paramNames, List<String> paramTypes,
 			List<Boolean> paramNullability,
 			List<Boolean> multivalued,
+			List<Boolean> paramPatterns,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
@@ -46,6 +48,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		this.containerType = containerType;
 		this.paramNullability = paramNullability;
 		this.multivalued = multivalued;
+		this.paramPatterns = paramPatterns;
 	}
 
 	@Override
@@ -221,7 +224,9 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		else {
 			//TODO: change to use Expression.equalTo() in JPA 3.2
 			declaration
-					.append("_builder.equal(_entity");
+					.append("_builder.")
+					.append(paramPatterns.get(i) ? "like" : "equal")
+					.append("(_entity");
 			path( declaration, paramName );
 			declaration
 					.append(", ")

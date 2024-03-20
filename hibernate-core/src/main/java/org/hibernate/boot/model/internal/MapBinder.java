@@ -416,7 +416,7 @@ public class MapBinder extends CollectionBinder {
 
 	private AnnotationUsage<jakarta.persistence.ForeignKey> getMapKeyForeignKey(MemberDetails property) {
 		final AnnotationUsage<MapKeyJoinColumns> mapKeyJoinColumns = property.getAnnotationUsage( MapKeyJoinColumns.class );
-		final AnnotationUsage<MapKeyJoinColumn> mapKeyJoinColumn = property.getAnnotationUsage( MapKeyJoinColumn.class );
+		final AnnotationUsage<MapKeyJoinColumn> mapKeyJoinColumn = property.getSingleAnnotationUsage( MapKeyJoinColumn.class );
 		if ( mapKeyJoinColumns != null ) {
 			return mapKeyJoinColumns.getNestedUsage( "foreignKey" );
 		}

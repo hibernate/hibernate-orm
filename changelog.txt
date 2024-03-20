@@ -3,6 +3,66 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.5.0.CR1 (March 20, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32208
+
+** Bug
+    * [HHH-17851] - Jakarta data lifecycle method overloading
+    * [HHH-17839] - Hibernate User Guide Envers Configuration references an experimental configuration property that doesn't exist: org.hibernate.envers.using_modified_flag
+    * [HHH-17831] - AttributeBinders aren't called for collections
+    * [HHH-17807] - Annotation processor doesn't support array types in query methods
+    * [HHH-17804] - 'null in ()' should evaluate to null
+    * [HHH-17802] - constraint name extractors for MySQL, h2, and SQL Server
+    * [HHH-17795] - 'insert ... on conflict on constraint ...' produces an NPE
+    * [HHH-17794] - CONTRIBUTING guide is out of date regarding Pull Request Handling
+    * [HHH-17791] - Hibernate does not work with SNAPSHOT versions of H2
+    * [HHH-17789] - Memory Issue for Hana Database by using Clob/NClob/Blob in Hibernate's Hana Dialect
+    * [HHH-17777] - Multiple fetches on the same root fail with AssertionError
+    * [HHH-17776] - java.lang.NullPointerException when subquery doesn't have from clause
+    * [HHH-17770] - Possible bug with Hibernate's BlobProxy
+    * [HHH-17759] - Undocumented escape behavior of colon characters in native queries
+    * [HHH-17745] - embeddable arguments to @HQL query methods
+    * [HHH-17729] - 6.x EntityManager createQuery() method doesn't check constructor field type
+    * [HHH-17133] - Unique keys generated for NaturalId should respect the configured ImplicitNamingStrategy
+    * [HHH-17073] - Auto flush broken when using sequence generator ID
+    * [HHH-16985] - Unique keys on unique columns ignore ImplicitNamingStrategy
+    * [HHH-16522] - HQL query produces SQL with incorrect ordering of joins
+    * [HHH-16463] - @PrimaryKeyJoinColumn ignored for @OneToOne mappings
+    * [HHH-16048] - inconsistent semantics for / operator on integers
+    * [HHH-15551] - error when collection-valued property is missing a @OneToMany/@ManyToMany annotation
+    * [HHH-14358] - Support binding null UUID sql parameter with PostgreSQL
+    * [HHH-9482] - JdbcCoordinatorImpl doesn't precisely determine transaction timeout
+
+** Improvement
+    * [HHH-17853] - support for @OrderBy("foo.bar") in Jakarta Data
+    * [HHH-17850] - Add jacoco test coverage to the build
+    * [HHH-17848] - tolerate primary table 'name' in @SqlInsert and friends
+    * [HHH-17836] - use ANSI syntax for Postgres identity columns
+    * [HHH-17833] - annotation errors logged as warning
+    * [HHH-17806] - Reduce the number of unnecessary joins with `JOINED` inheritance and parameterized discriminator predicates
+    * [HHH-17797] - support query hint database indexes
+    * [HHH-17778] - rename the annotation processor
+    * [HHH-17775] - Standardize the spelling of 'round trip' in documentation
+    * [HHH-17766] - Improve type of numeric and by unit expressions applied to converted attributes
+    * [HHH-17764] - checking / instantiation of result type for queries with single selection item
+    * [HHH-17748] - accept abbreviated enum value names in HQL 'when' clause
+    * [HHH-17746] - usability improvements to property setting via Configuration
+    * [HHH-17727] - Omit subclass tables in SQL when selecting only discriminator just like we do for basic attributes
+    * [HHH-17724] - Add HibernateCriteriaBuilder.count() to map to count(*)
+    * [HHH-17721] - improvements to checking of parameters of @Find and @HQL methods
+    * [HHH-17719] - Supports boolean as return type of mutation query method
+    * [HHH-17717] - Semicolon(`;`) will affects paramter mapping
+    * [HHH-17716] - implement JtaTransactionAdapterTransactionManagerImpl.setTimeOut()
+    * [HHH-17707] - Improve ColumnReference.toString() to remove repeated qualifier
+    * [HHH-17696] - AltibaseDialect should support Altibase 7.1 server and above
+    * [HHH-17691] - Avoid sequence query when hbm2ddl will recreate sequences
+    * [HHH-17682] - Expose JpaRoot interface on CriteriaUpdate/CriteriaDelete queries
+    * [HHH-17675] - Support enum type on H2
+    * [HHH-17673] - Allow the use of StatementInspector in stateless sessions
+
+
 Changes in 6.4.1.Final (December 15, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

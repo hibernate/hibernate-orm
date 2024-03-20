@@ -57,46 +57,49 @@ public class DefaultConstructor implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		StringBuilder declaration = new StringBuilder();
-		declaration.append('\n');
+		final StringBuilder declaration = new StringBuilder();
 		declaration
-				.append("@")
-				.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceUnit"));
-		if ( dataStore != null ) {
+				.append('\n');
+		if ( annotationMetaEntity.getSupertypeName() == null ) {
 			declaration
-					.append("(unitName=\"")
-					.append(dataStore)
-					.append("\")");
+					.append("@")
+					.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceUnit"));
+			if ( dataStore != null ) {
+				declaration
+						.append("(unitName=\"")
+						.append(dataStore)
+						.append("\")");
+			}
+			declaration
+					.append("\nprivate ")
+					.append(annotationMetaEntity.importType(ENTITY_MANAGER_FACTORY))
+					.append(" ")
+					.append(sessionVariableName)
+					.append("Factory;\n\n");
+			declaration.append('@')
+					.append(annotationMetaEntity.importType("jakarta.annotation.PostConstruct"))
+					.append("\nprivate void openSession() {")
+					.append("\n\t")
+					.append(sessionVariableName)
+					.append(" = ")
+					.append(sessionVariableName)
+					.append("Factory.unwrap(")
+					.append(annotationMetaEntity.importType(HIB_SESSION_FACTORY))
+					.append(".class).openStatelessSession();")
+					.append("\n}\n\n");
+			declaration.append('@')
+					.append(annotationMetaEntity.importType("jakarta.annotation.PreDestroy"))
+					.append("\nprivate void closeSession() {")
+					.append("\n\t")
+					.append(sessionVariableName)
+					.append(".close();")
+					.append("\n}\n\n");
 		}
-		declaration
-				.append("\nprivate ")
-				.append(annotationMetaEntity.importType(ENTITY_MANAGER_FACTORY))
-				.append(" ")
-				.append(sessionVariableName)
-				.append("Factory;\n\n");
 		inject( declaration );
 		declaration
 				.append(constructorName)
 				.append("(")
 				.append(") {")
-				.append("\n}\n\n");
-		declaration.append('@')
-				.append(annotationMetaEntity.importType("jakarta.annotation.PostConstruct"))
-				.append("\nprivate void openSession() {")
-				.append("\n\t")
-				.append(sessionVariableName)
-				.append(" = ")
-				.append(sessionVariableName)
-				.append("Factory.unwrap(")
-				.append(annotationMetaEntity.importType(HIB_SESSION_FACTORY))
-				.append(".class).openStatelessSession();")
-				.append("\n}\n\n");
-		declaration.append('@')
-				.append(annotationMetaEntity.importType("jakarta.annotation.PreDestroy"))
-				.append("\nprivate void closeSession() {")
-				.append("\n\t")
-				.append(sessionVariableName)
-				.append(".close();")
 				.append("\n}");
 		return declaration.toString();
 	}

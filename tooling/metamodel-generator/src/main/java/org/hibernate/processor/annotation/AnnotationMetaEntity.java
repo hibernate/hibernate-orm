@@ -138,6 +138,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean repository = false;
 
 	/**
+	 * A repository type that this repository inherits.
+	 */
+	private @Nullable TypeMirror superRepository;
+
+	/**
 	 * The type of the "session getter" method of a DAO-style repository.
 	 */
 	private String sessionType = ENTITY_MANAGER;
@@ -215,7 +220,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public @Nullable String getSupertypeName() {
-		return findMappedSuperClass( this, context );
+		if ( repository ) {
+			if ( superRepository == null ) {
+				return null;
+			}
+			else {
+				final DeclaredType declaredType = (DeclaredType) superRepository;
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				// the import should already have been added earlier
+				return importType( typeElement.getQualifiedName().toString() );
+			}
+		}
+		else {
+			return findMappedSuperClass( this, context );
+		}
 	}
 
 	@Override
@@ -354,6 +372,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		setupSession();
 
+		if ( repository ) {
+			superRepository = findSuperRepository( element );
+			if ( superRepository != null ) {
+				importType( superRepository.toString() );
+			}
+		}
+
 		if ( managed && !jakartaDataStaticModel ) {
 			putMember( "class", new AnnotationMetaType(this) );
 		}
@@ -427,6 +452,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	private @Nullable TypeMirror findSuperRepository(TypeElement type) {
+		for ( TypeMirror superinterface : type.getInterfaces() ) {
+			if ( superinterface.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) superinterface;
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				if ( hasAnnotation( typeElement, JD_REPOSITORY ) ) {
+					return superinterface;
+				}
+				else if ( typeElement.getEnclosedElements().stream()
+						.anyMatch( member -> hasAnnotation( member,
+								HQL, SQL, JD_QUERY, FIND, JD_FIND, JD_INSERT, JD_UPDATE, JD_DELETE, JD_SAVE ) ) ) {
+					return superinterface;
+				}
+				else {
+					final TypeMirror ret = findSuperRepository( typeElement );
+					if ( ret != null ) {
+						return ret;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	private @Nullable ExecutableElement findSessionGetter(TypeElement type) {
 		if ( !hasAnnotation( type, ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE )
 				|| isPanacheType( type ) ) {
@@ -438,7 +487,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final TypeMirror superclass = type.getSuperclass();
 			if ( superclass.getKind() == TypeKind.DECLARED ) {
 				final DeclaredType declaredType = (DeclaredType) superclass;
-				ExecutableElement ret = findSessionGetter( (TypeElement) declaredType.asElement() );
+				final ExecutableElement ret = findSessionGetter( (TypeElement) declaredType.asElement() );
 				if ( ret != null ) {
 					return ret;
 				}
@@ -446,7 +495,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			for ( TypeMirror superinterface : type.getInterfaces() ) {
 				if ( superinterface.getKind() == TypeKind.DECLARED ) {
 					final DeclaredType declaredType = (DeclaredType) superinterface;
-					ExecutableElement ret = findSessionGetter( (TypeElement) declaredType.asElement() );
+					final ExecutableElement ret = findSessionGetter( (TypeElement) declaredType.asElement() );
 					if ( ret != null ) {
 						return ret;
 					}

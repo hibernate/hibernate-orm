@@ -66,23 +66,26 @@ public class RepositoryConstructor implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		StringBuilder declaration = new StringBuilder();
+		final StringBuilder declaration = new StringBuilder();
 		declaration
-				.append("\nprivate ");
-		if ( !dataRepository ) {
-			// don't mark the field final
-			// because it will be initialized
-			// in @PostConstruct
+				.append('\n');
+		if ( annotationMetaEntity.getSupertypeName() == null ) {
 			declaration
-					.append("final ");
+					.append("protected ");
+			if ( !dataRepository ) {
+				// don't mark the field final
+				// because it will be initialized
+				// in @PostConstruct
+				declaration
+						.append("final ");
+			}
+			notNull( declaration );
+			declaration
+					.append(annotationMetaEntity.importType(sessionTypeName))
+					.append(" ")
+					.append(sessionVariableName)
+					.append(";\n\n");
 		}
-		notNull( declaration );
-		declaration
-				.append(annotationMetaEntity.importType(sessionTypeName))
-				.append(" ")
-				.append(sessionVariableName)
-				.append(";")
-				.append("\n\n");
 		inject( declaration );
 		declaration
 				.append("public ")
@@ -94,29 +97,41 @@ public class RepositoryConstructor implements MetaAttribute {
 				.append(annotationMetaEntity.importType(sessionTypeName))
 				.append(" ")
 				.append(sessionVariableName)
-				.append(") {")
-				.append("\n\tthis.")
-				.append(sessionVariableName)
-				.append(" = ")
-				.append(sessionVariableName)
-				.append(";")
-				.append("\n}")
-				.append("\n\n");
-		if (addOverrideAnnotation) {
-			declaration.append("@Override\n");
+				.append(") {\n");
+		if ( annotationMetaEntity.getSupertypeName() != null ) {
+			declaration
+					.append("\tsuper(")
+					.append(sessionVariableName)
+					.append(");\n");
+		}
+		else {
+			declaration
+					.append("\tthis.")
+					.append(sessionVariableName)
+					.append(" = ")
+					.append(sessionVariableName)
+					.append(";\n");
 		}
 		declaration
-				.append("public ");
-		notNull( declaration );
-		declaration
-				.append(annotationMetaEntity.importType(sessionTypeName))
-				.append(" ")
-				.append(methodName)
-				.append("() {")
-				.append("\n\treturn ")
-				.append(sessionVariableName)
-				.append(";")
-				.append("\n}");
+				.append("}");
+		if ( annotationMetaEntity.getSupertypeName() == null ) {
+			declaration
+					.append("\n\n");
+			if (addOverrideAnnotation) {
+				declaration.append("@Override\n");
+			}
+			declaration
+					.append("public ");
+			notNull( declaration );
+			declaration
+					.append(annotationMetaEntity.importType(sessionTypeName))
+					.append(" ")
+					.append(methodName)
+					.append("() {")
+					.append("\n\treturn ")
+					.append(sessionVariableName)
+					.append(";\n}");
+		}
 		return declaration.toString();
 	}
 

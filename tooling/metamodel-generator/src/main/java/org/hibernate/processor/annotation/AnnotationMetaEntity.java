@@ -1010,6 +1010,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String methodName = method.getSimpleName().toString();
 		final List<String> paramNames = parameterNames( method, entity );
 		final List<String> paramTypes = parameterTypes( method );
+		final List<Boolean> paramPatterns = parameterPatterns( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
 		final List<Boolean> multivalued = new ArrayList<>();
@@ -1044,6 +1045,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						paramTypes,
 						parameterNullability(method, entity),
 						multivalued,
+						paramPatterns,
 						repository,
 						sessionType[0],
 						sessionType[1],
@@ -1243,6 +1245,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			);
 		}
 		else {
+			final List<Boolean> paramPatterns = parameterPatterns( method );
 			putMember( methodKey,
 					new CriteriaFinderMethod(
 							this,
@@ -1253,6 +1256,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramTypes,
 							parameterNullability(method, entity),
 							multivalued,
+							paramPatterns,
 							repository,
 							sessionType[0],
 							sessionType[1],
@@ -1316,6 +1320,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					break;
 				case BASIC:
 				case MULTIVALUED:
+					final List<Boolean> paramPatterns = parameterPatterns( method );
 					putMember( methodKey,
 							new CriteriaFinderMethod(
 									this,
@@ -1329,6 +1334,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 											.map(param -> isFinderParameterMappingToAttribute(param)
 													&& fieldType == FieldType.MULTIVALUED)
 											.collect(toList()),
+									paramPatterns,
 									repository,
 									sessionType[0],
 									sessionType[1],
@@ -1397,6 +1403,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 			if ( checkParameterType( entityType, param, memberType( member ) ) ) {
 				return FieldType.MULTIVALUED;
+			}
+			else if ( containsAnnotation( param, PATTERN ) ) {
+				final AnnotationMirror mirror = getAnnotationMirror(param, PATTERN);
+				if ( mirror!=null && !param.asType().toString().equals( String.class.getName() ) ) {
+					context.message( param, mirror, "parameter annotated '@Pattern' is not of type 'String'",
+							Diagnostic.Kind.ERROR );
+				}
+				return FieldType.BASIC;
 			}
 			else if ( containsAnnotation( member, ID, EMBEDDED_ID ) ) {
 				return FieldType.ID;
@@ -2039,6 +2053,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static List<String> parameterTypes(ExecutableElement method) {
 		return method.getParameters().stream()
 				.map(param -> param.asType().toString())
+				.collect(toList());
+	}
+
+	private static List<Boolean> parameterPatterns(ExecutableElement method) {
+		return method.getParameters().stream()
+				.map(param -> hasAnnotation(param, PATTERN))
 				.collect(toList());
 	}
 

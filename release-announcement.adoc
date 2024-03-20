@@ -134,8 +134,9 @@ int results = query.getResultCount();
 [[key-pagination]]
 == Key-based Pagination
 
+As an incubating feature, 6.5 offers support for link:{intro-guide-url}#key-based-pagination[key-based pagination] (sometimes called "keyset" pagination) via both `SelectionQuery` and link:{intro-guide-url}#key-based-paging[generated query methods].
 
-
+Please see the Javadoc for link:{javadocs-url}/org/hibernate/query/KeyedPage.html[`KeyedPage`] and link:{javadocs-url}/org/hibernate/query/KeyedResultList.html[`KeyedResultList`] for more information.
 
 [[on-conflict]]
 == ON CONFLICT Clause for Insert Queries

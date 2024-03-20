@@ -53,7 +53,6 @@ public class ParameterParser {
 	 */
 	public static void parse(String sqlString, ParameterRecognizer recognizer, boolean nativeJdbcParametersIgnored) throws QueryException {
 		checkIsNotAFunctionCall( sqlString );
-		sqlString = preprocessing(sqlString);
 		final int stringLength = sqlString.length();
 
 		boolean inSingleQuotes = false;
@@ -130,20 +129,52 @@ public class ParameterParser {
 			}
 			// otherwise
 			else {
-				if ( c == ':' && indx < stringLength - 1 && Character.isJavaIdentifierStart( sqlString.charAt( indx + 1 ) )
-						&& !(0 < indx && sqlString.charAt( indx - 1 ) == ':')) {
-					// named parameter
-					final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
-					final int chopLocation = right < 0 ? sqlString.length() : right;
-					final String param = sqlString.substring( indx + 1, chopLocation );
-					if ( param.isEmpty() ) {
-						throw new QueryParameterException(
-								"Space is not allowed after parameter prefix ':'",
-								sqlString
-						);
+				if ( c == ':' ) {
+					if ( indx < stringLength - 1 && Character.isJavaIdentifierStart( sqlString.charAt( indx + 1 ) ) ) {
+						// named parameter
+						final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
+						final int chopLocation = right < 0 ? sqlString.length() : right;
+						final String param = sqlString.substring( indx + 1, chopLocation );
+						if ( param.isEmpty() ) {
+							throw new QueryParameterException(
+									"Space is not allowed after parameter prefix ':'",
+									sqlString
+							);
+						}
+						recognizer.namedParameter( param, indx );
+						indx = chopLocation - 1;
 					}
-					recognizer.namedParameter( param, indx );
-					indx = chopLocation - 1;
+					else {
+						// For backwards compatibility, allow some known operators in the escaped form
+						if ( indx < stringLength - 3
+								&& sqlString.charAt( indx + 1 ) == ':'
+								&& sqlString.charAt( indx + 2 ) == ':'
+								&& sqlString.charAt( indx + 3 ) == ':' ) {
+							// Detect the :: operator, escaped as ::::
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::::", "::" );
+							recognizer.other( ':' );
+							recognizer.other( ':' );
+							indx += 3;
+						}
+						else if ( indx < stringLength - 2
+								&& sqlString.charAt( indx + 1 ) == ':'
+								&& sqlString.charAt( indx + 2 ) == '=' ) {
+							// Detect the := operator, escaped as ::=
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::=", ":=" );
+							recognizer.other( ':' );
+							recognizer.other( '=' );
+							indx += 2;
+						}
+						else {
+							recognizer.other( ':' );
+							// Consume all following colons as they are eagerly to not confuse named parameter detection
+							while ( indx < stringLength - 1
+									&& sqlString.charAt( indx + 1 ) == ':' ) {
+								indx++;
+								recognizer.other( ':' );
+							}
+						}
+					}
 				}
 				else if ( c == '?' ) {
 					// could be either a positional or JPA-style ordinal parameter
@@ -174,19 +205,6 @@ public class ParameterParser {
 		}
 
 		recognizer.complete();
-	}
-
-	private static String preprocessing(String sqlString) {
-		final Map<String, String> preprocessingExchangeMap = Map.of("::=", ":=", "::::", "::");
-		for (Map.Entry<String, String> entry : preprocessingExchangeMap.entrySet()) {
-			final String preprocessedSqlString = sqlString.replace(entry.getKey(), entry.getValue());
-			if (!sqlString.equals(preprocessedSqlString)) {
-				DeprecationLogger.DEPRECATION_LOGGER.warn(
-						String.format("An unconventional syntax has been used in the SQL statement. It is recommended to use '%s' instead of '%s'.", entry.getValue(), entry.getKey()));
-				sqlString = preprocessedSqlString;
-			}
-		}
-		return sqlString;
 	}
 
 	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {

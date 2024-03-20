@@ -612,17 +612,18 @@ public final class TypeUtils {
 	}
 
 	public static @Nullable String findMappedSuperClass(Metamodel entity, Context context) {
-		Element element = entity.getElement();
+		final Element element = entity.getElement();
 		if ( element instanceof TypeElement ) {
-			TypeMirror superClass = ((TypeElement) element).getSuperclass();
+			final TypeElement typeElement = (TypeElement) element;
+			TypeMirror superClass = typeElement.getSuperclass();
 			//superclass of Object is of NoType which returns some other kind
 			while ( superClass.getKind() == TypeKind.DECLARED ) {
-				final Element superClassElement = ( (DeclaredType) superClass ).asElement();
-				String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
+				final DeclaredType declaredType = (DeclaredType) superClass;
+				final TypeElement superClassElement = (TypeElement) declaredType.asElement();
 				if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
-					return superClassName;
+					return superClassElement.getQualifiedName().toString();
 				}
-				superClass = ( (TypeElement) superClassElement ).getSuperclass();
+				superClass = superClassElement.getSuperclass();
 			}
 		}
 		return null;
@@ -643,21 +644,14 @@ public final class TypeUtils {
 	 */
 	private static boolean extendsSuperMetaModel(Element superClassElement, boolean entityMetaComplete, Context context) {
 		// if we processed the superclass in the same run we definitely need to extend
-		String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
-		if ( context.containsMetaEntity( superClassName )
-				|| context.containsMetaEmbeddable( superClassName ) ) {
-			return true;
-		}
-
-		// to allow for the case that the metamodel class for the super entity is for example contained in another
-		// jar file we use reflection. However, we need to consider the fact that there is xml configuration
-		// and annotations should be ignored
-		if ( !entityMetaComplete
-				&& containsAnnotation( superClassElement, Constants.ENTITY, Constants.MAPPED_SUPERCLASS ) ) {
-			return true;
-		}
-
-		return false;
+		final TypeElement typeElement = (TypeElement) superClassElement;
+		final String superClassName = typeElement.getQualifiedName().toString();
+		return context.containsMetaEntity( superClassName )
+			|| context.containsMetaEmbeddable( superClassName )
+			// to allow for the case that the metamodel class for the super entity is for example contained in another
+			// jar file we use reflection. However, we need to consider the fact that there is xml configuration
+			// and annotations should be ignored
+			|| !entityMetaComplete && containsAnnotation( superClassElement, ENTITY, MAPPED_SUPERCLASS );
 	}
 
 	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable String, Element> {

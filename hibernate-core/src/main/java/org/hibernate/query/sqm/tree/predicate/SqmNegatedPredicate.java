@@ -79,4 +79,5 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmNegatedPredicate( this, nodeBuilder() );
 	}
+
 }

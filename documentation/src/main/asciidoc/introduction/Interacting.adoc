@@ -942,7 +942,7 @@ So, as an alternative to the HQL `order by` clause, `SelectionQuery` offers the 
 List<Book> books =
         session.createSelectionQuery("from Book where title like ?1", Book.class)
             .setParameter(1, titlePattern)
-            .setOrder(List.of(Order.asc(Book._title), Order.asc(Book._isbn)))
+            .setOrder(List.of(Order.asc(Book_.title), Order.asc(Book_.isbn)))
             .setMaxResults(MAX_RESULTS)
             .getResultList();
 ----
@@ -960,6 +960,44 @@ Unfortunately, there's no way to do this using JPA's `TypedQuery` interface.
 | `setOrder()` | Specify how the query results should be ordered | &#10006;
 | `getResultCount()` | Determine how many results the query would return in the absence of any limit or offset | &#10006;
 |===
+
+The approach to pagination we've just seen is sometimes called _offset-based pagination_.
+Since Hibernate 6.5, there's an alternative approach, which offers some advantages, though it's a little more difficult to use.
+
+[[key-based-pagination]]
+=== Key-based pagination
+
+_Key-based pagination_ aims to reduce the likelihood of missed or duplicate results when data is modified between page requests.
+It's most easily illustrated with an example:
+
+[source,java]
+----
+String QUERY = "from Book where publicationDate > :minDate";
+
+// obtain the first page of results
+KeyedResultList<Book> first =
+        session.createSelectionQuery(QUERY, Book.class)
+                .setParameter("minDate", minDate)
+                .getKeyedResultList(Page.first(25)
+                        .keyedBy(Order.asc(Book_.isbn)));
+List<Book> firstPage = first.getResultList();
+...
+
+if (!firstPage.isLastPage()) {
+    // obtain the second page of results
+    KeyedResultList<Book> second =
+            session.createSelectionQuery(QUERY, Book.class)
+                    .setParameter("minDate", minDate))
+                    .getKeyedResultList(firstPage.getNextPage());
+    List<Book> secondPage = second.getResultList();
+    ...
+}
+----
+
+The "key" in key-based pagination refers to a unique key of the result set which determines a total order on the query results.
+In this example, `Book.isbn` is the key.
+
+Since this code is a little bit fiddly, key-based pagination works best with <<key-based-paging,generated query or finder methods>>.
 
 [[projection-lists]]
 === Representing projection lists

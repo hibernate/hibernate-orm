@@ -579,6 +579,43 @@ interface Queries {
 This gives some dynamic control over query execution, but what if would like direct control over the `Query` object?
 Well, let's talk about the return type.
 
+[[key-based-paging]]
+=== Key-based pagination
+
+A generated query or finder method can make use of <<key-based-pagination,key-based pagination>>.
+
+[source,java]
+----
+@Query("from Book where publicationDate > :minDate")
+KeyedResultList<Book> booksFromDate(Session session, LocalDate minDate, KeyedPage page);
+----
+
+Note that this method:
+
+- accepts a `KeyedPage`, and
+- returns `KeyedResultList`.
+
+Such a method may be used like this:
+
+[source,java]
+----
+// obtain the first page of results
+KeyedResultList<Book> first =
+        Queries_.booksFromDate(session, minDate,
+                Page.first(25).keyedBy(Order.asc(Book_.isbn)));
+List<Book> firstPage = first.getResultList();
+...
+
+if (!firstPage.isLastPage()) {
+    // obtain the second page of results
+    KeyedResultList<Book> second =
+            Queries_.booksFromDate(session, minDate,
+                    firstPage.getNextPage());
+    List<Book> secondPage = second.getResultList();
+    ...
+}
+----
+
 [[return-types]]
 === Query and finder method return types
 

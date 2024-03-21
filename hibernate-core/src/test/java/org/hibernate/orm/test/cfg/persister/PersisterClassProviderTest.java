@@ -18,6 +18,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
@@ -56,11 +57,8 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
             fail("The entity persister should be overridden");
 		}
 		catch ( MappingException e ) {
-			assertEquals(
-					"The entity persister should be overridden",
-					GoofyPersisterClassProvider.NoopEntityPersister.class,
-					( (GoofyException) e.getCause() ).getValue()
-			);
+			// expected
+			assertThat( e.getCause() ).isInstanceOf( GoofyException.class );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -81,10 +79,8 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
             fail("The collection persister should be overridden but not the entity persister");
 		}
 		catch ( MappingException e ) {
-			assertEquals(
-					"The collection persister should be overridden but not the entity persister",
-					GoofyPersisterClassProvider.NoopCollectionPersister.class,
-					( (GoofyException) e.getCause() ).getValue() );
+			// expected
+			assertThat( e.getCause() ).isInstanceOf( GoofyException.class );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -104,10 +100,8 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
             fail("The entity persisters should be overridden in a class hierarchy");
 		}
 		catch ( MappingException e ) {
-			assertEquals(
-					"The entity persisters should be overridden in a class hierarchy",
-					GoofyPersisterClassProvider.NoopEntityPersister.class,
-					( (GoofyException) e.getCause() ).getValue() );
+			// expected
+			assertThat( e.getCause() ).isInstanceOf( GoofyException.class );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );

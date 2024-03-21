@@ -139,8 +139,7 @@
                 <!-- hbm: auxiliary database object definitions -->
                 <xsd:element name="database-object" minOccurs="0" maxOccurs="unbounded" type="orm:database-object"/>
             </xsd:sequence>
-            <xsd:attribute name="version" type="orm:versionType"
-                           fixed="3.2" use="required"/>
+            <xsd:attribute name="version" type="orm:supportedVersionType" fixed="7.0" use="required"/>
         </xsd:complexType>
     </xsd:element>
 
@@ -149,6 +148,22 @@
     <xsd:simpleType name="versionType">
         <xsd:restriction base="xsd:token">
             <xsd:pattern value="[0-9]+(\.[0-9]+)*"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="supportedVersionType">
+        <xsd:restriction base="orm:versionType">
+            <!-- JPA versions -->
+            <xsd:enumeration value="1.0" />
+            <xsd:enumeration value="2.0" />
+            <xsd:enumeration value="2.1" />
+            <xsd:enumeration value="2.2" />
+            <xsd:enumeration value="3.0" />
+            <xsd:enumeration value="3.1" />
+            <xsd:enumeration value="3.2" />
+
+            <!-- Hibernate versions -->
+            <xsd:enumeration value="7.0" />
         </xsd:restriction>
     </xsd:simpleType>
 
@@ -2738,6 +2753,13 @@
             <xsd:documentation>
                 Specifies a filter definition.  After definition, a filter
                 can be applied to entity or collection by name.
+
+                @interface FilterDef {
+                    String name();
+                    String defaultCondition() default "";
+                    ParamDef[] parameters() default {};
+                    boolean autoEnabled() default false;
+                }
             </xsd:documentation>
         </xsd:annotation>
 
@@ -2748,15 +2770,25 @@
                     <xsd:annotation>
                         <xsd:documentation>
                             Used to identify all bind parameters in the condition element
+
+                            <![CDATA[
+                            @interface ParamDef {
+                                String name();
+                                Class<?> type();
+                                Class<? extends Supplier> resolver() default Supplier.class;
+                            }
+                            ]]>
                         </xsd:documentation>
                     </xsd:annotation>
                     <xsd:attribute name="name" use="required" type="xsd:string"/>
                     <xsd:attribute name="type" use="required" type="xsd:string"/>
+                    <xsd:attribute name="resolver" type="xsd:string"/>
                 </xsd:complexType>
             </xsd:element>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>
+        <xsd:attribute name="auto-enabled" type="xsd:boolean" default="false"/>
     </xsd:complexType>
 
     <xsd:complexType name="hbm-filter">

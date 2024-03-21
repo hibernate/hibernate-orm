@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.models.bind.internal;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -21,12 +20,8 @@ import org.hibernate.boot.models.categorize.spi.ManagedTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.TableOwner;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.KeyedConsumer;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -172,24 +167,6 @@ public class BindingStateImpl implements BindingState {
 
 	@Override
 	public void apply(FilterDefRegistration registration) {
-		metadataBuildingContext.getMetadataCollector().addFilterDefinition( new FilterDefinition(
-				registration.getName(),
-				registration.getDefaultCondition(),
-				extractParameterMap( registration )
-		) );
-	}
-
-	private Map<String, JdbcMapping> extractParameterMap(FilterDefRegistration registration) {
-		final Map<String, ClassDetails> parameters = registration.getParameters();
-		if ( CollectionHelper.isEmpty( parameters ) ) {
-			return Collections.emptyMap();
-		}
-
-		final TypeConfiguration typeConfiguration = metadataBuildingContext.getBootstrapContext().getTypeConfiguration();
-		final Map<String, JdbcMapping> result = new HashMap<>();
-		parameters.forEach( (name, typeDetails) -> {
-			result.put( name, typeConfiguration.getBasicTypeForJavaType( typeDetails.toJavaClass() ) );
-		} );
-		return result;
+		metadataBuildingContext.getMetadataCollector().addFilterDefinition( registration.toFilterDefinition( metadataBuildingContext ) );
 	}
 }

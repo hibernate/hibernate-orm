@@ -10,11 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -23,38 +23,30 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
-import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveAttributeConverter;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveBasicType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveJavaType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveUserType;
-import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * @author Gavin King
  */
-class FilterDefBinder {
+public class FilterDefBinder {
 	private static final CoreMessageLogger LOG = messageLogger( FilterDefBinder.class );
 
 	public static void bindFilterDefs(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
-		final AnnotationUsage<FilterDef> filterDef = annotatedElement.getAnnotationUsage( FilterDef.class );
-		final AnnotationUsage<FilterDefs> filterDefs = getOverridableAnnotation( annotatedElement, FilterDefs.class, context );
-		if ( filterDef != null ) {
-			bindFilterDef( filterDef, context );
-		}
-		if ( filterDefs != null ) {
-			final List<AnnotationUsage<FilterDef>> nestedDefs = filterDefs.getList( "value" );
-			for ( AnnotationUsage<FilterDef> def : nestedDefs ) {
-				bindFilterDef( def, context );
-			}
-		}
+		annotatedElement.forEachAnnotationUsage( FilterDef.class, (usage) -> {
+			bindFilterDef( usage, context );
+		} );
 	}
 
 	public static void bindFilterDef(AnnotationUsage<FilterDef> filterDef, MetadataBuildingContext context) {
@@ -64,6 +56,7 @@ class FilterDefBinder {
 		}
 
 		final Map<String, JdbcMapping> paramJdbcMappings;
+		//noinspection rawtypes
 		final Map<String, ManagedBean<? extends Supplier>> parameterResolvers;
 		final List<AnnotationUsage<ParamDef>> explicitParameters = filterDef.getList( "parameters" );
 		if ( explicitParameters.isEmpty() ) {
@@ -89,8 +82,9 @@ class FilterDefBinder {
 				}
 				paramJdbcMappings.put( parameterName, jdbcMapping );
 
-				if ( paramDef.resolver() != Supplier.class ) {
-					parameterResolvers.put( paramDef.name(), resolveParamResolver( paramDef, context ) );
+				final ClassDetails resolverClassDetails = explicitParameter.getClassDetails( "resolver" );
+				if ( !resolverClassDetails.getName().equals( Supplier.class.getName() ) ) {
+					parameterResolvers.put( explicitParameter.getString( "name" ), resolveParamResolver( resolverClassDetails, context ) );
 				}
 			}
 		}
@@ -98,17 +92,18 @@ class FilterDefBinder {
 		final FilterDefinition filterDefinition = new FilterDefinition(
 				name,
 				filterDef.getString( "defaultCondition" ),
+				filterDef.getBoolean( "autoEnabled" ),
 				paramJdbcMappings,
-				parameterResolvers,
-				filterDef.getBoolean( "autoEnabled" )
+				parameterResolvers
 		);
 
 		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}
 
-	private static ManagedBean<? extends Supplier> resolveParamResolver(ParamDef paramDef, MetadataBuildingContext context) {
-		Class<? extends Supplier> clazz = paramDef.resolver();
+	@SuppressWarnings("rawtypes")
+	private static ManagedBean<? extends Supplier> resolveParamResolver(ClassDetails resolverClassDetails, MetadataBuildingContext context) {
+		Class<? extends Supplier> clazz = resolverClassDetails.toJavaClass();
 		assert clazz != Supplier.class;
 
 		final ManagedBeanRegistry beanRegistry = context.getBootstrapContext().getServiceRegistry().getService( ManagedBeanRegistry.class );
@@ -116,7 +111,7 @@ class FilterDefBinder {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static JdbcMapping resolveFilterParamType(Class<?> type, MetadataBuildingContext context) {
+	public static JdbcMapping resolveFilterParamType(Class<?> type, MetadataBuildingContext context) {
 		if ( UserType.class.isAssignableFrom( type ) ) {
 			return resolveUserType( (Class<UserType<?>>) type, context );
 		}

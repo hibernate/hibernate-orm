@@ -130,7 +130,10 @@ stage('Build') {
 					}
 					state[buildEnv.tag]['containerName'] = null;
 					stage('Checkout') {
-						checkout scm
+						// https://stackoverflow.com/a/45845221
+						def scmVars = checkout(scm)
+						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+								" -Pci.git.commit=${scmVars.GIT_COMMIT}"
 					}
 					try {
 						stage('Start database') {

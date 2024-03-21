@@ -53,5 +53,9 @@ gradleEnterprise {
         if ( rootProject.hasProperty( 'ci.node' ) ) {
             tag rootProject.property('ci.node')
         }
+        if ( rootProject.hasProperty( 'ci.git.commit' ) ) {
+            // Workaroud use on Jenkins for this custom value not being added automatically by Gradle
+            value 'Git commit id', rootProject.property('ci.git.commit')
+        }
     }
 }

@@ -56,15 +56,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * The disadvantage of this approach is the use of stringly-typed names. An
  * alternative, completely typesafe, way to declare a generator and associate
- * it with an entity is provided by the {@link IdGeneratorType} meta-annotation.
+ * it with an entity is provided by the {@link IdGeneratorType @IdGeneratorType}
+ * meta-annotation.
  *
  * @see jakarta.persistence.GeneratedValue
+ *
+ * @deprecated Use the new approach based on {@link IdGeneratorType}.
  *
  * @author Emmanuel Bernard
  */
 @Target({PACKAGE, TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 @Repeatable(GenericGenerators.class)
+@Deprecated(since = "6.5")
 public @interface GenericGenerator {
 	/**
 	 * The name of the identifier generator. This is the name that may be specified by

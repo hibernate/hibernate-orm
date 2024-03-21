@@ -16,10 +16,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Array of generic generator definitions.
  *
+ * @deprecated since {@link GenericGenerator} is deprecated.
+ *
  * @author Paul Cowan
  */
 @Target({PACKAGE, TYPE})
 @Retention(RUNTIME)
+@Deprecated(since = "6.5")
 public @interface GenericGenerators {
 	/**
 	 * The aggregated generators.

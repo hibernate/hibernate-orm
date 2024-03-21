@@ -156,20 +156,6 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	}
 
 	/**
-	 * Determine if this generator allows identifier values to be manually assigned to the entity
-	 * instance before persisting it. This is useful when, for example, needing existing assigned
-	 * values to be used as identifiers and falling back to generated values by default.
-	 *
-	 * @return {@code true} if this generator allows pre-assigned identifier values,
-	 * {@code false} otherwise (default).
-	 *
-	 * @since 6.5
-	 */
-	default boolean allowAssignedIdentifiers() {
-		return false;
-	}
-
-	/**
 	 * Check if JDBC batch inserts are supported.
 	 *
 	 * @return JDBC batch inserts are supported.

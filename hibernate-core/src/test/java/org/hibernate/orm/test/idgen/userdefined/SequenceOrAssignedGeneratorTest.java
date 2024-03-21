@@ -6,9 +6,17 @@
  */
 package org.hibernate.orm.test.idgen.userdefined;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.EnumSet;
+
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -16,6 +24,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -23,6 +32,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -212,12 +224,9 @@ public class SequenceOrAssignedGeneratorTest {
 	}
 
 	@Entity( name = "MyVersionedEntity" )
-	@GenericGenerator( type = SequenceOrAssignedGenerator.class, name = MyVersionedEntity.SEQUENCE )
 	public static class MyVersionedEntity {
-		protected static final String SEQUENCE = "SEQ_MyVersionedEntity";
-
 		@Id
-		@GeneratedValue( generator = SEQUENCE )
+		@AssignedOrConstant
 		private Long id;
 
 		@Version
@@ -252,17 +261,51 @@ public class SequenceOrAssignedGeneratorTest {
 			if ( owner instanceof MyEntity ) {
 				id = ( (MyEntity) owner ).getId();
 			}
-			else if ( owner instanceof MyVersionedEntity ) {
+			else {
+				id = null;
+			}
+
+			return id != null ? id : super.generate( session, owner );
+		}
+
+		@Override
+		public boolean allowAssignedIdentifiers() {
+			return true;
+		}
+	}
+
+	@IdGeneratorType( AssignedOrCountGenerator.class )
+	@Target( { METHOD, FIELD } )
+	@Retention( RUNTIME )
+	public @interface AssignedOrConstant {
+	}
+
+	public static class AssignedOrCountGenerator implements BeforeExecutionGenerator {
+		private Long count;
+
+		public AssignedOrCountGenerator() {
+			this.count = 1L;
+		}
+
+		@Override
+		public Object generate(
+				SharedSessionContractImplementor session,
+				Object owner,
+				Object currentValue,
+				EventType eventType) {
+			final Long id;
+			if ( owner instanceof MyVersionedEntity ) {
 				id = ( (MyVersionedEntity) owner ).getId();
 			}
 			else {
 				id = null;
 			}
-			if ( id != null ) {
-				return id;
-			}
+			return id != null ? id : count++;
+		}
 
-			return super.generate( session, owner );
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return EventTypeSets.INSERT_ONLY;
 		}
 
 		@Override

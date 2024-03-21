@@ -47,11 +47,10 @@ gradleEnterprise {
         uploadInBackground = !settings.ext.isCiEnvironment
 
         tag "JDK ${JavaVersion.current().toString()}"
-        String db = rootProject.hasProperty( 'db' ) ? rootProject.properties.db : 'h2'
-        tag db
-        value 'database', db
-        if ( rootProject.hasProperty( 'ci.node' ) ) {
-            tag rootProject.property('ci.node')
+        tag extensions.db
+        value 'database', extensions.db
+        if ( extensions.hasProperty( 'ci.node' ) ) {
+            tag extensions.property( 'ci.node' )
         }
     }
 }

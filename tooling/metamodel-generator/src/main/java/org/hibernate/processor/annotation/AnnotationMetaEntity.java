@@ -891,20 +891,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final boolean returnArgument = returnType.getKind() != TypeKind.VOID;
 			final String operation = lifecycleOperation( method );
 			final VariableElement parameter = method.getParameters().get(0);
-			final TypeMirror parameterType = parameter.asType();
+			final TypeMirror declaredParameterType = parameter.asType();
+			final TypeMirror parameterType = parameterType( declaredParameterType );
 			final DeclaredType declaredType = entityType( parameterType );
 			if ( declaredType == null ) {
 				context.message( parameter,
 						"incorrect parameter type '" + parameterType + "' is not an entity type",
 						Diagnostic.Kind.ERROR );
 			}
-			else if ( !containsAnnotation( declaredType.asElement(), ENTITY ) ) {
+			else if ( !containsAnnotation( declaredType.asElement(), ENTITY )
+					// TODO: improve this (carefully consider the case of an erased type variable)
+					&& declaredParameterType == parameterType ) {
 				context.message( parameter,
 						"incorrect parameter type '" + parameterType + "' is not annotated '@Entity'",
 						Diagnostic.Kind.ERROR );
 			}
 			else if ( returnArgument
-					&& !context.getTypeUtils().isSameType( returnType, parameterType ) ) {
+					&& !context.getTypeUtils().isSameType( returnType, declaredParameterType ) ) {
 				context.message( parameter,
 						"return type '" + returnType
 								+ "' disagrees with parameter type '" + parameterType + "'",
@@ -933,6 +936,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private @Nullable DeclaredType entityType(TypeMirror parameterType) {
 		switch ( parameterType.getKind() ) {
+			case TYPEVAR:
+				final TypeVariable typeVariable = (TypeVariable) parameterType;
+				parameterType = typeVariable.getUpperBound();
+				//INTENTIONAL FALL THROUGH
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) parameterType;
 				final Types types = context.getTypeUtils();
@@ -940,7 +947,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( types.isAssignable( declaredType,
 						types.erasure( elements.getTypeElement(ITERABLE).asType() ) )
 							&& !declaredType.getTypeArguments().isEmpty() ) {
-					final TypeMirror elementType = declaredType.getTypeArguments().get(0);
+					final TypeMirror elementType = parameterType( declaredType.getTypeArguments().get(0) );
 					return elementType.getKind() == TypeKind.DECLARED ? (DeclaredType) elementType : null;
 				}
 				else {
@@ -948,7 +955,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			case ARRAY:
 				final ArrayType arrayType = (ArrayType) parameterType;
-				final TypeMirror componentType = arrayType.getComponentType();
+				final TypeMirror componentType = parameterType( arrayType.getComponentType() );
 				return componentType.getKind() == TypeKind.DECLARED ? (DeclaredType) componentType : null;
 			default:
 				return null;
@@ -2099,10 +2106,26 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				.collect(toList());
 	}
 
-	private static List<String> parameterTypes(ExecutableElement method) {
+	private List<String> parameterTypes(ExecutableElement method) {
 		return method.getParameters().stream()
-				.map(param -> param.asType().toString())
+				.map(param -> parameterType(param.asType()).toString())
 				.collect(toList());
+	}
+
+	private TypeMirror parameterType(TypeMirror type) {
+		switch (type.getKind()) {
+			case TYPEVAR:
+				final TypeVariable typeVariable = (TypeVariable) type;
+				return context.getTypeUtils().erasure(typeVariable);
+			case DECLARED:
+				final DeclaredType declaredType = (DeclaredType) type;
+				return declaredType.getTypeArguments().stream()
+						.anyMatch(arg -> arg.getKind() == TypeKind.TYPEVAR)
+						? context.getTypeUtils().erasure(type)
+						: type;
+			default:
+				return type;
+		}
 	}
 
 	private static List<Boolean> parameterPatterns(ExecutableElement method) {
@@ -2237,7 +2260,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean usingReactiveSession(String sessionType) {
 		return MUTINY_SESSION.equals(sessionType)
-			|| Constants.UNI_MUTINY_SESSION.equals(sessionType);
+			|| UNI_MUTINY_SESSION.equals(sessionType);
 	}
 
 	private boolean usingStatelessSession(String sessionType) {

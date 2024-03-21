@@ -78,6 +78,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedEntityGraphImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedSubgraphImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNationalizedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalId;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
@@ -87,11 +88,11 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping;
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
+import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.KeyedConsumer;
@@ -234,7 +235,12 @@ public class XmlAnnotationHelper {
 			MutableMemberDetails memberDetails,
 			Class<A> annotationType,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> joinColumnAnn = XmlProcessingHelper.getOrMakeAnnotation( annotationType, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<A> joinColumnAnn = XmlProcessingHelper.getOrMakeNamedAnnotation(
+				annotationType,
+				jaxbJoinColumn.getName(),
+				memberDetails,
+				xmlDocumentContext
+		);
 		final AnnotationDescriptor<A> joinColumnDescriptor = xmlDocumentContext
 				.getModelBuildingContext()
 				.getAnnotationDescriptorRegistry()
@@ -469,7 +475,12 @@ public class XmlAnnotationHelper {
 			JaxbForeignKeyImpl jaxbForeignKey,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<ForeignKey> foreignKeyAnn = XmlProcessingHelper.getOrMakeAnnotation( ForeignKey.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<ForeignKey> foreignKeyAnn = XmlProcessingHelper.getOrMakeNamedAnnotation(
+				ForeignKey.class,
+				jaxbForeignKey.getName(),
+				memberDetails,
+				xmlDocumentContext
+		);
 		final AnnotationDescriptor<ForeignKey> foreignKeyDescriptor = xmlDocumentContext
 				.getModelBuildingContext()
 				.getAnnotationDescriptorRegistry()
@@ -645,18 +656,18 @@ public class XmlAnnotationHelper {
 
 		final List<JaxbJoinColumnImpl> joinColumns = jaxbJoinTable.getJoinColumn();
 		if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
-			joinTableAnn.setAttributeValue( "joinColumns", createJoinColumns( joinColumns, memberDetails, xmlDocumentContext ) );
+			joinTableAnn.setAttributeValue( "joinColumns", createJoinColumns( joinColumns,  xmlDocumentContext ) );
 		}
 
 		final List<JaxbJoinColumnImpl> inverseJoinColumns = jaxbJoinTable.getInverseJoinColumn();
 		if ( CollectionHelper.isNotEmpty( inverseJoinColumns ) ) {
-			joinTableAnn.setAttributeValue( "inverseJoinColumns", createJoinColumns( inverseJoinColumns, memberDetails, xmlDocumentContext ) );
+			joinTableAnn.setAttributeValue( "inverseJoinColumns", createJoinColumns( inverseJoinColumns,  xmlDocumentContext ) );
 		}
 
 		if ( jaxbJoinTable.getForeignKey() != null ) {
 			joinTableAnn.setAttributeValue(
 					"foreignKey",
-					createForeignKeyAnnotation( jaxbJoinTable.getForeignKey(), memberDetails, xmlDocumentContext )
+					createForeignKeyAnnotation( jaxbJoinTable.getForeignKey(),  xmlDocumentContext )
 			);
 		}
 		if ( jaxbJoinTable.getInverseForeignKey() != null ) {
@@ -678,7 +689,7 @@ public class XmlAnnotationHelper {
 			MutableAnnotationTarget target,
 			MutableAnnotationUsage<A> annotationUsage,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isNotEmpty( jaxbCheckable.getCheckConstraints() ) ) {
+		if ( jaxbCheckable!= null && CollectionHelper.isNotEmpty( jaxbCheckable.getCheckConstraints() ) ) {
 			final List<AnnotationUsage<CheckConstraint>> checks = new ArrayList<>( jaxbCheckable.getCheckConstraints().size() );
 			final AnnotationDescriptor<CheckConstraint> checkConstraintDescriptor = xmlDocumentContext.getModelBuildingContext()
 					.getAnnotationDescriptorRegistry()
@@ -983,8 +994,24 @@ public class XmlAnnotationHelper {
 				.getAnnotationDescriptorRegistry()
 				.getDescriptor( Table.class );
 
-		applyOr( jaxbTable, JaxbTableImpl::getName, "name", tableAnn, tableDescriptor );
-		applyTableAttributes( jaxbTable, target, tableAnn, tableDescriptor, xmlDocumentContext );
+		if ( jaxbTable == null ) {
+			final XmlDocument.Defaults defaults = xmlDocumentContext.getXmlDocument().getDefaults();
+			final String catalog = defaults.getCatalog();
+			final String schema = defaults.getSchema();
+			if ( StringHelper.isNotEmpty( catalog ) || StringHelper.isNotEmpty( schema ) ) {
+				if ( StringHelper.isNotEmpty( catalog ) ) {
+					tableAnn.setAttributeValue( "catalog", catalog );
+
+				}
+				if ( StringHelper.isNotEmpty( schema ) ) {
+					tableAnn.setAttributeValue( "schema", schema );
+				}
+			}
+		}
+		else {
+			applyOr( jaxbTable, JaxbTableImpl::getName, "name", tableAnn, tableDescriptor );
+			applyTableAttributes( jaxbTable, target, tableAnn, tableDescriptor, xmlDocumentContext );
+		}
 	}
 
 	public static void applyTableOverride(
@@ -1010,8 +1037,8 @@ public class XmlAnnotationHelper {
 			MutableAnnotationUsage<A> tableAnn,
 			AnnotationDescriptor<A> annotationDescriptor,
 			XmlDocumentContext xmlDocumentContext) {
-		applyOr( jaxbTable, JaxbTableMapping::getCatalog, "catalog", tableAnn, annotationDescriptor );
-		applyOr( jaxbTable, JaxbTableMapping::getSchema, "schema", tableAnn, annotationDescriptor );
+		applyOrCatalog( jaxbTable, tableAnn, annotationDescriptor, xmlDocumentContext );
+		applyOrSchema( jaxbTable, tableAnn, annotationDescriptor, xmlDocumentContext);
 		applyOr( jaxbTable, JaxbTableMapping::getOptions, "options", tableAnn, annotationDescriptor );
 		applyOr( jaxbTable, JaxbTableMapping::getComment, "comment", tableAnn, annotationDescriptor );
 		applyCheckConstraints( jaxbTable, target, tableAnn, xmlDocumentContext );
@@ -1708,5 +1735,53 @@ public class XmlAnnotationHelper {
 		}
 
 		return explicitName;
+	}
+
+	public static <T, N, A extends Annotation> void applyOrSchema(
+			JaxbSchemaAware jaxbNode,
+			MutableAnnotationUsage<A> annotationUsage,
+			AnnotationDescriptor<A> annotationDescriptor,
+			XmlDocumentContext xmlDocumentContext) {
+		applyOr(
+				jaxbNode,
+				(collectionTable) -> {
+					if ( StringHelper.isNotEmpty( collectionTable.getSchema() ) ) {
+						return collectionTable.getSchema();
+					}
+					else if ( StringHelper.isNotEmpty( xmlDocumentContext.getXmlDocument()
+															   .getDefaults()
+															   .getSchema() ) ) {
+						return xmlDocumentContext.getXmlDocument().getDefaults().getSchema();
+					}
+					return null;
+				},
+				"schema",
+				annotationUsage,
+				annotationDescriptor
+		);
+	}
+
+	public static <T, N, A extends Annotation> void applyOrCatalog(
+			JaxbSchemaAware jaxbNode,
+			MutableAnnotationUsage<A> annotationUsage,
+			AnnotationDescriptor<A> annotationDescriptor,
+			XmlDocumentContext xmlDocumentContext) {
+		applyOr(
+				jaxbNode,
+				(collectionTable) -> {
+					if ( StringHelper.isNotEmpty( collectionTable.getCatalog() ) ) {
+						return collectionTable.getCatalog();
+					}
+					else if ( StringHelper.isNotEmpty( xmlDocumentContext.getXmlDocument()
+															   .getDefaults()
+															   .getCatalog() ) ) {
+						return xmlDocumentContext.getXmlDocument().getDefaults().getCatalog();
+					}
+					return null;
+				},
+				"catalog",
+				annotationUsage,
+				annotationDescriptor
+		);
 	}
 }

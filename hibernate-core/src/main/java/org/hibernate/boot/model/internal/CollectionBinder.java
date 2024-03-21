@@ -1143,7 +1143,7 @@ public abstract class CollectionBinder {
 							Locale.ROOT,
 							"Property '%s.%s' is not a collection and may not be a '@OneToMany', '@ManyToMany', or '@ElementCollection'",
 							property.getDeclaringType().getName(),
-							property.getName()
+							property.resolveAttributeName()
 					)
 			);
 		}

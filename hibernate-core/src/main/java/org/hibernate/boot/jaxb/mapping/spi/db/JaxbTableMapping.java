@@ -6,9 +6,11 @@
  */
 package org.hibernate.boot.jaxb.mapping.spi.db;
 
+import java.util.List;
+
+import org.hibernate.boot.jaxb.mapping.spi.JaxbIndexImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware;
-import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
-import org.hibernate.boot.jaxb.mapping.spi.db.JaxbDatabaseObject;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraintImpl;
 
 /**
  * @author Steve Ebersole
@@ -16,4 +18,7 @@ import org.hibernate.boot.jaxb.mapping.spi.db.JaxbDatabaseObject;
 public interface JaxbTableMapping extends JaxbSchemaAware, JaxbCheckable, JaxbDatabaseObject {
 	String getComment();
 	String getOptions();
+
+	List<JaxbIndexImpl> getIndexes();
+	List<JaxbUniqueConstraintImpl> getUniqueConstraints();
 }

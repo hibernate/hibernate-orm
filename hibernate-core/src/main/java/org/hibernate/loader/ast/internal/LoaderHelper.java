@@ -9,6 +9,7 @@ package org.hibernate.loader.ast.internal;
 import java.lang.reflect.Array;
 import java.util.List;
 
+import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectDeletedException;
@@ -26,6 +27,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -82,6 +84,21 @@ public class LoaderHelper {
 					lock = cache.lockItem( session, ck, entry.getVersion() );
 				}
 
+				if ( persister.isVersioned() && entry.getVersion() == null ) {
+					// This should be an empty entry created for an uninitialized bytecode proxy
+					if ( !Hibernate.isPropertyInitialized( object, persister.getVersionMapping().getPartName() ) ) {
+						Hibernate.initialize( object );
+						entry = session.getPersistenceContextInternal().getEntry( object );
+						assert entry.getVersion() != null;
+					}
+					else {
+						throw new IllegalStateException( String.format(
+								"Trying to lock versioned entity %s but found null version",
+								MessageHelper.infoString( persister.getEntityName(), entry.getId() )
+						) );
+					}
+				}
+
 				if ( persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT  ) {
 					// todo : should we check the current isolation mode explicitly?
 					Object nextVersion = persister.forceVersionIncrement(
@@ -101,7 +118,6 @@ public class LoaderHelper {
 					persister.getCacheAccessStrategy().unlockItem( session, ck, lock );
 				}
 			}
-
 		}
 	}
 

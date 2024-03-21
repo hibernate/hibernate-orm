@@ -6,7 +6,7 @@
   -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 version="3.1">
+                 version="7.0">
     <entity class="org.hibernate.orm.test.boot.models.xml.dynamic.Employee" access="FIELD">
         <id-class class="org.hibernate.orm.test.boot.models.xml.dynamic.EmployeePK"/>
         <attributes>

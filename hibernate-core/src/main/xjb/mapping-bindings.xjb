@@ -412,6 +412,12 @@
 
         <bindings node="//xsd:complexType[@name='table']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping</inheritance:implements>
+            <bindings node=".//xsd:element[@name='unique-constraint']">
+                <property name="uniqueConstraints"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='index']">
+                <property name="indexes"/>
+            </bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='check-constraint']">
@@ -484,6 +490,12 @@
 
         <bindings node="//xsd:complexType[@name='join-table']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping</inheritance:implements>
+            <bindings node=".//xsd:element[@name='unique-constraint']">
+                <property name="uniqueConstraints"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='index']">
+                <property name="indexes"/>
+            </bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='collection-table']">
@@ -503,6 +515,12 @@
         </bindings>
         <bindings node="//xsd:complexType[@name='table-generator']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping</inheritance:implements>
+            <bindings node=".//xsd:element[@name='unique-constraint']">
+                <property name="uniqueConstraints"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='index']">
+                <property name="indexes"/>
+            </bindings>
         </bindings>
         <bindings node="//xsd:complexType[@name='sequence-generator']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware</inheritance:implements>

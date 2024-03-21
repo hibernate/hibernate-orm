@@ -1,11 +1,17 @@
 package org.hibernate.orm.test.associations.any;
 
-import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
-import static org.hibernate.annotations.CascadeType.ALL;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ManyToAny;
+
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -22,16 +28,9 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ManyToAny;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
+import static org.hibernate.annotations.CascadeType.ALL;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(
 		annotatedClasses = {
@@ -60,7 +59,7 @@ class ManyToAnySubClassAccessPropertyTest {
 
 	@Entity
 	@Inheritance(strategy = SINGLE_TABLE)
-	@DiscriminatorColumn(name = "ROLE", length = 100)
+	@DiscriminatorColumn(name = "ROLE_COL", length = 100)
 	@Table(name = "TANIMAL")
 	public static class Animal {
 
@@ -88,7 +87,7 @@ class ManyToAnySubClassAccessPropertyTest {
 		@ManyToAny
 		@AnyKeyJavaClass(Integer.class)
 		@Cascade(ALL)
-		@Column(name = "ROLE")
+		@Column(name = "ROLE_COL")
 		@JoinTable(name = "DOG_OWNER", joinColumns = @JoinColumn(name = "SOURCE"), inverseJoinColumns = @JoinColumn(name = "DEST"))
 		@Override
 		public Set<Person> getOwners() {
@@ -104,7 +103,7 @@ class ManyToAnySubClassAccessPropertyTest {
 		@ManyToAny
 		@AnyKeyJavaClass(Integer.class)
 		@Cascade(ALL)
-		@Column(name = "ROLE")
+		@Column(name = "ROLE_COL")
 		@JoinTable(name = "DOG_OWNER", joinColumns = @JoinColumn(name = "SOURCE"), inverseJoinColumns = @JoinColumn(name = "DEST"))
 		@Override
 		public Set<Person> getOwners() {

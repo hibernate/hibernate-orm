@@ -31,46 +31,48 @@
 package org.hibernate.orm.test.mapping.collections.custom.declaredtype;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
+ * Test that we get an exception when an attribute whose type is not a Collection
+ * is annotated with any of <ul>
+ *     <li>{@linkplain jakarta.persistence.ElementCollection}</li>
+ *     <li>{@linkplain jakarta.persistence.OneToMany}</li>
+ *     <li>{@linkplain jakarta.persistence.ManyToMany}</li>
+ *     <li>{@linkplain org.hibernate.annotations.ManyToAny}</li>
+ * </ul>
+ * The test specifically uses {@linkplain OneToMany}, but the handling is the same
+ *
  * @author Max Rydahl Andersen
- * @author David Weinberg Negative test when specifying a type that can't be mapped as a collection
+ * @author David Weinberg
  */
-public class UserWithUnimplementedCollectionTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ UserWithUnimplementedCollection.class, Email.class };
-	}
-
-	@Override
-	protected String getCacheConcurrencyStrategy() {
-		return "nonstrict-read-write";
-	}
-
-	@Override
-	protected void buildSessionFactory() {
+@ServiceRegistry
+public class UserWithUnimplementedCollectionTest {
+	@Test
+	void testCollectionNotCollectionFailure(ServiceRegistryScope serviceRegistryScope) {
+		final MetadataSources metadataSources = new MetadataSources( serviceRegistryScope.getRegistry() );
+		metadataSources.addAnnotatedClasses( UserWithUnimplementedCollection.class, Email.class );
 		try {
-			super.buildSessionFactory();
-			fail( "Expected exception" );
+			metadataSources.buildMetadata();
+			fail( "Expecting an AnnotationException" );
 		}
-		catch (Exception e) {
-			assertThat( e ).isInstanceOf( AnnotationException.class );
+		catch (AnnotationException e) {
 			assertThat( e ).hasMessageEndingWith( "is not a collection and may not be a '@OneToMany', '@ManyToMany', or '@ElementCollection'" );
 			assertThat( e ).hasMessageContaining( ".emailAddresses" );
 		}
 	}
-
-	@Test
-	public void testSessionFactoryFailsToBeCreated() {
-
-	}
-
 }

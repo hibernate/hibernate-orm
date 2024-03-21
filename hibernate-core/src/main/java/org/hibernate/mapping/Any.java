@@ -236,10 +236,14 @@ public class Any extends SimpleValue {
 
 	public boolean isSame(Any other) {
 		return super.isSame( other )
-				&& Objects.equals( keyMapping.getTypeName(), other.keyMapping.getTypeName() )
-				&& Objects.equals( metaMapping.getTypeName(), other.keyMapping.getTypeName() )
+				&& Objects.equals( getTypeNameOrNull( keyMapping ), getTypeNameOrNull( other.keyMapping ) )
+				&& Objects.equals( getTypeNameOrNull( metaMapping ), getTypeNameOrNull( other.metaMapping ) )
 				&& Objects.equals( metaValueToEntityNameMap, other.metaValueToEntityNameMap )
 				&& lazy == other.lazy;
+	}
+
+	private String getTypeNameOrNull(SimpleValue simpleValue) {
+		return simpleValue != null ? simpleValue.getTypeName() : null;
 	}
 
 	public boolean isValid(Mapping mapping) throws MappingException {

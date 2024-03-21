@@ -49,6 +49,7 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 		);
 
 		settings.getGradle().getExtensions().add( JdkVersionConfig.DSL_NAME, jdkVersionConfig );
+		settings.getExtensions().add( JdkVersionConfig.DSL_NAME, jdkVersionConfig );
 		JdkVersionsLogging.logVersions( jdkVersionConfig );
 	}
 

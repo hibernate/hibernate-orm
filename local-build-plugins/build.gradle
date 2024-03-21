@@ -60,6 +60,10 @@ gradlePlugin {
 			id = 'org.hibernate.orm.build.env-settings'
 			implementationClass = 'org.hibernate.orm.env.EnvironmentSettingsPlugin'
 		}
+		jdkVersionSettings {
+			id = 'org.hibernate.orm.build.jdks-settings'
+			implementationClass = 'org.hibernate.orm.toolchains.JdkVersionSettingsPlugin'
+		}
 		envProject {
 			id = 'org.hibernate.orm.build.env-project'
 			implementationClass = 'org.hibernate.orm.env.EnvironmentProjectPlugin'

@@ -146,15 +146,23 @@ delete from Person p where p.association.someAttr = 1
 
 
 [[manually-assigned-generated-ids]]
-== Manually Assigned Identifiers with @GeneratedValue
+== Manually Assigned Identifiers with custom `IdentifierGenerator`s
 
-Manually assigned identifier values can now be used with `GeneratedValue` identifiers.
+Manually assigned identifier values can now be used with custom `IdenfierGenerator`s thanks to the new `allowAssignedIdentifiers()` method.
 
 [source,java]
 ----
+class MyGenerator implements IdentifierGenerator {
+    ...
+    @Override public boolean allowAssignedIdentifiers() {
+        return true;
+    }
+}
+
 @Entity
+@GenericGenerator( type = MyGenerator.class, name = "my_generator" )
 class Book {
-  @Id @GeneratedValue
+  @Id @GeneratedValue( generator = "my_generator" )
   Integer id;
   ...
 }

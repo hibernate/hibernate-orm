@@ -1746,10 +1746,8 @@ public class XmlAnnotationHelper {
 					if ( StringHelper.isNotEmpty( collectionTable.getSchema() ) ) {
 						return collectionTable.getSchema();
 					}
-					else if ( StringHelper.isNotEmpty( xmlDocumentContext.getXmlDocument()
-															   .getDefaults()
-															   .getSchema() ) ) {
-						return xmlDocumentContext.getXmlDocument().getDefaults().getSchema();
+					else if ( StringHelper.isNotEmpty( defaultSchema( xmlDocumentContext ) ) ) {
+						return defaultSchema( xmlDocumentContext );
 					}
 					return null;
 				},
@@ -1757,6 +1755,12 @@ public class XmlAnnotationHelper {
 				annotationUsage,
 				annotationDescriptor
 		);
+	}
+
+	private static String defaultSchema(XmlDocumentContext xmlDocumentContext) {
+		return xmlDocumentContext.getXmlDocument()
+				.getDefaults()
+				.getSchema();
 	}
 
 	public static <T, N, A extends Annotation> void applyOrCatalog(
@@ -1770,10 +1774,8 @@ public class XmlAnnotationHelper {
 					if ( StringHelper.isNotEmpty( collectionTable.getCatalog() ) ) {
 						return collectionTable.getCatalog();
 					}
-					else if ( StringHelper.isNotEmpty( xmlDocumentContext.getXmlDocument()
-															   .getDefaults()
-															   .getCatalog() ) ) {
-						return xmlDocumentContext.getXmlDocument().getDefaults().getCatalog();
+					else if ( StringHelper.isNotEmpty( defaultCatalog( xmlDocumentContext ) ) ) {
+						return defaultCatalog( xmlDocumentContext );
 					}
 					return null;
 				},
@@ -1781,5 +1783,11 @@ public class XmlAnnotationHelper {
 				annotationUsage,
 				annotationDescriptor
 		);
+	}
+
+	private static String defaultCatalog(XmlDocumentContext xmlDocumentContext) {
+		return xmlDocumentContext.getXmlDocument()
+				.getDefaults()
+				.getCatalog();
 	}
 }

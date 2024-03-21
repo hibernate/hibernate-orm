@@ -45,8 +45,10 @@ public class FetchSecondPass implements SecondPass {
 		final String profileName = fetch.getString( "profile" );
 		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( profileName );
 		if ( profile == null ) {
-			throw new AnnotationException( "Property '" + qualify( propertyHolder.getPath(), propertyName )
-												   + "' refers to an unknown fetch profile named '" + profileName + "'" );
+			throw new AnnotationException(
+					"Property '" + qualify( propertyHolder.getPath(), propertyName )
+							+ "' refers to an unknown fetch profile named '" + profileName + "'"
+			);
 		}
 
 		if ( profile.getSource() == ANNOTATIONS ) {

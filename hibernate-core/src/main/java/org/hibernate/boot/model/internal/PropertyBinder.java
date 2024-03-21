@@ -437,8 +437,9 @@ public class PropertyBinder {
 			final GeneratorCreator candidate = generatorCreator( property, usage );
 			if ( candidate != null ) {
 				if ( creator != null ) {
-					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
-														   + "' has multiple '@ValueGenerationType' annotations" );
+					throw new AnnotationException( String.format(
+							"Property `%s` has multiple '@ValueGenerationType' annotations", qualify( holder.getPath(), name )
+					) );
 				}
 				else {
 					creator = candidate;

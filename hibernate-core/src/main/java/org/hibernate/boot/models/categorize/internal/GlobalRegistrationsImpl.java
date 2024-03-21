@@ -723,8 +723,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			applyStringAttributeIfSpecified( "pkColumnValue", generator.getPkColumnValue(), annotationUsage );
 			applyAttributeIfSpecified( "initialValue", generator.getInitialValue(), annotationUsage );
 			applyAttributeIfSpecified( "allocationSize", generator.getAllocationSize(), annotationUsage );
-			applyAttributeIfSpecified( "uniqueConstraints", generator.getUniqueConstraint(), annotationUsage );
-			applyAttributeIfSpecified( "indexes", generator.getIndex(), annotationUsage );
+			applyAttributeIfSpecified( "uniqueConstraints", generator.getUniqueConstraints(), annotationUsage );
+			applyAttributeIfSpecified( "indexes", generator.getIndexes(), annotationUsage );
 			applyStringAttributeIfSpecified( "options", generator.getOptions(), annotationUsage );
 
 			collectTableGenerator( new TableGeneratorRegistration( generator.getName(), annotationUsage ) );

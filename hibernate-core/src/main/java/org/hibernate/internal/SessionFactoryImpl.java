@@ -469,9 +469,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 					if ( generator instanceof IdentifierGenerator ) {
 						final IdentifierGenerator identifierGenerator = (IdentifierGenerator) generator;
 						identifierGenerator.initialize( sqlStringGenerationContext );
-						if ( identifierGenerator.allowAssignedIdentifiers() ) {
-							( (SimpleValue) model.getIdentifier() ).setNullValue( "undefined" );
-						}
+					}
+					if ( generator.allowAssignedIdentifiers() ) {
+						( (SimpleValue) model.getIdentifier() ).setNullValue( "undefined" );
 					}
 					generators.put( model.getEntityName(), generator );
 				} );

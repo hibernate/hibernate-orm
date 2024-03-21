@@ -123,6 +123,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -444,8 +445,21 @@ public class EntityBinder {
 			TableBinder.addIndexes( appliedTable, usage.getList( "indexes" ), context );
 		} );
 
-		annotatedClass.forEachAnnotationUsage( jakarta.persistence.Table.class, (usage) -> {
-			TableBinder.addJpaIndexes( persistentClass.getTable(), usage.getList( "indexes" ), context );
+		final AnnotationUsage<jakarta.persistence.Table> jpaTableUsage = annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class );
+		if ( jpaTableUsage != null ) {
+			TableBinder.addJpaIndexes( persistentClass.getTable(), jpaTableUsage.getList( "indexes" ), context );
+		}
+
+		final InFlightMetadataCollector.EntityTableXref entityTableXref = context
+				.getMetadataCollector()
+				.getEntityTableXref( persistentClass.getEntityName() );
+
+		annotatedClass.forEachAnnotationUsage( jakarta.persistence.SecondaryTable.class, (usage) -> {
+			final Identifier secondaryTableLogicalName = toIdentifier( usage.getString( "name" ) );
+			final Table table = entityTableXref.resolveTable( secondaryTableLogicalName );
+			assert table != null;
+
+			TableBinder.addJpaIndexes( table, usage.getList( "indexes" ), context );
 		} );
 	}
 

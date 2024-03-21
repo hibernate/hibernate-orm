@@ -88,6 +88,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.internal.AnnotationUsageHelper;
@@ -616,15 +617,14 @@ public class XmlAnnotationHelper {
 		}
 
 		final List<AnnotationUsage<Index>> indexes = new ArrayList<>( jaxbIndexes.size() );
+		final AnnotationDescriptor<Index> indexDescriptor = xmlDocumentContext.getModelBuildingContext()
+				.getAnnotationDescriptorRegistry()
+				.getDescriptor( Index.class );
 		jaxbIndexes.forEach( jaxbIndex -> {
-			final MutableAnnotationUsage<Index> indexAnn = XmlProcessingHelper.getOrMakeAnnotation(
-					Index.class,
+			final MutableAnnotationUsage<Index> indexAnn = indexDescriptor.createUsage(
 					target,
-					xmlDocumentContext
+					xmlDocumentContext.getModelBuildingContext()
 			);
-			final AnnotationDescriptor<Index> indexDescriptor = xmlDocumentContext.getModelBuildingContext()
-					.getAnnotationDescriptorRegistry()
-					.getDescriptor( Index.class );
 			applyOr( jaxbIndex, JaxbIndexImpl::getName, "name", indexAnn, indexDescriptor );
 			applyOr( jaxbIndex, JaxbIndexImpl::getColumnList, "columnList", indexAnn, indexDescriptor );
 			applyOr( jaxbIndex, JaxbIndexImpl::isUnique, "unique", indexAnn, indexDescriptor );
@@ -676,10 +676,6 @@ public class XmlAnnotationHelper {
 					createForeignKeyAnnotation( jaxbJoinTable.getInverseForeignKey(), memberDetails, xmlDocumentContext )
 			);
 		}
-
-		applyUniqueConstraints( jaxbJoinTable.getUniqueConstraint(), memberDetails, joinTableAnn, xmlDocumentContext );
-
-		applyIndexes( jaxbJoinTable.getIndex(), memberDetails, joinTableAnn, xmlDocumentContext );
 
 		return joinTableAnn;
 	}
@@ -836,8 +832,8 @@ public class XmlAnnotationHelper {
 		XmlProcessingHelper.applyAttributeIfSpecified( "pkColumnValue", jaxbGenerator.getPkColumnValue(), annotationUsage );
 		XmlProcessingHelper.applyAttributeIfSpecified( "initialValue", jaxbGenerator.getInitialValue(), annotationUsage );
 		XmlProcessingHelper.applyAttributeIfSpecified( "allocationSize", jaxbGenerator.getInitialValue(), annotationUsage );
-		applyUniqueConstraints( jaxbGenerator.getUniqueConstraint(), memberDetails, annotationUsage, xmlDocumentContext );
-		applyIndexes( jaxbGenerator.getIndex(), memberDetails, annotationUsage, xmlDocumentContext );
+		applyUniqueConstraints( jaxbGenerator.getUniqueConstraints(), memberDetails, annotationUsage, xmlDocumentContext );
+		applyIndexes( jaxbGenerator.getIndexes(), memberDetails, annotationUsage, xmlDocumentContext );
 	}
 
 	public static void applyUuidGenerator(
@@ -1042,6 +1038,8 @@ public class XmlAnnotationHelper {
 		applyOr( jaxbTable, JaxbTableMapping::getOptions, "options", tableAnn, annotationDescriptor );
 		applyOr( jaxbTable, JaxbTableMapping::getComment, "comment", tableAnn, annotationDescriptor );
 		applyCheckConstraints( jaxbTable, target, tableAnn, xmlDocumentContext );
+		applyUniqueConstraints( jaxbTable.getUniqueConstraints(), target, tableAnn, xmlDocumentContext );
+		applyIndexes( jaxbTable.getIndexes(), target, tableAnn, xmlDocumentContext );
 	}
 
 	public static void applyNaturalId(

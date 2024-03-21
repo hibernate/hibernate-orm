@@ -1136,7 +1136,8 @@ public class BinderHelper {
 			final ClassDetails packageInfoClassDetails = classDetailsRegistry.resolveClassDetails( packageInfoName );
 			return packageInfoClassDetails.getAnnotationUsage( annotationType );
 		}
-		catch (ClassLoadingException ignore) {}
+		catch (ClassLoadingException ignore) {
+		}
 
 		return null;
 	}

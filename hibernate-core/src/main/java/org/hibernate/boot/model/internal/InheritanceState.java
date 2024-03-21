@@ -277,8 +277,10 @@ public class InheritanceState {
 				}
 			}
 		}
-		throw new AnnotationException( "Entity '" + classDetails.getName() + "' has no identifier"
-											   + " (every '@Entity' class must declare or inherit at least one '@Id' or '@EmbeddedId' property)" );
+		throw new AnnotationException(
+				"Entity '" + classDetails.getName() + "' has no identifier"
+						+ " (every '@Entity' class must declare or inherit at least one '@Id' or '@EmbeddedId' property)"
+		);
 	}
 
 	private void getMappedSuperclassesTillNextEntityOrdered() {

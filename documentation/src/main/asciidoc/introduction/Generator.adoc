@@ -586,8 +586,8 @@ A generated query or finder method can make use of <<key-based-pagination,key-ba
 
 [source,java]
 ----
-@Query("from Book where publicationDate > :minDate")
-KeyedResultList<Book> booksFromDate(Session session, LocalDate minDate, KeyedPage page);
+@Query("where publicationDate > :minDate")
+KeyedResultList<Book> booksFromDate(Session session, LocalDate minDate, KeyedPage<Book> page);
 ----
 
 Note that this method:

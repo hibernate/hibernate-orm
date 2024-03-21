@@ -184,48 +184,10 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	public void processFilterDefinitions() {
 		final Map<String, FilterDefRegistration> filterDefRegistrations = domainModelSource.getGlobalRegistrations().getFilterDefRegistrations();
 		for ( Map.Entry<String, FilterDefRegistration> filterDefRegistrationEntry : filterDefRegistrations.entrySet() ) {
-			final Map<String, JdbcMapping> parameterJdbcMappings = new HashMap<>();
-			final Map<String, ClassDetails> parameterDefinitions = filterDefRegistrationEntry.getValue().getParameters();
-			if ( CollectionHelper.isNotEmpty( parameterDefinitions ) ) {
-				for ( Map.Entry<String, ClassDetails> parameterEntry : parameterDefinitions.entrySet() ) {
-					final String parameterClassName = parameterEntry.getValue().getClassName();
-					final ClassDetails parameterClassDetails = domainModelSource.getClassDetailsRegistry().resolveClassDetails( parameterClassName );
-					parameterJdbcMappings.put(
-							parameterEntry.getKey(),
-							resolveFilterParamType( parameterClassDetails, rootMetadataBuildingContext )
-					);
-				}
-			}
-
-			rootMetadataBuildingContext.getMetadataCollector().addFilterDefinition( new FilterDefinition(
-					filterDefRegistrationEntry.getValue().getName(),
-					filterDefRegistrationEntry.getValue().getDefaultCondition(),
-					parameterJdbcMappings
-			) );
+			final FilterDefRegistration filterDefRegistration = filterDefRegistrationEntry.getValue();
+			final FilterDefinition filterDefinition = filterDefRegistration.toFilterDefinition( rootMetadataBuildingContext );
+			rootMetadataBuildingContext.getMetadataCollector().addFilterDefinition( filterDefinition );
 		}
-
-	}
-
-	private static JdbcMapping resolveFilterParamType(
-			ClassDetails classDetails,
-			MetadataBuildingContext context) {
-		if ( classDetails.isImplementor( UserType.class ) ) {
-			final Class<UserType<?>> impl = classDetails.toJavaClass();
-			return resolveUserType( impl, context );
-
-		}
-
-		if ( classDetails.isImplementor( AttributeConverter.class ) ) {
-			final Class<AttributeConverter<?,?>> impl = classDetails.toJavaClass();
-			return resolveAttributeConverter( impl, context );
-		}
-
-		if ( classDetails.isImplementor( JavaType.class ) ) {
-			final Class<JavaType<?>> impl = classDetails.toJavaClass();
-			return resolveJavaType( impl, context );
-		}
-
-		return resolveBasicType( classDetails.toJavaClass(), context );
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.GenericGenerator;
@@ -106,6 +107,7 @@ import static org.hibernate.boot.models.HibernateAnnotations.JDBC_TYPE_REG;
 import static org.hibernate.boot.models.HibernateAnnotations.TYPE_REG;
 import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyAttributeIfSpecified;
 import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyStringAttributeIfSpecified;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
@@ -314,7 +316,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		registrations.forEach( (registration) -> {
 			final ClassDetails explicitDomainType;
 			final String explicitDomainTypeName = registration.getClazz();
-			if ( StringHelper.isNotEmpty( explicitDomainTypeName ) ) {
+			if ( isNotEmpty( explicitDomainTypeName ) ) {
 				explicitDomainType = sourceModelContext.getClassDetailsRegistry().resolveClassDetails( explicitDomainTypeName );
 			}
 			else {
@@ -483,11 +485,35 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	// Filter-defs
 
 	public void collectFilterDefinitions(AnnotationTarget annotationTarget) {
-		annotationTarget.forEachAnnotationUsage( FILTER_DEF, (usage) -> collectFilterDefinition(
-				usage.getAttributeValue( "name" ),
-				usage.getAttributeValue( "defaultCondition" ),
-				extractFilterParameters( usage )
-		) );
+		annotationTarget.forEachAnnotationUsage( FILTER_DEF, (usage) -> {
+			final Map<String, ClassDetails> paramJdbcMappings;
+			final Map<String, ClassDetails> parameterResolvers;
+			final List<AnnotationUsage<ParamDef>> parameters = usage.getList( "parameters" );
+			if ( CollectionHelper.isEmpty( parameters ) ) {
+				paramJdbcMappings = emptyMap();
+				parameterResolvers = emptyMap();
+			}
+			else {
+				paramJdbcMappings = new HashMap<>();
+				parameterResolvers = new HashMap<>();
+
+				for ( AnnotationUsage<ParamDef> parameter : parameters ) {
+					paramJdbcMappings.put( parameter.getString( "name" ), parameter.getClassDetails( "type" ) );
+					final ClassDetails resolverClassDetails = parameter.getClassDetails( "resolver" );
+					if ( !resolverClassDetails.getName().equals( Supplier.class.getName() ) ) {
+						parameterResolvers.put( parameter.getString( "name" ), resolverClassDetails );
+					}
+				}
+			}
+
+			collectFilterDefinition(
+					usage.getString( "name" ),
+					usage.getString( "defaultCondition" ),
+					usage.getBoolean( "autoEnabled" ),
+					paramJdbcMappings,
+					parameterResolvers
+			);
+		} );
 	}
 
 	private Map<String, ClassDetails> extractFilterParameters(AnnotationUsage<FilterDef> source) {
@@ -508,40 +534,58 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			return;
 		}
 
-		filterDefinitions.forEach( (filterDefinition) -> collectFilterDefinition(
-				filterDefinition.getName(),
-				filterDefinition.getDefaultCondition(),
-				extractFilterParameters( filterDefinition )
-		) );
-	}
+		filterDefinitions.forEach( (filterDefinition) -> {
+			final Map<String, ClassDetails> paramJdbcMappings;
+			final Map<String, ClassDetails> parameterResolvers;
+			final List<JaxbFilterDefImpl.JaxbFilterParamImpl> jaxbParameters = filterDefinition.getFilterParams();
+			if ( jaxbParameters.isEmpty() ) {
+				paramJdbcMappings = emptyMap();
+				parameterResolvers = emptyMap();
+			}
+			else {
+				paramJdbcMappings = new HashMap<>();
+				parameterResolvers = new HashMap<>();
 
-	private Map<String, ClassDetails> extractFilterParameters(JaxbFilterDefImpl source) {
-		final List<JaxbFilterDefImpl.JaxbFilterParamImpl> parameters = source.getFilterParams();
-		if ( isEmpty( parameters ) ) {
-			return null;
-		}
+				for ( JaxbFilterDefImpl.JaxbFilterParamImpl jaxbParameter : jaxbParameters ) {
+					final ClassDetails targetClassDetails = XmlAnnotationHelper.resolveJavaType(
+							jaxbParameter.getType(),
+							sourceModelContext.getClassDetailsRegistry()
+					);
+					paramJdbcMappings.put( jaxbParameter.getName(), targetClassDetails );
 
-		final Map<String, ClassDetails> result = new HashMap<>( parameters.size() );
-		for ( JaxbFilterDefImpl.JaxbFilterParamImpl parameter : parameters ) {
-			// for now, don't check whether nothing was specified; this situation
-			// should resolve to Object - let's see how that reacts
-			final ClassDetails targetClassDetails = XmlAnnotationHelper.resolveJavaType(
-					parameter.getType(),
-					sourceModelContext.getClassDetailsRegistry()
+					if ( isNotEmpty( jaxbParameter.getResolver() ) ) {
+						final ClassDetails resolverClassDetails = XmlAnnotationHelper.resolveJavaType(
+								jaxbParameter.getType(),
+								sourceModelContext.getClassDetailsRegistry()
+						);
+						parameterResolvers.put( jaxbParameter.getName(), resolverClassDetails );
+					}
+				}
+			}
+
+			collectFilterDefinition(
+					filterDefinition.getName(),
+					filterDefinition.getDefaultCondition(),
+					filterDefinition.isAutoEnabled(),
+					paramJdbcMappings,
+					parameterResolvers
 			);
-			result.put( parameter.getName(), targetClassDetails );
-		}
-		return result;
+		} );
 	}
 
-	public void collectFilterDefinition(String name, String defaultCondition, Map<String, ClassDetails> parameters) {
+	public void collectFilterDefinition(
+			String name,
+			String defaultCondition,
+			boolean autoEnabled,
+			Map<String, ClassDetails> parameterTypes,
+			Map<String, ClassDetails> parameterResolvers) {
 		if ( filterDefRegistrations == null ) {
 			filterDefRegistrations = new HashMap<>();
 		}
 
 		final FilterDefRegistration previousEntry = filterDefRegistrations.put(
 				name,
-				new FilterDefRegistration( name, defaultCondition, parameters )
+				new FilterDefRegistration( name, defaultCondition, autoEnabled, parameterTypes, parameterResolvers )
 		);
 		if ( previousEntry != null ) {
 			// legacy code simply allows the collision overwriting the previous
@@ -558,7 +602,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		final String explicitRename = importedUsage.getString( "rename" );
-		final String rename = StringHelper.isNotEmpty( explicitRename )
+		final String rename = isNotEmpty( explicitRename )
 				? explicitRename
 				: StringHelper.unqualify( classDetails.getName() );
 
@@ -915,14 +959,14 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheMode().name() );
 				}
 
-				if ( StringHelper.isNotEmpty( jaxbNamedQuery.getCacheRegion() ) ) {
+				if ( isNotEmpty( jaxbNamedQuery.getCacheRegion() ) ) {
 					final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 					hint.setAttributeValue( "name", AvailableHints.HINT_CACHE_REGION );
 					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheRegion() );
 				}
 			}
 
-			if ( StringHelper.isNotEmpty( jaxbNamedQuery.getComment() ) ) {
+			if ( isNotEmpty( jaxbNamedQuery.getComment() ) ) {
 				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 				hint.setAttributeValue( "name", AvailableHints.HINT_COMMENT );
 				hint.setAttributeValue( "value", jaxbNamedQuery.getComment() );
@@ -967,7 +1011,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			queryAnnotation.setAttributeValue( "name", jaxbNamedQuery.getName() );
 			queryAnnotation.setAttributeValue( "query", jaxbNamedQuery.getQuery() );
 
-			if ( StringHelper.isNotEmpty( jaxbNamedQuery.getResultClass() ) ) {
+			if ( isNotEmpty( jaxbNamedQuery.getResultClass() ) ) {
 				queryAnnotation.setAttributeValue( "resultClass", sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbNamedQuery.getResultClass() ) );
 			}
 
@@ -1002,7 +1046,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheMode().name() );
 				}
 
-				if ( StringHelper.isNotEmpty( jaxbNamedQuery.getCacheRegion() ) ) {
+				if ( isNotEmpty( jaxbNamedQuery.getCacheRegion() ) ) {
 					final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 					hint.setAttributeValue( "name", AvailableHints.HINT_CACHE_REGION );
 					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheRegion() );
@@ -1015,7 +1059,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				hint.setAttributeValue( "value", Boolean.TRUE.toString() );
 			}
 
-			if ( StringHelper.isNotEmpty( jaxbNamedQuery.getComment() ) ) {
+			if ( isNotEmpty( jaxbNamedQuery.getComment() ) ) {
 				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 				hint.setAttributeValue( "name", AvailableHints.HINT_COMMENT );
 				hint.setAttributeValue( "value", jaxbNamedQuery.getComment() );

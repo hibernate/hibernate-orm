@@ -54,6 +54,14 @@ public class ManyToManyAttributeProcessing {
 
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbManyToMany, memberDetails, xmlDocumentContext );
 
+		XmlAnnotationHelper.applyJoinTable( jaxbManyToMany.getJoinTable(), memberDetails, xmlDocumentContext );
+
+		XmlAnnotationHelper.applySqlJoinTableRestriction( jaxbManyToMany.getSqlJoinTableRestriction(), memberDetails, xmlDocumentContext );
+
+		jaxbManyToMany.getJoinTableFilters().forEach( (jaxbFilter) -> {
+			XmlAnnotationHelper.applyJoinTableFilter( jaxbFilter, memberDetails, xmlDocumentContext );
+		} );
+
 		return memberDetails;
 	}
 

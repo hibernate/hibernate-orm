@@ -111,7 +111,7 @@ public class GeneratorBinder {
 					|| identifierGeneratorStrategy.equals( "seqhilo" );
 			if ( generatorType == null || !avoidOverriding ) {
 				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
-				if ( identifierGeneratorStrategy.equals( "assigned" ) ) {
+				if ( DEFAULT_ID_GEN_STRATEGY.equals( identifierGeneratorStrategy ) ) {
 					id.setNullValue( "undefined" );
 				}
 			}

@@ -979,8 +979,8 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				&& isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 			annotation.setValue( "schema", defaults.getSchema() );
 		}
-		buildUniqueConstraints( annotation, subelement.getUniqueConstraint() );
-		buildIndex( annotation, subelement.getIndex() );
+		buildUniqueConstraints( annotation, subelement.getUniqueConstraints() );
+		buildIndex( annotation, subelement.getIndexes() );
 		annotation.setValue( "joinColumns", getJoinColumns( subelement.getJoinColumn(), false ) );
 		annotation.setValue( "inverseJoinColumns", getJoinColumns( subelement.getInverseJoinColumn(), true ) );
 		return AnnotationFactory.create( annotation );
@@ -2772,7 +2772,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		copyAttribute( ad, "pk-column-value", element.getPkColumnValue(), false );
 		copyAttribute( ad, "initial-value", element.getInitialValue(), false );
 		copyAttribute( ad, "allocation-size", element.getAllocationSize(), false );
-		buildUniqueConstraints( ad, element.getUniqueConstraint() );
+		buildUniqueConstraints( ad, element.getUniqueConstraints() );
 		if ( isEmpty( (String) ad.valueOf( "schema" ) )
 				&& isNotEmpty( defaults.getSchema() ) ) {
 			ad.setValue( "schema", defaults.getSchema() );
@@ -3055,8 +3055,8 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 					&& isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 				annotation.setValue( "schema", defaults.getSchema() );
 			}
-			buildUniqueConstraints( annotation, element.getUniqueConstraint() );
-			buildIndex( annotation, element.getIndex() );
+			buildUniqueConstraints( annotation, element.getUniqueConstraints() );
+			buildIndex( annotation, element.getIndexes() );
 			return AnnotationFactory.create( annotation );
 		}
 	}

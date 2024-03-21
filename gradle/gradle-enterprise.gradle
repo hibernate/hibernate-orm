@@ -50,6 +50,11 @@ gradleEnterprise {
             tag "JOB ${System.getenv('JOB_NAME')}"
         }
         tag "JDK ${JavaVersion.current().toString()}"
-        value 'database', rootProject.hasProperty( 'db' ) ? rootProject.properties.db : 'h2'
+        String db = rootProject.hasProperty( 'db' ) ? rootProject.properties.db : 'h2'
+        tag db
+        value 'database', db
+        if ( rootProject.hasProperty( 'ci.node' ) ) {
+            tag rootProject.property('ci.node')
+        }
     }
 }

@@ -37,3 +37,6 @@ jira:
     - "release/"
     - "rules/"
     - "shared/"
+develocity:
+  buildScan:
+    addCheck: true

@@ -7,18 +7,15 @@
 package org.hibernate.orm.test.cfg.persister;
 
 import java.util.Set;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.annotations.Persister;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@Persister( impl = SingleTableEntityPersister.class)
 public class Portal {
 	@Id
 	public Long getId() { return id; }

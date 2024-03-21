@@ -124,6 +124,10 @@ stage('Build') {
 						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 								" -Ptest.jdk.launcher.args='${buildEnv.testJdkLauncherArgs}'"
 					}
+					if ( buildEnv.node ) {
+						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+								" -Pci.node=${buildEnv.node}"
+					}
 					state[buildEnv.tag]['containerName'] = null;
 					stage('Checkout') {
 						checkout scm

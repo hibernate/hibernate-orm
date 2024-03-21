@@ -104,7 +104,19 @@ public class ElementCollectionAttributeProcessing {
 				.getDescriptor( CollectionTable.class );
 
 		XmlAnnotationHelper.applyOr( jaxbCollectionTable, JaxbCollectionTableImpl::getName, "name", collectionTableAnn, collectionTableDescriptor );
-		XmlAnnotationHelper.applyOr( jaxbCollectionTable, JaxbCollectionTableImpl::getSchema, "schema", collectionTableAnn, collectionTableDescriptor );
+		XmlAnnotationHelper.applyOrSchema(
+				jaxbCollectionTable,
+				collectionTableAnn,
+				collectionTableDescriptor,
+				xmlDocumentContext
+		);
+
+		XmlAnnotationHelper.applyOrCatalog(
+				jaxbCollectionTable,
+				collectionTableAnn,
+				collectionTableDescriptor,
+				xmlDocumentContext
+		);
 		XmlAnnotationHelper.applyOr( jaxbCollectionTable, JaxbCollectionTableImpl::getOptions, "options", collectionTableAnn, collectionTableDescriptor );
 
 		collectionTableAnn.setAttributeValue( "joinColumns", XmlAnnotationHelper.createJoinColumns( jaxbCollectionTable.getJoinColumns(), xmlDocumentContext ) );

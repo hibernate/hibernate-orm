@@ -138,11 +138,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean repository = false;
 
 	/**
-	 * A repository type that this repository inherits.
-	 */
-	private @Nullable TypeMirror superRepository;
-
-	/**
 	 * The type of the "session getter" method of a DAO-style repository.
 	 */
 	private String sessionType = ENTITY_MANAGER;
@@ -221,15 +216,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	@Override
 	public @Nullable String getSupertypeName() {
 		if ( repository ) {
-			if ( superRepository == null ) {
-				return null;
-			}
-			else {
-				final DeclaredType declaredType = (DeclaredType) superRepository;
-				final TypeElement typeElement = (TypeElement) declaredType.asElement();
-				// the import should already have been added earlier
-				return importType( typeElement.getQualifiedName().toString() );
-			}
+			return null;
 		}
 		else {
 			return findMappedSuperClass( this, context );
@@ -237,7 +224,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	@Override
-	public final String getPackageName() {
+	public String getPackageName() {
 		return getPackageName( context, element );
 	}
 
@@ -350,41 +337,46 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	protected final void init() {
 		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type '" + getQualifiedName() + "'" );
 
-		determineAccessTypeForHierarchy( element, context );
-		entityAccessTypeInfo = castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
-
-		final List<VariableElement> fieldsOfClass = fieldsIn( element.getEnclosedElements() );
-		final List<ExecutableElement> methodsOfClass = methodsIn( element.getEnclosedElements() );
-		final List<ExecutableElement> gettersAndSettersOfClass = new ArrayList<>();
-		final List<ExecutableElement> queryMethods = new ArrayList<>();
-		final List<ExecutableElement> lifecycleMethods = new ArrayList<>();
-		for ( ExecutableElement method: methodsOfClass ) {
-			if ( isGetterOrSetter( method ) ) {
-				gettersAndSettersOfClass.add( method );
-			}
-			else if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
-				queryMethods.add( method );
-			}
-			else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE, JD_SAVE ) ) {
-				lifecycleMethods.add( method );
-			}
-		}
-
 		setupSession();
 
+		final List<ExecutableElement> queryMethods = new ArrayList<>();
+		final List<ExecutableElement> lifecycleMethods = new ArrayList<>();
+
 		if ( repository ) {
-			superRepository = findSuperRepository( element );
-			if ( superRepository != null ) {
-				importType( superRepository.toString() );
+			final List<ExecutableElement> methodsOfClass = new ArrayList<>();
+			addMethods( element, methodsOfClass );
+			for ( ExecutableElement method: methodsOfClass ) {
+				if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
+					queryMethods.add( method );
+				}
+				else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE, JD_SAVE ) ) {
+					lifecycleMethods.add( method );
+				}
 			}
 		}
+		else {
+			determineAccessTypeForHierarchy( element, context );
+			entityAccessTypeInfo = castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
 
-		if ( managed && !jakartaDataStaticModel ) {
-			putMember( "class", new AnnotationMetaType(this) );
+			final List<VariableElement> fieldsOfClass = fieldsIn( element.getEnclosedElements() );
+			final List<ExecutableElement> methodsOfClass = methodsIn( element.getEnclosedElements() );
+			final List<ExecutableElement> gettersAndSettersOfClass = new ArrayList<>();
+			for ( ExecutableElement method: methodsOfClass ) {
+				if ( isGetterOrSetter( method ) ) {
+					gettersAndSettersOfClass.add( method );
+				}
+				else if ( containsAnnotation( method, HQL, SQL, FIND ) ) {
+					queryMethods.add( method );
+				}
+			}
+
+			if ( managed && !jakartaDataStaticModel ) {
+				putMember( "class", new AnnotationMetaType(this) );
+			}
+
+			addPersistentMembers( fieldsOfClass, AccessType.FIELD );
+			addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 		}
-
-		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
-		addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 
 		addAuxiliaryMembers();
 
@@ -395,6 +387,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		addQueryMethods( queryMethods );
 
 		initialized = true;
+	}
+
+	private void addMethods(TypeElement element, List<ExecutableElement> methodsOfClass) {
+		for ( TypeMirror typeMirror : element.getInterfaces() ) {
+			final DeclaredType declaredType = (DeclaredType) typeMirror;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			addMethods( typeElement, methodsOfClass );
+		}
+		for ( ExecutableElement method : methodsIn( element.getEnclosedElements() ) ) {
+			methodsOfClass.removeIf( m -> context.getElementUtils().overrides(method, m, element) );
+			methodsOfClass.add( method );
+		}
 	}
 
 	private void addDefaultConstructor() {
@@ -450,30 +454,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( jakartaDataRepository && !quarkusInjection ) {
 			addDefaultConstructor();
 		}
-	}
-
-	private @Nullable TypeMirror findSuperRepository(TypeElement type) {
-		for ( TypeMirror superinterface : type.getInterfaces() ) {
-			if ( superinterface.getKind() == TypeKind.DECLARED ) {
-				final DeclaredType declaredType = (DeclaredType) superinterface;
-				final TypeElement typeElement = (TypeElement) declaredType.asElement();
-				if ( hasAnnotation( typeElement, JD_REPOSITORY ) ) {
-					return superinterface;
-				}
-				else if ( typeElement.getEnclosedElements().stream()
-						.anyMatch( member -> hasAnnotation( member,
-								HQL, SQL, JD_QUERY, FIND, JD_FIND, JD_INSERT, JD_UPDATE, JD_DELETE, JD_SAVE ) ) ) {
-					return superinterface;
-				}
-				else {
-					final TypeMirror ret = findSuperRepository( typeElement );
-					if ( ret != null ) {
-						return ret;
-					}
-				}
-			}
-		}
-		return null;
 	}
 
 	private @Nullable ExecutableElement findSessionGetter(TypeElement type) {

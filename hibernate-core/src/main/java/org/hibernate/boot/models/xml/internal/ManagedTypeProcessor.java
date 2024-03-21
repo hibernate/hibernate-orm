@@ -477,9 +477,7 @@ public class ManagedTypeProcessor {
 			extendsAnn.setAttributeValue( "superType", jaxbEntity.getExtends() );
 		}
 
-		if ( jaxbEntity.getTable() != null ) {
-			XmlAnnotationHelper.applyTable( jaxbEntity.getTable(), classDetails, xmlDocumentContext );
-		}
+		XmlAnnotationHelper.applyTable( jaxbEntity.getTable(), classDetails, xmlDocumentContext );
 
 		final JaxbAttributesContainerImpl attributes = jaxbEntity.getAttributes();
 		if ( attributes != null ) {

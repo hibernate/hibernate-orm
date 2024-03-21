@@ -140,7 +140,7 @@ public class SimpleProcessorTests {
 		assertThat( filterDefRegistrations ).containsKey( "name_filter" );
 		final FilterDefRegistration nameFilter = filterDefRegistrations.get( "name_filter" );
 		assertThat( nameFilter.getDefaultCondition() ).isEqualTo( "name = :name" );
-		final Map<String, ClassDetails> parameters = nameFilter.getParameters();
+		final Map<String, ClassDetails> parameters = nameFilter.getParameterTypes();
 		assertThat( parameters ).hasSize( 1 );
 		assertThat( parameters ).containsKey( "name" );
 		assertThat( parameters.get( "name" ).getName() ).isEqualTo( String.class.getName() );

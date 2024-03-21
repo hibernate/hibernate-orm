@@ -44,20 +44,17 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(
-			String name,
-			String defaultCondition,
-			@Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
-		this( name, defaultCondition, explicitParamJaMappings, Collections.emptyMap(), false, false);
+	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
+		this( name, defaultCondition, false, false, explicitParamJaMappings, Collections.emptyMap() );
 	}
 
 	public FilterDefinition(
 			String name,
 			String defaultCondition,
-			@Nullable Map<String, JdbcMapping> explicitParamJaMappings,
-			Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap,
 			boolean autoEnabled,
-			boolean applyToLoadByKey) {
+			boolean applyToLoadByKey,
+			@Nullable Map<String, JdbcMapping> explicitParamJaMappings,
+			@Nullable Map<String, ManagedBean<? extends  Supplier<?>>> parameterResolverMap) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		if ( explicitParamJaMappings != null ) {

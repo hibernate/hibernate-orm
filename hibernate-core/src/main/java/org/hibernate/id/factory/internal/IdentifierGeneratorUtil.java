@@ -10,7 +10,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -23,6 +22,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.generator.Generator;
 
+import java.util.Map;
 import java.util.Properties;
 
 public class IdentifierGeneratorUtil {
@@ -34,72 +34,62 @@ public class IdentifierGeneratorUtil {
 			String defaultCatalog,
 			String defaultSchema,
 			RootClass rootClass) {
+		return identifierGeneratorFactory.createIdentifierGenerator(
+				simpleValue.getIdentifierGeneratorStrategy(),
+				simpleValue.getType(),
+				collectParameters( simpleValue, dialect, defaultCatalog, defaultSchema, rootClass )
+		);
+	}
+
+	static Properties collectParameters(
+			SimpleValue simpleValue, Dialect dialect, String defaultCatalog, String defaultSchema, RootClass rootClass) {
+		final ConfigurationService configService =
+				simpleValue.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+						.requireService( ConfigurationService.class );
+
 		final Properties params = new Properties();
 
 		// This is for backwards compatibility only;
 		// when this method is called by Hibernate ORM, defaultSchema and defaultCatalog are always
 		// null, and defaults are handled later.
 		if ( defaultSchema != null ) {
-			params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema );
+			params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema);
 		}
 
 		if ( defaultCatalog != null ) {
-			params.setProperty( PersistentIdentifierGenerator.CATALOG, defaultCatalog );
+			params.setProperty( PersistentIdentifierGenerator.CATALOG, defaultCatalog);
 		}
 
 		// default initial value and allocation size per-JPA defaults
-		params.setProperty( OptimizableGenerator.INITIAL_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
-		final ConfigurationService cs = simpleValue.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-				.requireService( ConfigurationService.class );
+		params.setProperty( OptimizableGenerator.INITIAL_PARAM,
+				String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
 
-		final String idNamingStrategy = cs.getSetting(
-				AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
-				StandardConverters.STRING,
-				null
-		);
-
-		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
-				|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-				|| SingleNamingStrategy.class.getName().equals( idNamingStrategy ) ) {
-			params.setProperty( OptimizableGenerator.INCREMENT_PARAM, "1" );
-		}
-		else {
-			params.setProperty(
-					OptimizableGenerator.INCREMENT_PARAM,
-					String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE )
-			);
-		}
+		params.setProperty( OptimizableGenerator.INCREMENT_PARAM,
+				String.valueOf( defaultIncrement( configService ) ) );
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//	  splitting it up into schema/catalog/table names
-		final String tableName = simpleValue.getTable().getQuotedName(dialect);
+		final String tableName = simpleValue.getTable().getQuotedName( dialect );
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
 
 		//pass the column name (a generated id almost always has a single column)
-		final String columnName = ( (Column) simpleValue.getSelectables().get(0) ).getQuotedName(dialect);
+		final Column column = (Column) simpleValue.getSelectables().get(0);
+		final String columnName = column.getQuotedName( dialect );
 		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
 
 		//pass the entity-name, if not a collection-id
 		if ( rootClass != null ) {
 			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
 			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
-			// The table name is not really a good default for subselect entities, so use the JPA entity name which is short
-			if ( simpleValue.getTable().isSubselect() ) {
-				params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, rootClass.getJpaEntityName() );
-			}
-			else {
-				params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, simpleValue.getTable().getName() );
-			}
+			// The table name is not really a good default for subselect entities,
+			// so use the JPA entity name which is short
+			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE,
+					simpleValue.getTable().isSubselect()
+							? rootClass.getJpaEntityName()
+							: simpleValue.getTable().getName() );
 
-			final StringBuilder tables = new StringBuilder();
-			for ( Table table : rootClass.getIdentityTables() ) {
-				tables.append( table.getQuotedName(dialect) );
-				if ( tables.length()>0 ) {
-					tables.append( ", " );
-				}
-			}
-			params.setProperty( PersistentIdentifierGenerator.TABLES, tables.toString() );
+			params.setProperty( PersistentIdentifierGenerator.TABLES,
+					identityTablesString( dialect, rootClass ) );
 		}
 		else {
 			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
@@ -112,25 +102,42 @@ public class IdentifierGeneratorUtil {
 
 		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
 
-		params.put(
-				IdentifierGenerator.CONTRIBUTOR_NAME,
-				simpleValue.getBuildingContext().getCurrentContributorName()
-		);
+		params.put( IdentifierGenerator.CONTRIBUTOR_NAME,
+				simpleValue.getBuildingContext().getCurrentContributorName() );
 
-		if ( cs.getSettings().get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) != null ) {
-			params.put(
-					AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
-					cs.getSettings().get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER )
-			);
+		final Map<String, Object> settings = configService.getSettings();
+		if ( settings.containsKey( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) ) {
+			params.put( AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
+					settings.get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) );
 		}
 
-		final Generator generator = identifierGeneratorFactory.createIdentifierGenerator(
-				simpleValue.getIdentifierGeneratorStrategy(),
-				simpleValue.getType(),
-				params
-		);
+		return params;
+	}
 
-		return generator;
+	private static String identityTablesString(Dialect dialect, RootClass rootClass) {
+		final StringBuilder tables = new StringBuilder();
+		for ( Table table : rootClass.getIdentityTables() ) {
+			tables.append( table.getQuotedName( dialect ) );
+			if ( tables.length()>0 ) {
+				tables.append( ", " );
+			}
+		}
+		return tables.toString();
+	}
+
+	private static int defaultIncrement(ConfigurationService configService) {
+		final String idNamingStrategy =
+				configService.getSetting( AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
+						StandardConverters.STRING, null );
+		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
+				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
+				|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
+				|| SingleNamingStrategy.class.getName().equals( idNamingStrategy ) ) {
+			return 1;
+		}
+		else {
+			return OptimizableGenerator.DEFAULT_INCREMENT_SIZE;
+		}
 	}
 
 }

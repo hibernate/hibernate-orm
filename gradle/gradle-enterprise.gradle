@@ -46,9 +46,6 @@ gradleEnterprise {
 
         uploadInBackground = !settings.ext.isCiEnvironment
 
-        if ( settings.ext.isCiEnvironment ) {
-            tag "JOB ${System.getenv('JOB_NAME')}"
-        }
         tag "JDK ${JavaVersion.current().toString()}"
         String db = rootProject.hasProperty( 'db' ) ? rootProject.properties.db : 'h2'
         tag db

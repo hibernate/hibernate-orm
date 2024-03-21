@@ -157,14 +157,14 @@ public class XmlProcessingSmokeTests {
 
 		final FilterDefRegistration amountFilter = filterDefRegistrations.get( "amount_filter" );
 		assertThat( amountFilter.getDefaultCondition() ).isEqualTo( "amount = :amount" );
-		assertThat( amountFilter.getParameters() ).hasSize( 1 );
-		final ClassDetails amountParameterType = amountFilter.getParameters().get( "amount" );
+		assertThat( amountFilter.getParameterTypes() ).hasSize( 1 );
+		final ClassDetails amountParameterType = amountFilter.getParameterTypes().get( "amount" );
 		assertThat( amountParameterType.getClassName() ).isEqualTo( int.class.getName() );
 
 		final FilterDefRegistration nameFilter = filterDefRegistrations.get( "name_filter" );
 		assertThat( nameFilter.getDefaultCondition() ).isEqualTo( "name = :name" );
-		assertThat( nameFilter.getParameters() ).hasSize( 1 );
-		final ClassDetails nameParameterType = nameFilter.getParameters().get( "name" );
+		assertThat( nameFilter.getParameterTypes() ).hasSize( 1 );
+		final ClassDetails nameParameterType = nameFilter.getParameterTypes().get( "name" );
 		assertThat( nameParameterType.getClassName() ).isEqualTo( String.class.getName() );
 	}
 }

@@ -155,28 +155,34 @@ stage('Build') {
 						stage('Test') {
 							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
-								try {
-									if (buildEnv.dbLockableResource == null) {
-										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
-											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
-											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												sh cmd
+								withCredentials([string(credentialsId: helper.scmSource.pullRequest ?
+										'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key',
+										variable: 'GRADLE_ENTERPRISE_ACCESS_KEY')]) {
+									withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
+										try {
+											if (buildEnv.dbLockableResource == null) {
+												withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
+													sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
+													timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+														sh cmd
+													}
+												}
+											}
+											else {
+												lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
+													if ( buildEnv.dbLockResourceAsHost ) {
+														cmd += " -DdbHost=${LOCKED_RESOURCE}"
+													}
+													timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+														sh cmd
+													}
+												}
 											}
 										}
-									}
-									else {
-										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
-											if ( buildEnv.dbLockResourceAsHost ) {
-												cmd += " -DdbHost=${LOCKED_RESOURCE}"
-											}
-											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												sh cmd
-											}
+										finally {
+											junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
 										}
 									}
-								}
-								finally {
-									junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
 								}
 							}
 						}

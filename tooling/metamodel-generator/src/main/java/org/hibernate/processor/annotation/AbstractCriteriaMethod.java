@@ -1,0 +1,198 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.processor.annotation;
+
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import static org.hibernate.processor.util.TypeUtils.isPrimitive;
+
+/**
+ * @author Gavin King
+ */
+public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
+
+	private final List<Boolean> multivalued;
+	private final List<Boolean> paramPatterns;
+
+	public AbstractCriteriaMethod(
+			AnnotationMetaEntity annotationMetaEntity,
+			String methodName, String entity,
+			boolean belongsToDao,
+			String sessionType, String sessionName,
+			List<String> fetchProfiles,
+			List<String> paramNames,
+			List<String> paramTypes,
+			List<OrderBy> orderBys,
+			boolean addNonnullAnnotation,
+			boolean convertToDataExceptions,
+			List<Boolean> multivalued,
+			List<Boolean> paramPatterns) {
+		super(annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
+				paramNames, paramTypes, orderBys, addNonnullAnnotation, convertToDataExceptions);
+		this.multivalued = multivalued;
+		this.paramPatterns = paramPatterns;
+	}
+
+	@Override
+	public String getAttributeDeclarationString() {
+		final List<String> paramTypes = parameterTypes();
+		final StringBuilder declaration = new StringBuilder();
+		comment( declaration );
+		modifiers( declaration );
+		preamble( declaration, returnType(), paramTypes );
+		chainSession( declaration );
+		nullChecks( paramTypes, declaration );
+		createBuilder(declaration);
+		createCriteriaQuery( declaration );
+		where( declaration, paramTypes );
+//		orderBy( paramTypes, declaration );
+		executeQuery( declaration, paramTypes );
+		convertExceptions( declaration );
+		chainSessionEnd( false, declaration );
+		closingBrace( declaration );
+		return declaration.toString();
+	}
+
+	abstract void executeQuery(StringBuilder declaration, List<String> paramTypes);
+
+	abstract void createCriteriaQuery(StringBuilder declaration);
+
+	abstract String returnType();
+
+	@Override
+	void createQuery(StringBuilder declaration) {
+		declaration
+				.append(localSessionName())
+				.append(".createQuery(_query)\n");
+	}
+
+	private void createBuilder(StringBuilder declaration) {
+		declaration
+				.append("\tvar _builder = ")
+				.append(localSessionName())
+				.append(isUsingEntityManager()
+						? ".getEntityManagerFactory()"
+						: ".getFactory()")
+				.append(".getCriteriaBuilder();\n");
+	}
+
+	void nullChecks(List<String> paramTypes, StringBuilder declaration) {
+		for ( int i = 0; i< paramNames.size(); i++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( !isNullable(i) && !isPrimitive(paramType) ) {
+				nullCheck( declaration, paramName );
+			}
+		}
+	}
+
+	private static void nullCheck(StringBuilder declaration, String paramName) {
+		declaration
+				.append("\tif (")
+				.append(paramName.replace('.', '$'))
+				.append(" == null) throw new IllegalArgumentException(\"Null ")
+				.append(paramName)
+				.append("\");\n");
+	}
+
+	void where(StringBuilder declaration, List<String> paramTypes) {
+		declaration
+				.append("\t_query.where(");
+		boolean first = true;
+		for ( int i = 0; i < paramNames.size(); i ++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( !isSpecialParam(paramType) ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					declaration
+							.append(", ");
+				}
+				condition(declaration, i, paramName, paramType );
+			}
+		}
+		declaration
+				.append("\n\t);");
+	}
+
+	private void condition(StringBuilder declaration, int i, String paramName, String paramType) {
+		declaration
+				.append("\n\t\t\t");
+		final String parameterName = paramName.replace('.', '$');
+		if ( isNullable(i) && !isPrimitive(paramType) ) {
+			declaration
+					.append(parameterName)
+					.append("==null")
+					.append("\n\t\t\t\t? ")
+					.append("_entity");
+			path( declaration, paramName );
+			declaration
+					.append(".isNull()")
+					.append("\n\t\t\t\t: ");
+		}
+		if ( multivalued.get(i) ) {
+			declaration
+					.append("_entity");
+			path( declaration, paramName );
+			declaration
+					.append(".in(");
+			if ( paramType.endsWith("[]") ) {
+				declaration
+						.append("(Object[]) ")
+						//TODO: only safe if we are binding literals as parameters!!!
+						.append(parameterName);
+
+			}
+			else {
+				declaration
+						.append(annotationMetaEntity.staticImport(StreamSupport.class.getName(), "stream"))
+						.append('(')
+						//TODO: only safe if we are binding literals as parameters!!!
+						.append(parameterName)
+						.append(".spliterator(), false).collect(") // ugh, very ugly!
+						.append(annotationMetaEntity.staticImport(Collectors.class.getName(), "toList"))
+						.append("())");
+			}
+			declaration
+					.append(")");
+		}
+		else {
+			//TODO: change to use Expression.equalTo() in JPA 3.2
+			declaration
+					.append("_builder.")
+					.append(paramPatterns.get(i) ? "like" : "equal")
+					.append("(_entity");
+			path( declaration, paramName );
+			declaration
+					.append(", ")
+					//TODO: only safe if we are binding literals as parameters!!!
+					.append(parameterName)
+					.append(')');
+		}
+	}
+
+	private void path(StringBuilder declaration, String paramName) {
+		final StringTokenizer tokens = new StringTokenizer(paramName, ".");
+		String typeName = entity;
+		while ( typeName!= null && tokens.hasMoreTokens() ) {
+			final String memberName = tokens.nextToken();
+			declaration
+					.append(".get(")
+					.append(annotationMetaEntity.importType(typeName + '_'))
+					.append('.')
+					.append(memberName)
+					.append(')');
+			typeName = annotationMetaEntity.getMemberType(typeName, memberName);
+		}
+	}
+
+}

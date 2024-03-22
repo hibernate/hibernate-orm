@@ -149,6 +149,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	
 	private final Map<String,String> memberTypes = new HashMap<>();
 
+	/**
+	 * The primary entity type for a repository
+	 */
+	private @Nullable TypeElement primaryEntity;
+
 	public AnnotationMetaEntity(
 			TypeElement element, Context context, boolean managed,
 			boolean jakartaDataStaticMetamodel) {
@@ -349,10 +354,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
 					queryMethods.add( method );
 				}
-				else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE, JD_SAVE ) ) {
+				else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_SAVE ) ) {
 					lifecycleMethods.add( method );
 				}
+				else if ( hasAnnotation( method, JD_DELETE) ) {
+					if ( isDeleteLifecycle(method) ) {
+						lifecycleMethods.add( method );
+					}
+					else {
+						queryMethods.add( method );
+					}
+				}
 			}
+
+			primaryEntity = primaryEntity( lifecycleMethods );
 		}
 		else {
 			determineAccessTypeForHierarchy( element, context );
@@ -391,6 +406,43 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		addQueryMethods( queryMethods );
 
 		initialized = true;
+	}
+
+	private @Nullable TypeElement primaryEntity(List<ExecutableElement> lifecycleMethods) {
+		for (TypeMirror typeMirror : element.getInterfaces()) {
+			final DeclaredType declaredType = (DeclaredType) typeMirror;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			final Name name = typeElement.getQualifiedName();
+			if ( declaredType.getTypeArguments().size() == 2
+					&& (name.contentEquals(BASIC_REPOSITORY)
+						|| name.contentEquals(CRUD_REPOSITORY)
+						|| name.contentEquals(DATA_REPOSITORY)) ) {
+				final TypeMirror entityType = declaredType.getTypeArguments().get(0);
+				if ( entityType.getKind() == TypeKind.DECLARED ) {
+					final DeclaredType entityDeclared = (DeclaredType) entityType;
+					return (TypeElement) entityDeclared.asElement();
+				}
+			}
+		}
+		TypeElement result = null;
+		final Types types = context.getTypeUtils();
+		for ( ExecutableElement element : lifecycleMethods ) {
+			if ( element.getParameters().size()==1 ) {
+				final VariableElement param = element.getParameters().get(0);
+				final DeclaredType declaredType = entityType( parameterType(param) );
+				if ( declaredType != null ) {
+					if ( result == null ) {
+						result = (TypeElement) declaredType.asElement();
+					}
+					else {
+						if ( !types.isSameType( result.asType(), declaredType ) ) {
+							return null;
+						}
+					}
+				}
+			}
+		}
+		return result;
 	}
 
 	private void addMethods(TypeElement element, List<ExecutableElement> methodsOfClass) {
@@ -870,10 +922,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void addLifecycleMethods(List<ExecutableElement> queryMethods) {
 		for ( ExecutableElement method : queryMethods) {
 			if ( method.getModifiers().contains(Modifier.ABSTRACT) ) {
-				if ( hasAnnotation( method, JD_INSERT, JD_UPDATE, JD_DELETE, JD_SAVE ) ) {
-					addLifecycleMethod( method );
-				}
+				addLifecycleMethod( method );
 			}
+		}
+	}
+
+	private boolean isDeleteLifecycle(ExecutableElement method) {
+		if ( method.getParameters().size() == 1 ) {
+			final VariableElement parameter = method.getParameters().get(0);
+			final DeclaredType declaredType = entityType( parameterType(parameter) );
+			return declaredType != null
+				&& containsAnnotation( declaredType.asElement(), ENTITY );
+
+			}
+		else {
+			return false;
 		}
 	}
 
@@ -1017,6 +1080,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		if ( hasAnnotation( method, FIND, JD_FIND ) ) {
 			addFinderMethod( method, returnType, containerType );
+		}
+		else if ( hasAnnotation( method, JD_DELETE ) ) {
+			createCriteriaDelete( method, returnType );
 		}
 	}
 
@@ -1283,6 +1349,50 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						jakartaDataRepository
 				)
 		);
+	}
+
+	private void createCriteriaDelete(
+			ExecutableElement method, @Nullable TypeMirror returnType) {
+		final TypeElement entity = primaryEntity;
+		if ( entity == null) {
+			context.message( method, "repository does not have a well-defined primary entity type",
+					Diagnostic.Kind.ERROR);
+		}
+		else {
+			final String methodName = method.getSimpleName().toString();
+			final List<String> paramNames = parameterNames( method, entity );
+			final List<String> paramTypes = parameterTypes( method );
+			final List<Boolean> paramPatterns = parameterPatterns( method );
+			final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
+			final String methodKey = methodName + paramTypes;
+			final List<Boolean> multivalued = new ArrayList<>();
+			for ( VariableElement parameter : method.getParameters() ) {
+				if ( isFinderParameterMappingToAttribute( parameter ) ) {
+					multivalued.add( validateFinderParameter( entity, parameter ) == FieldType.MULTIVALUED );
+				}
+				else {
+					multivalued.add( false );
+				}
+			}
+			putMember( methodKey,
+					new CriteriaDeleteMethod(
+							this,
+							methodName,
+							entity.getQualifiedName().toString(),
+							returnType==null ? "void" : returnType.toString(),
+							paramNames,
+							paramTypes,
+							parameterNullability(method, entity),
+							multivalued,
+							paramPatterns,
+							repository,
+							sessionType[0],
+							sessionType[1],
+							context.addNonnullAnnotation(),
+							jakartaDataRepository
+					)
+			);
+		}
 	}
 
 	private void wrongTypeArgError(String entity, VariableElement parameter, boolean pageRequest) {

@@ -76,6 +76,9 @@ public final class Constants {
 	public static final String JD_PAGE_REQUEST = "jakarta.data.page.PageRequest";
 	public static final String JD_PAGE = "jakarta.data.page.Page";
 	public static final String JD_CURSORED_PAGE = "jakarta.data.page.CursoredPage";
+	public static final String BASIC_REPOSITORY = "jakarta.data.repository.BasicRepository";
+	public static final String CRUD_REPOSITORY = "jakarta.data.repository.CrudRepository";
+	public static final String DATA_REPOSITORY = "jakarta.data.repository.DataRepository";
 
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
 	public static final String HIB_PAGE = "org.hibernate.query.Page";

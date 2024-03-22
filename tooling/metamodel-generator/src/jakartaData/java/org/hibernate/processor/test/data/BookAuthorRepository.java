@@ -30,6 +30,12 @@ public interface BookAuthorRepository {
 
 	StatelessSession session();
 
+	@Delete
+	int deleteByIdIn(String[] isbn);
+
+	@Delete
+	void deleteById(String isbn);
+
 	@Insert
 	void insertBooks0(Book[] books);
 

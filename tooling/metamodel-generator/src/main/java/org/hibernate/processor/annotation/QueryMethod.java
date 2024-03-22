@@ -80,7 +80,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
-		final StringBuilder returnType = returnType();
+		final String returnType = returnType();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( paramTypes, declaration );
@@ -123,7 +123,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		declaration.append(")\n");
 	}
 
-	private void castResult(StringBuilder declaration, StringBuilder returnType) {
+	private void castResult(StringBuilder declaration, String returnType) {
 		if ( isNative && returnTypeName != null && containerType == null
 				&& isUsingEntityManager() ) {
 			// EntityManager.createNativeQuery() does not return TypedQuery,
@@ -192,7 +192,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append(")\n");
 	}
 
-	private StringBuilder returnType() {
+	private String returnType() {
 		final StringBuilder type = new StringBuilder();
 		if ( "[]".equals(containerType) ) {
 			if ( returnTypeName == null ) {
@@ -219,7 +219,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				type.append('>');
 			}
 		}
-		return type;
+		return type.toString();
 	}
 
 	private void comment(StringBuilder declaration) {

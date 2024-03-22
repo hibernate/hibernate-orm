@@ -1,5 +1,8 @@
 package org.hibernate.processor.test.data.eg;
 
+import jakarta.data.Limit;
+import jakarta.data.Order;
+import jakarta.data.Sort;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.By;
@@ -25,18 +28,22 @@ public interface Library {
 	List<Book> books(@By("isbn") List<String> isbns);
 
 	@Find
-	Book books(String title, LocalDate publicationDate);
+	Book book(String title, LocalDate publicationDate);
+
+	@Find
+	List<Book> publications(Type type, Sort<Book> sort);
 
 	@Find
 	@OrderBy("title")
 	List<Book> booksByPublisher(String publisher_name);
 
 	@Query("where title like :titlePattern")
+	@OrderBy("title")
 	List<Book> booksByTitle(String titlePattern);
 
 	// not required by Jakarta Data
 	record BookWithAuthor(Book book, Author author) {}
-	@Query("select b, a from Book b join b.authors a")
+	@Query("select b, a from Book b join b.authors a order by b.isbn, a.ssn")
 	List<BookWithAuthor> booksWithAuthors();
 
 	@Insert
@@ -69,14 +76,20 @@ public interface Library {
 	@Update
 	void update(Author author);
 
+	@Save
+	void save(Publisher publisher);
+
+	@Delete
+	void delete(Publisher publisher);
+
 	@Find
 	@OrderBy("isbn")
 	CursoredPage<Book> allBooks(PageRequest<Book> pageRequest);
 
 	@Find
 	@OrderBy("name")
-	@OrderBy("address.city") //not working currently
-	List<Author> authors();
+	@OrderBy("address.city")
+	List<Author> allAuthors(Order<Author> order, Limit limit);
 
 	@Find
 	List<Author> authorsByCity(@By("address.city") String city);

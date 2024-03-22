@@ -92,34 +92,38 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				.append("\n * Find ")
 				.append("{@link ")
 				.append(annotationMetaEntity.importType(entity))
-				.append("} by ");
+				.append("}");
 		long paramCount = paramTypes.stream()
 				.filter(type -> !isSpecialParam(type))
 				.count();
-		int count = 0;
-		for (int i = 0; i < paramTypes.size(); i++) {
-			String type = paramTypes.get(i);
-			if ( !isSpecialParam(type) ) {
-				if ( count>0 ) {
-					if ( count + 1 == paramCount) {
-						declaration
-								.append(paramCount>2 ? ", and " : " and "); //Oxford comma
+		if ( paramCount> 0 ) {
+			declaration
+					.append(" by ");
+			int count = 0;
+			for (int i = 0; i < paramTypes.size(); i++) {
+				final String type = paramTypes.get(i);
+				if ( !isSpecialParam(type) ) {
+					if ( count>0 ) {
+						if ( count + 1 == paramCount) {
+							declaration
+									.append(paramCount>2 ? ", and " : " and "); //Oxford comma
+						}
+						else {
+							declaration
+									.append(", ");
+						}
 					}
-					else {
-						declaration
-								.append(", ");
-					}
+					count++;
+					final String path = paramNames.get(i);
+					declaration
+							.append("{@link ")
+							.append(annotationMetaEntity.importType(entity))
+							.append('#')
+							.append(qualifier(path))
+							.append(' ')
+							.append(path)
+							.append("}");
 				}
-				count++;
-				final String path = paramNames.get(i);
-				declaration
-						.append("{@link ")
-						.append(annotationMetaEntity.importType(entity))
-						.append('#')
-						.append(qualifier(path))
-						.append(' ')
-						.append(path)
-						.append("}");
 			}
 		}
 		declaration

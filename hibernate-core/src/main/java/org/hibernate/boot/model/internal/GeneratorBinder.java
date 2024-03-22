@@ -34,6 +34,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
@@ -42,6 +43,7 @@ import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.IdentifierGeneratorCreator;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 
 import org.jboss.logging.Logger;
 
@@ -55,6 +57,7 @@ import jakarta.persistence.Version;
 
 import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
+import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.collectParameters;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 public class GeneratorBinder {
@@ -391,6 +394,7 @@ public class GeneratorBinder {
 							generatorClass
 					);
 			callInitialize( annotation, member, creationContext, generator );
+			callConfigure( creationContext, generator );
 			checkIdGeneratorTiming( annotationType, generator );
 			return generator;
 		};
@@ -433,7 +437,7 @@ public class GeneratorBinder {
 			Member member,
 			GeneratorCreationContext creationContext,
 			Generator generator) {
-		if ( generator instanceof AnnotationBasedGenerator) {
+		if ( generator instanceof AnnotationBasedGenerator ) {
 			// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be
 			// a programming error of the generation type developer and thus should show up during testing, we don't
 			// check this explicitly; If required, this could be done e.g. using ClassMate
@@ -455,6 +459,19 @@ public class GeneratorBinder {
 						+ "' is annotated '@Version' but has a 'Generator' which does not generate on updates"
 				);
 			}
+		}
+	}
+
+	private static void callConfigure(GeneratorCreationContext creationContext, Generator generator) {
+		if ( generator instanceof Configurable ) {
+			final Value value = creationContext.getProperty().getValue();
+			( (Configurable) generator ).configure( value.getType(), collectParameters(
+					(SimpleValue) value,
+					creationContext.getDatabase().getDialect(),
+					creationContext.getDefaultCatalog(),
+					creationContext.getDefaultSchema(),
+					creationContext.getPersistentClass().getRootClass()
+			), creationContext.getServiceRegistry() );
 		}
 	}
 

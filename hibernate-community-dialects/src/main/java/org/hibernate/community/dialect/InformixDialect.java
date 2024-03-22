@@ -59,6 +59,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -592,6 +593,12 @@ public class InformixDialect extends Dialect {
 				.replace("SSS", "%F3")
 				.replace("SS", "%F2")
 				.replace("S", "%F1");
+	}
+
+	@Override
+	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
+		String typeName = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType).getRawTypeName();
+		return "null::" + typeName;
 	}
 
 }

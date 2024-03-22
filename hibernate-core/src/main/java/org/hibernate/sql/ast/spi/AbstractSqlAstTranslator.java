@@ -7413,7 +7413,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private void renderNull(Literal literal) {
+	protected void renderNull(Literal literal) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.NO_UNTYPED ) {
 			renderCasted( literal );
 		}

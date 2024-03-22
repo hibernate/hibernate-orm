@@ -19,6 +19,8 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Base descriptor, within the mapping model, for any part of the
  * application's domain model: an attribute, an entity identifier,
@@ -143,6 +145,11 @@ public interface ModelPart extends MappingModelExpressible {
 	}
 
 	default EntityMappingType asEntityMappingType(){
+		return null;
+	}
+
+	@Nullable
+	default BasicValuedModelPart asBasicValuedModelPart() {
 		return null;
 	}
 

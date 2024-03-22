@@ -24,13 +24,14 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -47,13 +48,17 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
-import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
@@ -68,6 +73,9 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
 /**
  * Helper utilities for dealing with SQM
@@ -119,29 +127,108 @@ public class SqmUtil {
 		);
 	}
 
-	public static boolean needsTargetTableMapping(
+	/**
+	 * Utility that returns the entity association target's mapping type if the specified {@code sqmPath} should
+	 * be dereferenced using the target table, i.e. when the path's lhs is an explicit join that is used in the
+	 * group by clause, or defaults to the provided {@code modelPartContainer} otherwise.
+	 */
+	public static ModelPartContainer getTargetMappingIfNeeded(
 			SqmPath<?> sqmPath,
 			ModelPartContainer modelPartContainer,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
-		return ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
-				&& modelPartContainer.getPartMappingType() != modelPartContainer
-				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
-				&& modelPartContainer.getPartMappingType() instanceof ManagedMappingType
-				&& ( groupByClauseContains( sqlAstCreationState.getCurrentSqmQueryPart(), sqmPath.getNavigablePath() )
-				|| isNonOptimizableJoin( sqmPath.getLhs() ) );
+		final SqmQueryPart<?> queryPart = sqlAstCreationState.getCurrentSqmQueryPart();
+		if ( queryPart != null ) {
+			// We only need to do this for queries
+			final Clause clause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
+			if ( clause != Clause.FROM && modelPartContainer.getPartMappingType() != modelPartContainer && sqmPath.getLhs() instanceof SqmFrom<?, ?> ) {
+				final ModelPart modelPart;
+				if ( modelPartContainer instanceof PluralAttributeMapping ) {
+					modelPart = getCollectionPart(
+							(PluralAttributeMapping) modelPartContainer,
+							castNonNull( sqmPath.getNavigablePath().getParent() )
+					);
+				}
+				else {
+					modelPart = modelPartContainer;
+				}
+				if ( modelPart instanceof EntityAssociationMapping ) {
+					final EntityAssociationMapping association = (EntityAssociationMapping) modelPart;
+					// If the path is one of the association's target key properties,
+					// we need to render the target side if in group/order by
+					if ( association.getTargetKeyPropertyNames().contains( sqmPath.getReferencedPathSource().getPathName() )
+							&& ( clause == Clause.GROUP || clause == Clause.ORDER
+							|| !isFkOptimizationAllowed( sqmPath.getLhs() )
+							|| queryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath(), sqlAstCreationState )
+							|| queryPart.getFirstQuerySpec().orderByClauseContains( sqmPath.getNavigablePath(), sqlAstCreationState ) ) ) {
+						return association.getAssociatedEntityMappingType();
+					}
+				}
+			}
+		}
+		return modelPartContainer;
 	}
 
-	private static boolean groupByClauseContains(SqmQueryPart<?> sqmQueryPart, NavigablePath path) {
-		return sqmQueryPart.isSimpleQueryPart() && sqmQueryPart.getFirstQuerySpec().groupByClauseContains( path );
+	private static CollectionPart getCollectionPart(PluralAttributeMapping attribute, NavigablePath path) {
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( path.getLocalName() );
+		if ( nature != null ) {
+			switch ( nature ) {
+				case ELEMENT:
+					return attribute.getElementDescriptor();
+				case INDEX:
+					return attribute.getIndexDescriptor();
+			}
+		}
+		return null;
 	}
 
-	private static boolean isNonOptimizableJoin(SqmPath<?> sqmPath) {
+	/**
+	 * Utility that returns {@code false} when the provided {@link SqmPath sqmPath} is
+	 * a join that cannot be dereferenced through the foreign key on the associated table,
+	 * i.e. a join that's neither {@linkplain SqmJoinType#INNER} nor {@linkplain SqmJoinType#LEFT}
+	 * or one that has an explicit on clause predicate.
+	 */
+	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath) {
 		if ( sqmPath instanceof SqmJoin<?, ?> ) {
-			final SqmJoinType sqmJoinType = ( (SqmJoin<?, ?>) sqmPath ).getSqmJoinType();
-			return sqmJoinType != SqmJoinType.INNER && sqmJoinType != SqmJoinType.LEFT;
+			final SqmJoin<?, ?> sqmJoin = (SqmJoin<?, ?>) sqmPath;
+			switch ( sqmJoin.getSqmJoinType() ) {
+				case INNER:
+				case LEFT:
+					return !( sqmJoin instanceof SqmQualifiedJoin<?, ?>)
+							|| ( (SqmQualifiedJoin<?, ?>) sqmJoin ).getJoinPredicate() == null;
+				default:
+					return false;
+			}
 		}
 		return false;
+	}
+
+	public static List<NavigablePath> getGroupByNavigablePaths(SqmQuerySpec<?> querySpec) {
+		final List<SqmExpression<?>> expressions = querySpec.getGroupByClauseExpressions();
+		if ( expressions.isEmpty() ) {
+			return Collections.emptyList();
+		}
+
+		final List<NavigablePath> navigablePaths = new ArrayList<>( expressions.size() );
+		final SqmPathVisitor pathVisitor = new SqmPathVisitor( path -> navigablePaths.add( path.getNavigablePath() ) );
+		for ( SqmExpression<?> expression : expressions ) {
+			expression.accept( pathVisitor );
+		}
+		return navigablePaths;
+	}
+
+	public static List<NavigablePath> getOrderByNavigablePaths(SqmQuerySpec<?> querySpec) {
+		final SqmOrderByClause order = querySpec.getOrderByClause();
+		if ( order == null || order.getSortSpecifications().isEmpty() ) {
+			return Collections.emptyList();
+		}
+
+		final List<SqmSortSpecification> sortSpecifications = order.getSortSpecifications();
+		final List<NavigablePath> navigablePaths = new ArrayList<>( sortSpecifications.size() );
+		final SqmPathVisitor pathVisitor = new SqmPathVisitor( path -> navigablePaths.add( path.getNavigablePath() ) );
+		for ( SqmSortSpecification sortSpec : sortSpecifications ) {
+			sortSpec.getSortExpression().accept( pathVisitor );
+		}
+		return navigablePaths;
 	}
 
 	public static Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> generateJdbcParamsXref(
@@ -523,7 +610,7 @@ public class SqmUtil {
 		if ( statement.getQuerySource() == SqmQuerySource.CRITERIA ) {
 			final CriteriaParameterCollector parameterCollector = new CriteriaParameterCollector();
 
-			ParameterCollector.collectParameters(
+			collectParameters(
 					statement,
 					parameterCollector::process,
 					statement.nodeBuilder().getServiceRegistry()

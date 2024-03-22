@@ -60,6 +60,8 @@ public class PolymorphicQueriesTest {
 				session -> {
 					List<I> results = session.createQuery( "from " + I.class.getName(), I.class ).list();
 					assertThat( results.size() ).isEqualTo( 2 );
+					assertThat(results.get(0)).isInstanceOf(EntityA.class);
+					assertThat(results.get(1)).isInstanceOf(EntityB.class);
 				}
 		);
 
@@ -67,6 +69,8 @@ public class PolymorphicQueriesTest {
 				session -> {
 					List<I> results = session.createQuery( "from " + I.class.getName() + " i", I.class ).list();
 					assertThat( results.size() ).isEqualTo( 2 );
+					assertThat(results.get(0)).isInstanceOf(EntityA.class);
+					assertThat(results.get(1)).isInstanceOf(EntityB.class);
 				}
 		);
 
@@ -75,6 +79,8 @@ public class PolymorphicQueriesTest {
 					List<I> results = session.createQuery( "select i from " + I.class.getName() + " i", I.class )
 							.list();
 					assertThat( results.size() ).isEqualTo( 2 );
+					assertThat(results.get(0)).isInstanceOf(EntityA.class);
+					assertThat(results.get(1)).isInstanceOf(EntityB.class);
 				}
 		);
 	}

@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -25,10 +26,11 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -701,9 +703,32 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	public boolean groupByClauseContains(NavigablePath path) {
-		for ( SqmExpression<?> expression : groupByClauseExpressions ) {
-			if ( expression instanceof SqmPath && ( (SqmPath<?>) expression ).getNavigablePath() == path ) {
+	@Internal
+	public boolean groupByClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
+		if ( groupByClauseExpressions.isEmpty() ) {
+			return false;
+		}
+		return navigablePathsContain( sqlAstConverter.resolveMetadata(
+				this,
+				SqmUtil::getGroupByNavigablePaths
+		), navigablePath );
+	}
+
+	@Internal
+	public boolean orderByClauseContains(NavigablePath navigablePath, SqmToSqlAstConverter sqlAstConverter) {
+		final SqmOrderByClause orderByClause = getOrderByClause();
+		if ( orderByClause == null || orderByClause.getSortSpecifications().isEmpty() ) {
+			return false;
+		}
+		return navigablePathsContain( sqlAstConverter.resolveMetadata(
+				this,
+				SqmUtil::getOrderByNavigablePaths
+		), navigablePath );
+	}
+
+	private boolean navigablePathsContain(List<NavigablePath> navigablePaths, NavigablePath navigablePath) {
+		for ( NavigablePath path : navigablePaths ) {
+			if ( path.isParentOrEqual( navigablePath ) ) {
 				return true;
 			}
 		}

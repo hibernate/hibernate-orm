@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -29,7 +28,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
-import static org.hibernate.query.sqm.internal.SqmUtil.needsTargetTableMapping;
+import static org.hibernate.query.sqm.internal.SqmUtil.getTargetMappingIfNeeded;
 
 /**
  * @author Steve Ebersole
@@ -65,22 +64,12 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		}
 
 		final ModelPartContainer modelPartContainer = tableGroup.getModelPart();
-		final EmbeddableValuedModelPart mapping;
-		if ( needsTargetTableMapping( sqmPath, modelPartContainer, sqlAstCreationState ) ) {
-			// In the select, group by, order by and having clause we have to make sure we render
-			// the column of the target table, never the FK column, if the lhs is a join type that
-			// requires it (right, full) or if this path is contained in group by clause
-			mapping = (EmbeddableValuedModelPart) ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
-		else {
-			mapping = (EmbeddableValuedModelPart) modelPartContainer.findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
+		// Use the target type to find the sub part if needed, otherwise just use the container
+		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) getTargetMappingIfNeeded(
+				sqmPath,
+				modelPartContainer,
+				sqlAstCreationState
+		).findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
 
 		return new EmbeddableValuedPathInterpretation<>(
 				mapping.toSqlExpression(

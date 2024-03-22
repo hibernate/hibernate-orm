@@ -50,7 +50,7 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 		);
 	}
 
-	private void renderUpsertStatement(OptionalTableUpdate optionalTableUpdate) {
+	protected void renderUpsertStatement(OptionalTableUpdate optionalTableUpdate) {
 		// template:
 		//
 		// merge into [table] as t

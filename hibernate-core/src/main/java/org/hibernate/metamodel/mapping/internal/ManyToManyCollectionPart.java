@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.annotations.NotFoundAction;
@@ -133,6 +134,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 
 		return super.findSubPart( name, targetType );
+	}
+
+	@Override
+	public Set<String> getTargetKeyPropertyNames() {
+		return targetKeyPropertyNames;
 	}
 
 	@Override

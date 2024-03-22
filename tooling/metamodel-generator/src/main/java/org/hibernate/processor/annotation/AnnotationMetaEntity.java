@@ -1082,7 +1082,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			addFinderMethod( method, returnType, containerType );
 		}
 		else if ( hasAnnotation( method, JD_DELETE ) ) {
-			createCriteriaDelete( method, returnType );
+			addDeleteMethod( method, returnType );
+		}
+	}
+
+	private void addDeleteMethod(ExecutableElement method, @Nullable TypeMirror returnType) {
+		if ( returnType != null ) {
+			final TypeKind kind = returnType.getKind();
+			if ( kind != TypeKind.VOID
+					&& kind != TypeKind.INT
+					&& kind != TypeKind.LONG ) {
+				context.message(method,
+						"must be 'void' or return 'int' or 'long'",
+						Diagnostic.Kind.ERROR);
+			}
+			else {
+				createCriteriaDelete(method, returnType);
+			}
 		}
 	}
 
@@ -1351,8 +1367,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		);
 	}
 
-	private void createCriteriaDelete(
-			ExecutableElement method, @Nullable TypeMirror returnType) {
+	private void createCriteriaDelete(ExecutableElement method, TypeMirror returnType) {
 		final TypeElement entity = primaryEntity;
 		if ( entity == null) {
 			context.message( method, "repository does not have a well-defined primary entity type",
@@ -1379,7 +1394,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							this,
 							methodName,
 							entity.getQualifiedName().toString(),
-							returnType==null ? "void" : returnType.toString(),
+							returnType.toString(),
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),

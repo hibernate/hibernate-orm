@@ -279,7 +279,11 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
 			try {
-				if ( isEntityOrEmbeddable( element ) ) {
+				if ( hasAnnotation( element, SUPPRESS)
+						|| hasAnnotation( context.getElementUtils().getPackageOf(element), SUPPRESS ) ) {
+					// skip it completely
+				}
+				else if ( isEntityOrEmbeddable( element ) ) {
 					context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated entity class '" + element + "'" );
 					handleRootElementAnnotationMirrors( element );
 				}

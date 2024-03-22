@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -34,7 +33,8 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
-import static org.hibernate.query.sqm.internal.SqmUtil.needsTargetTableMapping;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.query.sqm.internal.SqmUtil.getTargetMappingIfNeeded;
 
 /**
  * @author Steve Ebersole
@@ -81,22 +81,14 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			}
 		}
 
-		final BasicValuedModelPart mapping;
-		if ( needsTargetTableMapping( sqmPath, modelPartContainer ) ) {
-			// We have to make sure we render the column of the target table
-			mapping = (BasicValuedModelPart) ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
-		else {
-			mapping = (BasicValuedModelPart) modelPartContainer.findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
+		// Use the target type to find the sub part if needed, otherwise just use the container
+		final ModelPart modelPart = getTargetMappingIfNeeded(
+				sqmPath,
+				modelPartContainer,
+				sqlAstCreationState
+		).findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
 
-		if ( mapping == null ) {
+		if ( modelPart == null ) {
 			if ( jpaQueryComplianceEnabled ) {
 				// to get the better error, see if we got nothing because of treat handling
 				final ModelPart subPart = tableGroup.getModelPart().findSubPart(
@@ -111,6 +103,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			throw new UnknownPathException( "Path '" + sqmPath.getNavigablePath() + "' did not reference a known model part" );
 		}
 
+		final BasicValuedModelPart mapping = castNonNull( modelPart.asBasicValuedModelPart() );
 		final TableReference tableReference = tableGroup.resolveTableReference(
 				sqmPath.getNavigablePath(),
 				mapping,

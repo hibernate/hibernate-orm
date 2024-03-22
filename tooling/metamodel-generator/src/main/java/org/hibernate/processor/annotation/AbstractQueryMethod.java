@@ -97,7 +97,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return type.endsWith("...") ? stripped + "..." : stripped;
 	}
 
-	void preamble(StringBuilder declaration, StringBuilder returnType, List<String> paramTypes) {
+	void preamble(StringBuilder declaration, String returnType, List<String> paramTypes) {
 		declaration
 				.append(returnType)
 				.append(" ")

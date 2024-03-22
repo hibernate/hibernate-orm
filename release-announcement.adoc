@@ -146,7 +146,7 @@ delete from Person p where p.association.someAttr = 1
 
 
 [[manually-assigned-generated-ids]]
-== Manually Assigned Identifiers with custom `Generator`s
+== Manually Assigned Identifiers with custom `Generator`
 
 Manually assigned identifier values can now be used with custom a `Generator` thanks to the new `allowAssignedIdentifiers()` method.
 

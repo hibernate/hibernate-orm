@@ -11,7 +11,6 @@ import org.hibernate.processor.Context;
 import org.hibernate.processor.util.AccessType;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
-import org.hibernate.processor.util.TypeUtils;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -40,6 +39,7 @@ import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.processor.util.TypeUtils.getCollectionElementType;
 import static org.hibernate.processor.util.TypeUtils.getKeyType;
+import static org.hibernate.processor.util.TypeUtils.getTargetEntity;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.isBasicAttribute;
 import static org.hibernate.processor.util.TypeUtils.isPropertyGetter;
@@ -86,7 +86,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
 		final String returnTypeName = returnedElement.getQualifiedName().toString();
 		final String collection = Constants.COLLECTIONS.get( returnTypeName );
-		final String targetEntity = TypeUtils.getTargetEntity( element.getAnnotationMirrors() );
+		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 		if ( collection != null ) {
 			return createMetaCollectionAttribute( declaredType, element, returnTypeName, collection, targetEntity );
 		}
@@ -103,7 +103,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 			DeclaredType declaredType, Element element, String returnTypeName, String collection,
 			@Nullable String targetEntity) {
 		if ( hasAnnotation( element, ELEMENT_COLLECTION ) ) {
-			final String explicitTargetEntity = TypeUtils.getTargetEntity( element.getAnnotationMirrors() );
+			final String explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
 			final TypeMirror collectionElementType =
 					getCollectionElementType( declaredType, returnTypeName, explicitTargetEntity, context );
 			if ( collectionElementType.getKind() == TypeKind.DECLARED ) {

@@ -62,7 +62,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	private final EntityMappingType associatedEntityTypeDescriptor;
 	private final NotFoundAction notFoundAction;
 
-	private final Set<String> targetKeyPropertyNames;
+	protected final Set<String> targetKeyPropertyNames;
 
 	public AbstractEntityCollectionPart(
 			Nature nature,
@@ -110,10 +110,6 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	@Override
 	public EntityMappingType getMappedType() {
 		return getAssociatedEntityMappingType();
-	}
-
-	protected Set<String> getTargetKeyPropertyNames() {
-		return targetKeyPropertyNames;
 	}
 
 	@Override

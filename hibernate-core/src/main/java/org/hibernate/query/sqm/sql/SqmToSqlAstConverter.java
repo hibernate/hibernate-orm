@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.sql;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.internal.util.collections.Stack;
@@ -22,6 +23,8 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryTransformer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+
+import jakarta.annotation.Nullable;
 
 /**
  * Specialized SemanticQueryWalker (SQM visitor) for producing SQL AST.
@@ -52,4 +55,10 @@ public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAs
 
 	Predicate visitNestedTopLevelPredicate(SqmPredicate predicate);
 
+	/**
+	 * Resolve a generic metadata object from the provided source, using the specified producer.
+	 */
+	default <S, M> M resolveMetadata(S source, Function<S, M> producer) {
+		return producer.apply( source );
+	}
 }

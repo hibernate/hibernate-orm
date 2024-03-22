@@ -162,7 +162,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		// we try to make use of it and the FK model part if possible based on the inferred mapping
 		if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ModelPart keyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
+			final ModelPart keyTargetMatchPart = associationMapping.getForeignKeyDescriptor().getPart(
+					associationMapping.getSideNature()
+			);
 
 			if ( associationMapping.isFkOptimizationAllowed() ) {
 				final boolean forceUsingForeignKeyAssociationSidePart;

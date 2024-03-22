@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -35,7 +34,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-import static org.hibernate.query.sqm.internal.SqmUtil.needsTargetTableMapping;
+import static org.hibernate.query.sqm.internal.SqmUtil.getTargetMappingIfNeeded;
 
 /**
  * @author Steve Ebersole
@@ -82,20 +81,12 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			}
 		}
 
-		final ModelPart modelPart;
-		if ( needsTargetTableMapping( sqmPath, modelPartContainer ) ) {
-			// We have to make sure we render the column of the target table
-			modelPart = ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
-		else {
-			modelPart = modelPartContainer.findSubPart(
-					sqmPath.getReferencedPathSource().getPathName(),
-					treatTarget
-			);
-		}
+		// Use the target type to find the sub part if needed, otherwise just use the container
+		final ModelPart modelPart = getTargetMappingIfNeeded(
+				sqmPath,
+				modelPartContainer,
+				sqlAstCreationState
+		).findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
 
 		if ( modelPart == null ) {
 			if ( jpaQueryComplianceEnabled ) {

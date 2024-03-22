@@ -25,13 +25,14 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -46,6 +47,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -60,11 +62,13 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -79,6 +83,7 @@ import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
 /**
@@ -132,13 +137,56 @@ public class SqmUtil {
 	}
 
 	/**
-	 * Utility that returns {@code true} if the specified {@link SqmPath sqmPath} should be
-	 * dereferenced using the target table mapping, i.e. when the path's lhs is an explicit join.
+	 * Utility that returns the entity association target's mapping type if the specified {@code sqmPath} should
+	 * be dereferenced using the target table, i.e. when the path's lhs is an explicit join that is used in the
+	 * group by clause, or defaults to the provided {@code modelPartContainer} otherwise.
 	 */
-	public static boolean needsTargetTableMapping(SqmPath<?> sqmPath, ModelPartContainer modelPartContainer) {
-		return modelPartContainer.getPartMappingType() != modelPartContainer
-				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
-				&& modelPartContainer.getPartMappingType() instanceof ManagedMappingType;
+	public static ModelPartContainer getTargetMappingIfNeeded(
+			SqmPath<?> sqmPath,
+			ModelPartContainer modelPartContainer,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		final SqmQueryPart<?> queryPart = sqlAstCreationState.getCurrentSqmQueryPart();
+		if ( queryPart != null ) {
+			// We only need to do this for queries
+			final Clause clause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
+			if ( clause != Clause.FROM && modelPartContainer.getPartMappingType() != modelPartContainer && sqmPath.getLhs() instanceof SqmFrom<?, ?> ) {
+				final ModelPart modelPart;
+				if ( modelPartContainer instanceof PluralAttributeMapping ) {
+					modelPart = getCollectionPart(
+							(PluralAttributeMapping) modelPartContainer,
+							castNonNull( sqmPath.getNavigablePath().getParent() )
+					);
+				}
+				else {
+					modelPart = modelPartContainer;
+				}
+				if ( modelPart instanceof EntityAssociationMapping ) {
+					final EntityAssociationMapping association = (EntityAssociationMapping) modelPart;
+					// If the path is one of the association's target key properties,
+					// we need to render the target side if in group/order by
+					if ( association.getTargetKeyPropertyNames().contains( sqmPath.getReferencedPathSource().getPathName() )
+							&& ( clause == Clause.GROUP || clause == Clause.ORDER
+							|| !isFkOptimizationAllowed( sqmPath.getLhs() )
+							|| queryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath() ) ) ) {
+						return association.getAssociatedEntityMappingType();
+					}
+				}
+			}
+		}
+		return modelPartContainer;
+	}
+
+	private static CollectionPart getCollectionPart(PluralAttributeMapping attribute, NavigablePath path) {
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( path.getLocalName() );
+		if ( nature != null ) {
+			switch ( nature ) {
+				case ELEMENT:
+					return attribute.getElementDescriptor();
+				case INDEX:
+					return attribute.getIndexDescriptor();
+			}
+		}
+		return null;
 	}
 
 	/**

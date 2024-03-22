@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -141,6 +142,18 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected String getFromDualForSelectOnly() {
 		return " from " + getDual() + " dual";
+	}
+
+	@Override
+	protected void renderNull(Literal literal) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.NO_UNTYPED ) {
+			renderCasted( literal );
+		}
+		else {
+			int sqlType = literal.getExpressionType().getSingleJdbcMapping().getJdbcType().getJdbcTypeCode();
+			String nullString = getDialect().getSelectClauseNullString( sqlType, getSessionFactory().getTypeConfiguration() );
+			appendSql( nullString );
+		}
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

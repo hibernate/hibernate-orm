@@ -264,6 +264,10 @@ public class EntityDelayedFetchInitializer implements EntityInitializer {
 		this.processed = processed;
 	}
 
+	protected boolean isProcessed() {
+		return processed;
+	}
+
 	protected Object getIdentifier() {
 		return identifier;
 	}

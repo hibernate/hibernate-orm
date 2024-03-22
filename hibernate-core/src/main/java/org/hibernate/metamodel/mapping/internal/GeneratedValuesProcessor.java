@@ -211,4 +211,8 @@ public class GeneratedValuesProcessor {
 	public EntityMappingType getEntityDescriptor() {
 		return entityDescriptor;
 	}
+
+	public JdbcOperationQuerySelect getJdbcSelect() {
+		return jdbcSelect;
+	}
 }

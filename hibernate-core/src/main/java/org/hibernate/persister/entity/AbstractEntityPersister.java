@@ -2048,7 +2048,7 @@ public abstract class AbstractEntityPersister
 		return select.addRestriction( rootTableKeyColumnNames ).toStatementString();
 	}
 
-	private GeneratedValuesProcessor createGeneratedValuesProcessor(
+	protected GeneratedValuesProcessor createGeneratedValuesProcessor(
 			EventType timing,
 			List<AttributeMapping> generatedAttributes) {
 		return new GeneratedValuesProcessor( this, generatedAttributes, timing, getFactory() );
@@ -3433,16 +3433,12 @@ public abstract class AbstractEntityPersister
 		insertGeneratedProperties = initInsertGeneratedProperties( insertGeneratedAttributes );
 		updateGeneratedProperties = initUpdateGeneratedProperties( updateGeneratedAttributes );
 
+		insertDelegate = createInsertDelegate();
+		updateDelegate = createUpdateDelegate();
+
 		if ( isIdentifierAssignedByInsert() ) {
-			final OnExecutionGenerator generator = (OnExecutionGenerator) getGenerator();
-			insertDelegate = generator.getGeneratedIdentifierDelegate( this );
 			identitySelectString = getIdentitySelectString( factory.getJdbcServices().getDialect() );
 		}
-		else {
-			insertDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, INSERT );
-		}
-
-		updateDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, UPDATE );
 
 		if ( hasInsertGeneratedProperties() ) {
 			insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT, insertGeneratedAttributes );
@@ -3467,6 +3463,18 @@ public abstract class AbstractEntityPersister
 
 		//select SQL
 		sqlVersionSelectString = generateSelectVersionString();
+	}
+
+	protected GeneratedValuesMutationDelegate createInsertDelegate() {
+		if ( isIdentifierAssignedByInsert() ) {
+			final OnExecutionGenerator generator = (OnExecutionGenerator) getGenerator();
+			return generator.getGeneratedIdentifierDelegate( this );
+		}
+		return GeneratedValuesHelper.getGeneratedValuesDelegate( this, INSERT );
+	}
+
+	protected GeneratedValuesMutationDelegate createUpdateDelegate() {
+		return GeneratedValuesHelper.getGeneratedValuesDelegate( this, UPDATE );
 	}
 
 	private EntityTableMapping findTableMapping(String tableName) {

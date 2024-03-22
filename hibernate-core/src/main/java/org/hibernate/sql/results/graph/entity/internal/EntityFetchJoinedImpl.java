@@ -197,4 +197,22 @@ public class EntityFetchJoinedImpl extends AbstractFetchParent implements Entity
 	public void collectValueIndexesToCache(BitSet valueIndexes) {
 		entityResult.collectValueIndexesToCache( valueIndexes );
 	}
+
+	/*
+	 * BEGIN: For Hibernate Reactive
+	 */
+	protected DomainResult<?> getKeyResult() {
+		return keyResult;
+	}
+
+	protected NotFoundAction getNotFoundAction() {
+		return notFoundAction;
+	}
+
+	protected String getSourceAlias() {
+		return sourceAlias;
+	}
+	/*
+	 * END: Hibernate Reactive: make sure values are accessible from subclass
+	 */
 }

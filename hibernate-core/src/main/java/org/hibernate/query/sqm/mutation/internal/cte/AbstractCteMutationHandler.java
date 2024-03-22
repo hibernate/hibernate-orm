@@ -212,7 +212,10 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		return ( (Number) list.get( 0 ) ).intValue();
 	}
 
-	private Expression createCountStar(
+	/**
+	 * Used by Hibernate Raective
+	 */
+	protected Expression createCountStar(
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );

@@ -113,7 +113,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private EntityKey entityKey;
 	private Object version;
 	private Object entityInstance;
-	private Object entityInstanceForNotify;
+	protected Object entityInstanceForNotify;
 	protected State state = State.UNINITIALIZED;
 	private boolean isOwningInitializer;
 	private Object[] resolvedEntityState;

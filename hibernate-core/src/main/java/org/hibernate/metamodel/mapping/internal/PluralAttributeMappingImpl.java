@@ -506,6 +506,7 @@ public class PluralAttributeMappingImpl
 							fetchablePath,
 							this,
 							collectionTableGroup,
+							referencedPropertyName != null,
 							fetchParent,
 							creationState
 					);
@@ -570,13 +571,14 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			TableGroup collectionTableGroup,
+			boolean needsCollectionKeyResult,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		return new EagerCollectionFetch(
 				fetchedPath,
 				fetchedAttribute,
 				collectionTableGroup,
-				referencedPropertyName != null,
+				needsCollectionKeyResult,
 				fetchParent,
 				creationState
 		);

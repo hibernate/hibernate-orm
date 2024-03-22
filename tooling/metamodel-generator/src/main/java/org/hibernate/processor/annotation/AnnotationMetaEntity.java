@@ -762,72 +762,98 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				case DECLARED:
 					final DeclaredType assocDeclaredType = (DeclaredType) typeMirror;
 					final TypeElement assocTypeElement = (TypeElement) assocDeclaredType.asElement();
-					if ( !hasAnnotation(assocTypeElement, ENTITY) ) {
+					if ( hasAnnotation(assocTypeElement, ENTITY) ) {
+						final String mappedBy = (String) getAnnotationValue(annotation, "mappedBy");
+						validateBidirectionalMapping(memberOfClass, annotation, mappedBy, assocTypeElement);
+					}
+					else {
 						context.message(memberOfClass, "type '" + assocTypeElement.getSimpleName()
 										+ "' is not annotated '@Entity'",
 								Diagnostic.Kind.WARNING);
-					}
-					final String mappedBy = (String) getAnnotationValue(annotation, "mappedBy");
-					if ( mappedBy != null && !mappedBy.isEmpty() ) {
-						if ( mappedBy.equals("<error>") ) {
-							return;
-//							throw new ProcessLaterException();
-						}
-						if ( mappedBy.indexOf('.')>0 ) {
-							//we don't know how to handle paths yet
-							return;
-						}
-						final List<? extends Element> members =
-								context.getElementUtils().getAllMembers(assocTypeElement);
-						final AnnotationValue annotationVal =
-								castNonNull(getAnnotationValueRef(annotation, "mappedBy"));
-						if ( members.stream().noneMatch(m -> propertyName(this, m).contentEquals(mappedBy)) ) {
-							context.message(memberOfClass, annotation,
-									annotationVal,
-									"no matching member in '" + assocTypeElement.getSimpleName() + "'",
-									Diagnostic.Kind.ERROR);
-						}
-						else {
-							final Element member =
-									members.stream()
-											.filter(m -> propertyName(this, m).contentEquals(mappedBy))
-											.findFirst().get();
-							if ( hasAnnotation(member, MANY_TO_ONE) ) {
-								final TypeMirror backType = attributeType(member);
-								if ( !context.getTypeUtils().isSameType(backType, element.asType()) ) {
-									context.message(memberOfClass, annotation, annotationVal,
-											"member '" + member.getSimpleName()
-													+ "' of '" + assocTypeElement.getSimpleName()
-													+ "' is not of type '" + element.getSimpleName() + "'",
-											Diagnostic.Kind.WARNING);
-								}
-							}
-							else if ( hasAnnotation(member, MANY_TO_MANY) ) {
-								final TypeMirror backType = elementType( attributeType(member) );
-								if ( backType != null ) {
-									if ( !context.getTypeUtils().isSameType(backType, element.asType()) ) {
-										context.message(memberOfClass, annotation, annotationVal,
-												"member '" + member.getSimpleName()
-														+ "' of '" + assocTypeElement.getSimpleName()
-														+ "' is not of type '" + element.getSimpleName() + "'",
-												Diagnostic.Kind.WARNING);
-									}
-								}
-							}
-							else {
-								context.message(memberOfClass, annotation, annotationVal,
-										"member '" + member.getSimpleName()
-												+ "' of '" + assocTypeElement.getSimpleName()
-												+ "' is not annotated '@ManyToMany' or '@ManyToOne'",
-										Diagnostic.Kind.WARNING);
-							}
-						}
 					}
 					break;
 				default:
 					context.message(memberOfClass, "type '" + typeMirror + "' is not an entity type",
 							Diagnostic.Kind.WARNING);
 			}
+		}
+	}
+
+	private void validateBidirectionalMapping(
+			Element memberOfClass, AnnotationMirror annotation, @Nullable String mappedBy, TypeElement assocTypeElement) {
+		if ( mappedBy != null && !mappedBy.isEmpty() ) {
+			if ( mappedBy.equals("<error>") ) {
+				return;
+//							throw new ProcessLaterException();
+			}
+			if ( mappedBy.indexOf('.')>0 ) {
+				//we don't know how to handle paths yet
+				return;
+			}
+			final AnnotationValue annotationVal =
+					castNonNull(getAnnotationValueRef(annotation, "mappedBy"));
+			for ( Element member : context.getElementUtils().getAllMembers(assocTypeElement) ) {
+				if ( propertyName(this, member).contentEquals(mappedBy) ) {
+					validateBackRef(memberOfClass, annotation, assocTypeElement, member, annotationVal);
+					return;
+				}
+			}
+			// not found
+			context.message(memberOfClass, annotation,
+					annotationVal,
+					"no matching member in '" + assocTypeElement.getSimpleName() + "'",
+					Diagnostic.Kind.ERROR);
+		}
+	}
+
+	private void validateBackRef(
+			Element memberOfClass,
+			AnnotationMirror annotation,
+			TypeElement assocTypeElement,
+			Element member,
+			AnnotationValue annotationVal) {
+		final TypeMirror backType;
+		switch ( annotation.getAnnotationType().asElement().toString() ) {
+			case ONE_TO_ONE:
+				backType = attributeType(member);
+				if ( !hasAnnotation(member, ONE_TO_ONE) ) {
+					context.message(memberOfClass, annotation, annotationVal,
+							"member '" + member.getSimpleName()
+									+ "' of '" + assocTypeElement.getSimpleName()
+									+ "' is not annotated '@OneToOne'",
+							Diagnostic.Kind.WARNING);
+				}
+				break;
+			case ONE_TO_MANY:
+				backType = attributeType(member);
+				if ( !hasAnnotation(member, MANY_TO_ONE) ) {
+					context.message(memberOfClass, annotation, annotationVal,
+							"member '" + member.getSimpleName()
+									+ "' of '" + assocTypeElement.getSimpleName()
+									+ "' is not annotated '@ManyToOne'",
+							Diagnostic.Kind.WARNING);
+				}
+				break;
+			case MANY_TO_MANY:
+				backType = elementType( attributeType(member) );
+				if ( !hasAnnotation(member, MANY_TO_MANY) ) {
+					context.message(memberOfClass, annotation, annotationVal,
+							"member '" + member.getSimpleName()
+									+ "' of '" + assocTypeElement.getSimpleName()
+									+ "' is not annotated '@ManyToMany'",
+							Diagnostic.Kind.WARNING);
+				}
+				break;
+			default:
+				throw new AssertionFailure("should not have a mappedBy");
+		}
+		if ( backType!=null
+				&& !context.getTypeUtils().isSameType(backType, element.asType()) ) {
+			context.message(memberOfClass, annotation, annotationVal,
+					"member '" + member.getSimpleName()
+							+ "' of '" + assocTypeElement.getSimpleName()
+							+ "' is not of type '" + element.getSimpleName() + "'",
+					Diagnostic.Kind.WARNING);
 		}
 	}
 

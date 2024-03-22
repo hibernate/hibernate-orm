@@ -9,6 +9,8 @@ package org.hibernate.cache.spi;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
@@ -46,6 +48,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 
 	private SessionFactoryOptions options;
 
+	protected final Lock thisLock = new ReentrantLock();
 
 	protected boolean isStarted() {
 		if ( started.get() ) {
@@ -83,7 +86,8 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	@Override
 	public final void start(SessionFactoryOptions settings, Map<String,Object> configValues) throws CacheException {
 		if ( started.compareAndSet( false, true ) ) {
-			synchronized (this) {
+			thisLock.lock();
+			try {
 				this.options = settings;
 				try {
 					prepareForUse( settings, configValues );
@@ -94,6 +98,8 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 					started.set( false );
 					startingException = e;
 				}
+			} finally {
+				thisLock.unlock();
 			}
 		}
 		else {
@@ -106,7 +112,8 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	@Override
 	public final void stop() {
 		if ( started.compareAndSet( true, false ) ) {
-			synchronized ( this ) {
+			thisLock.lock();
+			try {
 				try {
 					releaseFromUse();
 				}
@@ -114,6 +121,8 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 					options = null;
 					startingException = null;
 				}
+			} finally {
+				thisLock.unlock();
 			}
 		}
 		else {

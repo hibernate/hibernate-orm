@@ -32,7 +32,7 @@ public class AutoFlushEvent extends FlushEvent {
 		return querySpaces;
 	}
 
-	public void setQuerySpaces(Set querySpaces) {
+	public void setQuerySpaces(Set<String> querySpaces) {
 		this.querySpaces = querySpaces;
 	}
 

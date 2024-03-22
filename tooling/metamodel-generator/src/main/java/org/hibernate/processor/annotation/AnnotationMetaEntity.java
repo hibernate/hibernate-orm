@@ -375,6 +375,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				putMember( "class", new AnnotationMetaType(this) );
 			}
 
+			validatePersistentMembers( fieldsOfClass );
+			validatePersistentMembers( gettersAndSettersOfClass );
+
 			addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 			addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 		}
@@ -391,6 +394,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addMethods(TypeElement element, List<ExecutableElement> methodsOfClass) {
+		//TODO just use Elements.getAllMembers(element) here!
 		for ( TypeMirror typeMirror : element.getInterfaces() ) {
 			final DeclaredType declaredType = (DeclaredType) typeMirror;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
@@ -669,6 +673,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& returnType.getKind() != TypeKind.VOID;
 	}
 
+	private void validatePersistentMembers(List<? extends Element> membersOfClass) {
+		for ( Element memberOfClass : membersOfClass ) {
+			if ( hasAnnotation(memberOfClass, MANY_TO_ONE, ONE_TO_ONE, ONE_TO_MANY, MANY_TO_MANY) ) {
+				validateAssociation(memberOfClass);
+			}
+		}
+	}
+
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {
 		for ( Element memberOfClass : membersOfClass ) {
 			if ( isPersistent( memberOfClass, membersKind ) ) {
@@ -688,6 +700,133 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						members.put( jpaMetaAttribute.getPropertyName(), jpaMetaAttribute );
 					}
 				}
+			}
+		}
+	}
+
+	private void validateAssociation(Element memberOfClass) {
+		final TypeMirror type = attributeType(memberOfClass);
+		if ( hasAnnotation(memberOfClass, MANY_TO_ONE) ) {
+			final AnnotationMirror annotation =
+					castNonNull(getAnnotationMirror(memberOfClass, MANY_TO_ONE));
+			validateToOneAssociation(memberOfClass, annotation, type);
+		}
+		else if ( hasAnnotation(memberOfClass, ONE_TO_ONE) ) {
+			final AnnotationMirror annotation =
+					castNonNull(getAnnotationMirror(memberOfClass, ONE_TO_ONE));
+			validateToOneAssociation(memberOfClass, annotation, type);
+		}
+		else if ( hasAnnotation(memberOfClass, ONE_TO_MANY) ) {
+			final AnnotationMirror annotation =
+					castNonNull(getAnnotationMirror(memberOfClass, ONE_TO_MANY));
+			validateToManyAssociation(memberOfClass, annotation, type);
+		}
+		else if ( hasAnnotation(memberOfClass, MANY_TO_MANY) ) {
+			final AnnotationMirror annotation =
+					castNonNull(getAnnotationMirror(memberOfClass, MANY_TO_MANY));
+			validateToManyAssociation(memberOfClass, annotation, type);
+		}
+	}
+
+	private static TypeMirror attributeType(Element memberOfClass) {
+		switch ( memberOfClass.getKind() ) {
+			case METHOD:
+				final ExecutableElement method = (ExecutableElement) memberOfClass;
+				return method.getReturnType();
+			case FIELD:
+				return memberOfClass.asType();
+			default:
+				throw new AssertionFailure("should be a field or getter");
+		}
+	}
+
+	private void validateToOneAssociation(Element memberOfClass, AnnotationMirror annotation, TypeMirror type) {
+		final TypeMirror target = (TypeMirror) getAnnotationValue(annotation, "targetEntity");
+		validateAssociation(memberOfClass, annotation, target == null ? type : target);
+	}
+
+	private void validateToManyAssociation(Element memberOfClass, AnnotationMirror annotation, TypeMirror type) {
+		final TypeMirror target = (TypeMirror) getAnnotationValue(annotation, "targetEntity");
+		validateAssociation(memberOfClass, annotation, target == null ? elementType(type) : target);
+	}
+
+	private void validateAssociation(Element memberOfClass, AnnotationMirror annotation, @Nullable TypeMirror typeMirror) {
+		if ( typeMirror != null ) {
+			switch ( typeMirror.getKind() ) {
+				case TYPEVAR:
+					if ( hasAnnotation(element, ENTITY) ) {
+						context.message(memberOfClass, "type '" + typeMirror + "' is a type variable",
+								Diagnostic.Kind.WARNING);
+					}
+					break;
+				case DECLARED:
+					final DeclaredType assocDeclaredType = (DeclaredType) typeMirror;
+					final TypeElement assocTypeElement = (TypeElement) assocDeclaredType.asElement();
+					if ( !hasAnnotation(assocTypeElement, ENTITY) ) {
+						context.message(memberOfClass, "type '" + assocTypeElement.getSimpleName()
+										+ "' is not annotated '@Entity'",
+								Diagnostic.Kind.WARNING);
+					}
+					final String mappedBy = (String) getAnnotationValue(annotation, "mappedBy");
+					if ( mappedBy != null && !mappedBy.isEmpty() ) {
+						if ( mappedBy.equals("<error>") ) {
+							return;
+//							throw new ProcessLaterException();
+						}
+						if ( mappedBy.indexOf('.')>0 ) {
+							//we don't know how to handle paths yet
+							return;
+						}
+						final List<? extends Element> members =
+								context.getElementUtils().getAllMembers(assocTypeElement);
+						final AnnotationValue annotationVal =
+								castNonNull(getAnnotationValueRef(annotation, "mappedBy"));
+						if ( members.stream().noneMatch(m -> propertyName(this, m).contentEquals(mappedBy)) ) {
+							context.message(memberOfClass, annotation,
+									annotationVal,
+									"no matching member in '" + assocTypeElement.getSimpleName() + "'",
+									Diagnostic.Kind.ERROR);
+						}
+						else {
+							final Element member =
+									members.stream()
+											.filter(m -> propertyName(this, m).contentEquals(mappedBy))
+											.findFirst().get();
+							if ( hasAnnotation(member, MANY_TO_ONE) ) {
+								final TypeMirror backType = attributeType(member);
+								if ( !context.getTypeUtils().isSameType(backType, element.asType()) ) {
+									context.message(memberOfClass, annotation, annotationVal,
+											"member '" + member.getSimpleName()
+													+ "' of '" + assocTypeElement.getSimpleName()
+													+ "' is not of type '" + element.getSimpleName() + "'",
+											Diagnostic.Kind.WARNING);
+								}
+							}
+							else if ( hasAnnotation(member, MANY_TO_MANY) ) {
+								final TypeMirror backType = elementType( attributeType(member) );
+								if ( backType != null ) {
+									if ( !context.getTypeUtils().isSameType(backType, element.asType()) ) {
+										context.message(memberOfClass, annotation, annotationVal,
+												"member '" + member.getSimpleName()
+														+ "' of '" + assocTypeElement.getSimpleName()
+														+ "' is not of type '" + element.getSimpleName() + "'",
+												Diagnostic.Kind.WARNING);
+									}
+								}
+							}
+							else {
+								context.message(memberOfClass, annotation, annotationVal,
+										"member '" + member.getSimpleName()
+												+ "' of '" + assocTypeElement.getSimpleName()
+												+ "' is not annotated '@ManyToMany' or '@ManyToOne'",
+										Diagnostic.Kind.WARNING);
+							}
+						}
+					}
+					break;
+				default:
+					context.message(memberOfClass, "type '" + typeMirror + "' is not an entity type",
+							Diagnostic.Kind.WARNING);
 			}
 		}
 	}
@@ -943,6 +1082,27 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final ArrayType arrayType = (ArrayType) parameterType;
 				final TypeMirror componentType = types.erasure( arrayType.getComponentType() );
 				return componentType.getKind() == TypeKind.DECLARED ? (DeclaredType) componentType : null;
+			default:
+				return null;
+		}
+	}
+
+	private @Nullable TypeMirror elementType(TypeMirror parameterType) {
+		switch ( parameterType.getKind() ) {
+			case DECLARED:
+				final DeclaredType declaredType = (DeclaredType) parameterType;
+				List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+				switch ( typeArguments.size() ) {
+					case 1:
+						return typeArguments.get(0);
+					case 2:
+						return typeArguments.get(1);
+					default:
+						return null;
+				}
+			case ARRAY:
+				final ArrayType arrayType = (ArrayType) parameterType;
+				return arrayType.getComponentType();
 			default:
 				return null;
 		}

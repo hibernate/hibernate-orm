@@ -112,8 +112,6 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 						}
 					}
 				}
-				else {
-				}
 				this.rowToCacheSize = cacheIndex;
 			}
 		}

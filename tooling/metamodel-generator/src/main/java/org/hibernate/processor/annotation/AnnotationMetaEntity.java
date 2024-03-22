@@ -365,7 +365,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( isGetterOrSetter( method ) ) {
 					gettersAndSettersOfClass.add( method );
 				}
-				else if ( containsAnnotation( method, HQL, SQL, FIND ) ) {
+				else if ( element.getTypeParameters().isEmpty()
+						&& containsAnnotation( method, HQL, SQL, FIND ) ) {
 					queryMethods.add( method );
 				}
 			}
@@ -427,32 +428,34 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 	
 	private void setupSession() {
-		jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
-		final ExecutableElement getter = findSessionGetter( element );
-		if ( getter != null ) {
-			// Never make a DAO for Panache subtypes
-			if ( !isPanacheType( element ) ) {
+		if ( element.getTypeParameters().isEmpty() ) {
+			jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
+			final ExecutableElement getter = findSessionGetter( element );
+			if ( getter != null ) {
+				// Never make a DAO for Panache subtypes
+				if ( !isPanacheType( element ) ) {
+					repository = true;
+					sessionType = addDaoConstructor( getter );
+				}
+				else {
+					// For Panache subtypes, we look at the session type, but no DAO, we want static methods
+					sessionType = getter.getReturnType().toString();
+				}
+			}
+			else if ( element.getKind() == ElementKind.INTERFACE
+					&& ( context.usesQuarkusOrm() || context.usesQuarkusReactive() ) ) {
+				// if we don't have a getter, but we're in Quarkus, we know how to find the default sessions
 				repository = true;
-				sessionType = addDaoConstructor( getter );
+				sessionType = setupQuarkusDaoConstructor();
 			}
-			else {
-				// For Panache subtypes, we look at the session type, but no DAO, we want static methods
-				sessionType = getter.getReturnType().toString();
+			if ( !repository && jakartaDataRepository ) {
+				repository = true;
+				sessionType = HIB_STATELESS_SESSION;
+				addDaoConstructor( null );
 			}
-		}
-		else if ( element.getKind() == ElementKind.INTERFACE
-				&& ( context.usesQuarkusOrm() || context.usesQuarkusReactive() ) ) {
-			// if we don't have a getter, but we're in Quarkus, we know how to find the default sessions
-			repository = true;
-			sessionType = setupQuarkusDaoConstructor();
-		}
-		if ( !repository && jakartaDataRepository ) {
-			repository = true;
-			sessionType = HIB_STATELESS_SESSION;
-			addDaoConstructor( null );
-		}
-		if ( jakartaDataRepository && !quarkusInjection ) {
-			addDefaultConstructor();
+			if ( jakartaDataRepository && !quarkusInjection ) {
+				addDefaultConstructor();
+			}
 		}
 	}
 
@@ -720,7 +723,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addQueryMethod(ExecutableElement method) {
-		TypeMirror returnType = method.getReturnType();
+		final ExecutableType methodType =
+				(ExecutableType) context.getTypeUtils()
+						.asMemberOf((DeclaredType) element.asType(), method);
+		final TypeMirror returnType = methodType.getReturnType();
 		final TypeKind kind = returnType.getKind();
 		if ( kind == TypeKind.VOID ||  kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
@@ -872,7 +878,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final String operation = lifecycleOperation( method );
 			final VariableElement parameter = method.getParameters().get(0);
 			final TypeMirror declaredParameterType = parameter.asType();
-			final TypeMirror parameterType = parameterType( declaredParameterType );
+			final TypeMirror parameterType = parameterType( parameter );
 			final DeclaredType declaredType = entityType( parameterType );
 			if ( declaredType == null ) {
 				context.message( parameter,
@@ -915,6 +921,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable DeclaredType entityType(TypeMirror parameterType) {
+		final Types types = context.getTypeUtils();
 		switch ( parameterType.getKind() ) {
 			case TYPEVAR:
 				final TypeVariable typeVariable = (TypeVariable) parameterType;
@@ -922,12 +929,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				//INTENTIONAL FALL THROUGH
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) parameterType;
-				final Types types = context.getTypeUtils();
 				final Elements elements = context.getElementUtils();
 				if ( types.isAssignable( declaredType,
 						types.erasure( elements.getTypeElement(ITERABLE).asType() ) )
 							&& !declaredType.getTypeArguments().isEmpty() ) {
-					final TypeMirror elementType = parameterType( declaredType.getTypeArguments().get(0) );
+					final TypeMirror elementType = types.erasure( declaredType.getTypeArguments().get(0) );
 					return elementType.getKind() == TypeKind.DECLARED ? (DeclaredType) elementType : null;
 				}
 				else {
@@ -935,7 +941,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			case ARRAY:
 				final ArrayType arrayType = (ArrayType) parameterType;
-				final TypeMirror componentType = parameterType( arrayType.getComponentType() );
+				final TypeMirror componentType = types.erasure( arrayType.getComponentType() );
 				return componentType.getKind() == TypeKind.DECLARED ? (DeclaredType) componentType : null;
 			default:
 				return null;
@@ -1057,7 +1063,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			else {
 				multivalued.add( false );
 				final Types types = context.getTypeUtils();
-				final TypeMirror parameterType = parameter.asType();
+				final TypeMirror parameterType = parameterType( parameter );
 				final String type = parameterType.toString();
 				boolean pageRequest = type.startsWith(JD_PAGE_REQUEST);
 				if ( isOrderParam(type) || pageRequest ) {
@@ -1428,15 +1434,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return null;
 			}
 
-//			final String memberType = attributeType.toString();
-//			final String paramType = parameterType.toString();
-//			if ( !isLegalAssignment( paramType, memberType ) ) {
-//				context.message( param,
-//						"matching field has type '" + memberType
-//								+ "' in entity class '" + entityType + "'",
-//						Diagnostic.Kind.ERROR );
-//			}
-
 			if ( checkParameterType( entityType, param, memberType( member ) ) ) {
 				return FieldType.MULTIVALUED;
 			}
@@ -1485,7 +1482,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean checkParameterType(TypeElement entityType, VariableElement param, TypeMirror attributeType) {
 		final Types types = context.getTypeUtils();
 		if ( entityType.getKind() == CLASS ) { // do no checks if the entity type is a type variable
-			TypeMirror parameterType = param.asType();
+			TypeMirror parameterType = parameterType( param );
 			if ( types.isSameType( parameterType, attributeType ) ) {
 				return false;
 			}
@@ -2088,12 +2085,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private List<String> parameterTypes(ExecutableElement method) {
 		return method.getParameters().stream()
-				.map(param -> parameterType(param.asType()).toString())
+				.map(param -> parameterType(param).toString())
 				.collect(toList());
 	}
 
-	private TypeMirror parameterType(TypeMirror type) {
-		switch (type.getKind()) {
+	private TypeMirror parameterType(VariableElement parameter) {
+		final ExecutableElement method =
+				(ExecutableElement) parameter.getEnclosingElement();
+		final ExecutableType methodType =
+				(ExecutableType) context.getTypeUtils()
+						.asMemberOf((DeclaredType) element.asType(), method);
+		final TypeMirror type = methodType.getParameterTypes()
+				.get( method.getParameters().indexOf(parameter) );
+		switch ( type.getKind() ) {
 			case TYPEVAR:
 				final TypeVariable typeVariable = (TypeVariable) type;
 				return context.getTypeUtils().erasure(typeVariable);
@@ -2213,7 +2217,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( returnType != null ) {
 			final Types types = context.getTypeUtils();
 			for ( VariableElement parameter : method.getParameters() ) {
-				final TypeMirror parameterType = parameter.asType();
+				final TypeMirror parameterType = parameterType( parameter );
 				final TypeMirror typeArgument = getTypeArgument( parameterType );
 				final String type = parameterType.toString();
 				final boolean pageRequest = type.startsWith(JD_PAGE_REQUEST);

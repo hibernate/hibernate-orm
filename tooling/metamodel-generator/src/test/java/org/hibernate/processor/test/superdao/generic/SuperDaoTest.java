@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.processor.test.superdao;
+package org.hibernate.processor.test.superdao.generic;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
@@ -20,10 +20,10 @@ public class SuperDaoTest extends CompilationTest {
 	@Test
 	@WithClasses({ Book.class, SuperDao.class, Dao.class })
 	public void testQueryMethod() {
-//		System.out.println( TestUtil.getMetaModelSourceAsString( SuperDao.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( SuperDao.class ) );
 		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );
-//		assertMetamodelClassGeneratedFor( SuperDao.class );
+		assertMetamodelClassGeneratedFor( SuperDao.class );
 		assertMetamodelClassGeneratedFor( Dao.class );
 	}
 }

@@ -162,7 +162,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		// we try to make use of it and the FK model part if possible based on the inferred mapping
 		if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ModelPart keyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
+			final ModelPart keyTargetMatchPart = associationMapping.getForeignKeyDescriptor().getPart(
+					associationMapping.getSideNature()
+			);
 
 			if ( associationMapping.isFkOptimizationAllowed() ) {
 				final boolean forceUsingForeignKeyAssociationSidePart;
@@ -265,7 +267,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
 			assert sqlAstCreationState.getCurrentSqmQueryPart().isSimpleQueryPart();
 			final SqmQuerySpec<?> querySpec = sqlAstCreationState.getCurrentSqmQueryPart().getFirstQuerySpec();
-			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath ) ) {
+			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath, sqlAstCreationState ) ) {
 				// We must ensure that the order by expression be expanded but only if the group by
 				// contained the same expression, and that was expanded as well
 				expandToAllColumns = false;

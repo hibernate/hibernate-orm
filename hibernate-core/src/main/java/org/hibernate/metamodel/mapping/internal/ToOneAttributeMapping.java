@@ -891,6 +891,7 @@ public class ToOneAttributeMapping
 		return targetKeyPropertyName;
 	}
 
+	@Override
 	public Set<String> getTargetKeyPropertyNames() {
 		return targetKeyPropertyNames;
 	}

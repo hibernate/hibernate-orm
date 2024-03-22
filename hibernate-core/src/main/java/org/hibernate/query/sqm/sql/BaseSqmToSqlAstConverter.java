@@ -514,6 +514,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean negativeAdjustment;
 
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
+	private final HashMap<MetadataKey<?, ?>, Object> metadata = new HashMap<>();
 	private final MappingMetamodel domainModel;
 
 	public BaseSqmToSqlAstConverter(
@@ -8387,6 +8388,42 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			orderByFragments = new ArrayList<>();
 		}
 		orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
+	}
+
+	@Override
+	public <S, M> M resolveMetadata(S source, Function<S, M> producer ) {
+		//noinspection unchecked
+		return (M) metadata.computeIfAbsent( new MetadataKey<>( source, producer ), k -> producer.apply( source ) );
+	}
+
+	static class MetadataKey<S, M> {
+		private final S source;
+		private final Function<S, M> producer;
+
+		public MetadataKey(S source, Function<S, M> producer) {
+			this.source = source;
+			this.producer = producer;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+
+			final MetadataKey<?, ?> that = (MetadataKey<?, ?>) o;
+			return source.equals( that.source ) && producer.equals( that.producer );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = source.hashCode();
+			result = 31 * result + producer.hashCode();
+			return result;
+		}
 	}
 
 	@Override

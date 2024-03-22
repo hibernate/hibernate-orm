@@ -117,7 +117,7 @@ public abstract class AbstractMutationCoordinator {
 		}
 	}
 
-	void handleValueGeneration(
+	protected void handleValueGeneration(
 			AttributeMapping attributeMapping,
 			MutationGroupBuilder mutationGroupBuilder,
 			OnExecutionGenerator generator) {

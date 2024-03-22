@@ -61,6 +61,7 @@ public final class Constants {
 	public static final String SQL = "org.hibernate.annotations.processing.SQL";
 	public static final String FIND = "org.hibernate.annotations.processing.Find";
 	public static final String PATTERN = "org.hibernate.annotations.processing.Pattern";
+	public static final String SUPPRESS = "org.hibernate.annotations.processing.Suppress";
 
 	public static final String JD_REPOSITORY = "jakarta.data.repository.Repository";
 	public static final String JD_QUERY = "jakarta.data.repository.Query";

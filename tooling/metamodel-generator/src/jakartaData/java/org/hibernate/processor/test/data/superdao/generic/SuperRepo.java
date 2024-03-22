@@ -29,8 +29,8 @@ public interface SuperRepo<T,K> {
     @Find
     Page<T> findAll(PageRequest<T> pageRequest);
 
-    @Delete
-    void deleteById(@By("#id") K id);
+//    @Delete
+//    void deleteById(@By("#id") K id);
 
     @Delete
     void delete(T entity);

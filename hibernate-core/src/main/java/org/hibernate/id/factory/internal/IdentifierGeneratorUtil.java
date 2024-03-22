@@ -41,8 +41,12 @@ public class IdentifierGeneratorUtil {
 		);
 	}
 
-	static Properties collectParameters(
-			SimpleValue simpleValue, Dialect dialect, String defaultCatalog, String defaultSchema, RootClass rootClass) {
+	public static Properties collectParameters(
+			SimpleValue simpleValue,
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema,
+			RootClass rootClass) {
 		final ConfigurationService configService =
 				simpleValue.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
 						.requireService( ConfigurationService.class );

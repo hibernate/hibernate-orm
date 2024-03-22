@@ -628,8 +628,8 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	public boolean groupByClauseContains(NavigablePath path) {
-		for ( SqmExpression<?> expression : groupByClauseExpressions ) {
-			if ( expression instanceof SqmPath && ( (SqmPath<?>) expression ).getNavigablePath() == path ) {
+		for ( final SqmExpression<?> expression : groupByClauseExpressions ) {
+			if ( expression instanceof SqmPath && ( (SqmPath<?>) expression ).getNavigablePath().isParentOrEqual( path ) ) {
 				return true;
 			}
 		}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
@@ -21,14 +22,17 @@ import static org.hibernate.processor.util.TypeUtils.propertyName;
  */
 public class DataAnnotationMetaAttribute implements MetaAttribute {
 
-	final Element element;
-	final AnnotationMetaEntity parent;
+	private final Element element;
+	private final AnnotationMetaEntity parent;
 	private final String type;
+	private final @Nullable String path;
 
-	public DataAnnotationMetaAttribute(AnnotationMetaEntity parent, Element element, String type) {
+	public DataAnnotationMetaAttribute(
+			AnnotationMetaEntity parent, Element element, String type, @Nullable String path) {
 		this.element = element;
 		this.parent = parent;
 		this.type = type;
+		this.path = path;
 	}
 
 	@Override
@@ -48,7 +52,8 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 	@Override
 	public String getAttributeDeclarationString() {
 		final String className = parent.importType( parent.getQualifiedName() );
-		final String memberName = element.getSimpleName().toString();
+		final String elementName = element.getSimpleName().toString();
+		final String memberName = path == null ? elementName : path + '.' + elementName;
 		final String impl = isTextual()
 				? parent.importType("jakarta.data.metamodel.impl.TextAttributeRecord")
 				: parent.importType("jakarta.data.metamodel.impl.SortableAttributeRecord");
@@ -63,22 +68,24 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 				.append( "<" )
 				.append( className )
 				.append( "> " )
-				.append( getPropertyName() )
+				.append( getPropertyName().replace('.','_') )
 				.append(" = new ")
 				.append( impl )
 				.append( "<>(\"" )
-				.append(memberName)
+				.append( getPropertyName() )
 				.append( "\");" )
 				.toString();
 	}
 
 	@Override
 	public String getAttributeNameDeclarationString(){
+		final String fieldName =
+				getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName().replace('.', '_'));
 		return new StringBuilder()
 				.append("public static final ")
 				.append(parent.importType(String.class.getName()))
 				.append(" ")
-				.append(getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
+				.append(fieldName)
 				.append(" = ")
 				.append("\"")
 				.append(getPropertyName())
@@ -89,7 +96,8 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getPropertyName() {
-		return propertyName( parent, element );
+		final String propertyName = propertyName(parent, element);
+		return path == null ? propertyName : path + '.' + propertyName;
 	}
 
 	@Override

@@ -142,7 +142,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final MetadataBuildingOptions options;
 
 	private final GlobalRegistrations globalRegistrations;
-	private final PersistenceUnitMetadata persistenceUnitMetadata;
+	private PersistenceUnitMetadata persistenceUnitMetadata;
 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
 
@@ -199,7 +199,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		this.uuid = UUID.randomUUID();
 
 		this.globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext );
-		this.persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
 
 		for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {
@@ -704,6 +703,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 				log.duplicateGeneratorName( old.getName() );
 			}
 		}
+	}
+
+	@Override
+	public void addPersistenceUnitMetadata(PersistenceUnitMetadata persistenceUnitMetadata) {
+		this.persistenceUnitMetadata = persistenceUnitMetadata;
 	}
 
 	@Override

@@ -424,6 +424,7 @@ public class MetadataBuildingProcess {
 
 		assert metadataCollector.getPersistenceUnitMetadata() == xmlPreProcessingResult.getPersistenceUnitMetadata();
 
+		metadataCollector.addPersistenceUnitMetadata( xmlPreProcessingResult.getPersistenceUnitMetadata() );
 		//noinspection unchecked
 		final List<String> allKnownClassNames = mutableJoin(
 				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),

@@ -483,6 +483,8 @@ public class HibernateProcessor extends AbstractProcessor {
 					}
 					addMetamodelToContext( typeElement, metaEntity );
 					if ( context.generateJakartaDataStaticMetamodel()
+							// no static metamodel for embeddable classes in Jakarta Data
+							&& hasAnnotation( element, ENTITY, MAPPED_SUPERCLASS )
 							// Don't generate a Jakarta Data metamodel
 							// if this entity was partially mapped in XML
 							&& alreadyExistingMetaEntity == null ) {

@@ -22,6 +22,7 @@ public final class Constants {
 	public static final String ENTITY = "jakarta.persistence.Entity";
 	public static final String MAPPED_SUPERCLASS = "jakarta.persistence.MappedSuperclass";
 	public static final String EMBEDDABLE = "jakarta.persistence.Embeddable";
+	public static final String EMBEDDED = "jakarta.persistence.Embedded";
 	public static final String ID = "jakarta.persistence.Id";
 	public static final String ID_CLASS = "jakarta.persistence.IdClass";
 	public static final String EMBEDDED_ID = "jakarta.persistence.EmbeddedId";

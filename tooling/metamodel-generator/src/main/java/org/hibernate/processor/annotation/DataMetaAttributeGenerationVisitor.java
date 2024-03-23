@@ -33,10 +33,18 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 
 	private final AnnotationMetaEntity entity;
 	private final Context context;
+	private final @Nullable String path;
 
 	DataMetaAttributeGenerationVisitor(AnnotationMetaEntity entity, Context context) {
 		this.entity = entity;
 		this.context = context;
+		this.path = null;
+	}
+
+	DataMetaAttributeGenerationVisitor(AnnotationMetaEntity entity, String path, Context context) {
+		this.entity = entity;
+		this.context = context;
+		this.path = path;
 	}
 
 	private Types typeUtils() {
@@ -45,19 +53,19 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 
 	@Override
 	public @Nullable DataAnnotationMetaAttribute visitPrimitive(PrimitiveType primitiveType, Element element) {
-		return new DataAnnotationMetaAttribute( entity, element, toTypeString( primitiveType ) );
+		return new DataAnnotationMetaAttribute( entity, element, toTypeString( primitiveType ), path );
 	}
 
 	@Override
 	public @Nullable DataAnnotationMetaAttribute visitArray(ArrayType arrayType, Element element) {
-		return new DataAnnotationMetaAttribute( entity, element, toArrayTypeString( arrayType, context ) );
+		return new DataAnnotationMetaAttribute( entity, element, toArrayTypeString( arrayType, context ), path );
 	}
 
 	@Override
 	public @Nullable DataAnnotationMetaAttribute visitTypeVariable(TypeVariable typeVariable, Element element) {
 		// METAGEN-29 - for a type variable we use the upper bound
 		return new DataAnnotationMetaAttribute( entity, element,
-				typeUtils().erasure( typeVariable.getUpperBound() ).toString() );
+				typeUtils().erasure( typeVariable.getUpperBound() ).toString(), path );
 	}
 
 	@Override
@@ -72,7 +80,7 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 		}
 		else if ( isBasicAttribute( element, returnedElement, context ) ) {
 			final String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
-			return new DataAnnotationMetaAttribute( entity, element, type );
+			return new DataAnnotationMetaAttribute( entity, element, type, path );
 		}
 		else {
 			return null;

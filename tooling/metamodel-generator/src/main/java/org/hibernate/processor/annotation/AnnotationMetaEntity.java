@@ -316,7 +316,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public String scope() {
-		if (jakartaDataRepository && !quarkusInjection) {
+		if (jakartaDataRepository) {
 			return context.addTransactionScopedAnnotation()
 					? "javax.transaction.TransactionScoped"
 					: "jakarta.enterprise.context.RequestScoped";

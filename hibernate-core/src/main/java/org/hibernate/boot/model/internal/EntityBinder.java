@@ -1032,12 +1032,6 @@ public class EntityBinder {
 			if ( ignore ) {
 				LOG.debugf( "Ignoring explicit @DiscriminatorColumn annotation on: %s", annotatedClass.getName() );
 			}
-			else {
-				LOG.applyingExplicitDiscriminatorColumnForJoined(
-						annotatedClass.getName(),
-						AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
-				);
-			}
 			return !ignore;
 		}
 		else {

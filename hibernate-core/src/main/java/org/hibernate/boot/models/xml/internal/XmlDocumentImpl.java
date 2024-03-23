@@ -246,8 +246,8 @@ public class XmlDocumentImpl implements XmlDocument {
 					jaxbRoot.getPackage(),
 					NullnessHelper.coalesce( jaxbRoot.getAccess(), metadata.getAccessType() ),
 					NullnessHelper.coalesce( jaxbRoot.getAttributeAccessor(), metadata.getDefaultAccessStrategyName() ),
-					NullnessHelper.coalesce( jaxbRoot.getCatalog(), metadata.getDefaultCatalog() ),
-					NullnessHelper.coalesce( jaxbRoot.getSchema(), metadata.getDefaultSchema() ),
+					jaxbRoot.getCatalog(),
+					jaxbRoot.getSchema(),
 					jaxbRoot.isAutoImport(),
 					jaxbRoot.isDefaultLazy()
 			);

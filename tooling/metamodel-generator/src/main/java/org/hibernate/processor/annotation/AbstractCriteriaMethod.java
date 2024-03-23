@@ -8,8 +8,6 @@ package org.hibernate.processor.annotation;
 
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
@@ -147,22 +145,12 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 					.append(".in(");
 			if ( paramType.endsWith("[]") ) {
 				declaration
-						.append("(Object[]) ")
-						//TODO: only safe if we are binding literals as parameters!!!
-						.append(parameterName);
+						.append("(Object[]) ");
 
 			}
-			else {
-				declaration
-						.append(annotationMetaEntity.staticImport(StreamSupport.class.getName(), "stream"))
-						.append('(')
-						//TODO: only safe if we are binding literals as parameters!!!
-						.append(parameterName)
-						.append(".spliterator(), false).collect(") // ugh, very ugly!
-						.append(annotationMetaEntity.staticImport(Collectors.class.getName(), "toList"))
-						.append("())");
-			}
 			declaration
+					//TODO: only safe if we are binding literals as parameters!!!
+					.append(parameterName)
 					.append(")");
 		}
 		else {

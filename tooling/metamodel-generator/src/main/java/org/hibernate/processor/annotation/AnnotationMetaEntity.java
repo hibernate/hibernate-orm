@@ -734,23 +734,70 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {
 		for ( Element memberOfClass : membersOfClass ) {
-			if ( isPersistent( memberOfClass, membersKind ) ) {
-				if ( jakartaDataStaticModel ) {
-					final DataAnnotationMetaAttribute dataMetaAttribute =
-							memberOfClass.asType()
-									.accept( new DataMetaAttributeGenerationVisitor( this, context ), memberOfClass );
-					if ( dataMetaAttribute != null ) {
-						members.put( '_' + dataMetaAttribute.getPropertyName(), dataMetaAttribute );
+			if ( isPersistent(memberOfClass, membersKind) ) {
+				addPersistentMember(memberOfClass);
+			}
+		}
+	}
+
+	private void addPersistentMember(Element memberOfClass) {
+		if ( jakartaDataStaticModel ) {
+			final DataAnnotationMetaAttribute dataMetaAttribute =
+					memberOfClass.asType()
+							.accept( new DataMetaAttributeGenerationVisitor(this, context), memberOfClass );
+			if ( dataMetaAttribute != null ) {
+				final String path = dataMetaAttribute.getPropertyName();
+				members.put('_' + path, dataMetaAttribute);
+				if ( isEmbedded(memberOfClass) ) {
+					final TypeMirror type = attributeType(memberOfClass);
+					final DeclaredType declaredType = (DeclaredType) type;
+					final TypeElement typeElement = (TypeElement) declaredType.asElement();
+					for ( Element field : fieldsIn( typeElement.getEnclosedElements() ) ) {
+						addEmbeddablePersistentMember(field, path, AccessType.FIELD);
+					}
+					for ( Element method : methodsIn( typeElement.getEnclosedElements() ) ) {
+						if ( isGetterOrSetter(method) ) {
+							addEmbeddablePersistentMember(method, path, AccessType.PROPERTY);
+						}
 					}
 				}
-				else {
-					final AnnotationMetaAttribute jpaMetaAttribute =
-							memberOfClass.asType()
-									.accept( new MetaAttributeGenerationVisitor( this, context ), memberOfClass );
-					if ( jpaMetaAttribute != null ) {
-						members.put( jpaMetaAttribute.getPropertyName(), jpaMetaAttribute );
-					}
-				}
+			}
+		}
+		else {
+			final AnnotationMetaAttribute jpaMetaAttribute =
+					memberOfClass.asType()
+							.accept( new MetaAttributeGenerationVisitor( this, context ), memberOfClass);
+			if ( jpaMetaAttribute != null ) {
+				members.put( jpaMetaAttribute.getPropertyName(), jpaMetaAttribute );
+			}
+		}
+	}
+
+	private void addEmbeddablePersistentMember(Element memberOfEmbeddable, String path, AccessType membersKind) {
+		if ( isPersistent(memberOfEmbeddable, membersKind) ) { //TODO respect AccessType of embeddable
+			final DataAnnotationMetaAttribute metaAttribute =
+					memberOfEmbeddable.asType()
+							.accept( new DataMetaAttributeGenerationVisitor(this, path, context),
+									memberOfEmbeddable );
+			if (metaAttribute != null) {
+				members.put('_' + metaAttribute.getPropertyName(),
+						metaAttribute);
+			}
+		}
+	}
+
+	static boolean isEmbedded(Element memberOfClass) {
+		if ( hasAnnotation(memberOfClass, EMBEDDED) ) {
+			return true;
+		}
+		else {
+			final TypeMirror type = attributeType(memberOfClass);
+			if ( type.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) type;
+				return hasAnnotation( declaredType.asElement(), EMBEDDABLE );
+			}
+			else {
+				return false;
 			}
 		}
 	}

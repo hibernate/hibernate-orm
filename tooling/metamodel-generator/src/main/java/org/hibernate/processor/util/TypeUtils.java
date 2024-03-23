@@ -43,6 +43,7 @@ import static org.hibernate.processor.util.Constants.ACCESS;
 import static org.hibernate.processor.util.Constants.BASIC;
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
 import static org.hibernate.processor.util.Constants.EMBEDDABLE;
+import static org.hibernate.processor.util.Constants.EMBEDDED;
 import static org.hibernate.processor.util.Constants.EMBEDDED_ID;
 import static org.hibernate.processor.util.Constants.ENTITY;
 import static org.hibernate.processor.util.Constants.ID;
@@ -551,7 +552,7 @@ public final class TypeUtils {
 	}
 
 	public static boolean isBasicAttribute(Element element, Element returnedElement, Context context) {
-		return hasAnnotation( element, BASIC, ONE_TO_ONE, MANY_TO_ONE, EMBEDDED_ID, ID )
+		return hasAnnotation( element, BASIC, ONE_TO_ONE, MANY_TO_ONE, EMBEDDED, EMBEDDED_ID, ID )
 			|| hasAnnotation( element, "org.hibernate.annotations.Type") // METAGEN-28
 			|| returnedElement.asType().accept( new BasicAttributeVisitor( context ), returnedElement );
 	}

@@ -88,7 +88,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping;
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.internal.AnnotationUsageHelper;
@@ -985,16 +984,12 @@ public class XmlAnnotationHelper {
 			JaxbTableImpl jaxbTable,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<Table> tableAnn = XmlProcessingHelper.makeAnnotation( Table.class, target, xmlDocumentContext );
-		final AnnotationDescriptor<Table> tableDescriptor = xmlDocumentContext.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( Table.class );
-
 		if ( jaxbTable == null ) {
 			final XmlDocument.Defaults defaults = xmlDocumentContext.getXmlDocument().getDefaults();
 			final String catalog = defaults.getCatalog();
 			final String schema = defaults.getSchema();
 			if ( StringHelper.isNotEmpty( catalog ) || StringHelper.isNotEmpty( schema ) ) {
+				final MutableAnnotationUsage<Table> tableAnn = XmlProcessingHelper.makeAnnotation( Table.class, target, xmlDocumentContext );
 				if ( StringHelper.isNotEmpty( catalog ) ) {
 					tableAnn.setAttributeValue( "catalog", catalog );
 
@@ -1005,6 +1000,10 @@ public class XmlAnnotationHelper {
 			}
 		}
 		else {
+			final MutableAnnotationUsage<Table> tableAnn = XmlProcessingHelper.makeAnnotation( Table.class, target, xmlDocumentContext );
+			final AnnotationDescriptor<Table> tableDescriptor = xmlDocumentContext.getModelBuildingContext()
+					.getAnnotationDescriptorRegistry()
+					.getDescriptor( Table.class );
 			applyOr( jaxbTable, JaxbTableImpl::getName, "name", tableAnn, tableDescriptor );
 			applyTableAttributes( jaxbTable, target, tableAnn, tableDescriptor, xmlDocumentContext );
 		}
@@ -1742,9 +1741,9 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		applyOr(
 				jaxbNode,
-				(collectionTable) -> {
-					if ( StringHelper.isNotEmpty( collectionTable.getSchema() ) ) {
-						return collectionTable.getSchema();
+				(table) -> {
+					if ( StringHelper.isNotEmpty( table.getSchema() ) ) {
+						return table.getSchema();
 					}
 					else if ( StringHelper.isNotEmpty( defaultSchema( xmlDocumentContext ) ) ) {
 						return defaultSchema( xmlDocumentContext );
@@ -1770,9 +1769,9 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		applyOr(
 				jaxbNode,
-				(collectionTable) -> {
-					if ( StringHelper.isNotEmpty( collectionTable.getCatalog() ) ) {
-						return collectionTable.getCatalog();
+				(table) -> {
+					if ( StringHelper.isNotEmpty( table.getCatalog() ) ) {
+						return table.getCatalog();
 					}
 					else if ( StringHelper.isNotEmpty( defaultCatalog( xmlDocumentContext ) ) ) {
 						return defaultCatalog( xmlDocumentContext );

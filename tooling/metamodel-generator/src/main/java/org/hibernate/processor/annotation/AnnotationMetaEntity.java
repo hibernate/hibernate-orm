@@ -64,7 +64,6 @@ import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.ElementKind.CLASS;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -1176,10 +1175,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				//INTENTIONAL FALL THROUGH
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) parameterType;
-				final Elements elements = context.getElementUtils();
-				if ( types.isAssignable( declaredType,
-						types.erasure( elements.getTypeElement(ITERABLE).asType() ) )
-							&& !declaredType.getTypeArguments().isEmpty() ) {
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				if ( typeElement.getQualifiedName().contentEquals(LIST)
+						&& !declaredType.getTypeArguments().isEmpty() ) {
 					final TypeMirror elementType = types.erasure( declaredType.getTypeArguments().get(0) );
 					return elementType.getKind() == TypeKind.DECLARED ? (DeclaredType) elementType : null;
 				}
@@ -1792,7 +1790,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 */
 	private boolean checkParameterType(TypeElement entityType, VariableElement param, TypeMirror attributeType) {
 		final Types types = context.getTypeUtils();
-		if ( entityType.getKind() == CLASS ) { // do no checks if the entity type is a type variable
+//		if ( entityType.getKind() == CLASS ) { // do no checks if the entity type is a type variable
 			TypeMirror parameterType = parameterType( param );
 			if ( types.isSameType( parameterType, attributeType ) ) {
 				return false;
@@ -1809,8 +1807,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						parameterType = typeVariable.getUpperBound();
 						// INTENTIONAL FALL-THROUGH
 					case DECLARED:
-						final TypeElement iterable = context.getTypeElementForFullyQualifiedName(ITERABLE);
-						if ( types.isAssignable( parameterType, types.getDeclaredType( iterable, attributeType) ) ) {
+						final TypeElement list = context.getTypeElementForFullyQualifiedName(LIST);
+						if ( types.isSameType( parameterType, types.getDeclaredType( list, attributeType) ) ) {
 							return true;
 						}
 						else {
@@ -1836,10 +1834,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						}
 				}
 			}
-		}
-		else {
-			return false;
-		}
+//		}
+//		else {
+//			return false;
+//		}
 	}
 
 	private void parameterTypeError(TypeElement entityType, VariableElement param, TypeMirror attributeType) {

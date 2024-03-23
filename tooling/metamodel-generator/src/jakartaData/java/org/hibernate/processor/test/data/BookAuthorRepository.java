@@ -40,16 +40,13 @@ public interface BookAuthorRepository {
 	void insertBooks0(Book[] books);
 
 	@Insert
-	void insertBooks1(Iterable<Book> books);
+	void insertBooks1(List<Book> books);
 
 	@Insert
-	void insertBooks2(Set<Book> books);
+	List<Book> insertBooks2(List<Book> books);
 
 	@Insert
-	List<Book> insertBooks3(List<Book> books);
-
-	@Insert
-	Book[] insertBooks4(Book[] books);
+	Book[] insertBooks3(Book[] books);
 
 	@Find
 	Book book(String isbn);
@@ -61,7 +58,7 @@ public interface BookAuthorRepository {
 	Book[] books(@By("isbn") String[] isbns);
 
 	@Find
-	List<Book> booksWithPages(Iterable<Integer> pages);
+	List<Book> booksWithPages(List<Integer> pages);
 
 	@Find
 	List<Book> booksWithPages(int pages);
@@ -196,7 +193,4 @@ public interface BookAuthorRepository {
 
 	@Update
 	Book edit(Book book);
-
-	@Insert
-	Iterable<Book> createAll(Iterable<Book> books);
 }

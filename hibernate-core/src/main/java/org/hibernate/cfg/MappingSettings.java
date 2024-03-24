@@ -234,6 +234,8 @@ public interface MappingSettings {
 	 * {@linkplain java.time.Instant} references, use {@code hibernate.type.preferred_instant_jdbc_type=INSTANT}.
 	 * See {@linkplain #PREFERRED_INSTANT_JDBC_TYPE}, {@linkplain org.hibernate.type.SqlTypes#INSTANT} and
 	 * {@linkplain org.hibernate.type.descriptor.jdbc.InstantJdbcType}.
+	 *
+	 * @settingDefault false
 	 * 
 	 * @since 6.5
 	 */

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.function.Function;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -41,6 +42,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
@@ -53,6 +55,7 @@ import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
@@ -157,6 +160,32 @@ public class SqmUtil {
 			}
 		}
 		return false;
+	}
+
+	public static <T, A> SqmAttributeJoin<T, A> findCompatibleFetchJoin(
+			SqmFrom<?, T> sqmFrom,
+			SqmPathSource<A> pathSource,
+			SqmJoinType requestedJoinType) {
+		for ( final SqmJoin<T, ?> join : sqmFrom.getSqmJoins() ) {
+			if ( join.getReferencedPathSource() == pathSource ) {
+				final SqmAttributeJoin<T, ?> attributeJoin = (SqmAttributeJoin<T, ?>) join;
+				if ( attributeJoin.isFetched() ) {
+					final SqmJoinType joinType = join.getSqmJoinType();
+					if ( joinType != requestedJoinType ) {
+						throw new IllegalStateException( String.format(
+								"Requested join fetch with association [%s] with '%s' join type, " +
+										"but found existing join fetch with '%s' join type.",
+								pathSource.getPathName(),
+								requestedJoinType,
+								joinType
+						) );
+					}
+					//noinspection unchecked
+					return (SqmAttributeJoin<T, A>) attributeJoin;
+				}
+			}
+		}
+		return null;
 	}
 
 	public static Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> generateJdbcParamsXref(
@@ -564,14 +593,16 @@ public class SqmUtil {
 		}
 	}
 
-	static <T> JpaOrder sortSpecification(SqmSelectStatement<T> sqm, Order<? super T> order) {
+	static JpaOrder sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
 		final List<SqmSelectableNode<?>> items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
 		int element = order.getElement();
 		if ( element < 1) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element + " (the first select item is element 1)");
+			throw new IllegalQueryOperationException("Cannot order by element " + element
+					+ " (the first select item is element 1)");
 		}
 		if ( element > items.size() ) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element + " (there are only " + items.size() + " select items)");
+			throw new IllegalQueryOperationException("Cannot order by element " + element
+					+ " (there are only " + items.size() + " select items)");
 		}
 		final SqmSelectableNode<?> selected = items.get( element-1 );
 
@@ -591,7 +622,11 @@ public class SqmUtil {
 					if ( !order.getEntityClass().isAssignableFrom( root.getJavaType() ) ) {
 						throw new IllegalQueryOperationException("Select item was of wrong entity type");
 					}
-					final SqmPath<Object> path = root.get( order.getAttributeName() );
+					final StringTokenizer tokens = new StringTokenizer( order.getAttributeName(), "." );
+					SqmPath<?> path = root;
+					while ( tokens.hasMoreTokens() ) {
+						path = path.get( tokens.nextToken() );
+					}
 					return builder.sort( path, order.getDirection(), order.getNullPrecedence(), order.isCaseInsensitive() );
 				}
 				else {

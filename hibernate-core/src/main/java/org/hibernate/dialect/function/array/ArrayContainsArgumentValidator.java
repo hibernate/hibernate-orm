@@ -31,10 +31,13 @@ public class ArrayContainsArgumentValidator extends ArrayArgumentValidator {
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
 			TypeConfiguration typeConfiguration) {
-		final BasicPluralType<?, ?> haystackType = getPluralType( 0, arguments, functionName, typeConfiguration );
+		final BasicPluralType<?, ?> haystackType =
+				getPluralType( 0, arguments, functionName, typeConfiguration );
 		final SqmExpressible<?> expressible = arguments.get( 1 ).getExpressible();
 		final SqmExpressible<?> needleType = expressible == null ? null : expressible.getSqmType();
-		if ( needleType != null && !haystackType.equals( needleType ) && !haystackType.getElementType().equals( needleType ) ) {
+		if ( haystackType!= null && needleType != null
+				&& !haystackType.equals( needleType )
+				&& !haystackType.getElementType().equals( needleType ) ) {
 			throw new FunctionArgumentException(
 					String.format(
 							"Parameter 1 of function '%s()' has type %s, but argument is of type '%s'",

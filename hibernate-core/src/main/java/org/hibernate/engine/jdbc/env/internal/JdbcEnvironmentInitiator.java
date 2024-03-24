@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
@@ -55,6 +56,7 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSI
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
+import static org.hibernate.cfg.JdbcSettings.ALLOW_METADATA_ON_BOOT;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
 import static org.hibernate.cfg.JdbcSettings.DIALECT;
 import static org.hibernate.cfg.JdbcSettings.DIALECT_DB_VERSION;
@@ -65,6 +67,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBooleanWrapper;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
@@ -115,7 +118,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			}
 		}
 
-		if ( useJdbcMetadata( configurationValues ) ) {
+		if ( allowJdbcMetadataAccess( configurationValues ) ) {
 			return getJdbcEnvironmentUsingJdbcMetadata(
 					configurationValues,
 					registry,
@@ -179,15 +182,28 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return new JdbcEnvironmentImpl( registry, dialect );
 	}
 
-	// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
-	// The need for it is intended to be alleviated with future development, thus it is
-	// not defined as an Environment constant...
-	//
-	// it is used to control whether we should consult the JDBC metadata to determine
-	// certain default values; it is useful to *not* do this when the database
-	// may not be available (mainly in tools usage).
-	private static boolean useJdbcMetadata(Map<String, Object> configurationValues) {
-		return getBoolean(USE_JDBC_METADATA_DEFAULTS, configurationValues, true );
+	/**
+	 * Determine whether we can access JDBC {@linkplain DatabaseMetaData metadata} based on
+	 * the {@value JdbcSettings#ALLOW_METADATA_ON_BOOT} setting. The default is to allow access.
+	 *
+	 * @implNote Currently also looks for the deprecated {@value JdbcEnvironmentInitiator#USE_JDBC_METADATA_DEFAULTS} setting as a fallback.
+	 *
+	 * @see JdbcSettings#ALLOW_METADATA_ON_BOOT
+	 */
+	private static boolean allowJdbcMetadataAccess(Map<String, Object> configurationValues) {
+		final Boolean allow = getBooleanWrapper( ALLOW_METADATA_ON_BOOT, configurationValues, null );
+		if ( allow != null ) {
+			return allow;
+		}
+
+		final Boolean use = getBooleanWrapper( USE_JDBC_METADATA_DEFAULTS, configurationValues, null );
+		if ( use != null ) {
+			DEPRECATION_LOGGER.deprecatedSetting( USE_JDBC_METADATA_DEFAULTS, ALLOW_METADATA_ON_BOOT );
+			return use;
+		}
+
+		// allow by default
+		return true;
 	}
 
 	private static String getExplicitDatabaseVersion(

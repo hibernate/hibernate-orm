@@ -26,6 +26,7 @@ import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -109,7 +110,7 @@ public class CustomSQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Entity(name = "Person")
 	@SQLInsert(
 		sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) ",
-		check = ResultCheckStyle.COUNT
+		verify = Expectation.RowCount.class
 	)
 	@SQLUpdate(
 		sql = "UPDATE person SET name = ? where id = ? "

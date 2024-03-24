@@ -170,7 +170,6 @@ public class EntitySuperclassComponentWithCollectionTest {
 	}
 
 	@Entity(name = "Manager")
-	@Table(name = "MANAGER")
 	public static class Manager extends Employee {
 	}
 
@@ -275,7 +274,6 @@ public class EntitySuperclassComponentWithCollectionTest {
 	}
 
 	@Entity(name = "Leader")
-	@Table(name = "LEADER")
 	public static class Leader extends Person {
 	}
 

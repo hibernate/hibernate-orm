@@ -224,7 +224,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				null
+				getUniqueConstraintNameThatMayFail(sqlAst)
 		);
 	}
 

@@ -81,8 +81,13 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * For a {@code select} query, the return type of an annotated method
  * must be:
  * <ul>
- * <li>an entity type, or {@link java.util.List List&lt;E&gt;} where
- *     {@code E} is an entity type,
+ * <li>an entity type, or {@link java.util.Optional Optional&lt;E&gt;}
+ *     where {@code E} is an entity type,
+ * <li>{@link java.util.List List&lt;E&gt;} or
+ *     {@link java.util.stream.Stream Stream&lt;E&gt;}
+ *     where {@code E} is an entity type,
+ * <li>{@link java.util.List List&lt;Object[]&gt;} or
+ *     {@link java.util.stream.Stream Stream&lt;Object[]&gt;}
  * <li>a record type or JavaBean class with a constructor signature
  *     matching the types in the query {@code select} list, or
  *     {@link java.util.List List&lt;R&gt;} where {@code R} is such
@@ -123,6 +128,13 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * &#64;HQL("where title like :title)
  * List&lt;Book&gt; findBooksByTitleWithPagination(String title, Page page, Order&lt;Book&gt; order);
  * </pre>
+ * <p>
+ * As a further exception, a method might support key-based pagination.
+ * Then it must have:
+ * <ul>
+ * <li>return type {@link org.hibernate.query.KeyedResultList}, and
+ * <li>a parameter of type {@link org.hibernate.query.KeyedPage}.
+ * </ul>
  * <p>
  * Queries specified using this annotation are always validated by
  * the Metamodel Generator, and so it isn't necessary to specify the

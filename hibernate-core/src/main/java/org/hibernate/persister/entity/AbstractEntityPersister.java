@@ -1336,17 +1336,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean containsTableReference(String tableExpression) {
-		if ( getTableName().equals( tableExpression ) ) {
-			return true;
-		}
-		else {
-			for ( int i = 0; i < getSubclassTableSpan(); i++ ) {
-				if ( getSubclassTableName( i ).equals( tableExpression ) ) {
-					return true;
-				}
-			}
-			return false;
-		}
+		return contains( getSubclassTableNames(), tableExpression );
 	}
 
 	@Override
@@ -3076,7 +3066,7 @@ public abstract class AbstractEntityPersister
 				rootTableReference,
 				true,
 				sqlAliasBase,
-				(tableExpression) -> contains( getSubclassTableNames(), tableExpression ),
+				(tableExpression) -> getRootEntityDescriptor().containsTableReference( tableExpression ),
 				(tableExpression, tg) -> {
 					final String[] subclassTableNames = getSubclassTableNames();
 					for ( int i = 0; i < subclassTableNames.length; i++ ) {
@@ -3255,7 +3245,7 @@ public abstract class AbstractEntityPersister
 			Map<String, EntityNameUse> entityNameUses,
 			MappingMetamodelImplementor mappingMetamodel,
 			String alias) {
-		final InFragment frag = new InFragment();
+		final InFragment frag = new InFragment( false );
 		if ( isDiscriminatorFormula() ) {
 			frag.setFormula( alias, getDiscriminatorFormulaTemplate() );
 		}

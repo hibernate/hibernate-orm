@@ -110,13 +110,18 @@ values
 /**
  * a 'conflict' clause in an 'insert' statement
  */
-conflictClause: ON CONFLICT conflictTarget? conflictAction;
+conflictClause
+	: ON CONFLICT conflictTarget? DO conflictAction
+	;
+
 conflictTarget
 	: ON CONSTRAINT identifier
-	| LEFT_PAREN simplePath (COMMA simplePath)* RIGHT_PAREN;
+	| LEFT_PAREN simplePath (COMMA simplePath)* RIGHT_PAREN
+	;
+
 conflictAction
-	: DO NOTHING
-	| DO UPDATE setClause whereClause?
+	: NOTHING
+	| UPDATE setClause whereClause?
 	;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1078,6 +1083,7 @@ function
 	| collectionAggregateFunction
 	| collectionFunctionMisuse
 	| jpaNonstandardFunction
+	| columnFunction
 	| genericFunction
 	;
 
@@ -1085,7 +1091,7 @@ function
  * A syntax for calling user-defined or native database functions, required by JPQL
  */
 jpaNonstandardFunction
-	: FUNCTION LEFT_PAREN jpaNonstandardFunctionName (COMMA genericFunctionArguments)? RIGHT_PAREN
+	: FUNCTION LEFT_PAREN jpaNonstandardFunctionName (AS castTarget)? (COMMA genericFunctionArguments)? RIGHT_PAREN
 	;
 
 /**
@@ -1093,7 +1099,12 @@ jpaNonstandardFunction
  */
 jpaNonstandardFunctionName
 	: STRING_LITERAL
+	| identifier
 	;
+
+columnFunction
+    : COLUMN LEFT_PAREN path DOT jpaNonstandardFunctionName (AS castTarget)? RIGHT_PAREN
+    ;
 
 /**
  * Any function invocation that follows the regular syntax
@@ -1613,6 +1624,7 @@ rollup
 	| CASE
 	| CAST
 	| COLLATE
+	| COLUMN
 	| CONFLICT
 	| CONSTRAINT
 	| COUNT
@@ -1650,6 +1662,7 @@ rollup
 	| FETCH
 	| FILTER
 	| FIRST
+	| FK
 	| FOLLOWING
 	| FOR
 	| FORMAT

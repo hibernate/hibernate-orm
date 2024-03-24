@@ -9,12 +9,7 @@ package org.hibernate.orm.test.annotations.beanvalidation;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 @Entity
 public class Address {
@@ -42,7 +37,7 @@ public class Address {
 		this.country = country;
 	}
 
-	@NotNull
+	@NotEmpty
 	public String getLine1() {
 		return line1;
 	}
@@ -51,6 +46,7 @@ public class Address {
 		this.line1 = line1;
 	}
 
+	@NotBlank
 	public String getLine2() {
 		return line2;
 	}

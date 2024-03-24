@@ -41,7 +41,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
@@ -197,7 +196,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final transient boolean jpaComplianceEnabled;
 	private final transient QueryEngine queryEngine;
 	private final transient Supplier<SessionFactoryImplementor> sessionFactory;
-	private final transient ValueHandlingMode criteriaValueHandlingMode;
+	private transient ValueHandlingMode criteriaValueHandlingMode;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Long> longType;
@@ -222,6 +221,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			HibernateCriteriaBuilder builder = extension.extend( this );
 			extensions.put( extension.getRegistrationKey(), builder );
 		}
+	}
+
+	public void setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode) {
+		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
 	}
 
 	@Override
@@ -464,7 +467,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
-		final BasicDomainType<X> type = getTypeConfiguration().standardBasicTypeForJavaType( castTargetJavaType );
+		final BasicType<X> type = getTypeConfiguration().standardBasicTypeForJavaType( castTargetJavaType );
 		return getFunctionDescriptor( "cast" ).generateSqmExpression(
 				asList( (SqmTypedNode<?>) expression, new SqmCastTarget<>( type, this ) ),
 				type,

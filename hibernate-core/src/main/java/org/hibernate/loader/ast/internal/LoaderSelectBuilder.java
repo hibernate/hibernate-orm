@@ -29,7 +29,6 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -49,6 +48,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.internal.TableGroupJoinHelper;
 import org.hibernate.sql.ast.spi.AliasCollector;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
@@ -688,6 +688,8 @@ public class LoaderSelectBuilder {
 			SqlAstCreationState astCreationState) {
 		final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
 		if ( parentNavigablePath == null ) {
+			// Only apply restrictions for root table groups,
+			// because for table group joins the restriction is applied via PluralAttributeMappingImpl.createTableGroupJoin
 			pluralAttributeMapping.applyBaseRestrictions(
 					querySpec::applyPredicate,
 					tableGroup,
@@ -698,37 +700,6 @@ public class LoaderSelectBuilder {
 			);
 			pluralAttributeMapping.applyBaseManyToManyRestrictions(
 					querySpec::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-		}
-		else {
-			final TableGroup parentTableGroup = astCreationState.getFromClauseAccess().getTableGroup(
-					parentNavigablePath );
-			final TableGroupJoin pluralTableGroupJoin = parentTableGroup.findTableGroupJoin( tableGroup );
-			assert pluralTableGroupJoin != null;
-
-			final TableGroupJoin joinForPredicate;
-			if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
-				joinForPredicate = pluralTableGroupJoin;
-			}
-			else {
-				joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
-			}
-
-			pluralAttributeMapping.applyBaseRestrictions(
-					joinForPredicate::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-			pluralAttributeMapping.applyBaseManyToManyRestrictions(
-					joinForPredicate::applyPredicate,
 					tableGroup,
 					true,
 					loadQueryInfluencers.getEnabledFilters(),

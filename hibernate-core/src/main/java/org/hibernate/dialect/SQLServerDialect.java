@@ -707,7 +707,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
 						case 2627:
 						case 2601:
-							return extractUsingTemplate( "'", "'", sqle.getMessage() );
+							String message = sqle.getMessage();
+							if ( message.contains("unique index ") ) {
+								return extractUsingTemplate( "unique index '", "'", message);
+							}
+							else {
+								return extractUsingTemplate( "'", "'", message);
+							}
 						default:
 							return null;
 					}
@@ -728,18 +734,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				case 1222:
 					return new LockTimeoutException( message, sqlException, sql );
 				case 2627:
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-					);
 				case 2601:
 					return new ConstraintViolationException(
 							message,
 							sqlException,
 							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
 							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
 					);
 				default:

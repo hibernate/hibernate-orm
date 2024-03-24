@@ -35,11 +35,11 @@ import java.util.Set;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.dialect.function.SqlColumn;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.CharSequenceHelper;
-import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
@@ -59,7 +59,6 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
-import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.SyntaxException;
@@ -247,7 +246,10 @@ import static org.hibernate.grammars.hql.HqlParser.INTERSECT;
 import static org.hibernate.grammars.hql.HqlParser.ListaggFunctionContext;
 import static org.hibernate.grammars.hql.HqlParser.OnOverflowClauseContext;
 import static org.hibernate.grammars.hql.HqlParser.PLUS;
+import static org.hibernate.grammars.hql.HqlParser.QUOTED_IDENTIFIER;
 import static org.hibernate.grammars.hql.HqlParser.UNION;
+import static org.hibernate.internal.util.QuotingHelper.unquoteIdentifier;
+import static org.hibernate.internal.util.QuotingHelper.unquoteJavaStringLiteral;
 import static org.hibernate.internal.util.QuotingHelper.unquoteStringLiteral;
 import static org.hibernate.query.hql.internal.SqmTreeCreationHelper.extractJpaCompliantAlias;
 import static org.hibernate.query.sqm.TemporalUnit.DATE;
@@ -274,6 +276,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private static final Logger log = Logger.getLogger( SemanticQueryBuilder.class );
 	private static final Set<String> JPA_STANDARD_FUNCTIONS;
+
+	private static final BasicTypeImpl<Object> OBJECT_BASIC_TYPE =
+			new BasicTypeImpl<>( new UnknownBasicJavaType<>(Object.class), ObjectJdbcType.INSTANCE );
 
 	static {
 		final Set<String> jpaStandardFunctions = new HashSet<>();
@@ -1953,8 +1958,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public String visitNakedIdentifier(HqlParser.NakedIdentifierContext ctx) {
 		final TerminalNode node = (TerminalNode) ctx.getChild( 0 );
 		final String text = node.getText();
-		return node.getSymbol().getType() == HqlParser.QUOTED_IDENTIFIER
-				? QuotingHelper.unquoteIdentifier( text )
+		return node.getSymbol().getType() == QUOTED_IDENTIFIER
+				? unquoteIdentifier( text )
 				: text;
 	}
 
@@ -3166,9 +3171,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitCollation(HqlParser.CollationContext ctx) {
-		return new SqmCollation(
-				ctx.simplePath().getText(),
-				null,
+		final StringBuilder collation = new StringBuilder();
+		final HqlParser.SimplePathContext simplePathContext = ctx.simplePath();
+		final boolean quoted = simplePathContext.getStart().getType() == QUOTED_IDENTIFIER;
+		if ( quoted ) {
+			collation.append("\"");
+		}
+		collation.append( visitIdentifier( simplePathContext.identifier() ) );
+		for ( HqlParser.SimplePathElementContext pathElementContext
+				: simplePathContext.simplePathElement() ) {
+			collation.append( visitIdentifier( pathElementContext.identifier() ) );
+		}
+		if ( quoted ) {
+			collation.append("\"");
+		}
+		return new SqmCollation( collation.toString(), null,
 				creationContext.getNodeBuilder() );
 	}
 
@@ -3721,7 +3738,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmLiteral<String> javaStringLiteral(String text) {
-		String unquoted = QuotingHelper.unquoteJavaStringLiteral( text );
+		String unquoted = unquoteJavaStringLiteral( text );
 		return new SqmLiteral<>(
 				unquoted,
 				resolveExpressibleTypeBasic( String.class ),
@@ -3896,43 +3913,64 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Functions
 
+	private String toName(HqlParser.JpaNonstandardFunctionNameContext ctx) {
+		return ctx.STRING_LITERAL() == null
+				? ctx.identifier().getText().toLowerCase()
+				: unquoteStringLiteral( ctx.STRING_LITERAL().getText() ).toLowerCase();
+	}
+
 	@Override
 	public SqmExpression<?> visitJpaNonstandardFunction(HqlParser.JpaNonstandardFunctionContext ctx) {
-		final String functionName = unquoteStringLiteral( ctx.jpaNonstandardFunctionName().getText() ).toLowerCase();
-		final List<SqmTypedNode<?>> functionArguments;
-		if ( ctx.getChildCount() > 4 ) {
-			//noinspection unchecked
-			functionArguments = (List<SqmTypedNode<?>>) ctx.genericFunctionArguments().accept( this );
-		}
-		else {
-			functionArguments = emptyList();
-		}
+		final String functionName = toName( ctx.jpaNonstandardFunctionName() );
+		final HqlParser.GenericFunctionArgumentsContext argumentsContext = ctx.genericFunctionArguments();
+		@SuppressWarnings("unchecked")
+		final List<SqmTypedNode<?>> functionArguments =
+				argumentsContext == null
+						? emptyList()
+						: (List<SqmTypedNode<?>>) argumentsContext.accept(this);
 
+		final BasicType<?> returnableType = returnType( ctx.castTarget() );
 		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( functionName );
-		if (functionTemplate == null) {
+		if ( functionTemplate == null ) {
 			functionTemplate = new NamedSqmFunctionDescriptor(
 					functionName,
 					true,
 					null,
-					StandardFunctionReturnTypeResolvers.invariant(
-							new BasicTypeImpl<>(
-									new UnknownBasicJavaType<>( Object.class ),
-									ObjectJdbcType.INSTANCE
-							)
-					),
+					StandardFunctionReturnTypeResolvers.invariant(returnableType),
 					null
 			);
 		}
 		return functionTemplate.generateSqmExpression(
 				functionArguments,
-				null,
+				returnableType,
 				creationContext.getQueryEngine()
 		);
 	}
 
 	@Override
+	public SqmExpression<?> visitColumnFunction(HqlParser.ColumnFunctionContext ctx) {
+		final String columnName = toName( ctx.jpaNonstandardFunctionName() );
+		final SemanticPathPart semanticPathPart = visitPath( ctx.path() );
+		final BasicType<?> resultType = returnType( ctx.castTarget() );
+		return new SqlColumn( columnName, resultType ).generateSqmExpression(
+				(SqmTypedNode<?>) semanticPathPart,
+				resultType,
+				creationContext.getQueryEngine()
+		);
+	}
+
+	private BasicType<?> returnType(HqlParser.CastTargetContext castTarget) {
+		if ( castTarget == null ) {
+			return OBJECT_BASIC_TYPE;
+		}
+		else {
+			return (BasicType<?>) visitCastTarget( castTarget ).getType();
+		}
+	}
+
+	@Override
 	public String visitGenericFunctionName(HqlParser.GenericFunctionNameContext ctx) {
-		StringBuilder functionName = new StringBuilder( visitIdentifier( ctx.simplePath().identifier() ) );
+		final StringBuilder functionName = new StringBuilder( visitIdentifier( ctx.simplePath().identifier() ) );
 		for ( HqlParser.SimplePathElementContext sp: ctx.simplePath().simplePathElement() ) {
 			// allow function names of form foo.bar to be located in the registry
 			functionName.append('.').append( visitIdentifier( sp.identifier() ) );
@@ -4460,9 +4498,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final Integer scale = secondArg == null ? null : Integer.valueOf( secondArg.getText() );
 
 		return new SqmCastTarget<>(
-				(ReturnableType<?>)
-						creationContext.getTypeConfiguration()
-								.resolveCastTargetType( targetName ),
+				creationContext.getTypeConfiguration()
+						.resolveCastTargetType( targetName ),
 				//TODO: is there some way to interpret as length vs precision/scale here at this point?
 				length,
 				precision,

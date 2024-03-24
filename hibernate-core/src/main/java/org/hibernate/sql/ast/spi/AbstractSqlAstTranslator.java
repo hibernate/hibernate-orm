@@ -212,7 +212,6 @@ import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -846,26 +845,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 
+		return new JdbcOperationQueryInsertImpl(
+				getSql(),
+				getParameterBinders(),
+				getAffectedTableNames(),
+				getUniqueConstraintNameThatMayFail(sqlAst)
+		);
+	}
+
+	protected String getUniqueConstraintNameThatMayFail(InsertSelectStatement sqlAst) {
 		final ConflictClause conflictClause = sqlAst.getConflictClause();
-		final String uniqueConstraintNameThatMayFail;
 		if ( conflictClause == null || !conflictClause.getConstraintColumnNames().isEmpty() ) {
-			uniqueConstraintNameThatMayFail = null;
+			return null;
 		}
 		else {
 			if ( sqlAst.getSourceSelectStatement() != null && !isFetchFirstRowOnly( sqlAst.getSourceSelectStatement() )
 					|| sqlAst.getValuesList().size() > 1 ) {
 				throw new IllegalQueryOperationException( "Can't emulate conflict clause with constraint name for more than one row to insert" );
 			}
-			uniqueConstraintNameThatMayFail = conflictClause.getConstraintName() == null
-					? ""
-					: conflictClause.getConstraintName();
+			return conflictClause.getConstraintName() == null ? "" : conflictClause.getConstraintName();
 		}
-		return new JdbcOperationQueryInsertImpl(
-				getSql(),
-				getParameterBinders(),
-				getAffectedTableNames(),
-				uniqueConstraintNameThatMayFail
-		);
 	}
 
 	protected JdbcOperationQuerySelect translateSelect(SelectStatement selectStatement) {
@@ -890,10 +889,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
-		final JdbcValuesMappingProducerProvider producerProvider = getSessionFactory()
+		return getSessionFactory()
 				.getFastSessionServices()
-				.getJdbcValuesMappingProducerProvider();
-		return producerProvider.buildMappingProducer( selectStatement, getSessionFactory() );
+				.getJdbcValuesMappingProducerProvider()
+				.buildMappingProducer( selectStatement, getSessionFactory() );
 	}
 
 	protected int getRowsToSkip(SelectStatement sqlAstSelect, JdbcParameterBindings jdbcParameterBindings) {
@@ -2059,7 +2058,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// propagated, but instead will run the respective conflict action.
 		final String constraintName = conflictClause.getConstraintName();
 		if ( constraintName != null ) {
-			throw new IllegalQueryOperationException( "Dialect does not support constraint name in conflict clause" );
+			if ( conflictClause.isDoUpdate() ) {
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
+			}
+			else {
+				return;
+			}
 		}
 //		final List<String> constraintColumnNames = conflictClause.getConstraintColumnNames();
 //		if ( !constraintColumnNames.isEmpty() ) {
@@ -2437,7 +2441,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				.get( 1 ) == getCurrentQueryPart();
 	}
 
-	private boolean isInSubquery() {
+	protected boolean isInSubquery() {
 		return statementStack.depth() > 1 && statementStack.getCurrent() instanceof SelectStatement
 				&& !( (SelectStatement) statementStack.getCurrent() ).getQueryPart().isRoot();
 	}
@@ -2445,8 +2449,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitCteDefinition(CteStatement cte) {
 		final CteStatement oldCteStatement = currentCteStatement;
 		currentCteStatement = cte;
+		final Limit oldLimit = limit;
+		limit = null;
 		cte.getCteDefinition().accept( this );
 		currentCteStatement = oldCteStatement;
+		limit = oldLimit;
 	}
 
 	/**
@@ -4401,7 +4408,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		if ( ignoreCase ) {
-			appendSql("lower(");
+			appendSql( dialect.getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
 		}
 
 		if ( inOverOrWithinGroupClause() ) {
@@ -4412,7 +4420,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		if ( ignoreCase ) {
-			appendSql(")");
+			appendSql( CLOSE_PARENTHESIS );
 		}
 
 		if ( sortOrder == SortDirection.DESCENDING ) {
@@ -6210,11 +6218,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				true,
 				null
 		);
+		final Limit oldLimit = limit;
+		limit = null;
 		statementStack.push( cteDefinition );
 		renderPrimaryTableReference( queryPartTableGroup, lockMode );
 		if ( queryPartTableGroup.isLateral() && !dialect.supportsLateral() ) {
 			addAdditionalWherePredicate( determineLateralEmulationPredicate( queryPartTableGroup ) );
 		}
+		limit = oldLimit;
 		statementStack.pop();
 	}
 
@@ -7591,7 +7602,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
-			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
+			emptyInList( inListPredicate );
 			return;
 		}
 		Function<Expression, Expression> itemAccessor = Function.identity();
@@ -7696,6 +7707,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( parenthesis ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	protected void emptyInList(InListPredicate inListPredicate) {
+		appendSql("(");
+		appendSql( inListPredicate.isNegated() ? "0" : "1" );
+		appendSql(" = case when ");
+		inListPredicate.getTestExpression().accept( this );
+		appendSql( " is not null then 0");
+//		dialect.appendBooleanValueString( this, inListPredicate.isNegated() );
+		appendSql(" end)");
 	}
 
 	private void appendInClauseSeparator(InListPredicate inListPredicate) {

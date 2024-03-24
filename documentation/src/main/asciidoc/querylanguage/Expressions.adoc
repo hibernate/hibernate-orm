@@ -495,6 +495,15 @@ from Event where (year, day) > (year(local date), day(local date))
 
 This syntax may be used even when the underlying SQL dialect does _not_ support so-called "row value" constructors.
 
+A tuple value may be compared to an embedded field:
+
+[[tuple-embeddable]]
+[source,hql]
+----
+from Person
+where address = ('1600 Pennsylvania Avenue, NW', 'Washington', 'DC', 20500, 'USA')
+----
+
 [[exp-functions]]
 === Functions
 
@@ -722,6 +731,11 @@ The `format()` function formats a date, time, or datetime according to a pattern
 
 The pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
 
+[source, hql]
+----
+select format(local datetime as 'yyyy-MM-dd HH:mm:ss')
+----
+
 For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
 
 [[function-trunc-datetime]]
@@ -734,6 +748,11 @@ The `truncate()` function truncates the precision of a date, time, or datetime t
 - Its second argument is a date/time field type, specifying the precision of the truncated value.
 
 Supported temporal units are: `year`, `month`, `day`, `hour`, `minute` or `second`.
+
+[source, hql]
+----
+select trunc(local datetime, hour)
+----
 
 Truncating a date, time or datetime value means obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
 For hours, minutes and second this means setting them to `00`. For months and days, this means setting them to `01`.
@@ -759,7 +778,11 @@ Naturally, there are a good number of functions for working with strings.
 | `substring()` | Substring of a string (ANSI SQL-style)
 | `substring(str from start)`, +
 `substring(str from start for len)` | ✖ / ✔
-| `trim()` | Trim characters from string | See below | ✔ / ✔
+| `trim()` | Trim characters from string
+| `trim(str)`, +
+`trim(leading from str)`, +
+`trim(trailing from str)`, or +
+`trim(leading char from str)` | ✔ / ✔
 | `overlay()` | For replacing a substring
 | `overlay(str placing rep from start)`, +
 `overlay(str placing rep from start for len)` | ✖ / ✔
@@ -771,7 +794,7 @@ Naturally, there are a good number of functions for working with strings.
 | `left()` | The leftmost characters of a string | `left(str, len)` | ✖ / ✖
 | `right()` | The rightmost characters of a string | `right(str, len)`  | ✖ / ✖
 | `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✖ / ✖
-| `repeat()` | Concatenate a string with itself multiple times | `replace(str, times)` | ✖ / ✖
+| `repeat()` | Concatenate a string with itself multiple times | `repeat(str, times)` | ✖ / ✖
 | `collate()` | Select a collation | `collate(p.name as collation)` | ✖ / ✖
 |===
 
@@ -876,12 +899,16 @@ Its BNF is given by:
 [discrete]
 ===== Collations
 
-Selects a collation to be used for its string-valued argument.
+The `collate()` function selects a collation to be used for its string-valued argument.
 Collations are useful for <<relational-comparisons,binary comparisons>> with `<` or `>`, and in the <<order-by,order by clause>>.
 
 For example, `collate(p.name as ucs_basic)` specifies the SQL standard collation `ucs_basic`.
 
 IMPORTANT: Collations aren't very portable between databases.
+
+TIP: Some PostgreSQL collation names must be quoted with backticks, for example, ``collate(name as \`zh_TW.UTF-8`)``.
+
+TIP: The `@Collate` annotation may be used to specify the collation of a column, which is usually more convenient than using the `collate()` function.
 
 [[functions-numeric]]
 ==== Numeric functions
@@ -1096,15 +1123,56 @@ Finally, the following functions evaluate the id, version, or natural id of an e
 Useful with associations annotated `@NotFound`. | ✖
 |===
 
+[[embedding-sql]]
+==== Embedding SQL expressions
+
+The following special functions let us embed a call to a native SQL function, refer directly to a column, or evaluate an expression written in native SQL.
+
+[[sql-embedding-functions]]
+[cols="12,~,35,^15"]
+|===
+| Function | Purpose | Signature | JPA standard
+
+| `function()` | Call a SQL function
+| `function('fun', arg1, arg2)`
+| ✔
+| `function()` | Call a SQL function
+| `function(fun, arg1, arg2)`, +
+`function(fun as Type, arg1, arg2)`
+| ✖
+| `column()` | A column value | `column(entity.column)`, +
+`column(entity.column as Type)`
+| ✖
+| `sql()` | Evaluate a SQL expression
+| `sql('text', arg1, arg2)`
+| ✖
+|===
+
+TIP: Before using one of these functions, ask yourself if it might be better to just write the whole query in native SQL.
+
+[[column-references]]
+===== Direct column references
+
+The `column()` function lets us refer to an unmapped column of a table.
+The column name must be qualified by an identification variable or path expression.
+
+[source,hql]
+----
+select column(log.ctid as String)
+from Log log
+----
+
+Of course, the table itself must be mapped by an entity class.
+
 [[user-defined-functions]]
-==== Native and user-defined functions
+===== Native and user-defined functions
 
 The functions we've described above are the functions abstracted by HQL and made portable across databases.
 But, of course, HQL can't abstract every function in your database.
 
 There are several ways to call native or user-defined SQL functions.
 
-- A native or user-defined function may be called using JPQL's `function` syntax, for example, ``function('sinh', phi)``.
+- A native or user-defined function may be called using JPQL's `function` syntax, for example, ``function('sinh', phi)``, or HQL's extension to that syntax, for example ``function(sinh as Double, phi)``.
 (This is the easiest way, but not the best way.)
 - A user-written `FunctionContributor` may register user-defined functions.
 - A custom `Dialect` may register additional native functions by overriding `initializeFunctionRegistry()`.
@@ -1126,7 +1194,7 @@ Then at startup Hibernate will log a list of type signatures of all registered f
 
 
 [[function-sql]]
-==== Embedding native SQL in HQL
+===== Embedding native SQL in HQL
 
 The special function `sql()` allows the use of native SQL fragments inside an HQL query.
 

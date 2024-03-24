@@ -80,10 +80,23 @@ import org.hibernate.graph.GraphSemantic;
  * </ul>
  * <p>
  * The special built-in fetch profile named
- * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds
- * a fetch join for every {@link jakarta.persistence.FetchType#EAGER eager}
- * {@code @ManyToOne} or {@code @OneToOne} association belonging to an entity
- * returned by the query.
+ * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds a fetch join for
+ * every {@link jakarta.persistence.FetchType#EAGER eager} {@code @ManyToOne} or
+ * {@code @OneToOne} association belonging to an entity returned by the query.
+ * <p>
+ * Finally, two alternative approaches to pagination are available:
+ * <ol>
+ * <li>
+ * The operations and {@link #setOrder(List)} and {@link #setPage(Page)}, together
+ * with {@link Order} and {@link Page}, provide a streamlined API for offset-based
+ * pagination, at a slightly higher semantic level than the ancient but dependable
+ * {@link #setFirstResult(int)} and {@link #setMaxResults(int)}.
+ * <li>
+ * On the other hand, {@link KeyedPage} and {@link KeyedResultList}, along with
+ * {@link #getKeyedResultList(KeyedPage)}, provide for <em>key-based pagination</em>,
+ * which can help eliminate missed or duplicate results when data is modified
+ * between page requests.
+ * </ol>
  *
  * @author Steve Ebersole
  */
@@ -141,9 +154,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *
 	 * @return The results as a {@link Stream}
 	 *
-	 * @implNote: The default implementation simply returns
-	 * <code>{@link #list()}.stream()</code>. Concrete implementations
-	 * may provide more efficient implementations.
+	 * @implNote The default implementation defined here simply returns
+	 *           {@link #list()}{@code .stream()}. Concrete implementations
+	 *           may be more efficient.
 	 */
 	default Stream<R> getResultStream() {
 		return stream();
@@ -219,6 +232,24 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	@Incubating
 	long getResultCount();
+
+	/**
+	 * Execute the query and return the results for the given
+	 * {@linkplain KeyedPage page}, using key-based pagination.
+	 *
+	 * @param page the key-based specification of the page as
+	 *        an instance of {@link KeyedPage}
+	 *
+	 * @return the query results and the key of the next page
+	 *         as an instance of {@link KeyedResultList}
+	 *
+	 * @since 6.5
+	 *
+	 * @see KeyedPage
+	 * @see KeyedResultList
+	 */
+	@Incubating
+	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
 
 	SelectionQuery<R> setHint(String hintName, Object value);
 

@@ -508,7 +508,7 @@ include::{extrasdir}/pc-filter-persistence-example.sql[]
 ----
 ====
 
-By default, without explicitly enabling the filter, Hibernate is going to fetch all `Account` entities.
+By default, without enabling the filter, Hibernate is going to fetch all `Account` entities.
 
 [[pc-no-filter-entity-query-example]]
 .Query entities mapped without activating the `@Filter`
@@ -526,6 +526,8 @@ include::{extrasdir}/pc-no-filter-entity-query-example.sql[]
 
 If the filter is enabled and the filter parameter value is provided,
 then Hibernate is going to apply the filtering criteria to the associated `Account` entities.
+The filter can be enabled explicitly on the session or by specifying
+that it will be enabled by default directly on its `@FilterDef`.
 
 [[pc-filter-entity-query-example]]
 .Query entities mapped with `@Filter`
@@ -534,12 +536,25 @@ then Hibernate is going to apply the filtering criteria to the associated `Accou
 ----
 include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-query-example]
 ----
+[source, JAVA, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-auto-enabled-Account-example]
+----
 
 [source, SQL, indent=0]
 ----
 include::{extrasdir}/pc-filter-entity-query-example.sql[]
 ----
 ====
+
+A parameter's value can be explicitly set on the filter itself, or can be
+resolved by using a custom `Supplier`. The resolver must implement
+the interface `java.util.function.Supplier` and must be defined as a managed bean.
+
+[source, JAVA, indent=0]
+----
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-resolver-Account-example]
+----
 
 [IMPORTANT]
 ====
@@ -562,7 +577,8 @@ include::{extrasdir}/pc-filter-entity-example.sql[]
 As you can see from the example above, contrary to an entity query, the filter does not prevent the entity from being loaded.
 ====
 
-Just like with entity queries, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.
+Just like with entity queries, collections can be filtered as well, but only if the filter is enabled on the currently running Hibernate `Session`,
+either if the filter is enabled explicitly or by setting `autoEnabled` to `true`.
 
 [[pc-no-filter-collection-query-example]]
 .Traversing collections without activating the `@Filter`

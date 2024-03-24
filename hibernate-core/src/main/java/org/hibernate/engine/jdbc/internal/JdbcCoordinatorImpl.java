@@ -257,11 +257,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		if ( transactionTimeOutInstant < 0 ) {
 			return -1;
 		}
-		final int secondsRemaining = (int) ((transactionTimeOutInstant - System.currentTimeMillis()) / 1000);
-		if ( secondsRemaining <= 0 ) {
+		final long millisecondsRemaining = transactionTimeOutInstant - System.currentTimeMillis();
+		if ( millisecondsRemaining <= 0L ) {
 			throw new TransactionException( "transaction timeout expired" );
 		}
-		return secondsRemaining;
+		return Math.max( (int) (millisecondsRemaining / 1000), 1 );
 	}
 
 	@Override

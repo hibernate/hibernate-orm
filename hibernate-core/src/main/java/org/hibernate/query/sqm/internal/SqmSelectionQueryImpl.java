@@ -31,7 +31,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.SelectionQuery;
@@ -63,7 +62,6 @@ import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
 
-import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
@@ -77,7 +75,6 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
-import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 
 /**
  * @author Steve Ebersole
@@ -246,6 +243,11 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	@Override
+	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
+		this.sqm = sqm;
+	}
+
+	@Override
 	public DomainParameterXref getDomainParameterXref() {
 		return domainParameterXref;
 	}
@@ -274,34 +276,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 //		setMaxResults( pageSize );
 //		return this;
 //	}
-
-	@Override
-	public SelectionQuery<R> setPage(Page page) {
-		setMaxResults( page.getMaxResults() );
-		setFirstResult( page.getFirstResult() );
-		return this;
-	}
-
-	@Override
-	public SelectionQuery<R> setOrder(List<Order<? super R>> orderList) {
-		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-		sqm.orderBy( orderList.stream().map( order -> sortSpecification( sqm, order ) )
-				.collect( toList() ) );
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
-		return this;
-	}
-
-	@Override
-	public SelectionQuery<R> setOrder(Order<? super R> order) {
-		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-		sqm.orderBy( sortSpecification( sqm, order ) );
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
-		return this;
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// execution

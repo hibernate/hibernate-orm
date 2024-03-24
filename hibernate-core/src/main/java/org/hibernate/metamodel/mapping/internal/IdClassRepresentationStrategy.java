@@ -6,15 +6,21 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Locale;
+
+import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoStandard;
+import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordStandard;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.internal.util.ReflectHelper.isRecord;
 
 /**
  * EmbeddableRepresentationStrategy for an IdClass mapping
@@ -25,7 +31,9 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 
 	public IdClassRepresentationStrategy(IdClassEmbeddable idClassEmbeddable) {
 		this.idClassType = idClassEmbeddable.getMappedJavaType();
-		this.instantiator = new EmbeddableInstantiatorPojoStandard( idClassType, () -> idClassEmbeddable );
+		this.instantiator = isRecord( idClassType.getJavaTypeClass() ) ?
+				new EmbeddableInstantiatorRecordStandard( idClassType.getJavaTypeClass() ) :
+				new EmbeddableInstantiatorPojoStandard( idClassType, () -> idClassEmbeddable );
 	}
 
 	@Override
@@ -50,9 +58,23 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 
 	@Override
 	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
-		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess(
+		final PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( idClassType.getJavaTypeClass() );
+
+		if ( strategy == null ) {
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Could not resolve PropertyAccess for attribute `%s#%s`",
+							idClassType.getTypeName(),
+							bootAttributeDescriptor.getName()
+					)
+			);
+		}
+
+		return strategy.buildPropertyAccess(
 				idClassType.getJavaTypeClass(),
 				bootAttributeDescriptor.getName(),
-				true );
+				false
+		);
 	}
 }

@@ -80,7 +80,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -258,7 +258,12 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected void renderSelectExpression(Expression expression) {
-		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		if ( isInSubquery() && expression instanceof Literal ) {
+			renderCasted( expression );
+		}
+		else {
+			renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		}
 	}
 
 	@Override

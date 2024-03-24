@@ -11,11 +11,15 @@ import java.util.Set;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
@@ -123,6 +127,26 @@ public class JoinTableOptimizationTest {
 		);
 	}
 
+	@Test
+	@JiraKey("HHH-17830")
+	public void testElementCollectionJoinCustomOnClause(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select p.text from Document d join d.pages p on p.text is not null" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					Assertions.assertEquals(
+							"select p1_0.text " +
+									"from Document d1_0 " +
+									"join document_pages p1_0 on d1_0.id=p1_0.Document_id and p1_0.text is not null",
+							statementInspector.getSqlQueries().get( 0 ),
+							"Join condition was wrongly removed"
+					);
+				}
+		);
+	}
+
 	@Entity(name = "Document")
 	public static class Document {
 		@Id
@@ -131,11 +155,18 @@ public class JoinTableOptimizationTest {
 		@OneToMany
 		@JoinTable(name = "people")
 		Set<Person> people;
+		@ElementCollection
+		@CollectionTable(name = "document_pages")
+		Set<Page> pages;
 	}
 	@Entity(name = "Person")
 	public static class Person {
 		@Id
 		Long id;
 		String name;
+	}
+	@Embeddable
+	public static class Page {
+		String text;
 	}
 }

@@ -7,6 +7,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
+import org.hibernate.SharedSessionContract;
 
 /**
  * Defines the contract for handling of session auto-flush events.
@@ -20,4 +21,7 @@ public interface AutoFlushEventListener {
 	 * @param event The auto-flush event to be handled.
 	 */
 	void onAutoFlush(AutoFlushEvent event) throws HibernateException;
+
+	default void onAutoPreFlush(EventSource source) throws HibernateException {
+	}
 }

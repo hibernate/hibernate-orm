@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -323,7 +324,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * <p>
 	 * The type names are not case-sensitive.
 	 */
-	public BasicValuedMapping resolveCastTargetType(String name) {
+	public BasicType<?> resolveCastTargetType(String name) {
 		switch ( name.toLowerCase() ) {
 			case "string": return getBasicTypeForJavaType( String.class );
 			case "character": return getBasicTypeForJavaType( Character.class );
@@ -352,8 +353,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "truefalse": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.TRUE_FALSE.getName() );
 			case "yesno": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.YES_NO.getName() );
 			case "numericboolean": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.NUMERIC_BOOLEAN.getName() );
+			//really not sure about this one - it works well for casting from binary
+			//to UUID, but people will want to use it to cast from varchar, and that
+			//won't work at all without some special casing in the Dialects
+//			case "uuid": return getBasicTypeForJavaType( UUID.class );
 			default: {
-				final BasicType<Object> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
+				final BasicType<?> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
 				if ( registeredBasicType != null ) {
 					return registeredBasicType;
 				}

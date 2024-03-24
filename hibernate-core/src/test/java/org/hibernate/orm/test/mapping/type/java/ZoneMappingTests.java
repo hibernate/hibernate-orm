@@ -18,10 +18,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CollectionTable;
@@ -70,18 +71,34 @@ public class ZoneMappingTests {
 			session.persist( entity3 );
 		} );
 
-		try {
-			scope.inTransaction( (session) -> {
-				session.createQuery( "from ZoneMappingTestEntity" ).list();
-			});
-		}
-		finally {
-			scope.inTransaction( (session) -> {
-				session.createQuery( "delete ZoneMappingTestEntity" ).executeUpdate();
-			});
-		}
+		scope.inTransaction( (session) -> session.createQuery( "from ZoneMappingTestEntity" ).list() );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17726" )
+	public void testUpdateQuery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new ZoneMappingTestEntity(
+				1,
+				"one",
+				ZoneId.systemDefault(),
+				ZoneOffset.MIN
+		) ) );
+		scope.inTransaction( session -> {
+			final ZoneId zoneId = ZoneId.of( "UTC" );
+			final ZoneOffset zoneOffset = ZoneOffset.from( ZoneOffset.UTC );
+			session.createMutationQuery(
+					"update ZoneMappingTestEntity e set e.zoneId = :zoneId, e.zoneOffset = :zoneOffset"
+			).setParameter( "zoneId", zoneId ).setParameter( "zoneOffset", zoneOffset ).executeUpdate();
+			final ZoneMappingTestEntity entity = session.find( ZoneMappingTestEntity.class, 1 );
+			assertThat( entity.getZoneId() ).isEqualTo( zoneId );
+			assertThat( entity.getZoneOffset() ).isEqualTo( zoneOffset );
+		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.createMutationQuery( "delete ZoneMappingTestEntity" ).executeUpdate() );
+	}
 
 	@Entity( name = "ZoneMappingTestEntity" )
 	@Table( name = "zone_map_test_entity" )

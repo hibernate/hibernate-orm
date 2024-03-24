@@ -63,6 +63,9 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 	private long partialFlushCollectionCount;
 	private long partialFlushTime;
 
+	private int prePartialFlushCount;
+	private long prePartialFlushTime;
+
 
 	// JDBC Connection acquisition ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -237,6 +240,22 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 	// Partial-flushing  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private long partialFlushStart = -1;
+	private long prePartialFlushStart = -1;
+
+	@Override
+	public void prePartialFlushStart() {
+		assert prePartialFlushStart < 0 : "Nested calls to prePartialFlushStart";
+		prePartialFlushStart = System.nanoTime();
+	}
+
+	@Override
+	public void prePartialFlushEnd() {
+		assert prePartialFlushStart > 0 : "Unexpected call to partialFlushEnd; expecting partialFlushStart";
+
+		prePartialFlushCount++;
+		prePartialFlushTime += ( System.nanoTime() - partialFlushStart );
+		prePartialFlushStart = -1;
+	}
 
 	@Override
 	public void partialFlushStart() {
@@ -269,6 +288,7 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 							"    %s nanoseconds spent performing %s L2C hits;\n" +
 							"    %s nanoseconds spent performing %s L2C misses;\n" +
 							"    %s nanoseconds spent executing %s flushes (flushing a total of %s entities and %s collections);\n" +
+							"    %s nanoseconds spent executing %s pre-partial-flushes;\n" +
 							"    %s nanoseconds spent executing %s partial-flushes (flushing a total of %s entities and %s collections)\n" +
 							"}",
 					jdbcConnectionAcquisitionTime,
@@ -291,6 +311,8 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 					flushCount,
 					flushEntityCount,
 					flushCollectionCount,
+					prePartialFlushTime,
+					prePartialFlushCount,
 					partialFlushTime,
 					partialFlushCount,
 					partialFlushEntityCount,

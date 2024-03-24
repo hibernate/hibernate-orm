@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;

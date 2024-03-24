@@ -112,7 +112,6 @@ public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 
 	@Entity(name = "ShapePolygonEntity")
 	@DiscriminatorValue("POLYGON")
-	@Table(name = "POLYGON")
 	public static class ShapePolygonEntity extends ShapeEntity {
 
 	}
@@ -120,7 +119,6 @@ public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 	@Entity(name = "ShapeCircleEntity")
 	@DiscriminatorValue("CIRCLE")
 	@SecondaryTable(name = "SHAPE_CIRCLE", pkJoinColumns = @PrimaryKeyJoinColumn(name = "SHAPE_ID"))
-	@Table(name = "CIRCLE")
 	public static class ShapeCircleEntity extends ShapeEntity {
 		@Column(table = "SHAPE_CIRCLE")
 		private String centre;

@@ -14,6 +14,7 @@ import org.hibernate.processor.util.Constants;
 import java.util.List;
 
 import static org.hibernate.processor.util.Constants.LIST;
+import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -111,7 +112,8 @@ public class QueryMethod extends AbstractQueryMethod {
 	void createQuery(StringBuilder declaration) {
 		declaration
 				.append(localSessionName())
-				.append(isNative ? ".createNativeQuery" : ".createQuery")
+				.append('.')
+				.append(createQueryMethod())
 				.append("(")
 				.append(getConstantName());
 		if ( returnTypeName != null && !isUpdate ) {
@@ -121,6 +123,18 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append(".class");
 		}
 		declaration.append(")\n");
+	}
+
+	private String createQueryMethod() {
+		if ( isNative ) {
+			return "createNativeQuery";
+		}
+		else if ( isUsingEntityManager() || isReactive() || isUnspecializedQueryType(containerType) ) {
+			return "createQuery";
+		}
+		else {
+			return isUpdate ? "createMutationQuery" : "createSelectionQuery";
+		}
 	}
 
 	private void castResult(StringBuilder declaration, String returnType) {
@@ -149,7 +163,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 		else {
 			final boolean mustUnwrap =
-					containerType != null && containerType.startsWith("org.hibernate")
+					isHibernateQueryType(containerType)
 							|| isNative && returnTypeName != null;
 			executeSelect( declaration, paramTypes, containerType, unwrapped, mustUnwrap );
 		}
@@ -302,6 +316,6 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	public String getTypeDeclaration() {
-		return Constants.QUERY;
+		return QUERY;
 	}
 }

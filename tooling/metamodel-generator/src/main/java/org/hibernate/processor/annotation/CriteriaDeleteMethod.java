@@ -68,20 +68,20 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 		}
 	}
 
+	@Override
+	String createQueryMethod() {
+		return isUsingEntityManager() || isReactive()
+				? "createQuery"
+				: "createMutationQuery";
+	}
+
 	private void execute(StringBuilder declaration) {
 		declaration
 				.append("\t\t\t.executeUpdate();\n");
 	}
 
 	@Override
-	void createCriteriaQuery(StringBuilder declaration) {
-		declaration
-				.append("\tvar _query = _builder.createCriteriaDelete(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class);\n")
-				.append("\tvar _entity = _query.from(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class);\n");
+	String createCriteriaMethod() {
+		return "createCriteriaDelete";
 	}
-
 }

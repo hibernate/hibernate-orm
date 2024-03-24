@@ -30,9 +30,8 @@ public class Assigned implements IdentifierGenerator, StandardGenerator {
 		//TODO: cache the persister, this shows up in yourkit
 		final Object id = session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
 		if ( id == null ) {
-			throw new IdentifierGenerationException(
-					"ids for this class must be manually assigned before calling save(): " + entityName
-			);
+			throw new IdentifierGenerationException( "Identifier for entity '" + entityName
+					+ "' must be manually assigned before making the entity persistent" );
 		}
 		return id;
 	}

@@ -12,6 +12,7 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -701,4 +702,18 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		}
 		throw new AssertionFailure("could not find parameter");
 	}
+
+	private static final Set<String> UNSPECIALIZED_QUERY_TYPES
+			= Set.of(QUERY, TYPED_QUERY, HIB_QUERY);
+
+	static boolean isUnspecializedQueryType(@Nullable String containerType) {
+		return containerType != null
+			&& UNSPECIALIZED_QUERY_TYPES.contains(containerType);
+	}
+
+	static boolean isHibernateQueryType(@Nullable String containerType) {
+		return containerType != null
+			&& containerType.startsWith("org.hibernate");
+	}
+
 }

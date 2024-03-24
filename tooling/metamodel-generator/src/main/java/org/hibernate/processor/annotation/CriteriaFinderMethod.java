@@ -85,20 +85,19 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 	}
 
 	private void execute(StringBuilder declaration, List<String> paramTypes, boolean unwrapped) {
-		final boolean mustUnwrap =
-				containerType != null && containerType.startsWith("org.hibernate");
-		executeSelect( declaration, paramTypes, containerType, unwrapped, mustUnwrap );
+		executeSelect( declaration, paramTypes, containerType, unwrapped, isHibernateQueryType(containerType) );
 	}
 
 	@Override
-	void createCriteriaQuery(StringBuilder declaration) {
-		declaration
-				.append("\tvar _query = _builder.createQuery(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class);\n")
-				.append("\tvar _entity = _query.from(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class);\n");
+	String createQueryMethod() {
+		return isUsingEntityManager() || isReactive() || isUnspecializedQueryType(containerType)
+				? "createQuery"
+				: "createSelectionQuery";
+	}
+
+	@Override
+	String createCriteriaMethod() {
+		return "createQuery";
 	}
 
 	@Override

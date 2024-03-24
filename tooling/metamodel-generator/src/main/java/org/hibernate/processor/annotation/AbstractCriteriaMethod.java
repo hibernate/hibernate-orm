@@ -60,15 +60,32 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	abstract void executeQuery(StringBuilder declaration, List<String> paramTypes);
 
-	abstract void createCriteriaQuery(StringBuilder declaration);
+	abstract String createCriteriaMethod();
 
 	abstract String returnType();
+
+	abstract String createQueryMethod();
 
 	@Override
 	void createQuery(StringBuilder declaration) {
 		declaration
 				.append(localSessionName())
-				.append(".createQuery(_query)\n");
+				.append(".")
+				.append(createQueryMethod())
+				.append("(_query)\n");
+	}
+
+	void createCriteriaQuery(StringBuilder declaration) {
+		final String entityClass = annotationMetaEntity.importType(entity);
+		declaration
+				.append("\tvar _query = _builder.")
+				.append(createCriteriaMethod())
+				.append('(')
+				.append(entityClass)
+				.append(".class);\n")
+				.append("\tvar _entity = _query.from(")
+				.append(entityClass)
+				.append(".class);\n");
 	}
 
 	private void createBuilder(StringBuilder declaration) {

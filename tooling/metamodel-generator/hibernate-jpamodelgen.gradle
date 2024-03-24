@@ -54,12 +54,15 @@ sourceSets {
 dependencies {
     // api - ewww... but Maven needs them this way
     api project( ':hibernate-core' )
+	api libs.hcann
+	api libs.jandex
     api jakartaLibs.jaxbApi
     api jakartaLibs.jaxb
     api jakartaLibs.validation
     api jakartaLibs.annotation
     api libs.antlrRuntime
     api libs.byteBuddy
+	api libs.logging
 
     xjc jakartaLibs.xjc
     xjc jakartaLibs.jaxb

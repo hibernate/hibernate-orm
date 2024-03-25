@@ -6,12 +6,14 @@
  */
 package org.hibernate.boot.models.xml.spi;
 
+import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.xml.internal.ManagedTypeProcessor;
 import org.hibernate.boot.models.xml.internal.XmlDocumentContextImpl;
 import org.hibernate.boot.models.xml.internal.XmlDocumentImpl;
 import org.hibernate.boot.models.xml.internal.XmlProcessingResultImpl;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 /**
@@ -25,7 +27,8 @@ public class XmlProcessor {
 			XmlPreProcessingResult xmlPreProcessingResult,
 			DomainModelCategorizationCollector modelCategorizationCollector,
 			SourceModelBuildingContext sourceModelBuildingContext,
-			BootstrapContext bootstrapContext) {
+			BootstrapContext bootstrapContext,
+			RootMappingDefaults mappingDefaults) {
 		final boolean xmlMappingsGloballyComplete = xmlPreProcessingResult.getPersistenceUnitMetadata().areXmlMappingsComplete();
 		final XmlProcessingResultImpl xmlOverlay = new XmlProcessingResultImpl();
 
@@ -37,7 +40,7 @@ public class XmlProcessor {
 			);
 			final XmlDocumentContext xmlDocumentContext = new XmlDocumentContextImpl(
 					xmlDocument,
-					xmlPreProcessingResult.getPersistenceUnitMetadata(),
+					mappingDefaults,
 					sourceModelBuildingContext,
 					bootstrapContext
 			);

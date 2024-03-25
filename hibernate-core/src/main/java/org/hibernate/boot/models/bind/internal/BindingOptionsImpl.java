@@ -27,7 +27,7 @@ public class BindingOptionsImpl implements BindingOptions {
 	private final EnumSet<QuotedIdentifierTarget> globallyQuotedIdentifierTargets;
 
 	public BindingOptionsImpl(MetadataBuildingContext metadataBuildingContext) {
-		final boolean globallyQuote = metadataBuildingContext.getMappingDefaults().shouldImplicitlyQuoteIdentifiers();
+		final boolean globallyQuote = metadataBuildingContext.getEffectiveDefaults().isDefaultQuoteIdentifiers();
 		final boolean skipColumnDefinitions = metadataBuildingContext
 				.getBootstrapContext()
 				.getServiceRegistry()
@@ -53,13 +53,13 @@ public class BindingOptionsImpl implements BindingOptions {
 				.getJdbcEnvironment();
 
 		defaultCatalogName = toIdentifier(
-				metadataBuildingContext.getMappingDefaults().getImplicitCatalogName(),
+				metadataBuildingContext.getEffectiveDefaults().getDefaultCatalogName(),
 				QuotedIdentifierTarget.CATALOG_NAME,
 				globallyQuotedIdentifierTargets,
 				jdbcEnvironment
 		);
 		defaultSchemaName = toIdentifier(
-				metadataBuildingContext.getMappingDefaults().getImplicitSchemaName(),
+				metadataBuildingContext.getEffectiveDefaults().getDefaultSchemaName(),
 				QuotedIdentifierTarget.SCHEMA_NAME,
 				globallyQuotedIdentifierTargets,
 				jdbcEnvironment

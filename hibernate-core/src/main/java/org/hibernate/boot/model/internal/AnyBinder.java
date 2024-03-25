@@ -66,7 +66,7 @@ public class AnyBinder {
 			}
 		}
 		bindAny(
-				getCascadeStrategy( null, hibernateCascade, false, forcePersist ),
+				getCascadeStrategy( null, hibernateCascade, false, forcePersist, context ),
 				//@Any has no cascade attribute
 				joinColumns,
 				onDeleteAnn == null ? null : onDeleteAnn.getEnum( "action" ),

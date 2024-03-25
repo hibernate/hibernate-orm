@@ -6,7 +6,10 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.Incubating;
+
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.Properties;
 
 /**
@@ -16,6 +19,7 @@ import java.util.Properties;
  * instead of the key {@value PARAMETER_TYPE}.
  *
  * @author Janario Oliveira
+ * @author Yanming Zhou
  */
 public interface DynamicParameterizedType extends ParameterizedType {
 	String PARAMETER_TYPE = "org.hibernate.type.ParameterType";
@@ -32,6 +36,11 @@ public interface DynamicParameterizedType extends ParameterizedType {
 	interface ParameterType {
 
 		Class<?> getReturnedClass();
+
+		@Incubating
+		default Type getReturnedJavaType() {
+			return getReturnedClass();
+		}
 
 		Annotation[] getAnnotationsMethod();
 

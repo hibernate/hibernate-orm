@@ -42,6 +42,7 @@ import org.junit.Assert;
  * makes it easier to verify that valid parameter values are being passed into {@link #setParameterValues(Properties)}.
  *
  * @author Daniel Gredler
+ * @author Yanming Zhou
  */
 public class MyStringType implements UserType<String>, DynamicParameterizedType {
 
@@ -85,6 +86,7 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 		Assert.assertEquals( 1, parameterType.getColumns().length );
 		Assert.assertEquals( columnName, parameterType.getColumns()[0] );
 		Assert.assertEquals( String.class, parameterType.getReturnedClass() );
+		Assert.assertEquals( String.class, parameterType.getReturnedJavaType() );
 		Assert.assertEquals( tableName, parameterType.getTable() );
 
 		String value = tableName + "." + columnName;
@@ -117,7 +119,7 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 
 	@Override
 	public boolean equals(String x, String y) {
-		return ( x == null && y == null ) || ( x != null && y != null && x.equals( y ) );
+		return ( x == null && y == null ) || ( x != null && x.equals( y ) );
 	}
 
 	@Override

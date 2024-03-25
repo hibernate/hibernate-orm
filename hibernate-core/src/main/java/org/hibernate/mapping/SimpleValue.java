@@ -26,6 +26,7 @@ import org.hibernate.Remove;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.annotations.common.reflection.java.JavaXMember;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
@@ -71,6 +72,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray
  * A mapping model object that represents any value that maps to columns.
  *
  * @author Gavin King
+ * @author Yanming Zhou
  */
 public abstract class SimpleValue implements KeyValue {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( SimpleValue.class );
@@ -943,6 +945,7 @@ public abstract class SimpleValue implements KeyValue {
 							classLoaderService.classForTypeName(
 									typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)
 							),
+							xProperty instanceof JavaXMember ? ((JavaXMember) xProperty ).getJavaType() : null,
 							annotations,
 							table.getCatalog(),
 							table.getSchema(),
@@ -985,6 +988,7 @@ public abstract class SimpleValue implements KeyValue {
 
 			return new ParameterTypeImpl(
 					classLoaderService.classForTypeName(typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)),
+					xProperty instanceof JavaXMember ? ((JavaXMember) xProperty ).getJavaType() : null,
 					annotations,
 					table.getCatalog(),
 					table.getSchema(),
@@ -1002,6 +1006,7 @@ public abstract class SimpleValue implements KeyValue {
 	private static final class ParameterTypeImpl implements DynamicParameterizedType.ParameterType {
 
 		private final Class<?> returnedClass;
+		private final java.lang.reflect.Type returnedJavaType;
 		private final Annotation[] annotationsMethod;
 		private final String catalog;
 		private final String schema;
@@ -1012,6 +1017,7 @@ public abstract class SimpleValue implements KeyValue {
 
 		private ParameterTypeImpl(
 				Class<?> returnedClass,
+				java.lang.reflect.Type returnedJavaType,
 				Annotation[] annotationsMethod,
 				String catalog,
 				String schema,
@@ -1020,6 +1026,7 @@ public abstract class SimpleValue implements KeyValue {
 				String[] columns,
 				Long[] columnLengths) {
 			this.returnedClass = returnedClass;
+			this.returnedJavaType = returnedJavaType != null ? returnedJavaType : returnedClass;
 			this.annotationsMethod = annotationsMethod;
 			this.catalog = catalog;
 			this.schema = schema;
@@ -1032,6 +1039,11 @@ public abstract class SimpleValue implements KeyValue {
 		@Override
 		public Class<?> getReturnedClass() {
 			return returnedClass;
+		}
+
+		@Override
+		public java.lang.reflect.Type getReturnedJavaType() {
+			return returnedJavaType;
 		}
 
 		@Override

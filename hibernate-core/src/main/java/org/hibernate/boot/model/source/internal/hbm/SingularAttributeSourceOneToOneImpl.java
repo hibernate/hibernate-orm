@@ -89,7 +89,7 @@ class SingularAttributeSourceOneToOneImpl
 		this.attributePath = container.getAttributePathBase().append( oneToOneElement.getName() );
 
 		this.fetchCharacteristics = FetchCharacteristicsSingularAssociationImpl.interpretOneToOne(
-				mappingDocument.getMappingDefaults(),
+				mappingDocument.getEffectiveDefaults(),
 				oneToOneElement.getFetch(),
 				oneToOneElement.getOuterJoin(),
 				oneToOneElement.getLazy(),

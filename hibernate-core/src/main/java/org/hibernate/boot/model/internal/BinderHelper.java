@@ -966,7 +966,8 @@ public class BinderHelper {
 			List<jakarta.persistence.CascadeType> ejbCascades,
 			AnnotationUsage<Cascade> hibernateCascadeAnnotation,
 			boolean orphanRemoval,
-			boolean forcePersist) {
+			boolean forcePersist,
+			MetadataBuildingContext context) {
 		final EnumSet<CascadeType> cascadeTypes = convertToHibernateCascadeType( ejbCascades );
 		final List<CascadeType> hibernateCascades = hibernateCascadeAnnotation == null
 				? null
@@ -981,6 +982,7 @@ public class BinderHelper {
 		if ( forcePersist ) {
 			cascadeTypes.add( CascadeType.PERSIST );
 		}
+		cascadeTypes.addAll( context.getEffectiveDefaults().getDefaultCascadeTypes() );
 		return renderCascadeTypeList( cascadeTypes );
 	}
 

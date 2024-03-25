@@ -544,8 +544,8 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		// We always use Hibernate specific org.hibernate.annotations.CascadeType since
-		// it offers additional options than jakarta.persistence.CascadeType
+		// We always use Hibernate specific `org.hibernate.annotations.CascadeType`
+		// since it is a superset of `jakarta.persistence.CascadeType`
 		final List<CascadeType> cascadeTypes = new ArrayList<>();
 		if ( jaxbCascadeType.getCascadeAll() != null ) {
 			cascadeTypes.add( CascadeType.ALL );

@@ -39,7 +39,7 @@ public interface MetadataBuildingContext {
 	 *
 	 * @return The mapping defaults.
 	 */
-	MappingDefaults getMappingDefaults();
+	EffectiveMappingDefaults getEffectiveDefaults();
 
 	/**
 	 * Access to the collector of metadata as we build it.

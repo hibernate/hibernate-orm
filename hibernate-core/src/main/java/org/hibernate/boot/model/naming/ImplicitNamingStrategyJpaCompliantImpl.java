@@ -100,7 +100,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	@Override
 	public Identifier determineDiscriminatorColumnName(ImplicitDiscriminatorColumnNameSource source) {
 		return toIdentifier(
-				source.getBuildingContext().getMappingDefaults().getImplicitDiscriminatorColumnName(),
+				source.getBuildingContext().getEffectiveDefaults().getDefaultDiscriminatorColumnName(),
 				source.getBuildingContext()
 		);
 	}
@@ -108,7 +108,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	@Override
 	public Identifier determineTenantIdColumnName(ImplicitTenantIdColumnNameSource source) {
 		return toIdentifier(
-				source.getBuildingContext().getMappingDefaults().getImplicitTenantIdColumnName(),
+				source.getBuildingContext().getEffectiveDefaults().getDefaultTenantIdColumnName(),
 				source.getBuildingContext()
 		);
 	}
@@ -166,7 +166,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 		final MetadataBuildingContext buildingContext = source.getBuildingContext();
 		return toIdentifier(
 				transformAttributePath( source.getAttributePath() )
-						+ "_" + buildingContext.getMappingDefaults().getImplicitDiscriminatorColumnName(),
+						+ "_" + buildingContext.getEffectiveDefaults().getDefaultDiscriminatorColumnName(),
 				buildingContext
 		);
 	}
@@ -176,7 +176,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 		final MetadataBuildingContext buildingContext = source.getBuildingContext();
 		return toIdentifier(
 				transformAttributePath( source.getAttributePath() )
-						+ "_" + buildingContext.getMappingDefaults().getImplicitIdColumnName(),
+						+ "_" + buildingContext.getEffectiveDefaults().getDefaultIdColumnName(),
 				buildingContext
 		);
 	}

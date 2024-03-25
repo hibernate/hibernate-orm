@@ -27,6 +27,7 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -781,6 +782,11 @@ public abstract class MockSessionFactory
 	@Override
 	public MappingDefaults getMappingDefaults() {
 		return new MockMappingDefaults();
+	}
+
+	@Override
+	public EffectiveMappingDefaults getEffectiveDefaults() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

@@ -22,6 +22,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
@@ -47,10 +48,7 @@ public interface XmlDocumentContext {
 	 */
 	XmlDocument getXmlDocument();
 
-	/**
-	 * The {@code <persistence-unit-metadata/>} defined by the XML document
-	 */
-	PersistenceUnitMetadata getPersistenceUnitMetadata();
+	EffectiveMappingDefaults getEffectiveDefaults();
 
 	/**
 	 * Access to the containing SourceModelBuildingContext

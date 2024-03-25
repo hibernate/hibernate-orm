@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.Query;

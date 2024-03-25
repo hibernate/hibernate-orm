@@ -46,7 +46,7 @@ public class PluralAttributeElementSourceManyToManyImpl
 				: mappingDocument.qualifyClassName( jaxbManyToManyElement.getClazz() );
 
 		this.fetchCharacteristics = FetchCharacteristicsSingularAssociationImpl.interpretManyToManyElement(
-				mappingDocument.getMappingDefaults(),
+				mappingDocument.getEffectiveDefaults(),
 				jaxbManyToManyElement.getFetch(),
 				jaxbManyToManyElement.getOuterJoin(),
 				jaxbManyToManyElement.getLazy()

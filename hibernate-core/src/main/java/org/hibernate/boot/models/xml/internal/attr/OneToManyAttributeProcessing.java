@@ -48,11 +48,9 @@ public class OneToManyAttributeProcessing {
 
 		applyTargetEntity( jaxbOneToMany, oneToManyAnn, xmlDocumentContext );
 
-		XmlAnnotationHelper.applyCascading( jaxbOneToMany.getCascade(), memberDetails, xmlDocumentContext );
-
 		CommonAttributeProcessing.applyAttributeBasics( jaxbOneToMany, memberDetails, oneToManyAnn, accessType, xmlDocumentContext );
-
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbOneToMany, memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyCascading( jaxbOneToMany.getCascade(), memberDetails, xmlDocumentContext );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// join-table

@@ -124,7 +124,7 @@ public class ManagedTypeProcessor {
 			classAccessType = coalesce(
 					jaxbEntity.getAccess(),
 					jaxbRoot.getAccess(),
-					xmlDocumentContext.getPersistenceUnitMetadata().getAccessType(),
+					xmlDocumentContext.getEffectiveDefaults().getDefaultPropertyAccessType(),
 					AccessType.PROPERTY
 			);
 		}
@@ -653,7 +653,7 @@ public class ManagedTypeProcessor {
 					// look for @Access on the entity class
 					() -> determineAccessTypeFromClassAnnotations( classDetails ),
 					// look for a default (PU metadata default) access
-					xmlDocumentContext.getPersistenceUnitMetadata()::getAccessType,
+					xmlDocumentContext.getEffectiveDefaults()::getDefaultPropertyAccessType,
 					// look at @Id/@EmbeddedId
 					() -> determineAccessTypeFromClassMembers( classDetails ),
 					// fallback to PROPERTY
@@ -781,7 +781,7 @@ public class ManagedTypeProcessor {
 
 		final AccessType classAccessType = coalesce(
 				jaxbMappedSuperclass.getAccess(),
-				xmlDocumentContext.getPersistenceUnitMetadata().getAccessType()
+				xmlDocumentContext.getEffectiveDefaults().getDefaultPropertyAccessType()
 		);
 		classDetails.addAnnotationUsage( XmlAnnotationHelper.createAccessAnnotation( classAccessType, classDetails, xmlDocumentContext ) );
 
@@ -862,7 +862,7 @@ public class ManagedTypeProcessor {
 			classDetails = (MutableClassDetails) classDetailsRegistry.resolveClassDetails( className );
 			classAccessType = coalesce(
 					jaxbEmbeddable.getAccess(),
-					xmlDocumentContext.getPersistenceUnitMetadata().getAccessType()
+					xmlDocumentContext.getEffectiveDefaults().getDefaultPropertyAccessType()
 			);
 			memberAdjuster = ManagedTypeProcessor::adjustNonDynamicTypeMember;
 		}

@@ -159,7 +159,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 		this.elementSource = interpretElementType();
 
 		this.fetchCharacteristics = FetchCharacteristicsPluralAttributeImpl.interpret(
-				mappingDocument.getMappingDefaults(),
+				mappingDocument.getEffectiveDefaults(),
 				pluralAttributeJaxbMapping.getFetch(),
 				pluralAttributeJaxbMapping.getOuterJoin(),
 				pluralAttributeJaxbMapping.getLazy(),

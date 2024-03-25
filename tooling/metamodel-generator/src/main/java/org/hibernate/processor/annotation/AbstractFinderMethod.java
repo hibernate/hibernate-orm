@@ -7,12 +7,12 @@
 package org.hibernate.processor.annotation;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.processor.util.Constants;
 
 import java.util.List;
 import java.util.Locale;
 
 import static org.hibernate.processor.util.Constants.HIB_SESSION;
+import static org.hibernate.processor.util.Constants.UNI;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -194,7 +194,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	private void entityType(StringBuilder declaration) {
 		if ( isReactive() ) {
 			declaration
-					.append(annotationMetaEntity.importType(Constants.UNI))
+					.append(annotationMetaEntity.importType(UNI))
 					.append('<');
 		}
 		declaration

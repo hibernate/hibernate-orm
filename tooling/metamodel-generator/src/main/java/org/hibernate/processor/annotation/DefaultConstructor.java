@@ -13,6 +13,10 @@ import org.hibernate.processor.util.Constants;
 
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER_FACTORY;
 import static org.hibernate.processor.util.Constants.HIB_SESSION_FACTORY;
+import static org.hibernate.processor.util.Constants.MUTINY_SESSION;
+import static org.hibernate.processor.util.Constants.MUTINY_SESSION_FACTORY;
+import static org.hibernate.processor.util.Constants.MUTINY_STATELESS_SESSION;
+import static org.hibernate.processor.util.Constants.UNI_MUTINY_SESSION;
 
 /**
  * Used by the container to instantiate a Jakarta Data repository.
@@ -43,6 +47,12 @@ public class DefaultConstructor implements MetaAttribute {
 		this.sessionVariableName = sessionVariableName;
 		this.dataStore = dataStore;
 		this.addInjectAnnotation = addInjectAnnotation;
+	}
+
+	private boolean isReactive() {
+		return MUTINY_SESSION.equals(sessionTypeName)
+				|| MUTINY_STATELESS_SESSION.equals(sessionTypeName)
+				|| UNI_MUTINY_SESSION.equals(sessionTypeName);
 	}
 
 	@Override
@@ -84,9 +94,14 @@ public class DefaultConstructor implements MetaAttribute {
 					.append(" = ")
 					.append(sessionVariableName)
 					.append("Factory.unwrap(")
-					.append(annotationMetaEntity.importType(HIB_SESSION_FACTORY))
-					.append(".class).openStatelessSession();")
-					.append("\n}\n\n");
+					.append(annotationMetaEntity.importType(isReactive() ? MUTINY_SESSION_FACTORY : HIB_SESSION_FACTORY))
+					.append(".class).openStatelessSession()");
+			if ( isReactive() ) {
+				declaration
+						.append(".await().indefinitely()");
+			}
+			declaration
+					.append(";\n}\n\n");
 			declaration.append('@')
 					.append(annotationMetaEntity.importType("jakarta.annotation.PreDestroy"))
 					.append("\nprivate void closeSession() {")

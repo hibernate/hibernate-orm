@@ -9,12 +9,11 @@ package org.hibernate.processor.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.processor.util.Constants;
 
 import java.util.List;
 
-import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.QUERY;
+import static org.hibernate.processor.util.Constants.UNI;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -215,10 +214,9 @@ public class QueryMethod extends AbstractQueryMethod {
 			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
 		}
 		else {
-			boolean returnsUni = isReactive()
-					&& (containerType == null || LIST.equals(containerType));
+			final boolean returnsUni = isReactive() && isUnifiableReturnType(containerType);
 			if ( returnsUni ) {
-				type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
+				type.append(annotationMetaEntity.importType(UNI)).append('<');
 			}
 			if ( containerType != null ) {
 				type.append(annotationMetaEntity.importType(containerType));

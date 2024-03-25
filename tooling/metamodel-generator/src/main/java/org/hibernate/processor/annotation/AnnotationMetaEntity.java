@@ -668,6 +668,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					return name.contentEquals(HIB_SESSION)
 						|| name.contentEquals(HIB_STATELESS_SESSION)
 						|| name.contentEquals(MUTINY_SESSION)
+						|| name.contentEquals(MUTINY_STATELESS_SESSION)
 						|| name.contentEquals(ENTITY_MANAGER);
 				}
 			}
@@ -1149,8 +1150,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addLifecycleMethod(ExecutableElement method) {
-		final TypeMirror returnType = method.getReturnType();
-		if ( !HIB_STATELESS_SESSION.equals(sessionType) ) {
+		final TypeMirror returnType = ununi(method.getReturnType());
+		if ( !HIB_STATELESS_SESSION.equals(sessionType)
+				&& !MUTINY_STATELESS_SESSION.equals(sessionType) ) {
 			context.message( method,
 					"repository must be backed by a 'StatelessSession'",
 					Diagnostic.Kind.ERROR );
@@ -1167,7 +1169,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					Diagnostic.Kind.ERROR );
 		}
 		else {
-			final boolean returnArgument = returnType.getKind() != TypeKind.VOID;
+			final boolean returnArgument = !isVoid(returnType);
 			final String operation = lifecycleOperation( method );
 			final VariableElement parameter = method.getParameters().get(0);
 			final TypeMirror declaredParameterType = parameter.asType();
@@ -1203,6 +1205,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								methodName,
 								parameter.getSimpleName().toString(),
 								getSessionVariableName(),
+								sessionType,
 								operation,
 								context.addNonnullAnnotation(),
 								declaredType != parameterType,
@@ -1210,6 +1213,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						)
 				);
 			}
+		}
+	}
+
+	private static boolean isVoid(TypeMirror returnType) {
+		switch (returnType.getKind()) {
+			case VOID:
+				return true;
+			case DECLARED:
+				final DeclaredType declaredType = (DeclaredType) returnType;
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				return typeElement.getQualifiedName().contentEquals(Void.class.getName());
+			default:
+				return false;
 		}
 	}
 
@@ -1576,6 +1592,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case HIB_SESSION:
 			case HIB_STATELESS_SESSION:
 			case MUTINY_SESSION:
+			case MUTINY_STATELESS_SESSION:
 				return "session";
 			default:
 				return sessionGetter;
@@ -2604,10 +2621,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean usingReactiveSession(String sessionType) {
 		return MUTINY_SESSION.equals(sessionType)
+			|| MUTINY_STATELESS_SESSION.equals(sessionType)
 			|| UNI_MUTINY_SESSION.equals(sessionType);
 	}
 
 	private boolean usingStatelessSession(String sessionType) {
-		return HIB_STATELESS_SESSION.equals(sessionType);
+		return HIB_STATELESS_SESSION.equals(sessionType)
+			|| MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 }

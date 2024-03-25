@@ -3270,7 +3270,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// then we want to return the PluralTableGroup instead
 		if ( lhsTableGroup instanceof PluralTableGroup
 				&& !( path instanceof SqmPluralPartJoin<?, ?> )
-				&& CollectionPart.Nature.fromName( path.getNavigablePath().getLocalName() ) == null ) {
+				&& CollectionPart.Nature.fromNameExact( path.getNavigablePath().getLocalName() ) == null ) {
 			final TableGroup elementTableGroup = ( (PluralTableGroup) lhsTableGroup ).getElementTableGroup();
 			// The element table group could be null for basic collections
 			if ( elementTableGroup != null ) {

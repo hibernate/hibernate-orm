@@ -1923,7 +1923,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final AccessType accessType = getAccessType(entityType);
 		final String nextToken = tokens.nextToken();
 		for ( Element member : context.getElementUtils().getAllMembers(entityType) ) {
-			if ( "#id".equals(nextToken) && hasAnnotation( member, ID) ) {
+			if ( isIdRef(nextToken) && hasAnnotation( member, ID) ) {
 				return member;
 			}
 			final Element match =
@@ -1933,6 +1933,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		return null;
+	}
+
+	private static boolean isIdRef(String nextToken) {
+		return "#id".equals(nextToken) // for Jakarta Data M4 release
+			|| "id(this)".equals(nextToken); // post M4
 	}
 
 	private @Nullable Element memberMatchingPath(

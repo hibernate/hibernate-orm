@@ -253,8 +253,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	void addIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-	void addPersistenceUnitMetadata(PersistenceUnitMetadata persistenceUnitMetadata);
-
 	/**
 	 * Obtain the {@link ConverterRegistry} which may be
 	 * used to register {@link AttributeConverter}s.

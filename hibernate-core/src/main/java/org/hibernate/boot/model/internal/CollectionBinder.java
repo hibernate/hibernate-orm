@@ -514,7 +514,8 @@ public abstract class CollectionBinder {
 					oneToManyAnn.getList( "cascade" ),
 					hibernateCascade,
 					oneToManyAnn.getBoolean( "orphanRemoval" ),
-					false
+					false,
+					context
 			) );
 			collectionBinder.setOneToMany( true );
 		}
@@ -536,7 +537,8 @@ public abstract class CollectionBinder {
 					manyToManyAnn.getList( "cascade" ),
 					hibernateCascade,
 					false,
-					false
+					false,
+					context
 			) );
 			collectionBinder.setOneToMany( false );
 		}
@@ -547,7 +549,8 @@ public abstract class CollectionBinder {
 					null,
 					hibernateCascade,
 					false,
-					false
+					false,
+					context
 			) );
 			collectionBinder.setOneToMany( false );
 		}

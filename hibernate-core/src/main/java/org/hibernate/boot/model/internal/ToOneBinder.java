@@ -109,7 +109,7 @@ public class ToOneBinder {
 		final AnnotationUsage<OnDelete> onDelete = property.getAnnotationUsage( OnDelete.class );
 		final AnnotationUsage<JoinTable> joinTable = propertyHolder.getJoinTable( property );
 		bindManyToOne(
-				getCascadeStrategy( manyToOne.getList( "cascade" ), hibernateCascade, false, forcePersist ),
+				getCascadeStrategy( manyToOne.getList( "cascade" ), hibernateCascade, false, forcePersist, context ),
 				joinColumns,
 				joinTable,
 				!isMandatory( manyToOne.getBoolean( "optional" ), property, notFoundAction ),
@@ -486,7 +486,7 @@ public class ToOneBinder {
 		final AnnotationUsage<OnDelete> onDelete = property.getAnnotationUsage( OnDelete.class );
 		final AnnotationUsage<JoinTable> joinTable = propertyHolder.getJoinTable( property );
 		bindOneToOne(
-				getCascadeStrategy( oneToOne.getList( "cascade" ), hibernateCascade, oneToOne.getBoolean( "orphanRemoval" ), forcePersist ),
+				getCascadeStrategy( oneToOne.getList( "cascade" ), hibernateCascade, oneToOne.getBoolean( "orphanRemoval" ), forcePersist, context ),
 				joinColumns,
 				joinTable,
 				!isMandatory( oneToOne.getBoolean( "optional" ), property, notFoundAction ),

@@ -7,7 +7,6 @@
 package org.hibernate.boot.model.source.internal.annotations;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,27 +27,17 @@ import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.usertype.UserType;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
 
 import static org.hibernate.boot.jaxb.SourceType.OTHER;
-import static org.hibernate.boot.model.internal.AnnotationHelper.resolveAttributeConverter;
-import static org.hibernate.boot.model.internal.AnnotationHelper.resolveBasicType;
-import static org.hibernate.boot.model.internal.AnnotationHelper.resolveJavaType;
-import static org.hibernate.boot.model.internal.AnnotationHelper.resolveUserType;
 import static org.hibernate.models.spi.ClassDetails.VOID_CLASS_DETAILS;
 import static org.hibernate.models.spi.ClassDetails.VOID_OBJECT_CLASS_DETAILS;
 
@@ -128,7 +117,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	public static void processAdditionalMappings(
 			List<Class<?>> additionalClasses,
 			List<JaxbEntityMappingsImpl> additionalJaxbMappings,
-			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
+			MetadataBuildingOptions options) {
 		final AdditionalManagedResourcesImpl.Builder mrBuilder = new AdditionalManagedResourcesImpl.Builder();
 		mrBuilder.addLoadedClasses( additionalClasses );
 		for ( JaxbEntityMappingsImpl additionalJaxbMapping : additionalJaxbMappings ) {
@@ -139,7 +129,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		final DomainModelSource additionalDomainModelSource = MetadataBuildingProcess.processManagedResources(
 				mr,
 				rootMetadataBuildingContext.getMetadataCollector(),
-				rootMetadataBuildingContext.getBootstrapContext()
+				rootMetadataBuildingContext.getBootstrapContext(),
+				options.getMappingDefaults()
 		);
 		final AnnotationMetadataSourceProcessorImpl processor = new AnnotationMetadataSourceProcessorImpl( mr, additionalDomainModelSource, rootMetadataBuildingContext );
 		processor.processEntityHierarchies( new LinkedHashSet<>() );

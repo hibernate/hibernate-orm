@@ -37,6 +37,9 @@ public final class PersistenceUnitMetadataImpl implements PersistenceUnitMetadat
 
 	private final EnumSet<CascadeType> defaultCascadeTypes = EnumSet.noneOf( CascadeType.class );
 
+	public PersistenceUnitMetadataImpl() {
+	}
+
 	@Override
 	public boolean areXmlMappingsComplete() {
 		return xmlComplete;
@@ -132,7 +135,7 @@ public final class PersistenceUnitMetadataImpl implements PersistenceUnitMetadat
 
 		if ( defaults.getCascadePersist() != null
 				|| isNotEmpty( defaults.getDefaultCascade() ) ) {
-			if ( !defaultCascadeTypes.isEmpty() ) {
+			if ( !this.defaultCascadeTypes.isEmpty() ) {
 				XML_PROCESS_LOGGER.debugf( "Adding cascades to already defined set of default cascades" );
 			}
 

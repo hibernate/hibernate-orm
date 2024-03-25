@@ -952,16 +952,6 @@ public class BinderHelper {
 		}
 	}
 
-	private static EnumSet<CascadeType> convertToHibernateCascadeType(List<jakarta.persistence.CascadeType> ejbCascades) {
-		final EnumSet<CascadeType> cascadeTypes = EnumSet.noneOf( CascadeType.class );
-		if ( ejbCascades != null ) {
-			for ( jakarta.persistence.CascadeType cascade: ejbCascades ) {
-				cascadeTypes.add( convertCascadeType( cascade ) );
-			}
-		}
-		return cascadeTypes;
-	}
-
 	public static String getCascadeStrategy(
 			List<jakarta.persistence.CascadeType> ejbCascades,
 			AnnotationUsage<Cascade> hibernateCascadeAnnotation,
@@ -984,6 +974,16 @@ public class BinderHelper {
 		}
 		cascadeTypes.addAll( context.getEffectiveDefaults().getDefaultCascadeTypes() );
 		return renderCascadeTypeList( cascadeTypes );
+	}
+
+	private static EnumSet<CascadeType> convertToHibernateCascadeType(List<jakarta.persistence.CascadeType> ejbCascades) {
+		final EnumSet<CascadeType> cascadeTypes = EnumSet.noneOf( CascadeType.class );
+		if ( ejbCascades != null ) {
+			for ( jakarta.persistence.CascadeType cascade: ejbCascades ) {
+				cascadeTypes.add( convertCascadeType( cascade ) );
+			}
+		}
+		return cascadeTypes;
 	}
 
 	private static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {

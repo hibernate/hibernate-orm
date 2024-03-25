@@ -181,23 +181,26 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	boolean isUsingStatelessSession() {
 		return HIB_STATELESS_SESSION.equals(sessionType)
-			|| MUTINY_STATELESS_SESSION.equals(sessionType);
+			|| MUTINY_STATELESS_SESSION.equals(sessionType)
+			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 
 	boolean isReactive() {
 		return MUTINY_SESSION.equals(sessionType)
 			|| MUTINY_STATELESS_SESSION.equals(sessionType)
-			|| UNI_MUTINY_SESSION.equals(sessionType);
+			|| UNI_MUTINY_SESSION.equals(sessionType)
+			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 
 	boolean isReactiveSession() {
-		return UNI_MUTINY_SESSION.equals(sessionType);
+		return UNI_MUTINY_SESSION.equals(sessionType)
+			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 
 	String localSessionName() {
-		return isReactiveSession() ? "resolvedSession" : sessionName;
+		return isReactiveSession() ? "_session" : sessionName;
 	}
-	
+
 	void chainSession(StringBuilder declaration) {
 		// Reactive calls always have a return type
 		if ( isReactiveSession() ) {
@@ -206,7 +209,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(sessionName)
 					.append(".chain(")
 					.append(localSessionName())
-					.append(" -> {\n\t");
+					.append(" -> {\n");
 		}
 	}
 
@@ -655,9 +658,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					break;
 				case JD_PAGE:
 					if ( isReactive() ) {
+						if ( returnTypeName == null ) {
+							throw new AssertionFailure("entity class cannot be null");
+						}
 						declaration
 								.append("\t\t\t.getResultList()\n")
-								.append("\t\t\t.map(_results -> ");
+								.append("\t\t\t.map(_results -> (Page<")
+								.append(annotationMetaEntity.importType(returnTypeName))
+								.append(">)");
 					}
 					else {
 						declaration
@@ -741,8 +749,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	boolean isUnifiableReturnType(@Nullable String containerType) {
 		return containerType == null
-				|| LIST.equals(containerType)
-				|| JD_PAGE.equals(containerType)
-				|| JD_CURSORED_PAGE.equals(containerType);
+			|| LIST.equals(containerType)
+			|| JD_PAGE.equals(containerType)
+			|| JD_CURSORED_PAGE.equals(containerType);
 	}
 }

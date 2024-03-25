@@ -71,6 +71,7 @@ dependencies {
 	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
 	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.6.2"
     jakartaDataImplementation "jakarta.data:jakarta.data-api:1.0.0-SNAPSHOT"
+	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:2.2.2.Final"
 }
 
 // The source set gets a custom configuration which extends the normal test implementation config

@@ -180,11 +180,13 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	boolean isUsingStatelessSession() {
-		return HIB_STATELESS_SESSION.equals(sessionType);
+		return HIB_STATELESS_SESSION.equals(sessionType)
+			|| MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 
 	boolean isReactive() {
 		return MUTINY_SESSION.equals(sessionType)
+			|| MUTINY_STATELESS_SESSION.equals(sessionType)
 			|| UNI_MUTINY_SESSION.equals(sessionType);
 	}
 
@@ -440,7 +442,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		declaration
 				.append('\t');
 		if ( isJakartaCursoredPage(containerType)
-				|| isJakartaPage(containerType) ) {
+				|| isJakartaPage(containerType) && !isReactive() ) {
 			if ( returnTypeName != null && isUsingEntityManager() ) {
 				// this is necessary to avoid losing the type
 				// after unwrapping the Query object
@@ -467,18 +469,24 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	private void totalResults(StringBuilder declaration, List<String> paramTypes) {
 		declaration
-				.append("\tlong _totalResults = \n\t\t\t\t")
-				.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-				.append(".requestTotal()\n\t\t\t\t\t\t? ");
-		createQuery( declaration );
-		setParameters( declaration, paramTypes, "\t\t\t\t\t");
-		if ( isUsingEntityManager() ) {
-			declaration
-					.append("\t\t\t\t\t");
+				.append("\tlong _totalResults = \n\t\t\t\t");
+		if ( isReactive() ) {
+			declaration.append("-1;\n"); //TODO: add getResultCount() to HR
 		}
-		unwrapQuery( declaration, !isUsingEntityManager() );
-		declaration
-				.append("\t\t\t\t\t\t\t\t.getResultCount()\n\t\t\t\t\t\t: -1;\n");
+		else {
+			declaration
+					.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
+					.append(".requestTotal()\n\t\t\t\t\t\t? ");
+			createQuery( declaration );
+			setParameters( declaration, paramTypes, "\t\t\t\t\t");
+			if ( isUsingEntityManager() ) {
+				declaration
+						.append("\t\t\t\t\t");
+			}
+			unwrapQuery( declaration, !isUsingEntityManager() );
+			declaration
+					.append("\t\t\t\t\t\t\t\t.getResultCount()\n\t\t\t\t\t\t: -1;\n");
+		}
 	}
 
 	void collectOrdering(StringBuilder declaration, List<String> paramTypes) {
@@ -646,13 +654,28 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 							.append(");");
 					break;
 				case JD_PAGE:
+					if ( isReactive() ) {
+						declaration
+								.append("\t\t\t.getResultList()\n")
+								.append("\t\t\t.map(_results -> ");
+					}
+					else {
+						declaration
+								.append("\t\t\t.getResultList();\n")
+								.append("\t\treturn ");
+					}
 					declaration
-							.append("\t\t\t.getResultList();\n")
-							.append("\t\treturn new ")
+							.append("new ")
 							.append(annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord"))
 							.append('(')
 							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-							.append(", _results, _totalResults);");
+							.append(", _results, _totalResults)");
+					if ( isReactive() ) {
+						declaration
+								.append(')');
+					}
+					declaration
+							.append(';');
 					break;
 				case JD_CURSORED_PAGE:
 					if ( returnTypeName == null ) {
@@ -716,4 +739,10 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			&& containerType.startsWith("org.hibernate");
 	}
 
+	boolean isUnifiableReturnType(@Nullable String containerType) {
+		return containerType == null
+				|| LIST.equals(containerType)
+				|| JD_PAGE.equals(containerType)
+				|| JD_CURSORED_PAGE.equals(containerType);
+	}
 }

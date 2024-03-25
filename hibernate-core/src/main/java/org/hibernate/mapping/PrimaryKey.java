@@ -118,7 +118,7 @@ public class PrimaryKey extends Constraint {
 		final List<Column> columns = getColumns();
 		final Column[] columnsInOriginalOrder = new Column[columns.size()];
 		for ( int i = 0; i < columnsInOriginalOrder.length; i++ ) {
-			columnsInOriginalOrder[i] = columns.get( originalOrder[i] );
+			columnsInOriginalOrder[originalOrder[i]] = columns.get( i );
 		}
 		return Arrays.asList( columnsInOriginalOrder );
 	}

@@ -136,6 +136,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.table = original.table;
 		this.foreignKeyName = original.foreignKeyName;
 		this.foreignKeyDefinition = original.foreignKeyDefinition;
+		this.foreignKeyEnabled = original.foreignKeyEnabled;
 		this.alternateUniqueKey = original.alternateUniqueKey;
 		this.onDeleteAction = original.onDeleteAction;
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;

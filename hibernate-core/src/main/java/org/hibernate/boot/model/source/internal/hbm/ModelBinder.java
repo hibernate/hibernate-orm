@@ -8,6 +8,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -18,6 +19,7 @@ import java.util.Properties;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Remove;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -430,7 +432,8 @@ public class ModelBinder {
 				entitySource.getEntityNamingSource().getEntityName()
 		);
 
-		if ( sourceDocument.getMappingDefaults().isAutoImportEnabled() && entitySource.getEntityNamingSource().getEntityName().indexOf( '.' ) > 0 ) {
+		if ( sourceDocument.getEffectiveDefaults().isDefaultAutoImport()
+				&& entitySource.getEntityNamingSource().getEntityName().indexOf( '.' ) > 0 ) {
 			sourceDocument.getMetadataCollector().addImport(
 					StringHelper.unqualify( entitySource.getEntityNamingSource().getEntityName() ),
 					entitySource.getEntityNamingSource().getEntityName()
@@ -2447,7 +2450,7 @@ public class ModelBinder {
 		property.setPropertyAccessorName(
 				isNotEmpty( propertySource.getPropertyAccessorName() )
 						? propertySource.getPropertyAccessorName()
-						: mappingDocument.getMappingDefaults().getImplicitPropertyAccessorName()
+						: mappingDocument.getEffectiveDefaults().getDefaultAccessStrategyName()
 		);
 
 		if ( propertySource instanceof CascadeStyleSource ) {
@@ -2456,7 +2459,7 @@ public class ModelBinder {
 			property.setCascade(
 					isNotEmpty( cascadeStyleSource.getCascadeStyleName() )
 							? cascadeStyleSource.getCascadeStyleName()
-							: mappingDocument.getMappingDefaults().getImplicitCascadeStyleName()
+							: toCascadeString( mappingDocument.getEffectiveDefaults().getDefaultCascadeTypes() )
 			);
 		}
 
@@ -2479,6 +2482,25 @@ public class ModelBinder {
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Mapped property: " + propertySource.getName() + " -> [" + columns( property.getValue() ) + "]" );
 		}
+	}
+
+	private String toCascadeString(EnumSet<CascadeType> defaultCascadeTypes) {
+		if ( CollectionHelper.isEmpty( defaultCascadeTypes ) ) {
+			return "none";
+		}
+
+		boolean firstPass = true;
+		final StringBuilder buffer = new StringBuilder();
+		for ( CascadeType cascadeType : defaultCascadeTypes ) {
+			if ( firstPass ) {
+				firstPass = false;
+			}
+			else {
+				buffer.append( ", " );
+			}
+			buffer.append( cascadeType.name().toLowerCase( Locale.ROOT ) );
+		}
+		return buffer.toString();
 	}
 
 	private static void handleGenerationTiming(
@@ -3158,7 +3180,7 @@ public class ModelBinder {
 					if ( isNotEmpty( tableSource.getExplicitTableName() ) ) {
 						logicalName = toIdentifier(
 								tableSource.getExplicitTableName(),
-								mappingDocument.getMappingDefaults().shouldImplicitlyQuoteIdentifiers()
+								mappingDocument.getEffectiveDefaults().isDefaultQuoteIdentifiers()
 						);
 					}
 					else {

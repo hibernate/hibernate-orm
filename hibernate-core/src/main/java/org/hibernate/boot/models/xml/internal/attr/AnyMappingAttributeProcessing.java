@@ -19,6 +19,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingDiscriminatorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
+import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -61,6 +62,7 @@ public class AnyMappingAttributeProcessing {
 
 		applyDiscriminator( memberDetails, jaxbHbmAnyMapping, anyAnn, xmlDocumentContext );
 		applyKey( memberDetails, jaxbHbmAnyMapping, anyAnn, xmlDocumentContext );
+		XmlAnnotationHelper.applyCascading( jaxbHbmAnyMapping.getCascade(), memberDetails, xmlDocumentContext );
 
 		return memberDetails;
 	}

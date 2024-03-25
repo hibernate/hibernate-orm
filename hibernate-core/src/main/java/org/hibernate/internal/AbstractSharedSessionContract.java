@@ -41,6 +41,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExceptionConverter;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -251,8 +252,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected final void setupAutoEnabledFilters(SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) {
 		factory.getDefinedFilterNames()
 			.stream()
-			.map( filterName -> factory.getFilterDefinition( filterName ) )
-			.filter( filterDefinition -> filterDefinition.isAutoEnabled() )
+			.map(factory::getFilterDefinition)
+			.filter(FilterDefinition::isAutoEnabled)
 			.forEach( filterDefinition -> loadQueryInfluencers.enableFilter( filterDefinition.getFilterName() ) );
 	}
 

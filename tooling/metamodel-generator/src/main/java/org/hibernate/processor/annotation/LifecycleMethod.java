@@ -9,12 +9,18 @@ package org.hibernate.processor.annotation;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
+import static org.hibernate.processor.util.Constants.MUTINY_SESSION;
+import static org.hibernate.processor.util.Constants.MUTINY_STATELESS_SESSION;
+import static org.hibernate.processor.util.Constants.UNI;
+import static org.hibernate.processor.util.Constants.UNI_MUTINY_SESSION;
+
 public class LifecycleMethod implements MetaAttribute {
 	private final AnnotationMetaEntity annotationMetaEntity;
 	private final String entity;
 	private final String methodName;
 	private final String parameterName;
 	private final String sessionName;
+	private final String sessionType;
 	private final String operationName;
 	private final boolean addNonnullAnnotation;
 	private final boolean iterateParameter;
@@ -26,6 +32,7 @@ public class LifecycleMethod implements MetaAttribute {
 			String methodName,
 			String parameterName,
 			String sessionName,
+			String sessionType,
 			String operationName,
 			boolean addNonnullAnnotation,
 			boolean iterateParameter,
@@ -35,6 +42,7 @@ public class LifecycleMethod implements MetaAttribute {
 		this.methodName = methodName;
 		this.parameterName = parameterName;
 		this.sessionName = sessionName;
+		this.sessionType = sessionType;
 		this.operationName = operationName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.iterateParameter = iterateParameter;
@@ -79,39 +87,66 @@ public class LifecycleMethod implements MetaAttribute {
 
 	private void returnArgument(StringBuilder declaration) {
 		if ( returnArgument ) {
-			declaration
-					.append("\t\treturn ")
+			if ( isReactive() ) {
+				declaration
+					.append(".replaceWith(")
 					.append(parameterName)
+					.append(")");
+			}
+			else {
+				declaration
+						.append("\t\treturn ")
+						.append(parameterName);
+			}
+			declaration
 					.append(";\n");
+		}
+		else {
+			if ( isReactive() ) {
+				declaration
+						.append(";\n");
+			}
 		}
 	}
 
 	private void delegateCall(StringBuilder declaration) {
-		if ( iterateParameter ) {
+		if ( isReactive() ) {
 			declaration
-					.append("\t\tfor (var entity : ")
+					.append("\t\treturn ")
+					.append(sessionName)
+					.append('.')
+					.append(operationName)
+					.append('(')
 					.append(parameterName)
-					.append(") {\n\t");
+					.append(')');
 		}
-		declaration
-				.append("\t\t")
-				.append(sessionName)
-				.append('.')
-				.append(operationName)
-				.append('(')
-				.append(iterateParameter ? "entity" : parameterName)
-				.append(')')
-				.append(";\n");
-		if ( iterateParameter ) {
+		else {
+			if ( iterateParameter ) {
+				declaration
+						.append("\t\tfor (var _entity : ")
+						.append(parameterName)
+						.append(") {\n\t");
+			}
 			declaration
-					.append("\t\t}\n");
+					.append("\t\t")
+					.append(sessionName)
+					.append('.')
+					.append(operationName)
+					.append('(')
+					.append(iterateParameter ? "_entity" : parameterName)
+					.append(')')
+					.append(";\n");
+			if ( iterateParameter ) {
+				declaration
+						.append("\t\t}\n");
+			}
 		}
 	}
 
 	private void preamble(StringBuilder declaration) {
 		declaration
 				.append("\n@Override\npublic ")
-				.append(returnArgument ? annotationMetaEntity.importType(entity) : "void")
+				.append(returnType())
 				.append(' ')
 				.append(methodName)
 				.append('(');
@@ -122,6 +157,19 @@ public class LifecycleMethod implements MetaAttribute {
 				.append(parameterName)
 				.append(')')
 				.append(" {\n");
+	}
+
+	private String returnType() {
+		final String entityType = annotationMetaEntity.importType(entity);
+		if ( isReactive() ) {
+			return annotationMetaEntity.importType(UNI)
+					+ '<' + (returnArgument ? entityType : "Void") + '>';
+		}
+		else {
+			return returnArgument
+					? entityType
+					: "void";
+		}
 	}
 
 	private void nullCheck(StringBuilder declaration) {
@@ -176,5 +224,11 @@ public class LifecycleMethod implements MetaAttribute {
 	@Override
 	public Metamodel getHostingEntity() {
 		return annotationMetaEntity;
+	}
+
+	private boolean isReactive() {
+		return MUTINY_SESSION.equals(sessionType)
+			|| MUTINY_STATELESS_SESSION.equals(sessionType)
+			|| UNI_MUTINY_SESSION.equals(sessionType);
 	}
 }

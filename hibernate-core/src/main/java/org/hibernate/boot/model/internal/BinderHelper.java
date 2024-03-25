@@ -34,6 +34,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
@@ -923,33 +924,10 @@ public class BinderHelper {
 
 
 	public static FetchMode getFetchMode(FetchType fetch) {
-		switch ( fetch ) {
-			case EAGER:
-				return FetchMode.JOIN;
-			case LAZY:
-				return FetchMode.SELECT;
-			default:
-				throw new AssertionFailure("unknown fetch type: " + fetch);
-		}
-	}
-
-	private static CascadeType convertCascadeType(jakarta.persistence.CascadeType cascade) {
-		switch ( cascade ) {
-			case ALL:
-				return CascadeType.ALL;
-			case PERSIST:
-				return CascadeType.PERSIST;
-			case MERGE:
-				return CascadeType.MERGE;
-			case REMOVE:
-				return CascadeType.REMOVE;
-			case REFRESH:
-				return CascadeType.REFRESH;
-			case DETACH:
-				return CascadeType.DETACH;
-			default:
-				throw new AssertionFailure("unknown cascade type: " + cascade);
-		}
+		return switch ( fetch ) {
+			case EAGER -> FetchMode.JOIN;
+			case LAZY -> FetchMode.SELECT;
+		};
 	}
 
 	public static String getCascadeStrategy(
@@ -986,15 +964,31 @@ public class BinderHelper {
 		return cascadeTypes;
 	}
 
+	private static CascadeType convertCascadeType(jakarta.persistence.CascadeType cascade) {
+		switch ( cascade ) {
+			case ALL:
+				return CascadeType.ALL;
+			case PERSIST:
+				return CascadeType.PERSIST;
+			case MERGE:
+				return CascadeType.MERGE;
+			case REMOVE:
+				return CascadeType.REMOVE;
+			case REFRESH:
+				return CascadeType.REFRESH;
+			case DETACH:
+				return CascadeType.DETACH;
+			default:
+				throw new AssertionFailure("unknown cascade type: " + cascade);
+		}
+	}
+
 	private static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
 		final StringBuilder cascade = new StringBuilder();
 		for ( CascadeType cascadeType : cascadeTypes) {
 			switch ( cascadeType ) {
 				case ALL:
 					cascade.append( "," ).append( "all" );
-					break;
-				case SAVE_UPDATE:
-					cascade.append( "," ).append( "save-update" );
 					break;
 				case PERSIST:
 					cascade.append( "," ).append( "persist" );
@@ -1008,22 +1002,48 @@ public class BinderHelper {
 				case REFRESH:
 					cascade.append( "," ).append( "refresh" );
 					break;
-				case REPLICATE:
-					cascade.append( "," ).append( "replicate" );
-					break;
 				case DETACH:
 					cascade.append( "," ).append( "evict" );
 					break;
 				case DELETE:
 				case REMOVE:
+					if ( CascadeType.DELETE == cascadeType ) {
+						warnAboutDeprecatedCascadeType( CascadeType.DELETE, CascadeType.REMOVE );
+					}
 					cascade.append( "," ).append( "delete" );
 					break;
 				case DELETE_ORPHAN:
 					cascade.append( "," ).append( "delete-orphan" );
 					break;
+				case SAVE_UPDATE:
+					warnAboutDeprecatedCascadeType( CascadeType.SAVE_UPDATE );
+					cascade.append( "," ).append( "save-update" );
+					break;
+				case REPLICATE:
+					warnAboutDeprecatedCascadeType( CascadeType.REPLICATE );
+					cascade.append( "," ).append( "replicate" );
+					break;
 			}
 		}
 		return cascade.length() > 0 ? cascade.substring( 1 ) : "none";
+	}
+
+	private static void warnAboutDeprecatedCascadeType(CascadeType cascadeType) {
+		DeprecationLogger.DEPRECATION_LOGGER.warnf(
+				"%s.%s is deprecated",
+				CascadeType.class.getName(),
+				cascadeType.name().toLowerCase( Locale.ROOT )
+		);
+	}
+
+	private static void warnAboutDeprecatedCascadeType(CascadeType oldType, CascadeType newType) {
+		DeprecationLogger.DEPRECATION_LOGGER.warnf(
+				"%s.%s is deprecated, use %s.%s instead",
+				CascadeType.class.getName(),
+				oldType.name().toLowerCase( Locale.ROOT ),
+				CascadeType.class.getName(),
+				newType.name().toLowerCase( Locale.ROOT )
+		);
 	}
 
 	static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {

@@ -1916,14 +1916,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable Element memberMatchingPath(TypeElement entityType, String path) {
-		final StringTokenizer tokens = new StringTokenizer( path, "." );
-		return memberMatchingPath( entityType, tokens );
+		return memberMatchingPath( entityType, new StringTokenizer(path, ".") );
 	}
 
 	private @Nullable Element memberMatchingPath(TypeElement entityType, StringTokenizer tokens) {
 		final AccessType accessType = getAccessType(entityType);
 		final String nextToken = tokens.nextToken();
-		for ( Element member : entityType.getEnclosedElements() ) {
+		for ( Element member : context.getElementUtils().getAllMembers(entityType) ) {
 			if ( "#id".equals(nextToken) && hasAnnotation( member, ID) ) {
 				return member;
 			}

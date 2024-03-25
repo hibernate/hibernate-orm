@@ -1152,7 +1152,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void addLifecycleMethod(ExecutableElement method) {
 		final TypeMirror returnType = ununi(method.getReturnType());
 		if ( !HIB_STATELESS_SESSION.equals(sessionType)
-				&& !MUTINY_STATELESS_SESSION.equals(sessionType) ) {
+				&& !MUTINY_STATELESS_SESSION.equals(sessionType)
+				&& !UNI_MUTINY_STATELESS_SESSION.equals(sessionType) ) {
 			context.message( method,
 					"repository must be backed by a 'StatelessSession'",
 					Diagnostic.Kind.ERROR );
@@ -1593,6 +1594,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case HIB_STATELESS_SESSION:
 			case MUTINY_SESSION:
 			case MUTINY_STATELESS_SESSION:
+//			case UNI_MUTINY_SESSION:
+//			case UNI_MUTINY_STATELESS_SESSION:
 				return "session";
 			default:
 				return sessionGetter;
@@ -2622,11 +2625,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean usingReactiveSession(String sessionType) {
 		return MUTINY_SESSION.equals(sessionType)
 			|| MUTINY_STATELESS_SESSION.equals(sessionType)
-			|| UNI_MUTINY_SESSION.equals(sessionType);
+			|| UNI_MUTINY_SESSION.equals(sessionType)
+			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 
 	private boolean usingStatelessSession(String sessionType) {
 		return HIB_STATELESS_SESSION.equals(sessionType)
-			|| MUTINY_STATELESS_SESSION.equals(sessionType);
+			|| MUTINY_STATELESS_SESSION.equals(sessionType)
+			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 }

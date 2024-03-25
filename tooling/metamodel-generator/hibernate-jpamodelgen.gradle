@@ -205,7 +205,8 @@ task jaxb {
         ant.xjc(
                 destdir: ( xjcTargetDir as File ).absolutePath,
                 package: 'org.hibernate.processor.xml.jaxb',
-                extension: 'true'
+                extension: 'true',
+				binding: 'src/main/jaxb-bindings.xml'
         ) {
             project.ant.arg line: '-no-header'
             project.ant.arg line: '-npa'

@@ -28,21 +28,21 @@ import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.util.NullnessUtil;
 import org.hibernate.processor.util.StringUtil;
 import org.hibernate.processor.util.TypeUtils;
-import org.hibernate.processor.xml.jaxb.Attributes;
-import org.hibernate.processor.xml.jaxb.Basic;
-import org.hibernate.processor.xml.jaxb.ElementCollection;
-import org.hibernate.processor.xml.jaxb.Embeddable;
-import org.hibernate.processor.xml.jaxb.EmbeddableAttributes;
-import org.hibernate.processor.xml.jaxb.Embedded;
-import org.hibernate.processor.xml.jaxb.EmbeddedId;
-import org.hibernate.processor.xml.jaxb.Entity;
-import org.hibernate.processor.xml.jaxb.Id;
-import org.hibernate.processor.xml.jaxb.ManyToMany;
-import org.hibernate.processor.xml.jaxb.ManyToOne;
-import org.hibernate.processor.xml.jaxb.MapKeyClass;
-import org.hibernate.processor.xml.jaxb.MappedSuperclass;
-import org.hibernate.processor.xml.jaxb.OneToMany;
-import org.hibernate.processor.xml.jaxb.OneToOne;
+import org.hibernate.processor.xml.jaxb.XmlAttributes;
+import org.hibernate.processor.xml.jaxb.XmlBasic;
+import org.hibernate.processor.xml.jaxb.XmlElementCollection;
+import org.hibernate.processor.xml.jaxb.XmlEmbeddable;
+import org.hibernate.processor.xml.jaxb.XmlEmbeddableAttributes;
+import org.hibernate.processor.xml.jaxb.XmlEmbedded;
+import org.hibernate.processor.xml.jaxb.XmlEmbeddedId;
+import org.hibernate.processor.xml.jaxb.XmlEntity;
+import org.hibernate.processor.xml.jaxb.XmlId;
+import org.hibernate.processor.xml.jaxb.XmlManyToMany;
+import org.hibernate.processor.xml.jaxb.XmlManyToOne;
+import org.hibernate.processor.xml.jaxb.XmlMapKeyClass;
+import org.hibernate.processor.xml.jaxb.XmlMappedSuperclass;
+import org.hibernate.processor.xml.jaxb.XmlOneToMany;
+import org.hibernate.processor.xml.jaxb.XmlOneToOne;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -50,7 +50,7 @@ import static org.hibernate.processor.util.StringUtil.determineFullyQualifiedCla
 import static org.hibernate.processor.util.TypeUtils.extractClosestRealTypeAsString;
 import static org.hibernate.processor.util.TypeUtils.findMappedSuperClass;
 import static org.hibernate.processor.util.TypeUtils.getElementKindForAccessType;
-import static org.hibernate.processor.xml.jaxb.AccessType.*;
+import static org.hibernate.processor.xml.jaxb.XmlAccessType.*;
 
 /**
  * Collects XML-based meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -68,8 +68,8 @@ public class XmlMetaEntity implements Metamodel {
 	private final Context context;
 	private final boolean isMetaComplete;
 
-	private @Nullable Attributes attributes;
-	private @Nullable EmbeddableAttributes embeddableAttributes;
+	private @Nullable XmlAttributes attributes;
+	private @Nullable XmlEmbeddableAttributes embeddableAttributes;
 	private AccessTypeInformation accessTypeInfo;
 
 	/**
@@ -85,20 +85,20 @@ public class XmlMetaEntity implements Metamodel {
 	 */
 	private boolean initialized;
 
-	XmlMetaEntity(Entity ormEntity, String defaultPackageName, TypeElement element, Context context) {
+	XmlMetaEntity(XmlEntity ormEntity, String defaultPackageName, TypeElement element, Context context) {
 		this( ormEntity.getClazz(), defaultPackageName, element, context, ormEntity.isMetadataComplete() );
 		this.attributes = ormEntity.getAttributes();
 		this.embeddableAttributes = null;
 	}
 
-	static XmlMetaEntity create(Entity ormEntity, String defaultPackageName, TypeElement element, Context context) {
+	static XmlMetaEntity create(XmlEntity ormEntity, String defaultPackageName, TypeElement element, Context context) {
 		XmlMetaEntity entity = new XmlMetaEntity( ormEntity, defaultPackageName, element, context );
 		// entities can be directly initialised
 		entity.init();
 		return entity;
 	}
 
-	XmlMetaEntity(MappedSuperclass mappedSuperclass, String defaultPackageName, TypeElement element, Context context) {
+	XmlMetaEntity(XmlMappedSuperclass mappedSuperclass, String defaultPackageName, TypeElement element, Context context) {
 		this(
 				mappedSuperclass.getClazz(),
 				defaultPackageName,
@@ -110,7 +110,7 @@ public class XmlMetaEntity implements Metamodel {
 		this.embeddableAttributes = null;
 	}
 
-	XmlMetaEntity(Embeddable embeddable, String defaultPackageName, TypeElement element, Context context) {
+	XmlMetaEntity(XmlEmbeddable embeddable, String defaultPackageName, TypeElement element, Context context) {
 		this( embeddable.getClazz(), defaultPackageName, element, context, embeddable.isMetadataComplete() );
 		this.attributes = null;
 		this.embeddableAttributes = embeddable.getAttributes();
@@ -363,9 +363,9 @@ public class XmlMetaEntity implements Metamodel {
 		return null;
 	}
 
-	private void parseAttributes(Attributes attributes) {
+	private void parseAttributes(XmlAttributes attributes) {
 		XmlMetaSingleAttribute attribute;
-		for ( Id id : attributes.getId() ) {
+		for ( XmlId id : attributes.getId() ) {
 			ElementKind elementKind = getElementKind( id.getAccess() );
 			String type = getType( id.getName(), null, elementKind );
 			if ( type != null ) {
@@ -375,7 +375,7 @@ public class XmlMetaEntity implements Metamodel {
 		}
 
 		if ( attributes.getEmbeddedId() != null ) {
-			EmbeddedId embeddedId = attributes.getEmbeddedId();
+			XmlEmbeddedId embeddedId = attributes.getEmbeddedId();
 			ElementKind elementKind = getElementKind( embeddedId.getAccess() );
 			String type = getType( embeddedId.getName(), null, elementKind );
 			if ( type != null ) {
@@ -384,77 +384,77 @@ public class XmlMetaEntity implements Metamodel {
 			}
 		}
 
-		for ( Basic basic : attributes.getBasic() ) {
+		for ( XmlBasic basic : attributes.getBasic() ) {
 			parseBasic( basic );
 		}
 
-		for ( ManyToOne manyToOne : attributes.getManyToOne() ) {
+		for ( XmlManyToOne manyToOne : attributes.getManyToOne() ) {
 			parseManyToOne( manyToOne );
 		}
 
-		for ( OneToOne oneToOne : attributes.getOneToOne() ) {
+		for ( XmlOneToOne oneToOne : attributes.getOneToOne() ) {
 			parseOneToOne( oneToOne );
 		}
 
-		for ( ManyToMany manyToMany : attributes.getManyToMany() ) {
+		for ( XmlManyToMany manyToMany : attributes.getManyToMany() ) {
 			if ( parseManyToMany( manyToMany ) ) {
 				break;
 			}
 		}
 
-		for ( OneToMany oneToMany : attributes.getOneToMany() ) {
+		for ( XmlOneToMany oneToMany : attributes.getOneToMany() ) {
 			if ( parseOneToMany( oneToMany ) ) {
 				break;
 			}
 		}
 
-		for ( ElementCollection collection : attributes.getElementCollection() ) {
+		for ( XmlElementCollection collection : attributes.getElementCollection() ) {
 			if ( parseElementCollection( collection ) ) {
 				break;
 			}
 		}
 
-		for ( Embedded embedded : attributes.getEmbedded() ) {
+		for ( XmlEmbedded embedded : attributes.getEmbedded() ) {
 			parseEmbedded( embedded );
 		}
 	}
 
-	private void parseEmbeddableAttributes(@Nullable EmbeddableAttributes attributes) {
+	private void parseEmbeddableAttributes(@Nullable XmlEmbeddableAttributes attributes) {
 		if ( attributes == null ) {
 			return;
 		}
-		for ( Basic basic : attributes.getBasic() ) {
+		for ( XmlBasic basic : attributes.getBasic() ) {
 			parseBasic( basic );
 		}
 
-		for ( ManyToOne manyToOne : attributes.getManyToOne() ) {
+		for ( XmlManyToOne manyToOne : attributes.getManyToOne() ) {
 			parseManyToOne( manyToOne );
 		}
 
-		for ( OneToOne oneToOne : attributes.getOneToOne() ) {
+		for ( XmlOneToOne oneToOne : attributes.getOneToOne() ) {
 			parseOneToOne( oneToOne );
 		}
 
-		for ( ManyToMany manyToMany : attributes.getManyToMany() ) {
+		for ( XmlManyToMany manyToMany : attributes.getManyToMany() ) {
 			if ( parseManyToMany( manyToMany ) ) {
 				break;
 			}
 		}
 
-		for ( OneToMany oneToMany : attributes.getOneToMany() ) {
+		for ( XmlOneToMany oneToMany : attributes.getOneToMany() ) {
 			if ( parseOneToMany( oneToMany ) ) {
 				break;
 			}
 		}
 
-		for ( ElementCollection collection : attributes.getElementCollection() ) {
+		for ( XmlElementCollection collection : attributes.getElementCollection() ) {
 			if ( parseElementCollection( collection ) ) {
 				break;
 			}
 		}
 	}
 
-	private boolean parseElementCollection(ElementCollection collection) {
+	private boolean parseElementCollection(XmlElementCollection collection) {
 		@Nullable String @Nullable[] types;
 		XmlMetaCollection metaCollection;
 		ElementKind elementKind = getElementKind( collection.getAccess() );
@@ -484,7 +484,7 @@ public class XmlMetaEntity implements Metamodel {
 		return false;
 	}
 
-	private void parseEmbedded(Embedded embedded) {
+	private void parseEmbedded(XmlEmbedded embedded) {
 		XmlMetaSingleAttribute attribute;
 		ElementKind elementKind = getElementKind( embedded.getAccess() );
 		String type = getType( embedded.getName(), null, elementKind );
@@ -502,7 +502,7 @@ public class XmlMetaEntity implements Metamodel {
 		return explicitTargetClass;
 	}
 
-	private @Nullable String determineExplicitMapKeyClass(MapKeyClass mapKeyClass) {
+	private @Nullable String determineExplicitMapKeyClass(XmlMapKeyClass mapKeyClass) {
 		String explicitMapKey = null;
 		if ( mapKeyClass != null ) {
 			explicitMapKey = determineFullyQualifiedClassName( defaultPackageName, mapKeyClass.getClazz() );
@@ -510,7 +510,7 @@ public class XmlMetaEntity implements Metamodel {
 		return explicitMapKey;
 	}
 
-	private boolean parseOneToMany(OneToMany oneToMany) {
+	private boolean parseOneToMany(XmlOneToMany oneToMany) {
 		@Nullable String @Nullable [] types;
 		XmlMetaCollection metaCollection;
 		ElementKind elementKind = getElementKind( oneToMany.getAccess() );
@@ -538,7 +538,7 @@ public class XmlMetaEntity implements Metamodel {
 		return false;
 	}
 
-	private boolean parseManyToMany(ManyToMany manyToMany) {
+	private boolean parseManyToMany(XmlManyToMany manyToMany) {
 		@Nullable String @Nullable [] types;
 		XmlMetaCollection metaCollection;
 		ElementKind elementKind = getElementKind( manyToMany.getAccess() );
@@ -568,7 +568,7 @@ public class XmlMetaEntity implements Metamodel {
 		return false;
 	}
 
-	private void parseOneToOne(OneToOne oneToOne) {
+	private void parseOneToOne(XmlOneToOne oneToOne) {
 		XmlMetaSingleAttribute attribute;
 		ElementKind elementKind = getElementKind( oneToOne.getAccess() );
 		String type = getType( oneToOne.getName(), oneToOne.getTargetEntity(), elementKind );
@@ -578,7 +578,7 @@ public class XmlMetaEntity implements Metamodel {
 		}
 	}
 
-	private void parseManyToOne(ManyToOne manyToOne) {
+	private void parseManyToOne(XmlManyToOne manyToOne) {
 		XmlMetaSingleAttribute attribute;
 		ElementKind elementKind = getElementKind( manyToOne.getAccess() );
 		String type = getType( manyToOne.getName(), manyToOne.getTargetEntity(), elementKind );
@@ -588,7 +588,7 @@ public class XmlMetaEntity implements Metamodel {
 		}
 	}
 
-	private void parseBasic(Basic basic) {
+	private void parseBasic(XmlBasic basic) {
 		XmlMetaSingleAttribute attribute;
 		ElementKind elementKind = getElementKind( basic.getAccess() );
 		String type = getType( basic.getName(), null, elementKind );
@@ -612,7 +612,7 @@ public class XmlMetaEntity implements Metamodel {
 		);
 	}
 
-	private ElementKind getElementKind(org.hibernate.processor.xml.jaxb.AccessType accessType) {
+	private ElementKind getElementKind(org.hibernate.processor.xml.jaxb.XmlAccessType accessType) {
 		// if no explicit access type was specified in xml we use the entity access type
 		if ( accessType == null ) {
 			return getElementKindForAccessType( accessTypeInfo.getAccessType() );

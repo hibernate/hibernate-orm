@@ -272,7 +272,7 @@ public abstract class AbstractEntitySourceImpl
 	@Override
 	public boolean isLazy() {
 		if ( jaxbEntityMapping.isLazy() == null ) {
-			return metadataBuildingContext().getMappingDefaults().areEntitiesImplicitlyLazy();
+			return metadataBuildingContext().getEffectiveDefaults().isDefaultEntityLaziness();
 		}
 		return jaxbEntityMapping().isLazy();
 	}

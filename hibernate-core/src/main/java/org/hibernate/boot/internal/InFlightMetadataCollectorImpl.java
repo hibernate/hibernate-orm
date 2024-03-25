@@ -223,12 +223,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			MetadataBuildingOptions options) {
 		this(
 				bootstrapContext,
-				buildContext( bootstrapContext ),
+				createModelBuildingContext( bootstrapContext ),
 				options
 		);
 	}
 
-	private static SourceModelBuildingContext buildContext(BootstrapContext bootstrapContext) {
+	private static SourceModelBuildingContext createModelBuildingContext(BootstrapContext bootstrapContext) {
 		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
 		return new SourceModelBuildingContextImpl(

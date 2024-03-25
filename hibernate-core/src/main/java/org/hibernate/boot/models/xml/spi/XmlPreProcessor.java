@@ -24,8 +24,10 @@ public class XmlPreProcessor {
 	/**
 	 * Build an XmlResources reference based on the given {@code managedResources}
 	 */
-	public static XmlPreProcessingResult preProcessXmlResources(ManagedResources managedResources) {
-		final XmlPreProcessingResultImpl collected = new XmlPreProcessingResultImpl();
+	public static XmlPreProcessingResult preProcessXmlResources(
+			ManagedResources managedResources,
+			PersistenceUnitMetadata persistenceUnitMetadata) {
+		final XmlPreProcessingResultImpl collected = new XmlPreProcessingResultImpl( persistenceUnitMetadata );
 
 		for ( Binding<JaxbBindableMappingDescriptor> mappingXmlBinding : managedResources.getXmlMappingBindings() ) {
 			// for now skip hbm.xml
@@ -33,7 +35,8 @@ public class XmlPreProcessor {
 			if ( root instanceof JaxbHbmHibernateMapping ) {
 				continue;
 			}
-			collected.addDocument( (JaxbEntityMappingsImpl) root );
+			final JaxbEntityMappingsImpl jaxbEntityMappings = (JaxbEntityMappingsImpl) root;
+			collected.addDocument( jaxbEntityMappings );
 		}
 
 		return collected;

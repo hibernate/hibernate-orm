@@ -13,6 +13,7 @@ import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.models.bind.internal.BindingContextImpl;
@@ -54,11 +55,17 @@ public class BindingTestingHelper {
 				bootstrapContext
 		);
 
+		final RootMappingDefaults mappingDefaults = new RootMappingDefaults(
+				new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry ),
+				metadataCollector.getPersistenceUnitMetadata()
+		);
+
 		final MetadataBuildingContextRootImpl metadataBuildingContext = new MetadataBuildingContextRootImpl(
 				"models",
 				bootstrapContext,
 				bootstrapContext.getMetadataBuildingOptions(),
-				metadataCollector
+				metadataCollector,
+				mappingDefaults
 		);
 		final BindingStateImpl bindingState = new BindingStateImpl( metadataBuildingContext );
 		final BindingOptionsImpl bindingOptions = new BindingOptionsImpl( metadataBuildingContext );

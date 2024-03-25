@@ -27,6 +27,7 @@ import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
@@ -63,6 +64,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -193,6 +195,7 @@ public class MetadataBuildingProcess {
 			final MetadataBuildingOptions options) {
 
 		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
+		assert classLoaderService != null;
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
 
 		handleTypes( bootstrapContext, options, metadataCollector );
@@ -200,14 +203,16 @@ public class MetadataBuildingProcess {
 		final DomainModelSource domainModelSource = processManagedResources(
 				managedResources,
 				metadataCollector,
-				bootstrapContext
+				bootstrapContext,
+				options.getMappingDefaults()
 		);
 
 		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
 				"orm",
 				bootstrapContext,
 				options,
-				metadataCollector
+				metadataCollector,
+				domainModelSource.getEffectiveMappingDefaults()
 		);
 
 		managedResources.getAttributeConverterDescriptors().forEach( metadataCollector::addAttributeConverter );
@@ -220,6 +225,32 @@ public class MetadataBuildingProcess {
 		// 		to unified model
 		final IndexView jandexView = domainModelSource.getJandexIndex();
 
+		coordinateProcessors(
+				managedResources,
+				options,
+				rootMetadataBuildingContext,
+				domainModelSource,
+				classLoaderService,
+				metadataCollector,
+				jandexView
+		);
+
+		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
+		processAdditionalJaxbMappingProducer( metadataCollector, options, jandexView, classLoaderService, rootMetadataBuildingContext );
+
+		applyExtraQueryImports( managedResources, metadataCollector );
+
+		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
+	}
+
+	private static void coordinateProcessors(
+			ManagedResources managedResources,
+			MetadataBuildingOptions options,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
+			DomainModelSource domainModelSource,
+			ClassLoaderService classLoaderService,
+			InFlightMetadataCollectorImpl metadataCollector,
+			IndexView jandexView) {
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
 			private final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
 					? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
@@ -361,20 +392,14 @@ public class MetadataBuildingProcess {
 		processor.processNamedQueries();
 
 		processor.finishUp();
-
-		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
-		processAdditionalJaxbMappingProducer( metadataCollector, options, jandexView, classLoaderService, rootMetadataBuildingContext );
-
-		applyExtraQueryImports( managedResources, metadataCollector );
-
-		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
 	}
 
 	@Internal
 	public static DomainModelSource processManagedResources(
 			ManagedResources managedResources,
 			InFlightMetadataCollector metadataCollector,
-			BootstrapContext bootstrapContext) {
+			BootstrapContext bootstrapContext,
+			MappingDefaults optionDefaults) {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// 	- pre-process the XML
 		// 	- collect all known classes
@@ -392,7 +417,12 @@ public class MetadataBuildingProcess {
 		//		- sourceModelBuildingContext
 
 		final SourceModelBuildingContext sourceModelBuildingContext = metadataCollector.getSourceModelBuildingContext();
-		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources( managedResources );
+		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
+				managedResources,
+				metadataCollector.getPersistenceUnitMetadata()
+		);
+
+		assert metadataCollector.getPersistenceUnitMetadata() == xmlPreProcessingResult.getPersistenceUnitMetadata();
 
 		//noinspection unchecked
 		final List<String> allKnownClassNames = mutableJoin(
@@ -434,7 +464,6 @@ public class MetadataBuildingProcess {
 		// JPA id generator global-ity thing
 		final boolean areIdGeneratorsGlobal = true;
 		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
-		final AnnotationDescriptorRegistry descriptorRegistry = sourceModelBuildingContext.getAnnotationDescriptorRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
 				metadataCollector.getGlobalRegistrations(),
@@ -442,11 +471,16 @@ public class MetadataBuildingProcess {
 				sourceModelBuildingContext
 		);
 
+		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
+				optionDefaults,
+				xmlPreProcessingResult.getPersistenceUnitMetadata()
+		);
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
 				modelCategorizationCollector,
 				sourceModelBuildingContext,
-				bootstrapContext
+				bootstrapContext,
+				rootMappingDefaults
 		);
 
 		final HashSet<String> categorizedClassNames = new HashSet<>();
@@ -470,6 +504,7 @@ public class MetadataBuildingProcess {
 				jandexIndex,
 				allKnownClassNames,
 				modelCategorizationCollector.getGlobalRegistrations(),
+				rootMappingDefaults,
 				xmlPreProcessingResult.getPersistenceUnitMetadata()
 		);
 	}
@@ -718,7 +753,8 @@ public class MetadataBuildingProcess {
 				AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
 						additionalEntityClasses,
 						additionalJaxbMappings,
-						rootMetadataBuildingContext
+						rootMetadataBuildingContext,
+						options
 				);
 			}
 

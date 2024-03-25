@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.internal.util.StringHelper;
 
@@ -17,10 +18,25 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class XmlPreProcessingResultImpl implements XmlPreProcessingResult {
-	private final PersistenceUnitMetadataImpl persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
+	private final PersistenceUnitMetadataImpl persistenceUnitMetadata;
 	private final List<JaxbEntityMappingsImpl> documents = new ArrayList<>();
 	private final List<String> managedClasses = new ArrayList<>();
 	private final List<String> managedNames = new ArrayList<>();
+
+	public XmlPreProcessingResultImpl(PersistenceUnitMetadataImpl persistenceUnitMetadata) {
+		this.persistenceUnitMetadata = persistenceUnitMetadata;
+	}
+
+	public XmlPreProcessingResultImpl(PersistenceUnitMetadata persistenceUnitMetadata) {
+		this( (PersistenceUnitMetadataImpl) persistenceUnitMetadata );
+	}
+
+	/**
+	 * Intended for testing
+	 */
+	public XmlPreProcessingResultImpl() {
+		this( new PersistenceUnitMetadataImpl() );
+	}
 
 	@Override
 	public PersistenceUnitMetadataImpl getPersistenceUnitMetadata() {

@@ -64,7 +64,7 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	}
 
 	@Override
-	public MappingDefaults getMappingDefaults() {
+	public MappingDefaults getEffectiveDefaults() {
 		return metadataCollector.getMetadataBuildingOptions().getMappingDefaults();
 	}
 

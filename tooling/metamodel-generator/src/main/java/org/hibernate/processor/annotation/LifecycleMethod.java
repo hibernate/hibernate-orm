@@ -13,6 +13,7 @@ import static org.hibernate.processor.util.Constants.MUTINY_SESSION;
 import static org.hibernate.processor.util.Constants.MUTINY_STATELESS_SESSION;
 import static org.hibernate.processor.util.Constants.UNI;
 import static org.hibernate.processor.util.Constants.UNI_MUTINY_SESSION;
+import static org.hibernate.processor.util.Constants.UNI_MUTINY_STATELESS_SESSION;
 
 public class LifecycleMethod implements MetaAttribute {
 	private final AnnotationMetaEntity annotationMetaEntity;
@@ -110,7 +111,22 @@ public class LifecycleMethod implements MetaAttribute {
 	}
 
 	private void delegateCall(StringBuilder declaration) {
-		if ( isReactive() ) {
+		if ( isReactiveSession() ) {
+			declaration
+					.append("\t\treturn ")
+					.append(sessionName)
+					.append(".chain(")
+					.append(localSessionName())
+					.append(" -> ")
+					.append(localSessionName())
+					.append('.')
+					.append(operationName)
+					.append('(')
+					.append(parameterName)
+					.append(')')
+					.append(')');
+		}
+		else if ( isReactive() ) {
 			declaration
 					.append("\t\treturn ")
 					.append(sessionName)
@@ -229,6 +245,16 @@ public class LifecycleMethod implements MetaAttribute {
 	private boolean isReactive() {
 		return MUTINY_SESSION.equals(sessionType)
 			|| MUTINY_STATELESS_SESSION.equals(sessionType)
-			|| UNI_MUTINY_SESSION.equals(sessionType);
+			|| UNI_MUTINY_SESSION.equals(sessionType)
+			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
+	}
+
+	boolean isReactiveSession() {
+		return UNI_MUTINY_SESSION.equals(sessionType)
+			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
+	}
+
+	String localSessionName() {
+		return isReactiveSession() ? '_' + sessionName : sessionName;
 	}
 }

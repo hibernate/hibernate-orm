@@ -89,11 +89,23 @@ public class IdFinderMethod extends AbstractFinderMethod {
 	}
 
 	private void findWithNoFetchProfiles(StringBuilder declaration) {
+		if ( isReactiveSession() ) {
+			declaration
+					.append(".chain(")
+					.append(localSessionName())
+					.append(" -> ")
+					.append(localSessionName());
+		}
 		declaration
 				.append(isUsingStatelessSession() ? ".get(" : ".find(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class, ")
-				.append(paramName)
+				.append(paramName);
+		if ( isReactiveSession() ) {
+			declaration
+					.append(')');
+		}
+		declaration
 				.append(");\n");
 	}
 

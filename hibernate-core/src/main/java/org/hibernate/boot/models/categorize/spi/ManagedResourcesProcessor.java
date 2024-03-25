@@ -12,7 +12,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.Internal;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.boot.internal.BootstrapContextImpl;
+import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.ModelCategorizationLogging;
 import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
@@ -20,6 +24,7 @@ import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCo
 import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
 import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
+import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -27,6 +32,7 @@ import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.models.internal.SourceModelBuildingContextImpl;
 import org.hibernate.models.internal.jandex.JandexClassDetails;
 import org.hibernate.models.internal.jandex.JandexIndexerHelper;
@@ -55,6 +61,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mutableJo
 public class ManagedResourcesProcessor {
 	public static CategorizedDomainModel processManagedResources(
 			ManagedResources managedResources,
+			MetadataBuildingOptions metadataBuildingOptions,
 			BootstrapContext bootstrapContext) {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,7 +83,12 @@ public class ManagedResourcesProcessor {
 		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
 
-		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources( managedResources );
+		final PersistenceUnitMetadataImpl persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
+
+		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
+				managedResources,
+				persistenceUnitMetadata
+		);
 
 		//noinspection unchecked
 		final List<String> allKnownClassNames = mutableJoin(
@@ -133,11 +145,16 @@ public class ManagedResourcesProcessor {
 				sourceModelBuildingContext
 		);
 
+		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
+				metadataBuildingOptions.getMappingDefaults(),
+				persistenceUnitMetadata
+		);
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
 				modelCategorizationCollector,
 				sourceModelBuildingContext,
-				bootstrapContext
+				bootstrapContext,
+				rootMappingDefaults
 		);
 
 		allKnownClassNames.forEach( (className) -> {
@@ -281,4 +298,17 @@ public class ManagedResourcesProcessor {
 		}
 	}
 
+	/**
+	 * For testing use only
+	 */
+	@Internal
+	public static CategorizedDomainModel processManagedResources(
+			ManagedResources managedResources,
+			BootstrapContext bootstrapContext) {
+		return processManagedResources(
+				managedResources,
+				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
+				bootstrapContext
+		);
+	}
 }

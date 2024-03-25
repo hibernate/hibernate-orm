@@ -94,7 +94,7 @@ public class CompositeIdentifierSingularAttributeSourceManyToOneImpl
 		this.attributeRole = container.getAttributeRoleBase().append( getName() );
 
 		this.fetchCharacteristics = FetchCharacteristicsSingularAssociationImpl.interpretManyToOne(
-				mappingDocument.getMappingDefaults(),
+				mappingDocument.getEffectiveDefaults(),
 				null,
 				null,
 				interpretLazy( mappingDocument, keyManyToOneElement )

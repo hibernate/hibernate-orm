@@ -9,11 +9,11 @@ package org.hibernate.boot.model.source.internal.annotations;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.models.categorize.spi.ConversionRegistration;
 import org.hibernate.boot.models.categorize.spi.ConverterRegistration;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
-import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
 import org.jboss.jandex.IndexView;
@@ -24,8 +24,9 @@ import org.jboss.jandex.IndexView;
 public class DomainModelSource {
 	private final ClassDetailsRegistry classDetailsRegistry;
 	private final IndexView jandexIndex;
-	private final PersistenceUnitMetadata persistenceUnitMetadata;
 	private final GlobalRegistrations globalRegistrations;
+	private final RootMappingDefaults effectiveMappingDefaults;
+	private final PersistenceUnitMetadata persistenceUnitMetadata;
 	private final List<String> allKnownClassNames;
 
 	public DomainModelSource(
@@ -33,12 +34,14 @@ public class DomainModelSource {
 			IndexView jandexIndex,
 			List<String> allKnownClassNames,
 			GlobalRegistrations globalRegistrations,
+			RootMappingDefaults effectiveMappingDefaults,
 			PersistenceUnitMetadata persistenceUnitMetadata) {
 		this.classDetailsRegistry = classDetailsRegistry;
 		this.jandexIndex = jandexIndex;
-		this.persistenceUnitMetadata = persistenceUnitMetadata;
-		this.globalRegistrations = globalRegistrations;
 		this.allKnownClassNames = allKnownClassNames;
+		this.globalRegistrations = globalRegistrations;
+		this.effectiveMappingDefaults = effectiveMappingDefaults;
+		this.persistenceUnitMetadata = persistenceUnitMetadata;
 	}
 
 	public ClassDetailsRegistry getClassDetailsRegistry() {
@@ -49,12 +52,16 @@ public class DomainModelSource {
 		return jandexIndex;
 	}
 
-	public PersistenceUnitMetadata getPersistenceUnitMetadata() {
-		return persistenceUnitMetadata;
-	}
-
 	public GlobalRegistrations getGlobalRegistrations() {
 		return globalRegistrations;
+	}
+
+	public RootMappingDefaults getEffectiveMappingDefaults() {
+		return effectiveMappingDefaults;
+	}
+
+	public PersistenceUnitMetadata getPersistenceUnitMetadata() {
+		return persistenceUnitMetadata;
 	}
 
 	public List<ConversionRegistration> getConversionRegistrations() {

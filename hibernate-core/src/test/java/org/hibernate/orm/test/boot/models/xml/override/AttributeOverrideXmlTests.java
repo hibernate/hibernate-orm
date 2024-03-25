@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
+import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
@@ -53,7 +54,8 @@ public class AttributeOverrideXmlTests {
 		final DomainModelSource domainModelSource = processManagedResources(
 				managedResources,
 				metadataCollector,
-				bootstrapContext
+				bootstrapContext,
+				new MetadataBuilderImpl.MappingDefaultsImpl( registry )
 		);
 
 		final ClassDetailsRegistry classDetailsRegistry = domainModelSource.getClassDetailsRegistry();

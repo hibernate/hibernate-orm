@@ -122,9 +122,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		final AdditionalManagedResourcesImpl.Builder mrBuilder = new AdditionalManagedResourcesImpl.Builder();
 		mrBuilder.addLoadedClasses( additionalClasses );
 		mrBuilder.addClassDetails( additionalClassDetails );
-		for ( JaxbEntityMappingsImpl additionalJaxbMapping : additionalJaxbMappings ) {
-			mrBuilder.addXmlBinding( new Binding<>( additionalJaxbMapping, new Origin( OTHER, "additional" ) ) );
-		}
+		mrBuilder.addJaxbEntityMappings( additionalJaxbMappings );
 
 		final ManagedResources mr = mrBuilder.build();
 		final DomainModelSource additionalDomainModelSource = MetadataBuildingProcess.processManagedResources(

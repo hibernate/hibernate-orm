@@ -71,6 +71,7 @@ import org.hibernate.boot.model.naming.NamingStrategyHelper;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -1254,15 +1255,20 @@ public class EntityBinder {
 
 		context.getMetadataCollector().addSecondPass( persistentClasses -> {
 			for ( Property property : persistentClass.getDeclaredProperties() ) {
-				final Class<?> mappedClass = persistentClass.getMappedClass();
 				if ( property.isComposite() ) {
-					for ( CallbackType type : CallbackType.values() ) {
-						property.addCallbackDefinitions( CallbackDefinitionResolver.resolveEmbeddableCallbacks(
-								context,
-								mappedClass,
-								property,
-								type
-						) );
+					try {
+						final Class<?> mappedClass = persistentClass.getMappedClass();
+						for ( CallbackType type : CallbackType.values() ) {
+							property.addCallbackDefinitions( CallbackDefinitionResolver.resolveEmbeddableCallbacks(
+									context,
+									mappedClass,
+									property,
+									type
+							) );
+						}
+					}
+					catch (ClassLoadingException ignore) {
+						// a dynamic embeddable... cannot define listener methods
 					}
 				}
 			}
@@ -1357,7 +1363,7 @@ public class EntityBinder {
 		bindFiltersInHierarchy();
 
 		persistentClass.setAbstract( annotatedClass.isAbstract() );
-		persistentClass.setClassName( annotatedClass.getName() );
+		persistentClass.setClassName( annotatedClass.getClassName() );
 		persistentClass.setJpaEntityName( name );
 		persistentClass.setEntityName( annotatedClass.getName() );
 		persistentClass.setCached( isCached );

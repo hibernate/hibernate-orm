@@ -15,12 +15,15 @@ import java.util.Map;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.ClassDetails;
+
+import static org.hibernate.boot.jaxb.SourceType.OTHER;
 
 /**
  * @author Steve Ebersole
@@ -110,10 +113,12 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		}
 
 		public Builder addLoadedClasses(List<Class<?>> additionalClasses) {
-			if ( this.classes == null ) {
-				this.classes = new ArrayList<>();
+			if ( additionalClasses != null ) {
+				if ( this.classes == null ) {
+					this.classes = new ArrayList<>();
+				}
+				this.classes.addAll( additionalClasses );
 			}
-			this.classes.addAll( additionalClasses );
 			return this;
 		}
 
@@ -164,6 +169,15 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 			}
 			xmlMappings.add( binding );
 			return this;
+		}
+
+		public void addJaxbEntityMappings(List<JaxbEntityMappingsImpl> additionalJaxbMappings) {
+			if ( additionalJaxbMappings == null ) {
+				return;
+			}
+			for ( JaxbEntityMappingsImpl additionalJaxbMapping : additionalJaxbMappings ) {
+				addXmlBinding( new Binding<>( additionalJaxbMapping, new Origin( OTHER, "additional" ) ) );
+			}
 		}
 	}
 }

@@ -890,7 +890,7 @@ public class AnnotatedColumn {
 								+ attributeMember.getName() + "' maps to " + length + " columns (use a table-level '@Check')" );
 					}
 					addCheckConstraint(
-							checkAnn.getString( "name", (String) null ),
+							nullIfEmpty( checkAnn.getString( "name" ) ),
 							checkAnn.getString( "constraints" )
 					);
 				}

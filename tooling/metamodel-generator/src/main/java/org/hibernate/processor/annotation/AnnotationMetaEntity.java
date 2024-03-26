@@ -854,7 +854,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			switch ( typeMirror.getKind() ) {
 				case TYPEVAR:
 					if ( hasAnnotation(element, ENTITY) ) {
-						context.message(memberOfClass, "type '" + typeMirror + "' is a type variable",
+						message(memberOfClass, "type '" + typeMirror + "' is a type variable",
 								Diagnostic.Kind.WARNING);
 					}
 					break;
@@ -866,13 +866,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						validateBidirectionalMapping(memberOfClass, annotation, mappedBy, assocTypeElement);
 					}
 					else {
-						context.message(memberOfClass, "type '" + assocTypeElement.getSimpleName()
+						message(memberOfClass, "type '" + assocTypeElement.getSimpleName()
 										+ "' is not annotated '@Entity'",
 								Diagnostic.Kind.WARNING);
 					}
 					break;
 				default:
-					context.message(memberOfClass, "type '" + typeMirror + "' is not an entity type",
+					message(memberOfClass, "type '" + typeMirror + "' is not an entity type",
 							Diagnostic.Kind.WARNING);
 			}
 		}
@@ -898,7 +898,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			// not found
-			context.message(memberOfClass, annotation,
+			message(memberOfClass, annotation,
 					annotationVal,
 					"no matching member in '" + assocTypeElement.getSimpleName() + "'",
 					Diagnostic.Kind.ERROR);
@@ -916,7 +916,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case ONE_TO_ONE:
 				backType = attributeType(member);
 				if ( !hasAnnotation(member, ONE_TO_ONE) ) {
-					context.message(memberOfClass, annotation, annotationVal,
+					message(memberOfClass, annotation, annotationVal,
 							"member '" + member.getSimpleName()
 									+ "' of '" + assocTypeElement.getSimpleName()
 									+ "' is not annotated '@OneToOne'",
@@ -926,7 +926,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case ONE_TO_MANY:
 				backType = attributeType(member);
 				if ( !hasAnnotation(member, MANY_TO_ONE) ) {
-					context.message(memberOfClass, annotation, annotationVal,
+					message(memberOfClass, annotation, annotationVal,
 							"member '" + member.getSimpleName()
 									+ "' of '" + assocTypeElement.getSimpleName()
 									+ "' is not annotated '@ManyToOne'",
@@ -936,7 +936,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case MANY_TO_MANY:
 				backType = elementType( attributeType(member) );
 				if ( !hasAnnotation(member, MANY_TO_MANY) ) {
-					context.message(memberOfClass, annotation, annotationVal,
+					message(memberOfClass, annotation, annotationVal,
 							"member '" + member.getSimpleName()
 									+ "' of '" + assocTypeElement.getSimpleName()
 									+ "' is not annotated '@ManyToMany'",
@@ -948,7 +948,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		if ( backType!=null
 				&& !context.getTypeUtils().isSameType(backType, element.asType()) ) {
-			context.message(memberOfClass, annotation, annotationVal,
+			message(memberOfClass, annotation, annotationVal,
 					"member '" + member.getSimpleName()
 							+ "' of '" + assocTypeElement.getSimpleName()
 							+ "' is not of type '" + element.getSimpleName() + "'",
@@ -1031,7 +1031,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					}
 					break;
 				default:
-					context.message( method,
+					message( method,
 							"incorrect return type '" + declaredType + "'",
 							Diagnostic.Kind.ERROR );
 					break;
@@ -1047,7 +1047,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( method.getParameters().stream()
 						.noneMatch(param -> param.asType().toString()
 								.startsWith(JD_PAGE_REQUEST))) {
-					context.message(method,
+					message(method,
 							"method with return type '" + typeName
 									+ "' has no parameter of type 'PageRequest'",
 							Diagnostic.Kind.ERROR);
@@ -1060,7 +1060,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( method.getParameters().stream()
 						.noneMatch(param -> param.asType().toString()
 								.startsWith(HIB_KEYED_PAGE))) {
-					context.message(method,
+					message(method,
 							"method with return type '" + typeName
 									+ "' has no parameter of type 'KeyedPage'",
 							Diagnostic.Kind.ERROR);
@@ -1074,7 +1074,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					return true;
 				}
 				else {
-					context.message(method,
+					message(method,
 							"incorrect return type '" + typeName + "'",
 							Diagnostic.Kind.ERROR);
 					return false;
@@ -1139,7 +1139,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( kind != TypeKind.VOID
 					&& kind != TypeKind.INT
 					&& kind != TypeKind.LONG ) {
-				context.message(method,
+				message(method,
 						"must be 'void' or return 'int' or 'long'",
 						Diagnostic.Kind.ERROR);
 			}
@@ -1154,18 +1154,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( !HIB_STATELESS_SESSION.equals(sessionType)
 				&& !MUTINY_STATELESS_SESSION.equals(sessionType)
 				&& !UNI_MUTINY_STATELESS_SESSION.equals(sessionType) ) {
-			context.message( method,
+			message( method,
 					"repository must be backed by a 'StatelessSession'",
 					Diagnostic.Kind.ERROR );
 		}
 		else if ( method.getParameters().size() != 1 ) {
-			context.message( method,
+			message( method,
 					"must have exactly one parameter",
 					Diagnostic.Kind.ERROR );
 
 		}
 		else if ( returnType == null ) {
-			context.message( method,
+			message( method,
 					"must be declared 'void'",
 					Diagnostic.Kind.ERROR );
 		}
@@ -1177,20 +1177,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final TypeMirror parameterType = parameterType( parameter );
 			final DeclaredType declaredType = entityType( parameterType );
 			if ( declaredType == null ) {
-				context.message( parameter,
+				message( parameter,
 						"incorrect parameter type '" + parameterType + "' is not an entity type",
 						Diagnostic.Kind.ERROR );
 			}
 			else if ( !containsAnnotation( declaredType.asElement(), ENTITY )
 					// TODO: improve this (carefully consider the case of an erased type variable)
 					&& declaredParameterType == parameterType ) {
-				context.message( parameter,
+				message( parameter,
 						"incorrect parameter type '" + parameterType + "' is not annotated '@Entity'",
 						Diagnostic.Kind.ERROR );
 			}
 			else if ( returnArgument
 					&& !context.getTypeUtils().isSameType( returnType, declaredParameterType ) ) {
-				context.message( parameter,
+				message( parameter,
 						"return type '" + returnType
 								+ "' disagrees with parameter type '" + parameterType + "'",
 						Diagnostic.Kind.ERROR );
@@ -1301,7 +1301,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeMirror returnType,
 			@Nullable TypeElement containerType) {
 		if ( returnType == null ) {
-			context.message( method,
+			message( method,
 					"missing return type",
 					Diagnostic.Kind.ERROR );
 		}
@@ -1309,7 +1309,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final ArrayType arrayType = (ArrayType) returnType;
 			final TypeMirror componentType = arrayType.getComponentType();
 			if ( componentType.getKind() != TypeKind.DECLARED ) {
-				context.message( method,
+				message( method,
 						"incorrect return type '" + returnType + "' is not an array with entity elements",
 						Diagnostic.Kind.ERROR );
 			}
@@ -1317,7 +1317,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final DeclaredType declaredType = (DeclaredType) componentType;
 				final TypeElement entity = (TypeElement) declaredType.asElement();
 				if ( !containsAnnotation( entity, ENTITY ) ) {
-					context.message( method,
+					message( method,
 							"incorrect return type '" + returnType + "' is not annotated '@Entity'",
 							Diagnostic.Kind.ERROR );
 				}
@@ -1331,7 +1331,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final DeclaredType declaredType = (DeclaredType) ununi( returnType );
 			final TypeElement entity = (TypeElement) declaredType.asElement();
 			if ( !containsAnnotation( entity, ENTITY ) ) {
-				context.message( method,
+				message( method,
 						"incorrect return type '" + declaredType + "' is not annotated '@Entity'",
 						Diagnostic.Kind.ERROR );
 			}
@@ -1344,10 +1344,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					for ( VariableElement parameter : method.getParameters() ) {
 						final String type = parameter.asType().toString();
 						if ( isPageParam(type) ) {
-							context.message( parameter, "pagination would have no effect", Diagnostic.Kind.ERROR);
+							message( parameter, "pagination would have no effect", Diagnostic.Kind.ERROR);
 						}
 						else if ( isOrderParam(type) ) {
-							context.message( parameter, "ordering would have no effect", Diagnostic.Kind.ERROR);
+							message( parameter, "ordering would have no effect", Diagnostic.Kind.ERROR);
 						}
 					}
 					final long parameterCount =
@@ -1356,7 +1356,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									.count();
 					switch ( (int) parameterCount ) {
 						case 0:
-							context.message( method, "missing parameter", Diagnostic.Kind.ERROR );
+							message( method, "missing parameter", Diagnostic.Kind.ERROR );
 							break;
 						case 1:
 							createSingleParameterFinder( method, declaredType, entity );
@@ -1368,7 +1368,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		else {
-			context.message( method,
+			message( method,
 					"incorrect return type '" + returnType + "' is not an entity type",
 					Diagnostic.Kind.ERROR );
 		}
@@ -1432,7 +1432,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void createCriteriaDelete(ExecutableElement method, TypeMirror returnType) {
 		final TypeElement entity = primaryEntity;
 		if ( entity == null) {
-			context.message( method, "repository does not have a well-defined primary entity type",
+			message( method, "repository does not have a well-defined primary entity type",
 					Diagnostic.Kind.ERROR);
 		}
 		else {
@@ -1473,7 +1473,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void wrongTypeArgError(String entity, VariableElement parameter, boolean pageRequest) {
-		context.message(parameter,
+		message(parameter,
 				(pageRequest
 						? "mismatched type of page request (should be 'PageRequest<? super "
 						:"mismatched type of order (should be 'Order<? super ")
@@ -1482,7 +1482,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void missingTypeArgError(String entity, VariableElement parameter, boolean pageRequest) {
-		context.message(parameter,
+		message(parameter,
 				(pageRequest
 						? "missing type of page request (should be 'PageRequest<? super "
 						: "missing type of order (should be 'Order<? super ")
@@ -1524,7 +1524,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				.replace('$', '.')
 				.replace('_', '.'); //Jakarta Data allows _ here
 		if ( memberMatchingPath( entityType, path ) == null ) {
-			context.message( method, orderBy,
+			message( method, orderBy,
 					"no matching field named '" + fieldName
 							+ "' in entity class '" + entityType.getQualifiedName() + "'",
 					Diagnostic.Kind.ERROR );
@@ -1804,7 +1804,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final Element member = memberMatchingPath( entityType, parameterName( param ) );
 		if ( member != null ) {
 			if ( containsAnnotation( member, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
-				context.message( param,
+				message( param,
 						"matching field is a collection",
 						Diagnostic.Kind.ERROR );
 				return null;
@@ -1816,7 +1816,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			else if ( containsAnnotation( param, PATTERN ) ) {
 				final AnnotationMirror mirror = getAnnotationMirror(param, PATTERN);
 				if ( mirror!=null && !param.asType().toString().equals( String.class.getName() ) ) {
-					context.message( param, mirror, "parameter annotated '@Pattern' is not of type 'String'",
+					message( param, mirror,
+							"parameter annotated '@Pattern' is not of type 'String'",
 							Diagnostic.Kind.ERROR );
 				}
 				return FieldType.BASIC;
@@ -1842,7 +1843,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 
-			context.message( param,
+			message( param,
 					"no matching field named '" + parameterName( param )
 							+ "' in entity class '" + entityType + "'",
 					Diagnostic.Kind.ERROR );
@@ -1908,7 +1909,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void parameterTypeError(TypeElement entityType, VariableElement param, TypeMirror attributeType) {
-		context.message(param,
+		message(param,
 				"matching field has type '" + attributeType
 						+ "' in entity class '" + entityType + "'",
 				Diagnostic.Kind.ERROR );
@@ -2107,7 +2108,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType resultType = (DeclaredType) returnType;
 			if ( !resultType.getTypeArguments().isEmpty() ) {
-				context.message(method, mirror, value,
+				message(method, mirror, value,
 						"query result type may not be a generic type"
 								+ " (change '" + returnType +
 								"' to '" + context.getTypeUtils().erasure(returnType) + "')",
@@ -2163,7 +2164,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			AnnotationValue value) {
 		boolean reactive = usingReactiveSession( sessionType );
 		if ( !isValidUpdateReturnType( returnType, method, reactive ) ) {
-			context.message( method, mirror, value,
+			message( method, mirror, value,
 					"return type of mutation query method must be " + (!reactive ? "'int', 'boolean' or 'void'" : "'Uni<Integer>', 'Uni<Boolean>' or 'Uni<Void>'"),
 					Diagnostic.Kind.ERROR );
 		}
@@ -2205,7 +2206,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						break;
 					case DECLARED:
 						if ( !checkConstructorReturn( (DeclaredType) returnType, selection ) ) {
-							context.message(method, mirror, value,
+							message(method, mirror, value,
 									"return type '" + returnType
 											+ "' of method has no constructor matching query selection list",
 									Diagnostic.Kind.ERROR);
@@ -2238,7 +2239,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			if ( !returnTypeCorrect ) {
-				context.message(method, mirror, value,
+				message(method, mirror, value,
 						"return type of query did not match return type '" + returnType + "' of method",
 						Diagnostic.Kind.ERROR);
 			}
@@ -2258,7 +2259,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			public void ordinalParameter(int sourcePosition) {
 				ordinalCount++;
 				if ( ordinalCount > paramNames.size() ) {
-					context.message(method, mirror, value,
+					message(method, mirror, value,
 							"missing method parameter for query parameter " + ordinalCount
 									+ " (add a parameter to '" + method.getSimpleName() + "')",
 							Diagnostic.Kind.ERROR );
@@ -2268,7 +2269,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Override
 			public void namedParameter(String name, int sourcePosition) {
 				if ( !paramNames.contains(name) ) {
-					context.message(method, mirror, value,
+					message(method, mirror, value,
 							"missing method parameter for query parameter :" + name
 									+ " (add a parameter '" + name + "' to '" + method.getSimpleName() + "')",
 							Diagnostic.Kind.ERROR );
@@ -2278,7 +2279,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Override
 			public void jpaPositionalParameter(int label, int sourcePosition) {
 				if ( label > paramNames.size() ) {
-					context.message(method, mirror, value,
+					message(method, mirror, value,
 							"missing method parameter for query parameter ?" + label
 									+ " (add a parameter to '" + method.getSimpleName() + "')",
 							Diagnostic.Kind.ERROR );
@@ -2399,13 +2400,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final String name = param.getName();
 			int index = paramNames.indexOf( name );
 			if ( index < 0 ) {
-				context.message( method, mirror, value,
+				message( method, mirror, value,
 						"missing method parameter for query parameter :" + name
 						+ " (add a parameter '" + queryParamType + ' ' + name + "' to '" + method.getSimpleName() + "')",
 						Diagnostic.Kind.ERROR );
 			}
 			else if ( !isLegalAssignment( paramTypes.get(index), queryParamType ) ) {
-				context.message( method, mirror, value,
+				message( method, mirror, value,
 						"parameter matching query parameter :" + name + " has the wrong type"
 								+ " (change the method parameter type to '" + queryParamType + "')",
 						Diagnostic.Kind.ERROR );
@@ -2414,13 +2415,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else if ( param.getPosition() != null ) {
 			int position = param.getPosition();
 			if ( position > paramNames.size() ) {
-				context.message( method, mirror, value,
+				message( method, mirror, value,
 						"missing method parameter for query parameter ?" + position
 								+ " (add a parameter of type '" + queryParamType + "' to '" + method.getSimpleName() + "')",
 						Diagnostic.Kind.ERROR );
 			}
 			else if ( !isLegalAssignment( paramTypes.get(position-1), queryParamType ) ) {
-				context.message( method, mirror, value,
+				message( method, mirror, value,
 						"parameter matching query parameter ?" + position + " has the wrong type"
 								+ " (change the method parameter type to '" + queryParamType + "')",
 						Diagnostic.Kind.ERROR );
@@ -2588,7 +2589,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final String param = paramNames.get(i-1);
 			final String type = paramTypes.get(i-1);
 			if ( parameterIsMissing( hql, i, param, type ) ) {
-				context.message( method, mirror, value,
+				message( method, mirror, value,
 						"missing query parameter for '" + param
 								+ "' (no parameter named :" + param + " or ?" + i + ")",
 						Diagnostic.Kind.ERROR );
@@ -2638,5 +2639,53 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	static boolean usingReactiveSessionAccess(String sessionType) {
 		return UNI_MUTINY_SESSION.equals(sessionType)
 			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
+	}
+
+	private boolean isLocal(Element methodOrParam) {
+		switch (methodOrParam.getKind()) {
+			case PARAMETER:
+				return element.getEnclosedElements()
+						.contains( methodOrParam.getEnclosingElement() );
+			case METHOD:
+			case FIELD:
+				return element.getEnclosedElements()
+						.contains( methodOrParam );
+			default:
+				return true;
+		}
+	}
+
+	public void message(Element method, String message, Diagnostic.Kind severity) {
+		if ( isLocal(method) ) {
+			context.message(method, message, severity);
+		}
+		else {
+			context.message(element, messageWithLocation(method, message), severity);
+		}
+	}
+
+	public void message(Element method, AnnotationMirror mirror, String message, Diagnostic.Kind severity) {
+		if ( isLocal(method) ) {
+			context.message(method, mirror, message, severity);
+		}
+		else {
+			context.message(element, messageWithLocation(method, message), severity);
+		}
+	}
+
+	public void message(Element method, AnnotationMirror mirror, AnnotationValue value, String message, Diagnostic.Kind severity) {
+		if ( isLocal(method) ) {
+			context.message(method, mirror, value, message, severity);
+		}
+		else {
+			context.message(element, messageWithLocation(method, message), severity);
+		}
+	}
+
+	private static String messageWithLocation(Element element, String message) {
+		return element.getKind() == ElementKind.PARAMETER
+				? message + " for parameter '" + element.getSimpleName()
+						+ "' of inherited member '" + element.getEnclosingElement().getSimpleName() + "'"
+				: message + " for inherited member '" + element.getSimpleName() + "'";
 	}
 }

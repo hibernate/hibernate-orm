@@ -367,6 +367,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 
 			primaryEntity = primaryEntity( lifecycleMethods );
+
+			if ( !lifecycleMethods.isEmpty() ) {
+				validateStatelessSessionType();
+			}
 		}
 		else {
 			determineAccessTypeForHierarchy( element, context );
@@ -405,6 +409,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		addQueryMethods( queryMethods );
 
 		initialized = true;
+	}
+
+	private void validateStatelessSessionType() {
+		if ( !usingStatelessSession(sessionType) ) {
+			message( element,
+					"repository must be backed by a 'StatelessSession'",
+					Diagnostic.Kind.ERROR );
+		}
 	}
 
 	private @Nullable TypeElement primaryEntity(List<ExecutableElement> lifecycleMethods) {
@@ -1151,14 +1163,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addLifecycleMethod(ExecutableElement method) {
 		final TypeMirror returnType = ununi(method.getReturnType());
-		if ( !HIB_STATELESS_SESSION.equals(sessionType)
-				&& !MUTINY_STATELESS_SESSION.equals(sessionType)
-				&& !UNI_MUTINY_STATELESS_SESSION.equals(sessionType) ) {
-			message( method,
-					"repository must be backed by a 'StatelessSession'",
-					Diagnostic.Kind.ERROR );
-		}
-		else if ( method.getParameters().size() != 1 ) {
+		if ( method.getParameters().size() != 1 ) {
 			message( method,
 					"must have exactly one parameter",
 					Diagnostic.Kind.ERROR );

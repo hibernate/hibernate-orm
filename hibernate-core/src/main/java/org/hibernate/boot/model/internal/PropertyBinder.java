@@ -580,7 +580,7 @@ public class PropertyBinder {
 		// see if inFlightPropertyDataList already contains a PropertyData for this name,
 		// and if so, skip it...
 		for ( PropertyData propertyData : inFlightPropertyDataList ) {
-			if ( propertyData.getPropertyName().equals( property.getName() ) ) {
+			if ( propertyData.getPropertyName().equals( property.resolveAttributeName() ) ) {
 				checkIdProperty( property, propertyData );
 				// EARLY EXIT!!!
 				return 0;

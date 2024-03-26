@@ -14,6 +14,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.ClassDetails;
 
 /**
  * Collector for contributions from {@linkplain AdditionalMappingContributor contributors}
@@ -28,6 +29,11 @@ public interface AdditionalMappingContributions {
 	 * Contribute a presumably annotated entity class.
 	 */
 	void contributeEntity(Class<?> entityType);
+
+	/**
+	 * Contribute a ClassDetails representing a "managed class" (entity, embeddable, converter, etc)
+	 */
+	void contributeManagedClass(ClassDetails classDetails);
 
 	/**
 	 * Contribute mappings from the InputStream containing an XML mapping document.

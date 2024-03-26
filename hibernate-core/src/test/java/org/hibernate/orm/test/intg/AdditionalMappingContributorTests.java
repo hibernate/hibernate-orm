@@ -11,11 +11,18 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.internal.jdk.JdkClassDetails;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.MutableMemberDetails;
 
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
@@ -58,6 +65,32 @@ public class AdditionalMappingContributorTests {
 		sessionFactoryScope.inTransaction( (session) -> {
 			final List<?> results = session.createSelectionQuery( "from Entity2" ).list();
 			assertThat( results ).hasSize( 0 );
+		} );
+	}
+
+	@Test
+	void verifyClassDetailsContributions(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
+		{
+			final PersistentClass binding = domainModelScope.getDomainModel().getEntityBinding( Entity4.class.getName() );
+			assertThat( binding ).isNotNull();
+			assertThat( binding.getIdentifierProperty() ).isNotNull();
+			assertThat( binding.getProperties() ).hasSize( 1 );
+		}
+
+		{
+			final PersistentClass binding = domainModelScope.getDomainModel().getEntityBinding( Entity5.class.getName() );
+			assertThat( binding ).isNotNull();
+			assertThat( binding.getIdentifierProperty() ).isNotNull();
+			assertThat( binding.getProperties() ).hasSize( 1 );
+		}
+
+		sessionFactoryScope.inTransaction( (session) -> {
+			final List<?> results4 = session.createSelectionQuery( "from Entity4" ).list();
+			assertThat( results4 ).hasSize( 0 );
+
+			final List<?> results5 = session.createSelectionQuery( "from ___Entity5___" ).list();
+			assertThat( results5 ).hasSize( 0 );
+
 		} );
 	}
 
@@ -165,6 +198,19 @@ public class AdditionalMappingContributorTests {
 		}
 	}
 
+	@Entity(name="Entity4")
+	@Table(name="Entity4")
+	public static class Entity4 {
+		@Id
+		private Integer id;
+		private String name;
+	}
+
+	public static class Entity5 {
+		private Integer id;
+		private String name;
+	}
+
 	public static class AdditionalMappingContributorImpl implements AdditionalMappingContributor {
 		@Override
 		public void contribute(
@@ -173,6 +219,45 @@ public class AdditionalMappingContributorTests {
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
 			contributions.contributeEntity( Entity2.class );
+
+			final ClassDetailsRegistry classDetailsRegistry = buildingContext.getMetadataCollector()
+					.getSourceModelBuildingContext()
+					.getClassDetailsRegistry();
+
+			final ClassDetails entity4Details = classDetailsRegistry.resolveClassDetails(
+					Entity4.class.getName(),
+					(name, modelBuildingContext) -> {
+						assertThat( name ).isEqualTo( Entity4.class.getName() );
+						assertThat( modelBuildingContext ).isSameAs( buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+						return new JdkClassDetails( Entity4.class, modelBuildingContext );
+					}
+			);
+			contributions.contributeManagedClass( entity4Details );
+
+			final ClassDetails entity5Details = classDetailsRegistry.resolveClassDetails(
+					Entity5.class.getName(),
+					(name, modelBuildingContext) -> {
+						assertThat( name ).isEqualTo( Entity5.class.getName() );
+						assertThat( modelBuildingContext ).isSameAs( buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+						final JdkClassDetails jdkClassDetails = new JdkClassDetails(
+								Entity5.class,
+								modelBuildingContext
+						);
+
+						final MutableAnnotationUsage<Entity> entityAnnotation = JpaAnnotations.ENTITY.createUsage(
+								jdkClassDetails,
+								modelBuildingContext
+						);
+						entityAnnotation.setAttributeValue( "name", "___Entity5___" );
+						jdkClassDetails.addAnnotationUsage( entityAnnotation );
+
+						final MutableMemberDetails idField = (MutableMemberDetails) jdkClassDetails.findFieldByName( "id" );
+						idField.addAnnotationUsage( JpaAnnotations.ID.createUsage( idField, modelBuildingContext ) );
+
+						return jdkClassDetails;
+					}
+			);
+			contributions.contributeManagedClass( entity5Details );
 
 			try ( final InputStream stream = resourceStreamLocator.locateResourceStream( "mappings/intg/contributed-mapping.xml" ) ) {
 				contributions.contributeBinding( stream );

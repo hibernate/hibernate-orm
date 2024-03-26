@@ -19,7 +19,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -136,13 +135,13 @@ public class AnyTest {
 	public void testHqlAnyIdQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List<PropertySet> list1 = session.createQuery(
+					List<PropertyHolder> list1 = session.createQuery(
 							"select p from PropertyHolder p where id(p.property) = 666",
-							PropertySet.class ).list();
+							PropertyHolder.class ).list();
 					assertEquals( 0, list1.size() );
-					List<PropertySet> list2 = session.createQuery(
+					List<PropertyHolder> list2 = session.createQuery(
 							"select p from PropertyHolder p where type(p.property) = IntegerProperty",
-							PropertySet.class ).list();
+							PropertyHolder.class ).list();
 					assertEquals( 1, list2.size() );
 
 				}

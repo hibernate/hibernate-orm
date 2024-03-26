@@ -2277,6 +2277,7 @@
                     </xsd:annotation>
                     <xsd:attribute name="name" use="required" type="xsd:string"/>
                     <xsd:attribute name="type" use="required" type="xsd:string"/>
+                    <xsd:attribute name="resolver" type="xsd:string"/>
                 </xsd:complexType>
             </xsd:element>
             <xsd:element name="condition" type="xsd:string" minOccurs="0"/>

@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.jdbc.Expectation;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -24,6 +26,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@code ?} parameters that Hibernate expects, in the exact order Hibernate
  * expects. The primary key columns come before the version column if the
  * entity is versioned.
+ * <p>
+ * If an entity has {@linkplain jakarta.persistence.SecondaryTable secondary
+ * tables}, it may have a {@code @SQLDelete} annotation for each secondary table.
+ * The {@link #table} member must specify the name of the secondary table.
  *
  * @author Laszlo Benke
  */
@@ -42,15 +48,29 @@ public @interface SQLDelete {
 	boolean callable() default false;
 
 	/**
-	 * For persistence operation what style of determining results (success/failure) is to be used.
+	 * An {@link Expectation} class used to verify that the operation was successful.
+	 *
+	 * @see Expectation.None
+	 * @see Expectation.RowCount
+	 * @see Expectation.OutParameter
 	 */
+	Class<? extends Expectation> verify() default Expectation.class;
+
+	/**
+	 * A {@link ResultCheckStyle} used to verify that the operation was successful.
+	 *
+	 * @deprecated use {@link #verify()} with an {@link Expectation} class
+	 */
+	@Deprecated(since = "6.5")
 	ResultCheckStyle check() default ResultCheckStyle.NONE;
 
 	/**
-	 * The name of the table in the case of an entity with {@link jakarta.persistence.SecondaryTable
-	 * secondary tables}, defaults to the primary table.
+	 * The name of the table affected by the delete statement. Required when the
+	 * statement affects a {@linkplain jakarta.persistence.SecondaryTable secondary
+	 * table} of an entity. Not required for collections nor when the insert statement
+	 * affects the primary table of an entity.
 	 *
-	 * @return the name of the table
+	 * @return the name of the secondary table
 	 *
 	 * @since 6.2
 	 */

@@ -37,7 +37,7 @@ public abstract class AbstractMutationStrategyCompositeIdTest extends BaseCoreFu
 		super.configure( configuration );
 		Class<? extends SqmMultiTableMutationStrategy> strategyClass = getMultiTableBulkIdStrategyClass();
 		if ( strategyClass != null ) {
-			configuration.setProperty( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, strategyClass.getName() );
+			configuration.setProperty( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, strategyClass );
 		}
 	}
 

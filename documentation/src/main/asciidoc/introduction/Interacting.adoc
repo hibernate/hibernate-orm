@@ -838,7 +838,7 @@ So if there are any unflushed changes to ``Book``s, this query might return stal
 [source,java]
 ----
 List<Book> books =
-        session.createNativeQuery("select * from Books")
+        session.createNativeQuery("select * from Books", Book.class)
             .getResultList()
 ----
 
@@ -849,7 +849,7 @@ Either, we could simply force a flush by calling `flush()` or by setting the flu
 [source,java]
 ----
 List<Book> books =
-        session.createNativeQuery("select * from Books")
+        session.createNativeQuery("select * from Books", Book.class)
             .setHibernateFlushMode(ALWAYS)
             .getResultList()
 ----
@@ -859,7 +859,7 @@ Or, alternatively, we could tell Hibernate which modified state affects the resu
 [source,java]
 ----
 List<Book> books =
-        session.createNativeQuery("select * from Books")
+        session.createNativeQuery("select * from Books", Book.class)
             .addSynchronizedEntityClass(Book.class)
             .getResultList()
 ----
@@ -893,7 +893,7 @@ For example, this:
 [source,java]
 ----
 List<Book> books =
-        session.createSelectionQuery("from Book where title like ?1 order by title")
+        session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern)
             .setMaxResults(MAX_RESULTS)
             .getResultList();
@@ -903,8 +903,9 @@ is simpler than:
 
 [source,java]
 ----
+// a worse way to do pagination
 List<Book> books =
-        session.createSelectionQuery("from Book where title like ?1 order by title fetch first ?2 rows only")
+        session.createSelectionQuery("from Book where title like ?1 order by title fetch first ?2 rows only", Book.class)
             .setParameter(1, titlePattern)
             .setParameter(2, MAX_RESULTS)
             .getResultList();
@@ -915,10 +916,21 @@ Hibernate's `SelectionQuery` has a slightly different way to paginate the query 
 [source,java]
 ----
 List<Book> books =
-        session.createSelectionQuery("from Book where title like ?1 order by title")
+        session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern)
             .setPage(Page.first(MAX_RESULTS))
             .getResultList();
+----
+
+The `getResultCount()` method is useful for displaying the number of pages of results:
+
+[source,java]
+----
+SelectionQuery<Book> query =
+        session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
+            .setParameter(1, titlePattern);
+long pages = query.getResultCount() / MAX_RESULTS;
+List<Book> books = query.setMaxResults(MAX_RESULTS).getResultList();
 ----
 
 A closely-related issue is ordering.
@@ -928,9 +940,9 @@ So, as an alternative to the HQL `order by` clause, `SelectionQuery` offers the 
 [source,java]
 ----
 List<Book> books =
-        session.createSelectionQuery("from Book where title like ?1")
+        session.createSelectionQuery("from Book where title like ?1", Book.class)
             .setParameter(1, titlePattern)
-            .setOrder(List.of(Order.asc(Book._title), Order.asc(Book._isbn)))
+            .setOrder(List.of(Order.asc(Book_.title), Order.asc(Book_.isbn)))
             .setMaxResults(MAX_RESULTS)
             .getResultList();
 ----
@@ -946,7 +958,46 @@ Unfortunately, there's no way to do this using JPA's `TypedQuery` interface.
 | `setFirstResult()` | Set an offset on the results returned by a query | &#10004;
 | `setPage()` | Set the limit and offset by specifying a `Page` object | &#10006;
 | `setOrder()` | Specify how the query results should be ordered | &#10006;
+| `getResultCount()` | Determine how many results the query would return in the absence of any limit or offset | &#10006;
 |===
+
+The approach to pagination we've just seen is sometimes called _offset-based pagination_.
+Since Hibernate 6.5, there's an alternative approach, which offers some advantages, though it's a little more difficult to use.
+
+[[key-based-pagination]]
+=== Key-based pagination
+
+_Key-based pagination_ aims to reduce the likelihood of missed or duplicate results when data is modified between page requests.
+It's most easily illustrated with an example:
+
+[source,java]
+----
+String QUERY = "from Book where publicationDate > :minDate";
+
+// obtain the first page of results
+KeyedResultList<Book> first =
+        session.createSelectionQuery(QUERY, Book.class)
+                .setParameter("minDate", minDate)
+                .getKeyedResultList(Page.first(25)
+                        .keyedBy(Order.asc(Book_.isbn)));
+List<Book> firstPage = first.getResultList();
+...
+
+if (!firstPage.isLastPage()) {
+    // obtain the second page of results
+    KeyedResultList<Book> second =
+            session.createSelectionQuery(QUERY, Book.class)
+                    .setParameter("minDate", minDate))
+                    .getKeyedResultList(firstPage.getNextPage());
+    List<Book> secondPage = second.getResultList();
+    ...
+}
+----
+
+The "key" in key-based pagination refers to a unique key of the result set which determines a total order on the query results.
+In this example, `Book.isbn` is the key.
+
+Since this code is a little bit fiddly, key-based pagination works best with <<key-based-paging,generated query or finder methods>>.
 
 [[projection-lists]]
 === Representing projection lists

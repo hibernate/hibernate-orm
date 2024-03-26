@@ -15,18 +15,31 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
-@DomainModel( annotatedClasses = BasicEntity.class )
+@DomainModel( annotatedClasses = {
+		BasicEntity.class,
+		InSubqueryPredicateAnonymousTupleTest.TestEntity.class,
+} )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17332" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17701" )
 public class InSubqueryPredicateAnonymousTupleTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.persist( new BasicEntity( 1, "test" ) ) );
+		scope.inTransaction( session -> {
+			session.persist( new BasicEntity( 1, "test" ) );
+			session.persist( new TestEntity( 1L, new Money( 100L ) ) );
+		} );
 	}
 
 	@AfterAll
@@ -57,5 +70,63 @@ public class InSubqueryPredicateAnonymousTupleTest {
 			).getSingleResult();
 			assertThat( result ).isEqualTo( "test" );
 		} );
+	}
+
+	@Test
+	public void testConvertedAttributeTuple(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final TestEntity result = session.createQuery(
+					"select t from TestEntity t where (t.id, t.money) in " +
+							"(select t2.id, t2.money from TestEntity t2)",
+					TestEntity.class
+			).getSingleResult();
+			assertThat( result.getMoney().getCents() ).isEqualTo( 100L );
+		} );
+	}
+
+	@Entity( name = "TestEntity" )
+	public static class TestEntity {
+		@Id
+		private Long id;
+
+		@Convert( converter = MoneyConverter.class )
+		private Money money;
+
+		public TestEntity() {
+		}
+
+		public TestEntity(Long id, Money money) {
+			this.id = id;
+			this.money = money;
+		}
+
+		public Money getMoney() {
+			return money;
+		}
+	}
+
+	public static class Money {
+		private long cents;
+
+		public Money(long cents) {
+			this.cents = cents;
+		}
+
+		public long getCents() {
+			return cents;
+		}
+	}
+
+	@Converter
+	public static class MoneyConverter implements AttributeConverter<Money, Long> {
+		@Override
+		public Long convertToDatabaseColumn(Money attribute) {
+			return attribute == null ? null : attribute.getCents();
+		}
+
+		@Override
+		public Money convertToEntityAttribute(Long dbData) {
+			return dbData == null ? null : new Money( dbData );
+		}
 	}
 }

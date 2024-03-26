@@ -13,6 +13,5 @@ import jakarta.persistence.Table;
  * Elephant
  */
 @Entity
-@Table(name = "ELEPHANT")
 public class Elephant extends Animal {
 }

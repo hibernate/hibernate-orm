@@ -24,7 +24,6 @@ import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.FetchNotFoundException;
-import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -49,6 +48,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -60,6 +60,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -160,6 +161,8 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_SUBSELECT_FETCH;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.event.spi.LoadEventListener.IMMEDIATE_LOAD;
 import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_EAGER;
 import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_LAZY;
@@ -1356,16 +1359,35 @@ public class SessionImpl
 
 	@Override
 	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
+		return autoFlushIfRequired( querySpaces, false );
+	}
+
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
 		checkOpen();
 		if ( !isTransactionInProgress() ) {
 			// do not auto-flush while outside a transaction
 			return false;
 		}
-		AutoFlushEvent event = new AutoFlushEvent( querySpaces, this );
+		AutoFlushEvent event = new AutoFlushEvent( querySpaces, skipPreFlush, this );
 		fastSessionServices.eventListenerGroup_AUTO_FLUSH
 				.fireEventOnEachListener( event, AutoFlushEventListener::onAutoFlush );
 		return event.isFlushRequired();
 	}
+
+	@Override
+	public void autoPreFlush(){
+		checkOpen();
+		if ( !isTransactionInProgress() ) {
+			// do not auto-flush while outside a transaction
+			return;
+		}
+		fastSessionServices.eventListenerGroup_AUTO_FLUSH
+				.fireEventOnEachListener( this, AutoFlushEventListener::onAutoPreFlush );
+	}
+
+
 
 	@Override
 	public boolean isDirty() throws HibernateException {
@@ -1529,10 +1551,16 @@ public class SessionImpl
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
 		}
-		else {
-			final EntityEntry entry = persistenceContext.getEntry( object );
-			return entry != null ? entry.getId() : null;
+		else if ( isPersistentAttributeInterceptable( object ) ) {
+			final PersistentAttributeInterceptor interceptor =
+					asPersistentAttributeInterceptable( object ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				return ( (EnhancementAsProxyLazinessInterceptor) interceptor ).getIdentifier();
+			}
 		}
+
+		final EntityEntry entry = persistenceContext.getEntry( object );
+		return entry != null ? entry.getId() : null;
 	}
 
 	@Override

@@ -6,8 +6,11 @@
  */
 package org.hibernate.id.enhanced;
 
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -30,7 +33,9 @@ import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -191,7 +196,7 @@ public class SequenceStyleGenerator
 
 	@Override
 	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		this.identifierType = type;
@@ -210,7 +215,8 @@ public class SequenceStyleGenerator
 				incrementSize,
 				physicalSequence,
 				optimizationStrategy,
-				serviceRegistry
+				serviceRegistry,
+				determineContributor( parameters )
 		);
 
 		if ( physicalSequence
@@ -244,8 +250,9 @@ public class SequenceStyleGenerator
 			int incrementSize,
 			boolean physicalSequence,
 			OptimizerDescriptor optimizationStrategy,
-			ServiceRegistry serviceRegistry) {
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+			ServiceRegistry serviceRegistry,
+			String contributor) {
+		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
 				SequenceMismatchStrategy::interpret,
@@ -256,7 +263,7 @@ public class SequenceStyleGenerator
 				&& optimizationStrategy.isPooled()
 				&& physicalSequence ) {
 			final String databaseSequenceName = sequenceName.getObjectName().getText();
-			final Number databaseIncrementValue = getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
+			final Number databaseIncrementValue = isSchemaToBeRecreated( contributor, configurationService ) ? null : getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
 			if ( databaseIncrementValue != null && databaseIncrementValue.intValue() != incrementSize) {
 				final int dbIncrementValue = databaseIncrementValue.intValue();
 				switch ( sequenceMismatchStrategy ) {
@@ -278,6 +285,14 @@ public class SequenceStyleGenerator
 			}
 		}
 		return determineAdjustedIncrementSize( optimizationStrategy, incrementSize );
+	}
+
+	private boolean isSchemaToBeRecreated(String contributor, ConfigurationService configurationService) {
+		final Set<ActionGrouping> actions = ActionGrouping.interpret( Collections.singleton(contributor), configurationService.getSettings() );
+		// We know this will only contain at most 1 action
+		final Iterator<ActionGrouping> it = actions.iterator();
+		final Action dbAction = it.hasNext() ? it.next().getDatabaseAction() : null;
+		return dbAction == Action.CREATE || dbAction == Action.CREATE_DROP;
 	}
 
 	@Override
@@ -343,7 +358,7 @@ public class SequenceStyleGenerator
 			Identifier schema,
 			Properties params,
 			ServiceRegistry serviceRegistry) {
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 
 		final String namingStrategySetting = coalesceSuppliedValues(
 				() -> {
@@ -354,7 +369,7 @@ public class SequenceStyleGenerator
 					return localSetting;
 				},
 				() -> {
-					final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+					final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
 					if ( globalSetting != null ) {
 						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );

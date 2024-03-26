@@ -89,30 +89,6 @@ public final class ConfigurationHelper {
 	}
 
 	/**
-	 * Get the config value as a {@link String}.
-	 *
-	 * @param name The config setting name.
-	 * @param values The map of config parameters.
-	 * @param defaultValue The default value to use if not found.
-	 * @param otherSupportedValues List of other supported values. Does not need to contain the default one.
-	 *
-	 * @return The value.
-	 *
-	 * @throws ConfigurationException Unsupported value provided.
-	 *
-	 */
-	public static String getString(String name, Map values, String defaultValue, String ... otherSupportedValues) {
-		final String value = getString( name, values, defaultValue );
-		if ( !defaultValue.equals( value ) && ArrayHelper.indexOf( otherSupportedValues, value ) == -1 ) {
-			throw new ConfigurationException(
-					"Unsupported configuration [name=" + name + ", value=" + value + "]. " +
-							"Choose value between: '" + defaultValue + "', '" + String.join( "', '", otherSupportedValues ) + "'."
-			);
-		}
-		return value;
-	}
-
-	/**
 	 * Get the config value as a boolean (default of false)
 	 *
 	 * @param name The config setting name.
@@ -519,7 +495,7 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(StandardServiceRegistry serviceRegistry) {
-		final Integer typeCode = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer typeCode = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -529,7 +505,7 @@ public final class ConfigurationHelper {
 		}
 
 		// default to the Dialect answer
-		return serviceRegistry.getService( JdbcServices.class )
+		return serviceRegistry.requireService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
 				.getPreferredSqlTypeCodeForBoolean();
@@ -537,7 +513,7 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForDuration(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_DURATION_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -546,12 +522,12 @@ public final class ConfigurationHelper {
 			return explicitSetting;
 		}
 
-		return SqlTypes.NUMERIC;
+		return SqlTypes.DURATION;
 	}
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForUuid(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_UUID_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -565,7 +541,7 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForInstant(StandardServiceRegistry serviceRegistry) {
-		final Integer explicitSetting = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		final Integer explicitSetting = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
 				AvailableSettings.PREFERRED_INSTANT_JDBC_TYPE,
 				TypeCodeConverter.INSTANCE
 		);
@@ -580,7 +556,7 @@ public final class ConfigurationHelper {
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForArray(StandardServiceRegistry serviceRegistry) {
 		// default to the Dialect answer
-		return serviceRegistry.getService( JdbcServices.class )
+		return serviceRegistry.requireService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
 				.getPreferredSqlTypeCodeForArray();

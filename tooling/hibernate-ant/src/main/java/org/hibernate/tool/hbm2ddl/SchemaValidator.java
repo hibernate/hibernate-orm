@@ -52,9 +52,10 @@ public class SchemaValidator {
 	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
 		LOG.runningSchemaValidator();
 
-		Map<String, Object> config = new HashMap<>( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		Map<String, Object> config =
+				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
 
-		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
+		final SchemaManagementTool tool = serviceRegistry.requireService( SchemaManagementTool.class );
 
 		final ExecutionOptions executionOptions = SchemaManagementToolCoordinator.buildExecutionOptions(
 				config,
@@ -147,7 +148,7 @@ public class SchemaValidator {
 
 	private static MetadataImplementor buildMetadata(
 			CommandLineArgs parsedArgs,
-			StandardServiceRegistry serviceRegistry) throws Exception {
+			StandardServiceRegistry serviceRegistry) {
 
 		final MetadataSources metadataSources = new MetadataSources(serviceRegistry);
 
@@ -160,7 +161,7 @@ public class SchemaValidator {
 		}
 
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		if ( parsedArgs.implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy(
 					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, parsedArgs.implicitNamingStrategy )

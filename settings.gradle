@@ -19,8 +19,9 @@ pluginManagement {
 
 plugins {
     id 'org.hibernate.orm.build.env-settings'
+    id 'org.hibernate.orm.build.jdks-settings'
     id 'com.gradle.enterprise' version '3.16.2'
-    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.12.1'
+    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.13'
 }
 
 dependencyResolutionManagement {
@@ -65,7 +66,7 @@ dependencyResolutionManagement {
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"
-            def byteBuddyVersion = version "byteBuddy", "1.14.11"
+            def byteBuddyVersion = version "byteBuddy", "1.14.12"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.8.2"
             def hcannVersion = version "hcann", "6.0.6.Final"
@@ -140,6 +141,7 @@ dependencyResolutionManagement {
             def elVersion = version "el", "5.0.0"
             def injectVersion = version "inject", "2.0.1"
             def interceptorsVersion = version "interceptors", "2.1.0"
+            def dataVersion = version "data", "1.0.0-SNAPSHOT"
             def jaccVersion = version "jacc", "2.1.0"
             def jaxbApiVersion = version "jaxbApi", "4.0.0"
             def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.2"
@@ -157,6 +159,7 @@ dependencyResolutionManagement {
             library( "cdi", "jakarta.enterprise", "jakarta.enterprise.cdi-api" ).versionRef( cdiVersion )
             library( "annotation", "jakarta.annotation", "jakarta.annotation-api" ).versionRef( annotationVersion )
             library( "interceptors", "jakarta.interceptor", "jakarta.interceptor-api" ).versionRef( interceptorsVersion )
+            library( "data", "jakarta.data", "jakarta.data-api" ).versionRef( dataVersion )
             library( "jsonbApi", "jakarta.json.bind", "jakarta.json.bind-api" ).versionRef( jsonbApiVersion )
             library( "jsonb", "org.eclipse", "yasson" ).versionRef( jsonbRuntimeVersion )
             library( "inject", "jakarta.inject", "jakarta.inject-api" ).versionRef( injectVersion )

@@ -88,7 +88,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			else {
 				compositeUserType = creationContext.getBootstrapContext()
 						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
+						.requireService( ManagedBeanRegistry.class )
 						.getBean( userTypeClass )
 						.getBeanInstance();
 			}
@@ -105,7 +105,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			else {
 				customInstantiator = creationContext.getBootstrapContext()
 						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
+						.requireService( ManagedBeanRegistry.class )
 						.getBean( instantiatorClass )
 						.getBeanInstance();
 			}

@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
@@ -104,14 +103,11 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 	}
 
 	protected boolean needsLob(JdbcTypeIndicators indicators) {
-		final Dialect dialect = indicators.getTypeConfiguration()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getDialect();
+		final Dialect dialect = indicators.getDialect();
 		final long length = indicators.getColumnLength();
-		final long maxLength = indicators.isNationalized() ?
-				dialect.getMaxNVarcharLength() :
-				dialect.getMaxVarcharLength();
+		final long maxLength = indicators.isNationalized()
+				? dialect.getMaxNVarcharLength()
+				: dialect.getMaxVarcharLength();
 		if ( length > maxLength ) {
 			return true;
 		}

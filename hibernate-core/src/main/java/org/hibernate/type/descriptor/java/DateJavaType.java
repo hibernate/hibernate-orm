@@ -169,7 +169,7 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
+		switch ( javaType.getTypeName() ) {
 			case "java.sql.Date":
 			case "java.sql.Timestamp":
 			case "java.util.Calendar":

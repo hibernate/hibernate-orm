@@ -179,7 +179,6 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
@@ -808,7 +807,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * Render a SQL check condition for a column that represents an enumerated value
-	 * by its {@linkplain jakarta.persistence.EnumType#STRING string representation}.
+	 * by its {@linkplain jakarta.persistence.EnumType#STRING string representation}
+	 * or a given list of values (with NULL value allowed).
 	 *
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
@@ -816,11 +816,20 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
+		boolean nullIsValid = false;
 		for ( String value : values ) {
+			if ( value == null ) {
+				nullIsValid = true;
+				continue;
+			}
 			check.append( separator ).append('\'').append( value ).append('\'');
 			separator = ",";
 		}
-		return check.append( ')' ).toString();
+		check.append( ')' );
+		if ( nullIsValid ) {
+			check.append( " or " ).append( columnName ).append( " is null" );
+		}
+		return check.toString();
 	}
 
 	public String getCheckCondition(String columnName, Class<? extends Enum<?>> enumType) {
@@ -842,16 +851,43 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * by its {@linkplain jakarta.persistence.EnumType#ORDINAL ordinal representation}.
 	 *
 	 * @return a SQL expression that will occur in a {@code check} constraint
+	 * @deprecated use {@link #getCheckCondition(String, Long[])} instead
 	 */
+	@Deprecated(forRemoval = true)
 	public String getCheckCondition(String columnName, long[] values) {
+		Long objValues [] = new Long[ values.length ];
+		int i = 0;
+		for( long temp : values){
+			objValues[ i++ ] = temp;
+		}
+		return getCheckCondition(columnName, objValues);
+	}
+
+	/**
+	 * Render a SQL check condition for a column that represents an enumerated value
+	 * by its {@linkplain jakarta.persistence.EnumType#ORDINAL ordinal representation}
+	 * or a given list of values.
+	 *
+	 * @return a SQL expression that will occur in a {@code check} constraint
+	 */
+	public String getCheckCondition(String columnName, Long[] values) {
 		StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
-		for ( long value : values ) {
+		boolean nullIsValid = false;
+		for ( Long value : values ) {
+			if ( value == null ) {
+				nullIsValid = true;
+				continue;
+			}
 			check.append( separator ).append( value );
 			separator = ",";
 		}
-		return check.append( ')' ).toString();
+		check.append( ')' );
+		if ( nullIsValid ) {
+			check.append( " or " ).append( columnName ).append( " is null" );
+		}
+		return check.toString();
 	}
 
 	@Override
@@ -984,6 +1020,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <li> <code>greatest(arg0, arg1, ...)</code>
 	 * <li> <code>degrees(arg)</code>
 	 * <li> <code>radians(arg)</code>
+	 * <li> <code>bitand(arg1, arg1)</code>
+	 * <li> <code>bitor(arg1, arg1)</code>
+	 * <li> <code>bitxor(arg1, arg1)</code>
 	 * </ul>
 	 *
 	 * <ul>
@@ -1051,7 +1090,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		functionFactory.math();
 		functionFactory.round();
-
 
 		//trig functions supported on almost every database
 
@@ -1588,8 +1626,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <p>
 	 * An implementation may set configuration properties from
 	 * {@link #initDefaultProperties()}, though it is discouraged.
-	 *
-	 * @return a set of Hibernate configuration properties
+	 the
+	 * @return the Hibernate configuration properties
 	 *
 	 * @see #initDefaultProperties()
 	 */
@@ -1778,9 +1816,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			}
 			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
 			try {
-				final LobCreator lobCreator = jdbcServices.getLobCreator(
-						session
-				);
+				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
 						? lobCreator.createBlob( ArrayHelper.EMPTY_BYTE_ARRAY )
 						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
@@ -4575,7 +4611,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		// Keep this here, rather than moving to Select.
 		// Some Dialects may need the hint to be appended to the very end or beginning
 		// of the finalized SQL statement, so wait until everything is processed.
-		if ( queryOptions.getDatabaseHints() != null && queryOptions.getDatabaseHints().size() > 0 ) {
+		if ( queryOptions.getDatabaseHints() != null && !queryOptions.getDatabaseHints().isEmpty() ) {
 			sql = getQueryHintString( sql, queryOptions.getDatabaseHints() );
 		}
 		if ( commentsEnabled && queryOptions.getComment() != null ) {

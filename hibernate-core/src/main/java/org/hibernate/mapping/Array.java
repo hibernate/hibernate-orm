@@ -57,7 +57,7 @@ public class Array extends List {
 			try {
 				return getMetadata().getMetadataBuildingOptions()
 						.getServiceRegistry()
-						.getService( ClassLoaderService.class )
+						.requireService( ClassLoaderService.class )
 						.classForName( elementClassName );
 			}
 			catch (ClassLoadingException e) {

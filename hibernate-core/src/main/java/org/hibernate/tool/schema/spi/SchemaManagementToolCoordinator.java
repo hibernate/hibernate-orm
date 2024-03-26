@@ -23,7 +23,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.Helper;
@@ -116,7 +115,7 @@ public class SchemaManagementToolCoordinator {
 
 
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
-		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
 		final boolean haltOnError = configService.getSetting(
 				AvailableSettings.HBM2DDL_HALT_ON_ERROR,
@@ -173,17 +172,6 @@ public class SchemaManagementToolCoordinator {
 	public static ExecutionOptions buildExecutionOptions(
 			final Map<String,Object> configurationValues,
 			final ExceptionHandler exceptionHandler) {
-		return buildExecutionOptions(
-				configurationValues,
-				DefaultSchemaFilter.INSTANCE,
-				exceptionHandler
-		);
-	}
-
-	public static ExecutionOptions buildExecutionOptions(
-			final Map<String,Object> configurationValues,
-			final SchemaFilter schemaFilter,
-			final ExceptionHandler exceptionHandler) {
 		return new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -199,12 +187,18 @@ public class SchemaManagementToolCoordinator {
 			public ExceptionHandler getExceptionHandler() {
 				return exceptionHandler;
 			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return schemaFilter;
-			}
 		};
+	}
+
+	/**
+	 * @deprecated Use {@link #buildExecutionOptions(Map, ExceptionHandler)} instead.
+	 */
+	@Deprecated(forRemoval = true)
+	public static ExecutionOptions buildExecutionOptions(
+			final Map<String,Object> configurationValues,
+			final SchemaFilter schemaFilter,
+			final ExceptionHandler exceptionHandler) {
+		return buildExecutionOptions( configurationValues, exceptionHandler );
 	}
 
 	private static void performDatabaseAction(
@@ -727,19 +721,18 @@ public class SchemaManagementToolCoordinator {
 			return Action.interpretHbm2ddlSetting( scriptsActionSetting );
 		}
 
-		public static Set<ActionGrouping> interpret(Metadata metadata, Map<?,?> configurationValues) {
+		public static Set<ActionGrouping> interpret(Set<String> contributors, Map<?,?> configurationValues) {
 			// these represent the base (non-contributor-specific) values
 			final Action rootDatabaseAction = determineJpaDbActionSetting( configurationValues, null, null );
 			final Action rootScriptAction = determineJpaScriptActionSetting( configurationValues, null, null );
 
 			final Action rootAutoAction = determineAutoSettingImpliedAction( configurationValues, null, null );
 
-			final Set<String> contributors = metadata.getContributors();
 			final Set<ActionGrouping> groupings = new HashSet<>( contributors.size() );
 
 			// for each contributor, look for specific tooling config values
 			for ( String contributor : contributors ) {
-				Action databaseActionToUse = determineJpaDbActionSetting( configurationValues, contributor, rootDatabaseAction );;
+				Action databaseActionToUse = determineJpaDbActionSetting( configurationValues, contributor, rootDatabaseAction );
 				Action scriptActionToUse = determineJpaScriptActionSetting( configurationValues, contributor, rootScriptAction );
 
 				if ( databaseActionToUse == null && scriptActionToUse == null ) {
@@ -767,6 +760,10 @@ public class SchemaManagementToolCoordinator {
 			}
 
 			return groupings;
+		}
+
+		public static Set<ActionGrouping> interpret(Metadata metadata, Map<?,?> configurationValues) {
+			return interpret( metadata.getContributors(), configurationValues );
 		}
 
 		@Override

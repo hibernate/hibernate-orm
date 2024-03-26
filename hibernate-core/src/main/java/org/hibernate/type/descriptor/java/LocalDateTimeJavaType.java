@@ -162,7 +162,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
+		switch ( javaType.getTypeName() ) {
 			case "java.sql.Date":
 			case "java.sql.Timestamp":
 			case "java.util.Date":

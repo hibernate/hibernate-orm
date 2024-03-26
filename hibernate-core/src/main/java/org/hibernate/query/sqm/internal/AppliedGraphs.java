@@ -10,7 +10,6 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.spi.QueryOptions;
 
 /**
@@ -23,17 +22,18 @@ public class AppliedGraphs {
 
 	public static boolean containsCollectionFetches(QueryOptions queryOptions) {
 		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
-		return appliedGraph != null && appliedGraph.getGraph() != null && containsCollectionFetches(appliedGraph.getGraph());
+		return appliedGraph != null
+			&& appliedGraph.getGraph() != null
+			&& containsCollectionFetches( appliedGraph.getGraph() );
 	}
 
 	private static boolean containsCollectionFetches(GraphImplementor<?> graph) {
-		for (AttributeNodeImplementor<?> attributeNodeImplementor : graph.getAttributeNodeImplementors()) {
-			PersistentAttribute<?, ?> attributeDescriptor = attributeNodeImplementor.getAttributeDescriptor();
-			if (attributeDescriptor.isCollection()) {
+		for ( AttributeNodeImplementor<?> attributeNodeImplementor : graph.getAttributeNodeImplementors() ) {
+			if ( attributeNodeImplementor.getAttributeDescriptor().isCollection() ) {
 				return true;
 			}
-			for (SubGraphImplementor<?> subGraph : attributeNodeImplementor.getSubGraphMap().values()) {
-				if (containsCollectionFetches(subGraph)) {
+			for ( SubGraphImplementor<?> subGraph : attributeNodeImplementor.getSubGraphMap().values() ) {
+				if ( containsCollectionFetches(subGraph) ) {
 					return true;
 				}
 			}

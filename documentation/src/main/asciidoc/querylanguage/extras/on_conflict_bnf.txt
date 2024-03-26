@@ -1,0 +1,10 @@
+conflictClause
+	: ON CONFLICT conflictTarget? "DO" conflictAction
+
+conflictTarget
+	: ON CONSTRAINT identifier
+	| "(" simplePath ("," simplePath)* ")"
+
+conflictAction
+	: "NOTHING"
+	| "UPDATE" setClause whereClause?

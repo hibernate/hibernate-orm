@@ -123,9 +123,20 @@ public interface Type extends Serializable {
 	/**
 	 * The class handled by this type.
 	 *
-	 * @return The java type class handled by this type.
+	 * @return The Java class handled by this type.
 	 */
 	Class<?> getReturnedClass();
+
+	/**
+	 * The qualified name of the class handled by this type.
+	 *
+	 * @return The qualified Java class name.
+	 *
+	 * @since 6.5
+	 */
+	default String getReturnedClassName() {
+		return getReturnedClass().getName();
+	}
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality",

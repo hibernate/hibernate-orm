@@ -22,6 +22,7 @@ import java.lang.annotation.Annotation;
  * custom mapping annotation}.
  *
  * @see org.hibernate.annotations.AttributeBinderType
+ * @see TypeBinder
  *
  * @author Gavin King
  */
@@ -29,8 +30,8 @@ import java.lang.annotation.Annotation;
 public interface AttributeBinder<A extends Annotation> {
 	/**
 	 * Perform some custom configuration of the model relating to the given annotated
-	 * {@link Property} of the given {@link PersistentClass entity class} or
-	 * {@link org.hibernate.mapping.Component embeddable class}.
+	 * {@link Property} of the given {@linkplain PersistentClass entity class} or
+	 * {@linkplain org.hibernate.mapping.Component embeddable class}.
 	 *
 	 * @param annotation an annotation of the property that is declared as an
 	 *                   {@link org.hibernate.annotations.AttributeBinderType}

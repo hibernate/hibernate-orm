@@ -213,7 +213,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			AnnotatedJoinColumns parent,
 			MetadataBuildingContext context) {
 		final String defaultColumnName = context.getMetadataCollector()
-				.getLogicalColumnName( identifier.getTable(),  identifier.getColumns().get(0).getQuotedName() );
+				.getLogicalColumnName( identifier.getTable(), identifier.getColumns().get(0).getQuotedName() );
 		return primaryKeyJoinColumn != null || joinColumn != null
 				? buildExplicitInheritanceJoinColumn( primaryKeyJoinColumn, joinColumn, parent, context, defaultColumnName )
 				: buildImplicitInheritanceJoinColumn( parent, context, defaultColumnName );

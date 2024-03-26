@@ -29,7 +29,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -39,6 +38,8 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -654,9 +655,6 @@ public abstract class AbstractQuery<R>
 		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
 		}
-		catch (TypeMismatchException e) {
-			throw new IllegalArgumentException( e );
-		}
 		catch (HibernateException e) {
 			throw getSession().getExceptionConverter().convert( e );
 		}
@@ -667,7 +665,10 @@ public abstract class AbstractQuery<R>
 
 	protected abstract int doExecuteUpdate();
 
-
+	@Override
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> keyedPage) {
+		throw new UnsupportedOperationException("Getting keyed result list is not supported by this query.");
+	}
 
 	@Override
 	public void setOptionalId(Serializable id) {

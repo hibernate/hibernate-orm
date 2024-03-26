@@ -144,7 +144,7 @@ public class UniqueConstraintDropTest {
 		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
 			regex += " if exists";
 		}
-		regex += " uk_.*";
+		regex += " uk.*";
 		if ( getDialect().supportsIfExistsAfterConstraintName() ) {
 			regex += " if exists";
 		}

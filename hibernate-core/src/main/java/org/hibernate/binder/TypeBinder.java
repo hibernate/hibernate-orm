@@ -20,8 +20,34 @@ import java.lang.annotation.Annotation;
  * like {@link PersistentClass} and {@link Component} to implement the
  * semantics of some {@linkplain org.hibernate.annotations.TypeBinderType
  * custom mapping annotation}.
+ * <p>
+ * For example, this annotation disables rowcount checking for insert,
+ * update, and delete statements for annotated entities:
+ * <pre>
+ * &#064;TypeBinderType(binder = NoResultCheck.Binder.class)
+ * &#064;Target(TYPE) &#064;Retention(RUNTIME)
+ * public @interface NoResultCheck {
+ *     class Binder implements TypeBinder&lt;NoResultCheck&gt; {
+ *         &#064;Override
+ *         public void bind(NoResultCheck annotation,
+ *                 MetadataBuildingContext buildingContext,
+ *                 PersistentClass persistentClass) {
+ *             persistentClass.setInsertCheckStyle(NONE);
+ *             persistentClass.setUpdateCheckStyle(NONE);
+ *             persistentClass.setDeleteCheckStyle(NONE);
+ *         }
+ *         &#064;Override
+ *         public void bind(NoResultCheck annotation,
+ *                 MetadataBuildingContext buildingContext,
+ *                 Component embeddableClass) {
+ *             throw new AnnotationException("'@NoResultCheck' cannot annotate an '@Embeddable' class");
+ *         }
+ *     }
+ * }
+ * </pre>
  *
  * @see org.hibernate.annotations.TypeBinderType
+ * @see AttributeBinder
  *
  * @author Gavin King
  */
@@ -29,7 +55,7 @@ import java.lang.annotation.Annotation;
 public interface TypeBinder<A extends Annotation> {
 	/**
 	 * Perform some custom configuration of the model relating to the given annotated
-	 * {@link PersistentClass entity class}.
+	 * {@linkplain PersistentClass entity class}.
 	 *
 	 * @param annotation an annotation of the entity class that is declared as an
 	 *                   {@link org.hibernate.annotations.TypeBinderType}
@@ -38,7 +64,7 @@ public interface TypeBinder<A extends Annotation> {
 	void bind(A annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass);
 	/**
 	 * Perform some custom configuration of the model relating to the given annotated
-	 * {@link Component embeddable class}.
+	 * {@linkplain Component embeddable class}.
 	 *
 	 * @param annotation an annotation of the embeddable class that is declared as an
 	 *                   {@link org.hibernate.annotations.TypeBinderType}

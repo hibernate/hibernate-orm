@@ -184,11 +184,6 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected String getForUpdate() {
-		return " for update";
-	}
-
-	@Override
 	protected String getForShare(int timeoutMillis) {
 		return " for read only";
 	}
@@ -237,7 +232,12 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected void renderSelectExpression(Expression expression) {
-		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		if ( isInSubquery() && expression instanceof Literal ) {
+			renderCasted( expression );
+		}
+		else {
+			renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		}
 	}
 
 	@Override

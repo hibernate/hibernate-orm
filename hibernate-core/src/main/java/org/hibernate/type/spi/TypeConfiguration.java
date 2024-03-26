@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -80,6 +81,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
 
 /**
  * Each instance defines a set of {@linkplain Type types} available in a given
@@ -322,7 +324,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * <p>
 	 * The type names are not case-sensitive.
 	 */
-	public BasicValuedMapping resolveCastTargetType(String name) {
+	public BasicType<?> resolveCastTargetType(String name) {
 		switch ( name.toLowerCase() ) {
 			case "string": return getBasicTypeForJavaType( String.class );
 			case "character": return getBasicTypeForJavaType( Character.class );
@@ -351,15 +353,19 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "truefalse": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.TRUE_FALSE.getName() );
 			case "yesno": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.YES_NO.getName() );
 			case "numericboolean": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.NUMERIC_BOOLEAN.getName() );
+			//really not sure about this one - it works well for casting from binary
+			//to UUID, but people will want to use it to cast from varchar, and that
+			//won't work at all without some special casing in the Dialects
+//			case "uuid": return getBasicTypeForJavaType( UUID.class );
 			default: {
-				final BasicType<Object> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
+				final BasicType<?> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
 				if ( registeredBasicType != null ) {
 					return registeredBasicType;
 				}
 
 				try {
 					final Class<?> javaTypeClass =
-							scope.getServiceRegistry().getService( ClassLoaderService.class )
+							scope.getServiceRegistry().requireService( ClassLoaderService.class )
 									.classForName( name );
 					final JavaType<?> jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
 					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
@@ -550,7 +556,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			final String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
 			if ( factoryName == null ) {
 				final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
-						.getService( CfgXmlAccessService.class );
+						.requireService( CfgXmlAccessService.class );
 				if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
 					return cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
 				}
@@ -679,16 +685,24 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return getBasicTypeRegistry().getRegisteredType( Duration.class );
 		}
 
-		if ( secondType == null || firstType != null
-				&& firstType.getExpressibleJavaType().isWider( secondType.getExpressibleJavaType() ) ) {
-			return firstType;
+		if ( firstType != null && ( secondType == null
+				|| firstType.getRelationalJavaType().isWider( secondType.getRelationalJavaType() ) ) ) {
+			return resolveBasicArithmeticType( firstType );
 		}
-		return secondType;
+		return secondType != null ? resolveBasicArithmeticType( secondType ) : null;
+	}
+
+	private BasicType<?> resolveBasicArithmeticType(SqmExpressible<?> expressible) {
+		if ( isNumberArray( expressible ) ) {
+			return (BasicType<?>) expressible.getSqmType();
+		}
+		// Use the relational java type to account for possible converters
+		return getBasicTypeForJavaType( expressible.getRelationalJavaType().getJavaTypeClass() );
 	}
 
 	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
 		assert javaType != null;
-		return type != null && javaType.isAssignableFrom( type.getExpressibleJavaType().getJavaTypeClass() );
+		return type != null && javaType.isAssignableFrom( type.getRelationalJavaType().getJavaTypeClass() );
 	}
 
 
@@ -778,7 +792,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		if ( type == null ) {
 			return null;
 		}
-		return getSqlTemporalType( type.getExpressibleJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+		return getSqlTemporalType( type.getRelationalJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
 	public static TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
@@ -849,8 +863,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return (MutabilityPlan) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( planClass );
 		}
 
-		final ManagedBean<? extends MutabilityPlan<?>> planBean = scope.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
+		final ManagedBean<? extends MutabilityPlan<?>> planBean =
+				scope.getServiceRegistry().requireService( ManagedBeanRegistry.class )
 						.getBean( planClass );
 		return (MutabilityPlan<J>) planBean.getBeanInstance();
 	}

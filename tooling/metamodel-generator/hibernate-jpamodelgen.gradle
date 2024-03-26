@@ -8,7 +8,7 @@ plugins {
     id 'org.hibernate.build.xjc-jakarta'
 }
 
-description = 'Annotation Processor to generate JPA 2 static metamodel classes'
+description = 'Hibernate compile-time tooling'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
@@ -18,20 +18,106 @@ ext {
 	xsdDir = file( "${projectDir}/src/main/xsd" )
 }
 
+sourceSets {
+	quarkusOrmPanache {
+		java {
+			srcDirs = ['src/quarkusOrmPanache/java']
+		}
+		resources {
+			srcDirs tasks.processTestResources
+		}
+		compileClasspath += sourceSets.main.output + sourceSets.test.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+	}
+	quarkusHrPanache {
+		java {
+			srcDirs = ['src/quarkusHrPanache/java']
+		}
+		resources {
+			srcDirs tasks.processTestResources
+		}
+		compileClasspath += sourceSets.main.output + sourceSets.test.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+	}
+    jakartaData {
+        java {
+            srcDirs = ['src/jakartaData/java']
+        }
+        resources {
+            srcDirs tasks.processTestResources
+        }
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+    }
+}
+
 dependencies {
     // api - ewww... but Maven needs them this way
     api project( ':hibernate-core' )
+	api libs.hcann
+	api libs.jandex
     api jakartaLibs.jaxbApi
     api jakartaLibs.jaxb
     api jakartaLibs.validation
     api jakartaLibs.annotation
     api libs.antlrRuntime
     api libs.byteBuddy
+	api libs.logging
 
     xjc jakartaLibs.xjc
     xjc jakartaLibs.jaxb
     xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
+
+	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
+	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.6.2"
+    jakartaDataImplementation "jakarta.data:jakarta.data-api:1.0.0-SNAPSHOT"
+	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:2.2.2.Final"
 }
+
+// The source set gets a custom configuration which extends the normal test implementation config
+configurations {
+	quarkusOrmPanacheImplementation.extendsFrom(testImplementation)
+	quarkusOrmPanacheRuntimeOnly.extendsFrom(testRuntimeOnly)
+	quarkusOrmPanacheCompileOnly.extendsFrom(testCompileOnly)
+	quarkusHrPanacheImplementation.extendsFrom(testImplementation)
+	quarkusHrPanacheRuntimeOnly.extendsFrom(testRuntimeOnly)
+	quarkusHrPanacheCompileOnly.extendsFrom(testCompileOnly)
+    jakartaDataImplementation.extendsFrom(testImplementation)
+    jakartaDataRuntimeOnly.extendsFrom(testRuntimeOnly)
+    jakartaDataCompileOnly.extendsFrom(testCompileOnly)
+}
+
+def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) {
+	description = 'Runs the Quarkus ORM Panache tests.'
+	group = 'verification'
+
+	testClassesDirs = sourceSets.quarkusOrmPanache.output.classesDirs
+	classpath = sourceSets.quarkusOrmPanache.runtimeClasspath
+	shouldRunAfter test
+}
+
+def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
+	description = 'Runs the Quarkus HR Panache tests.'
+	group = 'verification'
+
+	testClassesDirs = sourceSets.quarkusHrPanache.output.classesDirs
+	classpath = sourceSets.quarkusHrPanache.runtimeClasspath
+	shouldRunAfter test
+}
+
+def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
+    description = 'Runs the Jakarta Data tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.jakartaData.output.classesDirs
+    classpath = sourceSets.jakartaData.runtimeClasspath
+    shouldRunAfter test
+}
+
+check.dependsOn quarkusHrPanacheTestTask
+check.dependsOn quarkusOrmPanacheTestTask
+test.dependsOn quarkusHrPanacheTestTask
+test.dependsOn quarkusOrmPanacheTestTask
 
 sourceSets.main {
     java.srcDir xjcTargetDir
@@ -40,29 +126,61 @@ sourceSets.main {
 
 compileTestJava {
     options.compilerArgs += [
-            "-proc:none"
+            "-proc:none",
+            "-AsuppressJakartaDataMetamodel=true"
     ]
 }
-
 
 // Tests with records
 if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
     // We need to configure the source and target version to 17
-    //compileTestJava17Java {
+	def testCompilerConfig = {
+		javaCompiler = javaToolchains.compilerFor {
+			languageVersion = jdkVersions.test.compile
+		}
+		sourceCompatibility = 17
+		targetCompatibility = 17
+	}
+
     compileTestJava {
-        javaCompiler = javaToolchains.compilerFor {
-            languageVersion = jdkVersions.test.compile
-        }
-        sourceCompatibility = 17
-        targetCompatibility = 17
+        configure testCompilerConfig
     }
 
+	compileQuarkusOrmPanacheJava {
+		configure testCompilerConfig
+	}
+
+	compileQuarkusHrPanacheJava {
+		configure testCompilerConfig
+	}
+
+	compileJakartaDataJava {
+		configure testCompilerConfig
+	}
+
+	def testLauncherConfig = {
+		javaLauncher = javaToolchains.launcherFor {
+			languageVersion = jdkVersions.test.launcher
+		}
+	}
+
     test {
-        javaLauncher = javaToolchains.launcherFor {
-            languageVersion = jdkVersions.test.launcher
-        }
+        configure testLauncherConfig
     }
-} else {
+
+	quarkusOrmPanacheTest {
+		configure testLauncherConfig
+	}
+
+	quarkusHrPanacheTest {
+		configure testLauncherConfig
+	}
+
+	jakartaDataTest {
+		configure testLauncherConfig
+	}
+}
+else {
     sourceSets {
         test {
             java {
@@ -87,7 +205,7 @@ task jaxb {
 
         ant.xjc(
                 destdir: ( xjcTargetDir as File ).absolutePath,
-                package: 'org.hibernate.jpamodelgen.xml.jaxb',
+                package: 'org.hibernate.processor.xml.jaxb',
                 extension: 'true'
         ) {
             project.ant.arg line: '-no-header'

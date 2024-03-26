@@ -27,11 +27,12 @@ public class TypeDefinitionBinder {
 	public static void processTypeDefinition(
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmTypeDefinitionType typeDefinitionBinding) {
-		final ClassLoaderService cls = context.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
 		final TypeDefinition definition = new TypeDefinition(
 				typeDefinitionBinding.getName(),
-				cls.classForName( typeDefinitionBinding.getClazz() ),
+				context.getBuildingOptions().getServiceRegistry()
+						.requireService( ClassLoaderService.class )
+						.classForName( typeDefinitionBinding.getClazz() ),
 				null,
 				ConfigParameterHelper.extractConfigParameters( typeDefinitionBinding )
 		);

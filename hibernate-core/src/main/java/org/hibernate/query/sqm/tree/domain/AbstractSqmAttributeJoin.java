@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmJoinable;
@@ -33,7 +34,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		extends AbstractSqmQualifiedJoin<O,T>
 		implements SqmAttributeJoin<O,T> {
 
-	private final boolean fetched;
+	private boolean fetched;
 
 	public AbstractSqmAttributeJoin(
 			SqmFrom<?,O> lhs,
@@ -71,6 +72,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 				nodeBuilder
 		);
 		this.fetched = fetched;
+		validateFetchAlias( alias );
 	}
 
 	@Override
@@ -84,8 +86,28 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 		return getJavaTypeDescriptor();
 	}
 
+	@Override
 	public boolean isFetched() {
 		return fetched;
+	}
+
+	@Override
+	public JpaSelection<T> alias(String name) {
+		validateFetchAlias( name );
+		return super.alias( name );
+	}
+
+	@Override
+	public void clearFetched() {
+		fetched = false;
+	}
+
+	private void validateFetchAlias(String alias) {
+		if ( fetched && alias != null && nodeBuilder().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not permit specifying an alias for fetch joins."
+			);
+		}
 	}
 
 	@Override

@@ -429,6 +429,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isPortableIntegerDivisionEnabled() {
+		return delegate.isPortableIntegerDivisionEnabled();
+	}
+
+	@Override
 	public int getQueryStatisticsMaxSize() {
 		return delegate.getQueryStatisticsMaxSize();
 	}

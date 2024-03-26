@@ -141,7 +141,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 							"Incoming natural-id value [%s (`%s`)] is not of expected type [`%s`] and could not be coerced",
 							naturalIdValue,
 							naturalIdValueClass.getName(),
-							getJavaType().getJavaType().getTypeName()
+							getJavaType().getTypeName()
 					)
 			);
 		}

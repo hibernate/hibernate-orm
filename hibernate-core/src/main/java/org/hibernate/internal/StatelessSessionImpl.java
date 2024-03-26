@@ -30,6 +30,7 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.values.GeneratedValues;
@@ -691,7 +692,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private JtaPlatform getJtaPlatform() {
-		return getFactory().getServiceRegistry().getService( JtaPlatform.class );
+		return getFactory().getServiceRegistry().requireService( JtaPlatform.class );
 	}
 
 	private LockMode getNullSafeLockMode(LockMode lockMode) {

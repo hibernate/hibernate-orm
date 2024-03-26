@@ -37,7 +37,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 	public void testNamedSessionFactorySerialization() throws Exception {
 		Configuration cfg = new Configuration()
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME, NAME )
-				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
+				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, false ); // default is true
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try (SessionFactory factory = cfg.buildSessionFactory()) {
 
@@ -69,7 +69,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 		// IMPL NOTE : this test is a control to testNamedSessionFactorySerialization
 		// 		here, the test should fail based just on attempted uuid resolution
 		Configuration cfg = new Configuration()
-				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
+				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, false ); // default is true
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try (SessionFactory factory = cfg.buildSessionFactory()) {
 

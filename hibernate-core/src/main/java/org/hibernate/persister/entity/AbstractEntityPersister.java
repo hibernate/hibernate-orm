@@ -874,7 +874,7 @@ public abstract class AbstractEntityPersister
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
-					.getService( BatchLoaderFactory.class )
+					.requireService( BatchLoaderFactory.class )
 					.createEntityBatchLoader( batchSize, this, factory );
 		}
 		else {
@@ -1336,17 +1336,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean containsTableReference(String tableExpression) {
-		if ( getTableName().equals( tableExpression ) ) {
-			return true;
-		}
-		else {
-			for ( int i = 0; i < getSubclassTableSpan(); i++ ) {
-				if ( getSubclassTableName( i ).equals( tableExpression ) ) {
-					return true;
-				}
-			}
-			return false;
-		}
+		return contains( getSubclassTableNames(), tableExpression );
 	}
 
 	@Override
@@ -3076,7 +3066,7 @@ public abstract class AbstractEntityPersister
 				rootTableReference,
 				true,
 				sqlAliasBase,
-				(tableExpression) -> contains( getSubclassTableNames(), tableExpression ),
+				(tableExpression) -> getRootEntityDescriptor().containsTableReference( tableExpression ),
 				(tableExpression, tg) -> {
 					final String[] subclassTableNames = getSubclassTableNames();
 					for ( int i = 0; i < subclassTableNames.length; i++ ) {
@@ -3255,7 +3245,7 @@ public abstract class AbstractEntityPersister
 			Map<String, EntityNameUse> entityNameUses,
 			MappingMetamodelImplementor mappingMetamodel,
 			String alias) {
-		final InFragment frag = new InFragment();
+		final InFragment frag = new InFragment( false );
 		if ( isDiscriminatorFormula() ) {
 			frag.setFormula( alias, getDiscriminatorFormulaTemplate() );
 		}
@@ -5312,7 +5302,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
-		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+		return serviceRegistry.requireService( SqmMultiTableMutationStrategyProvider.class )
 				.createMutationStrategy( entityMappingDescriptor, creationProcess );
 	}
 
@@ -5320,7 +5310,7 @@ public abstract class AbstractEntityPersister
 			AbstractEntityPersister entityMappingDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
-		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+		return serviceRegistry.requireService( SqmMultiTableMutationStrategyProvider.class )
 				.createInsertStrategy( entityMappingDescriptor, creationProcess );
 	}
 
@@ -6087,15 +6077,11 @@ public abstract class AbstractEntityPersister
 											Locale.ROOT,
 											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes '%s' and '%s'",
 											name,
-											getJavaType().getJavaType().getTypeName(),
+											getJavaType().getTypeName(),
 											attribute.asAttributeMapping().getDeclaringType()
-													.getJavaType()
-													.getJavaType()
-													.getTypeName(),
+													.getJavaType().getTypeName(),
 											subDefinedAttribute.asAttributeMapping().getDeclaringType()
-													.getJavaType()
-													.getJavaType()
-													.getTypeName()
+													.getJavaType().getTypeName()
 									)
 							);
 						}

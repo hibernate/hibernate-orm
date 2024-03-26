@@ -537,6 +537,14 @@ public interface SharedSessionContractImplementor
 	 */
 	boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException;
 
+	default boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
+		return autoFlushIfRequired( querySpaces );
+	}
+
+	default void autoPreFlush(){
+	}
+
 	/**
 	 * Are we currently enforcing a {@linkplain GraphSemantic#FETCH fetch graph}?
 	 *

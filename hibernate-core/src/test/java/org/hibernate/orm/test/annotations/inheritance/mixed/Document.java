@@ -11,7 +11,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
@@ -19,7 +18,6 @@ import jakarta.persistence.Table;
 @Entity
 @DiscriminatorValue("D")
 @SecondaryTable(name = "DocumentMixed")
-@Table(name="Document_Wrong") //illegal use, a warn is raised
 public class Document extends File {
 	private int size;
 

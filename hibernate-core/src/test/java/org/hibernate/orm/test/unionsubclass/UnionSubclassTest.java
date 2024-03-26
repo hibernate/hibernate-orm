@@ -502,6 +502,9 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 		// connections.
 
 		inTransaction( s1 -> {
+			// Force connection acquisition
+			s1.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
+
 			// Transaction used by s1 is already started.
 			// Assert that the Connection is already physically connected.
 			assertTrue( s1.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
@@ -520,6 +523,8 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 			// for a bulk operation.
 
 			inTransaction( s2 -> {
+				// Force connection acquisition
+				s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 							   // Check same assertions for s2 as was done for s1.
 				assertTrue( s2.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
 							   assertEquals(

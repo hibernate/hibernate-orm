@@ -46,10 +46,13 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.AccessType;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
@@ -70,6 +73,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.jboss.logging.Logger;
 
 import static jakarta.persistence.FetchType.LAZY;
+import static java.util.Collections.singletonList;
 import static org.hibernate.boot.model.internal.AnyBinder.bindAny;
 import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
@@ -93,9 +97,9 @@ import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnota
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
-import static org.hibernate.mapping.Constraint.hashedName;
 
 /**
  * A stateful binder responsible for creating {@link Property} objects.
@@ -125,7 +129,6 @@ public class PropertyBinder {
 	private EntityBinder entityBinder;
 	private boolean toMany;
 	private String referencedEntityName;
-//	private PropertyAccessStrategy propertyAccessStrategy;
 
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
@@ -195,10 +198,6 @@ public class PropertyBinder {
 		this.buildingContext = buildingContext;
 	}
 
-//	public void setPropertyAccessStrategy(PropertyAccessStrategy propertyAccessStrategy) {
-//		this.propertyAccessStrategy = propertyAccessStrategy;
-//	}
-//
 	public void setDeclaringClass(XClass declaringClass) {
 		this.declaringClass = declaringClass;
 		this.declaringClassSet = true;
@@ -267,19 +266,23 @@ public class PropertyBinder {
 		basicValueBinder.setReferencedEntityName( referencedEntityName );
 		basicValueBinder.setAccessType( accessType );
 
-
 		value = basicValueBinder.make();
 
 		return makeProperty();
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private void callAttributeBinders(Property prop) {
-		for ( Annotation containingAnnotation : findContainingAnnotations(property, AttributeBinderType.class ) ) {
-			final AttributeBinderType binderType = containingAnnotation.annotationType().getAnnotation( AttributeBinderType.class );
+	private void callAttributeBinders(Property property, Map<String, PersistentClass> persistentClasses) {
+		for ( Annotation containingAnnotation : findContainingAnnotations( this.property, AttributeBinderType.class ) ) {
+			final AttributeBinderType binderType =
+					containingAnnotation.annotationType().getAnnotation( AttributeBinderType.class );
 			try {
 				final AttributeBinder binder = binderType.binder().newInstance();
-				binder.bind( containingAnnotation, buildingContext, entityBinder.getPersistentClass(), prop );
+				final PersistentClass persistentClass =
+						entityBinder != null
+								? entityBinder.getPersistentClass()
+								: persistentClasses.get( holder.getEntityName() );
+				binder.bind( containingAnnotation, buildingContext, persistentClass, property );
 			}
 			catch ( Exception e ) {
 				throw new AnnotationException( "error processing @AttributeBinderType annotation '" + containingAnnotation + "'", e );
@@ -303,53 +306,62 @@ public class PropertyBinder {
 
 	private Property bind(Property property) {
 		if ( isId ) {
-			final RootClass rootClass = (RootClass) holder.getPersistentClass();
-			if ( toMany || entityBinder.wrapIdsInEmbeddedComponents() ) {
-				// If an XxxToMany, it has to be wrapped today.
-				// This poses a problem as the PK is the class instead of the
-				// associated class which is not really compliant with the spec
-				//FIXME is it good enough?
-				getOrCreateCompositeId( rootClass ).addProperty( property );
-			}
-			else {
-				rootClass.setIdentifier( (KeyValue) getValue() );
-				if ( embedded ) {
-					rootClass.setEmbeddedIdentifier( true );
-				}
-				else {
-					rootClass.setIdentifierProperty( property );
-					final MappedSuperclass superclass = getMappedSuperclassOrNull(
-							declaringClass,
-							inheritanceStatePerClass,
-							buildingContext
-					);
-					setDeclaredIdentifier( rootClass, superclass, property );
-				}
-			}
+			bindId( property );
 		}
 		else {
 			holder.addProperty( property, columns, declaringClass );
 		}
 
-		if ( buildingContext.getMetadataCollector().isInSecondPass() ) {
-			callAttributeBinders( property );
-		}
-		else {
-			buildingContext.getMetadataCollector()
-					.addSecondPass( persistentClasses -> callAttributeBinders( property ) );
-		}
+		callAttributeBindersInSecondPass( property );
 
 		return property;
+	}
+
+	private void callAttributeBindersInSecondPass(Property property) {
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		if ( metadataCollector.isInSecondPass() ) {
+			callAttributeBinders( property, metadataCollector.getEntityBindingMap() );
+		}
+		else {
+			metadataCollector.addSecondPass( persistentClasses -> callAttributeBinders( property, persistentClasses ) );
+		}
+	}
+
+	private void bindId(Property property) {
+		final RootClass rootClass = (RootClass) holder.getPersistentClass();
+		if ( toMany || entityBinder.wrapIdsInEmbeddedComponents() ) {
+			// If an XxxToMany, it has to be wrapped today.
+			// This poses a problem as the PK is the class instead of the
+			// associated class which is not really compliant with the spec
+			//FIXME is it good enough?
+			getOrCreateCompositeId( rootClass ).addProperty( property );
+		}
+		else {
+			rootClass.setIdentifier( (KeyValue) getValue() );
+			if ( embedded ) {
+				rootClass.setEmbeddedIdentifier( true );
+			}
+			else {
+				rootClass.setIdentifierProperty(property);
+				final MappedSuperclass superclass =
+						getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, buildingContext );
+				setDeclaredIdentifier( rootClass, superclass, property);
+			}
+		}
 	}
 
 	private void setDeclaredIdentifier(RootClass rootClass, MappedSuperclass superclass, Property prop) {
 		handleGenericComponentProperty( prop, buildingContext );
 		if ( superclass == null ) {
 			rootClass.setDeclaredIdentifierProperty( prop );
-			return;
 		}
-		final Class<?> type = buildingContext.getBootstrapContext().getReflectionManager().toClass( declaringClass );
-		prepareActualProperty( prop, type, false, buildingContext, superclass::setDeclaredIdentifierProperty );
+		else {
+			final Class<?> type =
+					buildingContext.getBootstrapContext().getReflectionManager()
+							.toClass( declaringClass );
+			prepareActualProperty( prop, type, false, buildingContext,
+					superclass::setDeclaredIdentifierProperty );
+		}
 	}
 
 	private Component getOrCreateCompositeId(RootClass rootClass) {
@@ -357,7 +369,7 @@ public class PropertyBinder {
 		if ( id == null ) {
 			final Component identifier = createEmbeddable(
 					holder,
-					new PropertyPreloadedData( null, null, null ),
+					new PropertyPreloadedData(),
 					true,
 					false,
 					resolveCustomInstantiator( property, returnedClass ),
@@ -406,6 +418,7 @@ public class PropertyBinder {
 		handleOptional( property );
 		inferOptimisticLocking( property );
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
+		callAttributeBindersInSecondPass( property );
 		return property;
 	}
 
@@ -802,7 +815,7 @@ public class PropertyBinder {
 				propertyBinder
 		);
 		addIndexes( inSecondPass, property, columns, joinColumns );
-		addNaturalIds( inSecondPass, property, columns, joinColumns );
+		addNaturalIds( inSecondPass, property, columns, joinColumns, context );
 	}
 
 	private static AnnotatedColumns bindProperty(
@@ -954,11 +967,9 @@ public class PropertyBinder {
 		rootClass.setVersion( property );
 
 		//If version is on a mapped superclass, update the mapping
-		final org.hibernate.mapping.MappedSuperclass superclass = getMappedSuperclassOrNull(
-				inferredData.getDeclaringClass(),
-				inheritanceStatePerClass,
-				context
-		);
+		final XClass declaringClass = inferredData.getDeclaringClass();
+		final org.hibernate.mapping.MappedSuperclass superclass =
+				getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, context );
 		if ( superclass != null ) {
 			superclass.setDeclaredVersion( property );
 		}
@@ -967,16 +978,19 @@ public class PropertyBinder {
 			rootClass.setDeclaredVersion( property );
 		}
 
-		( (SimpleValue) property.getValue() ).setNullValue( "undefined" );
+		final SimpleValue simpleValue = (SimpleValue) property.getValue();
+		simpleValue.setNullValue( "undefined" );
 		rootClass.setOptimisticLockStyle( OptimisticLockStyle.VERSION );
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Version name: {0}, unsavedValue: {1}", rootClass.getVersion().getName(),
-					( (SimpleValue) rootClass.getVersion().getValue() ).getNullValue() );
+			final SimpleValue versionValue = (SimpleValue) rootClass.getVersion().getValue();
+			LOG.tracev( "Version name: {0}, unsavedValue: {1}",
+					rootClass.getVersion().getName(),
+					versionValue.getNullValue() );
 		}
 	}
 
 	private static void checkVersionProperty(PropertyHolder propertyHolder, boolean isIdentifierMapper) {
-		if (isIdentifierMapper) {
+		if ( isIdentifierMapper ) {
 			throw new AnnotationException( "Class '" + propertyHolder.getEntityName()
 					+ "' is annotated '@IdClass' and may not have a property annotated '@Version'"
 			);
@@ -1011,7 +1025,10 @@ public class PropertyBinder {
 		final boolean isComposite;
 		final boolean isOverridden;
 		final AnnotatedColumns actualColumns;
-		if ( propertyBinder.isId() || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() ) {
+		if ( isIdentifierMapper
+				|| propertyBinder.isId()
+				|| propertyHolder.isOrWithinEmbeddedId()
+				|| propertyHolder.isInIdClass() ) {
 			// the associated entity could be using an @IdClass making the overridden property a component
 			final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
 					propertyBinder.isId(),
@@ -1021,8 +1038,7 @@ public class PropertyBinder {
 			);
 			if ( overridingProperty != null ) {
 				isOverridden = true;
-				final InheritanceState state = inheritanceStatePerClass.get( overridingProperty.getClassOrElement() );
-				isComposite = state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
+				isComposite = isComposite( inheritanceStatePerClass, property, returnedClass, overridingProperty );
 				//Get the new column
 				actualColumns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty( propertyBinder.isId() );
 			}
@@ -1100,6 +1116,15 @@ public class PropertyBinder {
 			);
 		}
 		return actualColumns;
+	}
+
+	private static boolean isComposite(
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			XProperty property,
+			XClass returnedClass,
+			PropertyData overridingProperty) {
+		final InheritanceState state = inheritanceStatePerClass.get( overridingProperty.getClassOrElement() );
+		return state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
 	}
 
 	private static void handleGeneratorsForOverriddenId(
@@ -1241,21 +1266,67 @@ public class PropertyBinder {
 			boolean inSecondPass,
 			XProperty property,
 			AnnotatedColumns columns,
-			AnnotatedJoinColumns joinColumns) {
+			AnnotatedJoinColumns joinColumns,
+			MetadataBuildingContext context) {
 		// Natural ID columns must reside in one single UniqueKey within the Table.
 		// For now, simply ensure consistent naming.
 		// TODO: AFAIK, there really isn't a reason for these UKs to be created
 		// on the SecondPass. This whole area should go away...
 		final NaturalId naturalId = property.getAnnotation( NaturalId.class );
 		if ( naturalId != null ) {
+			final Database database = context.getMetadataCollector().getDatabase();
 			if ( joinColumns != null ) {
-				final String keyName = "UK_" + hashedName( joinColumns.getTable().getName() + "_NaturalID" );
+				final Identifier name = context.getBuildingOptions().getImplicitNamingStrategy()
+						.determineUniqueKeyName(new ImplicitUniqueKeyNameSource() {
+							@Override
+							public Identifier getTableName() {
+								return joinColumns.getTable().getNameIdentifier();
+							}
+
+							@Override
+							public List<Identifier> getColumnNames() {
+								return singletonList(toIdentifier("_NaturalID"));
+							}
+
+							@Override
+							public Identifier getUserProvidedIdentifier() {
+								return null;
+							}
+
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
+						});
+				final String keyName = name.render( database.getDialect() );
 				for ( AnnotatedColumn column : joinColumns.getColumns() ) {
 					column.addUniqueKey( keyName, inSecondPass );
 				}
 			}
 			else {
-				final String keyName = "UK_" + hashedName( columns.getTable().getName() + "_NaturalID" );
+				final Identifier name = context.getBuildingOptions().getImplicitNamingStrategy()
+						.determineUniqueKeyName(new ImplicitUniqueKeyNameSource() {
+							@Override
+							public Identifier getTableName() {
+								return columns.getTable().getNameIdentifier();
+							}
+
+							@Override
+							public List<Identifier> getColumnNames() {
+								return singletonList(toIdentifier("_NaturalID"));
+							}
+
+							@Override
+							public Identifier getUserProvidedIdentifier() {
+								return null;
+							}
+
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
+						});
+				final String keyName = name.render( database.getDialect() );
 				for ( AnnotatedColumn column : columns.getColumns() ) {
 					column.addUniqueKey( keyName, inSecondPass );
 				}

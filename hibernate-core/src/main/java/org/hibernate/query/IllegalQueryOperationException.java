@@ -10,9 +10,12 @@ package org.hibernate.query;
 import org.hibernate.QueryException;
 
 /**
- * Indicates an attempt to perform some operation on a Query that is illegal
- * based on its state, e.g., attempt to call {@link Query#executeUpdate} on a
- * SELECT query.
+ * Thrown when an operation of the {@link Query} interface
+ * is called which is unsupported due to the nature of the
+ * query itself. For example, this exception is throw if
+ * {@link Query#executeUpdate executeUpdate()} is invoked
+ * on an instance of {@code Query} representing a JPQL or
+ * SQL {@code SELECT} query.
  *
  * @author Steve Ebersole
  */

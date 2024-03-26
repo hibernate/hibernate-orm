@@ -7,14 +7,17 @@
 package org.hibernate.orm.test.flush;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.query.sqm.internal.QuerySqmImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -24,6 +27,7 @@ import org.junit.Test;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Andrea Boriero
@@ -130,8 +134,28 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
+	@Test
+	public void hhh17743Test() throws Exception {
+		allowUpdateOperationOutsideTransaction = "true";
+		rebuildSessionFactory();
+		prepareTest();
+
+		try(Session s = openSession();
+			EntityManager entityManager = s.getEntityManagerFactory().createEntityManager();) {
+
+			MyEntity entity = new MyEntity("N1");
+			entityManager.persist(entity);
+
+			QuerySqmImpl q = (QuerySqmImpl)entityManager.createNamedQuery("deleteByName");
+			q.setParameter("name", "N1");
+			int d = q.executeUpdate();
+			assertEquals(0, d);
+		}
+	}
+
 	@Entity(name = "MyEntity")
 	@Table(name = "MY_ENTITY")
+	@NamedQuery(name = "deleteByName", query = "delete from MyEntity where name = :name")
 	public static class MyEntity {
 		@Id
 		@GeneratedValue

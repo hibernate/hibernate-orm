@@ -30,8 +30,8 @@ public class MultiPathCircleCascadeCheckNullFalseDelayedInsertTest extends Abstr
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		configuration.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
-		configuration.setProperty( Environment.CHECK_NULLABILITY, "false" );
+		configuration.setProperty( Environment.GENERATE_STATISTICS, true );
+		configuration.setProperty( Environment.STATEMENT_BATCH_SIZE, 0 );
+		configuration.setProperty( Environment.CHECK_NULLABILITY, false );
 	}
 }

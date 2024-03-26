@@ -7,6 +7,7 @@
 package org.hibernate.engine.spi;
 
 import java.sql.Connection;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -168,6 +169,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override @Deprecated
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
 		return delegate.getFilterDefinition( filterName );
+	}
+
+	@Override
+	public Collection<FilterDefinition> getAutoEnabledFilters() {
+		return delegate.getAutoEnabledFilters();
 	}
 
 	@Override

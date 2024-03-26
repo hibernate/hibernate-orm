@@ -226,7 +226,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
 		try {
-			int nextIndex = resetIndex ? 0 : getSize( key, session );
+			int nextIndex = ( resetIndex ? 0 : getSize( key, session ) ) +
+					Math.max( getAttributeMapping().getIndexMetadata().getListIndexBase(), 0 );
 
 			while ( entries.hasNext() ) {
 				final Object entry = entries.next();

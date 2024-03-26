@@ -16,16 +16,12 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -137,7 +133,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -281,7 +277,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	}
 
 	protected OffsetFetchClauseMode getOffsetFetchClauseMode(QueryPart queryPart) {
-		final DatabaseVersion version = getDialect().getVersion();
 		final boolean hasLimit;
 		final boolean hasOffset;
 		if ( queryPart.isRoot() && hasLimit() ) {
@@ -367,11 +362,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 			lateralPredicate = null;
 		}
 		super.visitSelectClause( selectClause );
-	}
-
-	@Override
-	protected boolean needsRowsToSkip() {
-		return false;
 	}
 
 	@Override

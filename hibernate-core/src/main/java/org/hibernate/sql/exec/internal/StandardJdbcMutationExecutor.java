@@ -8,7 +8,6 @@ package org.hibernate.sql.exec.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -109,10 +108,11 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			if ( exception instanceof ConstraintViolationException && jdbcMutation instanceof JdbcOperationQueryInsert ) {
 				final ConstraintViolationException constraintViolationException = (ConstraintViolationException) exception;
 				if ( constraintViolationException.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE ) {
-					final String uniqueConstraintNameThatMayFail = ( (JdbcOperationQueryInsert) jdbcMutation ).getUniqueConstraintNameThatMayFail();
+					final JdbcOperationQueryInsert jdbcInsert = (JdbcOperationQueryInsert) jdbcMutation;
+					final String uniqueConstraintNameThatMayFail = jdbcInsert.getUniqueConstraintNameThatMayFail();
 					if ( uniqueConstraintNameThatMayFail != null ) {
-						if ( uniqueConstraintNameThatMayFail.isEmpty()
-								|| uniqueConstraintNameThatMayFail.equalsIgnoreCase( constraintViolationException.getConstraintName() ) ) {
+						final String violatedConstraintName = constraintViolationException.getConstraintName();
+						if ( constraintNameMatches( uniqueConstraintNameThatMayFail, violatedConstraintName ) ) {
 							return 0;
 						}
 					}
@@ -123,5 +123,12 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 		finally {
 			executionContext.afterStatement( logicalConnection );
 		}
+	}
+
+	private static boolean constraintNameMatches(String uniqueConstraintNameThatMayFail, String violatedConstraintName) {
+		return uniqueConstraintNameThatMayFail.isEmpty()
+			|| uniqueConstraintNameThatMayFail.equalsIgnoreCase(violatedConstraintName)
+			|| violatedConstraintName != null && violatedConstraintName.indexOf('.') > 0
+				&& uniqueConstraintNameThatMayFail.equalsIgnoreCase(violatedConstraintName.substring(violatedConstraintName.lastIndexOf('.') + 1));
 	}
 }

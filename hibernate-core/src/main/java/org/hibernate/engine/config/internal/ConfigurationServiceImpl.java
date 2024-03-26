@@ -93,7 +93,8 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 		}
 		else {
 			try {
-				target = NullnessUtil.castNonNull( serviceRegistry.getService( ClassLoaderService.class ) ).classForName( candidate.toString() );
+				target = serviceRegistry.requireService( ClassLoaderService.class )
+						.classForName( candidate.toString() );
 			}
 			catch ( ClassLoadingException e ) {
 				LOG.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );

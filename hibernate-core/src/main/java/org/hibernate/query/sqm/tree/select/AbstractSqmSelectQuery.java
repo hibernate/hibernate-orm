@@ -36,6 +36,8 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
+import static java.lang.Character.isAlphabetic;
+
 /**
  * @author Steve Ebersole
  */
@@ -45,7 +47,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		implements SqmSelectQuery<T> {
 	private final Map<String, SqmCteStatement<?>> cteStatements;
 	private SqmQueryPart<T> sqmQueryPart;
-	private Class<T> resultType;
+	private final Class<T> resultType;
 
 	public AbstractSqmSelectQuery(Class<T> resultType, NodeBuilder builder) {
 		this( new SqmQuerySpec<>( builder ), resultType, builder );
@@ -79,11 +81,11 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	protected Map<String, SqmCteStatement<?>> copyCteStatements(SqmCopyContext context) {
-		final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>( this.cteStatements.size() );
-		for ( Map.Entry<String, SqmCteStatement<?>> entry : this.cteStatements.entrySet() ) {
-			cteStatements.put( entry.getKey(), entry.getValue().copy( context ) );
+		final Map<String, SqmCteStatement<?>> copies = new LinkedHashMap<>( cteStatements.size() );
+		for ( Map.Entry<String, SqmCteStatement<?>> entry : cteStatements.entrySet() ) {
+			copies.put( entry.getKey(), entry.getValue().copy( context ) );
 		}
-		return cteStatements;
+		return copies;
 	}
 
 	@Override
@@ -154,7 +156,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		if ( name == null || name.isBlank() ) {
 			throw new IllegalArgumentException( "Illegal empty CTE name" );
 		}
-		if ( !Character.isAlphabetic( name.charAt( 0 ) ) ) {
+		if ( !isAlphabetic( name.charAt( 0 ) ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							"Illegal CTE name [%s]. Names must start with an alphabetic character!",
@@ -202,8 +204,12 @@ public abstract class AbstractSqmSelectQuery<T>
 		return resultType;
 	}
 
+	/**
+	 * @deprecated Don't use this method. It has no effect.
+	 */
+	@Deprecated(forRemoval = true)
 	protected void setResultType(Class<T> resultType) {
-		this.resultType = resultType;
+		// No-op
 	}
 
 	@Override
@@ -410,7 +416,6 @@ public abstract class AbstractSqmSelectQuery<T>
 					break;
 				}
 				default: {
-					setResultType( (Class<T>) Object[].class );
 					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
 				}
 			}

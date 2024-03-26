@@ -37,8 +37,8 @@ public class TreatedEntityFetchTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 
-		configuration.setProperty( AvailableSettings.SHOW_SQL, Boolean.TRUE.toString() );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString() );
+		configuration.setProperty( AvailableSettings.SHOW_SQL, true );
+		configuration.setProperty( AvailableSettings.FORMAT_SQL, true );
 		// configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
 

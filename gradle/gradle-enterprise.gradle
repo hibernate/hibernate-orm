@@ -46,10 +46,11 @@ gradleEnterprise {
 
         uploadInBackground = !settings.ext.isCiEnvironment
 
-        if ( settings.ext.isCiEnvironment ) {
-            tag "JOB ${System.getenv('JOB_NAME')}"
+        tag "jdk-${extensions.jdkVersions.test.launcher}"
+        tag extensions.db
+        value 'database', extensions.db
+        if ( extensions.hasProperty( 'ci.node' ) ) {
+            tag extensions.property( 'ci.node' )
         }
-        tag "JDK ${JavaVersion.current().toString()}"
-        value 'database', rootProject.hasProperty( 'db' ) ? rootProject.properties.db : 'h2'
     }
 }

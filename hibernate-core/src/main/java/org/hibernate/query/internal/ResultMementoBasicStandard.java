@@ -82,9 +82,10 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			builder = new CompleteResultBuilderBasicValuedStandard( explicitColumnName, null, null );
 		}
 		else if ( AttributeConverter.class.isAssignableFrom( definedType ) ) {
-			final Class<? extends AttributeConverter<?, ?>> converterClass = (Class<? extends AttributeConverter<?, ?>>) definedType;
+			final Class<? extends AttributeConverter<?, ?>> converterClass =
+					(Class<? extends AttributeConverter<?, ?>>) definedType;
 			final ManagedBean<? extends AttributeConverter<?,?>> converterBean = sessionFactory.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class )
+					.requireService( ManagedBeanRegistry.class )
 					.getBean( converterClass );
 			final JavaType<? extends AttributeConverter<?,?>> converterJtd = typeConfiguration
 					.getJavaTypeRegistry()

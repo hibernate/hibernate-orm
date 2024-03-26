@@ -72,8 +72,6 @@ import org.hibernate.type.descriptor.java.Immutability;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JsonJavaType;
-import org.hibernate.type.descriptor.java.spi.XmlJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -543,7 +541,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private ManagedBeanRegistry getManagedBeanRegistry() {
 		return buildingContext.getBootstrapContext()
 				.getServiceRegistry()
-				.getService(ManagedBeanRegistry.class);
+				.requireService(ManagedBeanRegistry.class);
 	}
 
 	private void prepareMapKey(
@@ -667,10 +665,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		implicitJavaTypeAccess = typeConfiguration -> Integer.class;
 
 		final boolean useDeferredBeanContainerAccess = !buildingContext.getBuildingOptions().isAllowExtensionsInCdi();
-		final ManagedBeanRegistry beanRegistry = buildingContext
-				.getBootstrapContext()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
+		final ManagedBeanRegistry beanRegistry =
+				buildingContext.getBootstrapContext().getServiceRegistry()
+						.requireService( ManagedBeanRegistry.class );
 
 		explicitJavaTypeAccess = (typeConfiguration) -> {
 			final ListIndexJavaType javaTypeAnn = findAnnotation( listAttribute, ListIndexJavaType.class );

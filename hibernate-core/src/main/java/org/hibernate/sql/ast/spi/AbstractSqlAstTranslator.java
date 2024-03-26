@@ -50,7 +50,6 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -64,7 +63,6 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
-import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -81,7 +79,6 @@ import org.hibernate.query.sqm.function.MultipatternSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
@@ -215,7 +212,6 @@ import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -227,6 +223,7 @@ import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
@@ -848,26 +845,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 
+		return new JdbcOperationQueryInsertImpl(
+				getSql(),
+				getParameterBinders(),
+				getAffectedTableNames(),
+				getUniqueConstraintNameThatMayFail(sqlAst)
+		);
+	}
+
+	protected String getUniqueConstraintNameThatMayFail(InsertSelectStatement sqlAst) {
 		final ConflictClause conflictClause = sqlAst.getConflictClause();
-		final String uniqueConstraintNameThatMayFail;
 		if ( conflictClause == null || !conflictClause.getConstraintColumnNames().isEmpty() ) {
-			uniqueConstraintNameThatMayFail = null;
+			return null;
 		}
 		else {
 			if ( sqlAst.getSourceSelectStatement() != null && !isFetchFirstRowOnly( sqlAst.getSourceSelectStatement() )
 					|| sqlAst.getValuesList().size() > 1 ) {
 				throw new IllegalQueryOperationException( "Can't emulate conflict clause with constraint name for more than one row to insert" );
 			}
-			uniqueConstraintNameThatMayFail = conflictClause.getConstraintName() == null
-					? ""
-					: conflictClause.getConstraintName();
+			return conflictClause.getConstraintName() == null ? "" : conflictClause.getConstraintName();
 		}
-		return new JdbcOperationQueryInsertImpl(
-				getSql(),
-				getParameterBinders(),
-				getAffectedTableNames(),
-				uniqueConstraintNameThatMayFail
-		);
 	}
 
 	protected JdbcOperationQuerySelect translateSelect(SelectStatement selectStatement) {
@@ -892,10 +889,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
-		final JdbcValuesMappingProducerProvider producerProvider = getSessionFactory()
+		return getSessionFactory()
 				.getFastSessionServices()
-				.getJdbcValuesMappingProducerProvider();
-		return producerProvider.buildMappingProducer( selectStatement, getSessionFactory() );
+				.getJdbcValuesMappingProducerProvider()
+				.buildMappingProducer( selectStatement, getSessionFactory() );
 	}
 
 	protected int getRowsToSkip(SelectStatement sqlAstSelect, JdbcParameterBindings jdbcParameterBindings) {
@@ -1316,6 +1313,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitInsertSource( statement );
 		visitConflictClause( statement.getConflictClause() );
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected boolean isIntegerDivisionEmulationRequired(BinaryArithmeticExpression expression) {
+		return expression.getOperator() == DIVIDE_PORTABLE
+			&& jdbcType( expression.getLeftHandOperand() ).isInteger()
+			&& jdbcType( expression.getRightHandOperand() ).isInteger();
+	}
+
+	private JdbcType jdbcType(Expression expression) {
+		return expression.getExpressionType().getSingleJdbcMapping().getJdbcType();
 	}
 
 	protected void visitInsertSource(InsertSelectStatement statement) {
@@ -2051,7 +2058,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// propagated, but instead will run the respective conflict action.
 		final String constraintName = conflictClause.getConstraintName();
 		if ( constraintName != null ) {
-			throw new IllegalQueryOperationException( "Dialect does not support constraint name in conflict clause" );
+			if ( conflictClause.isDoUpdate() ) {
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
+			}
+			else {
+				return;
+			}
 		}
 //		final List<String> constraintColumnNames = conflictClause.getConstraintColumnNames();
 //		if ( !constraintColumnNames.isEmpty() ) {
@@ -2429,7 +2441,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				.get( 1 ) == getCurrentQueryPart();
 	}
 
-	private boolean isInSubquery() {
+	protected boolean isInSubquery() {
 		return statementStack.depth() > 1 && statementStack.getCurrent() instanceof SelectStatement
 				&& !( (SelectStatement) statementStack.getCurrent() ).getQueryPart().isRoot();
 	}
@@ -2437,8 +2449,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitCteDefinition(CteStatement cte) {
 		final CteStatement oldCteStatement = currentCteStatement;
 		currentCteStatement = cte;
+		final Limit oldLimit = limit;
+		limit = null;
 		cte.getCteDefinition().accept( this );
 		currentCteStatement = oldCteStatement;
+		limit = oldLimit;
 	}
 
 	/**
@@ -4362,21 +4377,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Expression sortExpression = sortSpecification.getSortExpression();
 		final NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
 		final SortDirection sortOrder = sortSpecification.getSortOrder();
+		final boolean ignoreCase = sortSpecification.isIgnoreCase();
 		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( sortExpression );
 		if ( sqlTuple != null ) {
 			String separator = NO_SEPARATOR;
 			for ( Expression expression : sqlTuple.getExpressions() ) {
 				appendSql( separator );
-				visitSortSpecification( expression, sortOrder, nullPrecedence );
+				visitSortSpecification( expression, sortOrder, nullPrecedence, ignoreCase );
 				separator = COMMA_SEPARATOR;
 			}
 		}
 		else {
-			visitSortSpecification( sortExpression, sortOrder, nullPrecedence );
+			visitSortSpecification( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 		}
 	}
 
-	protected void visitSortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+	protected void visitSortSpecification(
+			Expression sortExpression,
+			SortDirection sortOrder,
+			NullPrecedence nullPrecedence,
+			boolean ignoreCase) {
 		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
 			nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 		}
@@ -4387,11 +4407,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
 
+		if ( ignoreCase ) {
+			appendSql( dialect.getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
+		}
+
 		if ( inOverOrWithinGroupClause() ) {
 			resolveAliasedExpression( sortExpression ).accept( this );
 		}
 		else {
 			sortExpression.accept( this );
+		}
+
+		if ( ignoreCase ) {
+			appendSql( CLOSE_PARENTHESIS );
 		}
 
 		if ( sortOrder == SortDirection.DESCENDING ) {
@@ -6189,11 +6218,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				true,
 				null
 		);
+		final Limit oldLimit = limit;
+		limit = null;
 		statementStack.push( cteDefinition );
 		renderPrimaryTableReference( queryPartTableGroup, lockMode );
 		if ( queryPartTableGroup.isLateral() && !dialect.supportsLateral() ) {
 			addAdditionalWherePredicate( determineLateralEmulationPredicate( queryPartTableGroup ) );
 		}
+		limit = oldLimit;
 		statementStack.pop();
 	}
 
@@ -7149,8 +7181,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
-		final EntityMappingType entityMapping = expression.getEntityTypeDescriptor();
-		appendSql( entityMapping.getDiscriminatorSQLValue() );
+		appendSql( expression.getEntityTypeDescriptor().getDiscriminatorSQLValue() );
 	}
 
 	@Override
@@ -7571,7 +7602,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
-			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
+			emptyInList( inListPredicate );
 			return;
 		}
 		Function<Expression, Expression> itemAccessor = Function.identity();
@@ -7676,6 +7707,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( parenthesis ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	protected void emptyInList(InListPredicate inListPredicate) {
+		appendSql("(");
+		appendSql( inListPredicate.isNegated() ? "0" : "1" );
+		appendSql(" = case when ");
+		inListPredicate.getTestExpression().accept( this );
+		appendSql( " is not null then 0");
+//		dialect.appendBooleanValueString( this, inListPredicate.isNegated() );
+		appendSql(" end)");
 	}
 
 	private void appendInClauseSeparator(InListPredicate inListPredicate) {

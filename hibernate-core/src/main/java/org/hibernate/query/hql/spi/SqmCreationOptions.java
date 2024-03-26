@@ -22,5 +22,14 @@ public interface SqmCreationOptions {
 	 *
 	 * @see StrictJpaComplianceViolation
 	 */
-	boolean useStrictJpaCompliance();
+	default boolean useStrictJpaCompliance() {
+		return false;
+	}
+
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
+	 */
+	default boolean isPortableIntegerDivisionEnabled() {
+		return false;
+	}
 }

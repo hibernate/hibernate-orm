@@ -254,11 +254,11 @@ public class Main {
                 .setProperty(USER, "sa")
                 .setProperty(PASS, "")
                 // use Agroal connection pool
-                .setProperty("hibernate.agroal.maxSize", "20")
+                .setProperty("hibernate.agroal.maxSize", 20)
                 // display SQL in console
-                .setProperty(SHOW_SQL, TRUE.toString())
-                .setProperty(FORMAT_SQL, TRUE.toString())
-                .setProperty(HIGHLIGHT_SQL, TRUE.toString())
+                .setProperty(SHOW_SQL, true)
+                .setProperty(FORMAT_SQL, true)
+                .setProperty(HIGHLIGHT_SQL, true)
                 .buildSessionFactory();
 
         // export the inferred database schema

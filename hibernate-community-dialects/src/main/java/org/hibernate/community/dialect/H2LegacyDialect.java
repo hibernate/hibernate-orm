@@ -328,6 +328,7 @@ public class H2LegacyDialect extends Dialect {
 		functionFactory.bitand();
 		functionFactory.bitor();
 		functionFactory.bitxor();
+		functionFactory.bitnot();
 		functionFactory.bitAndOr();
 		functionFactory.yearMonthDay();
 		functionFactory.hourMinuteSecond();
@@ -971,5 +972,20 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public String getCaseInsensitiveLike() {
+		if ( getVersion().isSameOrAfter( 1, 4, 194 ) ) {
+			return "ilike";
+		}
+		else {
+			return super.getCaseInsensitiveLike();
+		}
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike() {
+		return getVersion().isSameOrAfter( 1, 4, 194 );
 	}
 }

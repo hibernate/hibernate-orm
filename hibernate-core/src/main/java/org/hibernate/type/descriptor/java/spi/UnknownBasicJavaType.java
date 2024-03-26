@@ -19,22 +19,35 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * {@link org.hibernate.type.descriptor.java.JavaType} for a given Java type.
  */
 public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
+	private final String typeName;
+
 	public UnknownBasicJavaType(Class<T> type) {
+		this( type, type.getTypeName() );
+	}
+	public UnknownBasicJavaType(Class<T> type, String typeName) {
 		super( type );
+		this.typeName = typeName;
 	}
 
 	public UnknownBasicJavaType(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		super( type, mutabilityPlan );
+		this.typeName = type.getTypeName();
 	}
 
 	public UnknownBasicJavaType(Type type, MutabilityPlan<T> mutabilityPlan) {
 		super( type, mutabilityPlan );
+		this.typeName = type.getTypeName();
+	}
+
+	@Override
+	public String getTypeName() {
+		return typeName;
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		throw new JdbcTypeRecommendationException(
-				"Could not determine recommended JdbcType for Java type '" + getJavaType().getTypeName() + "'"
+				"Could not determine recommended JdbcType for Java type '" + getTypeName() + "'"
 		);
 	}
 
@@ -46,7 +59,7 @@ public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 	@Override
 	public T fromString(CharSequence string) {
 		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Conversion from String strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
@@ -57,7 +70,7 @@ public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 			return (X) value;
 		}
 		throw new UnsupportedOperationException(
-				"Unwrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Unwrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
@@ -68,12 +81,12 @@ public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 			return (T) value;
 		}
 		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type : " + getJavaType().getTypeName()
+				"Wrap strategy not known for this Java type: " + getTypeName()
 		);
 	}
 
 	@Override
 	public String toString() {
-		return "BasicJavaType(" + getJavaType().getTypeName() + ")";
+		return "BasicJavaType(" + getTypeName() + ")";
 	}
 }

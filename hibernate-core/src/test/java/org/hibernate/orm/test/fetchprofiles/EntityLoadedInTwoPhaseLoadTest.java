@@ -34,7 +34,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 	static final String FETCH_PROFILE_NAME = "fp1";
 
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
 	@Test

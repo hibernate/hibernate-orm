@@ -13,7 +13,6 @@ import org.hibernate.Incubating;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.NullnessUtil;
 
 import org.jboss.logging.Logger;
 

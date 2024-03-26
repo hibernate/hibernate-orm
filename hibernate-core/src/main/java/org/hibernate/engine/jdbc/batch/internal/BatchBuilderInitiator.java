@@ -54,7 +54,7 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 
 		final String builderClassName = builder.toString();
 		try {
-			return (BatchBuilder) registry.getService( ClassLoaderService.class )
+			return (BatchBuilder) registry.requireService( ClassLoaderService.class )
 					.classForName( builderClassName )
 					.getConstructor()
 					.newInstance();

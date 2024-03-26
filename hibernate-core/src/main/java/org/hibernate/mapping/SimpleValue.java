@@ -300,7 +300,7 @@ public abstract class SimpleValue implements KeyValue {
 			final ClassLoaderService cls = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
+					.requireService( ClassLoaderService.class );
 			try {
 				final Class<? extends AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
 				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
@@ -368,11 +368,11 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
-	public void createUniqueKey() {
+	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( hasFormula() ) {
 			throw new MappingException( "unique key constraint involves formulas" );
 		}
-		getTable().createUniqueKey( getConstraintColumns() );
+		getTable().createUniqueKey( getConstraintColumns(), context );
 	}
 
 	/**
@@ -658,7 +658,7 @@ public abstract class SimpleValue implements KeyValue {
 				getMetadata()
 						.getMetadataBuildingOptions()
 						.getServiceRegistry()
-						.getService(ClassLoaderService.class)
+						.requireService( ClassLoaderService.class )
 		);
 	}
 
@@ -702,7 +702,7 @@ public abstract class SimpleValue implements KeyValue {
 						return getMetadata()
 								.getMetadataBuildingOptions()
 								.getServiceRegistry()
-								.getService( ManagedBeanRegistry.class );
+								.requireService( ManagedBeanRegistry.class );
 					}
 
 					@Override
@@ -772,11 +772,11 @@ public abstract class SimpleValue implements KeyValue {
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 		return new ConvertedBasicTypeImpl<>(
 				TYPE_NAME_PREFIX
-						+ jpaAttributeConverter.getConverterJavaType().getJavaType().getTypeName(),
+						+ jpaAttributeConverter.getConverterJavaType().getTypeName(),
 				String.format(
 						"BasicType adapter for AttributeConverter<%s,%s>",
-						domainJavaType.getJavaType().getTypeName(),
-						relationalJavaType.getJavaType().getTypeName()
+						domainJavaType.getTypeName(),
+						relationalJavaType.getTypeName()
 				),
 				metadata.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode ),
 				jpaAttributeConverter
@@ -935,7 +935,7 @@ public abstract class SimpleValue implements KeyValue {
 			final ClassLoaderService classLoaderService = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
+					.requireService( ClassLoaderService.class );
 			typeParameters.put(
 					DynamicParameterizedType.PARAMETER_TYPE,
 					new ParameterTypeImpl(
@@ -980,7 +980,7 @@ public abstract class SimpleValue implements KeyValue {
 			final ClassLoaderService classLoaderService = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
+					.requireService( ClassLoaderService.class );
 
 			return new ParameterTypeImpl(
 					classLoaderService.classForTypeName(typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)),

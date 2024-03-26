@@ -19,7 +19,6 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -28,6 +27,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
@@ -43,6 +43,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationClass;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 import static org.hibernate.sql.Template.collectColumnNames;
 
@@ -119,6 +120,10 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	private MappedSuperclass superMappedSuperclass;
 	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
+
+	private Class<? extends Expectation> insertExpectation;
+	private Class<? extends Expectation> updateExpectation;
+	private Class<? extends Expectation> deleteExpectation;
 
 	private boolean isCached;
 	private CacheLayout queryCacheLayout;
@@ -232,7 +237,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	public boolean hasSubclasses() {
-		return subclasses.size() > 0;
+		return !subclasses.isEmpty();
 	}
 
 	public int getSubclassSpan() {
@@ -463,7 +468,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 * Includes properties defined in superclasses of the mapping inheritance.
 	 * Includes all properties defined as part of a join.
 	 *
-	 * @see #getReferencedProperty for a discussion of "referenceable"
+	 * @see #getReferencedProperty
 	 * @return The referenceable property iterator.
 	 */
 	public List<Property> getReferenceableProperties() {
@@ -793,20 +798,11 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return properties;
 	}
 
-	public void setCustomSqlInsert(CustomSql customSql) {
-		if ( customSql != null ) {
-			setCustomSQLInsert(
-					customSql.getSql(),
-					customSql.isCallable(),
-					customSql.getCheckStyle()
-			);
-		}
-	}
-
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
 		this.insertCheckStyle = checkStyle;
+		this.insertExpectation = expectationClass( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -817,24 +813,19 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customInsertCallable;
 	}
 
+	/**
+	 * @deprecated use {@link #getInsertExpectation()}
+	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public ExecuteUpdateResultCheckStyle getCustomSQLInsertCheckStyle() {
 		return insertCheckStyle;
-	}
-
-	public void setCustomSqlUpdate(CustomSql customSql) {
-		if ( customSql != null ) {
-			setCustomSQLUpdate(
-					customSql.getSql(),
-					customSql.isCallable(),
-					customSql.getCheckStyle()
-			);
-		}
 	}
 
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
 		this.updateCheckStyle = checkStyle;
+		this.updateExpectation = expectationClass( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -845,24 +836,19 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customUpdateCallable;
 	}
 
+	/**
+	 * @deprecated use {@link #getUpdateExpectation()}
+	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
 		return updateCheckStyle;
-	}
-
-	public void setCustomSqlDelete(CustomSql customSql) {
-		if ( customSql != null ) {
-			setCustomSQLDelete(
-					customSql.getSql(),
-					customSql.isCallable(),
-					customSql.getCheckStyle()
-			);
-		}
 	}
 
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
 		this.deleteCheckStyle = checkStyle;
+		this.deleteExpectation = expectationClass( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {
@@ -873,6 +859,10 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return customDeleteCallable;
 	}
 
+	/**
+	 * @deprecated use {@link #getDeleteExpectation()}
+	 */
+	@Deprecated(since = "6.5", forRemoval = true)
 	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
 		return deleteCheckStyle;
 	}
@@ -1270,5 +1260,29 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			return getSuperPersistentClass( mappedSuperclass.getSuperMappedSuperclass() );
 		}
 		return null;
+	}
+
+	public Class<? extends Expectation> getInsertExpectation() {
+		return insertExpectation;
+	}
+
+	public void setInsertExpectation(Class<? extends Expectation> insertExpectation) {
+		this.insertExpectation = insertExpectation;
+	}
+
+	public Class<? extends Expectation> getUpdateExpectation() {
+		return updateExpectation;
+	}
+
+	public void setUpdateExpectation(Class<? extends Expectation> updateExpectation) {
+		this.updateExpectation = updateExpectation;
+	}
+
+	public Class<? extends Expectation> getDeleteExpectation() {
+		return deleteExpectation;
+	}
+
+	public void setDeleteExpectation(Class<? extends Expectation> deleteExpectation) {
+		this.deleteExpectation = deleteExpectation;
 	}
 }

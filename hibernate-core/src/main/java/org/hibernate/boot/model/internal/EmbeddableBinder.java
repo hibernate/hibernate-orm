@@ -367,7 +367,7 @@ public class EmbeddableBinder {
 		if ( baseClassElements != null
 				//useful to avoid breaking pre JPA 2 mappings
 				&& !hasAnnotationsOnIdClass( annotatedClass ) ) {
-			processIdClassElememts( propertyHolder, baseInferredData, classElements, baseClassElements );
+			processIdClassElements( propertyHolder, baseInferredData, classElements, baseClassElements );
 		}
 		for ( PropertyData propertyAnnotatedElement : classElements ) {
 			processElementAnnotations(
@@ -423,7 +423,7 @@ public class EmbeddableBinder {
 
 		return context.getBootstrapContext()
 				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class )
+				.requireService( ManagedBeanRegistry.class )
 				.getBean( compositeUserTypeClass )
 				.getBeanInstance();
 	}
@@ -441,8 +441,7 @@ public class EmbeddableBinder {
 		addElementsOfClass( classElements, container, context);
 		//add elements of the embeddable's mapped superclasses
 		XClass superClass = annotatedClass.getSuperclass();
-		while ( superClass != null && ( superClass.isAnnotationPresent( MappedSuperclass.class )
-				|| ( isIdClass && !Object.class.getName().equals( superClass.getName() ) ) ) ) {
+		while ( isValidSuperclass( superClass, isIdClass ) ) {
 			//FIXME: proper support of type variables incl var resolved at upper levels
 			final PropertyContainer superContainer =
 					new PropertyContainer( superClass, annotatedClass, propertyAccessor );
@@ -450,6 +449,17 @@ public class EmbeddableBinder {
 			superClass = superClass.getSuperclass();
 		}
 		return classElements;
+	}
+
+	private static boolean isValidSuperclass(XClass superClass, boolean isIdClass) {
+		if ( superClass == null ) {
+			return false;
+		}
+
+		return superClass.isAnnotationPresent( MappedSuperclass.class )
+				|| ( isIdClass
+				&& !superClass.getName().equals( Object.class.getName() )
+				&& !superClass.getName().equals( "java.lang.Record" ) );
 	}
 
 	private static List<PropertyData> collectBaseClassElements(
@@ -555,7 +565,7 @@ public class EmbeddableBinder {
 		}
 	}
 
-	private static void processIdClassElememts(
+	private static void processIdClassElements(
 			PropertyHolder propertyHolder,
 			PropertyData baseInferredData,
 			List<PropertyData> classElements,

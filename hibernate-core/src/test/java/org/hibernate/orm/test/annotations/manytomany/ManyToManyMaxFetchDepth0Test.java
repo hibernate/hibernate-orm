@@ -18,7 +18,7 @@ import org.hibernate.cfg.Environment;
 public class ManyToManyMaxFetchDepth0Test extends ManyToManyTest {
 	@Override
 	protected void configure(Configuration cfg) {
-		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "0" );
+		cfg.setProperty( Environment.MAX_FETCH_DEPTH, 0 );
 		super.configure( cfg );
 	}
 }

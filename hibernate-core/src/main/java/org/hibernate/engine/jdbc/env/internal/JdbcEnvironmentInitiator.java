@@ -11,9 +11,11 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -54,12 +56,18 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSI
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
+import static org.hibernate.cfg.JdbcSettings.ALLOW_METADATA_ON_BOOT;
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
+import static org.hibernate.cfg.JdbcSettings.DIALECT;
+import static org.hibernate.cfg.JdbcSettings.DIALECT_DB_VERSION;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_DB_VERSION;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBooleanWrapper;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
@@ -73,6 +81,13 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	public static final JdbcEnvironmentInitiator INSTANCE = new JdbcEnvironmentInitiator();
 
+	/**
+	 * @deprecated This setting was never a documented feature of Hibernate,
+	 *			 is not supported, and will be removed.
+	 */
+	@Deprecated(since="6", forRemoval = true)
+	private static final String USE_JDBC_METADATA_DEFAULTS = "hibernate.temp.use_jdbc_metadata_defaults";
+
 	@Override
 	public Class<JdbcEnvironment> getServiceInitiated() {
 		return JdbcEnvironment.class;
@@ -80,7 +95,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	@Override
 	public JdbcEnvironment initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		final DialectFactory dialectFactory = registry.getService( DialectFactory.class );
+		final DialectFactory dialectFactory = registry.requireService( DialectFactory.class );
 
 		final String explicitDatabaseName = getExplicitDatabaseName( configurationValues );
 		Integer explicitDatabaseMajorVersion = getExplicitDatabaseMajorVersion( configurationValues );
@@ -103,7 +118,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			}
 		}
 
-		if ( useJdbcMetadata( configurationValues ) ) {
+		if ( allowJdbcMetadataAccess( configurationValues ) ) {
 			return getJdbcEnvironmentUsingJdbcMetadata(
 					configurationValues,
 					registry,
@@ -138,10 +153,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory) {
-		return new JdbcEnvironmentImpl(
-				registry,
-				dialectFactory.buildDialect( configurationValues, null )
-		);
+		final Dialect dialect = dialectFactory.buildDialect( configurationValues, null );
+		return new JdbcEnvironmentImpl( registry, dialect );
 	}
 
 	private static JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
@@ -158,31 +171,39 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				explicitDatabaseVersion != null ? explicitDatabaseVersion : "0",
 				explicitDatabaseMajorVersion != null ? explicitDatabaseMajorVersion : 0,
 				explicitDatabaseMinorVersion != null ? explicitDatabaseMinorVersion : 0,
+				0,
 				null,
 				0,
 				0,
 				null,
 				configurationValues
 		);
-		return new JdbcEnvironmentImpl(
-				registry,
-				dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo )
-		);
+		final Dialect dialect = dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo );
+		return new JdbcEnvironmentImpl( registry, dialect );
 	}
 
-	// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
-	// The need for it is intended to be alleviated with future development, thus it is
-	// not defined as an Environment constant...
-	//
-	// it is used to control whether we should consult the JDBC metadata to determine
-	// certain default values; it is useful to *not* do this when the database
-	// may not be available (mainly in tools usage).
-	private static boolean useJdbcMetadata(Map<String, Object> configurationValues) {
-		return getBoolean(
-				"hibernate.temp.use_jdbc_metadata_defaults",
-				configurationValues,
-				true
-		);
+	/**
+	 * Determine whether we can access JDBC {@linkplain DatabaseMetaData metadata} based on
+	 * the {@value JdbcSettings#ALLOW_METADATA_ON_BOOT} setting. The default is to allow access.
+	 *
+	 * @implNote Currently also looks for the deprecated {@value JdbcEnvironmentInitiator#USE_JDBC_METADATA_DEFAULTS} setting as a fallback.
+	 *
+	 * @see JdbcSettings#ALLOW_METADATA_ON_BOOT
+	 */
+	private static boolean allowJdbcMetadataAccess(Map<String, Object> configurationValues) {
+		final Boolean allow = getBooleanWrapper( ALLOW_METADATA_ON_BOOT, configurationValues, null );
+		if ( allow != null ) {
+			return allow;
+		}
+
+		final Boolean use = getBooleanWrapper( USE_JDBC_METADATA_DEFAULTS, configurationValues, null );
+		if ( use != null ) {
+			DEPRECATION_LOGGER.deprecatedSetting( USE_JDBC_METADATA_DEFAULTS, ALLOW_METADATA_ON_BOOT );
+			return use;
+		}
+
+		// allow by default
+		return true;
 	}
 
 	private static String getExplicitDatabaseVersion(
@@ -190,14 +211,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			Integer configuredDatabaseMajorVersion,
 			Integer configuredDatabaseMinorVersion) {
 		return coalesceSuppliedValues(
-				() -> (String) configurationValues.get(AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION),
+				() -> (String) configurationValues.get( JAKARTA_HBM2DDL_DB_VERSION ),
 				() -> {
-					final Object value = configurationValues.get(AvailableSettings.DIALECT_DB_VERSION);
+					final Object value = configurationValues.get( DIALECT_DB_VERSION );
 					if ( value != null ) {
-						DEPRECATION_LOGGER.deprecatedSetting(
-								AvailableSettings.DIALECT_DB_VERSION,
-								AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION
-						);
+						DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_VERSION, JAKARTA_HBM2DDL_DB_VERSION );
 					}
 					return (String) value;
 				}
@@ -206,7 +224,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					if ( configuredDatabaseMajorVersion != null ) {
 						return configuredDatabaseMinorVersion == null
 								? configuredDatabaseMajorVersion.toString()
-								: (configuredDatabaseMajorVersion + "." + configuredDatabaseMinorVersion);
+								: configuredDatabaseMajorVersion + "." + configuredDatabaseMinorVersion;
 					}
 					return null;
 				}
@@ -266,7 +284,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				jdbcServices,
 				registry
 		);
-		temporaryJdbcSessionOwner.transactionCoordinator = registry.getService( TransactionCoordinatorBuilder.class )
+		temporaryJdbcSessionOwner.transactionCoordinator = registry.requireService( TransactionCoordinatorBuilder.class )
 				.buildTransactionCoordinator(
 						new JdbcCoordinatorImpl( null, temporaryJdbcSessionOwner, jdbcServices ),
 						() -> false
@@ -276,57 +294,38 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return temporaryJdbcSessionOwner.transactionCoordinator.createIsolationDelegate().delegateWork(
 					new AbstractReturningWork<>() {
 						@Override
-						public JdbcEnvironmentImpl execute(Connection connection) throws SQLException {
+						public JdbcEnvironmentImpl execute(Connection connection) {
 							try {
-								final DatabaseMetaData dbmd = connection.getMetaData();
-								logDatabaseAndDriver( dbmd );
-
-								final String databaseName;
-								final String databaseVersion;
-								final int databaseMajorVersion;
-								final int databaseMinorVersion;
-
-								if ( explicitDatabaseName == null ) {
-									databaseName = dbmd.getDatabaseProductName();
-								}
-								else {
-									databaseName = explicitDatabaseName;
-								}
-								if ( explicitDatabaseVersion == null ) {
-									databaseVersion = dbmd.getDatabaseProductVersion();
-								}
-								else {
-									databaseVersion = explicitDatabaseVersion;
-								}
-								if ( explicitDatabaseMajorVersion == null ) {
-									databaseMajorVersion = dbmd.getDatabaseMajorVersion();
-								}
-								else {
-									databaseMajorVersion = explicitDatabaseMajorVersion;
-								}
-								if ( explicitDatabaseMinorVersion == null ) {
-									databaseMinorVersion = dbmd.getDatabaseMinorVersion();
-								}
-								else {
-									databaseMinorVersion = explicitDatabaseMinorVersion;
-								}
+								final DatabaseMetaData metadata = connection.getMetaData();
+								logDatabaseAndDriver( metadata );
 
 								final DialectResolutionInfo dialectResolutionInfo = new DialectResolutionInfoImpl(
-										dbmd,
-										databaseName,
-										databaseVersion,
-										databaseMajorVersion,
-										databaseMinorVersion,
-										dbmd.getDriverName(),
-										dbmd.getDriverMajorVersion(),
-										dbmd.getDriverMinorVersion(),
-										dbmd.getSQLKeywords(),
+										metadata,
+										explicitDatabaseName == null
+												? metadata.getDatabaseProductName()
+												: explicitDatabaseName,
+										explicitDatabaseVersion == null
+												? metadata.getDatabaseProductVersion()
+												: explicitDatabaseVersion,
+										explicitDatabaseMajorVersion == null
+												? metadata.getDatabaseMajorVersion()
+												: explicitDatabaseMajorVersion,
+										explicitDatabaseMinorVersion == null
+												? metadata.getDatabaseMinorVersion()
+												: explicitDatabaseMinorVersion,
+										explicitDatabaseMinorVersion == null
+												? databaseMicroVersion( metadata )
+												: 0,
+										metadata.getDriverName(),
+										metadata.getDriverMajorVersion(),
+										metadata.getDriverMinorVersion(),
+										metadata.getSQLKeywords(),
 										configurationValues
 								);
 								return new JdbcEnvironmentImpl(
 										registry,
 										dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo ),
-										dbmd,
+										metadata,
 										jdbcConnectionAccess
 								);
 							}
@@ -336,6 +335,25 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 							// accessing the JDBC metadata failed
 							return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+						}
+
+						private int databaseMicroVersion(DatabaseMetaData metadata) throws SQLException {
+							final String version = metadata.getDatabaseProductVersion();
+							final String prefix =
+									metadata.getDatabaseMajorVersion() + "." + metadata.getDatabaseMinorVersion() + ".";
+							if ( version.startsWith(prefix) ) {
+								try {
+									final String substring = version.substring( prefix.length() );
+									final String micro = new StringTokenizer(substring," .,-:;/()[]").nextToken();
+									return Integer.parseInt(micro);
+								}
+								catch (NumberFormatException nfe) {
+									return 0;
+								}
+							}
+							else {
+								return 0;
+							}
 						}
 					},
 					false
@@ -352,10 +370,10 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
 					"Database ->\n"
-							+ "       name : %s\n"
-							+ "    version : %s\n"
-							+ "      major : %s\n"
-							+ "      minor : %s",
+							+ "	   name : %s\n"
+							+ "	version : %s\n"
+							+ "	  major : %s\n"
+							+ "	  minor : %s",
 					dbmd.getDatabaseProductName(),
 					dbmd.getDatabaseProductVersion(),
 					dbmd.getDatabaseMajorVersion(),
@@ -363,10 +381,10 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			);
 			log.debugf(
 					"Driver ->\n"
-							+ "       name : %s\n"
-							+ "    version : %s\n"
-							+ "      major : %s\n"
-							+ "      minor : %s",
+							+ "	   name : %s\n"
+							+ "	version : %s\n"
+							+ "	  major : %s\n"
+							+ "	  minor : %s",
 					dbmd.getDriverName(),
 					dbmd.getDriverVersion(),
 					dbmd.getDriverMajorVersion(),
@@ -383,7 +401,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			Integer explicitDatabaseMinorVersion,
 			String explicitDatabaseVersion) {
 		return ( isNotEmpty(explicitDatabaseVersion) || explicitDatabaseMajorVersion != null || explicitDatabaseMinorVersion != null )
-			&& ( isNotEmpty(explicitDatabaseName) || isNotNullAndNotEmpty( configurationValues.get(AvailableSettings.DIALECT) ) );
+			&& ( isNotEmpty(explicitDatabaseName) || isNotNullAndNotEmpty( configurationValues.get(DIALECT) ) );
 	}
 
 	private static boolean isNotNullAndNotEmpty(Object o) {
@@ -392,22 +410,22 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(ServiceRegistryImplementor registry) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
-			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
-			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
+			return new ConnectionProviderJdbcConnectionAccess( registry.requireService( ConnectionProvider.class ) );
 		}
 		else {
-			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
+			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider =
+					registry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
 		}
 	}
 
 	public static JdbcConnectionAccess buildBootstrapJdbcConnectionAccess(ServiceRegistryImplementor registry) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
-			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
-			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
+			return new ConnectionProviderJdbcConnectionAccess( registry.requireService( ConnectionProvider.class ) );
 		}
 		else {
-			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
+			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider =
+					registry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
 		}
 	}
@@ -472,6 +490,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final String databaseVersion;
 		private final int databaseMajorVersion;
 		private final int databaseMinorVersion;
+		private final int databaseMicroVersion;
 		private final String driverName;
 		private final int driverMajorVersion;
 		private final int driverMinorVersion;
@@ -483,7 +502,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				String databaseName,
 				String databaseVersion,
 				int databaseMajorVersion,
-				int databaseMinorVersion,
+				int databaseMinorVersion, 
+				int databaseMicroVersion,
 				String driverName,
 				int driverMajorVersion,
 				int driverMinorVersion,
@@ -494,6 +514,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			this.databaseVersion = databaseVersion;
 			this.databaseMajorVersion = databaseMajorVersion;
 			this.databaseMinorVersion = databaseMinorVersion;
+			this.databaseMicroVersion = databaseMicroVersion;
 			this.driverName = driverName;
 			this.driverMajorVersion = driverMajorVersion;
 			this.driverMinorVersion = driverMinorVersion;
@@ -523,6 +544,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public int getDatabaseMinorVersion() {
 			return databaseMinorVersion;
+		}
+
+		@Override
+		public int getDatabaseMicroVersion() {
+			return databaseMicroVersion;
 		}
 
 		@Override
@@ -580,26 +606,19 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			this.jdbcConnectionAccess = jdbcConnectionAccess;
 			this.jdbcServices = jdbcServices;
 			this.serviceRegistry = serviceRegistry;
-			final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-			this.jtaTrackByThread = configurationService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
-			this.preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, configurationService.getSettings() );
-			this.connectionProviderDisablesAutoCommit = getBoolean(
-					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
-					configurationService.getSettings(),
-					false
-			);
+			final ConfigurationService configuration = serviceRegistry.requireService( ConfigurationService.class );
+			this.jtaTrackByThread = configuration.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
+			this.preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, configuration.getSettings() );
+			this.connectionProviderDisablesAutoCommit =
+					getBoolean( CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, configuration.getSettings() );
 
-			final PhysicalConnectionHandlingMode specifiedHandlingMode = PhysicalConnectionHandlingMode.interpret(
-					configurationService.getSettings().get( CONNECTION_HANDLING )
-			);
+			final PhysicalConnectionHandlingMode specifiedHandlingMode =
+					PhysicalConnectionHandlingMode.interpret( configuration.getSettings().get( CONNECTION_HANDLING ) );
+			this.connectionHandlingMode = specifiedHandlingMode != null
+					? specifiedHandlingMode
+					: serviceRegistry.requireService(TransactionCoordinatorBuilder.class)
+							.getDefaultConnectionHandlingMode();
 
-			if ( specifiedHandlingMode != null ) {
-				this.connectionHandlingMode = specifiedHandlingMode;
-			}
-			else {
-				this.connectionHandlingMode = serviceRegistry.getService( TransactionCoordinatorBuilder.class )
-						.getDefaultConnectionHandlingMode();
-			}
 			this.jpaCompliance = new MutableJpaComplianceImpl( Collections.emptyMap(), false );
 			this.eventManager = new EmptyEventManager();
 		}
@@ -669,7 +688,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return null;
 		}
 
-		@Override
+		@Override @Deprecated
 		public int getFetchSize() {
 			return 0;
 		}
@@ -709,7 +728,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return null;
 		}
 
-		@Override
+		@Override @Deprecated
 		public JdbcObserver getObserver() {
 			return EMPTY_JDBC_OBSERVER;
 		}

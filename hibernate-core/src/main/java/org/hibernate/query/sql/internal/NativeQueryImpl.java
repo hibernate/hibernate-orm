@@ -42,6 +42,8 @@ import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Order;
 import org.hibernate.query.ParameterMetadata;
@@ -50,6 +52,7 @@ import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
@@ -58,7 +61,9 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderBasicStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityCalculated;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
@@ -71,6 +76,7 @@ import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -87,6 +93,7 @@ import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.spi.SingleResultConsumer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
@@ -365,7 +372,7 @@ public class NativeQueryImpl<R>
 						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
 
 						session.getFactory().getServiceRegistry()
-								.getService( NativeQueryInterpreter.class )
+								.requireService( NativeQueryInterpreter.class )
 								.recognizeParameters( sqlString, parameterRecognizer );
 
 						return new ParameterInterpretationImpl( parameterRecognizer );
@@ -621,6 +628,22 @@ public class NativeQueryImpl<R>
 		return resolveSelectQueryPlan().performList( this );
 	}
 
+	@Override
+	public long getResultCount() {
+		final DelegatingDomainQueryExecutionContext context = new DelegatingDomainQueryExecutionContext(this) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return QueryOptions.NONE;
+			}
+		};
+		return createCountQueryPlan().executeQuery( context, new SingleResultConsumer<>() );
+	}
+
+	@Override
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> page) {
+		throw new UnsupportedOperationException("native queries do not support key-based pagination");
+	}
+
 	protected SelectQueryPlan<R> resolveSelectQueryPlan() {
 		if ( isCacheableQuery() ) {
 			final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
@@ -647,12 +670,48 @@ public class NativeQueryImpl<R>
 
 			@Override
 			public List<ParameterOccurrence> getQueryParameterOccurrences() {
-				return NativeQueryImpl.this.parameterOccurrences;
+				return parameterOccurrences;
 			}
 
 			@Override
 			public ResultSetMapping getResultSetMapping() {
 				return resultSetMapping;
+			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return querySpaces;
+			}
+		};
+
+		return getSessionFactory().getQueryEngine().getNativeQueryInterpreter()
+				.createQueryPlan( queryDefinition, getSessionFactory() );
+	}
+
+	private NativeSelectQueryPlan<Long> createCountQueryPlan() {
+		final BasicType<Long> longType = getSessionFactory().getTypeConfiguration().getBasicTypeForJavaType(Long.class);
+		final String sqlString = expandParameterLists();
+		final NativeSelectQueryDefinition<Long> queryDefinition = new NativeSelectQueryDefinition<>() {
+			@Override
+			public String getSqlString() {
+				return "select count(*) from (" + sqlString + ") a_";
+			}
+
+			@Override
+			public boolean isCallable() {
+				return false;
+			}
+
+			@Override
+			public List<ParameterOccurrence> getQueryParameterOccurrences() {
+				return parameterOccurrences;
+			}
+
+			@Override
+			public ResultSetMapping getResultSetMapping() {
+				final ResultSetMappingImpl mapping = new ResultSetMappingImpl( "", true );
+				mapping.addResultBuilder( new DynamicResultBuilderBasicStandard( 1, longType ) );
+				return mapping;
 			}
 
 			@Override

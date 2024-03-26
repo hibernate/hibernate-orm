@@ -119,7 +119,7 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
+		switch ( javaType.getTypeName() ) {
 			case "char":
 			case "char[]":
 			case "java.lang.Character":

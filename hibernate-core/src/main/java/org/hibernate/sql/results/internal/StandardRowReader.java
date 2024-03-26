@@ -9,9 +9,6 @@ package org.hibernate.sql.results.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
@@ -21,6 +18,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -33,6 +32,8 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private final Class<T> domainResultJavaType;
 
 	private final int assemblerCount;
+
+	private static final Logger LOGGER = LoadingLogger.LOGGER;
 
 	public StandardRowReader(
 			List<DomainResultAssembler<?>> resultAssemblers,
@@ -82,14 +83,17 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		LoadingLogger.LOGGER.trace( "StandardRowReader#readRow" );
+		LOGGER.trace( "StandardRowReader#readRow" );
 		coordinateInitializers( rowProcessingState );
 
 		final Object[] resultRow = new Object[ assemblerCount ];
+		final boolean debugEnabled = LOGGER.isDebugEnabled();
 
 		for ( int i = 0; i < assemblerCount; i++ ) {
 			final DomainResultAssembler assembler = resultAssemblers.get( i );
-			LoadingLogger.LOGGER.debugf( "Calling top-level assembler (%s / %s) : %s", i, assemblerCount, assembler );
+			if ( debugEnabled ) {
+				LOGGER.debugf( "Calling top-level assembler (%s / %s) : %s", i, assemblerCount, assembler );
+			}
 			resultRow[i] = assembler.assemble( rowProcessingState, options );
 		}
 
@@ -99,7 +103,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	private void afterRow(RowProcessingState rowProcessingState) {
-		LoadingLogger.LOGGER.trace( "StandardRowReader#afterRow" );
+		LOGGER.trace( "StandardRowReader#afterRow" );
 		initializers.finishUpRow( rowProcessingState );
 	}
 
@@ -114,18 +118,4 @@ public class StandardRowReader<T> implements RowReader<T> {
 		initializers.endLoading( processingState.getExecutionContext() );
 	}
 
-	@Override
-	public RowReaderMemento toMemento(SessionFactoryImplementor factory) {
-		return new RowReaderMemento() {
-			@Override
-			public Class<?>[] getResultClasses() {
-				return ArrayHelper.EMPTY_CLASS_ARRAY;
-			}
-
-			@Override
-			public String[] getResultMappingNames() {
-				return ArrayHelper.EMPTY_STRING_ARRAY;
-			}
-		};
-	}
 }

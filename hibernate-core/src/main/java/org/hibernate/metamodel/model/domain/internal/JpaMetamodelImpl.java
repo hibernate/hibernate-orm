@@ -408,7 +408,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private <X> Class<X> resolveRequestedClass(String entityName) {
 		try {
-			return getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityName );
+			return getServiceRegistry().requireService( ClassLoaderService.class ).classForName( entityName );
 		}
 		catch (ClassLoadingException e) {
 			return null;

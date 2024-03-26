@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.binder.internal.BatchSizeBinder;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -19,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * entity or collection.
  * <p>
  * When batch fetching is enabled, Hibernate is able to fetch multiple
- * instances of an entity or collection in a single round-trip to the
+ * instances of an entity or collection in a single round trip to the
  * database. Instead of a SQL {@code select} with just one primary key
  * value in the {@code where} clause, the {@code where} clause contains
  * a list of primary keys inside a SQL {@code in} condition. The primary
@@ -54,6 +56,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
+@AttributeBinderType(binder = BatchSizeBinder.class)
+@TypeBinderType(binder = BatchSizeBinder.class)
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface BatchSize {

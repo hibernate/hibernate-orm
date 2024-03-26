@@ -295,7 +295,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			final ClassLoaderService classLoaderService = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
+					.requireService( ClassLoaderService.class );
 			try {
 				return classLoaderService.classForName( componentClassName );
 			}

@@ -53,7 +53,7 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 			customImplClass = (Class<? extends MutationExecutorService>) custom;
 		}
 		else {
-			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+			final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 			customImplClass = classLoaderService.classForName( custom.toString() );
 		}
 

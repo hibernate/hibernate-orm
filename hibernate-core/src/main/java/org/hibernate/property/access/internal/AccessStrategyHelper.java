@@ -19,7 +19,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInter
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.NullnessUtil;
 
 import jakarta.persistence.Access;

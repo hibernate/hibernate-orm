@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import jakarta.validation.constraints.*;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
@@ -43,11 +44,6 @@ import org.jboss.logging.Logger;
 
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.PropertyDescriptor;
@@ -106,8 +102,8 @@ class TypeSafeActivator {
 			return;
 		}
 
-		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService = activationContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ConfigurationService cfgService = activationContext.getServiceRegistry().requireService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = activationContext.getServiceRegistry().requireService( ClassLoaderService.class );
 
 		// de-activate not-null tracking at the core level when Bean Validation is present unless the user explicitly
 		// asks for it
@@ -122,7 +118,7 @@ class TypeSafeActivator {
 		);
 
 		final EventListenerRegistry listenerRegistry = activationContext.getServiceRegistry()
-				.getService( EventListenerRegistry.class );
+				.requireService( EventListenerRegistry.class );
 
 		listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
 
@@ -134,7 +130,7 @@ class TypeSafeActivator {
 	}
 
 	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext activationContext) {
-		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
+		final ConfigurationService cfgService = activationContext.getServiceRegistry().requireService( ConfigurationService.class );
 		if ( !cfgService.getSetting( BeanValidationIntegrator.APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true  ) ) {
 			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
 			return;
@@ -149,7 +145,7 @@ class TypeSafeActivator {
 				factory,
 				activationContext.getMetadata().getEntityBindings(),
 				cfgService.getSettings(),
-				activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect(),
+				activationContext.getServiceRegistry().requireService( JdbcServices.class ).getDialect(),
 				new ClassLoaderAccessImpl(
 						null,
 						activationContext.getServiceRegistry().getService( ClassLoaderService.class )
@@ -321,7 +317,10 @@ class TypeSafeActivator {
 
 	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
 		boolean hasNotNull = false;
-		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
+		// NotNull, NotEmpty, and NotBlank annotation add not-null on column
+		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType())
+				|| NotEmpty.class.equals( descriptor.getAnnotation().annotationType())
+				|| NotBlank.class.equals( descriptor.getAnnotation().annotationType())) {
 			// single table inheritance should not be forced to null due to shared state
 			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
 				//composite should not add not-null on all columns
@@ -473,7 +472,7 @@ class TypeSafeActivator {
 		}
 
 		// 2 - look in ConfigurationService
-		factory = resolveProvidedFactory( activationContext.getServiceRegistry().getService( ConfigurationService.class ) );
+		factory = resolveProvidedFactory( activationContext.getServiceRegistry().requireService( ConfigurationService.class ) );
 		if ( factory != null ) {
 			return factory;
 		}

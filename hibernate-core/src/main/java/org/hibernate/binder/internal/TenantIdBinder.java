@@ -6,6 +6,9 @@
  */
 package org.hibernate.binder.internal;
 
+import java.util.Collections;
+import java.util.function.Supplier;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.AttributeBinder;
@@ -54,7 +57,9 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 					new FilterDefinition(
 							FILTER_NAME,
 							"",
-							singletonMap( PARAMETER_NAME, tenantIdType )
+							singletonMap( PARAMETER_NAME, tenantIdType ),
+							Collections.emptyMap(),
+							true
 					)
 			);
 		}
@@ -66,9 +71,9 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			if ( !parameterJtd.getJavaTypeClass().equals( tenantIdTypeJtd.getJavaTypeClass() ) ) {
 				throw new MappingException(
 						"all @TenantId fields must have the same type: "
-								+ parameterJtd.getJavaType().getTypeName()
+								+ parameterJtd.getTypeName()
 								+ " differs from "
-								+ tenantIdTypeJtd.getJavaType().getTypeName()
+								+ tenantIdTypeJtd.getTypeName()
 				);
 			}
 		}

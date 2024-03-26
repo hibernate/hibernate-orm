@@ -48,7 +48,7 @@ public class MultipleSessionFactoriesProxyTest extends BaseCoreFunctionalTestCas
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.SESSION_FACTORY_NAME, "sf-name" ); // explicitly define the session factory name
-		cfg.setProperty( Environment.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // do not bind it to jndi
+		cfg.setProperty( Environment.SESSION_FACTORY_NAME_IS_JNDI, false ); // do not bind it to jndi
 	}
 
 	@Test

@@ -28,7 +28,6 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -383,7 +382,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		if ( conflictClause != null ) {
 			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
 	}
@@ -556,23 +555,6 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 			SqlTuple tuple,
 			ComparisonOperator operator) {
 		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
-	}
-
-	@Override
-	protected void renderPartitionItem(Expression expression) {
-		if ( expression instanceof Literal ) {
-			appendSql( "()" );
-		}
-		else if ( expression instanceof Summarization ) {
-			Summarization summarization = (Summarization) expression;
-			appendSql( summarization.getKind().sqlText() );
-			appendSql( OPEN_PARENTHESIS );
-			renderCommaSeparated( summarization.getGroupings() );
-			appendSql( CLOSE_PARENTHESIS );
-		}
-		else {
-			expression.accept( this );
-		}
 	}
 
 	@Override

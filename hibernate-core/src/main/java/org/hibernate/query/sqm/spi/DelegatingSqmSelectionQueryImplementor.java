@@ -25,6 +25,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.ParameterMetadata;
@@ -92,6 +94,16 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public List<R> getResultList() {
 		return getDelegate().getResultList();
+	}
+
+	@Override
+	public long getResultCount() {
+		return getDelegate().getResultCount();
+	}
+
+	@Override
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> page) {
+		return getDelegate().getKeyedResultList( page );
 	}
 
 	@Override

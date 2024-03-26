@@ -99,6 +99,8 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * or one of the following types:
  * <ul>
  * <li>{@link java.util.List java.util.List&lt;E&gt;},
+ * <li>{@link java.util.stream.Stream java.util.stream.Stream&lt;E&gt;},
+ * <li>{@link java.util.Optional java.util.Optional&lt;E&gt;},
  * <li>{@code io.smallrye.mutiny.Uni<E>}, when used with Hibernate Reactive,
  * <li>{@link org.hibernate.query.Query org.hibernate.query.Query&lt;E&gt;},
  * <li>{@link org.hibernate.query.SelectionQuery org.hibernate.query.SelectionQuery&lt;E&gt;},
@@ -147,6 +149,13 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * &#064;Find
  * List&lt;Book&gt; getBooksWithTitle(String title, List&lt;Order&lt;Book&gt;&gt; order);
  * </pre>
+ * <p>
+ * As a further exception, a method might support key-based pagination.
+ * Then it must have:
+ * <ul>
+ * <li>return type {@link org.hibernate.query.KeyedResultList}, and
+ * <li>a parameter of type {@link org.hibernate.query.KeyedPage}.
+ * </ul>
  *
  * @see HQL
  * @see SQL

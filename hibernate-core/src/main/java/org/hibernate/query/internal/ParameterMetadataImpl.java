@@ -255,7 +255,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 		final String errorMessage = String.format(
 				Locale.ROOT,
-				"Could not locate named parameter [%s], expecting one of [%s]",
+				"No parameter named ':%s' in query with named parameters [%s]",
 				name,
 				String.join( ", ", getNamedParameterNames() )
 		);
@@ -299,7 +299,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 		final String errorMessage = String.format(
 				Locale.ROOT,
-				"Could not locate ordinal parameter [%s], expecting one of [%s]",
+				"No parameter labelled '?%s' in query with ordinal parameters [%s]",
 				positionLabel,
 				StringHelper.join( ", ", getOrdinalParameterLabels() )
 		);

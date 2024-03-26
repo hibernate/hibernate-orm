@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.StringTokenizer;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -270,7 +271,7 @@ class IndexBinder {
 
 		@Override
 		public Identifier getUserProvidedIdentifier() {
-			return originalKeyName != null ? Identifier.toIdentifier( originalKeyName ) : null;
+			return originalKeyName != null ? toIdentifier( originalKeyName ) : null;
 		}
 	}
 
@@ -285,5 +286,4 @@ class IndexBinder {
 		}
 		return columnNames;
 	}
-
 }

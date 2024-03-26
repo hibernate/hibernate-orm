@@ -54,6 +54,7 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.hamcrest.Matchers;
 
@@ -64,6 +65,7 @@ import static org.hamcrest.Matchers.isOneOf;
 import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -90,6 +92,7 @@ public class FunctionTests {
 					entity.setTheTime( new Time( 20, 10, 8 ) );
 					entity.setTheDuration( Duration.of(3, ChronoUnit.SECONDS).plus( Duration.of(23,ChronoUnit.MILLIS) ) );
 					entity.setTheTimestamp( new Timestamp( 121, 4, 27, 13, 22, 50, 123456789 ) );
+					entity.setTheUuid( UUID.randomUUID() );
 					em.persist(entity);
 
 					EntityOfLists eol = new EntityOfLists(1,"");
@@ -1278,9 +1281,13 @@ public class FunctionTests {
 				session -> {
 					assertThat( session.createQuery("select function('lower','HIBERNATE')", String.class).getSingleResult(),
 							equalTo("hibernate") );
+					assertThat( session.createQuery("select function(lower as String,'HIBERNATE')", String.class).getSingleResult(),
+							equalTo("hibernate") );
 					assertThat( session.createQuery("select 1 where function('lower','HIBERNATE') = 'hibernate'", Integer.class).getSingleResult(),
 							equalTo(1) );
 					assertThat( session.createQuery("select function('current_user')", String.class).getSingleResult().toLowerCase(),
+							isOneOf("hibernate_orm_test", "hibernateormtest", "sa", "hibernateormtest@%", "hibernate_orm_test@%", "root@%") );
+					assertThat( session.createQuery("select function(current_user as String)", String.class).getSingleResult().toLowerCase(),
 							isOneOf("hibernate_orm_test", "hibernateormtest", "sa", "hibernateormtest@%", "hibernate_orm_test@%", "root@%") );
 					assertThat( session.createQuery("select lower(function('current_user'))", String.class).getSingleResult(),
 							isOneOf("hibernate_orm_test", "hibernateormtest", "sa", "hibernateormtest@%", "hibernate_orm_test@%", "root@%") );
@@ -2000,7 +2007,7 @@ public class FunctionTests {
 				session -> {
 					session.createQuery("select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e", Object[].class)
 							.list();
-					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e", Date.class)
+					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e", String.class)
 							.list();
 
 					assertThat(
@@ -2017,7 +2024,7 @@ public class FunctionTests {
 	public void testFormatTime(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e", Date.class)
+					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e", String.class)
 							.list();
 					assertThat(
 							session.createQuery("select format(theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics where id=123", String.class).getResultList().get(0),
@@ -2265,5 +2272,39 @@ public class FunctionTests {
 							.setParameter("word", "hello")
 							.getSingleResultOrNull());
         });
+	}
+
+	@Test
+	public void testColumnFunction(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			assertEquals("the string",
+					s.createSelectionQuery("select column(e.the_column) from EntityOfBasics e", String.class)
+							.getSingleResultOrNull());
+			assertEquals("the string",
+					s.createSelectionQuery("select column(e.'the_column') from EntityOfBasics e", String.class)
+							.getSingleResultOrNull());
+			s.createSelectionQuery("from EntityOfBasics e where column(e.the_column as String) = 'the string'", EntityOfBasics.class)
+					.getSingleResult();
+		});
+	}
+
+	@Test
+	public void testUUIDColumnFunction(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			byte[] bytes = s.createSelectionQuery("select column(e.theuuid as binary) from EntityOfBasics e", byte[].class)
+					.getSingleResultOrNull();
+//			UUID uuid = s.createSelectionQuery("select column(e.theuuid as UUID) from EntityOfBasics e", UUID.class)
+//					.getSingleResultOrNull();
+		});
+	}
+
+	@Test @RequiresDialect(PostgreSQLDialect.class)
+	public void testCtidColumnFunction(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			String string = s.createSelectionQuery("select column(e.ctid as String) from EntityOfBasics e", String.class)
+					.getSingleResultOrNull();
+			byte[] bytes = s.createSelectionQuery("select column(e.ctid as binary) from EntityOfBasics e", byte[].class)
+					.getSingleResultOrNull();
+		});
 	}
 }

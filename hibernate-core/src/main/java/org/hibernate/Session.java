@@ -44,7 +44,16 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * <p>
  * At any given time, an instance may be associated with at most one open session.
  * <p>
- * Any instance returned by {@link #get(Class, Object)} or by a query is persistent.
+ * Any instance returned by {@link #get(Class, Object)}, {@link #find(Class, Object)},
+ * or by a query is persistent. A persistent instance might hold references to other
+ * entity instances, and sometimes these references are <em>proxied</em> by an
+ * intermediate object. When an associated entity has not yet been fetched from the
+ * database, references to the unfetched entity are represented by uninitialized
+ * proxies. The state of an unfetched entity is automatically fetched from the
+ * database when a method of its proxy is invoked, if and only if the proxy is
+ * associated with an open session. Otherwise, {@link #getReference(Object)} may be
+ * used to trade a proxy belonging to a closed session for a new proxy associated
+ * with the current session.
  * <p>
  * A transient instance may be made persistent by calling {@link #persist(Object)}.
  * A persistent instance may be made detached by calling {@link #detach(Object)}.
@@ -969,6 +978,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <p>
 	 * This operation is very similar to {@link #find(Class, Object)}.
 	 * <p>
+	 * The object returned by {@code get()} or {@code find() } is either an unproxied instance
+	 * of the given entity class, of a fully-fetched proxy object.
+	 * <p>
 	 * This operation requests {@link LockMode#NONE}, that is, no lock, allowing the object
 	 * to be retrieved from the cache without the cost of database access. However, if it is
 	 * necessary to read the state from the database, the object will be returned with the
@@ -1086,6 +1098,15 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <p>
 	 * Note that {@link Hibernate#createDetachedProxy(SessionFactory, Class, Object)}
 	 * may be used to obtain a <em>detached</em> reference.
+	 * <p>
+	 * It's sometimes necessary to narrow a reference returned by {@code getReference()}
+	 * to a subtype of the given entity type. A direct Java typecast should never be used
+	 * in this situation. Instead, the method {@link Hibernate#unproxy(Object, Class)} is
+	 * the recommended way to narrow the type of a proxy object. Alternatively, a new
+	 * reference may be obtained by simply calling {@code getReference()} again, passing
+	 * the subtype. Either way, the narrowed reference will usually not be identical to
+	 * the original reference, when the references are compared using the {@code ==}
+	 * operator.
 	 *
 	 * @param entityType the entity type
 	 * @param id the identifier of a persistent instance that exists in the database

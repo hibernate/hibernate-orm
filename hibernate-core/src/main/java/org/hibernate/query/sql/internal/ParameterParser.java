@@ -7,9 +7,10 @@
 package org.hibernate.query.sql.internal;
 
 import java.util.BitSet;
-
+import java.util.Map;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -22,7 +23,7 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
  * @author Steve Ebersole
  */
 public class ParameterParser {
-	private static final String HQL_SEPARATORS = " \n\r\f\t,()=<>&|+-=/*'^![]#~\\";
+	private static final String HQL_SEPARATORS = " \n\r\f\t,;()=<>&|+-=/*'^![]#~\\";
 	private static final BitSet HQL_SEPARATORS_BITSET = new BitSet();
 
 	static {
@@ -128,24 +129,52 @@ public class ParameterParser {
 			}
 			// otherwise
 			else {
-				if ( c == ':' && indx < stringLength - 1 && sqlString.charAt( indx + 1 ) == ':') {
-					// colon character has been escaped
-					recognizer.other( c );
-					indx++;
-				}
-				else if ( c == ':' ) {
-					// named parameter
-					final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
-					final int chopLocation = right < 0 ? sqlString.length() : right;
-					final String param = sqlString.substring( indx + 1, chopLocation );
-					if ( param.isEmpty() ) {
-						throw new QueryParameterException(
-								"Space is not allowed after parameter prefix ':'",
-								sqlString
-						);
+				if ( c == ':' ) {
+					if ( indx < stringLength - 1 && Character.isJavaIdentifierStart( sqlString.charAt( indx + 1 ) ) ) {
+						// named parameter
+						final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
+						final int chopLocation = right < 0 ? sqlString.length() : right;
+						final String param = sqlString.substring( indx + 1, chopLocation );
+						if ( param.isEmpty() ) {
+							throw new QueryParameterException(
+									"Space is not allowed after parameter prefix ':'",
+									sqlString
+							);
+						}
+						recognizer.namedParameter( param, indx );
+						indx = chopLocation - 1;
 					}
-					recognizer.namedParameter( param, indx );
-					indx = chopLocation - 1;
+					else {
+						// For backwards compatibility, allow some known operators in the escaped form
+						if ( indx < stringLength - 3
+								&& sqlString.charAt( indx + 1 ) == ':'
+								&& sqlString.charAt( indx + 2 ) == ':'
+								&& sqlString.charAt( indx + 3 ) == ':' ) {
+							// Detect the :: operator, escaped as ::::
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::::", "::" );
+							recognizer.other( ':' );
+							recognizer.other( ':' );
+							indx += 3;
+						}
+						else if ( indx < stringLength - 2
+								&& sqlString.charAt( indx + 1 ) == ':'
+								&& sqlString.charAt( indx + 2 ) == '=' ) {
+							// Detect the := operator, escaped as ::=
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::=", ":=" );
+							recognizer.other( ':' );
+							recognizer.other( '=' );
+							indx += 2;
+						}
+						else {
+							recognizer.other( ':' );
+							// Consume all following colons as they are eagerly to not confuse named parameter detection
+							while ( indx < stringLength - 1
+									&& sqlString.charAt( indx + 1 ) == ':' ) {
+								indx++;
+								recognizer.other( ':' );
+							}
+						}
+					}
 				}
 				else if ( c == '?' ) {
 					// could be either a positional or JPA-style ordinal parameter

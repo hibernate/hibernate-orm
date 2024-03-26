@@ -6,9 +6,11 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ResultCheckStyle;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.jdbc.Expectation;
 
 /**
  * For persistence operations (INSERT, UPDATE, DELETE) what style of
@@ -20,7 +22,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *           new {@code org.hibernate.ResultCheck} enum.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use an {@link org.hibernate.jdbc.Expectation} class
  */
+@Deprecated(since = "6.5", forRemoval = true)
 public enum ExecuteUpdateResultCheckStyle {
 	/**
 	 * Do not perform checking.  Either user simply does not want checking, or is
@@ -28,7 +33,7 @@ public enum ExecuteUpdateResultCheckStyle {
 	 * checks are being performed explicitly and failures are handled through
 	 * propagation of {@link java.sql.SQLException}s.
 	 */
-	NONE( "none" ),
+	NONE,
 
 	/**
 	 * Perform row count checking.  Row counts are the int values returned by both
@@ -36,7 +41,7 @@ public enum ExecuteUpdateResultCheckStyle {
 	 * {@link java.sql.Statement#executeBatch()}.  These values are checked
 	 * against some expected count.
 	 */
-	COUNT( "rowcount" ),
+	COUNT,
 
 	/**
 	 * Essentially the same as {@link #COUNT} except that the row count actually
@@ -44,16 +49,19 @@ public enum ExecuteUpdateResultCheckStyle {
 	 * {@link java.sql.CallableStatement}.  This style explicitly prohibits
 	 * statement batching from being used...
 	 */
-	PARAM( "param" );
-
-	private final String name;
-
-	ExecuteUpdateResultCheckStyle(String name) {
-		this.name = name;
-	}
+	PARAM;
 
 	public String externalName() {
-		return name;
+		switch (this) {
+			case NONE:
+				return "none";
+			case COUNT:
+				return "rowcount";
+			case PARAM:
+				return "param";
+			default:
+				throw new AssertionFailure("Unrecognized ExecuteUpdateResultCheckStyle");
+		}
 	}
 
 	public static @Nullable ExecuteUpdateResultCheckStyle fromResultCheckStyle(ResultCheckStyle style) {
@@ -70,21 +78,37 @@ public enum ExecuteUpdateResultCheckStyle {
 	}
 
 	public static @Nullable ExecuteUpdateResultCheckStyle fromExternalName(String name) {
-		if ( name.equalsIgnoreCase( NONE.name ) ) {
-			return NONE;
+		for ( ExecuteUpdateResultCheckStyle style : values() ) {
+			if ( style.externalName().equalsIgnoreCase(name) ) {
+				return style;
+			}
 		}
-		else if ( name.equalsIgnoreCase( COUNT.name ) ) {
-			return COUNT;
-		}
-		else if ( name.equalsIgnoreCase( PARAM.name ) ) {
-			return PARAM;
-		}
-		else {
-			return null;
-		}
+		return null;
 	}
 
 	public static ExecuteUpdateResultCheckStyle determineDefault(@Nullable String customSql, boolean callable) {
 		return customSql != null && callable ? PARAM : COUNT;
+	}
+
+	public static @Nullable Class<? extends Expectation> expectationClass(@Nullable ExecuteUpdateResultCheckStyle style) {
+		if ( style == null ) {
+			return null;
+		}
+		else {
+			return style.expectationClass();
+		}
+	}
+
+	public Class<? extends Expectation> expectationClass() {
+		switch (this) {
+			case NONE:
+				return Expectation.None.class;
+			case COUNT:
+				return Expectation.RowCount.class;
+			case PARAM:
+				return Expectation.OutParameter.class;
+			default:
+				throw new AssertionFailure( "Unrecognized ExecuteUpdateResultCheckStyle");
+		}
 	}
 }

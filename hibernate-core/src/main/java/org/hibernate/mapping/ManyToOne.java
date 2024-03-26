@@ -60,9 +60,9 @@ public class ManyToOne extends ToOne {
 	}
 
 	@Override
-	public void createUniqueKey() {
+	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( !hasFormula() ) {
-			getTable().createUniqueKey( getConstraintColumns() );
+			getTable().createUniqueKey( getConstraintColumns(), context );
 		}
 	}
 

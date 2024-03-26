@@ -34,7 +34,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
 	@Test

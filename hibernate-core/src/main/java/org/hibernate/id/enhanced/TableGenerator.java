@@ -332,11 +332,11 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	@Override
 	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
-		storeLastUsedValue = serviceRegistry.getService( ConfigurationService.class )
+		storeLastUsedValue = serviceRegistry.requireService( ConfigurationService.class )
 				.getSetting( AvailableSettings.TABLE_GENERATOR_STORE_LAST_USED, StandardConverters.BOOLEAN, true );
 		identifierType = type;
 
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 
 		qualifiedTableName = determineGeneratorTableName( parameters, jdbcEnvironment, serviceRegistry );
 		segmentColumnName = determineSegmentColumnName( parameters, jdbcEnvironment );
@@ -398,7 +398,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			}
 		}
 
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 
 		final String namingStrategySetting = coalesceSuppliedValues(
 				() -> {
@@ -409,7 +409,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 					return localSetting;
 				},
 				() -> {
-					final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+					final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
 					if ( globalSetting != null ) {
 						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );

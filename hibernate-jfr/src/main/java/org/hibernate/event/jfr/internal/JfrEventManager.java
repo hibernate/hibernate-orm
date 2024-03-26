@@ -43,6 +43,7 @@ public class JfrEventManager implements EventManager {
 	private static final EventType flushEventType = EventType.getEventType( FlushEvent.class );
 	private static final EventType partialFlushEventType = EventType.getEventType( PartialFlushEvent.class );
 	private static final EventType dirtyCalculationEventType = EventType.getEventType( DirtyCalculationEvent.class );
+	private static final EventType prePartialFlushEventType = EventType.getEventType( PrePartialFlushEvent.class );
 
 	@Override
 	public SessionOpenEvent beginSessionOpenEvent() {
@@ -524,6 +525,34 @@ public class JfrEventManager implements EventManager {
 				dirtyCalculationEvent.entityStatus = entry.getStatus().name();
 				dirtyCalculationEvent.dirty = dirtyProperties != null;
 				dirtyCalculationEvent.commit();
+			}
+		}
+	}
+
+	@Override
+	public PrePartialFlushEvent beginPrePartialFlush() {
+		if ( prePartialFlushEventType.isEnabled() ) {
+			final PrePartialFlushEvent partialFlushEvent = new PrePartialFlushEvent();
+			partialFlushEvent.startedAt = System.nanoTime();
+			partialFlushEvent.begin();
+			return partialFlushEvent;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public void completePrePartialFlush(
+			HibernateMonitoringEvent event,
+			SharedSessionContractImplementor session) {
+		if ( event != null ) {
+			final PrePartialFlushEvent prePartialFlushEvent = (PrePartialFlushEvent) event;
+			prePartialFlushEvent.end();
+			if ( prePartialFlushEvent.shouldCommit() ) {
+				prePartialFlushEvent.executionTime = getExecutionTime( prePartialFlushEvent.startedAt );
+				prePartialFlushEvent.sessionIdentifier = getSessionIdentifier( session );
+				prePartialFlushEvent.commit();
 			}
 		}
 	}

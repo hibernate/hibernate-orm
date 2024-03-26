@@ -13,7 +13,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -37,7 +36,6 @@ import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindForeignKeyNameAndDefinition;
 import static org.hibernate.boot.model.internal.ToOneBinder.defineFetchingStrategy;
-import static org.hibernate.boot.model.internal.ToOneBinder.getReferenceEntityName;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.type.ForeignKeyDirection.FROM_PARENT;
 import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
@@ -53,19 +51,20 @@ public class OneToOneSecondPass implements SecondPass {
 	private final PropertyHolder propertyHolder;
 	private final NotFoundAction notFoundAction;
 	private final PropertyData inferredData;
-	private final XClass targetEntity;
 	private final OnDeleteAction onDeleteAction;
 	private final boolean optional;
 	private final String cascadeStrategy;
 	private final AnnotatedJoinColumns joinColumns;
+	private final String referencedEntityName;
+	private final boolean annotatedEntity;
 
 	public OneToOneSecondPass(
 			String mappedBy,
 			String ownerEntity,
-			@SuppressWarnings("unused") String ownerProperty,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			XClass targetEntity,
+			String referencedEntityName,
+			boolean annotatedEntity,
 			NotFoundAction notFoundAction,
 			OnDeleteAction onDeleteAction,
 			boolean optional,
@@ -75,10 +74,11 @@ public class OneToOneSecondPass implements SecondPass {
 		this.ownerEntity = ownerEntity;
 		this.mappedBy = mappedBy;
 		this.propertyHolder = propertyHolder;
+		this.referencedEntityName = referencedEntityName;
 		this.buildingContext = buildingContext;
 		this.notFoundAction = notFoundAction;
 		this.inferredData = inferredData;
-		this.targetEntity = targetEntity;
+		this.annotatedEntity = annotatedEntity;
 		this.onDeleteAction = onDeleteAction;
 		this.optional = optional;
 		this.cascadeStrategy = cascadeStrategy;
@@ -94,7 +94,6 @@ public class OneToOneSecondPass implements SecondPass {
 		);
 		final String propertyName = inferredData.getPropertyName();
 		value.setPropertyName( propertyName );
-		final String referencedEntityName = getReferenceEntityName( inferredData, targetEntity, buildingContext );
 		value.setReferencedEntityName( referencedEntityName );
 		XProperty property = inferredData.getProperty();
 		defineFetchingStrategy( value, property, inferredData, propertyHolder );
@@ -113,6 +112,7 @@ public class OneToOneSecondPass implements SecondPass {
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setBuildingContext( buildingContext );
+		binder.setHolder( propertyHolder );
 
 		final LazyGroup lazyGroupAnnotation = property.getAnnotation( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {
@@ -136,10 +136,14 @@ public class OneToOneSecondPass implements SecondPass {
 
 	private void bindUnowned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne, Property property) {
 		oneToOne.setMappedByProperty( mappedBy );
-		final PersistentClass targetEntity = persistentClasses.get( oneToOne.getReferencedEntityName() );
+		final String targetEntityName = oneToOne.getReferencedEntityName();
+		final PersistentClass targetEntity = persistentClasses.get( targetEntityName );
 		if ( targetEntity == null ) {
+			final String problem = annotatedEntity
+					? " which does not belong to the same persistence unit"
+					: " which is not an '@Entity' type";
 			throw new MappingException( "Association '" + getPath( propertyHolder, inferredData )
-					+ "' targets unknown entity type '" + oneToOne.getReferencedEntityName() + "'" );
+					+ "' targets the type '" + targetEntityName + "'" + problem );
 		}
 		final Property targetProperty = targetProperty( oneToOne, targetEntity );
 		if ( targetProperty.getValue() instanceof OneToOne ) {
@@ -151,7 +155,7 @@ public class OneToOneSecondPass implements SecondPass {
 		else {
 			throw new AnnotationException( "Association '" + getPath( propertyHolder, inferredData )
 					+ "' is 'mappedBy' a property named '" + mappedBy
-					+ "' of the target entity type '" + oneToOne.getReferencedEntityName()
+					+ "' of the target entity type '" + targetEntityName
 					+ "' which is not a '@OneToOne' or '@ManyToOne' association" );
 		}
 		checkMappedByType(
@@ -235,13 +239,18 @@ public class OneToOneSecondPass implements SecondPass {
 				+ "' which does not exist in the target entity type '" + oneToOne.getReferencedEntityName() + "'" );
 	}
 
-	private void bindOwned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne, String propertyName, Property property) {
+	private void bindOwned(
+			Map<String, PersistentClass> persistentClasses,
+			OneToOne oneToOne,
+			String propertyName,
+			Property property) {
 		final ToOneFkSecondPass secondPass = new ToOneFkSecondPass(
 				oneToOne,
 				joinColumns,
 				true,
+				annotatedEntity,
 				propertyHolder.getPersistentClass(),
-				qualify( propertyHolder.getPath(), propertyName),
+				qualify( propertyHolder.getPath(), propertyName ),
 				buildingContext
 		);
 		secondPass.doSecondPass(persistentClasses);

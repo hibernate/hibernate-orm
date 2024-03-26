@@ -389,10 +389,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			String propertyName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "@Immutable used on a non root entity: ignored for %s", id = 124)
-	void immutableAnnotationOnNonRoot(String className);
-
-	@LogMessage(level = WARN)
 	@Message(value = "Mapping metadata cache was not completely processed", id = 125)
 	void incompleteMappingMetadataCacheProcessing();
 
@@ -412,11 +408,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Array element type error\n%s", id = 132)
 	void invalidArrayElementType(String message);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Discriminator column has to be defined in the root entity, it will be ignored in subclass: %s",
-			id = 133)
-	void invalidDiscriminatorAnnotation(String className);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Application attempted to edit read only item: %s", id = 134)
 	void invalidEditOfReadOnlyItem(Object key);
@@ -426,23 +417,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void invalidJndiName(
 			String name,
 			@Cause JndiNameException e);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Inapropriate use of @OnDelete on entity, annotation ignored: %s", id = 136)
-	void invalidOnDeleteAnnotation(String entityName);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Root entity should not hold a PrimaryKeyJoinColum(s), will be ignored: %s", id = 137)
-	void invalidPrimaryKeyJoinColumnAnnotation(String className);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Mixing inheritance strategy in a entity hierarchy is not allowed, ignoring sub strategy in: %s",
-			id = 138)
-	void invalidSubStrategy(String className);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Illegal use of @Table in a subclass of a SINGLE_TABLE hierarchy: %s", id = 139)
-	void invalidTableAnnotation(String className);
 
 	@LogMessage(level = INFO)
 	@Message(value = "JACC contextID: %s", id = 140)
@@ -556,20 +530,16 @@ public interface CoreMessageLogger extends BasicLogger {
 	void optimisticLockFailures(long optimisticFailureCount);
 
 	@LogMessage(level = WARN)
-	@Message(value = "@OrderBy not allowed for an indexed collection, annotation ignored.", id = 189)
-	void orderByAnnotationIndexedCollection();
-
-	@LogMessage(level = WARN)
 	@Message(value = "Overriding %s is dangerous, this might break the EJB3 specification implementation", id = 193)
 	void overridingTransactionStrategyDangerous(String transactionStrategy);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Package not found or wo package-info.java: %s", id = 194)
+	@Message(value = "Package not found or no package-info.java: %s", id = 194)
 	void packageNotFound(String packageName);
 
-//	@LogMessage(level = WARN)
-//	@Message(value = "Parameter position [%s] occurred as both JPA and Hibernate positional parameter", id = 195)
-//	void parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter(Integer position);
+	@LogMessage(level = WARN)
+	@Message(value = "LinkageError while attempting to load package: %s", id = 195)
+	void linkageError(String packageName, @Cause LinkageError e);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Error parsing XML: (%s) %s", id = 196)
@@ -752,10 +722,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Sessions opened: %s", id = 242)
 	void sessionsOpened(long sessionOpenCount);
-
-	@LogMessage(level = WARN)
-	@Message(value = "@Sort not allowed for an indexed collection, annotation ignored.", id = 244)
-	void sortAnnotationIndexedCollection();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Manipulation query [%s] resulted in [%s] split queries", id = 245)
@@ -1628,16 +1594,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Named parameters are used for a callable statement, but database metadata indicates named parameters are not supported.", id = 456)
 	void unsupportedNamedParameters();
 
-	@LogMessage(level = WARN)
-	@Message(
-			id = 457,
-			value = "Joined inheritance hierarchy [%1$s] defined explicit @DiscriminatorColumn.  Legacy Hibernate behavior " +
-					"was to ignore the @DiscriminatorColumn.  However, as part of issue HHH-6911 we now apply the " +
-					"explicit @DiscriminatorColumn.  If you would prefer the legacy behavior, enable the `%2$s` setting " +
-					"(%2$s=true)"
-	)
-	void applyingExplicitDiscriminatorColumnForJoined(String className, String overrideSetting);
-
 	// 458-466 reserved for use by main branch (ORM 5.0.0)
 
 	@LogMessage(level = DEBUG)
@@ -1711,10 +1667,6 @@ public interface CoreMessageLogger extends BasicLogger {
 					"implementing equals/hashCode."
 	)
 	void unknownJavaTypeNoEqualsHashCode(Class javaType);
-
-	@LogMessage(level = WARN)
-	@Message(value = "@org.hibernate.annotations.Cache used on a non-root entity: ignored for [%s]. Please see the Hibernate documentation for proper usage.", id = 482)
-	void cacheOrCacheableAnnotationOnNonRoot(String className);
 
 	@LogMessage(level = WARN)
 	@Message(
@@ -1795,26 +1747,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void queuedOperationWhenDetachFromSessionOnRollback(String collectionInfoString);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Using @AttributeOverride or @AttributeOverrides in conjunction with entity inheritance is not supported: %s. The overriding definitions are ignored.", id = 499)
-	void unsupportedAttributeOverrideWithEntityInheritance(String entityName);
-
-	/* 6.0 message loggers
-	 @LogMessage(level = WARN)
-	 @Message(value = "The bytecode provider class [%s] could not be loaded", id = 500)
-	 void bytecodeProviderClassNotFound(String className);
-
-	 @LogMessage(level = WARN)
-	 @Message(value = "The bytecode provider class [%s] does not implement BytecodeProvider", id = 501)
-	 void bytecodeProviderInvalidClass(String className);
-	 */
-
-	@LogMessage(level = WARN)
 	@Message(value = "The [%s] property of the [%s] entity was modified, but it won't be updated because the property is immutable.", id = 502)
 	void ignoreImmutablePropertyModification(String propertyName, String entityName);
-
-	@LogMessage(level = WARN)
-	@Message(value = "A class should not be annotated with both @Inheritance and @MappedSuperclass. @Inheritance will be ignored for: %s.", id = 503)
-	void unsupportedMappedSuperclassWithEntityInheritance(String entityName);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'.", id = 504)

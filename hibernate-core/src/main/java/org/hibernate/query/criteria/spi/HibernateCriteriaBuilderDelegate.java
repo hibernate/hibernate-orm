@@ -58,7 +58,6 @@ import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
@@ -437,6 +436,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaExpression<Long> count(Expression<?> argument) {
 		return criteriaBuilder.count( argument );
+	}
+
+	@Override
+	public JpaExpression<Long> count() {
+		return criteriaBuilder.count();
 	}
 
 	@Override
@@ -1203,6 +1207,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase) {
+		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 	}
 
 	@Override
@@ -2435,7 +2444,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> arrayToString(
+	public JpaExpression<String> arrayToString(
 			Expression<? extends Object[]> arrayExpression,
 			Expression<String> separatorExpression) {
 		return criteriaBuilder.arrayToString( arrayExpression, separatorExpression );
@@ -2443,7 +2452,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
-	public <T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator) {
+	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator) {
 		return criteriaBuilder.arrayToString( arrayExpression, separator );
 	}
 

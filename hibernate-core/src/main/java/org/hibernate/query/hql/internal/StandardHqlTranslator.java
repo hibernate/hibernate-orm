@@ -72,7 +72,8 @@ public class StandardHqlTranslator implements HqlTranslator {
 					hqlParseTree,
 					expectedResultType,
 					sqmCreationOptions,
-					sqmCreationContext
+					sqmCreationContext,
+					query
 			);
 
 			// Log the SQM tree (if enabled)

@@ -19,18 +19,24 @@ public class SortSpecification implements SqlAstNode {
 	private final Expression sortExpression;
 	private final SortDirection sortOrder;
 	private final NullPrecedence nullPrecedence;
+	private final boolean ignoreCase;
 
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder) {
 		this( sortExpression, sortOrder, NullPrecedence.NONE );
 	}
 
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+		this(sortExpression, sortOrder, nullPrecedence, false);
+	}
+
+	public SortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase) {
 		assert sortExpression != null;
 		assert sortOrder != null;
 		assert nullPrecedence != null;
 		this.sortExpression = sortExpression;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
+		this.ignoreCase = ignoreCase;
 	}
 
 	public Expression getSortExpression() {
@@ -43,6 +49,10 @@ public class SortSpecification implements SqlAstNode {
 
 	public NullPrecedence getNullPrecedence() {
 		return nullPrecedence;
+	}
+
+	public boolean isIgnoreCase() {
+		return ignoreCase;
 	}
 
 	@Override

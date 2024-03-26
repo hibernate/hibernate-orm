@@ -47,7 +47,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
 	@SuppressWarnings({ "UnusedDeclaration" })

@@ -37,12 +37,7 @@ public interface QueryInterpretationCache {
 	int getNumberOfCachedHqlInterpretations();
 	int getNumberOfCachedQueryPlans();
 
-	@Deprecated(forRemoval = true)
-	HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, Function<String, SqmStatement<?>> creator);
-
-	default HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, HqlTranslator translator) {
-		return resolveHqlInterpretation( queryString, expectedResultType, s -> translator.translate( queryString, expectedResultType ) );
-	}
+	<R> HqlInterpretation<R> resolveHqlInterpretation(String queryString, Class<R> expectedResultType, HqlTranslator translator);
 
 	<R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator);
 

@@ -12,12 +12,15 @@ import org.hibernate.processor.ImportContextImpl;
 import org.hibernate.processor.model.ImportContext;
 import org.hibernate.processor.model.MetaAttribute;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.PackageElement;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Class used to collect meta information about an annotated package.
@@ -163,5 +166,10 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	@Override
 	public boolean isJakartaDataStyle() {
 		return false;
+	}
+
+	@Override
+	public List<AnnotationMirror> inheritedAnnotations() {
+		return emptyList();
 	}
 }

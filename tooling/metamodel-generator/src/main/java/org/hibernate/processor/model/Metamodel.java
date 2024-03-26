@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
 
 import java.util.List;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 
 /**
@@ -45,4 +46,6 @@ public interface Metamodel extends ImportContext {
 	String scope();
 
 	boolean isJakartaDataStyle();
+
+	List<AnnotationMirror> inheritedAnnotations();
 }

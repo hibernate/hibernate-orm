@@ -94,6 +94,7 @@ public final class ClassWriter {
 			if ( context.addSuppressWarningsAnnotation() ) {
 				pw.println( writeSuppressWarnings() );
 			}
+			entity.inheritedAnnotations().forEach(pw::println);
 
 			printClassDeclaration( entity, pw );
 

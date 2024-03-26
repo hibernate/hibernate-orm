@@ -14,10 +14,12 @@ import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
+import jakarta.transaction.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Transactional
 @Repository
 public interface Library {
 

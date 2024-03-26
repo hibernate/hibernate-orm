@@ -8,21 +8,26 @@ package org.hibernate.orm.test.intg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
@@ -45,17 +50,18 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @implNote hibernate-envers is already a full testing of contributing a {@code hbm.xml}
  * document; so we skip that here until if/when we transition it to use a better approach
  */
-@BootstrapServiceRegistry(
-		javaServices = @JavaService(
-				role = AdditionalMappingContributor.class,
-				impl = AdditionalMappingContributorTests.AdditionalMappingContributorImpl.class
-		)
-)
-@DomainModel( annotatedClasses = AdditionalMappingContributorTests.Entity1.class )
-@SessionFactory
 public class AdditionalMappingContributorTests {
 
 	@Test
+	@BootstrapServiceRegistry(
+			javaServices = @JavaService(
+					role = AdditionalMappingContributor.class,
+					impl = AdditionalMappingContributorTests.ClassContributorImpl.class
+			)
+	)
+	@DomainModel
+	@SessionFactory
+	@SuppressWarnings("JUnitMalformedDeclaration")
 	void verifyClassContribution(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
 		final PersistentClass binding = domainModelScope.getDomainModel().getEntityBinding( Entity2.class.getName() );
 		assertThat( binding ).isNotNull();
@@ -63,38 +69,22 @@ public class AdditionalMappingContributorTests {
 		assertThat( binding.getProperties() ).hasSize( 1 );
 
 		sessionFactoryScope.inTransaction( (session) -> {
+			//noinspection deprecation
 			final List<?> results = session.createSelectionQuery( "from Entity2" ).list();
 			assertThat( results ).hasSize( 0 );
 		} );
 	}
 
 	@Test
-	void verifyClassDetailsContributions(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
-		{
-			final PersistentClass binding = domainModelScope.getDomainModel().getEntityBinding( Entity4.class.getName() );
-			assertThat( binding ).isNotNull();
-			assertThat( binding.getIdentifierProperty() ).isNotNull();
-			assertThat( binding.getProperties() ).hasSize( 1 );
-		}
-
-		{
-			final PersistentClass binding = domainModelScope.getDomainModel().getEntityBinding( Entity5.class.getName() );
-			assertThat( binding ).isNotNull();
-			assertThat( binding.getIdentifierProperty() ).isNotNull();
-			assertThat( binding.getProperties() ).hasSize( 1 );
-		}
-
-		sessionFactoryScope.inTransaction( (session) -> {
-			final List<?> results4 = session.createSelectionQuery( "from Entity4" ).list();
-			assertThat( results4 ).hasSize( 0 );
-
-			final List<?> results5 = session.createSelectionQuery( "from ___Entity5___" ).list();
-			assertThat( results5 ).hasSize( 0 );
-
-		} );
-	}
-
-	@Test
+	@BootstrapServiceRegistry(
+			javaServices = @JavaService(
+					role = AdditionalMappingContributor.class,
+					impl = AdditionalMappingContributorTests.OrmXmlContributorImpl.class
+			)
+	)
+	@DomainModel
+	@SessionFactory
+	@SuppressWarnings("JUnitMalformedDeclaration")
 	void verifyOrmXmlContribution(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
 		final PersistentClass binding = domainModelScope.getDomainModel().getEntityBinding( Entity3.class.getName() );
 		assertThat( binding ).isNotNull();
@@ -102,8 +92,64 @@ public class AdditionalMappingContributorTests {
 		assertThat( binding.getProperties() ).hasSize( 1 );
 
 		sessionFactoryScope.inTransaction( (session) -> {
+			//noinspection deprecation
 			final List<?> results = session.createSelectionQuery( "from Entity3" ).list();
 			assertThat( results ).hasSize( 0 );
+		} );
+	}
+
+	@Test
+	@BootstrapServiceRegistry(
+			javaServices = @JavaService(
+					role = AdditionalMappingContributor.class,
+					impl = AdditionalMappingContributorTests.JdkClassDetailsContributorImpl.class
+			)
+	)
+	@DomainModel
+	@SessionFactory
+	@SuppressWarnings("JUnitMalformedDeclaration")
+	void verifyJdkClassDetailsContributions(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
+		final PersistentClass entity4Binding = domainModelScope.getDomainModel().getEntityBinding( Entity4.class.getName() );
+		assertThat( entity4Binding ).isNotNull();
+		assertThat( entity4Binding.getIdentifierProperty() ).isNotNull();
+		assertThat( entity4Binding.getProperties() ).hasSize( 1 );
+
+		final PersistentClass entity5Binding = domainModelScope.getDomainModel().getEntityBinding( Entity5.class.getName() );
+		assertThat( entity5Binding ).isNotNull();
+		assertThat( entity5Binding.getIdentifierProperty() ).isNotNull();
+		assertThat( entity5Binding.getProperties() ).hasSize( 1 );
+
+		sessionFactoryScope.inTransaction( (session) -> {
+			//noinspection deprecation
+			final List<?> results4 = session.createSelectionQuery( "from Entity4" ).list();
+			assertThat( results4 ).hasSize( 0 );
+
+			//noinspection deprecation
+			final List<?> results5 = session.createSelectionQuery( "from ___Entity5___" ).list();
+			assertThat( results5 ).hasSize( 0 );
+		} );
+	}
+
+	@Test
+	@BootstrapServiceRegistry(
+			javaServices = @JavaService(
+					role = AdditionalMappingContributor.class,
+					impl = AdditionalMappingContributorTests.DynamicClassDetailsContributorImpl.class
+			)
+	)
+	@DomainModel
+	@SessionFactory
+	@SuppressWarnings("JUnitMalformedDeclaration")
+	void verifyDynamicClassDetailsContributions(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
+		final PersistentClass entity6Binding = domainModelScope.getDomainModel().getEntityBinding( "Entity6" );
+		assertThat( entity6Binding ).isNotNull();
+		assertThat( entity6Binding.getIdentifierProperty() ).isNotNull();
+		assertThat( entity6Binding.getProperties() ).hasSize( 1 );
+
+		sessionFactoryScope.inTransaction( (session) -> {
+			//noinspection deprecation
+			final List<?> results6 = session.createSelectionQuery( "from Entity6" ).list();
+			assertThat( results6 ).hasSize( 0 );
 		} );
 	}
 
@@ -115,7 +161,8 @@ public class AdditionalMappingContributorTests {
 	    @Basic
 		private String name;
 
-		private Entity1() {
+		@SuppressWarnings("unused")
+		protected Entity1() {
 			// for use by Hibernate
 		}
 
@@ -146,7 +193,8 @@ public class AdditionalMappingContributorTests {
 	    @Basic
 		private String name;
 
-		private Entity2() {
+		@SuppressWarnings("unused")
+		protected Entity2() {
 			// for use by Hibernate
 		}
 
@@ -176,7 +224,8 @@ public class AdditionalMappingContributorTests {
 	    @Basic
 		private String name;
 
-		private Entity3() {
+		@SuppressWarnings("unused")
+		protected Entity3() {
 			// for use by Hibernate
 		}
 
@@ -198,6 +247,7 @@ public class AdditionalMappingContributorTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name="Entity4")
 	@Table(name="Entity4")
 	public static class Entity4 {
@@ -206,12 +256,13 @@ public class AdditionalMappingContributorTests {
 		private String name;
 	}
 
+	@SuppressWarnings("unused")
 	public static class Entity5 {
 		private Integer id;
 		private String name;
 	}
 
-	public static class AdditionalMappingContributorImpl implements AdditionalMappingContributor {
+	public static class ClassContributorImpl implements AdditionalMappingContributor {
 		@Override
 		public void contribute(
 				AdditionalMappingContributions contributions,
@@ -219,11 +270,44 @@ public class AdditionalMappingContributorTests {
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
 			contributions.contributeEntity( Entity2.class );
+		}
+	}
 
+	public static class OrmXmlContributorImpl implements AdditionalMappingContributor {
+		@Override
+		public void contribute(
+				AdditionalMappingContributions contributions,
+				InFlightMetadataCollector metadata,
+				ResourceStreamLocator resourceStreamLocator,
+				MetadataBuildingContext buildingContext) {
+			try ( final InputStream stream = resourceStreamLocator.locateResourceStream( "mappings/intg/contributed-mapping.xml" ) ) {
+				contributions.contributeBinding( stream );
+			}
+			catch (IOException e) {
+				throw new RuntimeException( e );
+			}
+		}
+	}
+
+	public static class JdkClassDetailsContributorImpl implements AdditionalMappingContributor {
+		@Override
+		public void contribute(
+				AdditionalMappingContributions contributions,
+				InFlightMetadataCollector metadata,
+				ResourceStreamLocator resourceStreamLocator,
+				MetadataBuildingContext buildingContext) {
 			final ClassDetailsRegistry classDetailsRegistry = buildingContext.getMetadataCollector()
 					.getSourceModelBuildingContext()
 					.getClassDetailsRegistry();
 
+			contributeEntity4Details( contributions, buildingContext, classDetailsRegistry );
+			contributeEntity5Details( contributions, buildingContext, classDetailsRegistry );
+		}
+
+		private static void contributeEntity4Details(
+				AdditionalMappingContributions contributions,
+				MetadataBuildingContext buildingContext,
+				ClassDetailsRegistry classDetailsRegistry) {
 			final ClassDetails entity4Details = classDetailsRegistry.resolveClassDetails(
 					Entity4.class.getName(),
 					(name, modelBuildingContext) -> {
@@ -233,7 +317,12 @@ public class AdditionalMappingContributorTests {
 					}
 			);
 			contributions.contributeManagedClass( entity4Details );
+		}
 
+		private static void contributeEntity5Details(
+				AdditionalMappingContributions contributions,
+				MetadataBuildingContext buildingContext,
+				ClassDetailsRegistry classDetailsRegistry) {
 			final ClassDetails entity5Details = classDetailsRegistry.resolveClassDetails(
 					Entity5.class.getName(),
 					(name, modelBuildingContext) -> {
@@ -258,13 +347,73 @@ public class AdditionalMappingContributorTests {
 					}
 			);
 			contributions.contributeManagedClass( entity5Details );
+		}
+	}
 
-			try ( final InputStream stream = resourceStreamLocator.locateResourceStream( "mappings/intg/contributed-mapping.xml" ) ) {
-				contributions.contributeBinding( stream );
-			}
-			catch (IOException e) {
-				throw new RuntimeException( e );
-			}
+	public static class DynamicClassDetailsContributorImpl implements AdditionalMappingContributor {
+		@Override
+		public void contribute(
+				AdditionalMappingContributions contributions,
+				InFlightMetadataCollector metadata,
+				ResourceStreamLocator resourceStreamLocator,
+				MetadataBuildingContext buildingContext) {
+			final ClassDetailsRegistry classDetailsRegistry = buildingContext.getMetadataCollector()
+					.getSourceModelBuildingContext()
+					.getClassDetailsRegistry();
+			contributeEntity6Details( contributions, buildingContext, classDetailsRegistry );
+		}
+
+		private void contributeEntity6Details(
+				AdditionalMappingContributions contributions,
+				MetadataBuildingContext buildingContext,
+				ClassDetailsRegistry classDetailsRegistry) {
+			final ClassDetails entity6Details = classDetailsRegistry.resolveClassDetails(
+					"Entity6",
+					(name, modelBuildingContext) -> {
+						assertThat( name ).isEqualTo( "Entity6" );
+						assertThat( modelBuildingContext ).isSameAs( buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+
+						final DynamicClassDetails classDetails = new DynamicClassDetails( "Entity6", modelBuildingContext );
+
+						final MutableAnnotationUsage<Entity> entityAnnotation = JpaAnnotations.ENTITY.createUsage(
+								classDetails,
+								modelBuildingContext
+						);
+						classDetails.addAnnotationUsage( entityAnnotation );
+
+						final DynamicFieldDetails idFieldDetails = new DynamicFieldDetails(
+								"id",
+								new ClassTypeDetailsImpl( classDetailsRegistry.resolveClassDetails( Integer.class.getName() ), TypeDetails.Kind.CLASS ),
+								classDetails,
+								dynamicFieldModifiers(),
+								modelBuildingContext
+						);
+						classDetails.addField( idFieldDetails );
+						idFieldDetails.addAnnotationUsage( JpaAnnotations.ID.createUsage( idFieldDetails, modelBuildingContext ) );
+
+						final DynamicFieldDetails nameFieldDetails = new DynamicFieldDetails(
+								"name",
+								new ClassTypeDetailsImpl(
+										classDetailsRegistry.resolveClassDetails( String.class.getName() ),
+										TypeDetails.Kind.CLASS
+								),
+								classDetails,
+								dynamicFieldModifiers(),
+								modelBuildingContext
+						);
+						classDetails.addField( nameFieldDetails );
+						nameFieldDetails.addAnnotationUsage( HibernateAnnotations.NATIONALIZED.createUsage( nameFieldDetails, modelBuildingContext ) );
+
+						return classDetails;
+					}
+			);
+			contributions.contributeManagedClass( entity6Details );
+		}
+
+		private static final int SYNTHETIC = 0x00001000;
+
+		private static int dynamicFieldModifiers() {
+			return ~Modifier.TRANSIENT & ~Modifier.ABSTRACT & ~Modifier.STATIC & ~SYNTHETIC;
 		}
 	}
 }

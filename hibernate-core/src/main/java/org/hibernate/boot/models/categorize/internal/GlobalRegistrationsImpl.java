@@ -70,6 +70,9 @@ import org.hibernate.boot.models.categorize.spi.SqlResultSetMappingRegistration;
 import org.hibernate.boot.models.categorize.spi.TableGeneratorRegistration;
 import org.hibernate.boot.models.categorize.spi.UserTypeRegistration;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableHints;
@@ -116,6 +119,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  */
 public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private final SourceModelBuildingContext sourceModelContext;
+	private final BootstrapContext bootstrapContext;
 
 	private List<JpaEventListener> jpaEventListeners;
 	private List<ConversionRegistration> converterRegistrations;
@@ -139,8 +143,9 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private Map<String, NamedNativeQueryRegistration> namedNativeQueryRegistrations;
 	private Map<String, NamedStoredProcedureQueryRegistration> namedStoredProcedureQueryRegistrations;
 
-	public GlobalRegistrationsImpl(SourceModelBuildingContext sourceModelContext) {
+	public GlobalRegistrationsImpl(SourceModelBuildingContext sourceModelContext, BootstrapContext bootstrapContext) {
 		this.sourceModelContext = sourceModelContext;
+		this.bootstrapContext = bootstrapContext;
 	}
 
 	@Override
@@ -696,11 +701,33 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	public void collectSequenceGenerator(SequenceGeneratorRegistration generatorRegistration) {
+		checkGeneratorName( generatorRegistration.name() );
+
 		if ( sequenceGeneratorRegistrations == null ) {
 			sequenceGeneratorRegistrations = new HashMap<>();
 		}
 
 		sequenceGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
+	}
+
+	private void checkGeneratorName(String name) {
+		checkGeneratorName( name, sequenceGeneratorRegistrations );
+		checkGeneratorName( name, tableGeneratorRegistrations );
+		checkGeneratorName( name, genericGeneratorRegistrations );
+	}
+
+	private void checkGeneratorName(String name, Map<String, ?> generatorMap) {
+		if ( generatorMap == null ) {
+			return;
+		}
+		if ( generatorMap.containsKey( name ) ) {
+			if ( bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
+				throw new IllegalArgumentException( "Duplicate generator name " + name + "; you will likely want to set the property " + AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
+			}
+			else {
+				CoreLogging.messageLogger( GlobalRegistrationsImpl.class ).duplicateGeneratorName( name );
+			}
+		}
 	}
 
 
@@ -736,6 +763,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	public void collectTableGenerator(TableGeneratorRegistration generatorRegistration) {
+		checkGeneratorName( generatorRegistration.name() );
 		if ( tableGeneratorRegistrations == null ) {
 			tableGeneratorRegistrations = new HashMap<>();
 		}
@@ -770,6 +798,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	public void collectGenericGenerator(GenericGeneratorRegistration generatorRegistration) {
+		checkGeneratorName( generatorRegistration.name() );
+
 		if ( genericGeneratorRegistrations == null ) {
 			genericGeneratorRegistrations = new HashMap<>();
 		}
@@ -952,17 +982,20 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				final MutableAnnotationUsage<QueryHint> cacheableHint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 				cacheableHint.setAttributeValue( "name", AvailableHints.HINT_CACHEABLE );
 				cacheableHint.setAttributeValue( "value", Boolean.TRUE.toString() );
+				hints.add( cacheableHint );
 
 				if ( jaxbNamedQuery.getCacheMode() != null ) {
 					final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 					hint.setAttributeValue( "name", AvailableHints.HINT_CACHE_MODE );
 					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheMode().name() );
+					hints.add( hint );
 				}
 
 				if ( isNotEmpty( jaxbNamedQuery.getCacheRegion() ) ) {
 					final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 					hint.setAttributeValue( "name", AvailableHints.HINT_CACHE_REGION );
 					hint.setAttributeValue( "value", jaxbNamedQuery.getCacheRegion() );
+					hints.add( hint );
 				}
 			}
 
@@ -970,24 +1003,28 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 				hint.setAttributeValue( "name", AvailableHints.HINT_COMMENT );
 				hint.setAttributeValue( "value", jaxbNamedQuery.getComment() );
+				hints.add( hint );
 			}
 
 			if ( jaxbNamedQuery.getFetchSize() != null ) {
 				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 				hint.setAttributeValue( "name", AvailableHints.HINT_FETCH_SIZE );
 				hint.setAttributeValue( "value", jaxbNamedQuery.getFetchSize().toString() );
+				hints.add( hint );
 			}
 
 			if ( jaxbNamedQuery.isReadOnly() == Boolean.TRUE ) {
 				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 				hint.setAttributeValue( "name", AvailableHints.HINT_READ_ONLY );
 				hint.setAttributeValue( "value", Boolean.TRUE.toString() );
+				hints.add( hint );
 			}
 
 			if ( jaxbNamedQuery.getFlushMode() != null ) {
 				final MutableAnnotationUsage<QueryHint> hint = makeAnnotation( JpaAnnotations.QUERY_HINT );
 				hint.setAttributeValue( "name", AvailableHints.HINT_FLUSH_MODE );
 				hint.setAttributeValue( "value", jaxbNamedQuery.getFlushMode().name() );
+				hints.add( hint );
 			}
 		}
 	}

@@ -8,6 +8,7 @@ package org.hibernate.processor.xml;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -46,6 +47,7 @@ import org.hibernate.processor.xml.jaxb.OneToOne;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.processor.util.StringUtil.determineFullyQualifiedClassName;
 import static org.hibernate.processor.util.TypeUtils.extractClosestRealTypeAsString;
 import static org.hibernate.processor.util.TypeUtils.findMappedSuperClass;
@@ -643,5 +645,10 @@ public class XmlMetaEntity implements Metamodel {
 	@Override
 	public boolean isJakartaDataStyle() {
 		return false;
+	}
+
+	@Override
+	public List<AnnotationMirror> inheritedAnnotations() {
+		return emptyList();
 	}
 }

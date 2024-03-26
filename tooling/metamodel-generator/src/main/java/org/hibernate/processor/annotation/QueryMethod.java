@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static org.hibernate.processor.util.Constants.QUERY;
@@ -28,6 +29,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	QueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName,
 			String queryString,
 			@Nullable
@@ -44,7 +46,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
-		super( annotationMetaEntity,
+		super( annotationMetaEntity, method,
 				methodName,
 				paramNames, paramTypes, returnTypeName,
 				sessionType, sessionName,

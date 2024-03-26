@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.processor.util.Constants;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 /**
@@ -22,6 +23,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 
 	CriteriaFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName, String entity,
 			@Nullable String containerType,
 			List<String> paramNames, List<String> paramTypes,
@@ -35,7 +37,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
-		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
+		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, multivalued, paramPatterns );
 		this.containerType = containerType;
 		this.paramNullability = paramNullability;

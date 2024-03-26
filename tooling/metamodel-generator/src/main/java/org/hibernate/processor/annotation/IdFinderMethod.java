@@ -89,7 +89,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 	}
 
 	private void findWithNoFetchProfiles(StringBuilder declaration) {
-		if ( isReactiveSession() ) {
+		if ( isReactiveSessionAccess() ) {
 			declaration
 					.append(".chain(")
 					.append(localSessionName())
@@ -101,7 +101,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class, ")
 				.append(paramName);
-		if ( isReactiveSession() ) {
+		if ( isReactiveSessionAccess() ) {
 			declaration
 					.append(')');
 		}

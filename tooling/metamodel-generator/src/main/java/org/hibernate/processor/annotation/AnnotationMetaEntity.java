@@ -2698,4 +2698,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						+ "' of inherited member '" + element.getEnclosingElement().getSimpleName() + "'"
 				: message + " for inherited member '" + element.getSimpleName() + "'";
 	}
+
+	@Override
+	public List<AnnotationMirror> inheritedAnnotations() {
+		if ( jakartaDataRepository ) {
+			return element.getAnnotationMirrors().stream()
+					.filter(annotationMirror -> hasAnnotation(annotationMirror.getAnnotationType().asElement(),
+							"jakarta.interceptor.InterceptorBinding"))
+					.collect(toList());
+		}
+		else {
+			return emptyList();
+		}
+	}
 }

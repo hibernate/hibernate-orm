@@ -8,6 +8,7 @@ package org.hibernate.processor.annotation;
 
 import org.hibernate.internal.util.StringHelper;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 import java.util.Locale;
 
@@ -24,6 +25,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 
 	AbstractFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName,
 			String entity,
 			boolean belongsToDao,
@@ -35,7 +37,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean convertToDataExceptions) {
-		super( annotationMetaEntity,
+		super( annotationMetaEntity, method,
 				methodName,
 				paramNames, paramTypes, entity,
 				sessionType, sessionName,

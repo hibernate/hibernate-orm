@@ -653,6 +653,7 @@ public class MetadataBuildingProcess {
 		private final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
 		private List<Class<?>> additionalEntityClasses;
+		private List<ClassDetails> additionalClassDetails;
 		private List<JaxbEntityMappingsImpl> additionalJaxbMappings;
 		private boolean extraHbmXml = false;
 
@@ -679,6 +680,17 @@ public class MetadataBuildingProcess {
 				additionalEntityClasses = new ArrayList<>();
 			}
 			additionalEntityClasses.add( entityType );
+		}
+
+		@Override
+		public void contributeManagedClass(ClassDetails classDetails) {
+			if ( additionalClassDetails == null ) {
+				additionalClassDetails = new ArrayList<>();
+			}
+			additionalClassDetails.add( classDetails );
+			metadataCollector.getSourceModelBuildingContext()
+					.getClassDetailsRegistry()
+					.addClassDetails( classDetails );
 		}
 
 		@Override
@@ -752,6 +764,7 @@ public class MetadataBuildingProcess {
 			if ( additionalEntityClasses != null || additionalJaxbMappings != null ) {
 				AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
 						additionalEntityClasses,
+						additionalClassDetails,
 						additionalJaxbMappings,
 						rootMetadataBuildingContext,
 						options

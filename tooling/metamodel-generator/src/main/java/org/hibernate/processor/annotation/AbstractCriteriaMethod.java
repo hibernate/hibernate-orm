@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -21,6 +22,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	public AbstractCriteriaMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName, String entity,
 			boolean belongsToDao,
 			String sessionType, String sessionName,
@@ -32,7 +34,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			boolean convertToDataExceptions,
 			List<Boolean> multivalued,
 			List<Boolean> paramPatterns) {
-		super(annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
+		super(annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, orderBys, addNonnullAnnotation, convertToDataExceptions);
 		this.multivalued = multivalued;
 		this.paramPatterns = paramPatterns;

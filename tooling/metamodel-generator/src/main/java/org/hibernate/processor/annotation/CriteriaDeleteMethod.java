@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -20,6 +21,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	CriteriaDeleteMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName, String entity, String returnType,
 			List<String> paramNames,
 			List<String> paramTypes,
@@ -31,7 +33,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 			String sessionName,
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
-		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, emptyList(),
+		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, emptyList(),
 				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, multivalued, paramPatterns );
 		this.paramNullability = paramNullability;
 		this.returnType = returnType;

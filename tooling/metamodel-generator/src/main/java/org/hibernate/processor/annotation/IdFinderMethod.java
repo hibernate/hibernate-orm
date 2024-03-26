@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -21,6 +22,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 
 	public IdFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName, String entity,
 			List<String> paramNames, List<String> paramTypes,
 			boolean belongsToDao,
@@ -29,7 +31,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			List<String> fetchProfiles,
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
-		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
+		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository );
 		int idParameter = idParameter(paramNames, paramTypes);
 		this.paramName = paramNames.get(idParameter);

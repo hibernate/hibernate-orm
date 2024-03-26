@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -19,6 +20,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 
 	public NaturalIdFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName, String entity,
 			List<String> paramNames, List<String> paramTypes,
 			List<Boolean> paramNullability,
@@ -28,7 +30,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			List<String> fetchProfiles,
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
-		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
+		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository );
 		this.paramNullability = paramNullability;
 	}

@@ -104,7 +104,16 @@ public final class ClassWriter {
 			for ( MetaAttribute metaMember : members ) {
 				if ( metaMember.hasTypedAttribute() ) {
 					metaMember.getAttributeDeclarationString().lines()
-							.forEach(line -> pw.println('\t' + line));
+							.forEach(line -> {
+								pw.println('\t' + line);
+								if ( line.trim().startsWith("@Override") ) {
+									metaMember.inheritedAnnotations()
+											.forEach(x -> {
+												pw.print('\t');
+												pw.println(x);
+											});
+								}
+							});
 				}
 			}
 			pw.println();

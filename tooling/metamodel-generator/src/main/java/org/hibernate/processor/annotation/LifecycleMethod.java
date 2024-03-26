@@ -6,6 +6,8 @@
  */
 package org.hibernate.processor.annotation;
 
+import javax.lang.model.element.ExecutableElement;
+
 import static org.hibernate.processor.util.Constants.UNI;
 
 public class LifecycleMethod extends AbstractAnnotatedMethod {
@@ -19,6 +21,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 
 	public LifecycleMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String entity,
 			String methodName,
 			String parameterName,
@@ -28,7 +31,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			boolean addNonnullAnnotation,
 			boolean iterateParameter,
 			boolean returnArgument) {
-		super(annotationMetaEntity, sessionName, sessionType);
+		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.entity = entity;
 		this.methodName = methodName;
 		this.parameterName = parameterName;

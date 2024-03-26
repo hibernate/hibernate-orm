@@ -9,6 +9,7 @@ package org.hibernate.processor.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,6 +52,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	AbstractQueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName,
 			List<String> paramNames, List<String> paramTypes,
 			@Nullable String returnTypeName,
@@ -60,7 +62,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
-		super(annotationMetaEntity, sessionName, sessionType);
+		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.methodName = methodName;
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;

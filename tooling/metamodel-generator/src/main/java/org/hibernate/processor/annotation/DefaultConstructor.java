@@ -11,13 +11,12 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
+import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingReactiveSession;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER_FACTORY;
 import static org.hibernate.processor.util.Constants.HIB_SESSION_FACTORY;
 import static org.hibernate.processor.util.Constants.MUTINY_SESSION;
 import static org.hibernate.processor.util.Constants.MUTINY_SESSION_FACTORY;
 import static org.hibernate.processor.util.Constants.MUTINY_STATELESS_SESSION;
-import static org.hibernate.processor.util.Constants.UNI_MUTINY_SESSION;
-import static org.hibernate.processor.util.Constants.UNI_MUTINY_STATELESS_SESSION;
 
 /**
  * Used by the container to instantiate a Jakarta Data repository.
@@ -51,10 +50,7 @@ public class DefaultConstructor implements MetaAttribute {
 	}
 
 	private boolean isReactive() {
-		return MUTINY_SESSION.equals(sessionTypeName)
-			|| MUTINY_STATELESS_SESSION.equals(sessionTypeName)
-			|| UNI_MUTINY_SESSION.equals(sessionTypeName)
-			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionTypeName);
+		return usingReactiveSession(sessionTypeName);
 	}
 
 	@Override

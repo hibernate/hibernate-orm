@@ -50,6 +50,8 @@ public class OneToOneAttributeProcessing {
 				xmlDocumentContext
 		);
 
+		XmlAnnotationHelper.applyJoinTable( jaxbOneToOne.getJoinTable(), memberDetails, xmlDocumentContext );
+
 		applyAttributeBasics( jaxbOneToOne, memberDetails, oneToOneAnn, accessType, xmlDocumentContext );
 		applyTarget( memberDetails, jaxbOneToOne, oneToOneAnn, xmlDocumentContext );
 		applyCascading( jaxbOneToOne.getCascade(), memberDetails, xmlDocumentContext );

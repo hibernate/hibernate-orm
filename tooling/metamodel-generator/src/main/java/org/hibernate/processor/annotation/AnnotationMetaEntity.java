@@ -2622,16 +2622,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				.matcher(hql).matches();
 	}
 
-	private boolean usingReactiveSession(String sessionType) {
+	static boolean usingReactiveSession(String sessionType) {
 		return MUTINY_SESSION.equals(sessionType)
 			|| MUTINY_STATELESS_SESSION.equals(sessionType)
 			|| UNI_MUTINY_SESSION.equals(sessionType)
 			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 
-	private boolean usingStatelessSession(String sessionType) {
+	static boolean usingStatelessSession(String sessionType) {
 		return HIB_STATELESS_SESSION.equals(sessionType)
 			|| MUTINY_STATELESS_SESSION.equals(sessionType)
+			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
+	}
+
+	static boolean usingReactiveSessionAccess(String sessionType) {
+		return UNI_MUTINY_SESSION.equals(sessionType)
 			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 }

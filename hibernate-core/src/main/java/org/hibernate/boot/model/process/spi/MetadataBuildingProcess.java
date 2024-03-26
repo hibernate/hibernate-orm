@@ -690,7 +690,7 @@ public class MetadataBuildingProcess {
 			additionalClassDetails.add( classDetails );
 			metadataCollector.getSourceModelBuildingContext()
 					.getClassDetailsRegistry()
-					.addClassDetails( classDetails );
+					.addClassDetails( classDetails.getName(), classDetails );
 		}
 
 		@Override
@@ -761,7 +761,7 @@ public class MetadataBuildingProcess {
 
 		public void complete() {
 			// annotations / orm.xml
-			if ( additionalEntityClasses != null || additionalJaxbMappings != null ) {
+			if ( additionalEntityClasses != null || additionalClassDetails != null || additionalJaxbMappings != null ) {
 				AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
 						additionalEntityClasses,
 						additionalClassDetails,

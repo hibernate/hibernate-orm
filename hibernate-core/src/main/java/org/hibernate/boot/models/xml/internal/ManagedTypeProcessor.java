@@ -526,10 +526,7 @@ public class ManagedTypeProcessor {
 
 		applyTenantId( classDetails, jaxbEntity, classAccessType, xmlDocumentContext );
 
-		final List<JaxbNamedEntityGraphImpl> namedEntityGraphs = jaxbEntity.getNamedEntityGraphs();
-		for ( JaxbNamedEntityGraphImpl namedEntityGraph : namedEntityGraphs ) {
-			XmlAnnotationHelper.applyNamedEntityGraph( namedEntityGraph, classDetails, xmlDocumentContext );
-		}
+		EntityGraphProcessing.applyEntityGraphs( jaxbEntity, classDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyDiscriminatorValue(
 				jaxbEntity.getDiscriminatorValue(),
@@ -548,7 +545,6 @@ public class ManagedTypeProcessor {
 				classDetails,
 				xmlDocumentContext
 		);
-		// todo : secondary-tables
 	}
 
 	private static void applyAccessAnnotation(

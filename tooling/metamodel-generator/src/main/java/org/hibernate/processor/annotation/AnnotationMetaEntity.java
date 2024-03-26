@@ -304,6 +304,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return repository;
 	}
 
+	boolean isJakartaDataRepository() {
+		return jakartaDataRepository;
+	}
+
 	@Override
 	String getSessionType() {
 		return sessionType;
@@ -1206,7 +1210,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				putMember(
 						methodName + '.' + entity,
 						new LifecycleMethod(
-								this,
+								this, method,
 								entity,
 								methodName,
 								parameter.getSimpleName().toString(),
@@ -1414,7 +1418,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		putMember( methodKey,
 				new CriteriaFinderMethod(
-						this,
+						this, method,
 						methodName,
 						returnType.toString(),
 						containerType,
@@ -1458,7 +1462,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			putMember( methodKey,
 					new CriteriaDeleteMethod(
-							this,
+							this, method,
 							methodName,
 							entity.getQualifiedName().toString(),
 							returnType.toString(),
@@ -1652,7 +1656,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				&& matchesNaturalKey( entity, fieldTypes ) ) {
 			putMember( methodKey,
 					new NaturalIdFinderMethod(
-							this,
+							this, method,
 							methodName,
 							returnType.toString(),
 							paramNames,
@@ -1671,7 +1675,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final List<Boolean> paramPatterns = parameterPatterns( method );
 			putMember( methodKey,
 					new CriteriaFinderMethod(
-							this,
+							this, method,
 							methodName,
 							returnType.toString(),
 							null,
@@ -1709,7 +1713,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				case ID:
 					putMember( methodKey,
 							new IdFinderMethod(
-									this,
+									this, method,
 									methodName,
 									returnType.toString(),
 									paramNames,
@@ -1726,7 +1730,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				case NATURAL_ID:
 					putMember( methodKey,
 							new NaturalIdFinderMethod(
-									this,
+									this, method,
 									methodName,
 									returnType.toString(),
 									paramNames,
@@ -1746,7 +1750,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					final List<Boolean> paramPatterns = parameterPatterns( method );
 					putMember( methodKey,
 							new CriteriaFinderMethod(
-									this,
+									this, method,
 									methodName,
 									returnType.toString(),
 									null,
@@ -2092,7 +2096,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 				final QueryMethod attribute =
 						new QueryMethod(
-								this,
+								this, method,
 								method.getSimpleName().toString(),
 								queryString,
 								returnType == null ? null : returnType.toString(),

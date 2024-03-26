@@ -203,7 +203,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 		this.uuid = UUID.randomUUID();
 
-		this.globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext );
+		this.globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext, bootstrapContext );
 		this.persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
 
 		for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {

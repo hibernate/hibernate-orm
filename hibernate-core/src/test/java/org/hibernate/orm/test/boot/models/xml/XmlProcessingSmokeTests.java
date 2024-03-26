@@ -23,6 +23,7 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.orm.test.boot.models.XmlHelper;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 
+import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.AccessType.FIELD;
@@ -126,7 +127,7 @@ public class XmlProcessingSmokeTests {
 
 		final DomainModelCategorizationCollector collector = new DomainModelCategorizationCollector(
 				false,
-				new GlobalRegistrationsImpl( buildingContext ),
+				new GlobalRegistrationsImpl( buildingContext, new BootstrapContextImpl() ),
 				null,
 				buildingContext
 		);

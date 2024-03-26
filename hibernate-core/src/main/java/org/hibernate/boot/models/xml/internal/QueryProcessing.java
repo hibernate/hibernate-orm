@@ -54,6 +54,8 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
+ * Processing of queries from XML
+ *
  * @author Steve Ebersole
  */
 public class QueryProcessing {

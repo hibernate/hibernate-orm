@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 import org.hibernate.Internal;
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
@@ -137,7 +136,7 @@ public class ManagedResourcesProcessor {
 		final boolean areIdGeneratorsGlobal = true;
 		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 		final AnnotationDescriptorRegistry descriptorRegistry = sourceModelBuildingContext.getAnnotationDescriptorRegistry();
-		final GlobalRegistrationsImpl globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext );
+		final GlobalRegistrationsImpl globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext, bootstrapContext );
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
 				globalRegistrations,

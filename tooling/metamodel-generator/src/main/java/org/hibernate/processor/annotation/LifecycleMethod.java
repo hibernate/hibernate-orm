@@ -6,22 +6,12 @@
  */
 package org.hibernate.processor.annotation;
 
-import org.hibernate.processor.model.MetaAttribute;
-import org.hibernate.processor.model.Metamodel;
-
-import static org.hibernate.processor.util.Constants.MUTINY_SESSION;
-import static org.hibernate.processor.util.Constants.MUTINY_STATELESS_SESSION;
 import static org.hibernate.processor.util.Constants.UNI;
-import static org.hibernate.processor.util.Constants.UNI_MUTINY_SESSION;
-import static org.hibernate.processor.util.Constants.UNI_MUTINY_STATELESS_SESSION;
 
-public class LifecycleMethod implements MetaAttribute {
-	private final AnnotationMetaEntity annotationMetaEntity;
+public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private final String entity;
 	private final String methodName;
 	private final String parameterName;
-	private final String sessionName;
-	private final String sessionType;
 	private final String operationName;
 	private final boolean addNonnullAnnotation;
 	private final boolean iterateParameter;
@@ -38,12 +28,10 @@ public class LifecycleMethod implements MetaAttribute {
 			boolean addNonnullAnnotation,
 			boolean iterateParameter,
 			boolean returnArgument) {
-		this.annotationMetaEntity = annotationMetaEntity;
+		super(annotationMetaEntity, sessionName, sessionType);
 		this.entity = entity;
 		this.methodName = methodName;
 		this.parameterName = parameterName;
-		this.sessionName = sessionName;
-		this.sessionType = sessionType;
 		this.operationName = operationName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.iterateParameter = iterateParameter;
@@ -111,30 +99,27 @@ public class LifecycleMethod implements MetaAttribute {
 	}
 
 	private void delegateCall(StringBuilder declaration) {
-		if ( isReactiveSession() ) {
+		if ( isReactive() ) {
 			declaration
 					.append("\t\treturn ")
-					.append(sessionName)
-					.append(".chain(")
-					.append(localSessionName())
-					.append(" -> ")
-					.append(localSessionName())
-					.append('.')
-					.append(operationName)
-					.append('(')
-					.append(parameterName)
-					.append(')')
-					.append(')');
-		}
-		else if ( isReactive() ) {
+					.append(sessionName);
+			if ( isReactiveSessionAccess() ) {
+				declaration
+						.append(".chain(")
+						.append(localSessionName())
+						.append(" -> ")
+						.append(localSessionName());
+			}
 			declaration
-					.append("\t\treturn ")
-					.append(sessionName)
 					.append('.')
 					.append(operationName)
 					.append('(')
 					.append(parameterName)
 					.append(')');
+			if ( isReactiveSessionAccess() ) {
+				declaration
+						.append(')');
+			}
 		}
 		else {
 			if ( iterateParameter ) {
@@ -235,26 +220,5 @@ public class LifecycleMethod implements MetaAttribute {
 	@Override
 	public String getTypeDeclaration() {
 		return entity;
-	}
-
-	@Override
-	public Metamodel getHostingEntity() {
-		return annotationMetaEntity;
-	}
-
-	private boolean isReactive() {
-		return MUTINY_SESSION.equals(sessionType)
-			|| MUTINY_STATELESS_SESSION.equals(sessionType)
-			|| UNI_MUTINY_SESSION.equals(sessionType)
-			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
-	}
-
-	boolean isReactiveSession() {
-		return UNI_MUTINY_SESSION.equals(sessionType)
-			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
-	}
-
-	String localSessionName() {
-		return isReactiveSession() ? '_' + sessionName : sessionName;
 	}
 }

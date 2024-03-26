@@ -8,28 +8,42 @@ package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
-import org.hibernate.processor.model.MetaAttribute;
-import org.hibernate.processor.model.Metamodel;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.processor.util.Constants.*;
+import static org.hibernate.processor.util.Constants.BOXED_VOID;
+import static org.hibernate.processor.util.Constants.HIB_KEYED_PAGE;
+import static org.hibernate.processor.util.Constants.HIB_KEYED_RESULT_LIST;
+import static org.hibernate.processor.util.Constants.HIB_ORDER;
+import static org.hibernate.processor.util.Constants.HIB_PAGE;
+import static org.hibernate.processor.util.Constants.HIB_QUERY;
+import static org.hibernate.processor.util.Constants.HIB_SELECTION_QUERY;
+import static org.hibernate.processor.util.Constants.HIB_SORT_DIRECTION;
+import static org.hibernate.processor.util.Constants.JD_CURSORED_PAGE;
+import static org.hibernate.processor.util.Constants.JD_LIMIT;
+import static org.hibernate.processor.util.Constants.JD_ORDER;
+import static org.hibernate.processor.util.Constants.JD_PAGE;
+import static org.hibernate.processor.util.Constants.JD_PAGE_REQUEST;
+import static org.hibernate.processor.util.Constants.JD_SORT;
+import static org.hibernate.processor.util.Constants.LIST;
+import static org.hibernate.processor.util.Constants.OPTIONAL;
+import static org.hibernate.processor.util.Constants.QUERY;
+import static org.hibernate.processor.util.Constants.SESSION_TYPES;
+import static org.hibernate.processor.util.Constants.STREAM;
+import static org.hibernate.processor.util.Constants.TYPED_QUERY;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
  * @author Gavin King
  */
-public abstract class AbstractQueryMethod implements MetaAttribute {
-	final AnnotationMetaEntity annotationMetaEntity;
+public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	final String methodName;
 	final List<String> paramNames;
 	final List<String> paramTypes;
 	final @Nullable String returnTypeName;
-	final String sessionType;
-	final String sessionName;
 	final boolean belongsToDao;
 	final List<OrderBy> orderBys;
 	final boolean addNonnullAnnotation;
@@ -46,22 +60,15 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean dataRepository) {
-		this.annotationMetaEntity = annotationMetaEntity;
+		super(annotationMetaEntity, sessionName, sessionType);
 		this.methodName = methodName;
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
 		this.returnTypeName = returnTypeName;
-		this.sessionType = sessionType;
-		this.sessionName = sessionName;
 		this.belongsToDao = belongsToDao;
 		this.orderBys = orderBys;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.dataRepository = dataRepository;
-	}
-
-	@Override
-	public Metamodel getHostingEntity() {
-		return annotationMetaEntity;
 	}
 
 	@Override
@@ -175,35 +182,9 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				.append(")");
 	}
 
-	boolean isUsingEntityManager() {
-		return ENTITY_MANAGER.equals(sessionType);
-	}
-
-	boolean isUsingStatelessSession() {
-		return HIB_STATELESS_SESSION.equals(sessionType)
-			|| MUTINY_STATELESS_SESSION.equals(sessionType)
-			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
-	}
-
-	boolean isReactive() {
-		return MUTINY_SESSION.equals(sessionType)
-			|| MUTINY_STATELESS_SESSION.equals(sessionType)
-			|| UNI_MUTINY_SESSION.equals(sessionType)
-			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
-	}
-
-	boolean isReactiveSession() {
-		return UNI_MUTINY_SESSION.equals(sessionType)
-			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
-	}
-
-	String localSessionName() {
-		return isReactiveSession() ? "_session" : sessionName;
-	}
-
 	void chainSession(StringBuilder declaration) {
 		// Reactive calls always have a return type
-		if ( isReactiveSession() ) {
+		if ( isReactiveSessionAccess() ) {
 			declaration
 					.append("\treturn ")
 					.append(sessionName)
@@ -214,7 +195,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	void chainSessionEnd(boolean isUpdate, StringBuilder declaration) {
-		if ( isReactiveSession() ) {
+		if ( isReactiveSessionAccess() ) {
 			declaration.append("\t})");
 			// here we're checking for a boxed void and not Uni<Void> because the returnType has already
 			// been checked, and is ununi-ed
@@ -463,7 +444,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(" _results = ");
 		}
 		else {
-			if ( !"void".equals(returnTypeName) || isReactiveSession() ) {
+			if ( !"void".equals(returnTypeName) || isReactiveSessionAccess() ) {
 				declaration
 						.append("return ");
 			}

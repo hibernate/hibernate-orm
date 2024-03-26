@@ -19,20 +19,25 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.models.spi.ClassDetails;
 
 /**
  * @author Steve Ebersole
  */
 public class AdditionalManagedResourcesImpl implements ManagedResources {
 	private final Collection<Class<?>> knownClasses;
+	private final Collection<ClassDetails> classDetails;
 	private final Collection<String> packageNames;
 	private final Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappings;
 
 	public AdditionalManagedResourcesImpl(
 			Collection<Class<?>> knownClasses,
+			Collection<ClassDetails> classDetails,
 			Collection<String> packageNames,
 			Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappings) {
 		this.knownClasses = knownClasses;
+		this.classDetails = classDetails;
 		this.packageNames = packageNames;
 		this.xmlMappings = xmlMappings;
 	}
@@ -49,6 +54,9 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 
 	@Override
 	public Collection<String> getAnnotatedClassNames() {
+		if ( CollectionHelper.isNotEmpty( classDetails ) ) {
+			return classDetails.stream().map( ClassDetails::getName ).toList();
+		}
 		return Collections.emptyList();
 	}
 
@@ -76,6 +84,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		private final MappingBinder mappingBinder;
 
 		private List<Class<?>> classes;
+		private List<ClassDetails> classDetails;
 		private List<String> packageNames;
 		private Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappings;
 
@@ -116,6 +125,16 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 			return this;
 		}
 
+		public Builder addClassDetails(List<ClassDetails> additionalClassDetails) {
+			if ( additionalClassDetails != null ) {
+				if ( this.classDetails == null ) {
+					this.classDetails = new ArrayList<>();
+				}
+				this.classDetails.addAll( additionalClassDetails );
+			}
+			return this;
+		}
+
 		public Builder addPackages(String... packageNames) {
 			if ( this.packageNames == null ) {
 				this.packageNames = new ArrayList<>();
@@ -125,7 +144,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		}
 
 		public ManagedResources build() {
-			return new AdditionalManagedResourcesImpl( classes, packageNames, xmlMappings );
+			return new AdditionalManagedResourcesImpl( classes, classDetails, packageNames, xmlMappings );
 		}
 
 		public Builder addXmlMappings(String resourceName) {

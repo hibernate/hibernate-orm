@@ -1875,13 +1875,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						parameterType = typeVariable.getUpperBound();
 						// INTENTIONAL FALL-THROUGH
 					case DECLARED:
-						final TypeElement list = context.getTypeElementForFullyQualifiedName(LIST);
-						if ( types.isSameType( parameterType, types.getDeclaredType( list, attributeType) ) ) {
+						if ( types.isSameType( parameterType, attributeType) ) {
 							return true;
 						}
 						else {
-							parameterTypeError( entityType, param, attributeType );
-							return false;
+							final TypeElement list = context.getTypeElementForFullyQualifiedName(LIST);
+							if ( types.isSameType( parameterType, types.getDeclaredType( list, attributeType) ) ) {
+								return true;
+							}
+							else {
+								parameterTypeError( entityType, param, attributeType );
+								return false;
+							}
 						}
 					case ARRAY:
 						if ( !types.isSameType( parameterType, types.getArrayType(attributeType) ) ) {

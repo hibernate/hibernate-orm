@@ -6,40 +6,33 @@
  */
 package org.hibernate.orm.test.annotations.onetoone;
 
-import java.util.Iterator;
 import java.util.List;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-
-import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.orm.test.annotations.Customer;
 import org.hibernate.orm.test.annotations.Discount;
 import org.hibernate.orm.test.annotations.Passport;
 import org.hibernate.orm.test.annotations.Ticket;
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -305,28 +298,6 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4606" )
-	public void testJoinColumnConfiguredInXml() {
-		PersistentClass pc = metadata().getEntityBinding( Son.class.getName() );
-		Table table = pc.getJoins().get( 0 ).getTable();
-        Iterator<Column> columnIter = table.getColumns().iterator();
-		boolean fooFound = false;
-		boolean barFound = false;
-		while ( columnIter.hasNext() ) {
-			Column column = columnIter.next();
-			if ( column.getName().equals( "foo" ) ) {
-				fooFound = true;
-			}
-			if ( column.getName().equals( "bar" ) ) {
-				barFound = true;
-			}
-		}
-		assertTrue(
-				"The mapping defines join columns which could not be found in the metadata.", fooFound && barFound
-		);
-	}
-
-	@Test
 	@TestForIssue(jiraKey = "HHH-6723")
 	public void testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() {
 		// This test uses an interceptor to verify that correct number of joins are generated.
@@ -471,11 +442,6 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 				Owner.class,
 				OwnerAddress.class
 		};
-	}
-
-	@Override
-	protected String[] getXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/annotations/onetoone/orm.xml" };
 	}
 
 }

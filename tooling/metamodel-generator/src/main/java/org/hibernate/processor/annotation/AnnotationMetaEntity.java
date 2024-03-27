@@ -1061,8 +1061,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case JD_PAGE:
 			case JD_CURSORED_PAGE:
 				if ( method.getParameters().stream()
-						.noneMatch(param -> param.asType().toString()
-								.startsWith(JD_PAGE_REQUEST))) {
+						.noneMatch(param -> typeNameEquals(param.asType(), JD_PAGE_REQUEST))) {
 					message(method,
 							"method with return type '" + typeName
 									+ "' has no parameter of type 'PageRequest'",
@@ -1074,8 +1073,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			case HIB_KEYED_RESULT_LIST:
 				if ( method.getParameters().stream()
-						.noneMatch(param -> param.asType().toString()
-								.startsWith(HIB_KEYED_PAGE))) {
+						.noneMatch(param -> typeNameEquals(param.asType(), HIB_KEYED_PAGE))) {
 					message(method,
 							"method with return type '" + typeName
 									+ "' has no parameter of type 'KeyedPage'",
@@ -1205,7 +1203,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR );
 			}
 			else {
-				final String entity = parameterType.toString();
+				final String entity = typeAsString(parameterType);
 				final String methodName = method.getSimpleName().toString();
 				putMember(
 						methodName + '.' + entity,
@@ -1351,7 +1349,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				else {
 					for ( VariableElement parameter : method.getParameters() ) {
-						final String type = parameter.asType().toString();
+						final String type = typeName(parameter.asType());
 						if ( isPageParam(type) ) {
 							message( parameter, "pagination would have no effect", Diagnostic.Kind.ERROR);
 						}
@@ -1403,9 +1401,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				multivalued.add( false );
 				final Types types = context.getTypeUtils();
 				final TypeMirror parameterType = parameterType( parameter );
-				final String type = parameterType.toString();
-				boolean pageRequest = type.startsWith(JD_PAGE_REQUEST);
-				if ( isOrderParam(type) || pageRequest ) {
+				boolean pageRequest = typeNameEquals( parameterType, JD_PAGE_REQUEST );
+				if ( isOrderParam( typeName(parameterType) ) || pageRequest ) {
 					final TypeMirror typeArgument = getTypeArgument( parameterType );
 					if ( typeArgument == null ) {
 						missingTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
@@ -1548,37 +1545,39 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return getTypeArgument( arrayType.getComponentType() );
 			case DECLARED:
 				final DeclaredType type = (DeclaredType) parameterType;
-				final String parameterTypeName = parameterType.toString();
-				if ( parameterTypeName.startsWith( LIST ) ) {
-					for (TypeMirror arg : type.getTypeArguments()) {
-						return getTypeArgument( arg );
-					}
-				}
-				else if ( parameterTypeName.startsWith( HIB_ORDER )
-						|| parameterTypeName.startsWith( JD_SORT )
-						|| parameterTypeName.startsWith( JD_ORDER )
-						|| parameterTypeName.startsWith( JD_PAGE_REQUEST ) ) {
-					for ( TypeMirror arg : type.getTypeArguments() ) {
-						switch ( arg.getKind() ) {
-							case WILDCARD:
-								return ((WildcardType) arg).getSuperBound();
-							case ARRAY:
-							case DECLARED:
-							case TYPEVAR:
-								return arg;
-							default:
-								return null;
+				switch ( typeName(parameterType) ) {
+					case LIST:
+						for (TypeMirror arg : type.getTypeArguments()) {
+							return getTypeArgument( arg );
 						}
-					}
+						return null;
+					case HIB_ORDER:
+					case JD_SORT:
+					case JD_ORDER:
+					case JD_PAGE_REQUEST:
+						for ( TypeMirror arg : type.getTypeArguments() ) {
+							switch ( arg.getKind() ) {
+								case WILDCARD:
+									return ((WildcardType) arg).getSuperBound();
+								case ARRAY:
+								case DECLARED:
+								case TYPEVAR:
+									return arg;
+								default:
+									return null;
+							}
+						}
+						return null;
+					default:
+						return null;
 				}
-				return null;
 			default:
 				return null;
 		}
 	}
 
 	private static boolean isFinderParameterMappingToAttribute(VariableElement param) {
-		return !isSpecialParam( param.asType().toString() );
+		return !isSpecialParam(typeName(param.asType()));
 	}
 
 	private String[] sessionTypeFromParameters(List<String> paramNames, List<String> paramTypes) {
@@ -1824,7 +1823,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			else if ( containsAnnotation( param, PATTERN ) ) {
 				final AnnotationMirror mirror = getAnnotationMirror(param, PATTERN);
-				if ( mirror!=null && !param.asType().toString().equals( String.class.getName() ) ) {
+				if ( mirror!=null && !typeNameEquals(param.asType(), String.class.getName()) ) {
 					message( param, mirror,
 							"parameter annotated '@Pattern' is not of type 'String'",
 							Diagnostic.Kind.ERROR );
@@ -2480,8 +2479,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private List<String> parameterTypes(ExecutableElement method) {
 		return method.getParameters().stream()
-				.map(param -> parameterType(param).toString())
+				.map(param -> typeAsString(parameterType(param)))
 				.collect(toList());
+	}
+
+	private String typeAsString(TypeMirror type) {
+		String result = type.toString();
+		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
+			result = result.replace(annotation.toString(), "");
+		}
+		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
+			result = annotation.toString() + ' ' + result;
+		}
+		return result;
 	}
 
 	private TypeMirror parameterType(VariableElement parameter) {
@@ -2614,9 +2624,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			for ( VariableElement parameter : method.getParameters() ) {
 				final TypeMirror parameterType = parameterType( parameter );
 				final TypeMirror typeArgument = getTypeArgument( parameterType );
-				final String type = parameterType.toString();
-				final boolean pageRequest = type.startsWith(JD_PAGE_REQUEST);
-				if ( isOrderParam( type ) || pageRequest) {
+				final boolean pageRequest = typeNameEquals(parameterType, JD_PAGE_REQUEST);
+				if ( isOrderParam( typeName(parameterType) ) || pageRequest ) {
 					if ( typeArgument == null ) {
 						missingTypeArgError( returnType.toString(), parameter, pageRequest );
 					}
@@ -2625,6 +2634,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					}
 				}
 			}
+		}
+	}
+
+	private boolean typeNameEquals(TypeMirror parameterType, String typeName) {
+		if ( parameterType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) parameterType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			return typeElement.getQualifiedName().contentEquals(typeName);
+		}
+		else {
+			return false;
+		}
+	}
+
+	private static String typeName(TypeMirror parameterType) {
+		if ( parameterType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) parameterType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			return typeElement.getQualifiedName().toString();
+		}
+		else {
+			return parameterType.toString();
 		}
 	}
 

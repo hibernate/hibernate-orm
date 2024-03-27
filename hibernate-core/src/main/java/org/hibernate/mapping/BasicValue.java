@@ -369,7 +369,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 						resolution.getRelationalJavaType(),
 						size,
 						getBuildingContext().getMetadataCollector().getDatabase(),
-						getTypeConfiguration()
+						this
 				);
 
 		return resolution;

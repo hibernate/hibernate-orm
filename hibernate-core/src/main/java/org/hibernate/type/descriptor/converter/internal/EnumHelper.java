@@ -6,16 +6,46 @@
  */
 package org.hibernate.type.descriptor.converter.internal;
 
+import java.util.Arrays;
+
+import org.hibernate.type.BasicType;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+
 /**
  * @author Gavin King
  */
 public class EnumHelper {
+
+	public static String[] getEnumeratedValues(Type type) {
+		return getEnumeratedValues( type.getReturnedClass(), ( (BasicType<?>) type ).getJdbcType() );
+	}
+
+	public static String[] getEnumeratedValues(Class<?> javaType, JdbcType jdbcType) {
+		//noinspection unchecked
+		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType;
+		final String[] enumValues;
+		if ( jdbcType.isString() ) {
+			enumValues = getSortedEnumeratedValues( enumClass );
+		}
+		else {
+			enumValues = getEnumeratedValues( enumClass );
+		}
+		return enumValues;
+	}
+
 	public static String[] getEnumeratedValues(Class<? extends Enum<?>> enumClass) {
 		Enum<?>[] values = enumClass.getEnumConstants();
 		String[] names = new String[values.length];
 		for ( int i = 0; i < values.length; i++ ) {
 			names[i] = values[i].name();
 		}
+		return names;
+	}
+
+	public static String[] getSortedEnumeratedValues(Class<? extends Enum<?>> enumClass) {
+		final String[] names = getEnumeratedValues( enumClass );
+		Arrays.sort( names );
 		return names;
 	}
 }

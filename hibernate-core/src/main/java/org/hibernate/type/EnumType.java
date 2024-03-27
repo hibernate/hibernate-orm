@@ -59,6 +59,7 @@ public class EnumType<T extends Enum<T>>
 
 	private Class<T> enumClass;
 
+	private boolean isOrdinal;
 	private JdbcType jdbcType;
 	private EnumJavaType<T> enumJavaType;
 
@@ -131,6 +132,10 @@ public class EnumType<T extends Enum<T>>
 		if ( parameters.containsKey( TYPE ) ) {
 			int jdbcTypeCode = Integer.parseInt( (String) parameters.get( TYPE ) );
 			jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
+			isOrdinal = jdbcType.isInteger()
+					// Both, ENUM and NAMED_ENUM are treated like ordinal with respect to the ordering
+					|| jdbcType.getDefaultSqlTypeCode() == SqlTypes.ENUM
+					|| jdbcType.getDefaultSqlTypeCode() == SqlTypes.NAMED_ENUM;
 		}
 		else {
 			final LocalJdbcTypeIndicators indicators;
@@ -151,6 +156,7 @@ public class EnumType<T extends Enum<T>>
 				);
 			}
 			jdbcType = descriptor.getRecommendedJdbcType( indicators );
+			isOrdinal = indicators.getEnumeratedType() != STRING;
 		}
 
 		if ( LOG.isDebugEnabled() ) {
@@ -295,7 +301,7 @@ public class EnumType<T extends Enum<T>>
 
 	public boolean isOrdinal() {
 		verifyConfigured();
-		return jdbcType.isInteger();
+		return isOrdinal;
 	}
 
 	private class LocalJdbcTypeIndicators implements JdbcTypeIndicators {

@@ -19,6 +19,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import static jakarta.persistence.EnumType.ORDINAL;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.ENUM;
+import static org.hibernate.type.SqlTypes.NAMED_ENUM;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.SMALLINT;
@@ -42,11 +43,22 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		int sqlType;
 		switch ( type == null ? ORDINAL : type ) {
 			case ORDINAL:
-				sqlType = hasManyValues() ? SMALLINT : TINYINT;
+				if ( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
+					sqlType = ENUM;
+				}
+				else if ( jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
+					sqlType = NAMED_ENUM;
+				}
+				else {
+					sqlType = hasManyValues() ? SMALLINT : TINYINT;
+				}
 				break;
 			case STRING:
 				if ( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
 					sqlType = ENUM;
+				}
+				else if ( jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
+					sqlType = NAMED_ENUM;
 				}
 				else if ( context.getColumnLength() == 1 ) {
 					sqlType = context.isNationalized() ? NCHAR : CHAR;

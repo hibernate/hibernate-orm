@@ -116,8 +116,10 @@ def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
 
 check.dependsOn quarkusHrPanacheTestTask
 check.dependsOn quarkusOrmPanacheTestTask
+check.dependsOn jakartaDataTestTask
 test.dependsOn quarkusHrPanacheTestTask
 test.dependsOn quarkusOrmPanacheTestTask
+test.dependsOn jakartaDataTestTask
 
 sourceSets.main {
     java.srcDir xjcTargetDir

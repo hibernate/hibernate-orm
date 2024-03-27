@@ -318,7 +318,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	public String scope() {
 		if (jakartaDataRepository) {
 			return context.addTransactionScopedAnnotation()
-					? "javax.transaction.TransactionScoped"
+					? "jakarta.transaction.TransactionScoped"
 					: "jakarta.enterprise.context.RequestScoped";
 		}
 		else {

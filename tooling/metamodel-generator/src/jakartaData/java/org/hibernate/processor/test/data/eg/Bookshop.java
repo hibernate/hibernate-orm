@@ -16,4 +16,10 @@ public interface Bookshop extends CrudRepository<Book,String> {
 
     @Query("select isbn where title like ?1 order by isbn")
     String[] ssns(String title);
+
+    @Query("select count(this) where title like ?1 order by isbn")
+    long count1(String title);
+
+    @Query("select count(this) where this.title like ?1 order by this.isbn")
+    long count2(String title);
 }

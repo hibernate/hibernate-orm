@@ -72,6 +72,7 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.grammars.hql.HqlLexer.FROM;
 import static org.hibernate.grammars.hql.HqlLexer.GROUP;
 import static org.hibernate.grammars.hql.HqlLexer.HAVING;
+import static org.hibernate.grammars.hql.HqlLexer.IDENTIFIER;
 import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -2155,9 +2156,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		else {
 			final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
+			String thisText = "";
 			final List<? extends Token> allTokens = hqlLexer.getAllTokens();
 			for (Token token : allTokens) {
 				switch ( token.getType() ) {
+					//TEMPORARY until HQL gets support for 'this'
+					case IDENTIFIER:
+						final String text = token.getText();
+						if ( text.equalsIgnoreCase("this") ) {
+							thisText = " as " + text;
+						}
+						break;
 					case FROM:
 						return hql;
 					case WHERE:
@@ -2165,11 +2174,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					case GROUP:
 					case ORDER:
 						return new StringBuilder(hql)
-								.insert(token.getStartIndex(), "from " + entityType + " ")
+								.insert(token.getStartIndex(), "from " + entityType + thisText + " ")
 								.toString();
 				}
 			}
-			return hql + " from " + entityType;
+			return hql + " from " + entityType + thisText;
 		}
 	}
 

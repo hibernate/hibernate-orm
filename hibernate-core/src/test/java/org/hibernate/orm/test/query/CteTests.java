@@ -17,13 +17,16 @@ import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaJoin;
+import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Address;
@@ -73,6 +76,47 @@ public class CteTests {
 									"select c.id id, c.name name from Contact c where c.gender = FEMALE" +
 									")" +
 									"select c.id, c.name from femaleContacts c order by c.id",
+							Tuple.class
+					);
+					verifySame(
+							session.createQuery( cq ).getResultList(),
+							query.getResultList(),
+							list -> {
+								assertEquals( 2, list.size() );
+								assertEquals( "Jane", list.get( 0 ).get( 1, Contact.Name.class ).getFirst() );
+								assertEquals( "Granny", list.get( 1 ).get( 1, Contact.Name.class ).getFirst() );
+							}
+					);
+				}
+		);
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17897")
+	public void testBasicJoined(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					final JpaCriteriaQuery<Tuple> cte = cb.createTupleQuery();
+					final JpaRoot<Contact> cteRoot = cte.from( Contact.class );
+					cte.multiselect( cteRoot.get( "id" ).alias( "id" ), cteRoot.get( "name" ).alias( "name" ) );
+					cte.where( cb.equal( cteRoot.get( "gender" ), Contact.Gender.FEMALE ) );
+
+					final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+					final JpaCteCriteria<Tuple> femaleContacts = cq.with( cte );
+
+					final JpaRoot<Contact> root = cq.from( Contact.class );
+					final JpaJoinedFrom<?, Tuple> join = root.join( femaleContacts );
+					join.on( cb.equal( root.get( "id" ), join.get( "id" ) ) );
+
+					cq.multiselect( root.get( "id" ), root.get( "name" ) );
+					cq.orderBy( cb.asc( root.get( "id" ) ) );
+
+					final QueryImplementor<Tuple> query = session.createQuery(
+							"with femaleContacts as (" +
+									"select c.id id, c.name name from Contact c where c.gender = FEMALE" +
+									")" +
+									"select c.id, c.name from Contact c join femaleContacts f on c.id = f.id order by c.id",
 							Tuple.class
 					);
 					verifySame(

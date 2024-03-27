@@ -6,8 +6,10 @@
  */
 package org.hibernate.processor.annotation;
 
+import org.antlr.v4.runtime.Token;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
+import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.ImportContextImpl;
 import org.hibernate.processor.ProcessLaterException;
@@ -23,6 +25,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -66,6 +69,12 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static org.hibernate.grammars.hql.HqlLexer.FROM;
+import static org.hibernate.grammars.hql.HqlLexer.GROUP;
+import static org.hibernate.grammars.hql.HqlLexer.HAVING;
+import static org.hibernate.grammars.hql.HqlLexer.ORDER;
+import static org.hibernate.grammars.hql.HqlLexer.WHERE;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSessionParameter;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSpecialParam;
@@ -2077,13 +2086,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final List<String> paramNames = parameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
 
-				if ( isNative ) {
-					validateSql( method, mirror, queryString, paramNames, value );
-				}
-				else {
-					validateHql( method, returnType, mirror, value, queryString, paramNames, paramTypes );
-				}
-
 				// now check that the query has a parameter for every method parameter
 				checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString );
 
@@ -2093,11 +2095,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						? emptyList()
 						: orderByList( method, (TypeElement) resultType.asElement() );
 
+				final String processedQuery;
+				if ( isNative ) {
+					processedQuery = queryString;
+					validateSql( method, mirror, processedQuery, paramNames, value );
+				}
+				else {
+					processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName(resultType) );
+					validateHql( method, returnType, mirror, value, processedQuery, paramNames, paramTypes );
+				}
+
 				final QueryMethod attribute =
 						new QueryMethod(
 								this, method,
 								method.getSimpleName().toString(),
-								queryString,
+								processedQuery,
 								returnType == null ? null : returnType.toString(),
 								containerTypeName,
 								paramNames,
@@ -2113,6 +2125,51 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						);
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
 			}
+		}
+	}
+
+	private @Nullable String implicitEntityName(@Nullable DeclaredType resultType) {
+		if ( resultType != null && hasAnnotation(resultType.asElement(), ENTITY) ) {
+			final AnnotationMirror annotation =
+					getAnnotationMirror(resultType.asElement(), ENTITY);
+			if ( annotation == null ) {
+				throw new AssertionFailure("@Entity annotation should not be missing");
+			}
+			final String name = (String) getAnnotationValue(annotation, "name");
+			return isNotEmpty(name) ? resultType.asElement().getSimpleName().toString() : name;
+		}
+		else if ( primaryEntity != null ) {
+			return primaryEntity.getSimpleName().toString();
+		}
+		else {
+			return null;
+		}
+	}
+
+	private static String addFromClauseIfNecessary(String hql, @Nullable String entityType) {
+		if ( entityType == null ) {
+			return hql;
+		}
+		else if ( isInsertUpdateDelete(hql) ) {
+			return hql;
+		}
+		else {
+			final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
+			final List<? extends Token> allTokens = hqlLexer.getAllTokens();
+			for (Token token : allTokens) {
+				switch ( token.getType() ) {
+					case FROM:
+						return hql;
+					case WHERE:
+					case HAVING:
+					case GROUP:
+					case ORDER:
+						return new StringBuilder(hql)
+								.insert(token.getStartIndex(), "from " + entityType + " ")
+								.toString();
+				}
+			}
+			return hql + " from " + entityType;
 		}
 	}
 

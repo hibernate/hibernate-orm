@@ -2483,6 +2483,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				.collect(toList());
 	}
 
+	/**
+	 * Workaround for a bug in Java 20/21. Should not be necessary!
+	 */
 	private String typeAsString(TypeMirror type) {
 		String result = type.toString();
 		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {

@@ -1978,9 +1978,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return null;
 	}
 
-	private static boolean isIdRef(String nextToken) {
-		return "#id".equals(nextToken) // for Jakarta Data M4 release
-			|| "id(this)".equals(nextToken); // post M4
+	private static boolean isIdRef(String token) {
+		return "#id".equals(token) // for Jakarta Data M4 release
+			|| "id(this)".equalsIgnoreCase(token); // post M4
 	}
 
 	private @Nullable Element memberMatchingPath(
@@ -2593,7 +2593,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						.orElse("id");
 		return method.getParameters().stream()
 				.map(AnnotationMetaEntity::parameterName)
-				.map(name -> "#id".equals(name) ? idName : name)
+				.map(name -> isIdRef(name) ? idName : name)
 				.collect(toList());
 	}
 

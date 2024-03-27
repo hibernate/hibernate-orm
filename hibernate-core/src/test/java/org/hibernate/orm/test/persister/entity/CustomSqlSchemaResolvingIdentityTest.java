@@ -2,20 +2,18 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.orm.test.persister.entity;
 
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.NamedNativeQuery;
-import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -89,7 +87,6 @@ public class CustomSqlSchemaResolvingIdentityTest {
 	}
 
 	@Entity(name = "CardWithCustomSQL")
-	@Persister( impl = SingleTableEntityPersister.class )
 	@Loader(namedQuery = "find_foo_by_id")
 	@NamedNativeQuery(
 		name = "find_foo_by_id",

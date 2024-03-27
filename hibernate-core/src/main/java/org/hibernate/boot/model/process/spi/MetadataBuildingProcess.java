@@ -59,14 +59,13 @@ import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
@@ -236,7 +235,6 @@ public class MetadataBuildingProcess {
 		);
 
 		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
-		processAdditionalJaxbMappingProducer( metadataCollector, options, jandexView, classLoaderService, rootMetadataBuildingContext );
 
 		applyExtraQueryImports( managedResources, metadataCollector );
 
@@ -380,11 +378,6 @@ public class MetadataBuildingProcess {
 		processor.postProcessEntityHierarchies();
 
 		processor.processResultSetMappings();
-
-		for ( MetadataContributor contributor : classLoaderService.loadJavaServices( MetadataContributor.class ) ) {
-			log.tracef( "Calling MetadataContributor : %s", contributor );
-			contributor.contribute( metadataCollector, jandexView );
-		}
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
 
@@ -759,6 +752,11 @@ public class MetadataBuildingProcess {
 			metadataCollector.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		}
 
+		@Override
+		public EffectiveMappingDefaults getEffectiveMappingDefaults() {
+			return rootMetadataBuildingContext.getEffectiveDefaults();
+		}
+
 		public void complete() {
 			// annotations / orm.xml
 			if ( additionalEntityClasses != null || additionalClassDetails != null || additionalJaxbMappings != null ) {
@@ -781,51 +779,6 @@ public class MetadataBuildingProcess {
 		}
 	}
 
-	private static void processAdditionalJaxbMappingProducer(
-			InFlightMetadataCollectorImpl metadataCollector,
-			MetadataBuildingOptions options,
-			IndexView jandexView,
-			ClassLoaderService classLoaderService,
-			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
-		if ( options.isXmlMappingEnabled() ) {
-			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
-			if ( producers != null ) {
-				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
-				final MappingBinder mappingBinder = new MappingBinder(
-						classLoaderService,
-						new MappingBinder.Options() {
-							@Override
-							public boolean validateMappings() {
-								return false;
-							}
-
-							@Override
-							public boolean transformHbmMappings() {
-								return false;
-							}
-						}
-				);
-				//noinspection deprecation
-				for ( AdditionalJaxbMappingProducer producer : producers ) {
-					log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
-					Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
-							metadataCollector,
-							jandexView,
-							mappingBinder,
-							rootMetadataBuildingContext
-					);
-					for ( MappingDocument mappingDocument : additionalMappings ) {
-						hierarchyBuilder.indexMappingDocument( mappingDocument );
-					}
-				}
-
-				ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
-				for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
-					binder.bindEntityHierarchy( entityHierarchySource );
-				}
-			}
-		}
-	}
 
 	private static void applyExtraQueryImports(
 			ManagedResources managedResources,

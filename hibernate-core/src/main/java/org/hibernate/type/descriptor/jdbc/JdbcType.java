@@ -357,12 +357,30 @@ public interface JdbcType extends Serializable {
 		callableStatement.registerOutParameter( index, getJdbcTypeCode() );
 	}
 
+	/**
+	 * @deprecated Use {@link #addAuxiliaryDatabaseObjects(JavaType, Size, Database, JdbcTypeIndicators)} instead
+	 */
 	@Incubating
+	@Deprecated(forRemoval = true)
 	default void addAuxiliaryDatabaseObjects(
 			JavaType<?> javaType,
 			Size columnSize,
 			Database database,
 			TypeConfiguration typeConfiguration) {
+	}
+
+	/**
+	 * Add auxiliary database objects for this {@linkplain JdbcType} to the {@link Database} object.
+	 *
+	 * @since 6.5
+	 */
+	@Incubating
+	default void addAuxiliaryDatabaseObjects(
+			JavaType<?> javaType,
+			Size columnSize,
+			Database database,
+			JdbcTypeIndicators context) {
+		addAuxiliaryDatabaseObjects( javaType, columnSize, database, context.getTypeConfiguration() );
 	}
 
 	@Incubating

@@ -2,7 +2,7 @@
 :toc:
 :toclevels: 4
 :docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/6.4
+:versionDocBase: {docsBase}/7.0
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {versionDocBase}/javadocs
 
@@ -67,6 +67,8 @@ private Employee manager;
 == Some Cleanup
 
 * Removed `SqmQualifiedJoin`.  All joins are qualified.
+* Removed `AdditionalJaxbMappingProducer`, deprecated in favor of `AdditionalMappingContributor`
+* Removed `MetadataContributor`, deprecated in favor of `AdditionalMappingContributor`
 
 
 [[todo]]
@@ -74,7 +76,6 @@ private Employee manager;
 
 NOTE:: Look for `// todo (jpa 3.2)`
 
-* Deprecate `SqmQualifiedJoin` in 6.x
 * {@linkplain SqmCrossJoin} and its offspring are largely de-typed to account
         for {@linkplain SqmCrossJoin} having only one type argument for the right-hand
         side.  To properly handle the type parameters in the hierarchy we need to change this to

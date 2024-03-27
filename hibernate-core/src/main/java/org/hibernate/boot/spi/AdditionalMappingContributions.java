@@ -69,4 +69,6 @@ public interface AdditionalMappingContributions {
 	 * Contribute a materialized AuxiliaryDatabaseObject
 	 */
 	void contributeAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
+
+	EffectiveMappingDefaults getEffectiveMappingDefaults();
 }

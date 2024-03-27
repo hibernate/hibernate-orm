@@ -47,6 +47,6 @@ public class AdditionalMappingContributorImpl implements AdditionalMappingContri
 					+ "`; alternatively disable Hibernate Envers." );
 		}
 
-		enversService.initialize( metadata, contributions::contributeBinding );
+		enversService.initialize( metadata, contributions::contributeBinding, contributions.getEffectiveMappingDefaults() );
 	}
 }

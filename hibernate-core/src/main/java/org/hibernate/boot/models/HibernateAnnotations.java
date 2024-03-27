@@ -140,7 +140,6 @@ public interface HibernateAnnotations {
 	AnnotationDescriptor<Parameter> PARAMETER = createOrmDescriptor( Parameter.class );
 	AnnotationDescriptor<Parent> PARENT = createOrmDescriptor( Parent.class );
 	AnnotationDescriptor<PartitionKey> PARTITION_KEY = createOrmDescriptor( PartitionKey.class );
-	AnnotationDescriptor<Persister> PERSISTER = createOrmDescriptor( Persister.class );
 	AnnotationDescriptor<Polymorphism> POLYMORPHISM = createOrmDescriptor( Polymorphism.class );
 	AnnotationDescriptor<Proxy> PROXY = createOrmDescriptor( Proxy.class );
 	AnnotationDescriptor<RowId> ROW_ID = createOrmDescriptor( RowId.class );

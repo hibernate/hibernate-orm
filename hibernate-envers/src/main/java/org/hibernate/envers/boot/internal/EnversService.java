@@ -7,6 +7,7 @@
 package org.hibernate.envers.boot.internal;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.MappingCollector;
@@ -53,7 +54,10 @@ public interface EnversService extends Service {
 	 */
 	boolean isInitialized();
 
-	void initialize(MetadataImplementor metadata, MappingCollector mappingCollector);
+	void initialize(
+			MetadataImplementor metadata,
+			MappingCollector mappingCollector,
+			EffectiveMappingDefaults effectiveMappingDefaults);
 
 	Configuration getConfig();
 

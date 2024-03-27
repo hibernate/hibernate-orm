@@ -10,8 +10,8 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
@@ -30,6 +30,7 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 
 	private final Configuration configuration;
 	private final InFlightMetadataCollector metadataCollector;
+	private final EffectiveMappingDefaults effectiveMappingDefaults;
 	private final MappingCollector mappingCollector;
 	private final ObjectNameNormalizer objectNameNormalizer;
 	private final AuditEntityNameRegister auditEntityNameRegistry;
@@ -38,9 +39,11 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	public EnversMetadataBuildingContextImpl(
 			Configuration configuration,
 			InFlightMetadataCollector metadataCollector,
+			EffectiveMappingDefaults effectiveMappingDefaults,
 			MappingCollector mappingCollector) {
 		this.configuration = configuration;
 		this.metadataCollector = metadataCollector;
+		this.effectiveMappingDefaults = effectiveMappingDefaults;
 		this.mappingCollector = mappingCollector;
 		this.auditEntityNameRegistry = new AuditEntityNameRegister();
 		this.auditEntityConfigurationRegistry = new AuditEntityConfigurationRegistry();
@@ -64,8 +67,8 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	}
 
 	@Override
-	public MappingDefaults getEffectiveDefaults() {
-		return metadataCollector.getMetadataBuildingOptions().getMappingDefaults();
+	public EffectiveMappingDefaults getEffectiveDefaults() {
+		return effectiveMappingDefaults;
 	}
 
 	@Override

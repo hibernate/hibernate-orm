@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -87,7 +88,10 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	}
 
 	@Override
-	public void initialize(MetadataImplementor metadata, MappingCollector mappingCollector) {
+	public void initialize(
+			MetadataImplementor metadata,
+			MappingCollector mappingCollector,
+			EffectiveMappingDefaults effectiveMappingDefaults) {
 		if ( initialized ) {
 			throw new UnsupportedOperationException( "EnversService#initialize should be called only once" );
 		}
@@ -107,6 +111,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 		final EnversMetadataBuildingContext metadataBuildingContext = new EnversMetadataBuildingContextImpl(
 				configuration,
 				(InFlightMetadataCollector) metadata,
+				effectiveMappingDefaults,
 				mappingCollector
 		);
 

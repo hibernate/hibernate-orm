@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.sql.internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.internal.EnumHelper;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
@@ -40,7 +41,10 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 
 	@Override @SuppressWarnings("unchecked")
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
-		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) type.getReturnedClass() );
+		return dialect.getEnumTypeDeclaration(
+				type.getReturnedClass().getSimpleName(),
+				EnumHelper.getEnumeratedValues( type )
+		);
 	}
 
 	@Override

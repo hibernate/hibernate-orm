@@ -77,7 +77,7 @@ public class ArrayAggregateTest {
 					new ArrayJavaType<>( javaTypeRegistry.getDescriptor( String.class ) ),
 					Size.nil(),
 					metadata.getDatabase(),
-					typeConfiguration
+					typeConfiguration.getCurrentBaseSqlTypeIndicators()
 			);
 		}
 	}

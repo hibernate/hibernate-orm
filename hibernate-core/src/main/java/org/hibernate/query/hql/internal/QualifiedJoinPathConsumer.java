@@ -302,7 +302,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				final String fullPath = path.toString();
 				final EntityDomainType<?> joinedEntityType = creationState.getCreationContext()
 						.getJpaMetamodel()
-						.resolveHqlEntityReference( fullPath );
+						.getHqlEntityReference( fullPath );
 				if ( joinedEntityType == null ) {
 					final SqmCteStatement<?> cteStatement = creationState.findCteStatement( fullPath );
 					if ( cteStatement != null ) {

@@ -24,6 +24,9 @@ public interface SuperRepo<T,K> {
     Optional<T> findById(@By("#id") K id);
 
     @Find
+    Optional<T> findById2(@By("id(this)") K id);
+
+    @Find
     Stream<T> findAll();
 
     @Find

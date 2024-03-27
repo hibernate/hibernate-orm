@@ -8,7 +8,6 @@ package org.hibernate.orm.test.intg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Modifier;
 import java.util.List;
 
 import org.hibernate.boot.ResourceStreamLocator;
@@ -19,15 +18,11 @@ import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
-import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.TypeDetails;
 
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
@@ -333,15 +328,14 @@ public class AdditionalMappingContributorTests {
 								modelBuildingContext
 						);
 
-						final MutableAnnotationUsage<Entity> entityAnnotation = JpaAnnotations.ENTITY.createUsage(
-								jdkClassDetails,
+						jdkClassDetails.applyAnnotationUsage(
+								JpaAnnotations.ENTITY,
+								(entityUsage) -> entityUsage.setAttributeValue( "name", "___Entity5___" ),
 								modelBuildingContext
 						);
-						entityAnnotation.setAttributeValue( "name", "___Entity5___" );
-						jdkClassDetails.addAnnotationUsage( entityAnnotation );
 
 						final MutableMemberDetails idField = (MutableMemberDetails) jdkClassDetails.findFieldByName( "id" );
-						idField.addAnnotationUsage( JpaAnnotations.ID.createUsage( idField, modelBuildingContext ) );
+						idField.applyAnnotationUsage( JpaAnnotations.ID, modelBuildingContext );
 
 						return jdkClassDetails;
 					}
@@ -374,46 +368,32 @@ public class AdditionalMappingContributorTests {
 						assertThat( modelBuildingContext ).isSameAs( buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
 
 						final DynamicClassDetails classDetails = new DynamicClassDetails( "Entity6", modelBuildingContext );
-
-						final MutableAnnotationUsage<Entity> entityAnnotation = JpaAnnotations.ENTITY.createUsage(
-								classDetails,
+						classDetails.applyAnnotationUsage(
+								JpaAnnotations.ENTITY,
+								(config) -> config.setAttributeValue( "name", "Entity6" ),
 								modelBuildingContext
 						);
-						classDetails.addAnnotationUsage( entityAnnotation );
-
-						final DynamicFieldDetails idFieldDetails = new DynamicFieldDetails(
+						classDetails.applyAttribute(
 								"id",
-								new ClassTypeDetailsImpl( classDetailsRegistry.resolveClassDetails( Integer.class.getName() ), TypeDetails.Kind.CLASS ),
-								classDetails,
-								dynamicFieldModifiers(),
+								classDetailsRegistry.resolveClassDetails( Integer.class.getName() ),
+								false,
+								false,
+								(fieldDetails) -> fieldDetails.applyAnnotationUsage( JpaAnnotations.ID, modelBuildingContext ),
 								modelBuildingContext
 						);
-						classDetails.addField( idFieldDetails );
-						idFieldDetails.addAnnotationUsage( JpaAnnotations.ID.createUsage( idFieldDetails, modelBuildingContext ) );
-
-						final DynamicFieldDetails nameFieldDetails = new DynamicFieldDetails(
+						classDetails.applyAttribute(
 								"name",
-								new ClassTypeDetailsImpl(
-										classDetailsRegistry.resolveClassDetails( String.class.getName() ),
-										TypeDetails.Kind.CLASS
-								),
-								classDetails,
-								dynamicFieldModifiers(),
+								classDetailsRegistry.resolveClassDetails( String.class.getName() ),
+								false,
+								false,
+								(fieldDetails) -> fieldDetails.applyAnnotationUsage( HibernateAnnotations.NATIONALIZED, modelBuildingContext ),
 								modelBuildingContext
 						);
-						classDetails.addField( nameFieldDetails );
-						nameFieldDetails.addAnnotationUsage( HibernateAnnotations.NATIONALIZED.createUsage( nameFieldDetails, modelBuildingContext ) );
 
 						return classDetails;
 					}
 			);
 			contributions.contributeManagedClass( entity6Details );
-		}
-
-		private static final int SYNTHETIC = 0x00001000;
-
-		private static int dynamicFieldModifiers() {
-			return ~Modifier.TRANSIENT & ~Modifier.ABSTRACT & ~Modifier.STATIC & ~SYNTHETIC;
 		}
 	}
 }

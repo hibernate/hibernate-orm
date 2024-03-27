@@ -62,8 +62,6 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
-
 /**
  * A {@link ConnectionProvider} implementation intended for testing Hibernate/JTA interaction.  In that limited scope we
  * only ever have one single resource (the database connection) so we do not at all care about full-blown XA
@@ -76,7 +74,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 		ServiceRegistryAwareService {
 	private static final String CONNECTION_KEY = "_database_connection";
 
-	private final SharedDriverManagerConnectionProviderImpl delegate = SharedDriverManagerConnectionProviderImpl.getInstance();
+	private final DriverManagerConnectionProviderImpl delegate = new DriverManagerConnectionProviderImpl();
 
 	private final List<Connection> nonEnlistedConnections = new ArrayList<>();
 

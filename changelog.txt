@@ -3,6 +3,19 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.23.Final (March 27, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32250
+
+** Bug
+    * [HHH-17705] - NullPointerException during enhancement when using the default BytecodeProvider in Wildfly
+    * [HHH-17689] - Cache SQL statement for unique key lookup
+
+** Improvement
+    * [HHH-17319] - Use Oracle GraalVM for Atlas builds
+
+
 Changes in 6.2.22.Final (January 24, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

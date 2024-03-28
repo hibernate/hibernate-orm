@@ -13,7 +13,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.5') _
+@Library('hibernate-jenkins-pipeline-helpers@1.9') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
 @Field final String DEFAULT_JDK_VERSION = '11'
@@ -25,6 +25,8 @@ this.helper = new JobHelper(this)
 
 helper.runWithNotification {
 stage('Configure') {
+	requireApprovalForPullRequest 'hibernate'
+
 	this.environments = [
 //		new BuildEnvironment( dbName: 'h2' ),
 //		new BuildEnvironment( dbName: 'hsqldb' ),

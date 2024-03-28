@@ -43,6 +43,7 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		settings.put( AvailableSettings.SHOW_SQL, "true" );
 		settings.put( AvailableSettings.FORMAT_SQL, "true" );
+		settings.put( AvailableSettings.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Test

@@ -243,6 +243,21 @@ public interface MappingSettings {
 	String PREFER_JAVA_TYPE_JDBC_TYPES = "hibernate.type.prefer_java_type_jdbc_types";
 
 	/**
+	 * Indicates whether to prefer using SQL enums and the respective special JDBC types for binding/extracting
+	 * of values.
+	 * <p/>
+	 * Used to set the value across the entire system as opposed to scattered, individual
+	 * {@linkplain org.hibernate.annotations.JdbcTypeCode} and {@linkplain org.hibernate.annotations.JdbcType}
+	 * naming specific {@linkplain org.hibernate.type.descriptor.jdbc.JdbcType} implementations.
+	 *
+	 * @settingDefault false
+	 *
+	 * @since 6.5
+	 */
+	@Incubating
+	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
+
+	/**
 	 * Specifies a {@link org.hibernate.type.format.FormatMapper} used for JSON
 	 * serialization and deserialization, either:
 	 * <ul>

@@ -1070,7 +1070,8 @@ public class ToOneAttributeMapping
 					fetchParent,
 					isSelectByUniqueKey( sideNature ),
 					parentNavigablePath,
-					foreignKeyDomainResult
+					foreignKeyDomainResult,
+					creationState
 			);
 		}
 		return null;
@@ -1350,12 +1351,17 @@ public class ToOneAttributeMapping
 				);
 			}
 
+			if ( entityMappingType.isConcreteProxy() && sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
+				createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState );
+			}
+
 			return buildEntityDelayedFetch(
 					fetchParent,
 					this,
 					fetchablePath,
 					domainResult,
-					isSelectByUniqueKey( sideNature )
+					isSelectByUniqueKey( sideNature ),
+					creationState
 			);
 		}
 	}
@@ -1368,8 +1374,16 @@ public class ToOneAttributeMapping
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
-			boolean selectByUniqueKey) {
-		return new EntityDelayedFetchImpl( fetchParent, fetchedAttribute, navigablePath, keyResult, selectByUniqueKey );
+			boolean selectByUniqueKey,
+			DomainResultCreationState creationState) {
+		return new EntityDelayedFetchImpl(
+				fetchParent,
+				fetchedAttribute,
+				navigablePath,
+				keyResult,
+				selectByUniqueKey,
+				creationState
+		);
 	}
 
 	/**
@@ -1634,13 +1648,7 @@ public class ToOneAttributeMapping
 		}
 		final boolean selectByUniqueKey = isSelectByUniqueKey( side );
 
-		// Consider all associations annotated with @NotFound as EAGER
-		// and LAZY one-to-one that are not instrumented and not  optional
-		if ( fetchTiming == FetchTiming.IMMEDIATE
-				|| hasNotFoundAction()
-				|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null
-				|| ( !entityMappingType.getEntityPersister().isInstrumented()
-				&& cardinality == Cardinality.ONE_TO_ONE && isOptional ) ) {
+		if ( needsImmediateFetch( fetchTiming ) ) {
 			return buildEntityFetchSelect(
 					fetchParent,
 					this,
@@ -1651,13 +1659,37 @@ public class ToOneAttributeMapping
 			);
 		}
 
+		if ( entityMappingType.isConcreteProxy() && sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
+			createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState );
+		}
+
 		return buildEntityDelayedFetch(
 				fetchParent,
 				this,
 				fetchablePath,
 				keyResult,
-				selectByUniqueKey
+				selectByUniqueKey,
+				creationState
 		);
+	}
+
+	private boolean needsImmediateFetch(FetchTiming fetchTiming) {
+		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
+			return true;
+		}
+		else if ( !entityMappingType.isConcreteProxy() ) {
+			// Consider all associations annotated with @NotFound as EAGER
+			// and LAZY one-to-one that are not instrumented and not optional.
+			// When resolving the concrete entity type we can preserve laziness
+			// and handle not found actions based on the discriminator value
+			return hasNotFoundAction()
+					|| entityMappingType.getSoftDeleteMapping() != null
+					|| ( !entityMappingType.getEntityPersister().isInstrumented()
+					&& cardinality == Cardinality.ONE_TO_ONE && isOptional );
+		}
+		else {
+			return false;
+		}
 	}
 
 	private TableGroup determineTableGroupForFetch(

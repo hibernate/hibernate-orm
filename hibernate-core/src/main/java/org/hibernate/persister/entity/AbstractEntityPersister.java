@@ -194,6 +194,7 @@ import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
@@ -450,6 +451,8 @@ public abstract class AbstractEntityPersister
 
 	private EntityMappingType superMappingType;
 	private SortedMap<String, EntityMappingType> subclassMappingTypes;
+	private final boolean concreteProxy;
+	private EntityConcreteTypeLoader concreteTypeLoader;
 
 	private EntityIdentifierMapping identifierMapping;
 	private NaturalIdMapping naturalIdMapping;
@@ -539,6 +542,10 @@ public abstract class AbstractEntityPersister
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
 		this.implementsLifecycle = Lifecycle.class.isAssignableFrom( javaType.getJavaTypeClass() );
+
+		concreteProxy = isPolymorphic()
+				&& ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() || hasProxy() )
+				&& persistentClass.isConcreteProxy();
 
 		final Dialect dialect = creationContext.getDialect();
 
@@ -4284,6 +4291,24 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean isExplicitPolymorphism() {
 		return entityMetamodel.isExplicitPolymorphism();
+	}
+
+	@Override
+	public boolean isConcreteProxy() {
+		return concreteProxy;
+	}
+
+	@Override
+	public EntityMappingType resolveConcreteProxyTypeForId(Object id, SharedSessionContractImplementor session) {
+		if ( !concreteProxy ) {
+			return this;
+		}
+
+		EntityConcreteTypeLoader concreteTypeLoader = this.concreteTypeLoader;
+		if ( concreteTypeLoader == null ) {
+			this.concreteTypeLoader = concreteTypeLoader = new EntityConcreteTypeLoader( this, session.getFactory() );
+		}
+		return concreteTypeLoader.getConcreteType( id, session );
 	}
 
 	@Override

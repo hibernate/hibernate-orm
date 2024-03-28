@@ -29,6 +29,7 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -128,15 +129,15 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	protected T doGetReference(Object id) {
 		final SessionImplementor session = context.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
+		final EntityMappingType concreteType = entityPersister.resolveConcreteProxyTypeForId( id, session );
 		return (T) getReference(
 				coerceId( id, factory ),
 				session.asEventSource(),
 				factory,
-				entityPersister.getEntityName(),
+				concreteType.getEntityName(),
 				isReadOnly( session )
 		);
 	}
-
 
 	private Boolean isReadOnly(SessionImplementor session) {
 		return readOnly != null

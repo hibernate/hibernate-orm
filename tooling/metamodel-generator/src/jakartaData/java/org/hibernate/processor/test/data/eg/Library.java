@@ -102,4 +102,7 @@ public interface Library {
 
 	@Find
 	List<Author> authorsByCityAndPostcode(String address_city, String address_postcode);
+
+	@Query("where type = org.hibernate.processor.test.data.eg.Type.Magazine")
+	List<Book> magazines();
 }

@@ -108,6 +108,7 @@ import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -282,6 +283,8 @@ public abstract class MockSessionFactory
 	abstract boolean isAttributeDefined(String entityName, String fieldName);
 
 	abstract boolean isClassDefined(String qualifiedName);
+
+	abstract boolean isEnum(String className);
 
 	abstract boolean isFieldDefined(String qualifiedClassName, String fieldName);
 
@@ -821,6 +824,26 @@ public abstract class MockSessionFactory
 		@Override
 		public <X> EntityDomainType<X> entity(Class<X> cls) {
 			throw new UnsupportedOperationException("operation not supported");
+		}
+
+		@Override
+		public EnumJavaType<?> getEnumType(String className) {
+			if ( isEnum(className) ) {
+				return new EnumJavaType( Enum.class ) {
+					@Override
+					public String getTypeName() {
+						return className;
+					}
+				};
+			}
+			else {
+				return null;
+			}
+		}
+
+		@Override
+		public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
+			return null;
 		}
 
 		@Override

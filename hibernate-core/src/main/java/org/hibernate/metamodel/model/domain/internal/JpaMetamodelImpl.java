@@ -244,6 +244,28 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
+	public EnumJavaType<?> getEnumType(String prefix) {
+		try {
+			final Class<?> namedClass =
+					getServiceRegistry().requireService( ClassLoaderService.class )
+							.classForName( prefix );
+			if ( namedClass != null && namedClass.isEnum() ) {
+				return (EnumJavaType) getTypeConfiguration()
+						.getJavaTypeRegistry()
+						.resolveDescriptor(namedClass);
+			}
+		}
+		catch (Exception ignore) {
+		}
+		return null;
+	}
+
+	@Override
+	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
+		return Enum.valueOf( enumType.getJavaTypeClass(), terminal );
+	}
+
+	@Override
 	public <T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph) {
 		final EntityGraph<?> old = entityGraphMap.put(
 				graphName,

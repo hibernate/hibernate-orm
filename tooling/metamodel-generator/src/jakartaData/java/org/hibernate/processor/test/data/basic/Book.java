@@ -1,4 +1,4 @@
-package org.hibernate.processor.test.data;
+package org.hibernate.processor.test.data.basic;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.NaturalId;

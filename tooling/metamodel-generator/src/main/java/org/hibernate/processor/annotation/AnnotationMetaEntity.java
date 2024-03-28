@@ -1439,7 +1439,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final TypeMirror parameterType = parameterType(parameter);
 		boolean pageRequest = typeNameEquals( parameterType, JD_PAGE_REQUEST );
 		if ( isOrderParam( typeName(parameterType) ) || pageRequest ) {
-			final TypeMirror typeArgument = getTypeArgument( parameterType );
+			final TypeMirror typeArgument = getTypeArgument( parameterType, entity );
 			if ( typeArgument == null ) {
 				missingTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
 			}
@@ -1552,17 +1552,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return new OrderBy( path, descending, ignoreCase );
 	}
 
-	private static @Nullable TypeMirror getTypeArgument(TypeMirror parameterType) {
+	private static @Nullable TypeMirror getTypeArgument(TypeMirror parameterType, TypeElement entity) {
 		switch ( parameterType.getKind() ) {
 			case ARRAY:
 				final ArrayType arrayType = (ArrayType) parameterType;
-				return getTypeArgument( arrayType.getComponentType() );
+				return getTypeArgument( arrayType.getComponentType(), entity);
 			case DECLARED:
 				final DeclaredType type = (DeclaredType) parameterType;
 				switch ( typeName(parameterType) ) {
 					case LIST:
 						for (TypeMirror arg : type.getTypeArguments()) {
-							return getTypeArgument( arg );
+							return getTypeArgument( arg, entity);
 						}
 						return null;
 					case HIB_ORDER:
@@ -1572,7 +1572,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						for ( TypeMirror arg : type.getTypeArguments() ) {
 							switch ( arg.getKind() ) {
 								case WILDCARD:
-									return ((WildcardType) arg).getSuperBound();
+									final TypeMirror superBound = ((WildcardType) arg).getSuperBound();
+									// horrible hack b/c Jakarta Data is not typesafe
+									return superBound == null ? entity.asType() : superBound;
 								case ARRAY:
 								case DECLARED:
 								case TYPEVAR:

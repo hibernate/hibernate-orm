@@ -248,7 +248,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return Types.BIT;
+		return getVersion().isSameOrAfter( 23 ) ? super.getPreferredSqlTypeCodeForBoolean() : Types.BIT;
 	}
 
 	@Override
@@ -420,7 +420,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	/**
-	 * Oracle doesn't have any sort of {@link Types#BOOLEAN}
 	 * type or {@link Types#TIME} type, and its default behavior
 	 * for casting dates and timestamps to and from strings is just awful.
 	 */
@@ -448,6 +447,11 @@ public class OracleDialect extends Dialect {
 				}
 				break;
 			case BOOLEAN:
+				result = BooleanDecoder.toBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
 			case TF_BOOLEAN:
 				result = BooleanDecoder.toTrueFalseBoolean( from );
 				if ( result != null ) {
@@ -456,6 +460,7 @@ public class OracleDialect extends Dialect {
 				break;
 			case STRING:
 				switch ( from ) {
+					case BOOLEAN:
 					case INTEGER_BOOLEAN:
 					case TF_BOOLEAN:
 					case YN_BOOLEAN:
@@ -695,9 +700,12 @@ public class OracleDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
-				// still, after all these years...
-				return "number(1,0)";
-
+				if ( getVersion().isSameOrAfter( 23 ) ) {
+						return super.columnType( sqlTypeCode );
+				}
+				else {
+						return "number(1,0)";
+				}
 			case TINYINT:
 				return "number(3,0)";
 			case SMALLINT:
@@ -883,8 +891,10 @@ public class OracleDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-
-		typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
+		if ( getVersion().isBefore( 23 ) ) {
+			// starting 23c we support Boolean type natively
+			typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
+		}
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcType( OracleJdbcHelper.getStructJdbcType( serviceRegistry ) );

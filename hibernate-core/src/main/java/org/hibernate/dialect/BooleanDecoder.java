@@ -66,6 +66,8 @@ public final class BooleanDecoder {
 				return "decode(?1,1,'Y',0,'N',null)";
 			case TF_BOOLEAN:
 				return "decode(?1,'T','Y','F','N',null)";
+			case BOOLEAN:
+				return "decode(?1,true,'Y',false,'N',null)";
 			case INTEGER:
 			case LONG:
 				return "decode(abs(sign(?1)),1,'Y',0,'N',null)";
@@ -81,6 +83,8 @@ public final class BooleanDecoder {
 				return "decode(?1,1,'T',0,'F',null)";
 			case YN_BOOLEAN:
 				return "decode(?1,'Y','T','N','F',null)";
+			case BOOLEAN:
+				return "decode(?1,true,'T',false,'F',null)";
 			case INTEGER:
 			case LONG:
 				return "decode(abs(sign(?1)),1,'T',0,'F',null)";

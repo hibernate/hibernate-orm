@@ -19,6 +19,8 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,12 +35,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17332" )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17701" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17803" )
 public class InSubqueryPredicateAnonymousTupleTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.persist( new BasicEntity( 1, "test" ) );
-			session.persist( new TestEntity( 1L, new Money( 100L ) ) );
+			session.persist( new TestEntity( 1L, new Money( 100L ), Status.VALID ) );
 		} );
 	}
 
@@ -84,6 +87,18 @@ public class InSubqueryPredicateAnonymousTupleTest {
 		} );
 	}
 
+	@Test
+	public void testEnumeratedAttributeTuple(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final TestEntity result = session.createQuery(
+					"select t from TestEntity t where (t.id, t.status) in " +
+								"(select t2.id, t2.status from TestEntity t2)",
+					TestEntity.class
+			).getSingleResult();
+			assertThat( result.getStatus() ).isEqualTo( Status.VALID );
+		} );
+	}
+
 	@Entity( name = "TestEntity" )
 	public static class TestEntity {
 		@Id
@@ -92,17 +107,29 @@ public class InSubqueryPredicateAnonymousTupleTest {
 		@Convert( converter = MoneyConverter.class )
 		private Money money;
 
+		@Enumerated( EnumType.STRING )
+		private Status status;
+
 		public TestEntity() {
 		}
 
-		public TestEntity(Long id, Money money) {
+		public TestEntity(Long id, Money money, Status status) {
 			this.id = id;
 			this.money = money;
+			this.status = status;
 		}
 
 		public Money getMoney() {
 			return money;
 		}
+
+		public Status getStatus() {
+			return status;
+		}
+	}
+
+	public enum Status {
+		VALID, INVALID
 	}
 
 	public static class Money {

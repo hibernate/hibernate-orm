@@ -20,7 +20,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
@@ -38,11 +38,11 @@ import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
  * @author Steve Ebersole
  */
 public class TransformationHelper {
-	public static JaxbEntityMappings transform(String resourceName, ServiceRegistry serviceRegistry) {
+	public static JaxbEntityMappingsImpl transform(String resourceName, ServiceRegistry serviceRegistry) {
 		return transform( resourceName, serviceRegistry.getService( ClassLoaderService.class ) );
 	}
 
-	public static JaxbEntityMappings transform(String resourceName, ClassLoaderService cls) {
+	public static JaxbEntityMappingsImpl transform(String resourceName, ClassLoaderService cls) {
 		try ( final InputStream inputStream = cls.locateResourceStream( resourceName ) ) {
 			return withStaxEventReader( inputStream, cls, (staxEventReader) -> {
 				final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
@@ -77,9 +77,9 @@ public class TransformationHelper {
 	 * Verify correctness of the transformed mapping by marshalling and unmarshalling it
 	 * using the JaxbEntityMappings JAXBContext
 	 */
-	static void verifyTransformation(JaxbEntityMappings transformed) {
+	static void verifyTransformation(JaxbEntityMappingsImpl transformed) {
 		try {
-			final JAXBContext jaxbContext = JAXBContext.newInstance( JaxbEntityMappings.class );
+			final JAXBContext jaxbContext = JAXBContext.newInstance( JaxbEntityMappingsImpl.class );
 			final Marshaller marshaller = jaxbContext.createMarshaller();
 			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 
@@ -89,7 +89,7 @@ public class TransformationHelper {
 			final String transformedXml = stringWriter.toString();
 
 			final StringReader stringReader = new StringReader( transformedXml );
-			final JaxbEntityMappings unmarshalled = (JaxbEntityMappings) unmarshaller.unmarshal( stringReader );
+			final JaxbEntityMappingsImpl unmarshalled = (JaxbEntityMappingsImpl) unmarshaller.unmarshal( stringReader );
 
 			assertThat( unmarshalled ).isNotNull();
 		}

@@ -17,12 +17,10 @@ import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaJoin;
-import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 
@@ -34,9 +32,11 @@ import org.hibernate.testing.orm.domain.contacts.Address;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -111,7 +111,7 @@ public class CteTests {
 					final JpaCteCriteria<Tuple> femaleContacts = cq.with( cte );
 
 					final JpaRoot<Contact> root = cq.from( Contact.class );
-					final JpaJoinedFrom<?, Tuple> join = root.join( femaleContacts );
+					final JpaJoin<?, Tuple> join = root.join( femaleContacts );
 					join.on( root.get( "id" ).equalTo( join.get( "id" ) ) );
 
 					cq.multiselect( root.get( "id" ), root.get( "name" ) );

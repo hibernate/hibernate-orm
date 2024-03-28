@@ -84,7 +84,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
           # Don't populate Develocity cache in pull requests as that's potentially dangerous
           POPULATE_REMOTE_GRADLE_CACHE: "${{ github.event_name == 'push' }}"
-          GRADLE_ENTERPRISE_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_TOKEN }}"
+          GRADLE_ENTERPRISE_ACCESS_KEY: "${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}"
         run: ./ci/build-github.sh
         shell: bash
       - name: Upload test reports (if Gradle failed)

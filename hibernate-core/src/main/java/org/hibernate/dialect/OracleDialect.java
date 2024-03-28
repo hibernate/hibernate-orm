@@ -879,9 +879,9 @@ public class OracleDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-		if ( getVersion().isSame( 21 ) || getVersion().isBefore( 21 )) {
+		if ( getVersion().isBefore( 23 ) ) {
 			// starting 23c we support Boolean type natively
-			typeContributions.contributeJdbcType(OracleBooleanJdbcType.INSTANCE);
+			typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
 		}
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {

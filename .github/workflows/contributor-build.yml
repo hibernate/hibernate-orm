@@ -82,7 +82,8 @@ jobs:
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}
-          POPULATE_REMOTE_GRADLE_CACHE: true
+          # Don't populate Develocity cache in pull requests as that's potentially dangerous
+          POPULATE_REMOTE_GRADLE_CACHE: "${{ github.event_name == 'push' }}"
           GRADLE_ENTERPRISE_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_TOKEN }}"
         run: ./ci/build-github.sh
         shell: bash

@@ -1479,7 +1479,7 @@ public class HbmXmlTransformer {
 	}
 
 	private JaxbManyToOneImpl transformManyToOne(final JaxbHbmManyToOneType hbmNode) {
-		if ( hbmNode.getNotFound() != JaxbHbmNotFoundEnum.EXCEPTION ) {
+		if ( hbmNode.getNotFound() != null ) {
 			handleUnsupported( "`not-found` not supported for transformation" );
 		}
 
@@ -1882,7 +1882,7 @@ public class HbmXmlTransformer {
 		if ( !(hbmOneToMany.getNode() == null || hbmOneToMany.getNode().isBlank() ) ) {
 			handleUnsupported( "`node` not supported for transformation" );
 		}
-		if ( hbmOneToMany.getNotFound() != JaxbHbmNotFoundEnum.EXCEPTION ) {
+		if ( hbmOneToMany.getNotFound() != null ) {
 			handleUnsupported( "`not-found` not supported for transformation" );
 		}
 

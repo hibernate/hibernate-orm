@@ -485,9 +485,14 @@ public class HibernateProcessor extends AbstractProcessor {
 					if ( context.generateJakartaDataStaticMetamodel()
 							// no static metamodel for embeddable classes in Jakarta Data
 							&& hasAnnotation( element, ENTITY, MAPPED_SUPERCLASS )
-							// Don't generate a Jakarta Data metamodel
+							// don't generate a Jakarta Data metamodel
 							// if this entity was partially mapped in XML
-							&& alreadyExistingMetaEntity == null ) {
+							&& alreadyExistingMetaEntity == null
+							// let a handwritten metamodel "override" the generated one
+							// (this is used in the Jakarta Data TCK)
+							&& element.getEnclosingElement().getEnclosedElements()
+								.stream().noneMatch(e -> e.getSimpleName()
+									.contentEquals('_' + element.getSimpleName().toString()))) {
 						final AnnotationMetaEntity dataMetaEntity =
 								AnnotationMetaEntity.create( typeElement, context,
 										requiresLazyMemberInitialization,

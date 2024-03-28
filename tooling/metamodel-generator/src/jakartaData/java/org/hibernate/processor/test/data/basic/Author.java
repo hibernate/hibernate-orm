@@ -1,4 +1,4 @@
-package org.hibernate.processor.test.data;
+package org.hibernate.processor.test.data.basic;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

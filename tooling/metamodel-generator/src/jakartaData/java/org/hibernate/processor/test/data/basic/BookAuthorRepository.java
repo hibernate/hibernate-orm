@@ -1,4 +1,4 @@
-package org.hibernate.processor.test.data;
+package org.hibernate.processor.test.data.basic;
 
 import jakarta.data.Limit;
 import jakarta.data.Order;
@@ -22,7 +22,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 @Repository(dataStore = "myds")

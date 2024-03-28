@@ -72,6 +72,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -521,6 +522,16 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	@Override
 	public Map<String, Map<Class<?>, Enum<?>>> getAllowedEnumLiteralTexts() {
 		return jpaMetamodel.getAllowedEnumLiteralTexts();
+	}
+
+	@Override
+	public EnumJavaType<?> getEnumType(String className) {
+		return jpaMetamodel.getEnumType(className);
+	}
+
+	@Override
+	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
+		return jpaMetamodel.enumValue(enumType, terminal);
 	}
 
 	@Override

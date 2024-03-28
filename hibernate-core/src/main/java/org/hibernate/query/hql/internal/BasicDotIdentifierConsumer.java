@@ -10,12 +10,14 @@ import java.lang.reflect.Field;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -26,7 +28,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 /**
  * @asciidoc
@@ -177,17 +178,20 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			}
 
 			final String path = pathSoFar.toString();
-			final String importableName = creationContext.getJpaMetamodel().qualifyImportableName( path );
+			final JpaMetamodelImplementor jpaMetamodel = creationContext.getJpaMetamodel();
+			final String importableName = jpaMetamodel.qualifyImportableName( path );
+			final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 			if ( importableName != null ) {
-				final EntityDomainType<?> entityDomainType = creationContext.getJpaMetamodel().entity( importableName );
+				final EntityDomainType<?> entityDomainType = jpaMetamodel.entity( importableName );
 				if ( entityDomainType != null ) {
-					return new SqmLiteralEntityType( entityDomainType, creationContext.getNodeBuilder() );
+					return new SqmLiteralEntityType( entityDomainType, nodeBuilder );
 				}
 			}
 
-			final SqmFunctionDescriptor functionDescriptor = creationContext.getQueryEngine()
-					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( path );
+			final SqmFunctionDescriptor functionDescriptor =
+					creationContext.getQueryEngine()
+							.getSqmFunctionRegistry()
+							.findFunctionDescriptor( path );
 			if ( functionDescriptor != null ) {
 				return functionDescriptor.generateSqmExpression(
 						null,
@@ -195,55 +199,37 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				);
 			}
 
-//			// see if it is a Class name...
-//			try {
-//				final Class<?> namedClass = creationState.getCreationContext()
-//						.getServiceRegistry()
-//						.getService( ClassLoaderService.class )
-//						.classForName( pathSoFar );
-//				if ( namedClass != null ) {
-//					return new
-//				}
-//			}
-//			catch (Exception ignore) {
-//			}
-
 			// see if it is a named field/enum reference
 			final int splitPosition = path.lastIndexOf( '.' );
 			if ( splitPosition > 0 ) {
 				final String prefix = path.substring( 0, splitPosition );
 				final String terminal = path.substring( splitPosition + 1 );
+
 				//TODO: try interpreting paths of form foo.bar.Foo.Bar as foo.bar.Foo$Bar
+				final EnumJavaType<?> enumType = jpaMetamodel.getEnumType(prefix);
+				if ( enumType != null ) {
+					return new SqmEnumLiteral(
+							jpaMetamodel.enumValue(enumType, terminal),
+							enumType,
+							terminal,
+							nodeBuilder
+					);
+				}
 
 				try {
-					final Class<?> namedClass = creationContext
-							.getServiceRegistry()
-							.requireService( ClassLoaderService.class )
-							.classForName( prefix );
+					final Class<?> namedClass =
+							creationContext.getServiceRegistry()
+									.requireService( ClassLoaderService.class )
+									.classForName( prefix );
 					if ( namedClass != null ) {
-						final JavaTypeRegistry javaTypeRegistry = creationContext.getJpaMetamodel()
-								.getTypeConfiguration()
-								.getJavaTypeRegistry();
-
-						if ( namedClass.isEnum() ) {
-							return new SqmEnumLiteral(
-									Enum.valueOf( (Class) namedClass, terminal ),
-									(EnumJavaType) javaTypeRegistry.resolveDescriptor( namedClass ),
-									terminal,
-									creationContext.getNodeBuilder()
-							);
-						}
-
-						try {
-							final Field referencedField = namedClass.getDeclaredField( terminal );
-							if ( referencedField != null ) {
-								final JavaType<?> fieldJtd = javaTypeRegistry
-										.getDescriptor( referencedField.getType() );
-								//noinspection unchecked
-								return new SqmFieldLiteral( referencedField, fieldJtd, creationContext.getNodeBuilder() );
-							}
-						}
-						catch (Exception ignore) {
+						final Field referencedField = namedClass.getDeclaredField( terminal );
+						if ( referencedField != null ) {
+							final JavaType<?> fieldJtd =
+									jpaMetamodel
+											.getTypeConfiguration()
+											.getJavaTypeRegistry()
+											.getDescriptor( referencedField.getType() );
+							return new SqmFieldLiteral( referencedField, fieldJtd, nodeBuilder);
 						}
 					}
 				}

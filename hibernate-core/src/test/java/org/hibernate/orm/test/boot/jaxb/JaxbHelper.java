@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.orm.test.boot.jaxb.mapping;
+package org.hibernate.orm.test.boot.jaxb;
 
 import java.io.InputStream;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -39,6 +40,17 @@ public class JaxbHelper {
 		return validationEnabled;
 	}
 
+	public static <T> T withStaxEventReader(InputStream inputStream, ClassLoaderService cls, Function<XMLEventReader,T> action) {
+		final XMLEventReader reader = createReader( inputStream, cls );
+		final T applied = action.apply( reader );
+		try {
+			reader.close();
+		}
+		catch (XMLStreamException ignore) {
+		}
+		return applied;
+	}
+
 	public static void withStaxEventReader(InputStream inputStream, ClassLoaderService cls, Consumer<XMLEventReader> action) {
 		final XMLEventReader reader = createReader( inputStream, cls );
 		action.accept( reader );
@@ -65,7 +77,7 @@ public class JaxbHelper {
 	}
 
 	@SuppressWarnings("unchecked")
-	<T> T jaxb(XMLEventReader reader, Schema xsd, JAXBContext jaxbContext) throws JAXBException {
+	public <T> T jaxb(XMLEventReader reader, Schema xsd, JAXBContext jaxbContext) throws JAXBException {
 		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 
 		final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();

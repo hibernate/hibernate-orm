@@ -253,11 +253,6 @@ tasks.withType( Test.class ).each { test ->
     test.beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
-
-    test.filter {
-        // todo (7.0) : we should go back to these tests
-        excludeTestsMatching 'GenericMapAssociationTest'
-    }
 }
 
 // Tests with records

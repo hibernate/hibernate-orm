@@ -253,7 +253,6 @@ tasks.withType( Test.class ).each { test ->
 
     test.filter {
         // todo (7.0) : we should go back to these tests
-        excludeTestsMatching 'EmbeddableGenericsAndInterfaceTest'
         excludeTestsMatching 'GenericMapAssociationTest'
     }
 }

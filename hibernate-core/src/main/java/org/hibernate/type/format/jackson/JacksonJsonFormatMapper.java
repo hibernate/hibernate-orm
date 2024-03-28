@@ -6,17 +6,18 @@
  */
 package org.hibernate.type.format.jackson;
 
-import org.hibernate.type.format.FormatMapper;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.format.AbstractJsonFormatMapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.lang.reflect.Type;
+
 /**
  * @author Christian Beikov
+ * @author Yanming Zhou
  */
-public final class JacksonJsonFormatMapper implements FormatMapper {
+public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jackson";
 
@@ -31,29 +32,22 @@ public final class JacksonJsonFormatMapper implements FormatMapper {
 	}
 
 	@Override
-	public <T> T fromString(CharSequence charSequence, JavaType<T> javaType, WrapperOptions wrapperOptions) {
-		if ( javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class ) {
-			return (T) charSequence.toString();
-		}
+	public <T> T fromString(CharSequence charSequence, Type type) {
 		try {
-			return objectMapper.readValue( charSequence.toString(), objectMapper.constructType( javaType.getJavaType() ) );
+			return objectMapper.readValue( charSequence.toString(), objectMapper.constructType( type ) );
 		}
 		catch (JsonProcessingException e) {
-			throw new IllegalArgumentException( "Could not deserialize string to java type: " + javaType, e );
+			throw new IllegalArgumentException( "Could not deserialize string to java type: " + type, e );
 		}
 	}
 
 	@Override
-	public <T> String toString(T value, JavaType<T> javaType, WrapperOptions wrapperOptions) {
-		if ( javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class ) {
-			return (String) value;
-		}
+	public <T> String toString(T value, Type type) {
 		try {
-			return objectMapper.writerFor( objectMapper.constructType( javaType.getJavaType() ) )
-					.writeValueAsString( value );
+			return objectMapper.writerFor( objectMapper.constructType( type ) ).writeValueAsString( value );
 		}
 		catch (JsonProcessingException e) {
-			throw new IllegalArgumentException( "Could not serialize object of java type: " + javaType, e );
+			throw new IllegalArgumentException( "Could not serialize object of java type: " + type, e );
 		}
 	}
 }

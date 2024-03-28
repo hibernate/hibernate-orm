@@ -586,18 +586,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					final Iterator<SqmPath<?>> iterator = insertStatement.getInsertionTargetPaths().iterator();
 					for ( int j = 1; j < values.getChildCount(); j += 2 ) {
 						final SqmPath<?> targetPath = iterator.next();
-						final Class<?> targetPathJavaType = targetPath.getJavaType();
-						final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
+						final String targetPathJavaType = targetPath.getJavaTypeName();
+						final boolean isEnum = targetPath.isEnum();
 						final ParseTree valuesContext = values.getChild( j );
 						final HqlParser.ExpressionContext expressionContext;
-						final Map<Class<?>, Enum<?>> possibleEnumValues;
+						final Set<String> possibleEnumTypes;
 						final SqmExpression<?> value;
 						if ( isEnum && valuesContext.getChild( 0 ) instanceof HqlParser.ExpressionContext
-								&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) valuesContext.getChild( 0 ) ) ) != null ) {
+								&& ( possibleEnumTypes = getPossibleEnumTypes( expressionContext = (HqlParser.ExpressionContext) valuesContext.getChild( 0 ) ) ) != null ) {
 							value = resolveEnumShorthandLiteral(
 									expressionContext,
-									possibleEnumValues,
-									targetPathJavaType
+									getPossibleEnumValue( expressionContext ),
+									targetPathJavaType,
+									possibleEnumTypes
 							);
 						}
 						else {
@@ -692,18 +693,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmAssignment<?> visitAssignment(HqlParser.AssignmentContext ctx) {
 		//noinspection unchecked
 		final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( ctx.simplePath() );
-		final Class<?> targetPathJavaType = targetPath.getJavaType();
-		final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
+		final String targetPathJavaType = targetPath.getJavaTypeName();
+		final boolean isEnum = targetPath.isEnum();
 		final ParseTree rightSide = ctx.getChild( 2 );
 		final HqlParser.ExpressionContext expressionContext;
-		final Map<Class<?>, Enum<?>> possibleEnumValues;
+		final Set<String> possibleEnumValues;
 		final SqmExpression<?> value;
 		if ( isEnum && rightSide.getChild( 0 ) instanceof HqlParser.ExpressionContext
-				&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) rightSide.getChild( 0 ) ) ) != null ) {
+				&& ( possibleEnumValues = getPossibleEnumTypes( expressionContext = (HqlParser.ExpressionContext) rightSide.getChild( 0 ) ) ) != null ) {
 			value = resolveEnumShorthandLiteral(
 					expressionContext,
-					possibleEnumValues,
-					targetPathJavaType
+					getPossibleEnumValue( expressionContext ),
+					targetPathJavaType,
+					possibleEnumValues
 			);
 		}
 		else {
@@ -2518,21 +2520,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			HqlParser.ExpressionContext rightExpressionContext) {
 		final SqmExpression<?> right;
 		final SqmExpression<?> left;
-		Map<Class<?>, Enum<?>> possibleEnumValues;
-		if ( ( possibleEnumValues = getPossibleEnumValues( leftExpressionContext ) ) != null ) {
+		Set<String> possibleEnumTypes;
+		if ( ( possibleEnumTypes = getPossibleEnumTypes( leftExpressionContext ) ) != null ) {
 			right = (SqmExpression<?>) rightExpressionContext.accept( this );
 			left = resolveEnumShorthandLiteral(
 					leftExpressionContext,
-					possibleEnumValues,
-					right.getJavaType()
+					getPossibleEnumValue( leftExpressionContext ),
+					right.getJavaTypeName(),
+					possibleEnumTypes
 			);
 		}
-		else if ( ( possibleEnumValues = getPossibleEnumValues( rightExpressionContext ) ) != null ) {
+		else if ( ( possibleEnumTypes = getPossibleEnumTypes( rightExpressionContext ) ) != null ) {
 			left = (SqmExpression<?>) leftExpressionContext.accept( this );
 			right = resolveEnumShorthandLiteral(
 					rightExpressionContext,
-					possibleEnumValues,
-					left.getJavaType()
+					getPossibleEnumValue( rightExpressionContext ),
+					left.getJavaTypeName(),
+					possibleEnumTypes
 			);
 		}
 		else {
@@ -2570,12 +2574,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-	private SqmExpression<?> resolveEnumShorthandLiteral(HqlParser.ExpressionContext expressionContext, Map<Class<?>, Enum<?>> possibleEnumValues, Class<?> enumType) {
-		final Enum<?> enumValue;
-		if ( possibleEnumValues != null && ( enumValue = possibleEnumValues.get( enumType ) ) != null ) {
+	private SqmExpression<?> resolveEnumShorthandLiteral(
+			HqlParser.ExpressionContext expressionContext,
+			String enumValue, String enumType, Set<String> enumTypes) {
+		if ( enumValue != null && enumType != null && enumTypes.contains(enumType) ) {
 			DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
-			dotIdentifierConsumer.consumeIdentifier( enumValue.getClass().getName(), true, false );
-			dotIdentifierConsumer.consumeIdentifier( enumValue.name(), false, true );
+			dotIdentifierConsumer.consumeIdentifier( enumType, true, false );
+			dotIdentifierConsumer.consumeIdentifier( enumValue, false, true );
 			return (SqmExpression<?>) dotIdentifierConsumerStack.getCurrent().getConsumedPart();
 		}
 		else {
@@ -2583,7 +2588,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
-	private Map<Class<?>, Enum<?>> getPossibleEnumValues(HqlParser.ExpressionContext expressionContext) {
+	private Set<String> getPossibleEnumTypes(HqlParser.ExpressionContext expressionContext) {
 		ParseTree ctx;
 		// Traverse the expression structure according to the grammar
 		if ( expressionContext instanceof HqlParser.BarePrimaryExpressionContext && expressionContext.getChildCount() == 1 ) {
@@ -2597,7 +2602,29 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				ctx = ctx.getChild( 0 );
 
 				if ( ctx instanceof HqlParser.SimplePathContext ) {
-					return creationContext.getJpaMetamodel().getAllowedEnumLiteralTexts().get( ctx.getText() );
+					return creationContext.getJpaMetamodel().getAllowedEnumLiteralTexts( ctx.getText() );
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private String getPossibleEnumValue(HqlParser.ExpressionContext expressionContext) {
+		ParseTree ctx;
+		// Traverse the expression structure according to the grammar
+		if ( expressionContext instanceof HqlParser.BarePrimaryExpressionContext && expressionContext.getChildCount() == 1 ) {
+			ctx = expressionContext.getChild( 0 );
+
+			while ( ctx instanceof HqlParser.PrimaryExpressionContext && ctx.getChildCount() == 1 ) {
+				ctx = ctx.getChild( 0 );
+			}
+
+			if ( ctx instanceof HqlParser.GeneralPathFragmentContext && ctx.getChildCount() == 1 ) {
+				ctx = ctx.getChild( 0 );
+
+				if ( ctx instanceof HqlParser.SimplePathContext ) {
+					return ctx.getText();
 				}
 			}
 		}
@@ -2689,8 +2716,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final HqlParser.ExplicitTupleInListContext tupleExpressionListContext = (HqlParser.ExplicitTupleInListContext) inListContext;
 			final int size = tupleExpressionListContext.getChildCount();
 			final int estimatedSize = size >> 1;
-			final Class<?> testExpressionJavaType = testExpression.getJavaType();
-			final boolean isEnum = testExpressionJavaType != null && testExpressionJavaType.isEnum();
+			final String testExpressionJavaType = testExpression.getJavaTypeName();
+			final boolean isEnum = testExpression.isEnum();
 			// Multivalued bindings are only allowed if there is a single list item, hence size 3 (LP, RP and param)
 			parameterDeclarationContextStack.push( () -> size == 3 );
 			try {
@@ -2700,14 +2727,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					if ( parseTree instanceof HqlParser.ExpressionOrPredicateContext ) {
 						final ParseTree child = parseTree.getChild( 0 );
 						final HqlParser.ExpressionContext expressionContext;
-						final Map<Class<?>, Enum<?>> possibleEnumValues;
+						final Set<String> possibleEnumTypes;
 						if ( isEnum && child instanceof HqlParser.ExpressionContext
-								&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) child ) ) != null ) {
+								&& ( possibleEnumTypes = getPossibleEnumTypes( expressionContext = (HqlParser.ExpressionContext) child ) ) != null ) {
 							listExpressions.add(
 									resolveEnumShorthandLiteral(
 											expressionContext,
-											possibleEnumValues,
-											testExpressionJavaType
+											getPossibleEnumValue( expressionContext ),
+											testExpressionJavaType,
+											possibleEnumTypes
 									)
 							);
 						}
@@ -3229,9 +3257,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final HqlParser.SimpleCaseWhenContext simpleCaseWhenContext = ctx.simpleCaseWhen( i );
 			final HqlParser.ExpressionContext testExpression = simpleCaseWhenContext.expression();
 			final SqmExpression<?> test;
-			final Map<Class<?>, Enum<?>> possibleEnumValues;
-			if ( ( possibleEnumValues = getPossibleEnumValues( testExpression ) ) != null ) {
-				test = resolveEnumShorthandLiteral( testExpression, possibleEnumValues, expression.getJavaType() );
+			final Set<String> possibleEnumTypes;
+			if ( ( possibleEnumTypes = getPossibleEnumTypes( testExpression ) ) != null ) {
+				test = resolveEnumShorthandLiteral(
+						testExpression,
+						getPossibleEnumValue( testExpression ),
+						expression.getJavaTypeName(),
+						possibleEnumTypes
+				);
 			}
 			else {
 				test = (SqmExpression<?>) testExpression.accept( this );

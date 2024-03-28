@@ -40,13 +40,14 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
 		final EnumType type = context.getEnumeratedType();
+		final boolean preferNativeEnumTypesEnabled = context.isPreferNativeEnumTypesEnabled();
 		int sqlType;
 		switch ( type == null ? ORDINAL : type ) {
 			case ORDINAL:
-				if ( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
+				if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
 					sqlType = ENUM;
 				}
-				else if ( jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
+				else if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
 					sqlType = NAMED_ENUM;
 				}
 				else {
@@ -57,7 +58,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 				if ( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
 					sqlType = ENUM;
 				}
-				else if ( jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
+				else if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
 					sqlType = NAMED_ENUM;
 				}
 				else if ( context.getColumnLength() == 1 ) {

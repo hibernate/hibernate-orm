@@ -430,6 +430,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		@Override
+		public boolean isPreferNativeEnumTypesEnabled() {
+			return sessionFactory == null
+					? metadataBuildingContext.isPreferNativeEnumTypesEnabled()
+					: sessionFactory.getSessionFactoryOptions().isPreferNativeEnumTypesEnabled();
+		}
+
+		@Override
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 			return sessionFactory == null
 					? metadataBuildingContext.getBuildingOptions().getDefaultTimeZoneStorage()

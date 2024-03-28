@@ -964,7 +964,7 @@
         <xs:attribute name="embed-xml" type="xs:boolean"/>
         <xs:attribute name="entity-name" type="xs:string"/>
         <xs:attribute name="node" type="xs:string"/>
-        <xs:attribute name="not-found" default="exception" type="NotFoundEnum"/>
+        <xs:attribute name="not-found" type="NotFoundEnum"/>
     </xs:complexType>
 
     <xs:complexType name="OneToOneType">
@@ -1014,7 +1014,7 @@
                 <xs:attribute name="lazy" type="LazyWithNoProxyEnum"/>
                 <xs:attribute name="name" use="required" type="xs:string"/>
                 <xs:attribute name="node" type="xs:string"/>
-                <xs:attribute name="not-found" default="exception" type="NotFoundEnum"/>
+                <xs:attribute name="not-found" type="NotFoundEnum"/>
                 <xs:attribute name="not-null" type="xs:boolean"/>
                 <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/>
                 <!-- only supported for properties of a class (not component) -->
@@ -1046,7 +1046,7 @@
                 <xs:attribute name="formula" type="xs:string"/>
                 <xs:attribute name="lazy" type="LazyEnum"/>
                 <xs:attribute name="node" type="xs:string"/>
-                <xs:attribute name="not-found" default="exception" type="NotFoundEnum"/>
+                <xs:attribute name="not-found" type="NotFoundEnum"/>
                 <xs:attribute name="order-by" type="xs:string"/>
                 <xs:attribute name="outer-join" type="OuterJoinEnum"/>
                 <xs:attribute name="property-ref" type="xs:string"/>

@@ -435,7 +435,7 @@ public class OracleDialect extends Dialect {
 				}
 				break;
 			case BOOLEAN:
-				result = BooleanDecoder.toBoolean(from);
+				result = BooleanDecoder.toBoolean( from );
 				if ( result != null ) {
 					return result;
 				}

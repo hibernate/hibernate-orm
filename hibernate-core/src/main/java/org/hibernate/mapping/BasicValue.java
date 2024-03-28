@@ -1112,6 +1112,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	}
 
 	@Override
+	public boolean isPreferNativeEnumTypesEnabled() {
+		return getBuildingContext().isPreferNativeEnumTypesEnabled();
+	}
+
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

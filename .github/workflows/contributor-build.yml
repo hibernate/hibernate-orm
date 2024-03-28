@@ -10,10 +10,12 @@ on:
   push:
     branches:
       - 'main'
-  pull_request:
+  # WARNING: Using pull_request_target to access secrets, but we check out the PR head commit.
+  # See checkout action for details.
+  pull_request_target:
     branches:
       - 'main'
-      
+
 permissions: {} # none
 
 # See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
@@ -23,7 +25,7 @@ concurrency:
   group: "workflow = ${{ github.workflow }}, ref = ${{ github.event.ref }}, pr = ${{ github.event.pull_request.id }}"
   # Cancel previous builds in the same concurrency group even if they are in process
   # for pull requests or pushes to forks (not the upstream repository).
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'hibernate/hibernate-orm' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request_target' || github.repository != 'hibernate/hibernate-orm' }}
 
 jobs:
   build:
@@ -51,8 +53,23 @@ jobs:
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out commit already pushed to branch
+        if: "! github.event.pull_request.number"
+        uses: actions/checkout@v4
         with:
+          persist-credentials: false
+      - name: Check out PR head
+        uses: actions/checkout@v4
+        if: github.event.pull_request.number
+        with:
+          # WARNING: This is potentially dangerous since we're checking out unreviewed code,
+          # and since we're using the pull_request_target event we can use secrets.
+          # Thus, we must be extra careful to never expose secrets to steps that execute this code,
+          # and to strictly limit our of secrets to those that only pose minor security threats.
+          # This means in particular we won't expose Develocity credentials to the main gradle executions,
+          # but instead will execute gradle a second time just to push build scans to Develocity;
+          # see below.
+          ref: "refs/pull/${{ github.event.pull_request.number }}/head"
           persist-credentials: false
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
@@ -84,9 +101,17 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
           # Don't populate Develocity cache in pull requests as that's potentially dangerous
           POPULATE_REMOTE_GRADLE_CACHE: "${{ github.event_name == 'push' }}"
-          GRADLE_ENTERPRISE_ACCESS_KEY: "${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}"
+          # WARNING: exposes secrets, so must only be passed to a step that doesn't run unapproved code.
+          GRADLE_ENTERPRISE_ACCESS_KEY: "${{ github.event_name == 'push' && secrets.GRADLE_ENTERPRISE_ACCESS_KEY || '' }}"
         run: ./ci/build-github.sh
         shell: bash
+      - name: Publish Develocity build scan for previous build (pull request)
+        if: "${{ !cancelled() && github.event_name == 'pull_request_target' && github.repository == 'hibernate/hibernate-orm' }}"
+        run: |
+          ./gradlew buildScanPublishPrevious
+        env:
+          # WARNING: exposes secrets, so must only be passed to a step that doesn't run unapproved code.
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY_PR }}
       - name: Upload test reports (if Gradle failed)
         uses: actions/upload-artifact@v4
         if: failure()

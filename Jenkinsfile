@@ -159,36 +159,30 @@ stage('Build') {
 							}
 						}
 						stage('Test') {
-							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+							String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
-								withCredentials([string(credentialsId: helper.scmSource.pullRequest ?
-										'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key',
-										variable: 'GRADLE_ENTERPRISE_ACCESS_KEY')]) {
-									withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
-										tryFinally({
-											if (buildEnv.dbLockableResource == null) {
-												withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
-													sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
-													timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-														sh cmd
-													}
-												}
+								tryFinally({
+									if (buildEnv.dbLockableResource == null) {
+										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
+											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
+											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+												ciBuild buildEnv, args
 											}
-											else {
-												lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
-													if ( buildEnv.dbLockResourceAsHost ) {
-														cmd += " -DdbHost=${LOCKED_RESOURCE}"
-													}
-													timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-														sh cmd
-													}
-												}
-											}
-										}, {
-											junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
-										})
+										}
 									}
-								}
+									else {
+										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
+											if ( buildEnv.dbLockResourceAsHost ) {
+												args += " -DdbHost=${LOCKED_RESOURCE}"
+											}
+											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+												ciBuild buildEnv, args
+											}
+										}
+									}
+								}, {
+									junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
+								})
 							}
 						}
 					}, { // Finally
@@ -239,6 +233,39 @@ void runBuildOnNode(String label, Closure body) {
         })
 	}
 }
+
+void ciBuild(buildEnv, String args) {
+	if ( !helper.scmSource.pullRequest ) {
+		// Not a PR: we can pass credentials to the build, allowing it to populate the build cache
+		// and to publish build scans directly.
+
+		// On untrusted nodes, we use the same access key as for PRs:
+		// it has limited access, essentially it can only push build scans.
+		def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
+
+		withCredentials([string(credentialsId: develocityCredentialsId,
+				variable: 'GRADLE_ENTERPRISE_ACCESS_KEY')]) {
+			withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
+				sh "./ci/build.sh $args"
+			}
+		}
+	}
+	else {
+		// Pull request: we can't pass credentials to the build, since we'd be exposing secrets to e.g. tests.
+		// We do the build first, then publish the build scan separately.
+		tryFinally({
+			sh "./ci/build.sh $args"
+		}, { // Finally
+			withCredentials([string(credentialsId: 'ge.hibernate.org-access-key-pr',
+					variable: 'GRADLE_ENTERPRISE_ACCESS_KEY')]) {
+				withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
+					sh './gradlew buildScanPublishPrevious'
+				}
+			}
+		})
+	}
+}
+
 void pruneDockerContainers() {
 	if ( !sh( script: 'command -v docker || true', returnStdout: true ).trim().isEmpty() ) {
 		sh 'docker container prune -f || true'

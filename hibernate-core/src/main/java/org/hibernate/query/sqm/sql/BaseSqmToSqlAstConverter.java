@@ -1579,12 +1579,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Values visitValues(SqmValues sqmValues) {
-		final Values values = new Values();
-		for ( SqmExpression<?> expression : sqmValues.getExpressions() ) {
-			// todo: add WriteExpression handling
-			values.getExpressions().add( (Expression) expression.accept( this ) );
+		final List<SqmPath<?>> insertionTargetPaths;
+		if ( currentSqmStatement instanceof SqmInsertStatement<?> ) {
+			insertionTargetPaths = ( (SqmInsertStatement<?>) currentSqmStatement ).getInsertionTargetPaths();
 		}
-		return values;
+		else {
+			insertionTargetPaths = null;
+		}
+		final List<SqmExpression<?>> expressions = sqmValues.getExpressions();
+		final ArrayList<Expression> valuesExpressions = new ArrayList<>( expressions.size() );
+		for ( int i = 0; i < expressions.size(); i++ ) {
+			// todo: add WriteExpression handling
+			valuesExpressions.add(
+					insertionTargetPaths == null
+							? (Expression) expressions.get( i ).accept( this )
+							: visitWithInferredType( expressions.get( i ), insertionTargetPaths.get( i ) )
+			);
+		}
+		return new Values( valuesExpressions );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

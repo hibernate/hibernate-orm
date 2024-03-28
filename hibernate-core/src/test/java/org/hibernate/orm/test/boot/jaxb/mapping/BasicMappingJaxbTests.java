@@ -15,6 +15,7 @@ import org.hibernate.boot.jaxb.internal.stax.MappingEventReader;
 import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -24,7 +25,7 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.orm.test.boot.jaxb.mapping.JaxbHelper.withStaxEventReader;
+import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
 
 /**
  * @author Steve Ebersole

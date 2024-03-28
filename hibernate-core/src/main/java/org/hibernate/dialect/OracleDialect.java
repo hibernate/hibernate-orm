@@ -688,7 +688,7 @@ public class OracleDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
-				if ( getVersion().isSameOrAfter( DatabaseVersion.make(23) ) ) {
+				if ( getVersion().isSameOrAfter( 23 ) ) {
 						return super.columnType( sqlTypeCode );
 				}
 				else {

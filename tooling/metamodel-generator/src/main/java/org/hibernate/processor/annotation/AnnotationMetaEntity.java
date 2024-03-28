@@ -75,7 +75,7 @@ import static org.hibernate.grammars.hql.HqlLexer.HAVING;
 import static org.hibernate.grammars.hql.HqlLexer.IDENTIFIER;
 import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSessionParameter;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSpecialParam;
@@ -2143,7 +2143,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				throw new AssertionFailure("@Entity annotation should not be missing");
 			}
 			final String name = (String) getAnnotationValue(annotation, "name");
-			return isNotEmpty(name) ? resultType.asElement().getSimpleName().toString() : name;
+			return isEmpty(name) ? resultType.asElement().getSimpleName().toString() : name;
 		}
 		else if ( primaryEntity != null ) {
 			return primaryEntity.getSimpleName().toString();

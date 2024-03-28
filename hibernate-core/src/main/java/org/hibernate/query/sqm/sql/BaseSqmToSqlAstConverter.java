@@ -2609,6 +2609,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup parentTableGroup = fromClauseIndex.findTableGroup(
 					from.getCorrelationParent().getNavigablePath()
 			);
+			if ( parentTableGroup == null ) {
+				throw new InterpretationException( "Access to from node '" + from.getCorrelationParent() + "' is not possible in from-clause subqueries, unless the 'lateral' keyword is used for the subquery!" );
+			}
 			final SqlAliasBase sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
 			if ( parentTableGroup instanceof PluralTableGroup ) {
 				final PluralTableGroup pluralTableGroup = (PluralTableGroup) parentTableGroup;
@@ -2760,7 +2763,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup;
 		if ( sqmRoot instanceof SqmDerivedRoot<?> ) {
 			final SqmDerivedRoot<?> derivedRoot = (SqmDerivedRoot<?>) sqmRoot;
+			// Temporarily push an empty FromClauseIndex to disallow access to aliases from the top query
+			// Only lateral subqueries are allowed to see the aliases
+			fromClauseIndexStack.push( new FromClauseIndex( null ) );
 			final SelectStatement statement = (SelectStatement) derivedRoot.getQueryPart().accept( this );
+			fromClauseIndexStack.pop();
 			final AnonymousTupleType<?> tupleType = (AnonymousTupleType<?>) sqmRoot.getNodeType();
 			final List<SqlSelection> sqlSelections = statement.getQueryPart().getFirstQuerySpec().getSelectClause().getSqlSelections();
 			final AnonymousTupleTableGroupProducer tableGroupProducer = tupleType.resolveTableGroupProducer(
@@ -3501,7 +3508,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private TableGroup consumeDerivedJoin(SqmDerivedJoin<?> sqmJoin, TableGroup parentTableGroup, boolean transitive) {
+		if ( !sqmJoin.isLateral() ) {
+			// Temporarily push an empty FromClauseIndex to disallow access to aliases from the top query
+			// Only lateral subqueries are allowed to see the aliases
+			fromClauseIndexStack.push( new FromClauseIndex( null ) );
+		}
 		final SelectStatement statement = (SelectStatement) sqmJoin.getQueryPart().accept( this );
+		if ( !sqmJoin.isLateral() ) {
+			fromClauseIndexStack.pop();
+		}
 		final AnonymousTupleType<?> tupleType = (AnonymousTupleType<?>) sqmJoin.getNodeType();
 		final List<SqlSelection> sqlSelections = statement.getQueryPart().getFirstQuerySpec().getSelectClause().getSqlSelections();
 		final AnonymousTupleTableGroupProducer tableGroupProducer = tupleType.resolveTableGroupProducer(

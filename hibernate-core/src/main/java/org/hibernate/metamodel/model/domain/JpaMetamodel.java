@@ -19,6 +19,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -84,6 +85,10 @@ public interface JpaMetamodel extends Metamodel {
 	 * This is needed for parsing shorthand enum literals that don't use FQNs.
 	 */
 	Map<String, Map<Class<?>, Enum<?>>> getAllowedEnumLiteralTexts();
+
+	EnumJavaType<?> getEnumType(String prefix);
+
+	<E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns

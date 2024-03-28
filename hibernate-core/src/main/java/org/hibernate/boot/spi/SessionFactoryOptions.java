@@ -345,6 +345,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isPreferJavaTimeJdbcTypesEnabled();
 
+	boolean isPreferNativeEnumTypesEnabled();
+
 	/**
 	 * The format mapper to use for serializing/deserializing JSON data.
 	 *

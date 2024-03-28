@@ -11,6 +11,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.JdbcExtractingLogging;
@@ -58,6 +60,12 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	protected String[] getMappings() {
 		return new String[] { "org/hibernate/orm/test/mapping/converted/enums/Person.hbm.xml" };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( Environment.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Override

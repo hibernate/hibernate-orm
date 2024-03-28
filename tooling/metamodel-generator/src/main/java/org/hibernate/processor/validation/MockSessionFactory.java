@@ -403,6 +403,11 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public boolean isPreferNativeEnumTypesEnabled() {
+		return MetadataBuildingContext.super.isPreferNativeEnumTypesEnabled();
+	}
+
+	@Override
 	public FastSessionServices getFastSessionServices() {
 		throw new UnsupportedOperationException("operation not supported");
 	}

@@ -1409,18 +1409,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			else {
 				multivalued.add( false );
-				final Types types = context.getTypeUtils();
-				final TypeMirror parameterType = parameterType( parameter );
-				boolean pageRequest = typeNameEquals( parameterType, JD_PAGE_REQUEST );
-				if ( isOrderParam( typeName(parameterType) ) || pageRequest ) {
-					final TypeMirror typeArgument = getTypeArgument( parameterType );
-					if ( typeArgument == null ) {
-						missingTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
-					}
-					else if ( !types.isSameType( typeArgument, entity.asType() ) ) {
-						wrongTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
-					}
-				}
+				checkFinderParameter(entity, parameter);
 			}
 		}
 		putMember( methodKey,
@@ -1443,6 +1432,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						jakartaDataRepository
 				)
 		);
+	}
+
+	private void checkFinderParameter(TypeElement entity, VariableElement parameter) {
+		final Types types = context.getTypeUtils();
+		final TypeMirror parameterType = parameterType(parameter);
+		boolean pageRequest = typeNameEquals( parameterType, JD_PAGE_REQUEST );
+		if ( isOrderParam( typeName(parameterType) ) || pageRequest ) {
+			final TypeMirror typeArgument = getTypeArgument( parameterType );
+			if ( typeArgument == null ) {
+				missingTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
+			}
+			else if ( !types.isSameType( typeArgument, entity.asType() ) ) {
+				wrongTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
+			}
+		}
 	}
 
 	private void createCriteriaDelete(ExecutableElement method, TypeMirror returnType) {
@@ -2689,21 +2693,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		if ( returnType != null ) {
-			final Types types = context.getTypeUtils();
 			for ( VariableElement parameter : method.getParameters() ) {
-				final TypeMirror parameterType = parameterType( parameter );
-				final TypeMirror typeArgument = getTypeArgument( parameterType );
-				final boolean pageRequest = typeNameEquals(parameterType, JD_PAGE_REQUEST);
-				if ( isOrderParam( typeName(parameterType) ) || pageRequest ) {
-					if ( typeArgument == null ) {
-						missingTypeArgError( returnType.toString(), parameter, pageRequest );
-					}
-					else if ( !types.isSameType(typeArgument, returnType) ) {
-						wrongTypeArgError( returnType.toString(), parameter, pageRequest );
-					}
+				final TypeElement entity = implicitEntityType(returnType);
+				if ( entity != null ) {
+					checkFinderParameter(entity, parameter);
 				}
+				// else? what?
 			}
 		}
+	}
+
+	private @Nullable TypeElement implicitEntityType(@Nullable TypeMirror resultType) {
+		if ( resultType != null && resultType.getKind() == TypeKind.DECLARED) {
+			final DeclaredType declaredType = (DeclaredType) resultType;
+			final Element typeElement = declaredType.asElement();
+			if ( hasAnnotation(typeElement, ENTITY) ) {
+				return (TypeElement) typeElement;
+			}
+		}
+		return primaryEntity;
 	}
 
 	private boolean typeNameEquals(TypeMirror parameterType, String typeName) {

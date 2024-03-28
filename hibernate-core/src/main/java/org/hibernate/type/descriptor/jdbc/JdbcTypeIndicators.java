@@ -77,6 +77,13 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * @see org.hibernate.cfg.MappingSettings#PREFER_NATIVE_ENUM_TYPES
+	 */
+	default boolean isPreferNativeEnumTypesEnabled() {
+		return getCurrentBaseSqlTypeIndicators().isPreferNativeEnumTypesEnabled();
+	}
+
+	/**
 	 * When mapping a boolean type to the database what is the preferred SQL type code to use?
 	 * <p>
 	 * Returns a key into the {@link JdbcTypeRegistry}.

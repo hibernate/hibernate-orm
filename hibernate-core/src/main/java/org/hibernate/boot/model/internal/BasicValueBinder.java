@@ -224,6 +224,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	@Override
+	public boolean isPreferNativeEnumTypesEnabled() {
+		return buildingContext.isPreferNativeEnumTypesEnabled();
+	}
+
+	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return resolveJdbcTypeCode( buildingContext.getPreferredSqlTypeCodeForBoolean() );
 	}

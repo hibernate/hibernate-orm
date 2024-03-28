@@ -66,6 +66,11 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					}
 
 					@Override
+					public boolean isPreferNativeEnumTypesEnabled() {
+						return context.isPreferNativeEnumTypesEnabled();
+					}
+
+					@Override
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 						return BasicValue.timeZoneStorageStrategy( timeZoneStorageType, context );
 					}

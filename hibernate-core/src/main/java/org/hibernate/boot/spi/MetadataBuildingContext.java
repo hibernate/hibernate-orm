@@ -85,8 +85,17 @@ public interface MetadataBuildingContext {
 		return isPreferJavaTimeJdbcTypesEnabled( getBootstrapContext().getServiceRegistry() );
 	}
 
+	@Incubating
+	default boolean isPreferNativeEnumTypesEnabled() {
+		return isPreferNativeEnumTypesEnabled( getBootstrapContext().getServiceRegistry() );
+	}
+
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ServiceRegistry serviceRegistry) {
 		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
+	}
+
+	static boolean isPreferNativeEnumTypesEnabled(ServiceRegistry serviceRegistry) {
+		return isPreferNativeEnumTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
 	}
 
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
@@ -94,6 +103,15 @@ public interface MetadataBuildingContext {
 				MappingSettings.PREFER_JAVA_TYPE_JDBC_TYPES,
 				configurationService.getSettings(),
 				// todo : true would be better eventually so maybe just rip off that band aid
+				false
+		);
+	}
+
+	static boolean isPreferNativeEnumTypesEnabled(ConfigurationService configurationService) {
+		return ConfigurationHelper.getBoolean(
+				MappingSettings.PREFER_NATIVE_ENUM_TYPES,
+				configurationService.getSettings(),
+				// todo: switch to true with HHH-17905
 				false
 		);
 	}

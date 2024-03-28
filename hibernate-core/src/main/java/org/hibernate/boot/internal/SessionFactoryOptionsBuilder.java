@@ -222,7 +222,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final SqmTranslatorFactory sqmTranslatorFactory;
 	private final Boolean useOfJdbcNamedParametersEnabled;
 	private boolean namedQueryStartupCheckingEnabled;
-	private boolean preferJavaTimeJdbcTypes;
+	private final boolean preferJavaTimeJdbcTypes;
+	private final boolean preferNativeEnumTypes;
 	private final int preferredSqlTypeCodeForBoolean;
 	private final int preferredSqlTypeCodeForDuration;
 	private final int preferredSqlTypeCodeForUuid;
@@ -445,6 +446,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.namedQueryStartupCheckingEnabled = configurationService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 		this.preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
+		this.preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
 		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 		this.preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( serviceRegistry );
 		this.preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( serviceRegistry );
@@ -1286,6 +1288,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return preferJavaTimeJdbcTypes;
+	}
+
+	@Override
+	public boolean isPreferNativeEnumTypesEnabled() {
+		return preferNativeEnumTypes;
 	}
 
 	@Override

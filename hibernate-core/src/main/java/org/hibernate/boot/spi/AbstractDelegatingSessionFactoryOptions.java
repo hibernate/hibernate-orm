@@ -494,6 +494,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isPreferNativeEnumTypesEnabled() {
+		return delegate.isPreferNativeEnumTypesEnabled();
+	}
+
+	@Override
 	public FormatMapper getJsonFormatMapper() {
 		return delegate.getJsonFormatMapper();
 	}

@@ -6,6 +6,9 @@
  */
 package org.hibernate.orm.test.envers.integration.customtype;
 
+import java.util.Map;
+
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.customtype.EnumTypeEntity;
@@ -24,6 +27,12 @@ public class EnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {EnumTypeEntity.class};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( AvailableSettings.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Test

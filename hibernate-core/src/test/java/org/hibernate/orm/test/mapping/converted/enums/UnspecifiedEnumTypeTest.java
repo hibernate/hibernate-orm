@@ -42,6 +42,7 @@ public class UnspecifiedEnumTypeTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setProperty( Environment.HBM2DDL_AUTO, "" );
+		configuration.setProperty( Environment.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Before

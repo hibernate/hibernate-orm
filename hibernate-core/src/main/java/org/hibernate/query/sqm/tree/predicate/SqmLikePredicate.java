@@ -143,12 +143,13 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
-		return new SqmLikePredicate( matchExpression, pattern, escapeCharacter, !isNegated(), nodeBuilder() );
-	}
-
-	@Override
-	public SqmNegatablePredicate not() {
-		negate();
-		return this;
+		return new SqmLikePredicate(
+				matchExpression,
+				pattern,
+				escapeCharacter,
+				!isNegated(),
+				isCaseSensitive,
+				nodeBuilder()
+		);
 	}
 }

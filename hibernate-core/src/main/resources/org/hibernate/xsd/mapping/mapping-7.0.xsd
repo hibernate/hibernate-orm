@@ -1620,7 +1620,7 @@
         <xsd:attribute name="mapped-by" type="xsd:string"/>
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
         <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
-        <xsd:attribute name="not-found" default="EXCEPTION" type="orm:not-found-enum"/>
+        <xsd:attribute name="not-found" type="orm:not-found-enum"/>
         <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
     </xsd:complexType>
 
@@ -1665,7 +1665,7 @@
         <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
         <xsd:attribute name="maps-id" type="xsd:string"/>
         <xsd:attribute name="id" type="xsd:boolean"/>
-        <xsd:attribute name="not-found" default="EXCEPTION" type="orm:not-found-enum"/>
+        <xsd:attribute name="not-found" type="orm:not-found-enum"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -2046,7 +2046,7 @@
         <xsd:attribute name="mapped-by" type="xsd:string"/>
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
         <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
-        <xsd:attribute name="not-found" default="EXCEPTION" type="orm:not-found-enum"/>
+        <xsd:attribute name="not-found" type="orm:not-found-enum"/>
         <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
     </xsd:complexType>
 

@@ -563,6 +563,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 	}
 
+	@Override
+	boolean isEnum(String className) {
+		final TypeElement typeElement = elementUtil.getTypeElement(className);
+		return typeElement != null && typeElement.getKind() == ElementKind.ENUM;
+	}
+
 	private static boolean isEmbeddableType(TypeElement type) {
 		return hasAnnotation(type, "Embeddable");
 	}

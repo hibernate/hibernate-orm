@@ -54,6 +54,7 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.EntityGraph;
@@ -245,17 +246,29 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	@Override
 	public EnumJavaType<?> getEnumType(String prefix) {
+		final ClassLoaderService classLoaderService =
+				getServiceRegistry().requireService(ClassLoaderService.class);
+		final JavaTypeRegistry registry = getTypeConfiguration().getJavaTypeRegistry();
 		try {
-			final Class<?> namedClass =
-					getServiceRegistry().requireService( ClassLoaderService.class )
-							.classForName( prefix );
+			final Class<?> namedClass = classLoaderService.classForName( prefix );
 			if ( namedClass != null && namedClass.isEnum() ) {
-				return (EnumJavaType) getTypeConfiguration()
-						.getJavaTypeRegistry()
-						.resolveDescriptor(namedClass);
+				return (EnumJavaType) registry.resolveDescriptor(namedClass);
 			}
 		}
-		catch (Exception ignore) {
+		catch (ClassLoadingException classLoadingException) {
+			try {
+				final int lastDot = prefix.lastIndexOf('.');
+				if ( lastDot>0) {
+					final String replaced =
+							prefix.substring(0, lastDot) + '$' + prefix.substring(lastDot+1);
+					final Class<?> namedClass = classLoaderService.classForName( replaced );
+					if ( namedClass != null && namedClass.isEnum() ) {
+						return (EnumJavaType) registry.resolveDescriptor(namedClass);
+					}
+				}
+			}
+			catch (ClassLoadingException ignore) {
+			}
 		}
 		return null;
 	}

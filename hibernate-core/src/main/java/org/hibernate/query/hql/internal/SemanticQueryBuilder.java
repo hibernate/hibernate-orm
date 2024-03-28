@@ -2624,7 +2624,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				ctx = ctx.getChild( 0 );
 
 				if ( ctx instanceof HqlParser.SimplePathContext ) {
-					return ctx.getText();
+					HqlParser.SimplePathContext simplePathContext = (HqlParser.SimplePathContext) ctx;
+					int size = simplePathContext.simplePathElement().size();
+					if ( size==0 ) {
+						return simplePathContext.getText();
+					}
+					else {
+						return simplePathContext.simplePathElement(size -1)
+								.identifier().getText();
+					}
 				}
 			}
 		}

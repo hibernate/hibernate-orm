@@ -49,6 +49,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -283,6 +284,7 @@ public class StructWithArrayEmbeddableTest implements AdditionalMappingContribut
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
 	public void testSelectionItems(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {

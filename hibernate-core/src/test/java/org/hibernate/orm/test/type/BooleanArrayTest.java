@@ -73,6 +73,7 @@ public class BooleanArrayTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
 	public void testById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TableWithBooleanArrays tableRecord;
@@ -88,8 +89,9 @@ public class BooleanArrayTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
 	public void testQueryById(SessionFactoryScope scope) {
-		scope.inSession( em -> {
+      scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getById", TableWithBooleanArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithBooleanArrays tableRecord = tq.getSingleResult();
@@ -99,8 +101,9 @@ public class BooleanArrayTest {
 
 	@Test
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
-	public void testQuery(SessionFactoryScope scope) {
-		scope.inSession( em -> {
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
+    public void testQuery(SessionFactoryScope scope) {
+      scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getByData", TableWithBooleanArrays.class );
 			tq.setParameter( "data", new Boolean[]{} );
 			TableWithBooleanArrays tableRecord = tq.getSingleResult();
@@ -109,6 +112,7 @@ public class BooleanArrayTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
 	public void testNativeQueryById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.Native.getById", TableWithBooleanArrays.class );
@@ -136,6 +140,7 @@ public class BooleanArrayTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
 	public void testNativeQueryUntyped(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			Query q = em.createNamedQuery( "TableWithBooleanArrays.Native.getByIdUntyped" );

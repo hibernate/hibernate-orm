@@ -236,6 +236,7 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.isEnumType;
 import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isVarbinaryType;
@@ -1609,6 +1610,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
 			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2)
+			// HHH-17908: Since the runtime can cope with enum on the DDL side,
+			// but varchar on the ORM expectation side, let's treat the types as equivalent
+			|| isEnumType( typeCode1 ) && isVarcharType( typeCode2 )
 			|| sameColumnType(typeCode1, typeCode2);
 	}
 

@@ -25,10 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Jan Schatteman
  */
-@Jpa(
-		annotatedClasses = {Wall.class},
-		jpaComplianceEnabled = false
-)
 @JiraKey( value = "HHH-17493" )
 public class NegatedPredicateTest {
 
@@ -56,6 +52,10 @@ public class NegatedPredicateTest {
 		);
 	}
 
+	@Jpa(
+			annotatedClasses = {Wall.class},
+			jpaComplianceEnabled = false
+	)
 	@Test
 	public void testNegatedPredicate(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
@@ -78,6 +78,10 @@ public class NegatedPredicateTest {
 		);
 	}
 
+	@Jpa(
+			annotatedClasses = {Wall.class},
+			jpaComplianceEnabled = false
+	)
 	@Test
 	public void testDoubleNegatedPredicate(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
@@ -103,4 +107,61 @@ public class NegatedPredicateTest {
 				}
 		);
 	}
+
+	@Jpa(
+			annotatedClasses = {Wall.class},
+			jpaComplianceEnabled = true
+	)
+	@Test
+	public void testJpaCompliantNegatedPredicate(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Wall> query = cb.createQuery( Wall.class );
+					Root<Wall> root = query.from( Wall.class );
+					query.select( root ).where(
+							cb.not(
+									cb.or(
+											cb.equal(root.get( "color" ), "yellow"),
+											cb.equal(root.get( "color" ), "red")
+									)
+							)
+					);
+					Wall result = entityManager.createQuery( query ).getSingleResult();
+					assertNotNull( result );
+					assertEquals("green", result.getColor());
+				}
+		);
+	}
+
+	@Jpa(
+			annotatedClasses = {Wall.class},
+			jpaComplianceEnabled = true
+	)
+	@Test
+	public void testJpaCompliantDoubleNegatedPredicate(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Wall> query = cb.createQuery( Wall.class );
+					Root<Wall> root = query.from( Wall.class );
+					query.select( root ).where(
+							cb.not(
+									cb.not(
+											cb.or(
+													cb.equal(root.get( "color" ), "yellow"),
+													cb.equal(root.get( "color" ), "red")
+											)
+									)
+							)
+					);
+					query.orderBy( cb.asc(root.get("id")) );
+					List<Wall> result = entityManager.createQuery( query ).getResultList();
+					assertEquals( 2, result.size() );
+					assertEquals("yellow", result.get(0).getColor());
+					assertEquals("red", result.get(1).getColor());
+				}
+		);
+	}
+
 }

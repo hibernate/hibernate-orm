@@ -25,8 +25,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import static java.util.Arrays.sort;
 import static java.util.Collections.emptySet;
 import static org.hibernate.type.SqlTypes.NAMED_ENUM;
+import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * Represents a named {@code enum} type on PostgreSQL.
@@ -120,9 +122,21 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 			Size columnSize,
 			Database database,
 			TypeConfiguration typeConfiguration) {
+		//sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
+		addAuxiliaryDatabaseObjects( javaType, database, true );
+	}
+
+	private void addAuxiliaryDatabaseObjects(
+			JavaType<?> javaType,
+			Database database,
+			boolean sortEnumValues) {
 		final Dialect dialect = database.getDialect();
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
-		final String[] create = dialect.getCreateEnumTypeCommand( enumClass );
+		String[] values = getEnumeratedValues( enumClass );
+		if ( sortEnumValues ) {
+			sort( values );
+		}
+		final String[] create = dialect.getCreateEnumTypeCommand( enumClass.getSimpleName(), values );
 		final String[] drop = dialect.getDropEnumTypeCommand( enumClass );
 		if ( create != null && create.length>0 ) {
 			database.addAuxiliaryDatabaseObject(

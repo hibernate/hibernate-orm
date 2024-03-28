@@ -91,7 +91,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private final Map<Class<?>, ManagedDomainType<?>> jpaManagedTypeMap = new HashMap<>();
 	private final Set<ManagedDomainType<?>> jpaManagedTypes = new HashSet<>();
 	private final Set<EmbeddableDomainType<?>> jpaEmbeddables = new HashSet<>();
-	private final Map<String, Map<Class<?>, Enum<?>>> allowedEnumLiteralTexts = new HashMap<>();
+	private final Map<String, Set<String>> allowedEnumLiteralTexts = new HashMap<>();
 
 	private final transient Map<String, RootGraphImplementor<?>> entityGraphMap = new ConcurrentHashMap<>();
 
@@ -239,8 +239,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public Map<String, Map<Class<?>, Enum<?>>> getAllowedEnumLiteralTexts() {
-		return allowedEnumLiteralTexts;
+	public Set<String> getAllowedEnumLiteralTexts(String enumValue) {
+		return allowedEnumLiteralTexts.get(enumValue);
 	}
 
 	@Override
@@ -604,13 +604,13 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				final Enum<?>[] enumConstants = enumJavaClass.getEnumConstants();
 				for ( Enum<?> enumConstant : enumConstants ) {
 					allowedEnumLiteralTexts
-							.computeIfAbsent( enumConstant.name(), (s) -> new HashMap<>() )
-							.put( enumJavaClass, enumConstant );
+							.computeIfAbsent( enumConstant.name(), s -> new HashSet<>() )
+							.add( enumJavaClass.getName() );
 
 					final String simpleQualifiedName = enumJavaClass.getSimpleName() + "." + enumConstant.name();
 					allowedEnumLiteralTexts
-							.computeIfAbsent( simpleQualifiedName, (s) -> new HashMap<>() )
-							.put( enumJavaClass, enumConstant );
+							.computeIfAbsent( simpleQualifiedName, s -> new HashSet<>() )
+							.add( enumJavaClass.getName() );
 				}
 			}
 		} );

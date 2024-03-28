@@ -105,4 +105,7 @@ public interface Library {
 
 	@Query("where type = org.hibernate.processor.test.data.eg.Type.Magazine")
 	List<Book> magazines();
+
+	@Query("where type = Journal")
+	List<Book> journals();
 }

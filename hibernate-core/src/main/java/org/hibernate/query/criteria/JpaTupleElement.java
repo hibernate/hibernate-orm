@@ -8,6 +8,7 @@ package org.hibernate.query.criteria;
 
 import jakarta.persistence.TupleElement;
 
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -22,5 +23,13 @@ public interface JpaTupleElement<T> extends TupleElement<T>, JpaCriteriaNode {
 	default Class<? extends T> getJavaType() {
 		// todo (6.0) : can this signature just return `Class<T>`?
 		return getJavaTypeDescriptor() == null ? null : getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	default String getJavaTypeName() {
+		return getJavaTypeDescriptor() == null ? null : getJavaTypeDescriptor().getTypeName();
+	}
+
+	default boolean isEnum() {
+		return getJavaTypeDescriptor() instanceof EnumJavaType;
 	}
 }

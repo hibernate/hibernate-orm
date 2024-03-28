@@ -43,8 +43,10 @@ import javax.lang.model.util.Types;
 import java.beans.Introspector;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static java.util.Arrays.stream;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -192,6 +194,30 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return mapping != null && mapping.getSimpleName().contentEquals("STRING")
 				? VarcharJdbcType.INSTANCE
 				: IntegerJdbcType.INSTANCE;
+	}
+
+	final Map<String, Set<String>> result = new HashMap<>();
+
+	@Override
+	Map<String, Set<String>> getAllowedEnumLiteralTexts() {
+		//TODO: elementUtil.getAllModuleElements();
+		if ( result.isEmpty() ) {
+			for (Element mod : elementUtil.getModuleElement("").getEnclosedElements()) {
+				for (Element element : mod.getEnclosedElements()) {
+					if (element.getKind() == ElementKind.ENUM) {
+						TypeElement typeElement = (TypeElement) element;
+						for (Element member : element.getEnclosedElements()) {
+							if (member.getKind() == ElementKind.ENUM_CONSTANT) {
+								String name = member.getSimpleName().toString();
+								result.computeIfAbsent( name, s -> new HashSet<>() )
+										.add( typeElement.getQualifiedName().toString() );
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
 	}
 
 	private static Type elementCollectionElementType(TypeElement elementType,

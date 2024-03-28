@@ -847,9 +847,18 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
+		public Set<String> getAllowedEnumLiteralTexts(String enumValue) {
+			return MockSessionFactory.this.getAllowedEnumLiteralTexts().get(enumValue);
+		}
+
+		@Override
 		public JpaCompliance getJpaCompliance() {
 			return jpaCompliance;
 		}
+	}
+
+	Map<String, Set<String>> getAllowedEnumLiteralTexts() {
+		return emptyMap();
 	}
 
 	class MockMappedDomainType<X> extends MappedSuperclassTypeImpl<X>{

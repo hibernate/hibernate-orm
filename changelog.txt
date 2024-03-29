@@ -3,6 +3,16 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.24.Final (March 29, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32272
+
+** Bug
+    * [HHH-17734] - Hibernate should prioritize provider_class over datasource
+    * [HHH-17493] - Negating a SqmNegatedPredicate has no effect on Hql string
+
+
 Changes in 6.2.23.Final (March 27, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

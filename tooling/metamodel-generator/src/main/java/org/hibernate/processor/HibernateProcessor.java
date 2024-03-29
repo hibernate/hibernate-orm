@@ -124,7 +124,9 @@ public class HibernateProcessor extends AbstractProcessor {
 	public static final String ADD_GENERATION_DATE = "addGenerationDate";
 
 	/**
-	 * Controls whether {@code @SuppressWarnings({"deprecation","rawtypes"})} should be added to the generated classes
+	 * A comma-separated list of warnings to suppress, or simply {@code true}
+	 * if {@code @SuppressWarnings({"deprecation","rawtypes"})} should be
+	 * added to the generated classes.
 	 */
 	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
 
@@ -213,7 +215,16 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		context.setAddGenerationDate( parseBoolean( options.get( ADD_GENERATION_DATE ) ) );
 
-		context.setAddSuppressWarningsAnnotation( parseBoolean( options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION ) ) );
+		String suppressedWarnings = options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION );
+		if ( suppressedWarnings != null ) {
+			if ( parseBoolean(suppressedWarnings) ) {
+				// legacy behavior from HHH-12068
+				context.setSuppressedWarnings(new String[] {"deprecation", "rawtypes"});
+			}
+			else {
+				context.setSuppressedWarnings( suppressedWarnings.replace(" ","").split(",") );
+			}
+		}
 
 		return parseBoolean( options.get( FULLY_ANNOTATION_CONFIGURED_OPTION ) );
 	}

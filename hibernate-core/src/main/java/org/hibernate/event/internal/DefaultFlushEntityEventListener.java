@@ -18,6 +18,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -41,11 +42,13 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
@@ -219,6 +222,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			else {
 				final Object entity = event.getEntity();
 				processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
+				processIfManagedEntity( entity, DefaultFlushEntityEventListener::useTracker );
 				final EventSource source = event.getSession();
 				source.getFactory()
 						.getCustomEntityDirtinessStrategy()
@@ -229,6 +233,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		else {
 			return hasDirtyCollections( event );
 		}
+	}
+
+	private static void useTracker(final ManagedEntity entity) {
+		entity.$$_hibernate_setUseTracker( true );
 	}
 
 	private boolean scheduleUpdate(final FlushEntityEvent event) {
@@ -553,9 +561,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 		else {
 			final Object entity = event.getEntity();
-			return isSelfDirtinessTracker( entity )
-					? getDirtyPropertiesFromSelfDirtinessTracker( asSelfDirtinessTracker( entity ), event )
-					: getDirtyPropertiesFromCustomEntityDirtinessStrategy( event );
+			if ( isSelfDirtinessTracker( entity ) && asManagedEntity( entity ).$$_hibernate_useTracker() ) {
+				return getDirtyPropertiesFromSelfDirtinessTracker( asSelfDirtinessTracker( entity ), event );
+			}
+			return getDirtyPropertiesFromCustomEntityDirtinessStrategy( event );
 		}
 	}
 
@@ -595,16 +604,24 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final EntityEntry entry = event.getEntityEntry();
 		final EntityPersister persister = entry.getPersister();
 		if ( tracker.$$_hibernate_hasDirtyAttributes() || persister.hasMutableProperties() ) {
-			return persister.resolveDirtyAttributeIndexes(
-					event.getPropertyValues(),
-					entry.getLoadedState(),
-					tracker.$$_hibernate_getDirtyAttributes(),
-					event.getSession()
-			);
+			return resolveDirtyAttributeIndex( tracker, event, persister, entry );
 		}
 		else {
 			return ArrayHelper.EMPTY_INT_ARRAY;
 		}
+	}
+
+	private static int[] resolveDirtyAttributeIndex(
+			SelfDirtinessTracker tracker,
+			FlushEntityEvent event,
+			EntityPersister persister,
+			EntityEntry entry) {
+		return persister.resolveDirtyAttributeIndexes(
+				event.getPropertyValues(),
+				entry.getLoadedState(),
+				tracker.$$_hibernate_getDirtyAttributes(),
+				event.getSession()
+		);
 	}
 
 	private static class DirtyCheckAttributeInfoImpl implements CustomEntityDirtinessStrategy.AttributeInformation {

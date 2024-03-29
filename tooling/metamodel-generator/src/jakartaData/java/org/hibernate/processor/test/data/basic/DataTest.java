@@ -11,6 +11,7 @@ import org.hibernate.processor.test.util.WithClasses;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 
 /**
@@ -18,7 +19,7 @@ import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsStr
  */
 public class DataTest extends CompilationTest {
 	@Test
-	@WithClasses({ Author.class, Book.class, BookAuthorRepository.class })
+	@WithClasses({ Author.class, Book.class, BookAuthorRepository.class, IdOperations.class, Concrete.class })
 	public void test() {
 		System.out.println( getMetaModelSourceAsString( Author.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
@@ -30,5 +31,7 @@ public class DataTest extends CompilationTest {
 		assertMetamodelClassGeneratedFor( Author.class );
 		assertMetamodelClassGeneratedFor( Book.class );
 		assertMetamodelClassGeneratedFor( BookAuthorRepository.class );
+		assertMetamodelClassGeneratedFor( Concrete.class );
+		assertNoMetamodelClassGeneratedFor( IdOperations.class );
 	}
 }

@@ -33,12 +33,12 @@ public class Menu implements Serializable {
 		this.id = id;
 	}
 
-	@Column(name="is_default")	
-	public String isDefault() {
+	@Column(name="is_default")
+	public String getIsDefault() {
 		return isDefault;
 	}
 
-	public void setDefault(String isDefault) {
+	public void setIsDefault(String isDefault) {
 		this.isDefault = isDefault;
 	}
 

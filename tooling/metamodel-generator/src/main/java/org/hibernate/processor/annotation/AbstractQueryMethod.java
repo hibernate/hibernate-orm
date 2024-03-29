@@ -378,10 +378,12 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			"\t\t\t\t\t\t.collect(toList());\n" +
 			"\t\tvar _page =\n" +
 			"\t\t\t\tPageRequest.of(Entity.class)\n" +
-			"\t\t\t\t\t\t.sortBy(pageRequest.sorts())\n" +
+			//SHOULD NOT have cast to raw Iterable
+			"\t\t\t\t\t\t.sortBy((Iterable) pageRequest.sorts())\n" +
 			"\t\t\t\t\t\t.size(pageRequest.size())\n" +
 			"\t\t\t\t\t\t.page(pageRequest.page() + 1);\n" +
-			"\t\treturn new CursoredPageRecord<>(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
+			//SHOULD BE new CursoredPageRecord<>
+			"\t\treturn new CursoredPageRecord(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
 			"\t\t\t\t_results.isLastPage() ? null : _page.afterKey(_results.getNextPage().getKey().toArray()),\n" +
 			"\t\t\t\t_results.isFirstPage() ? null : _page.beforeKey(_results.getPreviousPage().getKey().toArray()));";
 

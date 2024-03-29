@@ -12,10 +12,14 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
+import org.hibernate.Hibernate;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.CacheHelper;
+import org.hibernate.engine.internal.ManagedTypeHelper;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
@@ -58,6 +62,8 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 
 /**
  * @author Steve Ebersole
@@ -478,16 +484,28 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		if ( targetObject == null ) {
 			return null;
 		}
-		if ( refersToPrimaryKey ) {
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( targetObject );
-			if ( lazyInitializer != null ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( targetObject );
+		if ( lazyInitializer != null ) {
+			if ( refersToPrimaryKey ) {
 				return lazyInitializer.getIdentifier();
+			}
+			else {
+				targetObject = lazyInitializer.getImplementation();
 			}
 		}
 		final ModelPart modelPart = side.getModelPart();
 		if ( modelPart.isEntityIdentifierMapping() ) {
 			return ( (EntityIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
+
+		if ( lazyInitializer == null && ManagedTypeHelper.isPersistentAttributeInterceptable( targetObject ) ) {
+			final PersistentAttributeInterceptor interceptor =
+					asPersistentAttributeInterceptable( targetObject ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor && !( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized() ) {
+				Hibernate.initialize( targetObject );
+			}
+		}
+
 		return ( (PropertyBasedMapping) modelPart ).getPropertyAccess().getGetter().get( targetObject );
 	}
 

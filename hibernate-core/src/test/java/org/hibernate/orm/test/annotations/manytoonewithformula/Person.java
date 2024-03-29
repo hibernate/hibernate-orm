@@ -39,9 +39,10 @@ public class Person implements Serializable {
 		this.companyId = companyId;
 	}
 	@Column(name="is_default")
-	public String isDefaultFlag() {
+	public String getDefaultFlag() {
 		return defaultFlag;
 	}
+
 	public void setDefaultFlag(String defaultFlag) {
 		this.defaultFlag = defaultFlag;
 	}

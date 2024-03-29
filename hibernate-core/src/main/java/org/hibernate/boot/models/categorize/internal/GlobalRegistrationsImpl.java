@@ -893,18 +893,24 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			final MutableAnnotationUsage<EntityResult> entityResultAnnotation = makeAnnotation( JpaAnnotations.ENTITY_RESULT );
 			entityResults.add( entityResultAnnotation );
 
-			applyAttributeIfSpecified( "entityClass", sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbEntityResult.getEntityClass() ), entityResultAnnotation );
+			entityResultAnnotation.setAttributeValue(
+					"entityClass",
+					sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbEntityResult.getEntityClass() )
+			);
+
 			applyAttributeIfSpecified( "lockMode", jaxbEntityResult.getLockMode(), entityResultAnnotation );
 			applyStringAttributeIfSpecified( "discriminatorColumn", jaxbEntityResult.getDiscriminatorColumn(), entityResultAnnotation );
 
 			if ( !jaxbEntityResult.getFieldResult().isEmpty() ) {
 				final List<AnnotationUsage<FieldResult>> fieldResults = arrayList( jaxbEntityResult.getFieldResult().size() );
-				applyAttributeIfSpecified( "fields", fieldResults, entityResultAnnotation );
+				entityResultAnnotation.setAttributeValue( "fields", fieldResults );
 
 				for ( JaxbFieldResultImpl jaxbFieldResult : jaxbEntityResult.getFieldResult() ) {
-					final MutableAnnotationUsage<FieldResult> fieldResultAnnotation = makeAnnotation( JpaAnnotations.FIELD_RESULT );
-					applyStringAttributeIfSpecified( "name", jaxbFieldResult.getName(), fieldResultAnnotation );
-					applyStringAttributeIfSpecified( "column", jaxbFieldResult.getColumn(), fieldResultAnnotation );
+					final MutableAnnotationUsage<FieldResult> fieldResultAnnotation = JpaAnnotations.FIELD_RESULT.createUsage( null, sourceModelContext );
+					fieldResults.add( fieldResultAnnotation );
+					// both name and column are required
+					fieldResultAnnotation.setAttributeValue( "name", jaxbFieldResult.getName() );
+					fieldResultAnnotation.setAttributeValue( "column", jaxbFieldResult.getColumn() );
 				}
 			}
 		}

@@ -19,6 +19,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -295,9 +296,10 @@ public class HibernateProcessor extends AbstractProcessor {
 					final TypeElement typeElement = (TypeElement) element;
 					final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
 					if ( repository != null ) {
-						final String provider = (String) getAnnotationValue( repository, "provider" );
-						if ( provider == null || provider.isEmpty()
-								|| provider.equalsIgnoreCase("hibernate") ) {
+						final AnnotationValue provider = getAnnotationValue( repository, "provider" );
+						if ( provider == null
+								|| provider.getValue().toString().isEmpty()
+								|| provider.getValue().toString().equalsIgnoreCase("hibernate") ) {
 							context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
 							final AnnotationMetaEntity metaEntity =
 									AnnotationMetaEntity.create( typeElement, context );

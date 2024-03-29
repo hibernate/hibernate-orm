@@ -97,10 +97,10 @@ public interface Filter {
 	boolean isAutoEnabled();
 
 	/**
-	 * Get the associated {@link FilterDefinition appliedOnFilter} of this
+	 * Get the associated {@link FilterDefinition applyToLoadByKey} of this
 	 * named filter.
 	 *
 	 * @return The flag value
 	 */
-	boolean isAppliedOnFind();
+	boolean isApplyToLoadByKey();
 }

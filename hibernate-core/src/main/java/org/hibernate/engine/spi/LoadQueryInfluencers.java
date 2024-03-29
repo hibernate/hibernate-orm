@@ -170,16 +170,16 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	/**
-	 * Returns a Map of enabled filters that have the appliedOnFind
+	 * Returns a Map of enabled filters that have the applyToLoadByKey
 	 * flag set to true
-	 * @return a Map of enabled filters that have the appliedOnFind
+	 * @return a Map of enabled filters that have the applyToLoadByKey
 	 * flag set to true
 	 */
 	public Map<String, Filter> getEnabledFiltersForFind() {
 		return getEnabledFilters()
 				.entrySet()
 				.stream()
-				.filter(f -> f.getValue().isAppliedOnFind())
+				.filter(f -> f.getValue().isApplyToLoadByKey())
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 

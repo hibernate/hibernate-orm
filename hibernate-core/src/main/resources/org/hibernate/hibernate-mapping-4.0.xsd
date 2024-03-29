@@ -70,7 +70,6 @@ arbitrary number of queries, and import declarations of arbitrary classes.
             </xs:sequence>
             <xs:attribute name="condition" type="xs:string"/>
             <xs:attribute name="name" use="required" type="xs:string"/> <!-- The filter name -->
-            <xs:attribute name="applied-on-find" type="xs:boolean" default="false"/>
           </xs:complexType>
         </xs:element>
         <!--

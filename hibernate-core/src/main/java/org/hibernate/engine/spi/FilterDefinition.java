@@ -37,7 +37,7 @@ public class FilterDefinition implements Serializable {
 	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
 	private final Map<String, ManagedBean<? extends Supplier>> parameterResolverMap = new HashMap<>();
 	private final boolean autoEnabled;
-	private final boolean appliedOnFind;
+	private final boolean applyToLoadByKey;
 
 	/**
 	 * Construct a new FilterDefinition instance.
@@ -49,13 +49,13 @@ public class FilterDefinition implements Serializable {
 	}
 
 	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings,
-							Map<String, ManagedBean<? extends  Supplier>> parameterResolverMap, boolean autoEnabled, boolean appliedOnFind) {
+							Map<String, ManagedBean<? extends  Supplier>> parameterResolverMap, boolean autoEnabled, boolean applyToLoadByKey) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		if ( explicitParamJaMappings != null ) {
 			this.explicitParamJaMappings.putAll( explicitParamJaMappings );
 		}
-		this.appliedOnFind = appliedOnFind;
+		this.applyToLoadByKey = applyToLoadByKey;
 		if ( parameterResolverMap != null ) {
 			this.parameterResolverMap.putAll( parameterResolverMap );
 		}
@@ -108,8 +108,8 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The flag value.
 	 */
-	public boolean isAppliedOnFind() {
-		return appliedOnFind;
+	public boolean isApplyToLoadByKey() {
+		return applyToLoadByKey;
 	}
 
 	/**

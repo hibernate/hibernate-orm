@@ -103,5 +103,5 @@ public @interface FilterDef {
 	 * If the flag is true, the filter will be
 	 * applied on direct fetches, such as findById().
 	 */
-	boolean appliedOnFind() default false;
+	boolean applyToLoadByKey() default false;
 }

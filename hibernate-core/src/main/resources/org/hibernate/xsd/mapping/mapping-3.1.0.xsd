@@ -2281,7 +2281,7 @@
                 </xsd:complexType>
             </xsd:element>
             <xsd:element name="condition" type="xsd:string" minOccurs="0"/>
-            <xsd:element name="applied-on-find" type="xsd:boolean" default="false"/>
+            <xsd:element name="apply-to-load-by-key" type="xsd:boolean" default="false"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>

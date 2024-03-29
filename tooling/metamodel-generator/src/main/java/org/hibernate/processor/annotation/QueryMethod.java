@@ -23,6 +23,7 @@ import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFrom
  */
 public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
+	private final @Nullable String returnTypeClass;
 	private final @Nullable String containerType;
 	private final boolean isUpdate;
 	private final boolean isNative;
@@ -34,6 +35,8 @@ public class QueryMethod extends AbstractQueryMethod {
 			String queryString,
 			@Nullable
 			String returnTypeName,
+			@Nullable
+			String returnTypeClass,
 			@Nullable
 			String containerType,
 			List<String> paramNames,
@@ -54,6 +57,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				addNonnullAnnotation,
 				dataRepository );
 		this.queryString = queryString;
+		this.returnTypeClass = returnTypeClass;
 		this.containerType = containerType;
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;
@@ -117,10 +121,10 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append(createQueryMethod())
 				.append("(")
 				.append(getConstantName());
-		if ( returnTypeName != null && !isUpdate ) {
+		if ( returnTypeClass != null && !isUpdate ) {
 			declaration
 					.append(", ")
-					.append(annotationMetaEntity.importType(returnTypeName))
+					.append(annotationMetaEntity.importType(returnTypeClass))
 					.append(".class");
 		}
 		declaration.append(")\n");

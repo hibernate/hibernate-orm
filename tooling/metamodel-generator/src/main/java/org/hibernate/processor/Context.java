@@ -83,7 +83,7 @@ public final class Context {
 	private boolean addNonnullAnnotation = false;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
-	private boolean addSuppressWarningsAnnotation;
+	private String[] suppressedWarnings;
 	private boolean addTransactionScopedAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
@@ -185,11 +185,15 @@ public final class Context {
 	}
 
 	public boolean addSuppressWarningsAnnotation() {
-		return addSuppressWarningsAnnotation;
+		return suppressedWarnings != null;
 	}
 
-	public void setAddSuppressWarningsAnnotation(boolean addSuppressWarningsAnnotation) {
-		this.addSuppressWarningsAnnotation = addSuppressWarningsAnnotation;
+	public String[] getSuppressedWarnings() {
+		return suppressedWarnings;
+	}
+
+	public void setSuppressedWarnings(String[] suppressedWarnings) {
+		this.suppressedWarnings = suppressedWarnings;
 	}
 
 	public boolean addTransactionScopedAnnotation() {

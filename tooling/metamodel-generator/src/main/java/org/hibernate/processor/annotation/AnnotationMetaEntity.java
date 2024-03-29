@@ -75,7 +75,6 @@ import static org.hibernate.grammars.hql.HqlLexer.HAVING;
 import static org.hibernate.grammars.hql.HqlLexer.IDENTIFIER;
 import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSessionParameter;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSpecialParam;
@@ -89,7 +88,6 @@ import static org.hibernate.processor.util.TypeUtils.determineAnnotationSpecifie
 import static org.hibernate.processor.util.TypeUtils.findMappedSuperClass;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
-import static org.hibernate.processor.util.TypeUtils.getAnnotationValueRef;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
@@ -500,9 +498,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private @Nullable String dataStore() {
 		final AnnotationMirror repo = getAnnotationMirror( element, JD_REPOSITORY );
 		if ( repo != null ) {
-			final String dataStore = (String) getAnnotationValue( repo, "dataStore" );
-			if ( dataStore != null && !dataStore.isEmpty() ) {
-				return dataStore;
+			final AnnotationValue dataStoreValue = getAnnotationValue( repo, "dataStore" );
+			if (dataStoreValue != null) {
+				final String dataStore = dataStoreValue.getValue().toString();
+				if ( !dataStore.isEmpty() ) {
+					return dataStore;
+				}
 			}
 		}
 		return null;
@@ -866,13 +867,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void validateToOneAssociation(Element memberOfClass, AnnotationMirror annotation, TypeMirror type) {
-		final TypeMirror target = (TypeMirror) getAnnotationValue(annotation, "targetEntity");
-		validateAssociation(memberOfClass, annotation, target == null ? type : target);
+		final AnnotationValue target = getAnnotationValue(annotation, "targetEntity");
+		validateAssociation(memberOfClass, annotation, target == null ? type : (TypeMirror) target.getValue());
 	}
 
 	private void validateToManyAssociation(Element memberOfClass, AnnotationMirror annotation, TypeMirror type) {
-		final TypeMirror target = (TypeMirror) getAnnotationValue(annotation, "targetEntity");
-		validateAssociation(memberOfClass, annotation, target == null ? elementType(type) : target);
+		final AnnotationValue target = getAnnotationValue(annotation, "targetEntity");
+		validateAssociation(memberOfClass, annotation, target == null ? elementType(type) : (TypeMirror) target.getValue());
 	}
 
 	private void validateAssociation(Element memberOfClass, AnnotationMirror annotation, @Nullable TypeMirror typeMirror) {
@@ -888,8 +889,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					final DeclaredType assocDeclaredType = (DeclaredType) typeMirror;
 					final TypeElement assocTypeElement = (TypeElement) assocDeclaredType.asElement();
 					if ( hasAnnotation(assocTypeElement, ENTITY) ) {
-						final String mappedBy = (String) getAnnotationValue(annotation, "mappedBy");
-						validateBidirectionalMapping(memberOfClass, annotation, mappedBy, assocTypeElement);
+						final AnnotationValue mappedBy = getAnnotationValue(annotation, "mappedBy");
+						final String propertyName = mappedBy == null ? null : mappedBy.getValue().toString();
+						validateBidirectionalMapping(memberOfClass, annotation, propertyName, assocTypeElement);
 					}
 					else {
 						message(memberOfClass, "type '" + assocTypeElement.getSimpleName()
@@ -916,7 +918,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return;
 			}
 			final AnnotationValue annotationVal =
-					castNonNull(getAnnotationValueRef(annotation, "mappedBy"));
+					castNonNull(getAnnotationValue(annotation, "mappedBy"));
 			for ( Element member : context.getElementUtils().getAllMembers(assocTypeElement) ) {
 				if ( propertyName(this, member).contentEquals(mappedBy) ) {
 					validateBackRef(memberOfClass, annotation, assocTypeElement, member, annotationVal);
@@ -1517,7 +1519,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final List<OrderBy> result = new ArrayList<>();
 			@SuppressWarnings("unchecked")
 			final List<AnnotationValue> list = (List<AnnotationValue>)
-					castNonNull( getAnnotationValue( orderByList, "value" ) );
+					castNonNull( getAnnotationValue( orderByList, "value" ) ).getValue();
 			for ( AnnotationValue element : list ) {
 				result.add( orderByExpression( castNonNull( (AnnotationMirror) element.getValue() ), entityType, method ) );
 			}
@@ -1532,14 +1534,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private OrderBy orderByExpression(AnnotationMirror orderBy, TypeElement entityType, ExecutableElement method) {
-		final String fieldName = (String) castNonNull( getAnnotationValue(orderBy, "value") );
+		final String fieldName = castNonNull( getAnnotationValue(orderBy, "value") ).getValue().toString();
 		if ( fieldName.equals("<error>") ) {
 			throw new ProcessLaterException();
 		}
-		final Boolean descendingOrNull = (Boolean) getAnnotationValue(orderBy, "descending");
-		final Boolean ignoreCaseOrNull = (Boolean) getAnnotationValue(orderBy, "ignoreCase");
-		final boolean descending = descendingOrNull != null && descendingOrNull;
-		final boolean ignoreCase = ignoreCaseOrNull != null && ignoreCaseOrNull;
+		final AnnotationValue descendingOrNull = getAnnotationValue(orderBy, "descending");
+		final AnnotationValue ignoreCaseOrNull = getAnnotationValue(orderBy, "ignoreCase");
+		final boolean descending = descendingOrNull != null && (Boolean) descendingOrNull.getValue();
+		final boolean ignoreCase = ignoreCaseOrNull != null && (Boolean) ignoreCaseOrNull.getValue();
 		final String path = fieldName
 				.replace('$', '.')
 				.replace('_', '.'); //Jakarta Data allows _ here
@@ -1632,14 +1634,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return emptyList();
 		}
 		else {
-			final Object enabledFetchProfiles =
+			final AnnotationValue enabledFetchProfiles =
 					getAnnotationValue( findAnnotation, "enabledFetchProfiles" );
 			if ( enabledFetchProfiles == null ) {
 				return emptyList();
 			}
 			else {
 				@SuppressWarnings("unchecked")
-				final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles;
+				final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles.getValue();
 				final List<String> result = annotationValues.stream().map(AnnotationValue::toString).collect(toList());
 				if ( result.stream().anyMatch("<error>"::equals) ) {
 					throw new ProcessLaterException();
@@ -1859,9 +1861,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			final AnnotationMirror idClass = getAnnotationMirror( entityType, ID_CLASS );
 			if ( idClass != null ) {
-				final Object value = getAnnotationValue( idClass, "value" );
-				if ( value instanceof TypeMirror ) {
-					if ( context.getTypeUtils().isSameType( param.asType(), (TypeMirror) value ) ) {
+				final AnnotationValue value = getAnnotationValue( idClass, "value" );
+				if ( value != null ) {
+					if ( context.getTypeUtils().isSameType( param.asType(), (TypeMirror) value.getValue() ) ) {
 						return FieldType.ID;
 					}
 				}
@@ -2060,7 +2062,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			AnnotationMirror mirror,
 			boolean isNative) {
 
-		final AnnotationValue value = getAnnotationValueRef( mirror, "value" );
+		final AnnotationValue value = getAnnotationValue( mirror, "value" );
 		if ( value != null ) {
 			final Object query = value.getValue();
 			if ( query instanceof String ) {
@@ -2142,8 +2144,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( annotation == null ) {
 				throw new AssertionFailure("@Entity annotation should not be missing");
 			}
-			final String name = (String) getAnnotationValue(annotation, "name");
-			return isEmpty(name) ? resultType.asElement().getSimpleName().toString() : name;
+			return entityName(resultType, annotation);
 		}
 		else if ( primaryEntity != null ) {
 			return primaryEntity.getSimpleName().toString();
@@ -2151,6 +2152,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			return null;
 		}
+	}
+
+	private static String entityName(DeclaredType resultType, AnnotationMirror annotation) {
+		final AnnotationValue name = getAnnotationValue(annotation, "name");
+		if (name != null) {
+			final String explicitName = name.getValue().toString();
+			if ( !explicitName.isEmpty() ) {
+				return explicitName;
+			}
+		}
+		return resultType.asElement().getSimpleName().toString();
 	}
 
 	private static String addFromClauseIfNecessary(String hql, @Nullable String entityType) {
@@ -2468,8 +2480,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final AnnotationMirror mirror = getAnnotationMirror(typeElement, ENTITY );
 			if ( mirror != null ) {
-				final Object value = getAnnotationValue( mirror, "name" );
-				final String entityName = value instanceof String ? (String) value : typeElement.getSimpleName().toString();
+				final String entityName = entityName(declaredType, mirror);
 				return model.getHibernateEntityName().equals( entityName );
 			}
 		}
@@ -2622,7 +2633,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final AnnotationMirror by = getAnnotationMirror( parameter, "jakarta.data.repository.By" );
 		final AnnotationMirror param = getAnnotationMirror( parameter, "jakarta.data.repository.Param" );
 		if ( by != null ) {
-			final String name = (String) castNonNull(getAnnotationValue(by, "value"));
+			final String name =
+					castNonNull(getAnnotationValue(by, "value"))
+							.getValue().toString();
 			if ( name.contains("<error>") ) {
 				throw new ProcessLaterException();
 			}
@@ -2631,7 +2644,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					.replace('_', '.');
 		}
 		else if ( param != null ) {
-			final String name = (String) castNonNull(getAnnotationValue(param, "value"));
+			final String name =
+					castNonNull(getAnnotationValue(param, "value"))
+							.getValue().toString();
 			if ( name.contains("<error>") ) {
 				throw new ProcessLaterException();
 			}
@@ -2669,7 +2684,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( name.contentEquals(Constants.BASIC)
 					|| name.contentEquals(Constants.MANY_TO_ONE)
 					|| name.contentEquals(Constants.ONE_TO_ONE)) {
-				if ( FALSE.equals( getAnnotationValue(mirror, "optional") ) ) {
+				AnnotationValue optional = getAnnotationValue(mirror, "optional");
+				if ( optional != null && optional.getValue().equals(FALSE) ) {
 					nullable = false;
 				}
 			}

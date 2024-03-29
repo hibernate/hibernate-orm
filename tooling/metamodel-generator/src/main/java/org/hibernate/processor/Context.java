@@ -309,8 +309,7 @@ public final class Context {
 	}
 
 	public TypeElement getTypeElementForFullyQualifiedName(String qualifiedName) {
-		Elements elementUtils = processingEnvironment.getElementUtils();
-		return elementUtils.getTypeElement( qualifiedName );
+		return processingEnvironment.getElementUtils().getTypeElement( qualifiedName );
 	}
 
 	void markGenerated(Metamodel metamodel) {

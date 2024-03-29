@@ -2177,14 +2177,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			String thisText = "";
 			final List<? extends Token> allTokens = hqlLexer.getAllTokens();
 			for (Token token : allTokens) {
-				switch ( token.getType() ) {
+				if ( token.getType() == IDENTIFIER ) {
 					//TEMPORARY until HQL gets support for 'this'
-					case IDENTIFIER:
-						final String text = token.getText();
-						if ( text.equalsIgnoreCase("this") ) {
-							thisText = " as " + text;
-						}
-						break;
+					final String text = token.getText();
+					if ( text.equalsIgnoreCase("this") ) {
+						thisText = " as " + text;
+					}
+					break;
+				}
+			}
+			for (Token token : allTokens) {
+				switch ( token.getType() ) {
 					case FROM:
 						return hql;
 					case WHERE:
@@ -2238,7 +2241,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						hql,
 						returnType,
 						true,
-						new ErrorHandler( context, method, mirror, value, hql),
+						new ErrorHandler( context, isLocal(method) ? method : element, mirror, value, hql ),
 						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
 				);
 		if ( statement != null ) {

@@ -33,7 +33,7 @@ public class ManyToOneWithFormulaTest {
 		scope.inTransaction( (session) -> {
 			Menu menu = new Menu();
 			menu.setOrderNbr( "123" );
-			menu.setDefault( "F" );
+			menu.setIsDefault( "F" );
 			session.persist( menu );
 			FoodItem foodItem = new FoodItem();
 			foodItem.setItem( "Mouse" );

@@ -2120,6 +2120,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								method.getSimpleName().toString(),
 								processedQuery,
 								returnType == null ? null : returnType.toString(),
+								returnType == null ? null : returnTypeClass( returnType ),
 								containerTypeName,
 								paramNames,
 								paramTypes,
@@ -2134,6 +2135,36 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						);
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
 			}
+		}
+	}
+
+	private static String returnTypeClass(TypeMirror returnType) {
+		switch (returnType.getKind()) {
+			case DECLARED:
+				DeclaredType declaredType = (DeclaredType) returnType;
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				return typeElement.getQualifiedName().toString();
+			case INT:
+				return "int";
+			case LONG:
+				return "long";
+			case SHORT:
+				return "short";
+			case BYTE:
+				return "byte";
+			case BOOLEAN:
+				return "boolean";
+			case FLOAT:
+				return "float";
+			case DOUBLE:
+				return "double";
+			case CHAR:
+				return "char";
+			case ARRAY:
+				final ArrayType arrayType = (ArrayType) returnType;
+				return returnTypeClass( arrayType.getComponentType() ) + "[]";
+			default:
+				return returnType.toString();
 		}
 	}
 

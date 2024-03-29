@@ -63,6 +63,19 @@ private Employee manager;
 ----
 
 
+[[java-beans]]
+== JavaBean Conventions
+
+Previous versions allowed some, at beast, questionable attribute naming patterns.  These are no longer supported.  E.g.
+
+[source,java]
+----
+@Basic
+String isDefault();
+----
+
+
+
 [[cleanup]]
 == Some Cleanup
 

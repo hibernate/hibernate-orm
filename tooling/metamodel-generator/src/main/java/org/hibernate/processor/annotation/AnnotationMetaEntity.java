@@ -2262,7 +2262,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		boolean reactive = usingReactiveSession( sessionType );
 		if ( !isValidUpdateReturnType( returnType, method, reactive ) ) {
 			message( method, mirror, value,
-					"return type of mutation query method must be " + (!reactive ? "'int', 'boolean' or 'void'" : "'Uni<Integer>', 'Uni<Boolean>' or 'Uni<Void>'"),
+					"return type of mutation query method must be "
+							+ (!reactive ? "'int', 'long', 'boolean' or 'void'"
+								: "'Uni<Integer>', 'Uni<Boolean>' or 'Uni<Void>'"),
 					Diagnostic.Kind.ERROR );
 		}
 	}
@@ -2283,7 +2285,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			// non-reactive
 			return returnType.getKind() == TypeKind.VOID
 				|| returnType.getKind() == TypeKind.BOOLEAN
-				|| returnType.getKind() == TypeKind.INT;
+				|| returnType.getKind() == TypeKind.INT
+				|| returnType.getKind() == TypeKind.LONG;
 		}
 	}
 

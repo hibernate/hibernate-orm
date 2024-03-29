@@ -92,7 +92,7 @@ public final class ClassWriter {
 				pw.println( writeGeneratedAnnotation( entity, context ) );
 			}
 			if ( context.addSuppressWarningsAnnotation() ) {
-				pw.println( writeSuppressWarnings() );
+				pw.println( writeSuppressWarnings(context) );
 			}
 			entity.inheritedAnnotations().forEach(pw::println);
 
@@ -200,8 +200,14 @@ public final class ClassWriter {
 		return generatedAnnotation.toString();
 	}
 
-	private static String writeSuppressWarnings() {
-		return "@SuppressWarnings({\"deprecation\", \"rawtypes\"})";
+	private static String writeSuppressWarnings(Context context) {
+		final StringBuilder annotation = new StringBuilder("@SuppressWarnings({");
+		final String[] warnings = context.getSuppressedWarnings();
+		for (int i = 0; i < warnings.length; i++) {
+			if ( i>0 ) annotation.append(", ");
+			annotation.append('"').append(warnings[i]).append('"');
+		}
+		return annotation.append("})").toString();
 	}
 
 	private static String writeScopeAnnotation(Metamodel entity) {

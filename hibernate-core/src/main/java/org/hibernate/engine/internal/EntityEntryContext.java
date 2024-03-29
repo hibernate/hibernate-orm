@@ -553,9 +553,11 @@ public class EntityEntryContext {
 		private EntityEntry entityEntry;
 		private ManagedEntity previous;
 		private ManagedEntity next;
+		private boolean useTracker;
 
 		public ManagedEntityImpl(Object entityInstance) {
 			this.entityInstance = entityInstance;
+			useTracker = false;
 		}
 
 		@Override
@@ -581,6 +583,16 @@ public class EntityEntryContext {
 		@Override
 		public void $$_hibernate_setNextManagedEntity(ManagedEntity next) {
 			this.next = next;
+		}
+
+		@Override
+		public void $$_hibernate_setUseTracker(boolean useTracker) {
+			this.useTracker = useTracker;
+		}
+
+		@Override
+		public boolean $$_hibernate_useTracker() {
+			return useTracker;
 		}
 
 		@Override
@@ -661,6 +673,16 @@ public class EntityEntryContext {
 			// next reference cannot be stored in an immutable ManagedEntity;
 			// next reference is maintained by this ManagedEntityHolder.
 			this.next = next;
+		}
+
+		@Override
+		public void $$_hibernate_setUseTracker(boolean useTracker) {
+			managedEntity.$$_hibernate_setUseTracker( useTracker );
+		}
+
+		@Override
+		public boolean $$_hibernate_useTracker() {
+			return managedEntity.$$_hibernate_useTracker();
 		}
 
 		/*

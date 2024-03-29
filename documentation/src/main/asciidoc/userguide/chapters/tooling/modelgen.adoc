@@ -120,5 +120,5 @@ part of the `javac` execution using standard link:{ann-proc-options}[-A] options
 `-AlazyXmlParsing=[true|false]`:: Controls whether the processor should attempt to determine whether any `orm.xml` files have changed.
 `-AaddGeneratedAnnotation=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated` to the generated classes.
 `-addGenerationDate=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated#date`.
-`-addSuppressWarningsAnnotation=[true|false]`:: Controls whether the processor should add `@SuppressWarnings({"deprecation","rawtypes"})` to the generated classes.
+`-addSuppressWarningsAnnotation=[warning[,warning]*|true]`:: A comma-separated list of warnings to suppress, or simply `true` if `@SuppressWarnings({"deprecation","rawtypes"})` should be added to the generated classes.
 

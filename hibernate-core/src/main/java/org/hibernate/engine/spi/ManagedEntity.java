@@ -81,6 +81,45 @@ public interface ManagedEntity extends Managed {
 	void $$_hibernate_setNextManagedEntity(ManagedEntity next);
 
 	/**
+	 * Used to understand if the tracker can be used to detect dirty properties.
+	 *
+	 * E.g:
+	 * 		@Entity
+	 * 		class MyEntity{
+	 * 			@Id Integer id
+	 * 			String name
+	 * 		}
+	 *
+	 * 		inSession (
+	 * 			session -> {
+	 * 				MyEntity entity = new MyEntity(1, "Poul");
+	 * 				session.persist(entity);
+	 * 		});
+	 *
+	 *
+	 * 		inSession (
+	 * 			session -> {
+	 * 				MyEntity entity = new MyEntity(1, null);
+	 * 				session.merge(entity);
+	 * 		});
+	 *
+	 * 		Because the attribute `name` has been set to null the SelfDirtyTracker does not detect any change and
+	 * 		so doesn't mark the attribute as dirty so the merge does not perform any update.
+	 *
+	 *
+	 * @param useTracker true if the tracker can be used to detect dirty properties, false otherwise
+	 *
+	 */
+	void $$_hibernate_setUseTracker(boolean useTracker);
+
+	/**
+	 * Can the tracker be used to detect dirty attributes
+	 *
+	 * @return true if the tracker can be used to detect dirty properties, false otherwise
+	 */
+	boolean $$_hibernate_useTracker();
+
+	/**
 	 * Special internal contract to optimize type checking
 	 * @see PrimeAmongSecondarySupertypes
 	 * @return this same instance

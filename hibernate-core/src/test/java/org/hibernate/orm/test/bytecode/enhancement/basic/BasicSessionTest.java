@@ -123,5 +123,15 @@ public class BasicSessionTest extends BaseCoreFunctionalTestCase {
         public void $$_hibernate_setPreviousManagedEntity(ManagedEntity previous) {
             this.previous = previous;
         }
+
+        @Override
+        public void $$_hibernate_setUseTracker(boolean useTracker) {
+
+        }
+
+        @Override
+        public boolean $$_hibernate_useTracker() {
+            return false;
+        }
     }
 }

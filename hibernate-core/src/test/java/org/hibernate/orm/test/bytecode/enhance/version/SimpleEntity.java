@@ -59,4 +59,14 @@ public class SimpleEntity implements ManagedEntity {
 	public void $$_hibernate_setNextManagedEntity(ManagedEntity next) {
 
 	}
+
+	@Override
+	public void $$_hibernate_setUseTracker(boolean useTracker) {
+
+	}
+
+	@Override
+	public boolean $$_hibernate_useTracker() {
+		return false;
+	}
 }

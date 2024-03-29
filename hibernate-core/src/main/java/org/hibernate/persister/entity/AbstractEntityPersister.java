@@ -90,6 +90,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -304,6 +305,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
@@ -4403,10 +4405,15 @@ public abstract class AbstractEntityPersister
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
 		processIfSelfDirtinessTracker( entity, AbstractEntityPersister::clearDirtyAttributes );
+		processIfManagedEntity( entity, AbstractEntityPersister::useTracker );
 	}
 
 	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
 		entity.$$_hibernate_clearDirtyAttributes();
+	}
+
+	private static void useTracker(final ManagedEntity entity) {
+		entity.$$_hibernate_setUseTracker( true );
 	}
 
 	@Override

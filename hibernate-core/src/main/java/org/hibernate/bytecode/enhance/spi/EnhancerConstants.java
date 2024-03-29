@@ -182,6 +182,11 @@ public final class EnhancerConstants {
 	 */
 	public static final String TRACKER_COMPOSITE_CLEAR_OWNER = "$$_hibernate_clearOwner";
 
+	public static final String USE_TRACKER_FIELD_NAME = "$$_hibernate_useTracker";
+	public static final String USE_TRACKER_GETTER_NAME = "$$_hibernate_useTracker";
+	public static final String USE_TRACKER_SETTER_NAME = "$$_hibernate_setUseTracker";
+
+
 	private EnhancerConstants() {
 	}
 }

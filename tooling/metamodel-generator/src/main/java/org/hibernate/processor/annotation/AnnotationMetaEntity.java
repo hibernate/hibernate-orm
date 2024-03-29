@@ -2493,44 +2493,71 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkParameter(
 			SqmParameter<?> param, List<String> paramNames, List<String> paramTypes,
 			ExecutableElement method, AnnotationMirror mirror, AnnotationValue value) {
-		final SqmExpressible<?> expressible = param.getExpressible();
-		final String queryParamType = expressible == null ? "unknown" : expressible.getTypeName(); //getTypeName() can return "unknown"
-		if ( param.getName() != null ) {
-			final String name = param.getName();
-			int index = paramNames.indexOf( name );
-			if ( index < 0 ) {
-				message( method, mirror, value,
-						"missing method parameter for query parameter :" + name
-						+ " (add a parameter '" + queryParamType + ' ' + name + "' to '" + method.getSimpleName() + "')",
-						Diagnostic.Kind.ERROR );
+		final SqmExpressible<?> expressible = param.getExpressible(); //same object as param.getAnticipatedType()
+		final String queryParamType = expressible == null ? null : expressible.getTypeName(); //getTypeName() can return "unknown"
+		if ( queryParamType!=null
+				//TODO: arguments of functions get assigned "unknown" which sucks
+				&& !"unknown".equals(queryParamType) ) {
+			if ( param.getName() != null ) {
+				checkNamedParameter(param, paramNames, paramTypes, method, mirror, value, queryParamType);
 			}
-			else if ( !isLegalAssignment( paramTypes.get(index), queryParamType ) ) {
-				message( method, mirror, value,
-						"parameter matching query parameter :" + name + " has the wrong type"
-								+ " (change the method parameter type to '" + queryParamType + "')",
-						Diagnostic.Kind.ERROR );
-			}
-		}
-		else if ( param.getPosition() != null ) {
-			int position = param.getPosition();
-			if ( position > paramNames.size() ) {
-				message( method, mirror, value,
-						"missing method parameter for query parameter ?" + position
-								+ " (add a parameter of type '" + queryParamType + "' to '" + method.getSimpleName() + "')",
-						Diagnostic.Kind.ERROR );
-			}
-			else if ( !isLegalAssignment( paramTypes.get(position-1), queryParamType ) ) {
-				message( method, mirror, value,
-						"parameter matching query parameter ?" + position + " has the wrong type"
-								+ " (change the method parameter type to '" + queryParamType + "')",
-						Diagnostic.Kind.ERROR );
+			else if ( param.getPosition() != null ) {
+				checkOrdinalParameter(param, paramNames, paramTypes, method, mirror, value, queryParamType);
 			}
 		}
 	}
 
+	private void checkOrdinalParameter(
+			SqmParameter<?> param, List<String> paramNames, List<String> paramTypes, ExecutableElement method,
+			AnnotationMirror mirror, AnnotationValue value, String queryParamType) {
+		int position = param.getPosition();
+		if ( position > paramNames.size() ) {
+			message(method, mirror, value,
+					"missing method parameter for query parameter ?" + position
+							+ " (add a parameter of type '" + queryParamType + "' to '" + method.getSimpleName() + "')",
+					Diagnostic.Kind.ERROR);
+		}
+		else {
+			final String argType = paramTypes.get(position - 1);
+			if ( !isLegalAssignment(param, argType, queryParamType) ) {
+				message(method, mirror, value,
+						"parameter matching query parameter ?" + position + " has the wrong type"
+								+ " (change the method parameter type to '" + queryParamType + "')",
+						Diagnostic.Kind.ERROR);
+			}
+		}
+	}
+
+	private void checkNamedParameter(
+			SqmParameter<?> param, List<String> paramNames, List<String> paramTypes, ExecutableElement method,
+			AnnotationMirror mirror, AnnotationValue value, String queryParamType) {
+		final String name = param.getName();
+		int index = paramNames.indexOf( name );
+		if ( index < 0 ) {
+			message(method, mirror, value,
+					"missing method parameter for query parameter :" + name
+					+ " (add a parameter '" + queryParamType + ' ' + name + "' to '" + method.getSimpleName() + "')",
+					Diagnostic.Kind.ERROR);
+		}
+		else {
+			final String argType = paramTypes.get(index);
+			if ( !isLegalAssignment(param, argType, queryParamType) ) {
+				message(method, mirror, value,
+						"parameter matching query parameter :" + name + " has the wrong type"
+								+ " (change the method parameter type to '" + queryParamType + "')",
+						Diagnostic.Kind.ERROR);
+			}
+		}
+	}
+
+	private static boolean isLegalAssignment(SqmParameter<?> param, String argType, String queryParamType) {
+		return param.allowMultiValuedBinding()
+				? isLegalAssignment(argType, LIST + '<' + queryParamType + '>')
+				: isLegalAssignment(argType, queryParamType);
+	}
+
 	private static boolean isLegalAssignment(String argType, String paramType) {
-		return paramType.equals("unknown")
-			|| paramType.equals(argType)
+		return paramType.equals(argType)
 			|| paramType.equals(fromPrimitive(argType));
 	}
 

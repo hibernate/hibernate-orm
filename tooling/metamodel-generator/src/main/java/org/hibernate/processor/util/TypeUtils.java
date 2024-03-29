@@ -232,7 +232,8 @@ public final class TypeUtils {
 		assert annotationMirror != null;
 		assert qualifiedName != null;
 		final Element element = annotationMirror.getAnnotationType().asElement();
-		return ((TypeElement) element).getQualifiedName().contentEquals( qualifiedName );
+		final TypeElement typeElement = (TypeElement) element;
+		return typeElement.getQualifiedName().contentEquals( qualifiedName );
 	}
 
 	/**
@@ -268,24 +269,12 @@ public final class TypeUtils {
 		return false;
 	}
 
-	public static @Nullable Object getAnnotationValue(AnnotationMirror annotationMirror, String parameterValue) {
+	public static @Nullable AnnotationValue getAnnotationValue(AnnotationMirror annotationMirror, String member) {
 		assert annotationMirror != null;
-		assert parameterValue != null;
+		assert member != null;
 		for ( Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
 				: annotationMirror.getElementValues().entrySet() ) {
-			if ( entry.getKey().getSimpleName().contentEquals( parameterValue ) ) {
-				return entry.getValue().getValue();
-			}
-		}
-		return null;
-	}
-
-	public static @Nullable AnnotationValue getAnnotationValueRef(AnnotationMirror annotationMirror, String parameterValue) {
-		assert annotationMirror != null;
-		assert parameterValue != null;
-		for ( Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
-				: annotationMirror.getElementValues().entrySet() ) {
-			if ( entry.getKey().getSimpleName().contentEquals( parameterValue ) ) {
+			if ( entry.getKey().getSimpleName().contentEquals(member) ) {
 				return entry.getValue();
 			}
 		}
@@ -485,9 +474,9 @@ public final class TypeUtils {
 	public static @Nullable AccessType determineAnnotationSpecifiedAccessType(Element element) {
 		final AnnotationMirror mirror = getAnnotationMirror( element, ACCESS );
 		if ( mirror != null ) {
-			final Object accessType = getAnnotationValue( mirror, DEFAULT_ANNOTATION_PARAMETER_NAME );
-			if ( accessType instanceof VariableElement) {
-				final VariableElement enumValue = (VariableElement) accessType;
+			final AnnotationValue accessType = getAnnotationValue( mirror, DEFAULT_ANNOTATION_PARAMETER_NAME );
+			if ( accessType != null ) {
+				final VariableElement enumValue = (VariableElement) accessType.getValue();
 				final Name enumValueName = enumValue.getSimpleName();
 				if ( enumValueName.contentEquals(PROPERTY) ) {
 					return AccessType.PROPERTY;
@@ -558,10 +547,10 @@ public final class TypeUtils {
 	}
 
 	public static @Nullable String getFullyQualifiedClassNameOfTargetEntity(
-			AnnotationMirror mirror, String parameterName) {
-		final Object parameterValue = getAnnotationValue( mirror, parameterName );
-		if ( parameterValue != null ) {
-			final TypeMirror parameterType = (TypeMirror) parameterValue;
+			AnnotationMirror mirror, String member) {
+		final AnnotationValue value = getAnnotationValue( mirror, member);
+		if ( value != null ) {
+			final TypeMirror parameterType = (TypeMirror) value.getValue();
 			if ( parameterType.getKind() != TypeKind.VOID ) {
 				return parameterType.toString();
 			}

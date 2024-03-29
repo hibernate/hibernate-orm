@@ -26,7 +26,6 @@ import java.util.List;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
-import static org.hibernate.processor.util.TypeUtils.getAnnotationValueRef;
 
 public abstract class AnnotationMeta implements Metamodel {
 
@@ -69,11 +68,11 @@ public abstract class AnnotationMeta implements Metamodel {
 	private void handleNamedQueryRepeatableAnnotation(String annotationName, boolean checkHql) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			final Object value = getAnnotationValue( mirror, "value" );
-			if ( value instanceof List ) {
+			final AnnotationValue value = getAnnotationValue( mirror, "value" );
+			if ( value != null ) {
 				@SuppressWarnings("unchecked")
 				final List<? extends AnnotationMirror> values =
-						(List<? extends AnnotationMirror>) value;
+						(List<? extends AnnotationMirror>) value.getValue();
 				for ( AnnotationMirror annotationMirror : values ) {
 					handleNamedQuery( annotationMirror, checkHql );
 				}
@@ -82,11 +81,11 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private void handleNamedQuery(AnnotationMirror mirror, boolean checkHql) {
-		final Object nameValue = getAnnotationValue( mirror, "name" );
-		if ( nameValue instanceof String ) {
-			final String name = nameValue.toString();
+		final AnnotationValue nameValue = getAnnotationValue( mirror, "name" );
+		if ( nameValue != null ) {
+			final String name = nameValue.getValue().toString();
 			final boolean reportErrors = getContext().checkNamedQuery( name );
-			final AnnotationValue value = getAnnotationValueRef( mirror, "query" );
+			final AnnotationValue value = getAnnotationValue( mirror, "query" );
 			if ( value != null ) {
 				final Object query = value.getValue();
 				if ( query instanceof String ) {
@@ -132,11 +131,11 @@ public abstract class AnnotationMeta implements Metamodel {
 	private void addAuxiliaryMembersForRepeatableAnnotation(String annotationName, String prefix) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			final Object value = getAnnotationValue( mirror, "value" );
-			if ( value instanceof List ) {
+			final AnnotationValue value = getAnnotationValue( mirror, "value" );
+			if ( value != null ) {
 				@SuppressWarnings("unchecked")
 				final List<? extends AnnotationMirror> values =
-						(List<? extends AnnotationMirror>) value;
+						(List<? extends AnnotationMirror>) value.getValue();
 				for ( AnnotationMirror annotationMirror : values ) {
 					addAuxiliaryMembersForMirror( annotationMirror, prefix );
 				}

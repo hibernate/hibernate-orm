@@ -30,6 +30,7 @@ import java.util.List;
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
 import static org.hibernate.processor.util.Constants.MANY_TO_ANY;
 import static org.hibernate.processor.util.Constants.MANY_TO_MANY;
+import static org.hibernate.processor.util.Constants.MAP_KEY_CLASS;
 import static org.hibernate.processor.util.Constants.ONE_TO_MANY;
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.TypeUtils.DEFAULT_ANNOTATION_PARAMETER_NAME;
@@ -160,10 +161,11 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 	}
 
 	private String getMapKeyType(DeclaredType declaredType, Element element) {
-		final AnnotationMirror annotationMirror = getAnnotationMirror(element, Constants.MAP_KEY_CLASS );
+		final AnnotationMirror annotationMirror = getAnnotationMirror(element, MAP_KEY_CLASS );
 		return annotationMirror == null
 				? getKeyType( declaredType, context )
-				: castNonNull( getAnnotationValue( annotationMirror, DEFAULT_ANNOTATION_PARAMETER_NAME ) ).toString();
+				: castNonNull( getAnnotationValue( annotationMirror, DEFAULT_ANNOTATION_PARAMETER_NAME ) )
+						.getValue().toString();
 	}
 
 	private String getElementType(DeclaredType declaredType, @Nullable String targetEntity) {

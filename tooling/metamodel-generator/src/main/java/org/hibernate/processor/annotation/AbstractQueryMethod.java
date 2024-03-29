@@ -376,16 +376,22 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			"\t\t\t\t\t\t.stream()\n" +
 			"\t\t\t\t\t\t.map(_key -> Cursor.forKey(_key.toArray()))\n" +
 			"\t\t\t\t\t\t.collect(toList());\n" +
-			"\t\tvar _page =\n" +
+			"\t\tvar _next =\n" +
 			"\t\t\t\tPageRequest.of(Entity.class)\n" +
 			//SHOULD NOT have cast to raw Iterable
 			"\t\t\t\t\t\t.sortBy((Iterable) pageRequest.sorts())\n" +
 			"\t\t\t\t\t\t.size(pageRequest.size())\n" +
 			"\t\t\t\t\t\t.page(pageRequest.page() + 1);\n" +
+			"\t\tvar _last =\n" +
+			"\t\t\t\tPageRequest.of(Entity.class)\n" +
+			//SHOULD NOT have cast to raw Iterable
+			"\t\t\t\t\t\t.sortBy((Iterable) pageRequest.sorts())\n" +
+			"\t\t\t\t\t\t.size(pageRequest.size())\n" +
+			"\t\t\t\t\t\t.page(pageRequest.page() - 1);\n" +
 			//SHOULD BE new CursoredPageRecord<>
 			"\t\treturn new CursoredPageRecord(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
-			"\t\t\t\t_results.isLastPage() ? null : _page.afterKey(_results.getNextPage().getKey().toArray()),\n" +
-			"\t\t\t\t_results.isFirstPage() ? null : _page.beforeKey(_results.getPreviousPage().getKey().toArray()));";
+			"\t\t\t\t_results.isLastPage() ? null : _next.afterKey(_results.getNextPage().getKey().toArray()),\n" +
+			"\t\t\t\t_results.isFirstPage() ? null : _last.beforeKey(_results.getPreviousPage().getKey().toArray()));";
 
 	static final String MAKE_KEYED_PAGE
 			= "\tvar _unkeyedPage =\n" +

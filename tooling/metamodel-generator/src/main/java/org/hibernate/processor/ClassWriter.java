@@ -204,7 +204,9 @@ public final class ClassWriter {
 		final StringBuilder annotation = new StringBuilder("@SuppressWarnings({");
 		final String[] warnings = context.getSuppressedWarnings();
 		for (int i = 0; i < warnings.length; i++) {
-			if ( i>0 ) annotation.append(", ");
+			if ( i>0 ) {
+				annotation.append(", ");
+			}
 			annotation.append('"').append(warnings[i]).append('"');
 		}
 		return annotation.append("})").toString();

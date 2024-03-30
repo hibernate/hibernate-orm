@@ -535,7 +535,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				sessionType = HIB_STATELESS_SESSION;
 				addDaoConstructor( null );
 			}
-			if ( jakartaDataRepository && !quarkusInjection ) {
+			if ( jakartaDataRepository && !quarkusInjection
+					&& context.addDependentAnnotation() ) {
 				addDefaultConstructor();
 			}
 		}

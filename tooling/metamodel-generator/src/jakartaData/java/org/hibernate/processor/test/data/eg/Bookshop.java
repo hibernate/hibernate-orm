@@ -24,4 +24,13 @@ public interface Bookshop extends CrudRepository<Book,String> {
 
     @Query("select count(this) where this.title like ?1 order by this.isbn")
     long count2(String title);
+
+    @Query("where isbn in :isbns and type = Book")
+    List<Book> books(List<String> isbns);
+
+    @Query("delete from Book where type = org.hibernate.processor.test.data.eg.Type.Book")
+    long deleteAllBooks();
+
+    @Query("delete from Book where type = Book and isbn in ?1")
+    int deleteBooks(List<String> isbns);
 }

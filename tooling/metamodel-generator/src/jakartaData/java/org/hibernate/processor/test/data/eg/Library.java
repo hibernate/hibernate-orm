@@ -88,6 +88,9 @@ public interface Library {
 	@Delete
 	void delete(Publisher publisher);
 
+	@Update
+	void updateAll(Publisher... publishers);
+
 	@Find
 	@OrderBy("isbn")
 	CursoredPage<Book> allBooks(PageRequest<Book> pageRequest);

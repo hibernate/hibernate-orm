@@ -2562,6 +2562,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	private static String stripTypeAnnotations(String argType) {
+		while ( argType.startsWith("@") ) {
+			int index = argType.indexOf(' ');
+			if (index>0) {
+				argType = argType.substring(index+1);
+			}
+		}
+		return argType;
+	}
+
 	private void checkNamedParameter(
 			SqmParameter<?> param, List<String> paramNames, List<String> paramTypes, ExecutableElement method,
 			AnnotationMirror mirror, AnnotationValue value, String queryParamType) {
@@ -2584,7 +2594,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static boolean isLegalAssignment(SqmParameter<?> param, String argType, String queryParamType) {
+	private static boolean isLegalAssignment(SqmParameter<?> param, String argumentType, String queryParamType) {
+		final String argType = stripTypeAnnotations(argumentType);
 		return param.allowMultiValuedBinding()
 				? isLegalAssignment(argType, LIST + '<' + queryParamType + '>')
 				: isLegalAssignment(argType, queryParamType);
@@ -2636,7 +2647,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private String typeAsString(TypeMirror type) {
 		String result = type.toString();
 		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
-			result = result.replace(annotation.toString(), "");
+			final String annotationString = annotation.toString();
+			result = result
+					// if it has a space after it, we need to remove that too
+					.replace(annotationString + ' ', "")
+					// just in case it did not have a space after it
+					.replace(annotationString, "");
 		}
 		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
 			result = annotation.toString() + ' ' + result;

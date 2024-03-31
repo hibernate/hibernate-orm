@@ -17,7 +17,7 @@ import org.hibernate.processor.util.Constants;
  * @author Gavin King
  */
 public class RepositoryConstructor implements MetaAttribute {
-	private final Metamodel annotationMetaEntity;
+	private final AnnotationMetaEntity annotationMetaEntity;
 	private final String constructorName;
 	private final String methodName;
 	private final String sessionTypeName;
@@ -30,7 +30,7 @@ public class RepositoryConstructor implements MetaAttribute {
 	private final boolean quarkusInjection;
 
 	public RepositoryConstructor(
-			Metamodel annotationMetaEntity,
+			AnnotationMetaEntity annotationMetaEntity,
 			String constructorName,
 			String methodName,
 			String sessionTypeName,
@@ -135,6 +135,11 @@ public class RepositoryConstructor implements MetaAttribute {
 		return declaration.toString();
 	}
 
+	/**
+	 * In Quarkus we use the Quarkus-specific {@code @PersistenceUnit}
+	 * CDI qualifier annotation to inject the {@code StatelessSession}
+	 * directly.
+	 */
 	private void qualifier(StringBuilder declaration) {
 		if ( addInjectAnnotation && quarkusInjection && dataStore != null ) {
 			declaration
@@ -146,13 +151,23 @@ public class RepositoryConstructor implements MetaAttribute {
 		}
 	}
 
+	/**
+	 * In Quarkus we inject the {@code StatelessSession}
+	 * directly via the constructor. But this doesn't work
+	 * in other CDI implementations, where we need to use
+	 * the JPA {@code @PersistenceUnit} annotation for
+	 * field injection of an {@code EntityManager}. In
+	 * that case, CDI will instantiate the repository via
+	 * a {@link DefaultConstructor default constructor},
+	 * so we don't need to mark this one {@code @Inject}.
+	 */
 	private void inject(StringBuilder declaration) {
 		// Jakarta Data repositories are instantiated
 		// via the default constructor, so in that
 		// case, this one is just for testing, unless
 		// we are in Quarkus where we can use
 		// constructor injection
-		if ( addInjectAnnotation && (!dataRepository || quarkusInjection) ) {
+		if ( addInjectAnnotation && !annotationMetaEntity.needsDefaultConstructor() ) {
 			declaration
 					.append('@')
 					.append(annotationMetaEntity.importType("jakarta.inject.Inject"))

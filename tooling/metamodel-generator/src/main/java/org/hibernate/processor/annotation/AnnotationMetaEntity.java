@@ -535,11 +535,26 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				sessionType = HIB_STATELESS_SESSION;
 				addDaoConstructor( null );
 			}
-			if ( jakartaDataRepository && !quarkusInjection
-					&& context.addDependentAnnotation() ) {
+			if ( needsDefaultConstructor() ) {
 				addDefaultConstructor();
 			}
 		}
+	}
+
+	/**
+	 * For usage with CDI, but outside Quarkus, Jakarta Data
+	 * repositories use {@code @PersistenceUnit} to obtain an
+	 * {@code EntityManagerFactory} via field injection. So in
+	 * that case we will need a {@link DefaultConstructor default
+	 * constructor}. We don't do this in Quarkus, because there
+	 * we can just inject the {@code StatelessSession} directly,
+	 * and so in Quarkus we don't need the default constructor
+	 * at all.
+	 */
+	boolean needsDefaultConstructor() {
+		return jakartaDataRepository
+			&& !quarkusInjection
+			&& context.addDependentAnnotation();
 	}
 
 	private @Nullable ExecutableElement findSessionGetter(TypeElement type) {

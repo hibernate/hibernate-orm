@@ -1541,23 +1541,26 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				Diagnostic.Kind.ERROR );
 	}
 
-	private List<OrderBy> orderByList(ExecutableElement method, TypeElement entityType) {
-		final AnnotationMirror orderByList =
-				getAnnotationMirror( method, "jakarta.data.repository.OrderBy.List" );
-		if ( orderByList != null ) {
-			final List<OrderBy> result = new ArrayList<>();
-			@SuppressWarnings("unchecked")
-			final List<AnnotationValue> list = (List<AnnotationValue>)
-					castNonNull( getAnnotationValue( orderByList, "value" ) ).getValue();
-			for ( AnnotationValue element : list ) {
-				result.add( orderByExpression( castNonNull( (AnnotationMirror) element.getValue() ), entityType, method ) );
+	private List<OrderBy> orderByList(ExecutableElement method, TypeElement returnType) {
+		final TypeElement entityType = implicitEntityType( returnType );
+		if ( entityType != null ) {
+			final AnnotationMirror orderByList =
+					getAnnotationMirror( method, "jakarta.data.repository.OrderBy.List" );
+			if ( orderByList != null ) {
+				final List<OrderBy> result = new ArrayList<>();
+				@SuppressWarnings("unchecked")
+				final List<AnnotationValue> list = (List<AnnotationValue>)
+						castNonNull( getAnnotationValue( orderByList, "value" ) ).getValue();
+				for ( AnnotationValue element : list ) {
+					result.add( orderByExpression( castNonNull( (AnnotationMirror) element.getValue() ), entityType, method ) );
+				}
+				return result;
 			}
-			return result;
-		}
-		final AnnotationMirror orderBy =
-				getAnnotationMirror( method, "jakarta.data.repository.OrderBy" );
-		if ( orderBy != null ) {
-			return List.of( orderByExpression(orderBy, entityType, method) );
+			final AnnotationMirror orderBy =
+					getAnnotationMirror( method, "jakarta.data.repository.OrderBy" );
+			if ( orderBy != null ) {
+				return List.of( orderByExpression(orderBy, entityType, method) );
+			}
 		}
 		return emptyList();
 	}
@@ -2208,6 +2211,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		else if ( primaryEntity != null ) {
 			return primaryEntity.getSimpleName().toString();
+		}
+		else {
+			return null;
+		}
+	}
+
+	private @Nullable TypeElement implicitEntityType(@Nullable TypeElement resultType) {
+		if ( resultType != null && hasAnnotation(resultType, ENTITY) ) {
+			return resultType;
+		}
+		else if ( primaryEntity != null ) {
+			return primaryEntity;
 		}
 		else {
 			return null;

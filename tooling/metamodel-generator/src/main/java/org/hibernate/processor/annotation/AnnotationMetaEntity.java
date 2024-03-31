@@ -1244,11 +1244,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								sessionType,
 								operation,
 								context.addNonnullAnnotation(),
-								declaredType != parameterType,
+								isIterableLifecycleParameter(parameterType),
 								returnArgument
 						)
 				);
 			}
+		}
+	}
+
+	private static boolean isIterableLifecycleParameter(TypeMirror parameterType) {
+		switch (parameterType.getKind()) {
+			case ARRAY:
+				return true;
+			case DECLARED:
+				final DeclaredType declaredType = (DeclaredType) parameterType;
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				return typeElement.getQualifiedName().contentEquals(LIST);
+			default:
+				return false;
 		}
 	}
 

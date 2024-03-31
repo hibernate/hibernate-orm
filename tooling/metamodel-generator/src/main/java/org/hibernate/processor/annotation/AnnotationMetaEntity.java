@@ -1918,7 +1918,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						// INTENTIONAL FALL-THROUGH
 					case DECLARED:
 						if ( types.isSameType( parameterType, attributeType) ) {
-							return true;
+							return false;
 						}
 						else {
 							final TypeElement list = context.getTypeElementForFullyQualifiedName(LIST);

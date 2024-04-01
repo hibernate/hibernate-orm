@@ -314,7 +314,10 @@ public class HibernateProcessor extends AbstractProcessor {
 							context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
 							final AnnotationMetaEntity metaEntity =
 									AnnotationMetaEntity.create( typeElement, context );
-							context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+							if ( metaEntity.isInitialized() ) {
+								context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+							}
+							// otherwise discard it (assume it has query by magical method name stuff)
 						}
 					}
 					else {

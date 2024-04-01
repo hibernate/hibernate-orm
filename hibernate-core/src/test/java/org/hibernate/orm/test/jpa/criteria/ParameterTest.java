@@ -16,11 +16,10 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -146,6 +145,25 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 
 			final TypedQuery<MultiTypedBasicAttributesEntity> query1 = em.createQuery( criteria );
 			query1.setParameter( parameter, Arrays.asList( 1L, 2L, 3L ) );
+			query1.getResultList();
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-17912")
+	public void testAttributeEqualListParameter() {
+		TransactionUtil.doInJPA( this::entityManagerFactory, em -> {
+			final CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+			final CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = criteriaBuilder
+					.createQuery( MultiTypedBasicAttributesEntity.class );
+
+			final ParameterExpression<List> parameter = criteriaBuilder.parameter( List.class );
+
+			final Root<MultiTypedBasicAttributesEntity> root = criteria.from( MultiTypedBasicAttributesEntity.class );
+			criteria.select( root ).where( criteriaBuilder.equal( root.get( MultiTypedBasicAttributesEntity_.integerList ), parameter ) );
+
+			final TypedQuery<MultiTypedBasicAttributesEntity> query1 = em.createQuery( criteria );
+			query1.setParameter( parameter, List.of( 1, 2, 3 ) );
 			query1.getResultList();
 		} );
 	}

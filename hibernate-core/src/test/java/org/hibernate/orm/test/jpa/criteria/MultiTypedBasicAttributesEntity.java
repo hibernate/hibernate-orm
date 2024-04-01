@@ -13,6 +13,8 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 
+import java.util.List;
+
 /**
  * An entity with multiple attributes of basic type for use in testing using those types/attributes
  * in queries.
@@ -28,6 +30,8 @@ public class MultiTypedBasicAttributesEntity {
 	private Long id;
 	private int[] someInts;
 	private Integer[] someWrappedIntegers;
+
+	private List<Integer> integerList;
 
 	public Long getId() {
 		return id;
@@ -51,5 +55,13 @@ public class MultiTypedBasicAttributesEntity {
 
 	public void setSomeWrappedIntegers(Integer[] someWrappedIntegers) {
 		this.someWrappedIntegers = someWrappedIntegers;
+	}
+
+	public List<Integer> getIntegerList() {
+		return integerList;
+	}
+
+	public void setIntegerList(List<Integer> integerList) {
+		this.integerList = integerList;
 	}
 }

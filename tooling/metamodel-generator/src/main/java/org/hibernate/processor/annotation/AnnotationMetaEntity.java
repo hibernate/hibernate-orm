@@ -161,6 +161,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 */
 	private @Nullable TypeElement primaryEntity;
 
+	private final Map<String, AnnotationMirror> namedQueries = new HashMap<>();
+
 	public AnnotationMetaEntity(
 			TypeElement element, Context context, boolean managed,
 			boolean jakartaDataStaticMetamodel) {
@@ -359,6 +361,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<ExecutableElement> lifecycleMethods = new ArrayList<>();
 
 		if ( repository ) {
+			initCompanionNamedQueries();
 			final List<ExecutableElement> methodsOfClass = new ArrayList<>();
 			addMethods( element, methodsOfClass );
 			for ( ExecutableElement method: methodsOfClass ) {
@@ -368,13 +371,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_SAVE ) ) {
 					lifecycleMethods.add( method );
 				}
-				else if ( hasAnnotation( method, JD_DELETE) ) {
+				else if ( hasAnnotation( method, JD_DELETE ) ) {
 					if ( isDeleteLifecycle(method) ) {
 						lifecycleMethods.add( method );
 					}
 					else {
 						queryMethods.add( method );
 					}
+				}
+				else if ( namedQueries.containsKey( method.getSimpleName().toString() ) ) {
+					queryMethods.add( method );
 				}
 			}
 
@@ -421,6 +427,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		addQueryMethods( queryMethods );
 
 		initialized = true;
+	}
+
+	private void initCompanionNamedQueries() {
+		final TypeElement companion =
+				context.getElementUtils()
+						.getTypeElement(element.getQualifiedName().toString() + '$');
+		if ( companion != null ) {
+			for ( AnnotationMirror mirror : companion.getAnnotationMirrors() ) {
+				TypeElement typeElement = (TypeElement) mirror.getAnnotationType().asElement();
+				if ( typeElement.getQualifiedName().contentEquals(NAMED_QUERY) ) {
+					final String name =
+							castNonNull(getAnnotationValue(mirror, "name"))
+									.getValue().toString();
+					namedQueries.put(name, mirror);
+				}
+			}
+		}
 	}
 
 	private void validateStatelessSessionType() {
@@ -1047,7 +1070,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						.asMemberOf((DeclaredType) element.asType(), method);
 		final TypeMirror returnType = methodType.getReturnType();
 		final TypeKind kind = returnType.getKind();
-		if ( kind == TypeKind.VOID ||  kind == TypeKind.ARRAY || kind.isPrimitive() ) {
+		if ( kind == TypeKind.VOID || kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
@@ -1172,6 +1195,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		else if ( hasAnnotation( method, JD_DELETE ) ) {
 			addDeleteMethod( method, returnType );
+		}
+		final String methodName = method.getSimpleName().toString();
+		if ( namedQueries.containsKey(methodName) ) {
+			addQueryMethod( method, returnType, containerType, namedQueries.get(methodName), false );
 		}
 	}
 
@@ -2093,81 +2120,97 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeElement containerType,
 			AnnotationMirror mirror,
 			boolean isNative) {
-
 		final AnnotationValue value = getAnnotationValue( mirror, "value" );
 		if ( value != null ) {
-			final Object query = value.getValue();
-			if ( query instanceof String ) {
-				final String queryString = (String) query;
+			final Object queryString = value.getValue();
+			if ( queryString instanceof String ) {
+				addQueryMethod( method, returnType, containerType, mirror, isNative, value, (String) queryString);
+			}
+		}
+		final AnnotationValue query = getAnnotationValue( mirror, "query" );
+		if ( query != null ) {
+			final Object queryString = query.getValue();
+			if ( queryString instanceof String ) {
+				addQueryMethod( method, returnType, containerType, mirror, isNative, query, (String) queryString);
+			}
+		}
+	}
 
-				// The following is quite fragile!
-				final String containerTypeName;
-				if ( containerType == null ) {
-					if ( returnType != null && returnType.getKind() == TypeKind.ARRAY ) {
-						final ArrayType arrayType = (ArrayType) returnType;
-						final TypeMirror componentType = arrayType.getComponentType();
-						final TypeElement object = context.getElementUtils().getTypeElement(JAVA_OBJECT);
-						if ( !context.getTypeUtils().isSameType( object.asType(), componentType ) ) {
-							returnType = componentType;
-							containerTypeName = "[]";
-						}
-						else {
-							// assume it's returning a single tuple as Object[]
-							containerTypeName = null;
-						}
-					}
-					else {
-						containerTypeName = null;
-					}
+	private void addQueryMethod(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			@Nullable TypeElement containerType,
+			AnnotationMirror mirror,
+			boolean isNative,
+			AnnotationValue value,
+			String queryString) {
+		// The following is quite fragile!
+		final String containerTypeName;
+		if ( containerType == null ) {
+			if ( returnType != null && returnType.getKind() == TypeKind.ARRAY ) {
+				final ArrayType arrayType = (ArrayType) returnType;
+				final TypeMirror componentType = arrayType.getComponentType();
+				final TypeElement object = context.getElementUtils().getTypeElement(JAVA_OBJECT);
+				if ( !context.getTypeUtils().isSameType( object.asType(), componentType ) ) {
+					returnType = componentType;
+					containerTypeName = "[]";
 				}
 				else {
-					containerTypeName = containerType.getQualifiedName().toString();
+					// assume it's returning a single tuple as Object[]
+					containerTypeName = null;
 				}
+			}
+			else {
+				containerTypeName = null;
+			}
+		}
+		else {
+			containerTypeName = containerType.getQualifiedName().toString();
+		}
 
-				final List<String> paramNames = parameterNames( method );
-				final List<String> paramTypes = parameterTypes( method );
+		final List<String> paramNames = parameterNames(method);
+		final List<String> paramTypes = parameterTypes(method);
 
-				// now check that the query has a parameter for every method parameter
-				checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString );
+		// now check that the query has a parameter for every method parameter
+		checkParameters(method, returnType, paramNames, paramTypes, mirror, value, queryString);
 
-				final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
-				final DeclaredType resultType = resultType( method, returnType, mirror, value );
-				final List<OrderBy> orderBys = resultType == null
+		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
+		final DeclaredType resultType = resultType(method, returnType, mirror, value);
+		final List<OrderBy> orderBys =
+				resultType == null
 						? emptyList()
 						: orderByList( method, (TypeElement) resultType.asElement() );
 
-				final String processedQuery;
-				if ( isNative ) {
-					processedQuery = queryString;
-					validateSql( method, mirror, processedQuery, paramNames, value );
-				}
-				else {
-					processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName(resultType) );
-					validateHql( method, returnType, mirror, value, processedQuery, paramNames, paramTypes );
-				}
-
-				final QueryMethod attribute =
-						new QueryMethod(
-								this, method,
-								method.getSimpleName().toString(),
-								processedQuery,
-								returnType == null ? null : returnType.toString(),
-								returnType == null ? null : returnTypeClass( returnType ),
-								containerTypeName,
-								paramNames,
-								paramTypes,
-								isInsertUpdateDelete( queryString ),
-								isNative,
-								repository,
-								sessionType[0],
-								sessionType[1],
-								orderBys,
-								context.addNonnullAnnotation(),
-								jakartaDataRepository
-						);
-				putMember( attribute.getPropertyName() + paramTypes, attribute );
-			}
+		final String processedQuery;
+		if (isNative) {
+			processedQuery = queryString;
+			validateSql(method, mirror, processedQuery, paramNames, value);
 		}
+		else {
+			processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName(resultType) );
+			validateHql(method, returnType, mirror, value, processedQuery, paramNames, paramTypes);
+		}
+
+		final QueryMethod attribute =
+				new QueryMethod(
+						this, method,
+						method.getSimpleName().toString(),
+						processedQuery,
+						returnType == null ? null : returnType.toString(),
+						returnType == null ? null : returnTypeClass(returnType),
+						containerTypeName,
+						paramNames,
+						paramTypes,
+						isInsertUpdateDelete(queryString),
+						isNative,
+						repository,
+						sessionType[0],
+						sessionType[1],
+						orderBys,
+						context.addNonnullAnnotation(),
+						jakartaDataRepository
+				);
+		putMember( attribute.getPropertyName() + paramTypes, attribute );
 	}
 
 	private static String returnTypeClass(TypeMirror returnType) {

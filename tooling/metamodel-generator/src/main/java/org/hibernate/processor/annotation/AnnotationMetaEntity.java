@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.Token;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.grammars.hql.HqlLexer;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.ImportContextImpl;
 import org.hibernate.processor.ProcessLaterException;
@@ -21,7 +22,6 @@ import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
@@ -212,9 +212,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return jakartaDataStaticModel;
 	}
 
+	public boolean isInitialized() {
+		return initialized;
+	}
+
 	@Override
 	public final String getSimpleName() {
-		return element.getSimpleName().toString();
+		return removeDollar( element.getSimpleName().toString() );
+	}
+
+	private String getConstructorName() {
+		return getSimpleName() + '_';
+	}
+
+	/**
+	 * If this is an "intermediate" class providing {@code @Query}
+	 * annotations for the query by magical method name crap, then
+	 * by convention it will be named with a trailing $ sign. Strip
+	 * that off, so we get the standard constructor.
+	 */
+	private static String removeDollar(String simpleName) {
+		return simpleName.endsWith("$")
+				? simpleName.substring(0, simpleName.length()-1)
+				: simpleName;
 	}
 
 	@Override
@@ -368,13 +388,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_SAVE ) ) {
 					lifecycleMethods.add( method );
 				}
-				else if ( hasAnnotation( method, JD_DELETE) ) {
+				else if ( hasAnnotation( method, JD_DELETE ) ) {
 					if ( isDeleteLifecycle(method) ) {
 						lifecycleMethods.add( method );
 					}
 					else {
 						queryMethods.add( method );
 					}
+				}
+				else if ( !isSessionGetter(method)
+						&& !method.getModifiers().contains(Modifier.DEFAULT) ) {
+					final String companionClassName = element.getQualifiedName().toString() + '$';
+					if ( context.getElementUtils().getTypeElement(companionClassName) == null ) {
+						message( method, "repository method cannot be implemented",
+								Diagnostic.Kind.ERROR );
+					}
+					// NOTE EARLY EXIT with initialized = false
+					return;
 				}
 			}
 
@@ -483,10 +513,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addDefaultConstructor() {
 		final String sessionVariableName = getSessionVariableName(sessionType);
-		final String typeName = element.getSimpleName().toString() + '_';
 		putMember("_", new DefaultConstructor(
 				this,
-				typeName,
+				getConstructorName(),
 				sessionVariableName,
 				sessionType,
 				sessionVariableName,
@@ -633,13 +662,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String sessionType = method == null ? this.sessionType : method.getReturnType().toString();
 		final String sessionVariableName = getSessionVariableName( sessionType );
 		final String name = method == null ? sessionVariableName : method.getSimpleName().toString();
-		final String typeName = element.getSimpleName().toString() + '_';
 
 		if ( method == null || !method.isDefault() ) {
 			putMember( name,
 					new RepositoryConstructor(
 							this,
-							typeName,
+							getConstructorName(),
 							name,
 							sessionType,
 							sessionVariableName,
@@ -664,18 +692,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * and in HR, we define the static session getter.
 	 */
 	private String setupQuarkusDaoConstructor() {
-		final String typeName = element.getSimpleName().toString() + '_';
-		final String sessionVariableName = getSessionVariableName( sessionType );
-
 		if ( context.usesQuarkusOrm() ) {
 			String name = "getEntityManager";
 			putMember( name,
 					new RepositoryConstructor(
 							this,
-							typeName,
+							getConstructorName(),
 							name,
 							sessionType,
-							sessionVariableName,
+							getSessionVariableName( sessionType ),
 							dataStore(), 
 							context.addInjectAnnotation(),
 							context.addNonnullAnnotation(),
@@ -1047,7 +1072,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						.asMemberOf((DeclaredType) element.asType(), method);
 		final TypeMirror returnType = methodType.getReturnType();
 		final TypeKind kind = returnType.getKind();
-		if ( kind == TypeKind.VOID ||  kind == TypeKind.ARRAY || kind.isPrimitive() ) {
+		if ( kind == TypeKind.VOID || kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
@@ -2093,81 +2118,91 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeElement containerType,
 			AnnotationMirror mirror,
 			boolean isNative) {
+		// The following is quite fragile!
+		final String containerTypeName;
+		if ( containerType == null ) {
+			if ( returnType != null && returnType.getKind() == TypeKind.ARRAY ) {
+				final ArrayType arrayType = (ArrayType) returnType;
+				final TypeMirror componentType = arrayType.getComponentType();
+				final TypeElement object = context.getElementUtils().getTypeElement(JAVA_OBJECT);
+				if ( !context.getTypeUtils().isSameType( object.asType(), componentType ) ) {
+					returnType = componentType;
+					containerTypeName = "[]";
+				}
+				else {
+					// assume it's returning a single tuple as Object[]
+					containerTypeName = null;
+				}
+			}
+			else {
+				containerTypeName = null;
+			}
+		}
+		else {
+			containerTypeName = containerType.getQualifiedName().toString();
+		}
 
 		final AnnotationValue value = getAnnotationValue( mirror, "value" );
 		if ( value != null ) {
-			final Object query = value.getValue();
-			if ( query instanceof String ) {
-				final String queryString = (String) query;
+			final Object queryString = value.getValue();
+			if ( queryString instanceof String ) {
+				addQueryMethod(method, returnType, containerTypeName, mirror, isNative, value, (String) queryString);
+			}
+		}
+	}
 
-				// The following is quite fragile!
-				final String containerTypeName;
-				if ( containerType == null ) {
-					if ( returnType != null && returnType.getKind() == TypeKind.ARRAY ) {
-						final ArrayType arrayType = (ArrayType) returnType;
-						final TypeMirror componentType = arrayType.getComponentType();
-						final TypeElement object = context.getElementUtils().getTypeElement(JAVA_OBJECT);
-						if ( !context.getTypeUtils().isSameType( object.asType(), componentType ) ) {
-							returnType = componentType;
-							containerTypeName = "[]";
-						}
-						else {
-							// assume it's returning a single tuple as Object[]
-							containerTypeName = null;
-						}
-					}
-					else {
-						containerTypeName = null;
-					}
-				}
-				else {
-					containerTypeName = containerType.getQualifiedName().toString();
-				}
+	private void addQueryMethod(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			@Nullable String containerTypeName,
+			AnnotationMirror mirror,
+			boolean isNative,
+			AnnotationValue value,
+			String queryString) {
 
-				final List<String> paramNames = parameterNames( method );
-				final List<String> paramTypes = parameterTypes( method );
+		final List<String> paramNames = parameterNames(method);
+		final List<String> paramTypes = parameterTypes(method);
 
-				// now check that the query has a parameter for every method parameter
-				checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString );
+		// now check that the query has a parameter for every method parameter
+		checkParameters(method, returnType, paramNames, paramTypes, mirror, value, queryString);
 
-				final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
-				final DeclaredType resultType = resultType( method, returnType, mirror, value );
-				final List<OrderBy> orderBys = resultType == null
+		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
+		final DeclaredType resultType = resultType(method, returnType, mirror, value);
+		final List<OrderBy> orderBys =
+				resultType == null
 						? emptyList()
 						: orderByList( method, (TypeElement) resultType.asElement() );
 
-				final String processedQuery;
-				if ( isNative ) {
-					processedQuery = queryString;
-					validateSql( method, mirror, processedQuery, paramNames, value );
-				}
-				else {
-					processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName(resultType) );
-					validateHql( method, returnType, mirror, value, processedQuery, paramNames, paramTypes );
-				}
-
-				final QueryMethod attribute =
-						new QueryMethod(
-								this, method,
-								method.getSimpleName().toString(),
-								processedQuery,
-								returnType == null ? null : returnType.toString(),
-								returnType == null ? null : returnTypeClass( returnType ),
-								containerTypeName,
-								paramNames,
-								paramTypes,
-								isInsertUpdateDelete( queryString ),
-								isNative,
-								repository,
-								sessionType[0],
-								sessionType[1],
-								orderBys,
-								context.addNonnullAnnotation(),
-								jakartaDataRepository
-						);
-				putMember( attribute.getPropertyName() + paramTypes, attribute );
-			}
+		final String processedQuery;
+		if (isNative) {
+			processedQuery = queryString;
+			validateSql(method, mirror, processedQuery, paramNames, value);
 		}
+		else {
+			processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName(resultType) );
+			validateHql(method, returnType, mirror, value, processedQuery, paramNames, paramTypes);
+		}
+
+		final QueryMethod attribute =
+				new QueryMethod(
+						this, method,
+						method.getSimpleName().toString(),
+						processedQuery,
+						returnType == null ? null : returnType.toString(),
+						returnType == null ? null : returnTypeClass(returnType),
+						containerTypeName,
+						paramNames,
+						paramTypes,
+						isInsertUpdateDelete(queryString),
+						isNative,
+						repository,
+						sessionType[0],
+						sessionType[1],
+						orderBys,
+						context.addNonnullAnnotation(),
+						jakartaDataRepository
+				);
+		putMember( attribute.getPropertyName() + paramTypes, attribute );
 	}
 
 	private static String returnTypeClass(TypeMirror returnType) {

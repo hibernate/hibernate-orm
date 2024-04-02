@@ -91,14 +91,7 @@ public class JoinFormulaManyToOneLazyFetchingTest extends BaseEntityManagerFunct
 			assertEquals( 2, stocks.size() );
 			assertEquals( "ABC", stocks.get( 0 ).getCode().getRefNumber() );
 
-			try {
-				stocks.get( 1 ).getCode().getRefNumber();
-
-				fail( "Should have thrown EntityNotFoundException" );
-			}
-			catch (EntityNotFoundException expected) {
-
-			}
+			assertNull( stocks.get( 1 ).getCode() );
 
 		} );
 	}

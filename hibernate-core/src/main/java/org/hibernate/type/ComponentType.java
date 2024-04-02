@@ -669,7 +669,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			String[] range = ArrayHelper.slice( names, begin, length ); //cache this
 			Object val = propertyTypes[i].hydrate( rs, range, session, owner );
 			if ( val == null ) {
-				if ( isKey ) {
+				if ( isKey || !propertyNullability[i] ) {
 					return null; //different nullability rules for pk/fk
 				}
 			}

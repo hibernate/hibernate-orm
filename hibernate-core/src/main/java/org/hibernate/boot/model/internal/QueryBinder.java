@@ -15,16 +15,13 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.Remove;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.SQLSelect;
-import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
-import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
@@ -34,23 +31,23 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.HibernateHints;
+import org.hibernate.models.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.type.BasicType;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
-import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.StoredProcedureParameter;
 
 import static java.lang.Boolean.TRUE;
@@ -111,7 +108,6 @@ public abstract class QueryBinder {
 		}
 	}
 
-
 	public static void bindNativeQuery(
 			AnnotationUsage<NamedNativeQuery> namedNativeQuery,
 			MetadataBuildingContext context,
@@ -149,7 +145,6 @@ public abstract class QueryBinder {
 				.setReadOnly( hints.getBooleanWrapper( HibernateHints.HINT_READ_ONLY ) )
 				.setComment( hints.getString( HibernateHints.HINT_COMMENT ) )
 				.addHints( hints.getHintsMap() );
-
 
 		final NamedNativeQueryDefinition queryDefinition = builder.build();
 
@@ -252,123 +247,97 @@ public abstract class QueryBinder {
 
 			context.getMetadataCollector().addNamedNativeQuery( queryDefinition );
 		}
-
 	}
 
 	public static NamedProcedureCallDefinition createStoredProcedure(
 			NamedNativeQueryDefinitionBuilder builder,
 			MetadataBuildingContext context,
 			Supplier<RuntimeException> exceptionProducer) {
-		List<StoredProcedureParameter> storedProcedureParameters = new ArrayList<>();
-		List<QueryHint> queryHints = new ArrayList<>();
 		final String sqlString = builder.getSqlString().trim();
 		if ( !sqlString.startsWith( "{" ) || !sqlString.endsWith( "}" ) ) {
 			throw exceptionProducer.get();
 		}
 		final JdbcCall jdbcCall = parseJdbcCall( sqlString, exceptionProducer );
 
-		AnnotationDescriptor descriptor = new AnnotationDescriptor( NamedStoredProcedureQuery.class );
-		descriptor.setValue( "name", builder.getName() );
-		descriptor.setValue( "procedureName", jdbcCall.callableName );
+		final SourceModelBuildingContext sourceModelBuildingContext = context.getMetadataCollector()
+				.getSourceModelBuildingContext();
+		final MutableAnnotationUsage<NamedStoredProcedureQuery> nameStoredProcedureQueryAnn = JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY.createUsage(
+				null,
+				sourceModelBuildingContext
+		);
+		nameStoredProcedureQueryAnn.setAttributeValue( "name", builder.getName() );
+		nameStoredProcedureQueryAnn.setAttributeValue( "procedureName", jdbcCall.callableName );
 
+		final List<AnnotationUsage<StoredProcedureParameter>> storedProcedureParameters = new ArrayList<>();
 		for ( String parameterName : jdbcCall.parameters ) {
-			AnnotationDescriptor parameterDescriptor = new AnnotationDescriptor( StoredProcedureParameter.class );
-			parameterDescriptor.setValue( "name", parameterName );
-			parameterDescriptor.setValue( "mode", ParameterMode.IN );
+			final MutableAnnotationUsage<StoredProcedureParameter> storedProcedureParameterAnn = JpaAnnotations.STORED_PROCEDURE_PARAMETER
+					.createUsage( null, sourceModelBuildingContext );
+			storedProcedureParameterAnn.setAttributeValue( "name", parameterName );
+			storedProcedureParameterAnn.setAttributeValue( "mode", ParameterMode.IN );
 			final String typeName = builder.getParameterTypes().get( parameterName );
-			if ( typeName == null ) {
-				parameterDescriptor.setValue( "type", Object.class );
+			final ClassDetails classDetails;
+			if ( StringHelper.isEmpty( typeName ) ) {
+				classDetails = ClassDetails.VOID_CLASS_DETAILS;
 			}
 			else {
 				final BasicType<Object> registeredType = context.getBootstrapContext()
 						.getTypeConfiguration()
 						.getBasicTypeRegistry()
 						.getRegisteredType( typeName );
-				parameterDescriptor.setValue( "type", registeredType.getJavaType() );
+				classDetails = storedProcedureParameterAnn.getClassDetails( registeredType.getJavaType().getName() );
 			}
-			storedProcedureParameters.add( AnnotationFactory.create( parameterDescriptor ) );
+			storedProcedureParameterAnn.setAttributeValue( "type", classDetails );
+
+			storedProcedureParameters.add(  storedProcedureParameterAnn  );
 		}
-		descriptor.setValue(
-				"parameters",
-				storedProcedureParameters.toArray( new StoredProcedureParameter[storedProcedureParameters.size()] )
-		);
+		nameStoredProcedureQueryAnn.setAttributeValue( "parameters", storedProcedureParameters );
 
 		if ( builder.getResultSetMappingName() != null ) {
-			descriptor.setValue( "resultSetMappings", new String[]{ builder.getResultSetMappingName() } );
-		}
-		else {
-			descriptor.setValue( "resultSetMappings", new String[0]  );
-		}
-
-		if ( builder.getResultSetMappingClassName() != null ) {
-			descriptor.setValue(
-					"resultClasses",
-					new Class[] {
-							context.getBootstrapContext()
-									.getClassLoaderAccess().classForName( builder.getResultSetMappingClassName() )
-					}
-			);
-		}
-		else {
-			descriptor.setValue( "resultClasses", new Class[0]  );
+			final List<String> resultSetMappings = new ArrayList<>( 1 );
+			resultSetMappings.add( builder.getResultSetMappingName() );
+			nameStoredProcedureQueryAnn.setAttributeValue( "resultSetMappings", resultSetMappings );
 		}
 
+		final String resultSetMappingClassName = builder.getResultSetMappingClassName();
+		if ( resultSetMappingClassName != null ) {
+			final List<ClassDetails> resultClasses = new ArrayList<>( 1 );
+			final ClassDetails classDetails;
+			if ( StringHelper.isEmpty( resultSetMappingClassName ) ) {
+				classDetails = ClassDetails.VOID_CLASS_DETAILS;
+			}
+			else {
+				classDetails = nameStoredProcedureQueryAnn.getClassDetails( resultSetMappingClassName );
+			}
+
+			resultClasses.add( classDetails );
+			nameStoredProcedureQueryAnn.setAttributeValue( "resultClasses", resultClasses );
+		}
+
+		final List<AnnotationUsage<QueryHint>> queryHints = new ArrayList<>();
 		if ( builder.getQuerySpaces() != null ) {
-			AnnotationDescriptor hintDescriptor = new AnnotationDescriptor( QueryHint.class );
-			hintDescriptor.setValue( "name", HibernateHints.HINT_NATIVE_SPACES );
-			hintDescriptor.setValue( "value", String.join( " ", builder.getQuerySpaces() ) );
-			queryHints.add( AnnotationFactory.create( hintDescriptor ) );
+			final MutableAnnotationUsage<QueryHint> queryHintAnn = JpaAnnotations.QUERY_HINT.createUsage(
+					null,
+					sourceModelBuildingContext
+			);
+			queryHintAnn.setAttributeValue( "name", HibernateHints.HINT_NATIVE_SPACES );
+			queryHintAnn.setAttributeValue( "value", String.join( " ", builder.getQuerySpaces() ) );
+			queryHints.add( queryHintAnn );
 		}
 
 		if ( jdbcCall.resultParameter ) {
 			// Mark native queries that have a result parameter as callable functions
-			AnnotationDescriptor hintDescriptor2 = new AnnotationDescriptor( QueryHint.class );
-			hintDescriptor2.setValue( "name", HibernateHints.HINT_CALLABLE_FUNCTION );
-			hintDescriptor2.setValue( "value", "true" );
-			queryHints.add( AnnotationFactory.create( hintDescriptor2 ) );
+			final MutableAnnotationUsage<QueryHint> queryHintAnn = JpaAnnotations.QUERY_HINT.createUsage(
+					null,
+					sourceModelBuildingContext
+			);
+			queryHintAnn.setAttributeValue( "name", HibernateHints.HINT_CALLABLE_FUNCTION );
+			queryHintAnn.setAttributeValue( "value", "true" );
+			queryHints.add( queryHintAnn );
 		}
 
-		descriptor.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
+		nameStoredProcedureQueryAnn.setAttributeValue( "hints", queryHints );
 
-		return new NamedProcedureCallDefinitionImpl( AnnotationFactory.create( descriptor ) );
-	}
-
-	public static void bindQueries(AnnotationUsage<NamedQueries> namedQueries, MetadataBuildingContext context, boolean isDefault) {
-		if ( namedQueries == null ) {
-			return;
-		}
-
-		final List<AnnotationUsage<NamedQuery>> nestedValues = namedQueries.getList( "value" );
-		for ( AnnotationUsage<NamedQuery> nestedValue : nestedValues ) {
-			bindQuery( nestedValue, context, isDefault );
-		}
-	}
-
-	public static void bindNativeQueries(
-			AnnotationUsage<NamedNativeQueries> namedNativeQueries,
-			MetadataBuildingContext context,
-			boolean isDefault) {
-		if ( namedNativeQueries == null ) {
-			return;
-		}
-
-		final List<AnnotationUsage<NamedNativeQuery>> nestedValues = namedNativeQueries.getList( "value" );
-		for ( AnnotationUsage<NamedNativeQuery> nestedValue : nestedValues ) {
-			bindNativeQuery( nestedValue, context, isDefault );
-		}
-	}
-
-	public static void bindNativeQueries(
-			AnnotationUsage<org.hibernate.annotations.NamedNativeQueries> namedNativeQueries,
-			MetadataBuildingContext context) {
-		if ( namedNativeQueries == null ) {
-			return;
-		}
-
-		final List<AnnotationUsage<org.hibernate.annotations.NamedNativeQuery>> nestedValues = namedNativeQueries.getList( "value" );
-		for ( AnnotationUsage<org.hibernate.annotations.NamedNativeQuery> nestedValue : nestedValues ) {
-			bindNativeQuery( nestedValue, context );
-		}
+		return new NamedProcedureCallDefinitionImpl(  nameStoredProcedureQueryAnn  );
 	}
 
 	public static void bindQuery(
@@ -464,20 +433,6 @@ public abstract class QueryBinder {
 		}
 	}
 
-
-	public static void bindQueries(
-			AnnotationUsage<org.hibernate.annotations.NamedQueries> namedQueries,
-			MetadataBuildingContext context) {
-		if ( namedQueries == null ) {
-			return;
-		}
-
-		final List<AnnotationUsage<org.hibernate.annotations.NamedQuery>> nestedValues = namedQueries.getList( "value" );
-		for ( AnnotationUsage<org.hibernate.annotations.NamedQuery> nestedValue : nestedValues ) {
-			bindQuery( nestedValue, context );
-		}
-	}
-
 	public static void bindNamedStoredProcedureQuery(
 			AnnotationUsage<NamedStoredProcedureQuery> namedStoredProcedureQuery,
 			MetadataBuildingContext context,
@@ -495,20 +450,6 @@ public abstract class QueryBinder {
 				context.getMetadataCollector().addNamedProcedureCallDefinition( definition );
 			}
 			LOG.debugf( "Bound named stored procedure query : %s => %s", definition.getRegistrationName(), definition.getProcedureName() );
-		}
-	}
-
-	public static void bindSqlResultSetMappings(
-			AnnotationUsage<SqlResultSetMappings> resultSetMappings,
-			MetadataBuildingContext context,
-			boolean isDefault) {
-		if ( resultSetMappings == null ) {
-			return;
-		}
-
-		final List<AnnotationUsage<SqlResultSetMapping>> mappings = resultSetMappings.getList( "value" );
-		for ( AnnotationUsage<SqlResultSetMapping> mapping : mappings ) {
-			bindSqlResultSetMapping( mapping, context, isDefault );
 		}
 	}
 
@@ -589,67 +530,6 @@ public abstract class QueryBinder {
 				}
 		);
 		return new JdbcCall( callableName, resultParameter, parameters );
-	}
-
-	@Remove
-	@Deprecated(since = "6.2")
-	public static String parseJdbcCall(
-			String sqlString,
-			List<String> parameterNames,
-			Supplier<RuntimeException> exceptionProducer) {
-		String procedureName = null;
-		int index = skipWhitespace( sqlString, 1 );
-		// Parse the out param `?=` part
-		if ( sqlString.charAt( index ) == '?' ) {
-			index++;
-			index = skipWhitespace( sqlString, index );
-			if ( sqlString.charAt( index ) != '=' ) {
-				throw exceptionProducer.get();
-			}
-			index++;
-			index = skipWhitespace( sqlString, index );
-		}
-		// Parse the call keyword
-		if ( !sqlString.regionMatches( true, index, "call", 0, 4 ) ) {
-			throw exceptionProducer.get();
-		}
-		index += 4;
-		index = skipWhitespace( sqlString, index );
-
-		// Parse the procedure name
-		final int procedureStart = index;
-		for ( ; index < sqlString.length(); index++ ) {
-			final char c = sqlString.charAt( index );
-			if ( c == '(' || Character.isWhitespace( c ) ) {
-				procedureName = sqlString.substring( procedureStart, index );
-				break;
-			}
-		}
-		index = skipWhitespace( sqlString, index );
-		ParameterParser.parse(
-				sqlString.substring( index, sqlString.length() - 1 ),
-				new ParameterRecognizer() {
-					@Override
-					public void ordinalParameter(int sourcePosition) {
-						parameterNames.add( "" );
-					}
-
-					@Override
-					public void namedParameter(String name, int sourcePosition) {
-						parameterNames.add( name );
-					}
-
-					@Override
-					public void jpaPositionalParameter(int label, int sourcePosition) {
-						parameterNames.add( "" );
-					}
-
-					@Override
-					public void other(char character) {
-					}
-				}
-		);
-		return procedureName;
 	}
 
 	private static int skipWhitespace(String sqlString, int i) {

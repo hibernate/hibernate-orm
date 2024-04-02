@@ -58,7 +58,6 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.EntityGraph;
@@ -95,7 +94,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private final Map<String, ManagedDomainType<?>> managedTypeByName = new TreeMap<>();
 	private final Map<Class<?>, ManagedDomainType<?>> managedTypeByClass = new HashMap<>();
 	private JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting;
-	private final Map<String, Set<String>> allowedEnumLiteralTexts = new HashMap<>();
+	private final Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames = new HashMap<>();
+	private final Map<String, EnumJavaType<?>> enumJavaTypes = new HashMap<>();
 
 	private final transient Map<String, RootGraphImplementor<?>> entityGraphMap = new ConcurrentHashMap<>();
 
@@ -282,43 +282,19 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				.collect( Collectors.toSet() );
 	}
 
-	@Override @Nullable
-	public Set<String> getEnumTypesForValue(String enumValue) {
-		return allowedEnumLiteralTexts.get(enumValue);
+	@Override
+	public @Nullable Set<String> getEnumTypesForValue(String enumValue) {
+		return allowedEnumLiteralsToEnumTypeNames.get( enumValue);
 	}
 
 	@Override
-	public EnumJavaType<?> getEnumType(String prefix) {
-		final ClassLoaderService classLoaderService =
-				getServiceRegistry().requireService(ClassLoaderService.class);
-		final JavaTypeRegistry registry = getTypeConfiguration().getJavaTypeRegistry();
-		try {
-			final Class<?> namedClass = classLoaderService.classForName( prefix );
-			if ( namedClass != null && namedClass.isEnum() ) {
-				return (EnumJavaType) registry.resolveDescriptor(namedClass);
-			}
-		}
-		catch (ClassLoadingException classLoadingException) {
-			try {
-				final int lastDot = prefix.lastIndexOf('.');
-				if ( lastDot>0) {
-					final String replaced =
-							prefix.substring(0, lastDot) + '$' + prefix.substring(lastDot+1);
-					final Class<?> namedClass = classLoaderService.classForName( replaced );
-					if ( namedClass != null && namedClass.isEnum() ) {
-						return (EnumJavaType) registry.resolveDescriptor(namedClass);
-					}
-				}
-			}
-			catch (ClassLoadingException ignore) {
-			}
-		}
-		return null;
+	public EnumJavaType<?> getEnumType(String className) {
+		return enumJavaTypes.get( className );
 	}
 
 	@Override
-	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
-		return Enum.valueOf( enumType.getJavaTypeClass(), terminal );
+	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String enumValueName) {
+		return Enum.valueOf( enumType.getJavaTypeClass(), enumValueName );
 	}
 
 	@Override
@@ -671,19 +647,47 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				final Class<? extends Enum<?>> enumJavaClass = enumJavaType.getJavaTypeClass();
 				final Enum<?>[] enumConstants = enumJavaClass.getEnumConstants();
 				for ( Enum<?> enumConstant : enumConstants ) {
-					allowedEnumLiteralTexts
-							.computeIfAbsent( enumConstant.name(), s -> new HashSet<>() )
-							.add( enumJavaClass.getName() );
-
-					final String simpleQualifiedName = enumJavaClass.getSimpleName() + "." + enumConstant.name();
-					allowedEnumLiteralTexts
-							.computeIfAbsent( simpleQualifiedName, s -> new HashSet<>() )
-							.add( enumJavaClass.getName() );
+					addAllowedEnumLiteralsToEnumTypesMap(
+							allowedEnumLiteralsToEnumTypeNames,
+							enumConstant.name(),
+							enumJavaClass.getSimpleName(),
+							enumJavaClass.getCanonicalName(),
+							enumJavaClass.getName()
+					);
+					enumJavaTypes.put( enumJavaClass.getName(), enumJavaType );
+					enumJavaTypes.put( enumJavaClass.getCanonicalName(), enumJavaType );
 				}
 			}
 		} );
 
 		applyNamedEntityGraphs( namedEntityGraphDefinitions );
+	}
+
+	public static void addAllowedEnumLiteralsToEnumTypesMap(
+			Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames,
+			String enumConstantName,
+			String enumSimpleName,
+			String enumAlternativeName,
+			String enumClassName
+	) {
+		allowedEnumLiteralsToEnumTypeNames
+				.computeIfAbsent( enumConstantName, s -> new HashSet<>() )
+				.add( enumClassName );
+
+		final String simpleQualifiedName = enumSimpleName + "." + enumConstantName;
+		allowedEnumLiteralsToEnumTypeNames
+				.computeIfAbsent( simpleQualifiedName, s -> new HashSet<>() )
+				.add( enumClassName );
+
+		final String qualifiedAlternativeName = enumAlternativeName + "." + enumConstantName;
+		allowedEnumLiteralsToEnumTypeNames
+				.computeIfAbsent( qualifiedAlternativeName, s -> new HashSet<>() )
+				.add( enumClassName );
+
+		final String qualifiedName = enumClassName + "." + enumConstantName;
+		allowedEnumLiteralsToEnumTypeNames
+				.computeIfAbsent( qualifiedName, s -> new HashSet<>() )
+				.add( enumClassName );
 	}
 
 	private EntityDomainType<?> locateOrBuildEntityType(

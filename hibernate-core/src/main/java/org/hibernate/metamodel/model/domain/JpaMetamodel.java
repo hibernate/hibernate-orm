@@ -90,12 +90,11 @@ public interface JpaMetamodel extends Metamodel {
 
 	String qualifyImportableName(String queryName);
 
-	@Nullable
-	Set<String> getEnumTypesForValue(String enumValue);
+	@Nullable Set<String> getEnumTypesForValue(String enumValue);
 
-	EnumJavaType<?> getEnumType(String prefix);
+	EnumJavaType<?> getEnumType(String className);
 
-	<E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal);
+	<E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String enumValueName);
 
 	JavaType<?> getJavaConstantType(String className, String fieldName);
 

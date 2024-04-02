@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,6 +59,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.StringHelper.unroot;
+import static org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl.addAllowedEnumLiteralsToEnumTypesMap;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 
 /**
@@ -90,7 +92,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final Types typeUtil;
 	private final Filer filer;
 	private final Map<String, String> entityNameMappings;
-	private final Map<String, Set<String>> enumTypesByValue;
+	private final Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames;
 
 	public ProcessorSessionFactory(
 			ProcessingEnvironment processingEnvironment,
@@ -100,7 +102,23 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		typeUtil = processingEnvironment.getTypeUtils();
 		filer = processingEnvironment.getFiler();
 		this.entityNameMappings = entityNameMappings;
-		this.enumTypesByValue = enumTypesByValue;
+		final Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames = new HashMap<>( enumTypesByValue.size() << 2 );
+		for ( Map.Entry<String, Set<String>> entry : enumTypesByValue.entrySet() ) {
+			final String enumConstantName = entry.getKey();
+			for ( String enumClassName : entry.getValue() ) {
+				final TypeElement enumTypeElement = elementUtil.getTypeElement( enumClassName );
+				if ( enumTypeElement != null ) {
+					addAllowedEnumLiteralsToEnumTypesMap(
+							allowedEnumLiteralsToEnumTypeNames,
+							enumConstantName,
+							enumTypeElement.getSimpleName().toString(),
+							elementUtil.getBinaryName( enumTypeElement ).toString(),
+							enumClassName
+					);
+				}
+			}
+		}
+		this.allowedEnumLiteralsToEnumTypeNames = allowedEnumLiteralsToEnumTypeNames;
 	}
 
 	@Override
@@ -217,7 +235,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override @Nullable
 	Set<String> getEnumTypesForValue(String value) {
-		Set<String> result = enumTypesByValue.get(value);
+		Set<String> result = allowedEnumLiteralsToEnumTypeNames.get( value);
 		if ( result != null ) {
 			return result;
 		}
@@ -631,7 +649,18 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	boolean isEnum(String className) {
-		final TypeElement typeElement = elementUtil.getTypeElement(className);
+		TypeElement typeElement = elementUtil.getTypeElement( className );
+		int startIdx = 0;
+		int dollarIdx;
+		while ( typeElement == null && ( dollarIdx = className.indexOf( '$', startIdx ) ) != -1 ) {
+			final String potentialBaseTypeName = className.substring( 0, dollarIdx );
+			final TypeElement potentialBaseType = elementUtil.getTypeElement( potentialBaseTypeName );
+			if ( potentialBaseType != null ) {
+				className = potentialBaseTypeName + className.substring( dollarIdx + 1 );
+				typeElement = elementUtil.getTypeElement( className );
+			}
+			startIdx = dollarIdx + 1;
+		}
 		return typeElement != null && typeElement.getKind() == ElementKind.ENUM;
 	}
 

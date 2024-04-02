@@ -550,8 +550,8 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
-		return jpaMetamodel.enumValue(enumType, terminal);
+	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String enumValueName) {
+		return jpaMetamodel.enumValue( enumType, enumValueName );
 	}
 
 	@Override

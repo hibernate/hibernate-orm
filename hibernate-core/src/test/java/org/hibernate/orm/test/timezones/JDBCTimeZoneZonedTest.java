@@ -57,13 +57,17 @@ public class JDBCTimeZoneZonedTest {
 			ZoneId systemZone = ZoneId.systemDefault();
 			ZoneOffset systemOffset = systemZone.getRules().getOffset( Instant.now() );
 			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+			Instant expected = DateTimeUtils.adjustToDefaultPrecision( nowZoned.toInstant(), dialect );
+			Instant actual = DateTimeUtils.adjustToDefaultPrecision( z.zonedDateTime.toInstant(), dialect );
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowZoned.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.zonedDateTime.toInstant(), dialect )
+					expected,
+					actual
 			);
+			expected = DateTimeUtils.adjustToDefaultPrecision( nowOffset.toInstant(), dialect );
+			actual = DateTimeUtils.adjustToDefaultPrecision( z.offsetDateTime.toInstant(), dialect );
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowOffset.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.offsetDateTime.toInstant(), dialect )
+					expected,
+					actual
 			);
 			assertEquals( systemZone, z.zonedDateTime.getZone() );
 			assertEquals( systemOffset, z.offsetDateTime.getOffset() );

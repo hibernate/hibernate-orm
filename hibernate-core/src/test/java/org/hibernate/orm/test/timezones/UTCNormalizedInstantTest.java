@@ -46,12 +46,12 @@ public class UTCNormalizedInstantTest {
 			final Zoned z = s.find(Zoned.class, id);
 			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( z.utcInstant, dialect ),
-					DateTimeUtils.roundToDefaultPrecision( instant, dialect )
+					DateTimeUtils.adjustToDefaultPrecision( z.utcInstant, dialect ),
+					DateTimeUtils.adjustToDefaultPrecision( instant, dialect )
 			);
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( z.localInstant, dialect ),
-					DateTimeUtils.roundToDefaultPrecision( instant, dialect )
+					DateTimeUtils.adjustToDefaultPrecision( z.localInstant, dialect ),
+					DateTimeUtils.adjustToDefaultPrecision( instant, dialect )
 			);
 		});
 	}
@@ -79,13 +79,16 @@ public class UTCNormalizedInstantTest {
 			scope.inSession( s-> {
 				final Zoned z = s.find(Zoned.class, id);
 				final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+				Instant expected = DateTimeUtils.adjustToDefaultPrecision( z.utcInstant, dialect );
+			Instant actual = DateTimeUtils.adjustToDefaultPrecision( instant, dialect );
 				assertEquals(
-						DateTimeUtils.roundToDefaultPrecision( z.utcInstant, dialect ),
-						DateTimeUtils.roundToDefaultPrecision( instant, dialect )
-				);
-				assertEquals(
-						DateTimeUtils.roundToDefaultPrecision( z.localInstant, dialect ),
-						DateTimeUtils.roundToDefaultPrecision( instant, dialect )
+						expected,
+					actual
+			);
+			expected = DateTimeUtils.adjustToDefaultPrecision( z.localInstant, dialect );
+			assertEquals(
+					expected,
+					actual
 				);
 			});
 		}

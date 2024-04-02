@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.timezones;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -53,13 +54,17 @@ public class AutoZonedTest {
 		scope.inSession( s -> {
 			Zoned z = s.find(Zoned.class, id);
 			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+			Instant expected = DateTimeUtils.adjustToDefaultPrecision( nowZoned.toInstant(), dialect );
+			Instant actual = DateTimeUtils.adjustToDefaultPrecision( z.zonedDateTime.toInstant(), dialect );
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowZoned.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.zonedDateTime.toInstant(), dialect )
+					expected,
+					actual
 			);
+			expected = DateTimeUtils.adjustToDefaultPrecision( nowOffset.toInstant(), dialect );
+			actual = DateTimeUtils.adjustToDefaultPrecision( z.offsetDateTime.toInstant(), dialect );
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowOffset.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.offsetDateTime.toInstant(), dialect )
+					expected,
+					actual
 			);
 			assertEquals( nowZoned.toOffsetDateTime().getOffset(), z.zonedDateTime.toOffsetDateTime().getOffset() );
 			assertEquals( nowOffset.getOffset(), z.offsetDateTime.getOffset() );

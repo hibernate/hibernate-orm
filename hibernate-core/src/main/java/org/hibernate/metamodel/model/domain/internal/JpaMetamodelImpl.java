@@ -665,7 +665,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 		final Class<?> javaTypeClass = persistentClass.getMappedClass();
 		final JavaType<?> javaType;
-		if ( javaTypeClass == null || Map.class.isAssignableFrom( javaTypeClass ) ) {
+		if ( javaTypeClass == null || javaTypeClass == Map.class ) {
 			// dynamic map
 			javaType = new DynamicModelJavaType();
 		}

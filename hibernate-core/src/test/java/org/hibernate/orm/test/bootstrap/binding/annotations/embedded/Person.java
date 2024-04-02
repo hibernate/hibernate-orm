@@ -34,6 +34,9 @@ public class Person implements Serializable {
 	Address address;
 
 	@Embedded
+	AddressBis addressBis;
+
+	@Embedded
 	@AttributeOverrides( {
 			@AttributeOverride(name = "iso2", column = @Column(name = "bornIso2")),
 			@AttributeOverride(name = "name", column = @Column(name = "bornCountryName"))

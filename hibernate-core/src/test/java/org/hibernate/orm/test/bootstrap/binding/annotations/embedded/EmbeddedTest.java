@@ -100,10 +100,13 @@ public class EmbeddedTest {
 			assertNotNull( p );
 			assertNotNull( p.address );
 			assertEquals( "Springfield", p.address.city );
+			assertEquals( (Integer) 1, p.address.formula );
+
 			assertNotNull( p.address.country );
 			assertEquals( "DM", p.address.country.getIso2() );
 			assertNotNull( p.bornIn );
 			assertEquals( "US", p.bornIn.getIso2() );
+			assertEquals( (Integer) 2, p.addressBis.formula );
 		} );
 	}
 

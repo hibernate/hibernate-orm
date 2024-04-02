@@ -379,8 +379,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<ExecutableElement> lifecycleMethods = new ArrayList<>();
 
 		if ( repository ) {
-			final List<ExecutableElement> methodsOfClass = new ArrayList<>();
-			addMethods( element, methodsOfClass );
+			final List<ExecutableElement> methodsOfClass =
+					methodsIn( context.getElementUtils().getAllMembers(element) );
 			for ( ExecutableElement method: methodsOfClass ) {
 				if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
 					queryMethods.add( method );
@@ -396,8 +396,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						queryMethods.add( method );
 					}
 				}
-				else if ( !isSessionGetter(method)
-						&& !method.getModifiers().contains(Modifier.DEFAULT) ) {
+				else if ( method.getEnclosingElement().getKind().isInterface()
+						&& !method.isDefault()
+						&& !isSessionGetter(method) ) {
 					final String companionClassName = element.getQualifiedName().toString() + '$';
 					if ( context.getElementUtils().getTypeElement(companionClassName) == null ) {
 						message( method, "repository method cannot be implemented",
@@ -496,19 +497,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		return result;
-	}
-
-	private void addMethods(TypeElement element, List<ExecutableElement> methodsOfClass) {
-		//TODO just use Elements.getAllMembers(element) here!
-		for ( TypeMirror typeMirror : element.getInterfaces() ) {
-			final DeclaredType declaredType = (DeclaredType) typeMirror;
-			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			addMethods( typeElement, methodsOfClass );
-		}
-		for ( ExecutableElement method : methodsIn( element.getEnclosedElements() ) ) {
-			methodsOfClass.removeIf( m -> context.getElementUtils().overrides(method, m, element) );
-			methodsOfClass.add( method );
-		}
 	}
 
 	private void addDefaultConstructor() {

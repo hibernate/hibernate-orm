@@ -11,6 +11,7 @@ import java.io.Serializable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.annotations.Formula;
 
 /**
  * @author Emmanuel Bernard
@@ -23,4 +24,7 @@ public class Address implements Serializable {
 	Country country;
 	@ManyToOne
 	AddressType type;
+
+	@Formula("1")
+	Integer formula;
 }

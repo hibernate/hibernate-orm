@@ -873,8 +873,8 @@ public abstract class MockSessionFactory
 			return null;
 		}
 
-		@Override @Nullable
-		public Set<String> getEnumTypesForValue(String enumValue) {
+		@Override
+		public @Nullable Set<String> getEnumTypesForValue(String enumValue) {
 			return MockSessionFactory.this.getEnumTypesForValue(enumValue);
 		}
 
@@ -884,8 +884,7 @@ public abstract class MockSessionFactory
 		}
 	}
 
-	@Nullable
-	Set<String> getEnumTypesForValue(String value) {
+	@Nullable Set<String> getEnumTypesForValue(String value) {
 		return emptySet();
 	}
 

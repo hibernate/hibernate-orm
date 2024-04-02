@@ -147,4 +147,7 @@ public interface Dao {
 
     @HQL("select b\nfrom Book b\nwhere b.isbn = :isbn")
     Book findByIsbnMultiline(String isbn);
+
+    @HQL("from Book b where b.type = Magazine")
+    List<Book> findMagazines();
 }

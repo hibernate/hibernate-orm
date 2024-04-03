@@ -22,6 +22,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -1080,6 +1081,26 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		throw new HibernateException(
 				"Could not locate table which owns column [" + columnName + "] referenced in order-by mapping - " + getEntityName()
 		);
+	}
+
+	@Override
+	public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
+		if ( getSuperMappingType() != null ) {
+			return getSuperMappingType().getEntityPersister().forceVersionIncrement( id, currentVersion, session );
+		}
+		return super.forceVersionIncrement( id, currentVersion, session );
+	}
+
+	@Override
+	public Object forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			boolean batching,
+			SharedSessionContractImplementor session) throws HibernateException {
+		if ( getSuperMappingType() != null ) {
+			return getSuperMappingType().getEntityPersister().forceVersionIncrement( id, currentVersion, session );
+		}
+		return super.forceVersionIncrement( id, currentVersion, batching, session );
 	}
 
 	@Override

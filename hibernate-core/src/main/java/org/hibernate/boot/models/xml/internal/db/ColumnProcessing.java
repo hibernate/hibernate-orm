@@ -145,7 +145,7 @@ public class ColumnProcessing {
 			JaxbColumnNullable jaxbColumn,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		XmlProcessingHelper.applyAttributeIfSpecified( "unique", jaxbColumn.isNullable(), columnAnn );
+		XmlProcessingHelper.applyAttributeIfSpecified( "nullable", jaxbColumn.isNullable(), columnAnn );
 	}
 
 	private static <A extends Annotation> void applyColumnMutability(

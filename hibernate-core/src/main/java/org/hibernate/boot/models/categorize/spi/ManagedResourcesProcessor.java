@@ -12,9 +12,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.ModelCategorizationLogging;
@@ -57,6 +58,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mutableJo
  *
  * @author Steve Ebersole
  */
+@Incubating
 public class ManagedResourcesProcessor {
 	public static CategorizedDomainModel processManagedResources(
 			ManagedResources managedResources,
@@ -76,7 +78,7 @@ public class ManagedResourcesProcessor {
 		//
 		// OUTPUTS:
 		//		- xmlPreProcessingResult
-		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
+		//		- allKnownClassNames
 		//		- sourceModelBuildingContext
 
 		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
@@ -304,9 +306,10 @@ public class ManagedResourcesProcessor {
 	public static CategorizedDomainModel processManagedResources(
 			ManagedResources managedResources,
 			BootstrapContext bootstrapContext) {
+		final MetadataBuildingOptionsImpl metadataBuildingOptions = new MetadataBuildingOptionsImpl( bootstrapContext );
 		return processManagedResources(
 				managedResources,
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
+				metadataBuildingOptions,
 				bootstrapContext
 		);
 	}

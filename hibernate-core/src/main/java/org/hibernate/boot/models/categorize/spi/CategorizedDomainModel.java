@@ -103,4 +103,15 @@ public interface CategorizedDomainModel {
 
 		embeddables.forEach( consumer::accept );
 	}
+
+	default void forEachManagedType(KeyedConsumer<String, ClassDetails> consumer) {
+		forEachEntityHierarchy( (index, entityHierarchy) -> {
+			entityHierarchy.forEachType( (type, superType, hierarchy, relation) -> {
+				final ClassDetails classDetails = type.getClassDetails();
+				consumer.accept( classDetails.getName(), classDetails );
+			} );
+		} );
+		forEachMappedSuperclass( consumer );
+		forEachEmbeddable( consumer );
+	}
 }

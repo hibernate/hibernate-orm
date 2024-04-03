@@ -7,11 +7,14 @@
 package org.hibernate.boot.model.process.spi;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.models.spi.ClassDetails;
 
 /**
  * Represents the result of the first step of the process of building {@link org.hibernate.boot.MetadataSources}

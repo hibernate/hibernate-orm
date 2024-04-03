@@ -81,7 +81,9 @@ public abstract class AbstractPersistentAttributeMemberResolver implements Persi
 		final List<FieldDetails> fields = classDetails.getFields();
 		for ( int i = 0; i < fields.size(); i++ ) {
 			final FieldDetails fieldDetails = fields.get( i );
-			memberConsumer.acceptMember( fieldDetails );
+			if ( memberConsumer != null ) {
+				memberConsumer.acceptMember( fieldDetails );
+			}
 			if ( fieldDetails.getAnnotationUsage( JpaAnnotations.TRANSIENT ) != null ) {
 				transientFieldConsumer.accept( fieldDetails );
 			}
@@ -90,7 +92,9 @@ public abstract class AbstractPersistentAttributeMemberResolver implements Persi
 		final List<MethodDetails> methods = classDetails.getMethods();
 		for ( int i = 0; i < methods.size(); i++ ) {
 			final MethodDetails methodDetails = methods.get( i );
-			memberConsumer.acceptMember( methodDetails );
+			if ( memberConsumer != null ) {
+				memberConsumer.acceptMember( methodDetails );
+			}
 			if ( methodDetails.getAnnotationUsage( JpaAnnotations.TRANSIENT ) != null ) {
 				transientMethodConsumer.accept( methodDetails );
 			}

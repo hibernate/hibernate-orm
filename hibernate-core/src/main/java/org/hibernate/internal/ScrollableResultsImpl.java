@@ -129,16 +129,20 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 		loadContexts.register( getJdbcValuesSourceProcessingState() );
 		persistenceContext.beforeLoad();
 		try {
-			currentRow = getRowReader().readRow( getRowProcessingState(), getProcessingOptions() );
+			try {
+				currentRow = getRowReader().readRow( getRowProcessingState(), getProcessingOptions() );
 
-			getRowProcessingState().finishRowProcessing();
-			getJdbcValuesSourceProcessingState().finishUp( false );
+				getRowProcessingState().finishRowProcessing( );
+				getJdbcValuesSourceProcessingState().finishUp( false );
+			}
+			finally {
+				persistenceContext.afterLoad();
+			}
+			persistenceContext.initializeNonLazyCollections();
 		}
 		finally {
-			persistenceContext.afterLoad();
 			loadContexts.deregister( getJdbcValuesSourceProcessingState() );
 		}
-		persistenceContext.initializeNonLazyCollections();
 
 		afterScrollOperation();
 	}

@@ -65,11 +65,15 @@ import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionLoader;
+import org.hibernate.mapping.Any;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
@@ -128,13 +132,17 @@ import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -303,9 +311,37 @@ public abstract class AbstractCollectionPersister
 			spaces[i] = tables.next();
 		}
 
-		if ( StringHelper.isNotEmpty( collectionBootDescriptor.getWhere() ) ) {
+		String where = collectionBootDescriptor.getWhere();
+		/*
+		 * Add the predicate on the role in the WHERE clause before creating the SQL queries.
+		 */
+		if ( mappedByProperty != null && elementType.isEntityType() ) {
+			final String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
+			final PersistentClass persistentClass = creationContext.getBootModel().getEntityBinding( entityName );
+			final Property property = persistentClass.getRecursiveProperty( mappedByProperty );
+			final Value propertyValue = property.getValue();
+			if ( propertyValue instanceof Any ) {
+				final Any any = (Any) propertyValue;
+				final BasicValue discriminatorDescriptor = any.getDiscriminatorDescriptor();
+				final AnyType anyType = any.getType();
+				final MetaType metaType = (MetaType) anyType.getDiscriminatorType();
+				final Object discriminatorValue = metaType.getEntityNameToDiscriminatorValueMap().get( ownerPersister.getEntityName() );
+				final BasicType<Object> discriminatorBaseType = (BasicType<Object>) metaType.getBaseType();
+				final String discriminatorLiteral = discriminatorBaseType.getJdbcLiteralFormatter().toJdbcLiteral(
+						discriminatorValue,
+						creationContext.getDialect(),
+						creationContext.getSessionFactory().getWrapperOptions()
+				);
+				where = getNonEmptyOrConjunctionIfBothNonEmpty(
+						where,
+						discriminatorDescriptor.getColumn().getText() + "=" + discriminatorLiteral
+				);
+			}
+		}
+
+		if ( StringHelper.isNotEmpty( where ) ) {
 			hasWhere = true;
-			sqlWhereString = "(" + collectionBootDescriptor.getWhere() + ")";
+			sqlWhereString = "(" + where + ")";
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					sqlWhereString,
 					dialect,

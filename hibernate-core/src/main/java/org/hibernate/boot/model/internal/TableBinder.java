@@ -22,6 +22,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -797,6 +798,9 @@ public class TableBinder {
 						+ associatedClass.getEntityName() + "." + mappedByProperty + "' specify 'mappedBy'" );
 			}
 			return element.getColumns();
+		}
+		else if (value instanceof Any) {
+			return ( (Any) value ).getKeyDescriptor().getColumns();
 		}
 		else {
 			return value.getColumns();

@@ -12,8 +12,10 @@ import org.hibernate.query.SelectionQuery;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public interface Dao {
@@ -55,6 +57,15 @@ public interface Dao {
 
     @Find
     SelectionQuery<Book> createBooksSelectionQuery(String title);
+
+    @HQL("where isbn in ?1")
+    List<Book> booksGivenIsbnList(List<String> isbns);
+
+    @HQL("where isbn in :isbns")
+    List<Book> booksGivenIsbnSet(Set<String> isbns);
+
+    @HQL("where isbn in :isbns")
+    List<Book> booksGivenIsbnCollection(Collection<String> isbns);
 
     @HQL("where title like ?1")
     List<Book> findBooksByTitle(String title);

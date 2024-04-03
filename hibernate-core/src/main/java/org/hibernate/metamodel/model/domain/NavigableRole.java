@@ -106,10 +106,6 @@ public final class NavigableRole implements DotIdentifierSequence, Serializable 
 		return fullPath;
 	}
 
-	public boolean isRoot() {
-		return parent == null && StringHelper.isEmpty( localName );
-	}
-
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + '[' + fullPath + ']';

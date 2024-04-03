@@ -403,7 +403,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					temporalPrecision = null;
 					isLob = false;
 					nullable = bootPropertyDescriptor.isOptional();
-					selectablePath = basicValue.createSelectablePath( bootPropertyDescriptor.getName() );
+					selectablePath = new SelectablePath( determineEmbeddablePrefix() + bootPropertyDescriptor.getName() );
 				}
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),

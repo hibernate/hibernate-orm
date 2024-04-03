@@ -109,6 +109,10 @@ public class Any extends SimpleValue {
 		return discriminatorDescriptor;
 	}
 
+	public BasicValue getKeyDescriptor() {
+		return keyDescriptor;
+	}
+
 	public MetaValue getMetaMapping() {
 		return metaMapping;
 	}

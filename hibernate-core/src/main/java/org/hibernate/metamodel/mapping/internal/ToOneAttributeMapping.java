@@ -765,7 +765,7 @@ public class ToOneAttributeMapping
 			targetKeyPropertyNames.add( prefix );
 		}
 		if ( type.isComponentType() ) {
-			final ComponentType componentType = (ComponentType) type;
+			final CompositeType componentType = (CompositeType) type;
 			final String[] propertyNames = componentType.getPropertyNames();
 			final Type[] componentTypeSubtypes = componentType.getSubtypes();
 			for ( int i = 0, propertyNamesLength = propertyNames.length; i < propertyNamesLength; i++ ) {

@@ -305,7 +305,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					temporalPrecision = null;
 					nullable = true;
 					isLob = false;
-					selectablePath = basicValue.createSelectablePath( bootPropertyDescriptor.getName() );
+					selectablePath = new SelectablePath( determineEmbeddablePrefix() + bootPropertyDescriptor.getName() );
 				}
 
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
@@ -455,6 +455,14 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 		completionCallback.success();
 		return true;
+	}
+
+	protected String determineEmbeddablePrefix() {
+		NavigableRole root = getNavigableRole().getParent();
+		while ( !root.isRoot() ) {
+			root = root.getParent();
+		}
+		return getNavigableRole().getFullPath().substring( root.getFullPath().length() + 1 ) + ".";
 	}
 
 	@Override

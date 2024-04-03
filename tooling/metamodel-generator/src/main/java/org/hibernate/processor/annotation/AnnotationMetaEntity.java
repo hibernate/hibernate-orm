@@ -2665,6 +2665,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String argType = stripTypeAnnotations(argumentType);
 		return param.allowMultiValuedBinding()
 				? isLegalAssignment(argType, LIST + '<' + queryParamType + '>')
+					|| isLegalAssignment(argType, SET + '<' + queryParamType + '>')
+					|| isLegalAssignment(argType, COLLECTION + '<' + queryParamType + '>')
 				: isLegalAssignment(argType, queryParamType);
 	}
 

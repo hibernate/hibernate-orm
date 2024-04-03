@@ -71,7 +71,12 @@ public class MapKeyTest {
 					Map<Date, Person> lastNames = new HashMap<>();
 					lastNames.put( date1, person1 );
 					lastNames.put( date2, person2 );
+
 					school2.setStudentsByDate( lastNames );
+					Map<Object, Person> lastNames2 = new HashMap<>();
+					lastNames2.put( date1, person1 );
+					lastNames2.put( date2, person2 );
+					school2.setStudentsByObjectThatIsDate( lastNames2 );
 
 					entityManager.persist( school1 );
 					entityManager.persist( school2 );
@@ -95,6 +100,15 @@ public class MapKeyTest {
 					Collection<Person> people = studentsByDate.values();
 					assertEquals( expectedPeople.size(), people.size() );
 					assertTrue( expectedPeople.containsAll( people ) );
+
+					Map<Object, Person> studentsByObjectThatIsDate = school.getStudentsByObjectThatIsDate();
+					Set<Object> dates2 = studentsByObjectThatIsDate.keySet();
+					assertEquals( expectedDates.size(), dates2.size() );
+					assertTrue( expectedDates.containsAll( dates2 ) );
+
+					Collection<Person> people2 = studentsByObjectThatIsDate.values();
+					assertEquals( expectedPeople.size(), people2.size() );
+					assertTrue( expectedPeople.containsAll( people2 ) );
 				}
 		);
 	}
@@ -165,6 +179,12 @@ public class MapKeyTest {
 		@MapKeyTemporal(TemporalType.DATE)
 		private Map<Date, Person> studentsByDate;
 
+		@OneToMany(mappedBy = "school")
+		@MapKeyClass(Date.class)
+		@MapKeyColumn(name = "THE_DATE")
+		@MapKeyTemporal(TemporalType.DATE)
+		private Map<Object, Person> studentsByObjectThatIsDate;
+
 		@Temporal( TemporalType.DATE )
 		private Date aDate;
 
@@ -192,6 +212,14 @@ public class MapKeyTest {
 			this.studentsByDate = studentsByDate;
 		}
 
+		public Map<Object, Person> getStudentsByObjectThatIsDate() {
+			return studentsByObjectThatIsDate;
+		}
+
+		public void setStudentsByObjectThatIsDate(
+				Map<Object, Person> studentsByObjectThatIsDate) {
+			this.studentsByObjectThatIsDate = studentsByObjectThatIsDate;
+		}
 	}
 
 }

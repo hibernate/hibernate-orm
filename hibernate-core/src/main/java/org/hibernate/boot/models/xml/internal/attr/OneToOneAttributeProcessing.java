@@ -8,11 +8,13 @@ package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
-import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
+import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
+import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
@@ -22,7 +24,6 @@ import jakarta.persistence.OneToOne;
 
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCascading;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
-import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.getOrMakeAnnotation;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeBasics;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
@@ -50,11 +51,28 @@ public class OneToOneAttributeProcessing {
 				xmlDocumentContext
 		);
 
-		XmlAnnotationHelper.applyJoinTable( jaxbOneToOne.getJoinTable(), memberDetails, xmlDocumentContext );
-
 		applyAttributeBasics( jaxbOneToOne, memberDetails, oneToOneAnn, accessType, xmlDocumentContext );
 		applyTarget( memberDetails, jaxbOneToOne, oneToOneAnn, xmlDocumentContext );
 		applyCascading( jaxbOneToOne.getCascade(), memberDetails, xmlDocumentContext );
+
+		TableProcessing.applyJoinTable( jaxbOneToOne.getJoinTable(), memberDetails, xmlDocumentContext );
+		JoinColumnProcessing.applyJoinColumns( jaxbOneToOne.getJoinColumn(), memberDetails, xmlDocumentContext );
+		JoinColumnProcessing.applyPrimaryKeyJoinColumns( jaxbOneToOne.getPrimaryKeyJoinColumn(), memberDetails, xmlDocumentContext );
+
+		if ( jaxbOneToOne.isId() == Boolean.TRUE ) {
+			memberDetails.applyAnnotationUsage(
+					JpaAnnotations.ID,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbOneToOne.getMapsId() ) ) {
+			memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAPS_ID,
+					(usage) -> usage.setAttributeValue( "value", jaxbOneToOne.getMapsId() ),
+					xmlDocumentContext.getModelBuildingContext()
+			);
+		}
 
 		return memberDetails;
 	}
@@ -63,21 +81,24 @@ public class OneToOneAttributeProcessing {
 			MutableMemberDetails memberDetails,
 			JaxbOneToOneImpl jaxbOneToOne,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<OneToOne> oneToOneAnn = getOrMakeAnnotation( OneToOne.class, memberDetails, xmlDocumentContext );
-		final AnnotationDescriptor<OneToOne> oneToOneDescriptor = xmlDocumentContext
-				.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( OneToOne.class );
-
-		XmlAnnotationHelper.applyOr(
-				jaxbOneToOne,
-				JaxbOneToOneImpl::getFetch,
-				"fetch",
-				oneToOneAnn,
-				oneToOneDescriptor
+		return memberDetails.applyAnnotationUsage(
+				JpaAnnotations.ONE_TO_ONE,
+				(usage) -> {
+					if ( jaxbOneToOne.getFetch() != null ) {
+						usage.setAttributeValue( "fetch", jaxbOneToOne.getFetch() );
+					}
+					if ( jaxbOneToOne.isOptional() != null ) {
+						usage.setAttributeValue( "optional", jaxbOneToOne.isOptional() );
+					}
+					if ( StringHelper.isNotEmpty( jaxbOneToOne.getMappedBy() ) ) {
+						usage.setAttributeValue( "mappedBy", jaxbOneToOne.getMappedBy() );
+					}
+					if ( jaxbOneToOne.isOrphanRemoval() != null ) {
+						usage.setAttributeValue( "orphanRemoval", jaxbOneToOne.isOrphanRemoval() );
+					}
+				},
+				xmlDocumentContext.getModelBuildingContext()
 		);
-
-		return oneToOneAnn;
 	}
 
 	@SuppressWarnings("unused")
@@ -91,8 +112,12 @@ public class OneToOneAttributeProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<Target> targetAnn = XmlProcessingHelper.makeAnnotation( Target.class, memberDetails, xmlDocumentContext );
-		targetAnn.setAttributeValue( "value", determineTargetName( targetEntityName, xmlDocumentContext ) );
+		final MutableAnnotationUsage<Target> targetUsage = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.TARGET,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final String targetName = determineTargetName( targetEntityName, xmlDocumentContext );
+		targetUsage.setAttributeValue( "value", targetName );
 	}
 
 }

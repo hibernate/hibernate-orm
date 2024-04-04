@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -186,11 +185,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 	@Override
 	public Object getScanner() {
 		return scannerSetting;
-	}
-
-	@Override
-	public ReflectionManager getReflectionManager() {
-		return null;
 	}
 
 	@Override

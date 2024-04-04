@@ -104,6 +104,7 @@ dependencyResolutionManagement {
             library( "hibernateModels", "org.hibernate.models", "hibernate-models" ).versionRef( hibernateModelsVersion )
             library( "jandex", "io.smallrye", "jandex" ).versionRef( jandexVersion )
             library( "classmate", "com.fasterxml", "classmate" ).versionRef( classmateVersion )
+            library( "hcann", "org.hibernate.common", "hibernate-commons-annotations" ).versionRef( hcannVersion )
 
             library( "jackson", "com.fasterxml.jackson.core", "jackson-databind" ).versionRef( jacksonVersion )
             library( "jacksonXml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).versionRef( jacksonVersion )

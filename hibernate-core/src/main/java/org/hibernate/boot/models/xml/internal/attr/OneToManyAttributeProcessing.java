@@ -53,10 +53,17 @@ public class OneToManyAttributeProcessing {
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbOneToMany, memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyCascading( jaxbOneToMany.getCascade(), memberDetails, xmlDocumentContext );
 
+		XmlAnnotationHelper.applyAttributeOverrides(
+				jaxbOneToMany.getMapKeyAttributeOverrides(),
+				memberDetails,
+				"key",
+				xmlDocumentContext
+		);
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// join-table
 
-		TableProcessing.applyJoinTable( jaxbOneToMany.getJoinTable(), memberDetails, xmlDocumentContext );
+		TableProcessing.transformJoinTable( jaxbOneToMany.getJoinTable(), memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applySqlJoinTableRestriction( jaxbOneToMany.getSqlJoinTableRestriction(), memberDetails, xmlDocumentContext );
 

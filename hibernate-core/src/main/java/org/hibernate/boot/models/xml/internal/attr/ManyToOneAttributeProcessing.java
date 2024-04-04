@@ -59,7 +59,7 @@ public class ManyToOneAttributeProcessing {
 
 		CommonAttributeProcessing.applyAttributeBasics( jaxbManyToOne, memberDetails, manyToOneAnn, accessType, xmlDocumentContext );
 
-		TableProcessing.applyJoinTable( jaxbManyToOne.getJoinTable(), memberDetails, xmlDocumentContext );
+		TableProcessing.transformJoinTable( jaxbManyToOne.getJoinTable(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
 
 		applyNotFound( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );

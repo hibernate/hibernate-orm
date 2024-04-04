@@ -60,7 +60,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.QueryCacheLayout;
-import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -76,7 +75,6 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -92,7 +90,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
@@ -501,7 +498,6 @@ public abstract class CollectionBinder {
 					+ "' is annotated both '@OneToMany' and '@ManyToMany'" );
 		}
 		final String mappedBy;
-		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
 		if ( oneToManyAnn != null ) {
 			if ( joinColumns.isSecondary() ) {
 				throw new AnnotationException( "Collection '" + getPath( propertyHolder, inferredData )

@@ -15,7 +15,6 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -321,10 +320,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void addDefaultResultSetMapping(NamedResultSetMappingDescriptor definition);
 
 	void addDefaultNamedProcedureCall(NamedProcedureCallDefinitionImpl procedureCallDefinition);
-
-	AnnotatedClassType addClassType(XClass clazz);
-	AnnotatedClassType getClassType(XClass clazz);
-
 	AnnotatedClassType addClassType(ClassDetails classDetails);
 	AnnotatedClassType getClassType(ClassDetails classDetails);
 

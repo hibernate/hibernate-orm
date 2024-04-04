@@ -192,4 +192,7 @@ public interface BookAuthorRepository {
 
 	@Update
 	Book edit(Book book);
+
+	@Query("select count(this) from Author")
+	int countAuthors();
 }

@@ -2189,6 +2189,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName(resultType) );
 			validateHql(method, returnType, mirror, value, processedQuery, paramNames, paramTypes);
+			if ( jakartaDataRepository
+					&& isCountThisQuery(queryString)
+					&& returnType != null && returnType.getKind() == TypeKind.INT ) {
+				// hack in a special case for converting long to int in Jakarta Data
+				// query by method name countByXxxx() queries (eventually remove this)
+				queryString = "select cast(count(this) as Integer)" + queryString.substring(18);
+			}
 		}
 
 		final QueryMethod attribute =
@@ -2211,6 +2218,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						jakartaDataRepository
 				);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
+	}
+
+	@Deprecated
+	private static boolean isCountThisQuery(String queryString) {
+		// Horrible awful
+		return queryString.startsWith("select count(this)");
 	}
 
 	private static String returnTypeClass(TypeMirror returnType) {
@@ -2460,6 +2473,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			else if ( selection instanceof JpaRoot ) {
 				final JpaRoot<?> from = (JpaRoot<?>) selection;
 				returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
+			}
+			else if ( jakartaDataRepository
+					&& returnType.getKind()==TypeKind.INT
+					&& isCountThisQuery(value.getValue().toString())) {
+				// hack in a special case for converting long to int in Jakarta Data
+				// query by method name countByXxxx() queries (eventually remove this)
+				message(method, mirror, value, "method should return 'long'", Diagnostic.Kind.WARNING);
+				returnTypeCorrect = true;
 			}
 			else {
 				// TODO: anything more we can do here? e.g. check constructor

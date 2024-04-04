@@ -462,7 +462,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private @Nullable TypeElement primaryEntity(List<ExecutableElement> lifecycleMethods) {
+	private static @Nullable TypeElement primaryEntity(TypeElement element) {
 		for (TypeMirror typeMirror : element.getInterfaces()) {
 			final DeclaredType declaredType = (DeclaredType) typeMirror;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
@@ -477,8 +477,27 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					return (TypeElement) entityDeclared.asElement();
 				}
 			}
+			else {
+				final TypeElement primaryEntity = primaryEntity(typeElement);
+				if ( primaryEntity != null ) {
+					return primaryEntity;
+				}
+			}
 		}
-		TypeElement result = null;
+		return null;
+	}
+
+	private @Nullable TypeElement primaryEntity(List<ExecutableElement> lifecycleMethods) {
+		// first see if we are a subtype of DataRepository
+		// in that case, the first type argument determines
+		// the primary entity type
+		TypeElement result = primaryEntity(element);
+		if ( result != null ) {
+			return result;
+		}
+		// otherwise, we have to check all the lifecycle
+		// methods and determine if they all agree on the
+		// entity type; if so, it is the primary
 		final Types types = context.getTypeUtils();
 		for ( ExecutableElement element : lifecycleMethods ) {
 			if ( element.getParameters().size()==1 ) {

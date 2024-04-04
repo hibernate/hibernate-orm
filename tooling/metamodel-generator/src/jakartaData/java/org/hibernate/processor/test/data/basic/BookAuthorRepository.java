@@ -192,4 +192,10 @@ public interface BookAuthorRepository {
 
 	@Update
 	Book edit(Book book);
+
+	@Find
+	List<Author> withNoOrder1(PageRequest pageRequest);
+
+	@Query("")
+	List<Author> withNoOrder2(PageRequest pageRequest);
 }

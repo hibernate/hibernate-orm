@@ -69,6 +69,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static org.hibernate.grammars.hql.HqlLexer.AS;
 import static org.hibernate.grammars.hql.HqlLexer.FROM;
 import static org.hibernate.grammars.hql.HqlLexer.GROUP;
 import static org.hibernate.grammars.hql.HqlLexer.HAVING;
@@ -2303,10 +2304,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					break;
 				}
 			}
-			for (Token token : allTokens) {
+			for (int i = 0; i < allTokens.size(); i++) {
+				final Token token = allTokens.get(i);
 				switch ( token.getType() ) {
 					case FROM:
-						return hql;
+						return thisText.isEmpty() || hasAlias(i, allTokens) ? hql
+								: new StringBuilder(hql)
+								.insert(allTokens.get(i+1).getStopIndex() + 1, thisText)
+								.toString();
 					case WHERE:
 					case HAVING:
 					case GROUP:
@@ -2317,6 +2322,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			return hql + " from " + entityType + thisText;
+		}
+	}
+
+	private static boolean hasAlias(int i, List<? extends Token> allTokens) {
+		if ( allTokens.size() <= i+2 ) {
+			return false;
+		}
+		else {
+			final int nextTokenType = allTokens.get(i+2).getType();
+			return nextTokenType == IDENTIFIER
+				|| nextTokenType == AS;
 		}
 	}
 

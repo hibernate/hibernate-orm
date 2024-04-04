@@ -108,7 +108,7 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 
 	@Override
 	public ReflectionManager getReflectionManager() {
-		return metadataCollector.getBootstrapContext().getReflectionManager();
+		return configuration.getReflectionManager();
 	}
 
 	@Override

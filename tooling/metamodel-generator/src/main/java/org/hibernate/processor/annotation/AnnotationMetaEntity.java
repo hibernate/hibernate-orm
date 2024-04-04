@@ -1501,14 +1501,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkFinderParameter(TypeElement entity, VariableElement parameter) {
 		final Types types = context.getTypeUtils();
 		final TypeMirror parameterType = parameterType(parameter);
-		boolean pageRequest = typeNameEquals( parameterType, JD_PAGE_REQUEST );
-		if ( isOrderParam( typeName(parameterType) ) || pageRequest ) {
+		if ( isOrderParam( typeName(parameterType) ) ) {
 			final TypeMirror typeArgument = getTypeArgument( parameterType, entity );
 			if ( typeArgument == null ) {
-				missingTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
+				missingTypeArgError( entity.getSimpleName().toString(), parameter );
 			}
 			else if ( !types.isSameType( typeArgument, entity.asType() ) ) {
-				wrongTypeArgError( entity.getSimpleName().toString(), parameter, pageRequest );
+				wrongTypeArgError( entity.getSimpleName().toString(), parameter );
 			}
 		}
 	}
@@ -1556,21 +1555,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private void wrongTypeArgError(String entity, VariableElement parameter, boolean pageRequest) {
-		message(parameter,
-				(pageRequest
-						? "mismatched type of page request (should be 'PageRequest<? super "
-						:"mismatched type of order (should be 'Order<? super ")
-						+ entity + ">')",
+	private void wrongTypeArgError(String entity, VariableElement parameter) {
+		message(parameter, "mismatched type of order (should be 'Order<? super " + entity + ">')",
 				Diagnostic.Kind.ERROR );
 	}
 
-	private void missingTypeArgError(String entity, VariableElement parameter, boolean pageRequest) {
-		message(parameter,
-				(pageRequest
-						? "missing type of page request (should be 'PageRequest<? super "
-						: "missing type of order (should be 'Order<? super ")
-						+ entity + ">')",
+	private void missingTypeArgError(String entity, VariableElement parameter) {
+		message(parameter, "missing type of order (should be 'Order<? super " + entity + ">')",
 				Diagnostic.Kind.ERROR );
 	}
 
@@ -1635,7 +1626,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					case HIB_ORDER:
 					case JD_SORT:
 					case JD_ORDER:
-					case JD_PAGE_REQUEST:
 						for ( TypeMirror arg : type.getTypeArguments() ) {
 							switch ( arg.getKind() ) {
 								case WILDCARD:

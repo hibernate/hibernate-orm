@@ -1120,9 +1120,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String typeName = typeElement.getQualifiedName().toString();
 		switch ( typeName ) {
 			case JD_PAGE:
-			case JD_CURSORED_PAGE:
-				if ( method.getParameters().stream()
-						.noneMatch(param -> typeNameEquals(param.asType(), JD_PAGE_REQUEST))) {
+				if ( !hasPageRequest(method) ) {
 					message(method,
 							"method with return type '" + typeName
 									+ "' has no parameter of type 'PageRequest'",
@@ -1132,9 +1130,26 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				else {
 					return true;
 				}
+			case JD_CURSORED_PAGE:
+				if ( !hasPageRequest(method) ) {
+					message(method,
+							"method with return type '" + typeName
+									+ "' has no parameter of type 'PageRequest'",
+							Diagnostic.Kind.ERROR);
+					return false;
+				}
+				else if ( !hasOrder(method) ) {
+					message(method,
+							"method with return type '" + typeName
+									+ "' has no parameter of type 'Order' or 'Sort' and no '@OrderBy' annotation",
+							Diagnostic.Kind.ERROR);
+					return false;
+				}
+				else {
+					return true;
+				}
 			case HIB_KEYED_RESULT_LIST:
-				if ( method.getParameters().stream()
-						.noneMatch(param -> typeNameEquals(param.asType(), HIB_KEYED_PAGE))) {
+				if ( !hashKeyedPage(method) ) {
 					message(method,
 							"method with return type '" + typeName
 									+ "' has no parameter of type 'KeyedPage'",
@@ -1155,6 +1170,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					return false;
 				}
 		}
+	}
+
+	private static boolean hashKeyedPage(ExecutableElement method) {
+		return method.getParameters().stream()
+				.anyMatch(param -> typeNameEquals(param.asType(), HIB_KEYED_PAGE));
+	}
+
+	private static boolean hasPageRequest(ExecutableElement method) {
+		return method.getParameters().stream()
+				.anyMatch(param -> typeNameEquals(param.asType(), JD_PAGE_REQUEST));
+	}
+
+	private static boolean hasOrder(ExecutableElement method) {
+		return hasAnnotation(method, JD_ORDER_BY, JD_ORDER_BY_LIST)
+			|| method.getParameters().stream()
+				.anyMatch(param -> typeNameEquals(param.asType(), JD_ORDER)
+						|| typeNameEquals(param.asType(), JD_SORT)
+						|| typeNameEqualsArray(param.asType(), JD_SORT));
 	}
 
 	private static TypeMirror ununi(TypeMirror returnType) {
@@ -1568,8 +1601,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private List<OrderBy> orderByList(ExecutableElement method, TypeElement returnType) {
 		final TypeElement entityType = implicitEntityType( returnType );
 		if ( entityType != null ) {
-			final AnnotationMirror orderByList =
-					getAnnotationMirror( method, "jakarta.data.repository.OrderBy.List" );
+			final AnnotationMirror orderByList = getAnnotationMirror( method, JD_ORDER_BY_LIST );
 			if ( orderByList != null ) {
 				final List<OrderBy> result = new ArrayList<>();
 				@SuppressWarnings("unchecked")
@@ -1580,8 +1612,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				return result;
 			}
-			final AnnotationMirror orderBy =
-					getAnnotationMirror( method, "jakarta.data.repository.OrderBy" );
+			final AnnotationMirror orderBy = getAnnotationMirror( method, JD_ORDER_BY );
 			if ( orderBy != null ) {
 				return List.of( orderByExpression(orderBy, entityType, method) );
 			}
@@ -2906,11 +2937,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return primaryEntity;
 	}
 
-	private boolean typeNameEquals(TypeMirror parameterType, String typeName) {
+	private static boolean typeNameEquals(TypeMirror parameterType, String typeName) {
 		if ( parameterType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) parameterType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			return typeElement.getQualifiedName().contentEquals(typeName);
+		}
+		else {
+			return false;
+		}
+	}
+
+	private static boolean typeNameEqualsArray(TypeMirror parameterType, String typeName) {
+		if ( parameterType.getKind() == TypeKind.ARRAY ) {
+			final ArrayType arrayType = (ArrayType) parameterType;
+			return typeNameEquals( arrayType.getComponentType(), typeName );
 		}
 		else {
 			return false;

@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -28,15 +29,55 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.MapKeyJoinColumns;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
 
 /**
- * XML -> AnnotationUsage support for {@linkplain JaxbColumnJoined}
+ * XML -> AnnotationUsage support for {@linkplain JaxbColumnJoined}: <ul>
+ *     <li>{@code <join-column/>}</li>
+ *     <li>{@code <primary-key-join-column/>}</li>
+ *     <li>{@code <map-key-join-column/>}</li>
+ * </ul>
  *
  * @author Steve Ebersole
  */
 public class JoinColumnProcessing {
+
+	public static void applyMapKeyJoinColumns(
+			List<JaxbMapKeyJoinColumnImpl> jaxbJoinColumns,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
+			return;
+		}
+
+		if ( jaxbJoinColumns.size() == 1 ) {
+			final MutableAnnotationUsage<MapKeyJoinColumn> joinColumnUsage = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAP_KEY_JOIN_COLUMN,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			transferJoinColumn( jaxbJoinColumns.get( 0 ), joinColumnUsage, memberDetails, xmlDocumentContext );
+		}
+		else {
+			final MutableAnnotationUsage<MapKeyJoinColumns> joinColumnsUsage = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAP_KEY_JOIN_COLUMNS,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			final ArrayList<MutableAnnotationUsage<MapKeyJoinColumn>> joinColumnUsages = CollectionHelper.arrayList( jaxbJoinColumns.size() );
+			joinColumnsUsage.setAttributeValue( "value", joinColumnUsages );
+			jaxbJoinColumns.forEach( (jaxbJoinColumn) -> {
+				final MutableAnnotationUsage<MapKeyJoinColumn> joinColumnUsage = JpaAnnotations.MAP_KEY_JOIN_COLUMN.createUsage(
+						memberDetails,
+						xmlDocumentContext.getModelBuildingContext()
+				);
+				joinColumnUsages.add( joinColumnUsage );
+				transferJoinColumn( jaxbJoinColumn, joinColumnUsage, memberDetails, xmlDocumentContext );
+			} );
+		}
+	}
+
 	/**
 	 * Support for {@linkplain JaxbPrimaryKeyJoinColumnImpl} to {@linkplain PrimaryKeyJoinColumns} transformation
 	 *
@@ -73,7 +114,7 @@ public class JoinColumnProcessing {
 		} );
 	}
 
-	private static void transferJoinColumn(
+	public static void transferJoinColumn(
 			JaxbColumnJoined jaxbJoinColumn,
 			MutableAnnotationUsage<? extends Annotation> joinColumnUsage,
 			MutableMemberDetails memberDetails,
@@ -102,13 +143,19 @@ public class JoinColumnProcessing {
 	 */
 	public static List<AnnotationUsage<JoinColumn>> transformJoinColumnList(
 			List<JaxbJoinColumnImpl> jaxbJoinColumns,
+			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
 			return Collections.emptyList();
 		}
 		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
 		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
-			joinColumns.add( createJoinColumnAnnotation( jaxbJoinColumn, JoinColumn.class, xmlDocumentContext ) );
+			final MutableAnnotationUsage<JoinColumn> joinColumnAnn = JpaAnnotations.JOIN_COLUMN.createUsage(
+					memberDetails,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			transferJoinColumn( jaxbJoinColumn, joinColumnAnn, null, xmlDocumentContext );
+			joinColumns.add( joinColumnAnn );
 		} );
 		return joinColumns;
 	}
@@ -125,15 +172,6 @@ public class JoinColumnProcessing {
 				xmlDocumentContext
 		);
 		transferJoinColumn( jaxbJoinColumn, joinColumnAnn, memberDetails, xmlDocumentContext );
-		return joinColumnAnn;
-	}
-
-	public static <A extends Annotation> MutableAnnotationUsage<A> createJoinColumnAnnotation(
-			JaxbColumnJoined jaxbJoinColumn,
-			Class<A> annotationType,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> joinColumnAnn = XmlProcessingHelper.getOrMakeAnnotation( annotationType, xmlDocumentContext );
-		transferJoinColumn( jaxbJoinColumn, joinColumnAnn, null, xmlDocumentContext );
 		return joinColumnAnn;
 	}
 

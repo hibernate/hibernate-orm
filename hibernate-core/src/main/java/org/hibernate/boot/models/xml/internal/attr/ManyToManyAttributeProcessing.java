@@ -9,6 +9,7 @@ package org.hibernate.boot.models.xml.internal.attr;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
+import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableClassDetails;
@@ -54,7 +55,7 @@ public class ManyToManyAttributeProcessing {
 
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbManyToMany, memberDetails, xmlDocumentContext );
 
-		XmlAnnotationHelper.applyJoinTable( jaxbManyToMany.getJoinTable(), memberDetails, xmlDocumentContext );
+		TableProcessing.applyJoinTable( jaxbManyToMany.getJoinTable(), memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applySqlJoinTableRestriction( jaxbManyToMany.getSqlJoinTableRestriction(), memberDetails, xmlDocumentContext );
 

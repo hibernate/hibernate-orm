@@ -11,7 +11,6 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -60,22 +59,17 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorFormulaImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIndexImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallbackContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLobImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedAttributeNodeImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedEntityGraphImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedSubgraphImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNationalizedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalId;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware;
@@ -86,12 +80,15 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
-import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
+import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
+import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
+import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
@@ -126,21 +123,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyJoinColumn;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
-import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
@@ -157,7 +148,6 @@ import jakarta.persistence.UniqueConstraint;
 
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
-import static org.hibernate.boot.models.JpaAnnotations.NAMED_ATTRIBUTE_NODE;
 import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.makeNestedAnnotation;
 
 /**
@@ -166,6 +156,52 @@ import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.makeNes
  * @author Steve Ebersole
  */
 public class XmlAnnotationHelper {
+
+	public static void applyOptionalAttribute(MutableAnnotationUsage<? extends Annotation> annotationUsage, String attributeName, Object value) {
+		if ( value != null ) {
+			annotationUsage.setAttributeValue( attributeName, value );
+		}
+	}
+
+	public static void applyOptionalAttribute(MutableAnnotationUsage<? extends Annotation> annotationUsage, String attributeName, String value) {
+		if ( StringHelper.isNotEmpty( value ) ) {
+			annotationUsage.setAttributeValue( attributeName, value );
+		}
+	}
+
+	public static <S> void applyOptionalAttribute(
+			MutableAnnotationUsage<? extends Annotation> annotationUsage,
+			String attributeName,
+			S valueSource,
+			Function<S,Object> valueExtractor) {
+		if ( valueSource == null ) {
+			return;
+		}
+
+		final Object value = valueExtractor.apply( valueSource );
+		if ( value == null ) {
+			return;
+		}
+
+		annotationUsage.setAttributeValue( attributeName, value );
+	}
+
+	public static <S> void applyOptionalStringAttribute(
+			MutableAnnotationUsage<? extends Annotation> annotationUsage,
+			String attributeName,
+			S valueSource,
+			Function<S,String> valueExtractor) {
+		if ( valueSource == null ) {
+			return;
+		}
+
+		final String value = valueExtractor.apply( valueSource );
+		if ( StringHelper.isEmpty( value ) ) {
+			return;
+		}
+
+		annotationUsage.setAttributeValue( attributeName, value );
+	}
 
 	/**
 	 * Handle creating {@linkplain Entity @Entity} from an {@code <entity/>} element.
@@ -217,127 +253,7 @@ public class XmlAnnotationHelper {
 			return null;
 		}
 
-		return createJoinColumnAnnotation( jaxbJoinColumn, memberDetails, JoinColumn.class, xmlDocumentContext );
-	}
-
-	public static MutableAnnotationUsage<JoinColumn> applyJoinColumn(
-			JaxbJoinColumnImpl jaxbJoinColumn,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbJoinColumn == null ) {
-			return null;
-		}
-
-		return createJoinColumnAnnotation( jaxbJoinColumn, JoinColumn.class, xmlDocumentContext );
-	}
-
-	public static <A extends Annotation> MutableAnnotationUsage<A> createJoinColumnAnnotation(
-			JaxbColumnJoined jaxbJoinColumn,
-			MutableMemberDetails memberDetails,
-			Class<A> annotationType,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> joinColumnAnn = XmlProcessingHelper.getOrMakeNamedAnnotation(
-				annotationType,
-				jaxbJoinColumn.getName(),
-				memberDetails,
-				xmlDocumentContext
-		);
-		final AnnotationDescriptor<A> joinColumnDescriptor = xmlDocumentContext
-				.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( annotationType );
-
-		ColumnProcessing.applyColumnDetails( jaxbJoinColumn, memberDetails, joinColumnAnn, xmlDocumentContext );
-
-		applyOr( jaxbJoinColumn, JaxbColumnJoined::getReferencedColumnName, "referencedColumnName", joinColumnAnn, joinColumnDescriptor );
-
-		final JaxbForeignKeyImpl jaxbForeignKey = jaxbJoinColumn.getForeignKey();
-		if ( jaxbForeignKey != null ) {
-			joinColumnAnn.setAttributeValue(
-					"foreignKey",
-					createForeignKeyAnnotation( jaxbForeignKey, memberDetails, xmlDocumentContext )
-			);
-		}
-
-		return joinColumnAnn;
-	}
-
-	public static <A extends Annotation> MutableAnnotationUsage<A> createJoinColumnAnnotation(
-			JaxbColumnJoined jaxbJoinColumn,
-			Class<A> annotationType,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> joinColumnAnn = XmlProcessingHelper.getOrMakeAnnotation( annotationType, xmlDocumentContext );
-		final AnnotationDescriptor<A> joinColumnDescriptor = xmlDocumentContext
-				.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( annotationType );
-
-		ColumnProcessing.applyColumnDetails( jaxbJoinColumn, joinColumnAnn, xmlDocumentContext );
-
-		applyOr( jaxbJoinColumn, JaxbColumnJoined::getReferencedColumnName, "referencedColumnName", joinColumnAnn, joinColumnDescriptor );
-
-		final JaxbForeignKeyImpl jaxbForeignKey = jaxbJoinColumn.getForeignKey();
-		if ( jaxbForeignKey != null ) {
-			joinColumnAnn.setAttributeValue(
-					"foreignKey",
-					createForeignKeyAnnotation( jaxbForeignKey, xmlDocumentContext )
-			);
-		}
-
-		return joinColumnAnn;
-	}
-
-	public static void applyJoinColumns(
-			List<JaxbJoinColumnImpl> jaxbJoinColumns,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
-			return;
-		}
-
-		if ( jaxbJoinColumns.size() == 1 ) {
-			XmlAnnotationHelper.applyJoinColumn( jaxbJoinColumns.get( 0 ), memberDetails, xmlDocumentContext );
-		}
-		else {
-			final MutableAnnotationUsage<JoinColumns> columnsAnn = XmlProcessingHelper.makeAnnotation(
-					JoinColumns.class,
-					memberDetails,
-					xmlDocumentContext
-			);
-			columnsAnn.setAttributeValue( "value", createJoinColumns( jaxbJoinColumns, memberDetails, xmlDocumentContext ) );
-		}
-	}
-
-	public static List<AnnotationUsage<JoinColumn>> createJoinColumns(
-			List<JaxbJoinColumnImpl> jaxbJoinColumns,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
-			return Collections.emptyList();
-		}
-		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
-		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
-			final MutableAnnotationUsage<JoinColumn> annotationUsage = createJoinColumnAnnotation(
-					jaxbJoinColumn,
-					memberDetails,
-					JoinColumn.class,
-					xmlDocumentContext
-			);
-			joinColumns.add( annotationUsage );
-		} );
-		return joinColumns;
-	}
-
-	public static List<AnnotationUsage<JoinColumn>> createJoinColumns(
-			List<JaxbJoinColumnImpl> jaxbJoinColumns,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
-			return Collections.emptyList();
-		}
-		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
-		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
-			joinColumns.add( applyJoinColumn( jaxbJoinColumn, xmlDocumentContext ) );
-		} );
-		return joinColumns;
+		return JoinColumnProcessing.createJoinColumnAnnotation( jaxbJoinColumn, memberDetails, JoinColumn.class, xmlDocumentContext );
 	}
 
 	public static <T,N> void applyOr(
@@ -460,57 +376,6 @@ public class XmlAnnotationHelper {
 		applyOr( jaxbCollectionId, JaxbCollectionIdImpl::getGenerator, "generator", collectionIdAnn, collectionIdDescriptor );
 	}
 
-	public static void applyForeignKey(
-			JaxbForeignKeyImpl jaxbForeignKey,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbForeignKey == null ) {
-			return;
-		}
-
-		createForeignKeyAnnotation( jaxbForeignKey, memberDetails, xmlDocumentContext );
-	}
-
-	public static MutableAnnotationUsage<ForeignKey> createForeignKeyAnnotation(
-			JaxbForeignKeyImpl jaxbForeignKey,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<ForeignKey> foreignKeyAnn = XmlProcessingHelper.getOrMakeNamedAnnotation(
-				ForeignKey.class,
-				jaxbForeignKey.getName(),
-				memberDetails,
-				xmlDocumentContext
-		);
-		final AnnotationDescriptor<ForeignKey> foreignKeyDescriptor = xmlDocumentContext
-				.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( ForeignKey.class );
-
-		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getName, "name", foreignKeyAnn, foreignKeyDescriptor );
-		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getConstraintMode, "value", foreignKeyAnn, foreignKeyDescriptor );
-		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getForeignKeyDefinition, "foreignKeyDefinition", foreignKeyAnn, foreignKeyDescriptor );
-		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getOptions, "options", foreignKeyAnn, foreignKeyDescriptor );
-
-		return foreignKeyAnn;
-	}
-
-	public static MutableAnnotationUsage<ForeignKey> createForeignKeyAnnotation(
-			JaxbForeignKeyImpl jaxbForeignKey,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<ForeignKey> foreignKeyAnn = XmlProcessingHelper.getOrMakeAnnotation( ForeignKey.class, xmlDocumentContext );
-		final AnnotationDescriptor<ForeignKey> foreignKeyDescriptor = xmlDocumentContext
-				.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( ForeignKey.class );
-
-		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getName, "name", foreignKeyAnn, foreignKeyDescriptor );
-		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getConstraintMode, "value", foreignKeyAnn, foreignKeyDescriptor );
-		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getForeignKeyDefinition, "foreignKeyDefinition", foreignKeyAnn, foreignKeyDescriptor );
-		applyOr( jaxbForeignKey, JaxbForeignKeyImpl::getOptions, "options", foreignKeyAnn, foreignKeyDescriptor );
-
-		return foreignKeyAnn;
-	}
-
 	public static void applyMapKeyColumn(
 			JaxbMapKeyColumnImpl jaxbMapKeyColumn,
 			MutableMemberDetails memberDetails,
@@ -532,7 +397,7 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		createJoinColumnAnnotation( jaxbMapKeyJoinColumn, memberDetails, MapKeyJoinColumn.class, xmlDocumentContext );
+		JoinColumnProcessing.createJoinColumnAnnotation( jaxbMapKeyJoinColumn, memberDetails, MapKeyJoinColumn.class, xmlDocumentContext );
 	}
 
 	public static void applyCascading(
@@ -545,7 +410,7 @@ public class XmlAnnotationHelper {
 
 		// We always use Hibernate specific `org.hibernate.annotations.CascadeType`
 		// since it is a superset of `jakarta.persistence.CascadeType`
-		final List<CascadeType> cascadeTypes = new ArrayList<>();
+		final List<CascadeType> cascadeTypes = new ArrayList<>( xmlDocumentContext.getEffectiveDefaults().getDefaultCascadeTypes() );
 		if ( jaxbCascadeType.getCascadeAll() != null ) {
 			cascadeTypes.add( CascadeType.ALL );
 		}
@@ -587,23 +452,19 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final List<AnnotationUsage<UniqueConstraint>> uniqueConstraints = new ArrayList<>( jaxbUniqueConstraints.size() );
-		jaxbUniqueConstraints.forEach( jaxbUniqueConstraint -> {
-			final MutableAnnotationUsage<UniqueConstraint> uniqueConstraintAnn = XmlProcessingHelper.getOrMakeAnnotation(
-					UniqueConstraint.class,
-					target,
-					xmlDocumentContext
-			);
-			final AnnotationDescriptor<UniqueConstraint> uniqueConstraintDescriptor = xmlDocumentContext.getModelBuildingContext()
-					.getAnnotationDescriptorRegistry()
-					.getDescriptor( UniqueConstraint.class );
-			XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbUniqueConstraint.getName(), uniqueConstraintAnn );
-			XmlProcessingHelper.applyAttributeIfSpecified( "options", jaxbUniqueConstraint.getOptions(), uniqueConstraintAnn );
-			uniqueConstraintAnn.setAttributeValue( "columnNames", jaxbUniqueConstraint.getColumnName() );
-			uniqueConstraints.add( uniqueConstraintAnn );
-		} );
+		final List<AnnotationUsage<UniqueConstraint>> uniqueConstraintUsages = new ArrayList<>( jaxbUniqueConstraints.size() );
+		annotationUsage.setAttributeValue( "uniqueConstraints", uniqueConstraintUsages );
 
-		annotationUsage.setAttributeValue( "uniqueConstraints", uniqueConstraints );
+		jaxbUniqueConstraints.forEach( (jaxbUniqueConstraint) -> {
+			final MutableAnnotationUsage<UniqueConstraint> ucUsage = JpaAnnotations.UNIQUE_CONSTRAINT.createUsage(
+					target,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "name", jaxbUniqueConstraint.getName() );
+			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "options", jaxbUniqueConstraint.getOptions() );
+			ucUsage.setAttributeValue( "columnNames", jaxbUniqueConstraint.getColumnName() );
+			uniqueConstraintUsages.add( ucUsage );
+		} );
 	}
 
 	public static <A extends Annotation> void applyIndexes(
@@ -631,52 +492,6 @@ public class XmlAnnotationHelper {
 		} );
 
 		annotationUsage.setAttributeValue( "indexes", indexes );
-	}
-
-	public static MutableAnnotationUsage<JoinTable> applyJoinTable(
-			JaxbJoinTableImpl jaxbJoinTable,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbJoinTable == null ) {
-			return null;
-		}
-
-		final MutableAnnotationUsage<JoinTable> joinTableAnn = XmlProcessingHelper.getOrMakeAnnotation(
-				JoinTable.class,
-				memberDetails,
-				xmlDocumentContext
-		);
-		final AnnotationDescriptor<JoinTable> joinTableDescriptor = xmlDocumentContext.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( JoinTable.class );
-
-		applyOr( jaxbJoinTable, JaxbJoinTableImpl::getName, "name", joinTableAnn, joinTableDescriptor );
-		applyTableAttributes( jaxbJoinTable, memberDetails, joinTableAnn, joinTableDescriptor, xmlDocumentContext );
-
-		final List<JaxbJoinColumnImpl> joinColumns = jaxbJoinTable.getJoinColumn();
-		if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
-			joinTableAnn.setAttributeValue( "joinColumns", createJoinColumns( joinColumns,  xmlDocumentContext ) );
-		}
-
-		final List<JaxbJoinColumnImpl> inverseJoinColumns = jaxbJoinTable.getInverseJoinColumn();
-		if ( CollectionHelper.isNotEmpty( inverseJoinColumns ) ) {
-			joinTableAnn.setAttributeValue( "inverseJoinColumns", createJoinColumns( inverseJoinColumns,  xmlDocumentContext ) );
-		}
-
-		if ( jaxbJoinTable.getForeignKey() != null ) {
-			joinTableAnn.setAttributeValue(
-					"foreignKey",
-					createForeignKeyAnnotation( jaxbJoinTable.getForeignKey(),  xmlDocumentContext )
-			);
-		}
-		if ( jaxbJoinTable.getInverseForeignKey() != null ) {
-			joinTableAnn.setAttributeValue(
-					"inverseForeignKey",
-					createForeignKeyAnnotation( jaxbJoinTable.getInverseForeignKey(), memberDetails, xmlDocumentContext )
-			);
-		}
-
-		return joinTableAnn;
 	}
 
 	public static <A extends Annotation> void applyCheckConstraints(
@@ -912,18 +727,18 @@ public class XmlAnnotationHelper {
 			XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbOverride.getName(), annotationUsage );
 			final List<JaxbJoinColumnImpl> joinColumns = jaxbOverride.getJoinColumns();
 			if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
-				annotationUsage.setAttributeValue( "joinColumns", createJoinColumns( joinColumns, memberDetails, xmlDocumentContext ) );
+				annotationUsage.setAttributeValue( "joinColumns", JoinColumnProcessing.createJoinColumns( joinColumns, memberDetails, xmlDocumentContext ) );
 			}
 			if ( jaxbOverride.getJoinTable() != null ) {
 				annotationUsage.setAttributeValue(
 						"joinTable",
-						applyJoinTable( jaxbOverride.getJoinTable(), memberDetails, xmlDocumentContext )
+						TableProcessing.applyJoinTable( jaxbOverride.getJoinTable(), memberDetails, xmlDocumentContext )
 				);
 			}
 			if ( jaxbOverride.getForeignKeys() != null ) {
 				annotationUsage.setAttributeValue(
 						"foreignKey",
-						createForeignKeyAnnotation( jaxbOverride.getForeignKeys(), memberDetails, xmlDocumentContext )
+						ForeignKeyProcessing.createForeignKeyAnnotation( jaxbOverride.getForeignKeys(), memberDetails, xmlDocumentContext )
 				);
 			}
 		} );
@@ -1602,7 +1417,7 @@ public class XmlAnnotationHelper {
 		);
 		final ClassDetails classDetails = xmlDocumentContext.getModelBuildingContext()
 				.getClassDetailsRegistry()
-				.findClassDetails( qualifiedName );
+				.resolveClassDetails( qualifiedName );
 		if ( classDetails != null ) {
 			return classDetails.getName();
 		}

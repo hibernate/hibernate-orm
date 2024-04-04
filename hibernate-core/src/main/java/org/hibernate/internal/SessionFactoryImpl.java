@@ -325,11 +325,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			typeConfiguration.scope( this );
 
 			observer.sessionFactoryCreated( this );
-
-			// As last operation, delete all caches from ReflectionManager
-			// (not modelled as a listener as we want this to be last)
-			bootstrapContext.getReflectionManager().reset();
-
 		}
 		catch ( Exception e ) {
 			disintegrate( e, integratorObserver );

@@ -15,8 +15,11 @@ dependencies {
 
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb
-    implementation libs.hibernateModels
     implementation libs.jandex
+    implementation libs.hcann
+
+    implementation "org.hibernate.common:hibernate-commons-annotations:6.0.6.Final"
+
 
     compileOnly libs.ant
 

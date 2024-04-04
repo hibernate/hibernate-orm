@@ -8,15 +8,11 @@ package org.hibernate.boot.models.internal;
 
 import java.lang.annotation.Annotation;
 
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.MutableAnnotationUsage;
-import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import jakarta.persistence.NamedQueries;
 
 public class AnnotationUsageHelper {
 
@@ -24,18 +20,14 @@ public class AnnotationUsageHelper {
 			String attributeName,
 			Object value,
 			MutableAnnotationUsage<A> annotationUsage) {
-		if ( value != null ) {
-			annotationUsage.setAttributeValue( attributeName, value );
-		}
+		XmlAnnotationHelper.applyOptionalAttribute( annotationUsage, attributeName, value );
 	}
 
 	public static <A extends Annotation> void applyStringAttributeIfSpecified(
 			String attributeName,
 			String value,
 			MutableAnnotationUsage<A> annotationUsage) {
-		if ( StringHelper.isNotEmpty( value ) ) {
-			annotationUsage.setAttributeValue( attributeName, value );
-		}
+		XmlAnnotationHelper.applyOptionalAttribute( annotationUsage, attributeName, value );
 	}
 
 	public static <A extends Annotation> MutableAnnotationUsage<A> getOrCreateUsage(

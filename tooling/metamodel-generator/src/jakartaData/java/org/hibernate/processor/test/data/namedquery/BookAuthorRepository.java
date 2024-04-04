@@ -17,14 +17,17 @@ import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
 import org.hibernate.StatelessSession;
+import org.hibernate.processor.test.data.namedquery.Book.Type;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Repository(dataStore = "myds")
 public interface BookAuthorRepository {
 	List<Book> findByTitleLike(String title);
+	List<Book> findByTypeIn(Set<Type> types);
 }

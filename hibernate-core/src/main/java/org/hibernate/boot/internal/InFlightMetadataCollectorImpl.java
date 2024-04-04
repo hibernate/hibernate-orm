@@ -29,7 +29,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -1318,7 +1317,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final Map<String,AnnotatedClassType> annotatedClassTypeMap = new HashMap<>();
 
 	@Override
-	public AnnotatedClassType getClassType(XClass clazz) {
+	public AnnotatedClassType getClassType(ClassDetails clazz) {
 		AnnotatedClassType type = annotatedClassTypeMap.get( clazz.getName() );
 		if ( type == null ) {
 			return addClassType( clazz );
@@ -1329,13 +1328,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public AnnotatedClassType addClassType(XClass clazz) {
+	public AnnotatedClassType addClassType(ClassDetails clazz) {
 		final AnnotatedClassType type = getAnnotatedClassType(clazz);
 		annotatedClassTypeMap.put( clazz.getName(), type );
 		return type;
 	}
 
-	private static AnnotatedClassType getAnnotatedClassType(XClass clazz) {
+	private static AnnotatedClassType getAnnotatedClassType(ClassDetails clazz) {
 		if ( clazz.isAnnotationPresent( Entity.class ) ) {
 			if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Entity' and '@Embeddable': '" + clazz.getName() + "'" );

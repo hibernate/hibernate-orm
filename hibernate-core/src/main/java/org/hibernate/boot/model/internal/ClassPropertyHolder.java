@@ -291,8 +291,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			return;
 		}
 
-		final TypeDetails.Kind kind = memberDetails.getType().getTypeKind();
-		if ( kind != TypeDetails.Kind.TYPE_VARIABLE && kind != TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+		if ( memberDetails.getType().isResolved() ) {
 			// Avoid copying when the property doesn't depend on a type variable
 			propertyConsumer.accept( prop );
 			return;

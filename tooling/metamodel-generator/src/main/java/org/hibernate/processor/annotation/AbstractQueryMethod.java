@@ -205,8 +205,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void setPage(StringBuilder declaration, String paramName, String paramType) {
-		boolean jakartaLimit = JD_LIMIT.equals(paramType);
-		boolean jakartaPageRequest = paramType.startsWith(JD_PAGE_REQUEST);
+		final boolean jakartaLimit = JD_LIMIT.equals(paramType);
+		final boolean jakartaPageRequest = JD_PAGE_REQUEST.equals(paramType);
 		if ( jakartaLimit || jakartaPageRequest
 				|| isUsingEntityManager() ) {
 			final String firstResult;
@@ -326,15 +326,14 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	static boolean isPageParam(String parameterType) {
 		return HIB_PAGE.equals(parameterType)
 			|| JD_LIMIT.equals(parameterType)
-			|| parameterType.startsWith(JD_PAGE_REQUEST);
+			|| JD_PAGE_REQUEST.equals(parameterType);
 	}
 
 	static boolean isOrderParam(String parameterType) {
 		return parameterType.startsWith(HIB_ORDER)
 			|| parameterType.startsWith(LIST + "<" + HIB_ORDER)
 			|| parameterType.startsWith(JD_SORT)
-			|| parameterType.startsWith(JD_ORDER)
-			|| parameterType.startsWith(JD_PAGE_REQUEST);
+			|| parameterType.startsWith(JD_ORDER);
 	}
 
 	static boolean isJakartaCursoredPage(@Nullable String containerType) {
@@ -516,8 +515,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append(name)
 								.append(");\n");
 					}
-					else if ( type.startsWith(JD_ORDER)
-							|| type.startsWith(JD_PAGE_REQUEST) ) {
+					else if ( type.startsWith(JD_ORDER) ) {
 						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 						declaration
 								.append("\tfor (var _sort : ")

@@ -93,7 +93,7 @@ public interface Library {
 
 	@Find
 	@OrderBy("isbn")
-	CursoredPage<Book> allBooks(PageRequest<Book> pageRequest);
+	CursoredPage<Book> allBooks(PageRequest pageRequest);
 
 	@Find
 	@OrderBy("name")

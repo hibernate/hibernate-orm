@@ -80,6 +80,8 @@ public final class Constants {
 	public static final String BASIC_REPOSITORY = "jakarta.data.repository.BasicRepository";
 	public static final String CRUD_REPOSITORY = "jakarta.data.repository.CrudRepository";
 	public static final String DATA_REPOSITORY = "jakarta.data.repository.DataRepository";
+	public static final String JD_ORDER_BY = "jakarta.data.repository.OrderBy";
+	public static final String JD_ORDER_BY_LIST = "jakarta.data.repository.OrderBy.List";
 
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
 	public static final String HIB_PAGE = "org.hibernate.query.Page";

@@ -19,16 +19,17 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
+import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
@@ -58,6 +59,7 @@ public class ManyToOneAttributeProcessing {
 
 		CommonAttributeProcessing.applyAttributeBasics( jaxbManyToOne, memberDetails, manyToOneAnn, accessType, xmlDocumentContext );
 
+		TableProcessing.applyJoinTable( jaxbManyToOne.getJoinTable(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
 
 		applyNotFound( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
@@ -82,6 +84,15 @@ public class ManyToOneAttributeProcessing {
 		if ( jaxbManyToOne.isId() == Boolean.TRUE ) {
 			memberDetails.applyAnnotationUsage( JpaAnnotations.ID, xmlDocumentContext.getModelBuildingContext() );
 		}
+
+		if ( StringHelper.isNotEmpty( jaxbManyToOne.getMapsId() ) ) {
+			final MutableAnnotationUsage<MapsId> mapsIdUsage = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAPS_ID,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			mapsIdUsage.setAttributeValue( "value", jaxbManyToOne.getMapsId() );
+		}
+
 		return manyToOneUsage;
 	}
 

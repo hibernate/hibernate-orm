@@ -21,6 +21,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
+import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationDescriptor;
@@ -149,7 +150,7 @@ public class CommonPluralAttributeProcessing {
 			XmlAnnotationHelper.applyMapKeyJoinColumn( jaxbMapKeyJoinColumn, memberDetails, xmlDocumentContext );
 		} );
 
-		XmlAnnotationHelper.applyForeignKey( jaxbPluralAttribute.getMapKeyForeignKey(), memberDetails, xmlDocumentContext );
+		ForeignKeyProcessing.applyForeignKey( jaxbPluralAttribute.getMapKeyForeignKey(), memberDetails, xmlDocumentContext );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// filters and custom sql

@@ -14,6 +14,8 @@ import java.util.Set;
 @Entity
 @Table(name = "books")
 public class Book {
+    public enum Type { Book, Magazine, Journal }
+
     @Id
     String isbn;
 
@@ -33,6 +35,8 @@ public class Book {
     BigDecimal price;
 
     int pages;
+
+    Type type;
 
     public Book(String isbn, String title, String text) {
         this.isbn = isbn;

@@ -25,6 +25,9 @@ public interface Bookshop extends CrudRepository<Book,String> {
     @Query("select count(this) where this.title like ?1 order by this.isbn")
     long count2(String title);
 
+    @Query("select count(this)")
+    long countAll();
+
     @Query("where isbn in :isbns and type = Book")
     List<Book> books(List<String> isbns);
 

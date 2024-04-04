@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.usertype.DynamicParameterizedType;

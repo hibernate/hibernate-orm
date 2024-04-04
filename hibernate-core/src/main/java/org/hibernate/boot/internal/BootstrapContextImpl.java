@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -23,7 +21,6 @@ import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.TypeBeanInstanceProducer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -64,7 +61,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private boolean isJpaBootstrap;
 
-	private final JavaReflectionManager hcannReflectionManager;
 	private final ClassmateContext classmateContext;
 
 	private ScanOptions scanOptions;
@@ -88,7 +84,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
 		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
-		this.hcannReflectionManager = generateHcannReflectionManager();
 
 		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
@@ -186,11 +181,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public Object getScanner() {
 		return scannerSetting;
-	}
-
-	@Override
-	public ReflectionManager getReflectionManager() {
-		return hcannReflectionManager;
 	}
 
 	@Override
@@ -338,11 +328,4 @@ public class BootstrapContextImpl implements BootstrapContext {
 		}
 		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}
-
-	private JavaReflectionManager generateHcannReflectionManager() {
-		final JavaReflectionManager reflectionManager = new JavaReflectionManager();
-		reflectionManager.setMetadataProvider( new JPAXMLOverriddenMetadataProvider( this ) );
-		return reflectionManager;
-	}
-
 }

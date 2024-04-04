@@ -10,8 +10,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.Incubating;
-import org.hibernate.Internal;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -157,19 +155,6 @@ public interface BootstrapContext {
 	 * @return The scanner
 	 */
 	Object getScanner();
-
-	/**
-	 * Retrieve the Hibernate Commons Annotations {@link ReflectionManager}.
-	 *
-	 * @apiNote Supported for internal use only. This method will go away as
-	 *          we migrate away from Hibernate Commons Annotations to Jandex for
-	 *          annotation handling and XMl to annotation merging.
-	 *
-	 * @deprecated HCANN is deprecated in favor of hibernate-models
-	 */
-	@Internal
-	@Deprecated
-	ReflectionManager getReflectionManager();
 
 	/**
 	 * Access to the Jandex index passed by call to

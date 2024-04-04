@@ -15,7 +15,7 @@ pipeline {
         label 'Fedora'
     }
     tools {
-        jdk 'OpenJDK 11 Latest'
+        jdk 'OpenJDK 17 Latest'
     }
     options {
   		rateLimitBuilds(throttle: [count: 1, durationName: 'hour', userBoost: true])

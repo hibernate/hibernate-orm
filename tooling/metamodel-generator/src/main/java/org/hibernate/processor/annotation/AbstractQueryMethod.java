@@ -132,7 +132,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				notNull( declaration );
 			}
 			declaration
-					.append(annotationMetaEntity.importType(importReturnTypeArgument(paramType)))
+					.append(annotationMetaEntity.importType(paramType))
 					.append(" ")
 					.append(paramNames.get(i).replace('.', '$'));
 		}
@@ -142,12 +142,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	static boolean isSessionParameter(String paramType) {
 		return SESSION_TYPES.contains(paramType);
-	}
-
-	private String importReturnTypeArgument(String type) {
-		return returnTypeName != null
-				? type.replace(returnTypeName, annotationMetaEntity.importType(returnTypeName))
-				: type;
 	}
 
 	void sessionParameter(StringBuilder declaration) {

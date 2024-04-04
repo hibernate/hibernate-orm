@@ -253,7 +253,6 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 			skipRows( resultSet );
 			logicalConnection.getResourceRegistry().register( resultSet, preparedStatement );
-
 		}
 		catch (SQLException e) {
 			try {
@@ -266,9 +265,6 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 					e,
 					"JDBC exception executing SQL [" + finalSql + "]"
 			);
-		}
-		finally {
-			logicalConnection.afterStatement();
 		}
 	}
 
@@ -324,20 +320,18 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 	@Override
 	public void release() {
+		final LogicalConnectionImplementor logicalConnection = getPersistenceContext().getJdbcCoordinator()
+				.getLogicalConnection();
 		if ( resultSet != null ) {
-			getPersistenceContext().getJdbcCoordinator()
-					.getLogicalConnection()
-					.getResourceRegistry()
-					.release( resultSet, preparedStatement );
+			logicalConnection.getResourceRegistry().release( resultSet, preparedStatement );
 			resultSet = null;
 		}
 
 		if ( preparedStatement != null ) {
-			getPersistenceContext().getJdbcCoordinator()
-					.getLogicalConnection()
-					.getResourceRegistry()
-					.release( preparedStatement );
+			logicalConnection.getResourceRegistry().release( preparedStatement );
 			preparedStatement = null;
 		}
+
+		logicalConnection.afterStatement();
 	}
 }

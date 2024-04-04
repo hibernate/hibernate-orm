@@ -182,74 +182,79 @@ public class OutputsImpl implements Outputs {
 				executionContext
 		);
 
-		//noinspection unchecked
-		final RowReader<Object> rowReader = (RowReader<Object>) ResultsHelper.createRowReader(
-				executionContext,
-				null,
-				RowTransformerStandardImpl.INSTANCE,
-				null,
-				jdbcValues
-		);
-
-		/*
-		 * Processing options effectively are only used for entity loading.  Here we don't need these values.
-		 */
-		final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
-			@Override
-			public Object getEffectiveOptionalObject() {
-				return null;
-			}
-
-			@Override
-			public String getEffectiveOptionalEntityName() {
-				return null;
-			}
-
-			@Override
-			public Serializable getEffectiveOptionalId() {
-				return null;
-			}
-
-			@Override
-			public boolean shouldReturnProxies() {
-				return true;
-			}
-		};
-
-		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState =
-				new JdbcValuesSourceProcessingStateStandardImpl(
-						executionContext,
-						processingOptions
-				);
-		final ArrayList<Object> results = new ArrayList<>();
 		try {
-			final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
-					jdbcValuesSourceProcessingState,
+
+			//noinspection unchecked
+			final RowReader<Object> rowReader = (RowReader<Object>) ResultsHelper.createRowReader(
 					executionContext,
-					rowReader,
+					null,
+					RowTransformerStandardImpl.INSTANCE,
+					null,
 					jdbcValues
 			);
 
-			rowReader.getInitializersList().startLoading( rowProcessingState );
+			/*
+			 * Processing options effectively are only used for entity loading.  Here we don't need these values.
+			 */
+			final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
+				@Override
+				public Object getEffectiveOptionalObject() {
+					return null;
+				}
 
-			while ( rowProcessingState.next() ) {
-				results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
-				rowProcessingState.finishRowProcessing( true );
+				@Override
+				public String getEffectiveOptionalEntityName() {
+					return null;
+				}
+
+				@Override
+				public Serializable getEffectiveOptionalId() {
+					return null;
+				}
+
+				@Override
+				public boolean shouldReturnProxies() {
+					return true;
+				}
+			};
+
+			final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState =
+					new JdbcValuesSourceProcessingStateStandardImpl(
+							executionContext,
+							processingOptions
+					);
+			final ArrayList<Object> results = new ArrayList<>();
+			try {
+				final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
+						jdbcValuesSourceProcessingState,
+						executionContext,
+						rowReader,
+						jdbcValues
+				);
+
+				rowReader.getInitializersList().startLoading( rowProcessingState );
+
+				while ( rowProcessingState.next() ) {
+					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
+					rowProcessingState.finishRowProcessing( true );
+				}
+				if ( resultSetMapping.getNumberOfResultBuilders() == 0
+						&& procedureCall.isFunctionCall()
+						&& procedureCall.getFunctionReturn().getJdbcTypeCode() == Types.REF_CURSOR
+						&& results.size() == 1
+						&& results.get( 0 ) instanceof ResultSet ) {
+					// When calling a function that returns a ref_cursor with as table function,
+					// we have to unnest the ResultSet manually here
+					return extractResults( (ResultSet) results.get( 0 ) );
+				}
+				return results;
 			}
-			if ( resultSetMapping.getNumberOfResultBuilders() == 0
-					&& procedureCall.isFunctionCall()
-					&& procedureCall.getFunctionReturn().getJdbcTypeCode() == Types.REF_CURSOR
-					&& results.size() == 1
-					&& results.get( 0 ) instanceof ResultSet ) {
-				// When calling a function that returns a ref_cursor with as table function,
-				// we have to unnest the ResultSet manually here
-				return extractResults( (ResultSet) results.get( 0 ) );
+			finally {
+				rowReader.finishUp( jdbcValuesSourceProcessingState );
+				jdbcValuesSourceProcessingState.finishUp( results.size() > 1 );
 			}
-			return results;
 		}
 		finally {
-			rowReader.finishUp( jdbcValuesSourceProcessingState );
-			jdbcValuesSourceProcessingState.finishUp( results.size() > 1 );
 			jdbcValues.finishUp( this.context.getSession() );
 		}
 	}

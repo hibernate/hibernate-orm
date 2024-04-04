@@ -326,13 +326,10 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 							null,
 							context.getBootstrapContext().getReflectionManager()
 					);
-					final Value originalValue = prop.getValue();
-					if ( originalValue instanceof SimpleValue ) {
+					if ( declaredProperty.isTypeResolved() ) {
 						// Avoid copying when the property doesn't depend on a type variable
-						if ( inferredData.getTypeName().equals( getTypeName( prop ) ) ) {
-							propertyConsumer.accept( prop );
-							return;
-						}
+						propertyConsumer.accept( prop );
+						return;
 					}
 					// If the property depends on a type variable, we have to copy it and the Value
 					final Property actualProperty = prop.copy();
@@ -348,6 +345,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 //						collection.setOwner( null );
 						collection.setRole( type.getName() + "." + prop.getName() );
 						// To copy the element and key values, we need to defer setting the type name until the CollectionBinder ran
+						final Value originalValue = prop.getValue();
 						context.getMetadataCollector().addSecondPass(
 								new SecondPass() {
 									@Override

@@ -28,7 +28,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -1315,42 +1314,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	private final Map<String,AnnotatedClassType> annotatedClassTypeMap = new HashMap<>();
-
-	@Override
-	public AnnotatedClassType getClassType(XClass clazz) {
-		AnnotatedClassType type = annotatedClassTypeMap.get( clazz.getName() );
-		if ( type == null ) {
-			return addClassType( clazz );
-		}
-		else {
-			return type;
-		}
-	}
-
-	@Override
-	public AnnotatedClassType addClassType(XClass clazz) {
-		final AnnotatedClassType type = getAnnotatedClassType(clazz);
-		annotatedClassTypeMap.put( clazz.getName(), type );
-		return type;
-	}
-
-	private static AnnotatedClassType getAnnotatedClassType(XClass clazz) {
-		if ( clazz.isAnnotationPresent( Entity.class ) ) {
-			return AnnotatedClassType.ENTITY;
-		}
-		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
-			return AnnotatedClassType.EMBEDDABLE;
-		}
-		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
-			return AnnotatedClassType.MAPPED_SUPERCLASS;
-		}
-		else if ( clazz.isAnnotationPresent( Imported.class ) ) {
-			return AnnotatedClassType.IMPORTED;
-		}
-		else {
-			return AnnotatedClassType.NONE;
-		}
-	}
 
 	@Override
 	public AnnotatedClassType addClassType(ClassDetails classDetails) {

@@ -15,8 +15,10 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
+import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -56,7 +58,8 @@ public class ManyToOneAttributeProcessing {
 
 		CommonAttributeProcessing.applyAttributeBasics( jaxbManyToOne, memberDetails, manyToOneAnn, accessType, xmlDocumentContext );
 
-		XmlAnnotationHelper.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
+		JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
+
 		applyNotFound( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
 		applyOnDelete( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
 		applyTarget( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
@@ -69,21 +72,17 @@ public class ManyToOneAttributeProcessing {
 			MutableMemberDetails memberDetails,
 			JaxbManyToOneImpl jaxbManyToOne,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<ManyToOne> manyToOneAnn = XmlProcessingHelper.getOrMakeAnnotation( ManyToOne.class, memberDetails, xmlDocumentContext );
-		final AnnotationDescriptor<ManyToOne> manyToOneDescriptor = xmlDocumentContext
-				.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( ManyToOne.class );
-
-		XmlAnnotationHelper.applyOr(
-				jaxbManyToOne,
-				JaxbManyToOneImpl::getFetch,
+		final MutableAnnotationUsage<ManyToOne> manyToOneUsage = XmlProcessingHelper.getOrMakeAnnotation( ManyToOne.class, memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyOptionalAttribute(
+				manyToOneUsage,
 				"fetch",
-				manyToOneAnn,
-				manyToOneDescriptor
+				jaxbManyToOne.getFetch()
 		);
 
-		return manyToOneAnn;
+		if ( jaxbManyToOne.isId() == Boolean.TRUE ) {
+			memberDetails.applyAnnotationUsage( JpaAnnotations.ID, xmlDocumentContext.getModelBuildingContext() );
+		}
+		return manyToOneUsage;
 	}
 
 	private static void applyNotFound(

@@ -79,8 +79,6 @@ public final class AnnotationBinder {
 	private AnnotationBinder() {}
 
 	public static void bindDefaults(MetadataBuildingContext context) {
-		// todo (jpa32) - remove this.  left for now for easy debugging
-		final Map<?,?> defaults = context.getBootstrapContext().getReflectionManager().getDefaults();
 		final GlobalRegistrations globalRegistrations = context.getMetadataCollector().getGlobalRegistrations();
 
 		// id generators ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

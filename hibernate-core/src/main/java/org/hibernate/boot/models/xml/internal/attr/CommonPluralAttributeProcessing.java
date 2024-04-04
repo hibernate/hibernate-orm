@@ -21,7 +21,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
+import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
+import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationDescriptor;
@@ -115,7 +117,8 @@ public class CommonPluralAttributeProcessing {
 		}
 
 		if ( jaxbPluralAttribute.getMapKeyClass() != null ) {
-			final ClassDetails mapKeyClass = classDetailsRegistry.resolveClassDetails( jaxbPluralAttribute.getMapKeyClass().getClazz() );
+			final String className = xmlDocumentContext.resolveClassName( jaxbPluralAttribute.getMapKeyClass().getClazz() );
+			final ClassDetails mapKeyClass = classDetailsRegistry.resolveClassDetails( className );
 			XmlProcessingHelper.getOrMakeAnnotation( MapKeyClass.class, memberDetails, xmlDocumentContext ).setAttributeValue( "value", mapKeyClass );
 		}
 
@@ -133,22 +136,17 @@ public class CommonPluralAttributeProcessing {
 			);
 		}
 
-		XmlAnnotationHelper.applyAttributeOverrides(
-				jaxbPluralAttribute.getMapKeyAttributeOverrides(),
-				memberDetails,
-				"key",
-				xmlDocumentContext
-		);
-
 		jaxbPluralAttribute.getMapKeyConverts().forEach( (jaxbConvert) -> {
 			XmlAnnotationHelper.applyConvert( jaxbConvert, memberDetails, "key", xmlDocumentContext );
 		} );
 
-		XmlAnnotationHelper.applyMapKeyColumn( jaxbPluralAttribute.getMapKeyColumn(), memberDetails, xmlDocumentContext );
+		ColumnProcessing.applyMapKeyColumn( jaxbPluralAttribute.getMapKeyColumn(), memberDetails, xmlDocumentContext );
 
-		jaxbPluralAttribute.getMapKeyJoinColumns().forEach( jaxbMapKeyJoinColumn -> {
-			XmlAnnotationHelper.applyMapKeyJoinColumn( jaxbMapKeyJoinColumn, memberDetails, xmlDocumentContext );
-		} );
+		JoinColumnProcessing.applyMapKeyJoinColumns(
+				jaxbPluralAttribute.getMapKeyJoinColumns(),
+				memberDetails,
+				xmlDocumentContext
+		);
 
 		ForeignKeyProcessing.applyForeignKey( jaxbPluralAttribute.getMapKeyForeignKey(), memberDetails, xmlDocumentContext );
 

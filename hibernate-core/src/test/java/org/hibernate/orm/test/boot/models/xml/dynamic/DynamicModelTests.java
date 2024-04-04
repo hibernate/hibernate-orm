@@ -120,12 +120,19 @@ public class DynamicModelTests {
 			final FieldDetails labels = rootEntity.getClassDetails().findFieldByName( "labels" );
 			assertThat( labels.getType().determineRawClass().getClassName() ).isEqualTo( Set.class.getName() );
 			final AnnotationUsage<ElementCollection> elementCollection = labels.getAnnotationUsage( ElementCollection.class );
-			assertThat( elementCollection.<ClassDetails>getAttributeValue( "targetClass" ).getName() ).isEqualTo( String.class.getName() );
+
+			assertThat( elementCollection.getClassDetails( "targetClass" ) ).isEqualTo( ClassDetails.VOID_CLASS_DETAILS );
+			final AnnotationUsage<Target> targetUsage = labels.getAnnotationUsage( Target.class );
+			assertThat( targetUsage.getString( "value" ) ).isEqualTo( "string" );
+
 			final AnnotationUsage<CollectionClassification> collectionClassification = labels.getAnnotationUsage( CollectionClassification.class );
 			assertThat( collectionClassification.<LimitedCollectionClassification>getAttributeValue( "value" ) ).isEqualTo( LimitedCollectionClassification.SET );
+
+			assertThat( labels.getAnnotationUsage( SortNatural.class ) ).isNotNull();
+
 			final AnnotationUsage<CollectionTable> collectionTable = labels.getAnnotationUsage( CollectionTable.class );
 			assertThat( collectionTable.<String>getAttributeValue( "name" ) ).isEqualTo( "labels" );
-			assertThat( labels.getAnnotationUsage( SortNatural.class ) ).isNotNull();
+
 			final List<AnnotationUsage<JoinColumn>> joinColumns = collectionTable.getList( "joinColumns" );
 			assertThat( joinColumns ).hasSize( 1 );
 			assertThat( joinColumns.get( 0 ).<String>getAttributeValue( "name" ) ).isEqualTo( "contact_fk" );

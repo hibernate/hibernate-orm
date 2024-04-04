@@ -6,8 +6,11 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
+import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
@@ -42,31 +45,31 @@ public class ElementCollectionAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<ElementCollection> elementCollectionAnn = XmlProcessingHelper.getOrMakeAnnotation(
-				ElementCollection.class,
-				memberDetails,
-				xmlDocumentContext
+		final MutableAnnotationUsage<ElementCollection> elementCollectionUsage = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.ELEMENT_COLLECTION,
+				xmlDocumentContext.getModelBuildingContext()
 		);
 		XmlProcessingHelper.applyAttributeIfSpecified(
 				"fetch",
 				jaxbElementCollection.getFetch(),
-				elementCollectionAnn
+				elementCollectionUsage
 		);
 
 		final String targetClass = jaxbElementCollection.getTargetClass();
 		if ( targetClass != null ) {
-			XmlProcessingHelper.applyAttributeIfSpecified(
-					"targetClass",
-					XmlAnnotationHelper.resolveJavaType( targetClass, xmlDocumentContext.getModelBuildingContext() ).determineRawClass(),
-					elementCollectionAnn
+			final MutableAnnotationUsage<Target> targetUsage = memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.TARGET,
+					xmlDocumentContext.getModelBuildingContext()
 			);
+			targetUsage.setAttributeValue( "value", xmlDocumentContext.resolveClassName( targetClass ) );
 		}
 
-		CommonAttributeProcessing.applyAttributeBasics( jaxbElementCollection, memberDetails, elementCollectionAnn, accessType, xmlDocumentContext );
+		CommonAttributeProcessing.applyAttributeBasics( jaxbElementCollection, memberDetails, elementCollectionUsage, accessType, xmlDocumentContext );
 
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbElementCollection, memberDetails, xmlDocumentContext );
 
 		applyCollectionTable( jaxbElementCollection.getCollectionTable(), memberDetails, xmlDocumentContext );
+
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// elements
@@ -78,12 +81,13 @@ public class ElementCollectionAttributeProcessing {
 		XmlAnnotationHelper.applyTemporal( jaxbElementCollection.getTemporal(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyBasicTypeComposition( jaxbElementCollection, memberDetails, xmlDocumentContext );
 
-		jaxbElementCollection.getConverts().forEach( (jaxbConvert) -> {
-			XmlAnnotationHelper.applyConvert( jaxbConvert, memberDetails, xmlDocumentContext );
-		} );
+		jaxbElementCollection.getConverts().forEach( (jaxbConvert) -> XmlAnnotationHelper.applyConvert(
+				jaxbConvert,
+				memberDetails,
+				xmlDocumentContext
+		) );
 
-		XmlAnnotationHelper.applyAttributeOverrides( jaxbElementCollection.getAttributeOverrides(), memberDetails, xmlDocumentContext );
-
+		XmlAnnotationHelper.applyAttributeOverrides( jaxbElementCollection, memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyAssociationOverrides( jaxbElementCollection.getAssociationOverrides(), memberDetails, xmlDocumentContext );
 
 		return memberDetails;
@@ -122,7 +126,11 @@ public class ElementCollectionAttributeProcessing {
 		);
 		XmlAnnotationHelper.applyOr( jaxbCollectionTable, JaxbCollectionTableImpl::getOptions, "options", collectionTableAnn, collectionTableDescriptor );
 
-		collectionTableAnn.setAttributeValue( "joinColumns", JoinColumnProcessing.transformJoinColumnList( jaxbCollectionTable.getJoinColumns(), xmlDocumentContext ) );
+		collectionTableAnn.setAttributeValue( "joinColumns", JoinColumnProcessing.transformJoinColumnList(
+				jaxbCollectionTable.getJoinColumns(),
+				memberDetails,
+				xmlDocumentContext
+		) );
 
 		if ( jaxbCollectionTable.getForeignKeys() != null ) {
 			collectionTableAnn.setAttributeValue(

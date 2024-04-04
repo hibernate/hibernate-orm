@@ -18,9 +18,6 @@ dependencies {
     implementation libs.jandex
     implementation libs.hcann
 
-    implementation "org.hibernate.common:hibernate-commons-annotations:6.0.6.Final"
-
-
     compileOnly libs.ant
 
     annotationProcessor project( ':hibernate-processor' )

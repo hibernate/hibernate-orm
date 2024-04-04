@@ -10,6 +10,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
+import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
+import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.MutableAnnotationUsage;
@@ -120,12 +122,12 @@ public class ElementCollectionAttributeProcessing {
 		);
 		XmlAnnotationHelper.applyOr( jaxbCollectionTable, JaxbCollectionTableImpl::getOptions, "options", collectionTableAnn, collectionTableDescriptor );
 
-		collectionTableAnn.setAttributeValue( "joinColumns", XmlAnnotationHelper.createJoinColumns( jaxbCollectionTable.getJoinColumns(), xmlDocumentContext ) );
+		collectionTableAnn.setAttributeValue( "joinColumns", JoinColumnProcessing.transformJoinColumnList( jaxbCollectionTable.getJoinColumns(), xmlDocumentContext ) );
 
 		if ( jaxbCollectionTable.getForeignKeys() != null ) {
 			collectionTableAnn.setAttributeValue(
 					"foreignKey",
-					XmlAnnotationHelper.createForeignKeyAnnotation( jaxbCollectionTable.getForeignKeys(), xmlDocumentContext )
+					ForeignKeyProcessing.createNestedForeignKeyAnnotation( jaxbCollectionTable.getForeignKeys(), memberDetails, xmlDocumentContext )
 			);
 		}
 

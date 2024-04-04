@@ -72,7 +72,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 				.setImplicitCatalogName( documentRoot.getCatalog() )
 				.setImplicitPackageName( documentRoot.getPackage() )
 				.setImplicitPropertyAccessorName( documentRoot.getDefaultAccess() )
-				.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
+//				.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
 				.setEntitiesImplicitlyLazy( documentRoot.isDefaultLazy() )
 				.setAutoImportEnabled( documentRoot.isAutoImport() )
 				.setPluralAttributesImplicitlyLazy( documentRoot.isDefaultLazy() )

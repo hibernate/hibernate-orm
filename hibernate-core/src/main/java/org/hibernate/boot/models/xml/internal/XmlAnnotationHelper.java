@@ -56,6 +56,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbConvertImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCustomSqlImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorFormulaImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
@@ -68,10 +69,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallbackContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLobImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNationalizedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalId;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
@@ -111,6 +111,7 @@ import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AssociationOverrides;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CheckConstraint;
@@ -130,8 +131,6 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
@@ -374,30 +373,6 @@ public class XmlAnnotationHelper {
 		}
 
 		applyOr( jaxbCollectionId, JaxbCollectionIdImpl::getGenerator, "generator", collectionIdAnn, collectionIdDescriptor );
-	}
-
-	public static void applyMapKeyColumn(
-			JaxbMapKeyColumnImpl jaxbMapKeyColumn,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbMapKeyColumn == null ) {
-			return;
-		}
-
-		final MutableAnnotationUsage<MapKeyColumn> columnAnn = XmlProcessingHelper.getOrMakeAnnotation( MapKeyColumn.class, memberDetails, xmlDocumentContext );
-
-		ColumnProcessing.applyColumnDetails( jaxbMapKeyColumn, memberDetails, columnAnn, xmlDocumentContext );
-	}
-
-	public static void applyMapKeyJoinColumn(
-			JaxbMapKeyJoinColumnImpl jaxbMapKeyJoinColumn,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbMapKeyJoinColumn == null ) {
-			return;
-		}
-
-		JoinColumnProcessing.createJoinColumnAnnotation( jaxbMapKeyJoinColumn, memberDetails, MapKeyJoinColumn.class, xmlDocumentContext );
 	}
 
 	public static void applyCascading(
@@ -664,6 +639,124 @@ public class XmlAnnotationHelper {
 	}
 
 	public static void applyAttributeOverrides(
+			JaxbPluralAttribute pluralAttribute,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		final List<JaxbAttributeOverrideImpl> jaxbMapKeyOverrides = pluralAttribute.getMapKeyAttributeOverrides();
+		final List<JaxbAttributeOverrideImpl> jaxbElementOverrides = pluralAttribute instanceof JaxbElementCollectionImpl
+				? ( (JaxbElementCollectionImpl) pluralAttribute ).getAttributeOverrides()
+				: emptyList();
+
+		if ( CollectionHelper.isEmpty( jaxbMapKeyOverrides ) && CollectionHelper.isEmpty( jaxbElementOverrides ) ) {
+			return;
+		}
+
+		final int numberOfOverrides = jaxbMapKeyOverrides.size() + jaxbElementOverrides.size();
+		if ( numberOfOverrides == 1 ) {
+			final MutableAnnotationUsage<AttributeOverride> overrideUsage;
+			if ( memberDetails.getMapKeyType() != null ) {
+				if ( jaxbMapKeyOverrides.size() == 1 ) {
+					overrideUsage = createAttributeOverrideUsage(
+							jaxbMapKeyOverrides.get( 0 ),
+							"key",
+							memberDetails,
+							xmlDocumentContext
+					);
+				}
+				else {
+					assert jaxbElementOverrides.size() == 1;
+					overrideUsage = createAttributeOverrideUsage(
+							jaxbElementOverrides.get( 0 ),
+							"value",
+							memberDetails,
+							xmlDocumentContext
+					);
+				}
+			}
+			else {
+				assert jaxbElementOverrides.size() == 1;
+				overrideUsage = createAttributeOverrideUsage(
+						jaxbElementOverrides.get( 0 ),
+						null,
+						memberDetails,
+						xmlDocumentContext
+				);
+			}
+
+			memberDetails.addAnnotationUsage( overrideUsage );
+			return;
+		}
+
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final MutableAnnotationUsage<AttributeOverrides> overridesUsage = JpaAnnotations.ATTRIBUTE_OVERRIDES.createUsage(
+				memberDetails,
+				modelBuildingContext
+		);
+		memberDetails.addAnnotationUsage( overridesUsage );
+
+		final List<MutableAnnotationUsage<AttributeOverride>> overrideUsages = CollectionHelper.arrayList(
+				numberOfOverrides
+		);
+		overridesUsage.setAttributeValue( "value", overrideUsages );
+
+		// We need to handle overrides for maps specially...
+		if ( memberDetails.getMapKeyType() != null ) {
+			jaxbMapKeyOverrides.forEach( (jaxbOverride) -> {
+				overrideUsages.add( createAttributeOverrideUsage(
+						jaxbOverride,
+						"key",
+						memberDetails,
+						xmlDocumentContext
+				) );
+			} );
+			jaxbElementOverrides.forEach( (jaxbOverride) -> {
+				overrideUsages.add( createAttributeOverrideUsage(
+						jaxbOverride,
+						"value",
+						memberDetails,
+						xmlDocumentContext
+				) );
+			} );
+		}
+		else {
+			assert CollectionHelper.isEmpty( jaxbMapKeyOverrides );
+			jaxbElementOverrides.forEach( (jaxbOverride) -> {
+				overrideUsages.add( createAttributeOverrideUsage(
+						jaxbOverride,
+						null,
+						memberDetails,
+						xmlDocumentContext
+				) );
+			} );
+		}
+	}
+
+	private static MutableAnnotationUsage<AttributeOverride> createAttributeOverrideUsage(
+			JaxbAttributeOverrideImpl jaxbOverride,
+			String namePrefix,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+
+		final MutableAnnotationUsage<AttributeOverride> overrideUsage = JpaAnnotations.ATTRIBUTE_OVERRIDE.createUsage(
+				memberDetails,
+				modelBuildingContext
+		);
+
+		final String name = StringHelper.qualifyConditionally( namePrefix, jaxbOverride.getName() );
+		overrideUsage.setAttributeValue( "name", name );
+
+		final MutableAnnotationUsage<Column> columnAnn = JpaAnnotations.COLUMN.createUsage(
+				memberDetails,
+				modelBuildingContext
+		);
+		overrideUsage.setAttributeValue( "column", columnAnn );
+		ColumnProcessing.applyColumnDetails( jaxbOverride.getColumn(), memberDetails, columnAnn, xmlDocumentContext );
+
+		return overrideUsage;
+	}
+
+	public static void applyAttributeOverrides(
 			List<JaxbAttributeOverrideImpl> jaxbOverrides,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
@@ -686,26 +779,16 @@ public class XmlAnnotationHelper {
 		);
 		memberDetails.addAnnotationUsage( attributeOverridesAnn );
 
-		final ArrayList<MutableAnnotationUsage<AttributeOverride>> overrideAnnList = CollectionHelper.arrayList( jaxbOverrides.size() );
-		attributeOverridesAnn.setAttributeValue( "value", overrideAnnList );
+		final ArrayList<MutableAnnotationUsage<AttributeOverride>> overrideUsages = CollectionHelper.arrayList( jaxbOverrides.size() );
+		attributeOverridesAnn.setAttributeValue( "value", overrideUsages );
 
 		jaxbOverrides.forEach( (jaxbOverride) -> {
-			final MutableAnnotationUsage<AttributeOverride> attributeOverrideAnn = XmlProcessingHelper.makeNestedAnnotation(
-					AttributeOverride.class,
+			overrideUsages.add( createAttributeOverrideUsage(
+					jaxbOverride,
+					namePrefix,
 					memberDetails,
 					xmlDocumentContext
-			);
-			overrideAnnList.add( attributeOverrideAnn );
-
-			attributeOverrideAnn.setAttributeValue( "name", prefixIfNotAlready( jaxbOverride.getName(), namePrefix ) );
-
-			final MutableAnnotationUsage<Column> columnAnn = makeNestedAnnotation(
-					Column.class,
-					memberDetails,
-					xmlDocumentContext
-			);
-			attributeOverrideAnn.setAttributeValue( "column", columnAnn );
-			ColumnProcessing.applyColumnDetails( jaxbOverride.getColumn(), memberDetails, columnAnn, xmlDocumentContext );
+			) );
 		} );
 	}
 
@@ -717,31 +800,64 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		jaxbOverrides.forEach( (jaxbOverride) -> {
-			final MutableAnnotationUsage<AssociationOverride> annotationUsage = XmlProcessingHelper.makeAnnotation(
-					AssociationOverride.class,
+		if ( jaxbOverrides.size() == 1 ) {
+			final MutableAnnotationUsage<AssociationOverride> overrideUsage = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.ASSOCIATION_OVERRIDE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			transferAssociationOverride(
+					jaxbOverrides.get( 0 ),
+					overrideUsage,
 					memberDetails,
 					xmlDocumentContext
 			);
-			memberDetails.addAnnotationUsage( annotationUsage );
-			XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbOverride.getName(), annotationUsage );
-			final List<JaxbJoinColumnImpl> joinColumns = jaxbOverride.getJoinColumns();
-			if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
-				annotationUsage.setAttributeValue( "joinColumns", JoinColumnProcessing.createJoinColumns( joinColumns, memberDetails, xmlDocumentContext ) );
-			}
-			if ( jaxbOverride.getJoinTable() != null ) {
-				annotationUsage.setAttributeValue(
-						"joinTable",
-						TableProcessing.applyJoinTable( jaxbOverride.getJoinTable(), memberDetails, xmlDocumentContext )
+		}
+		else {
+			final MutableAnnotationUsage<AssociationOverrides> overridesUsage = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.ASSOCIATION_OVERRIDES,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			final ArrayList<MutableAnnotationUsage<AssociationOverride>> overrideUsages = CollectionHelper.arrayList( jaxbOverrides.size() );
+			overridesUsage.setAttributeValue( "value", overrideUsages );
+
+			jaxbOverrides.forEach( (jaxbOverride) -> {
+				final MutableAnnotationUsage<AssociationOverride> overrideUsage = JpaAnnotations.ASSOCIATION_OVERRIDE.createUsage(
+						memberDetails,
+						xmlDocumentContext.getModelBuildingContext()
 				);
-			}
-			if ( jaxbOverride.getForeignKeys() != null ) {
-				annotationUsage.setAttributeValue(
-						"foreignKey",
-						ForeignKeyProcessing.createForeignKeyAnnotation( jaxbOverride.getForeignKeys(), memberDetails, xmlDocumentContext )
-				);
-			}
-		} );
+				transferAssociationOverride( jaxbOverride, overrideUsage, memberDetails, xmlDocumentContext );
+				overrideUsages.add( overrideUsage );
+			} );
+		}
+	}
+	
+	private static void transferAssociationOverride(
+			JaxbAssociationOverrideImpl jaxbOverride,
+			MutableAnnotationUsage<AssociationOverride> overrideUsage,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		overrideUsage.setAttributeValue( "name", jaxbOverride.getName() );
+
+		final List<JaxbJoinColumnImpl> joinColumns = jaxbOverride.getJoinColumns();
+		if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
+			overrideUsage.setAttributeValue( 
+					"joinColumns",
+					JoinColumnProcessing.transformJoinColumnList( joinColumns, memberDetails, xmlDocumentContext ) 
+			);
+		}
+		if ( jaxbOverride.getJoinTable() != null ) {
+			overrideUsage.setAttributeValue(
+					"joinTable",
+					TableProcessing.transformJoinTable( jaxbOverride.getJoinTable(), memberDetails, xmlDocumentContext )
+			);
+		}
+		if ( jaxbOverride.getForeignKeys() != null ) {
+			overrideUsage.setAttributeValue(
+					"foreignKey",
+					ForeignKeyProcessing.createNestedForeignKeyAnnotation( jaxbOverride.getForeignKeys(), memberDetails, xmlDocumentContext )
+			);
+		}
+		
 	}
 
 	public static void applyOptimisticLockInclusion(

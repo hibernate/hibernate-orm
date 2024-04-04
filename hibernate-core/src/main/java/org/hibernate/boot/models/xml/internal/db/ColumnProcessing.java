@@ -8,6 +8,7 @@ package org.hibernate.boot.models.xml.internal.db;
 
 import java.lang.annotation.Annotation;
 
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumn;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnCommon;
@@ -24,6 +25,9 @@ import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.MutableMemberDetails;
+
+import jakarta.persistence.MapKeyColumn;
 
 /**
  * @author Steve Ebersole
@@ -193,5 +197,18 @@ public class ColumnProcessing {
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		XmlProcessingHelper.applyAttributeIfSpecified( "comment", jaxbColumn.getComment(), columnAnn );
+	}
+
+	public static void applyMapKeyColumn(
+			JaxbMapKeyColumnImpl jaxbMapKeyColumn,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbMapKeyColumn == null ) {
+			return;
+		}
+
+		final MutableAnnotationUsage<MapKeyColumn> columnAnn = XmlProcessingHelper.getOrMakeAnnotation( MapKeyColumn.class, memberDetails, xmlDocumentContext );
+
+		applyColumnDetails( jaxbMapKeyColumn, memberDetails, columnAnn, xmlDocumentContext );
 	}
 }

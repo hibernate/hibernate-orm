@@ -52,10 +52,16 @@ public class ManyToManyAttributeProcessing {
 		XmlAnnotationHelper.applyCascading( jaxbManyToMany.getCascade(), memberDetails, xmlDocumentContext );
 
 		CommonAttributeProcessing.applyAttributeBasics( jaxbManyToMany, memberDetails, manyToManyAnn, accessType, xmlDocumentContext );
-
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbManyToMany, memberDetails, xmlDocumentContext );
 
-		TableProcessing.applyJoinTable( jaxbManyToMany.getJoinTable(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyAttributeOverrides(
+				jaxbManyToMany.getMapKeyAttributeOverrides(),
+				memberDetails,
+				"key",
+				xmlDocumentContext
+		);
+
+		TableProcessing.transformJoinTable( jaxbManyToMany.getJoinTable(), memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applySqlJoinTableRestriction( jaxbManyToMany.getSqlJoinTableRestriction(), memberDetails, xmlDocumentContext );
 

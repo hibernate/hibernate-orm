@@ -23,7 +23,7 @@ import jakarta.persistence.JoinTable;
  * @author Steve Ebersole
  */
 public class TableProcessing {
-	public static MutableAnnotationUsage<JoinTable> applyJoinTable(
+	public static MutableAnnotationUsage<JoinTable> transformJoinTable(
 			JaxbJoinTableImpl jaxbJoinTable,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
@@ -41,12 +41,19 @@ public class TableProcessing {
 
 		final List<JaxbJoinColumnImpl> joinColumns = jaxbJoinTable.getJoinColumn();
 		if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
-			joinTableUsage.setAttributeValue( "joinColumns", JoinColumnProcessing.transformJoinColumnList( joinColumns, xmlDocumentContext ) );
+			joinTableUsage.setAttributeValue( "joinColumns", JoinColumnProcessing.transformJoinColumnList(
+					joinColumns,
+					memberDetails,
+					xmlDocumentContext
+			) );
 		}
-
 		final List<JaxbJoinColumnImpl> inverseJoinColumns = jaxbJoinTable.getInverseJoinColumn();
 		if ( CollectionHelper.isNotEmpty( inverseJoinColumns ) ) {
-			joinTableUsage.setAttributeValue( "inverseJoinColumns", JoinColumnProcessing.transformJoinColumnList( inverseJoinColumns, xmlDocumentContext ) );
+			joinTableUsage.setAttributeValue( "inverseJoinColumns", JoinColumnProcessing.transformJoinColumnList(
+					inverseJoinColumns,
+					memberDetails,
+					xmlDocumentContext
+			) );
 		}
 
 		if ( jaxbJoinTable.getForeignKey() != null ) {

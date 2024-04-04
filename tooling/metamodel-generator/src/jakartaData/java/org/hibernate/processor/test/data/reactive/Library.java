@@ -91,7 +91,7 @@ public interface Library {
 
 	@Find
 	@OrderBy("isbn")
-	Uni<Page<Book>> allBooks(PageRequest<Book> pageRequest);
+	Uni<Page<Book>> allBooks(PageRequest pageRequest);
 
 	@Find
 	@OrderBy("name")

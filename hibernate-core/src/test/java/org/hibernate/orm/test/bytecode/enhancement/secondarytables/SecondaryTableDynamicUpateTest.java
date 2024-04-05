@@ -2,12 +2,13 @@ package org.hibernate.orm.test.bytecode.enhancement.secondarytables;
 
 import org.hibernate.annotations.DynamicUpdate;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,24 +19,23 @@ import jakarta.persistence.SecondaryTable;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @JiraKey("HHH-17587")
-@RunWith(BytecodeEnhancerRunner.class)
-public class SecondaryTableDynamicUpateTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				SecondaryTableDynamicUpateTest.TestEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class SecondaryTableDynamicUpateTest {
 
 	private static final Long ENTITY_ID = 123l;
 	private static final String COL_VALUE = "col";
 	private static final String COL1_VALUE = "col1";
 	private static final String COL2_VALUE = "col2";
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				TestEntity.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					TestEntity testEntity = new TestEntity( ENTITY_ID, COL_VALUE, COL1_VALUE, COL2_VALUE );
 					entityManager.persist( testEntity );
@@ -44,8 +44,8 @@ public class SecondaryTableDynamicUpateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSetSecondaryTableColumnToNull() {
-		inTransaction(
+	public void testSetSecondaryTableColumnToNull(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					TestEntity testEntity = entityManager.find( TestEntity.class, ENTITY_ID );
 					assertThat( testEntity.getTestCol() ).isEqualTo( COL_VALUE );
@@ -55,7 +55,7 @@ public class SecondaryTableDynamicUpateTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				entityManager -> {
 					TestEntity testEntity = entityManager.find( TestEntity.class, ENTITY_ID );
 					assertThat( testEntity ).isNotNull();
@@ -66,7 +66,7 @@ public class SecondaryTableDynamicUpateTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				entityManager -> {
 					TestEntity testEntity = entityManager.find( TestEntity.class, ENTITY_ID );
 					assertThat( testEntity ).isNotNull();
@@ -78,7 +78,7 @@ public class SecondaryTableDynamicUpateTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				entityManager -> {
 					TestEntity testEntity = entityManager.find( TestEntity.class, ENTITY_ID );
 					assertThat( testEntity ).isNotNull();

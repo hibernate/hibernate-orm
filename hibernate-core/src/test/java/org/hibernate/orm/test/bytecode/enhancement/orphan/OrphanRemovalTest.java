@@ -6,12 +6,13 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,26 +26,24 @@ import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.annotations.FetchMode.SELECT;
 import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				OrphanRemovalTest.Entity1.class,
+				OrphanRemovalTest.Entity2.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @JiraKey("HHH-16756")
-public class OrphanRemovalTest extends BaseCoreFunctionalTestCase {
+public class OrphanRemovalTest {
 
 	static final int ENTITY_ID = 1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Entity1.class,
-				Entity2.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Entity1 e1 = new Entity1( ENTITY_ID );
 					Entity2 e2 = new Entity2();
@@ -61,8 +60,8 @@ public class OrphanRemovalTest extends BaseCoreFunctionalTestCase {
 
 
 	@Test
-	public void testRemovingChild() {
-		inTransaction(
+	public void testRemovingChild(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Entity1 e1 = session.byId( Entity1.class ).load( ENTITY_ID );
 					e1.setChild( null );

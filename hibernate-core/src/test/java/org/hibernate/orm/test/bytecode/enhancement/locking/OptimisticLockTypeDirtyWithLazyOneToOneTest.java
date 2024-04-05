@@ -11,15 +11,15 @@ import java.util.List;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -30,31 +30,24 @@ import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
 @JiraKey("HHH-16839")
-public class OptimisticLockTypeDirtyWithLazyOneToOneTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				OptimisticLockTypeDirtyWithLazyOneToOneTest.Address.class,
+				OptimisticLockTypeDirtyWithLazyOneToOneTest.Person.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class OptimisticLockTypeDirtyWithLazyOneToOneTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Address.class,
-				Person.class
-		};
+	SQLStatementInspector statementInspector(SessionFactoryScope scope) {
+		return (SQLStatementInspector) scope.getSessionFactory().getSessionFactoryOptions().getStatementInspector();
 	}
 
-	@Override
-	protected void afterConfigurationBuilt(Configuration configuration) {
-		super.afterConfigurationBuilt( configuration );
-		configuration.setStatementInspector( new SQLStatementInspector() );
-	}
-
-	SQLStatementInspector statementInspector() {
-		return (SQLStatementInspector) sessionFactory().getSessionFactoryOptions().getStatementInspector();
-	}
-
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createMutationQuery( "delete from Person" ).executeUpdate();
 					session.createMutationQuery( "delete from Address" ).executeUpdate();
@@ -63,20 +56,20 @@ public class OptimisticLockTypeDirtyWithLazyOneToOneTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testUpdate() {
-		inTransaction(
+	public void testUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = new Person( 1L, "Name", new Address( 10L, "Street" ) );
 					session.persist( person );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person person = session.find( Person.class, 1L );
 					person.getAddress().setStreet( "new Street" );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Address address = session.find( Address.class, 10L );
 					assertThat( address.getStreet() ).isEqualTo( "new Street" );
@@ -85,18 +78,18 @@ public class OptimisticLockTypeDirtyWithLazyOneToOneTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testUpdate2() {
-		inTransaction(
+	public void testUpdate2(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = new Person( 1L, "Name", new Address( 10L, null ) );
 					session.persist( person );
 				}
 		);
 
-		SQLStatementInspector statementInspector = statementInspector();
+		SQLStatementInspector statementInspector = statementInspector(scope);
 		statementInspector.clear();
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Address address = session.find( Address.class, 10L );
 					address.setStreet( "new Street" );
@@ -110,7 +103,7 @@ public class OptimisticLockTypeDirtyWithLazyOneToOneTest extends BaseCoreFunctio
 		String updateQuery = sqlQueries.get( 1 );
 		updateQuery.contains( "where id=? and street is null" );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Address address = session.find( Address.class, 10L );
 					assertThat( address.getStreet() ).isEqualTo( "new Street" );
@@ -119,17 +112,17 @@ public class OptimisticLockTypeDirtyWithLazyOneToOneTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testUpdate3() {
-		inTransaction(
+	public void testUpdate3(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = new Person( 1L, "Name", new Address( 10L, null ) );
 					session.persist( person );
 				}
 		);
 
-		SQLStatementInspector statementInspector = statementInspector();
+		SQLStatementInspector statementInspector = statementInspector(scope);
 		statementInspector.clear();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Address address = session.find( Address.class, 10L );
 					address.setStreet( "new Street" );
@@ -143,7 +136,7 @@ public class OptimisticLockTypeDirtyWithLazyOneToOneTest extends BaseCoreFunctio
 		String updateQuery = sqlQueries.get( 1 );
 		updateQuery.contains( "where id=? and street=?" );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Address address = session.find( Address.class, 10L );
 					assertThat( address.getStreet() ).isEqualTo( "new Street" );

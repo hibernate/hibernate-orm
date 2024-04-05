@@ -18,24 +18,25 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Immutable;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
-@RunWith(BytecodeEnhancerRunner.class)
-public class FinalFieldEnhancementTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				EntityWithFinalField.class,
-				EntityWithEmbeddedIdWithFinalField.class, EntityWithEmbeddedIdWithFinalField.EmbeddableId.class,
-				EntityWithEmbeddedNonIdWithFinalField.class, EntityWithEmbeddedNonIdWithFinalField.EmbeddableNonId.class
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+			FinalFieldEnhancementTest.EntityWithFinalField.class,
+				FinalFieldEnhancementTest.EntityWithEmbeddedIdWithFinalField.class, FinalFieldEnhancementTest.EntityWithEmbeddedIdWithFinalField.EmbeddableId.class,
+				FinalFieldEnhancementTest.EntityWithEmbeddedNonIdWithFinalField.class, FinalFieldEnhancementTest.EntityWithEmbeddedNonIdWithFinalField.EmbeddableNonId.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class FinalFieldEnhancementTest {
 
 	@Test
 	public void entityWithFinalField_constructor() {
@@ -45,14 +46,14 @@ public class FinalFieldEnhancementTest extends BaseCoreFunctionalTestCase {
 
 	// Just test that the embedded non-ID works correctly over a persist/retrieve cycle
 	@Test
-	public void entityWithFinalField_smokeTest() {
+	public void entityWithFinalField_smokeTest(SessionFactoryScope scope) {
 		EntityWithFinalField persistedEntity = new EntityWithFinalField( "foo" );
 		persistedEntity.setName( "Some name" );
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			s.persist( persistedEntity );
 		} );
 
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			EntityWithFinalField entity = s.find( EntityWithFinalField.class, persistedEntity.getId() );
 			assertThat( entity ).extracting( EntityWithFinalField::getImmutableProperty )
 					.isEqualTo( persistedEntity.getImmutableProperty() );
@@ -61,22 +62,22 @@ public class FinalFieldEnhancementTest extends BaseCoreFunctionalTestCase {
 
 	// Just test that the embedded ID works correctly over a persist/retrieve cycle
 	@Test
-	public void embeddableIdWithFinalField_smokeTest() {
+	public void embeddableIdWithFinalField_smokeTest(SessionFactoryScope scope) {
 		EntityWithEmbeddedIdWithFinalField persistedEntity = new EntityWithEmbeddedIdWithFinalField();
 		persistedEntity.setName( "Some name" );
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			s.persist( persistedEntity );
 		} );
 
 		// Read with the same ID instance
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			EntityWithEmbeddedIdWithFinalField entity = s.find( EntityWithEmbeddedIdWithFinalField.class, persistedEntity.getId() );
 			assertThat( entity ).extracting( EntityWithEmbeddedIdWithFinalField::getId ).extracting( i -> i.id )
 					.isEqualTo( persistedEntity.getId().id );
 		} );
 
 		// Read with a new ID instance
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			EntityWithEmbeddedIdWithFinalField entity = s.find( EntityWithEmbeddedIdWithFinalField.class, EntityWithEmbeddedIdWithFinalField.EmbeddableId.of( persistedEntity.getId().id ) );
 			assertThat( entity ).extracting( EntityWithEmbeddedIdWithFinalField::getId ).extracting( i -> i.id )
 					.isEqualTo( persistedEntity.getId().id );
@@ -87,7 +88,7 @@ public class FinalFieldEnhancementTest extends BaseCoreFunctionalTestCase {
 		// we know Hibernate ORM *has to* instantiate the EmbeddableIdType itself:
 		// it cannot reuse the ID we passed.
 		// And since the EmbeddableIdType has a final field, instantiation will not be able to use a no-arg constructor...
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			EntityWithEmbeddedIdWithFinalField entity =
 					s.createQuery( "from embidwithfinal e where e.name = :name", EntityWithEmbeddedIdWithFinalField.class )
 							.setParameter( "name", persistedEntity.getName() )
@@ -106,15 +107,15 @@ public class FinalFieldEnhancementTest extends BaseCoreFunctionalTestCase {
 
 	// Just test that the embedded non-ID works correctly over a persist/retrieve cycle
 	@Test
-	public void embeddableNonIdWithFinalField_smokeTest() {
+	public void embeddableNonIdWithFinalField_smokeTest(SessionFactoryScope scope) {
 		EntityWithEmbeddedNonIdWithFinalField persistedEntity = new EntityWithEmbeddedNonIdWithFinalField();
 		persistedEntity.setName( "Some name" );
 		persistedEntity.setEmbedded( new EntityWithEmbeddedNonIdWithFinalField.EmbeddableNonId( "foo" ) );
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			s.persist( persistedEntity );
 		} );
 
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			EntityWithEmbeddedNonIdWithFinalField entity = s.find( EntityWithEmbeddedNonIdWithFinalField.class, persistedEntity.getId() );
 			assertThat( entity ).extracting( EntityWithEmbeddedNonIdWithFinalField::getEmbedded )
 					.extracting( EntityWithEmbeddedNonIdWithFinalField.EmbeddableNonId::getImmutableProperty )

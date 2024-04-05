@@ -12,16 +12,15 @@ import java.util.List;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -29,39 +28,33 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Christian Beikov
  */
-@RunWith(BytecodeEnhancerRunner.class)
-public class MultipleBagsInLazyFetchGroupFtechModeSelectTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				MultipleBagsInLazyFetchGroupFetchModeSelectTest.StringsEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class MultipleBagsInLazyFetchGroupFetchModeSelectTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { StringsEntity.class };
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyCollectionsInDefaultFetchGroup( true );
-	}
-
-	@After
-	public void tearDown() {
-		doInJPA( this::sessionFactory, em -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			em.createQuery( "delete from StringsEntity" ).executeUpdate();
 		} );
 	}
 
-	@Before
-	public void prepare() {
-		assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		assertTrue( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 
-		doInJPA( this::sessionFactory, em -> {
+		scope.inTransaction( em -> {
 			StringsEntity entity = new StringsEntity();
 			entity.id = 1L;
 			entity.text = "abc";
@@ -72,9 +65,9 @@ public class MultipleBagsInLazyFetchGroupFtechModeSelectTest extends BaseNonConf
 	}
 
 	@Test
-	public void testGetReference() {
-		Assertions.assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
-		doInJPA( this::sessionFactory, entityManager -> {
+	public void testGetReference(SessionFactoryScope scope) {
+		Assertions.assertTrue( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+		scope.inTransaction( entityManager -> {
 			StringsEntity entity = entityManager.getReference( StringsEntity.class, 1L );
 			assertEquals( 3, entity.someStrings.size() );
 			assertEquals( 4, entity.someStrings2.size() );
@@ -82,9 +75,9 @@ public class MultipleBagsInLazyFetchGroupFtechModeSelectTest extends BaseNonConf
 	}
 
 	@Test
-	public void testFind() {
-		Assertions.assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
-		doInJPA( this::sessionFactory, entityManager -> {
+	public void testFind(SessionFactoryScope scope) {
+		Assertions.assertTrue( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+		scope.inTransaction( entityManager -> {
 			StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
 			assertEquals( 3, entity.someStrings.size() );
 			assertEquals( 4, entity.someStrings2.size() );
@@ -96,7 +89,7 @@ public class MultipleBagsInLazyFetchGroupFtechModeSelectTest extends BaseNonConf
 
 	@Entity(name = "StringsEntity")
 	@Table(name = "STRINGS_ENTITY")
-	private static class StringsEntity {
+	static class StringsEntity {
 
 		@Id
 		Long id;

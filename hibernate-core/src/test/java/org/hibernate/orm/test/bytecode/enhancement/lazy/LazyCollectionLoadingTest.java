@@ -9,14 +9,16 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -39,9 +41,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Simple test for lazy collection handling in the new bytecode support.
@@ -52,27 +53,28 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-10055" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10055" )
+@DomainModel(
+        annotatedClasses = {
+                LazyCollectionLoadingTest.Parent.class, LazyCollectionLoadingTest.Child.class
+        }
+)
+@ServiceRegistry(
+        settings = {
+                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyCollectionLoadingTest {
     private static final int CHILDREN_SIZE = 10;
     private Long parentID;
     private Parent parent;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Parent.class, Child.class};
-    }
-
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Parent parent = new Parent();
             parent.setChildren( new ArrayList<>() );
             for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
@@ -86,8 +88,8 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void testTransaction() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void testTransaction(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Parent parent = s.load( Parent.class, parentID );
             assertThat( parent, notNullValue() );
             assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
@@ -109,9 +111,9 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-14620" )
-    public void testTransaction_noProxy() {
-        doInHibernate( this::sessionFactory, s -> {
+    @JiraKey( "HHH-14620" )
+    public void testTransaction_noProxy(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             // find will not return a proxy, which is exactly what we want here.
             Parent parent = s.find( Parent.class, parentID );
             assertThat( parent, notNullValue() );
@@ -136,8 +138,8 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void testNoTransaction() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void testNoTransaction(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             parent = s.load( Parent.class, parentID );
             assertThat( parent, notNullValue() );
             assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
@@ -161,7 +163,7 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "PARENT" )
-    private static class Parent {
+    static class Parent {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )
@@ -177,7 +179,7 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "CHILD" )
-    private static class Child {
+    static class Child {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )

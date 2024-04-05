@@ -16,64 +16,60 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-13640" )
-@RunWith(BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-13640" )
+@DomainModel(
+		annotatedClasses = {
+				LazyToOnesProxyMergeWithSubclassesTest.Animal.class,
+				LazyToOnesProxyMergeWithSubclassesTest.Primate.class,
+				LazyToOnesProxyMergeWithSubclassesTest.Human.class,
+				LazyToOnesProxyMergeWithSubclassesTest.OtherEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Animal.class );
-		sources.addAnnotatedClass( Primate.class );
-		sources.addAnnotatedClass( Human.class );
-		sources.addAnnotatedClass( OtherEntity.class );
-	}
+public class LazyToOnesProxyMergeWithSubclassesTest {
 
 	@Test
-	public void mergeUpdatedHibernateProxy() {
+	public void mergeUpdatedHibernateProxy(SessionFactoryScope scope) {
 
-		checkAgeInNewSession( 1 );
+		checkAgeInNewSession( scope, 1 );
 
-		final Statistics stats = sessionFactory().getStatistics();
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		final OtherEntity withInitializedHibernateProxy = doInHibernate(
-				this::sessionFactory,
+		final OtherEntity withInitializedHibernateProxy = scope.fromTransaction(
 				session -> {
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertEquals( 1, stats.getPrepareStatementCount() );
@@ -93,15 +89,14 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 2, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 1 );
+		checkAgeInNewSession( scope, 1 );
 		stats.clear();
 
 		// merge updated HibernateProxy to updated HibernateProxy
 
 		withInitializedHibernateProxy.getHuman().setAge( 2 );
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction( 
 				session -> {
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertEquals( 1, stats.getPrepareStatementCount() );
@@ -129,15 +124,14 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 2 );
+		checkAgeInNewSession( scope, 2 );
 		stats.clear();
 
 		// merge updated HibernateProxy to updated enhanced entity
 
 		withInitializedHibernateProxy.getHuman().setAge( 4 );
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final Human human = session.getReference( Human.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( human ) );
@@ -166,15 +160,14 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 4 );
+		checkAgeInNewSession( scope, 4 );
 		stats.clear();
 
 		// merge updated HibernateProxy to uninitialized HibernateProxy
 
 		withInitializedHibernateProxy.getHuman().setAge( 6 );
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertEquals( 1, stats.getPrepareStatementCount() );
@@ -203,15 +196,14 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 6 );
+		checkAgeInNewSession( scope, 6 );
 		stats.clear();
 
 		// merge updated HibernateProxy To uninitialized enhanced proxy
 
 		withInitializedHibernateProxy.getHuman().setAge( 7 );
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final Human human = session.getReference( Human.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( human ) );
@@ -234,19 +226,18 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 7 );
+		checkAgeInNewSession( scope, 7 );
 	}
 
 	@Test
-	public void mergeUpdatedEnhancedProxy() {
+	public void mergeUpdatedEnhancedProxy(SessionFactoryScope scope) {
 
-		checkAgeInNewSession( 1 );
+		checkAgeInNewSession( scope, 1 );
 
-		final Statistics stats = sessionFactory().getStatistics();
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		final OtherEntity withInitializedEnhancedProxy = doInHibernate(
-				this::sessionFactory,
+		final OtherEntity withInitializedEnhancedProxy = scope.fromTransaction(
 				session -> {
 
 					final Human human = session.getReference( Human.class, "A Human" );
@@ -272,15 +263,14 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 2, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 1 );
+		checkAgeInNewSession( scope, 1 );
 		stats.clear();
 
 		// merge updated enhanced proxy to updated HibernateProxy
 
 		withInitializedEnhancedProxy.getHuman().setAge( 2 );
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertEquals( 1, stats.getPrepareStatementCount() );
@@ -309,15 +299,14 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 2 );
+		checkAgeInNewSession( scope, 2 );
 		stats.clear();
 
 		// merge updated enhanced proxy to updated enhanced proxy
 
 		withInitializedEnhancedProxy.getHuman().setAge( 4 );
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final Human human = session.getReference( Human.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( human ) );
@@ -344,15 +333,14 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 4 );
+		checkAgeInNewSession( scope, 4 );
 		stats.clear();
 
 		// merge updated enhanced proxy to uninitialized HibernateProxy
 
 		withInitializedEnhancedProxy.getHuman().setAge( 6 );
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertEquals( 1, stats.getPrepareStatementCount() );
@@ -374,15 +362,14 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 6 );
+		checkAgeInNewSession( scope, 6 );
 		stats.clear();
 
 		// merge updated enhanced proxy to uninitialized enhanced proxy
 
 		withInitializedEnhancedProxy.getHuman().setAge( 7 );
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final Human human = session.getReference( Human.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( human ) );
@@ -405,19 +392,18 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 7 );
+		checkAgeInNewSession( scope, 7 );
 	}
 
 	@Test
-	public void mergeUninitializedHibernateProxy() {
+	public void mergeUninitializedHibernateProxy(SessionFactoryScope scope) {
 
-		checkAgeInNewSession( 1 );
+		checkAgeInNewSession( scope, 1 );
 
-		final Statistics stats = sessionFactory().getStatistics();
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		final OtherEntity withUninitializedHibernateProxy = doInHibernate(
-				this::sessionFactory,
+		final OtherEntity withUninitializedHibernateProxy = scope.fromTransaction(
 				session -> {
 
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
@@ -434,13 +420,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 1, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 1 );
+		checkAgeInNewSession( scope, 1 );
 		stats.clear();
 
 		// merge uninitialized HibernateProxy to updated HibernateProxy
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertEquals( 1, stats.getPrepareStatementCount() );
@@ -470,13 +455,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 3 );
+		checkAgeInNewSession( scope, 3 );
 		stats.clear();
 
 		// merge uninitialized HibernateProxy to updated enhanced proxy
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final Human human = session.getReference( Human.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( human ) );
@@ -503,13 +487,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 5 );
+		checkAgeInNewSession( scope, 5 );
 		stats.clear();
 
 		// merge uninitialized HibernateProxy to uninitialized HibernateProxy
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertEquals( 1, stats.getPrepareStatementCount() );
@@ -528,13 +511,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 1, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 5 );
+		checkAgeInNewSession( scope, 5 );
 		stats.clear();
 
 		// merge uninitialized HibernateProxy to uninitialized enhanced proxy
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final Human human = session.getReference( Human.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( human ) );
@@ -555,19 +537,18 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 1, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 5 );
+		checkAgeInNewSession( scope, 5 );
 	}
 
 	@Test
-	public void testmergeUninitializedEnhancedProxy() {
+	public void testmergeUninitializedEnhancedProxy(SessionFactoryScope scope) {
 
-		checkAgeInNewSession( 1 );
+		checkAgeInNewSession( scope, 1 );
 
-		final Statistics stats = sessionFactory().getStatistics();
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		final OtherEntity withUninitializedEnhancedProxy = doInHibernate(
-				this::sessionFactory,
+		final OtherEntity withUninitializedEnhancedProxy = scope.fromTransaction(
 				session -> {
 
 					final Human human = session.getReference( Human.class, "A Human" );
@@ -588,13 +569,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 1, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 1 );
+		checkAgeInNewSession( scope, 1 );
 		stats.clear();
 
 		// merge uninitialized enhanced proxy to updated HibernateProxy
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertEquals( 1, stats.getPrepareStatementCount() );
@@ -623,13 +603,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 3 );
+		checkAgeInNewSession( scope, 3 );
 		stats.clear();
 
 		// merge uninitialized enhanced proxy to updated enhanced entity
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final Human human = session.getReference( Human.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( human ) );
@@ -656,13 +635,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 3, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 5 );
+		checkAgeInNewSession( scope, 5 );
 		stats.clear();
 
 		// merge uninitialized enhanced proxy to uninitialized HibernateProxy
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertEquals( 1, stats.getPrepareStatementCount() );
@@ -681,13 +659,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 1, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 5 );
+		checkAgeInNewSession( scope, 5 );
 		stats.clear();
 
 		// merge uninitialized enhanced proxy to uninitialized enhanced proxy
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					final Human human = session.getReference( Human.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( human ) );
@@ -708,24 +685,21 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		assertEquals( 1, stats.getPrepareStatementCount() );
 		stats.clear();
 
-		checkAgeInNewSession( 5 );
+		checkAgeInNewSession( scope, 5 );
 	}
 
-	private void checkAgeInNewSession(int expectedAge) {
-
-		doInHibernate(
-				this::sessionFactory,
+	private void checkAgeInNewSession(SessionFactoryScope scope, int expectedAge) {
+		scope.inTransaction(
 				session -> {
 					final Human human = session.get( Human.class, "A Human" );
 					assertEquals( expectedAge, human.getAge() );
 				}
 		);
-
 	}
 
-	@Before
-	public void setupData() {
-		inTransaction(
+	@BeforeEach
+	public void setupData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Human human = new Human( "A Human" );
 					OtherEntity otherEntity = new OtherEntity( "test1" );
@@ -740,9 +714,9 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from OtherEntity" ).executeUpdate();
 					session.createQuery( "delete from Human" ).executeUpdate();

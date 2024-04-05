@@ -34,18 +34,17 @@ import java.lang.reflect.Method;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
 public class DirtyCheckingWithEmbeddableAndNonVisibleGenericMappedSuperclassTest {
 
@@ -99,7 +98,7 @@ public class DirtyCheckingWithEmbeddableAndNonVisibleGenericMappedSuperclassTest
 		assertThat( entity )
 				.extracting( TRACKER_FIELD_NAME ).isInstanceOf( SimpleFieldTracker.class );
 		assertThat( entity.getEmbedded() )
-				.extracting( TRACKER_COMPOSITE_FIELD_NAME ).isInstanceOf( CompositeOwnerTracker.class);
+				.extracting( TRACKER_COMPOSITE_FIELD_NAME ).isInstanceOf( CompositeOwnerTracker.class );
 
 		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( true );
 		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) )

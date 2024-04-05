@@ -8,14 +8,15 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import java.io.Serializable;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -26,19 +27,20 @@ import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				LazyOneToOneMappedByInEmbeddedTest.EntityA.class, LazyOneToOneMappedByInEmbeddedTest.EntityB.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-@TestForIssue(jiraKey = "HHH-15606")
-public class LazyOneToOneMappedByInEmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
+@JiraKey("HHH-15606")
+public class LazyOneToOneMappedByInEmbeddedTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityA.class, EntityB.class };
-	}
-
-	@Before
-	public void prepare() {
-		inTransaction( s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EntityA entityA = new EntityA( 1 );
 			EntityB entityB = new EntityB( 2 );
 			entityA.getEmbedded().setEntityB( entityB );
@@ -48,17 +50,17 @@ public class LazyOneToOneMappedByInEmbeddedTest extends BaseNonConfigCoreFunctio
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction( s -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			s.createMutationQuery( "delete entityb" ).executeUpdate();
 			s.createMutationQuery( "delete entitya" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	public void testGet() {
-		inTransaction( s -> {
+	public void testGet(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EntityA entityA = s.get( EntityA.class, "1" );
 
 			assertThat( entityA ).isNotNull();
@@ -72,8 +74,8 @@ public class LazyOneToOneMappedByInEmbeddedTest extends BaseNonConfigCoreFunctio
 	}
 
 	@Test
-	public void testGetReference() {
-		inTransaction( s -> {
+	public void testGetReference(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EntityA entityA = s.getReference( EntityA.class, "1" );
 
 			assertThat( entityA ).isNotNull();

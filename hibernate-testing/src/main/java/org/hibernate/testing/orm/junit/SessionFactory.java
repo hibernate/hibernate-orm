@@ -56,4 +56,6 @@ public @interface SessionFactory {
 	 * @see SQLStatementInspector
 	 */
 	boolean useCollectingStatementInspector() default false;
+
+	boolean applyCollectionsInDefaultFetchGroup() default true;
 }

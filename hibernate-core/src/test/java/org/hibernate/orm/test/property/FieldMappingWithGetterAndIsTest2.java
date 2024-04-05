@@ -6,13 +6,12 @@
  */
 package org.hibernate.orm.test.property;
 
-import org.hibernate.boot.MetadataSources;
-
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -22,18 +21,19 @@ import jakarta.persistence.Table;
 /**
  * @author Steve Ebersole
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+			FieldMappingWithGetterAndIsTest2.Tester.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced(testEnhancedClasses = FieldMappingWithGetterAndIsTest2.Tester.class)
 @EnhancementOptions( inlineDirtyChecking = true, lazyLoading = true )
-public class FieldMappingWithGetterAndIsTest2 extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Tester.class );
-	}
+public class FieldMappingWithGetterAndIsTest2 {
 
 	@Test
-	public void testResolution() {
-		sessionFactory();
+	public void testResolution(SessionFactoryScope scope) {
+		scope.getSessionFactory();
 	}
 
 	@Entity(name="Tester")

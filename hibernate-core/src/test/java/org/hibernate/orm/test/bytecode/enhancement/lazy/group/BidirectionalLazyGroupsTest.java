@@ -23,19 +23,19 @@ import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import org.hamcrest.CoreMatchers;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests removing non-owning side of the bidirectional association,
@@ -43,22 +43,24 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-13241")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-13241")
+@DomainModel(
+		annotatedClasses = {
+				BidirectionalLazyGroupsTest.Employer.class,
+				BidirectionalLazyGroupsTest.Employee.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({
 		EnhancerTestContext.class,
 		BidirectionalLazyGroupsTest.NoDirtyCheckEnhancementContext.class
 })
-public class BidirectionalLazyGroupsTest extends BaseCoreFunctionalTestCase {
-
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Employer.class, Employee.class };
-	}
+public class BidirectionalLazyGroupsTest {
 
 	@Test
-	public void testRemoveCollectionOwnerNoCascade() {
-		inTransaction(
-				(session) -> {
+	public void testRemoveCollectionOwnerNoCascade(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					final Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
 					employer.addEmployee( new Employee( "Jack" ) );
@@ -70,21 +72,19 @@ public class BidirectionalLazyGroupsTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
-				(session) -> {
+		scope.inTransaction( session -> {
 					final Employer employer = session.createQuery( "from Employer e", Employer.class ).getSingleResult();
 					session.remove( employer );
 					for ( Employee employee : employer.getEmployees() ) {
 						assertTrue( Hibernate.isPropertyInitialized( employee, "employer") );
-						assertThat( employee.getEmployer(), CoreMatchers.sameInstance( employer ) );
+						assertThat( employee.getEmployer() ).isSameAs( employer );
 
 						session.remove( employee );
 					}
 				}
 		);
 
-		inTransaction(
-				(session) -> {
+		scope.inTransaction( session -> {
 					assertNull( session.find( Employer.class, "RedHat" ) );
 					assertNull( session.createQuery( "from Employee e", Employee.class ).uniqueResult() );
 				}

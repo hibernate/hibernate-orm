@@ -12,51 +12,51 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				EnhancedFetchTest.School.class, EnhancedFetchTest.Student.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class EnhancedFetchTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-		sfb.applyCollectionsInDefaultFetchGroup( true );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( School.class );
-		sources.addAnnotatedClass( Student.class );
-	}
+public class EnhancedFetchTest {
 
 	@Test
-	public void testFetch() {
-		inStatelessTransaction(
+	public void testFetch(SessionFactoryScope scope) {
+		scope.inStatelessTransaction(
 				session -> {
 					School school = new School( "BHS" );
 					Student student = new Student( "gavin" );
@@ -66,9 +66,9 @@ public class EnhancedFetchTest extends BaseNonConfigCoreFunctionalTestCase {
 				}
 		);
 
-		inStatelessSession(
+		scope.inStatelessSession(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 					final Student student = session.get( Student.class, "gavin" );
 					assertFalse( Hibernate.isInitialized( student.getSchool() ) );
@@ -83,9 +83,9 @@ public class EnhancedFetchTest extends BaseNonConfigCoreFunctionalTestCase {
 				}
 		);
 
-		inStatelessSession(
+		scope.inStatelessSession(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 					final School school = session.get( School.class, "BHS" );
 					assertFalse( Hibernate.isInitialized( school.getStudents() ) );
@@ -99,9 +99,9 @@ public class EnhancedFetchTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Pupil" ).executeUpdate();
 					session.createQuery( "delete from School" ).executeUpdate();

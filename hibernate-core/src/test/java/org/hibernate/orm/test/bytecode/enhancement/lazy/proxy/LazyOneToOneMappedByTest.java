@@ -6,20 +6,21 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
-import java.util.Map;
-
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -29,24 +30,25 @@ import jakarta.persistence.OneToOne;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				LazyOneToOneMappedByTest.EntityA.class, LazyOneToOneMappedByTest.EntityB.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-@TestForIssue(jiraKey = "HHH-15606")
-public class LazyOneToOneMappedByTest extends BaseNonConfigCoreFunctionalTestCase {
+@JiraKey("HHH-15606")
+public class LazyOneToOneMappedByTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityA.class, EntityB.class };
-	}
-
-	@Override
-	protected void addSettings(Map<String, Object> settings) {
-		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Before
-	public void prepare() {
-		inTransaction( s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EntityA entityA = new EntityA( 1, "A" );
 			EntityB entityB = new EntityB( 2 );
 			entityA.setEntityB( entityB );
@@ -56,19 +58,19 @@ public class LazyOneToOneMappedByTest extends BaseNonConfigCoreFunctionalTestCas
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction( s -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			s.createMutationQuery( "delete entityb" ).executeUpdate();
 			s.createMutationQuery( "delete entitya" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	public void testGet() {
-		final Statistics stats = sessionFactory().getStatistics();
+	public void testGet(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			EntityA entityA = s.get( EntityA.class, "1" );
 			assertThat( stats.getPrepareStatementCount() ).isEqualTo( 1 );
 			assertThat( entityA ).isNotNull();
@@ -86,10 +88,10 @@ public class LazyOneToOneMappedByTest extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testGetReference() {
-		final Statistics stats = sessionFactory().getStatistics();
+	public void testGetReference(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			EntityA entityA = s.getReference( EntityA.class, "1" );
 			assertThat( stats.getPrepareStatementCount() ).isEqualTo( 0 );
 			assertThat( entityA ).isNotNull();

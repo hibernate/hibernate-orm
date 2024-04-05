@@ -691,4 +691,11 @@ abstract public class DialectFeatureChecks {
 			return dialect.supportsCaseInsensitiveLike();
 		}
 	}
+
+	public static class SupportsNClob implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.getNationalizationSupport() == NationalizationSupport.EXPLICIT;
+		}
+	}
 }

@@ -6,13 +6,13 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -25,20 +25,21 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@TestForIssue( jiraKey = "HHH-10708" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class UnexpectedDeleteTest3 extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-10708")
+@DomainModel(
+        annotatedClasses = {
+                UnexpectedDeleteTest3.Parent.class, UnexpectedDeleteTest3.Child.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class UnexpectedDeleteTest3 {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Parent.class, Child.class};
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Child child = new Child();
             child.setId( 2L );
             s.save( child );
@@ -53,8 +54,8 @@ public class UnexpectedDeleteTest3 extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Parent parent = s.get( Parent.class, 1L );
            
             Child child = new Child();
@@ -67,9 +68,9 @@ public class UnexpectedDeleteTest3 extends BaseCoreFunctionalTestCase {
             s.save( parent );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Parent application = s.get( Parent.class, 1L );
-            Assert.assertEquals( "Loaded Children collection has unexpected size", 2, application.getChildren().size() );
+            assertEquals( 2, application.getChildren().size(), "Loaded Children collection has unexpected size" );
         } );
     }
 
@@ -77,7 +78,7 @@ public class UnexpectedDeleteTest3 extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "CHILD" )
-    private static class Child {
+    static class Child {
 
         Long id;
 
@@ -94,7 +95,7 @@ public class UnexpectedDeleteTest3 extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "PARENT" )
-    private static class Parent {
+    static class Parent {
 
         Long id;
         Set<String> names;

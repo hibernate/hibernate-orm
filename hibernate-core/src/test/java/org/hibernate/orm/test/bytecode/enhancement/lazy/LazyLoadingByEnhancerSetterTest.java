@@ -6,16 +6,17 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.cfg.AvailableSettings;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -28,7 +29,7 @@ import jakarta.persistence.Table;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This tests issues HHH-11624. The fix is also for HHH-10747 (and HHH-11476) and is a change on the enhanced setter.
@@ -36,31 +37,27 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
  * @author Luis Barreiro
  */
 
-@TestForIssue( jiraKey = "HHH-10747" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10747" )
+@DomainModel(
+        annotatedClasses = {
+                LazyLoadingByEnhancerSetterTest.ItemField.class, LazyLoadingByEnhancerSetterTest.ItemProperty.class
+        }
+)
+@ServiceRegistry(
+        settings = {
+                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyLoadingByEnhancerSetterTest {
 
     private Item item, mergedItem;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{ItemField.class, ItemProperty.class};
-    }
-
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( Environment.USE_SECOND_LEVEL_CACHE, false );
-        configuration.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, true );
-    }
-
-    @Before
-    public void prepare() {
-
-    }
-
     @Test
-    public void testField() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void testField(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             ItemField input = new ItemField();
             input.name = "F";
             input.parameters = new HashMap<>();
@@ -69,22 +66,22 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
             s.persist( input );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             // A parameters map is created with the class and is being compared to the persistent map (by the generated code) -- it shouldn't
             item = s.find( ItemField.class, "F" );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             mergedItem = (Item) s.merge( item );
         } );
 
-        Assert.assertEquals( 2, mergedItem.getParameters().size() );
+        assertEquals( 2, mergedItem.getParameters().size() );
     }
 
     @Test
     @FailureExpected( jiraKey = "HHH-10747" )
-    public void testProperty() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void testProperty(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             ItemProperty input = new ItemProperty();
             input.setName( "P" );
             Map<String, String> parameters = new HashMap<>();
@@ -94,16 +91,16 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
             s.persist( input );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             // A parameters map is created with the class and is being compared to the persistent map (by the generated code) -- it shouldn't
             item = s.find( ItemProperty.class, "P" );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             mergedItem = (Item) s.merge( item );
         } );
 
-        Assert.assertEquals( 2, mergedItem.getParameters().size() );
+        assertEquals( 2, mergedItem.getParameters().size() );
     }
 
     // --- //
@@ -114,7 +111,7 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
 
     @Entity
     @Table( name = "ITEM_F" )
-    private static class ItemField implements Item {
+    static class ItemField implements Item {
 
         @Id
         @Column( nullable = false )
@@ -134,7 +131,7 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
 
     @Entity
     @Table( name = "ITEM_P" )
-    private static class ItemProperty implements Item {
+    static class ItemProperty implements Item {
 
         private String aName;
 

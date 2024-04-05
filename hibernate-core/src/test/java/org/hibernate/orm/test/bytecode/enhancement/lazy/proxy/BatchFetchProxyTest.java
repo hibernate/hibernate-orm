@@ -16,45 +16,59 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
 
-@TestForIssue(jiraKey = "HHH-11147")
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey("HHH-11147")
+@DomainModel(
+		annotatedClasses = {
+				BatchFetchProxyTest.Employee.class,
+				BatchFetchProxyTest.Employer.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.SHOW_SQL, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
+public class BatchFetchProxyTest {
 
 	private static int NUMBER_OF_ENTITIES = 20;
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void testBatchAssociationFetch() {
-		inTransaction(
+	@JiraKey("HHH-11147")
+	public void testBatchAssociationFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics statistics = sessionFactory().getStatistics();
+					final Statistics statistics = scope.getSessionFactory().getStatistics();
 					statistics.clear();
 					List<Employee> employees = session.createQuery( "from Employee", Employee.class ).getResultList();
 
@@ -74,19 +88,19 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 					}
 
 					// assert that all 20 Employee and all 20 Employers have been loaded
-					assertThat( statistics.getEntityLoadCount(), is( 40L ) );
+					assertThat( statistics.getEntityLoadCount() ).isEqualTo( 40L );
 					// but assert that it only took 3 queries (the initial plus the 2 batch fetches)
-					assertThat( statistics.getPrepareStatementCount(), is( 3L ) );
+					assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 3L );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void testBatchAssociation() {
-		inTransaction(
+	@JiraKey("HHH-11147")
+	public void testBatchAssociation(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics statistics = sessionFactory().getStatistics();
+					final Statistics statistics = scope.getSessionFactory().getStatistics();
 					statistics.clear();
 					List<Employee> employees = session.createQuery( "from Employee", Employee.class ).getResultList();
 
@@ -111,11 +125,11 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void testBatchEntityLoad() {
-		inTransaction(
+	@JiraKey("HHH-11147")
+	public void testBatchEntityLoad(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics statistics = sessionFactory().getStatistics();
+					final Statistics statistics = scope.getSessionFactory().getStatistics();
 					statistics.clear();
 
 					List<Employer> employers = new ArrayList<>();
@@ -144,11 +158,11 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void testBatchEntityLoadThenModify() {
-		inTransaction(
+	@JiraKey("HHH-11147")
+	public void testBatchEntityLoadThenModify(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Statistics statistics = sessionFactory().getStatistics();
+					final Statistics statistics = scope.getSessionFactory().getStatistics();
 					statistics.clear();
 
 					List<Employer> employers = new ArrayList<>();
@@ -175,7 +189,7 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
 						final Employer employer = session.get( Employer.class, i + 1 );
@@ -185,17 +199,9 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Employee.class,
-				Employer.class
-		};
-	}
-
-	@Before
-	public void setUpData() {
-		inTransaction(
+	@BeforeEach
+	public void setUpData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
 						final Employee employee = new Employee();
@@ -211,30 +217,14 @@ public class BatchFetchProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void cleanupDate() {
-		inTransaction(
+	@AfterEach
+	public void cleanupDate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Employee" ).executeUpdate();
 					session.createQuery( "delete from Employer" ).executeUpdate();
 				}
 		);
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-		ssrb.applySetting( AvailableSettings.SHOW_SQL, true );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
 	}
 
 	@Entity(name = "Employee")

@@ -7,15 +7,16 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.basic;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -26,33 +27,34 @@ import jakarta.persistence.Table;
 
 import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyBasicPropertyAccessTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+        annotatedClasses = {
+                LazyBasicPropertyAccessTest.LazyEntity.class
+        }
+)
+@ServiceRegistry(
+        settings = {
+                @Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false"),
+                @Setting(name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true"),
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyBasicPropertyAccessTest {
 
     private LazyEntity entity;
     private Long entityId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{LazyEntity.class};
-    }
-
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             LazyEntity entity = new LazyEntity();
             entity.setDescription( "desc" );
             s.persist( entity );
@@ -61,20 +63,20 @@ public class LazyBasicPropertyAccessTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void testAttachedUpdate() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void testAttachedUpdate(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             entity = s.get( LazyEntity.class, entityId );
 
-            Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
+            assertFalse( isPropertyInitialized( entity, "description" ) );
             checkDirtyTracking( entity );
 
             assertEquals( "desc", entity.getDescription() );
             assertTrue( isPropertyInitialized( entity, "description" ) );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             entity = s.get( LazyEntity.class, entityId );
-            Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
+            assertFalse( isPropertyInitialized( entity, "description" ) );
             entity.setDescription( "desc1" );
 
             checkDirtyTracking( entity, "description" );
@@ -83,26 +85,26 @@ public class LazyBasicPropertyAccessTest extends BaseCoreFunctionalTestCase {
             assertTrue( isPropertyInitialized( entity, "description" ) );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             entity = s.get( LazyEntity.class, entityId );
             assertEquals( "desc1", entity.getDescription() );
         } );
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-11882")
-    public void testDetachedUpdate() {
-        doInHibernate( this::sessionFactory, s -> {
+    @JiraKey("HHH-11882")
+    public void testDetachedUpdate(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             entity = s.get( LazyEntity.class, entityId );
 
-            Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
+            assertFalse( isPropertyInitialized( entity, "description" ) );
             checkDirtyTracking( entity );
 
             assertEquals( "desc", entity.getDescription() );
             assertTrue( isPropertyInitialized( entity, "description" ) );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             entity.setDescription( "desc1" );
             s.update( entity );
 
@@ -112,12 +114,12 @@ public class LazyBasicPropertyAccessTest extends BaseCoreFunctionalTestCase {
             assertTrue( isPropertyInitialized( entity, "description" ) );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             entity = s.get( LazyEntity.class, entityId );
             assertEquals( "desc1", entity.getDescription() );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             entity.setDescription( "desc2" );
             LazyEntity mergedEntity = (LazyEntity) s.merge( entity );
 
@@ -128,7 +130,7 @@ public class LazyBasicPropertyAccessTest extends BaseCoreFunctionalTestCase {
             assertTrue( isPropertyInitialized( mergedEntity, "description" ) );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             entity = s.get( LazyEntity.class, entityId );
             assertEquals( "desc2", entity.getDescription() );
         } );
@@ -138,7 +140,7 @@ public class LazyBasicPropertyAccessTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "LAZY_FIELD_ENTITY" )
-    private static class LazyEntity {
+    static class LazyEntity {
         Long id;
         String description;
 

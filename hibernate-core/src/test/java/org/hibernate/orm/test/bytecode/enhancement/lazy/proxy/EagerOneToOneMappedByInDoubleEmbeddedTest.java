@@ -2,37 +2,38 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import java.io.Serializable;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				EagerOneToOneMappedByInDoubleEmbeddedTest.EntityA.class, EagerOneToOneMappedByInDoubleEmbeddedTest.EntityB.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-@TestForIssue(jiraKey = "HHH-15967")
-public class EagerOneToOneMappedByInDoubleEmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
+@JiraKey("HHH-15967")
+public class EagerOneToOneMappedByInDoubleEmbeddedTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityA.class, EntityB.class };
-	}
-
-	@Before
-	public void prepare() {
-		inTransaction( s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EntityA entityA = new EntityA( 1 );
 			EntityB entityB = new EntityB( 2 );
 
@@ -49,9 +50,9 @@ public class EagerOneToOneMappedByInDoubleEmbeddedTest extends BaseNonConfigCore
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from EntityB" ).executeUpdate();
 					session.createQuery( "delete from EntityA" ).executeUpdate();
@@ -60,8 +61,8 @@ public class EagerOneToOneMappedByInDoubleEmbeddedTest extends BaseNonConfigCore
 	}
 
 	@Test
-	public void testGetEntityA() {
-		inTransaction(
+	public void testGetEntityA(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					EntityA entityA = session.get( EntityA.class, 1 );
 					assertThat( entityA ).isNotNull();
@@ -74,8 +75,8 @@ public class EagerOneToOneMappedByInDoubleEmbeddedTest extends BaseNonConfigCore
 	}
 
 	@Test
-	public void testGetReferenceEntityA() {
-		inTransaction(
+	public void testGetReferenceEntityA(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					EntityA entityA = session.getReference( EntityA.class, 1 );
 					assertThat( entityA ).isNotNull();

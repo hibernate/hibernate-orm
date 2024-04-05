@@ -17,21 +17,17 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.CacheRegionStatistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.not;
@@ -39,41 +35,32 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(BytecodeEnhancerRunner.class)
-public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTestCase {
+import org.junit.Assert;
+import org.junit.jupiter.api.Test;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{Employee.class};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty(AvailableSettings.USE_SECOND_LEVEL_CACHE, true);
-		configuration.setProperty(AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, false);
-		configuration.setProperty(AvailableSettings.GENERATE_STATISTICS, true);
-	}
-
-	@Override
-	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.addService(
-				SessionFactoryBuilderService.class,
-				(SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-					SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-							metadata.getMetadataBuildingOptions().getServiceRegistry(),
-							bootstrapContext
-					);
-					// This test only makes sense if association properties *can* be uninitialized.
-					optionsBuilder.enableCollectionInDefaultFetchGroup( false );
-					return new SessionFactoryBuilderImpl( metadata, optionsBuilder, bootstrapContext );
-				}
-		);
-	}
+@DomainModel(
+		annotatedClasses = {
+				UninitializedAssociationsInCacheTest.Employee.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory(
+		// This test only makes sense if association properties *can* be uninitialized.
+		applyCollectionsInDefaultFetchGroup = false
+)
+@BytecodeEnhanced
+public class UninitializedAssociationsInCacheTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11766")
-	public void attributeLoadingFromCache() {
-		inTransaction(
+	@JiraKey("HHH-11766")
+	public void attributeLoadingFromCache(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(s) -> {
 					Employee boss = new Employee( 1, "boss" );
 					Employee teamleader = new Employee( 2, "leader" );
@@ -90,11 +77,11 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 				}
 		);
 
-		sessionFactory().getCache().evictAll();
-		sessionFactory().getStatistics().clear();
-		CacheRegionStatistics regionStatistics = sessionFactory().getStatistics().getCacheRegionStatistics( "Employee" );
+		scope.getSessionFactory().getCache().evictAll();
+		scope.getSessionFactory().getStatistics().clear();
+		CacheRegionStatistics regionStatistics = scope.getSessionFactory().getStatistics().getCacheRegionStatistics( "Employee" );
 
-		inTransaction(
+		scope.inTransaction(
 				(s) -> {
 					final Employee boss = s.find( Employee.class, 1 );
 					Assert.assertEquals( "boss", boss.regularString );
@@ -124,7 +111,7 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 		assertEquals( 3, regionStatistics.getMissCount() );
 		assertEquals( 3, regionStatistics.getPutCount() );
 
-		inTransaction(
+		scope.inTransaction(
 				(s) -> {
 					final Employee boss = s.find( Employee.class, 1 );
 					final Employee leader = s.find( Employee.class, 2 );
@@ -164,7 +151,7 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 	@Table(name = "EMPLOYEE_TABLE")
 	@Cacheable
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "Employee")
-	private static class Employee {
+	static class Employee {
 		@Id
 		Integer id;
 

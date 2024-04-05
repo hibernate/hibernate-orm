@@ -9,13 +9,14 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -24,24 +25,24 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				MultiLazyBasicInLazyGroupUpdateToNullTest.LazyEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext( { EnhancerTestContext.class, NoDirtyCheckingContext.class} )
-public class MultiLazyBasicInLazyGroupUpdateToNullTest extends BaseCoreFunctionalTestCase {
+public class MultiLazyBasicInLazyGroupUpdateToNullTest {
 
 	private Long entityId;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { LazyEntity.class };
-	}
-
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			LazyEntity entity = new LazyEntity();
 			entity.setEagerProperty( "eager" );
 			entity.setLazyProperty1( "update1" );
@@ -52,13 +53,13 @@ public class MultiLazyBasicInLazyGroupUpdateToNullTest extends BaseCoreFunctiona
 	}
 
 	@Test
-	public void updateOneLazyProperty() {
+	public void updateOneLazyProperty(SessionFactoryScope scope) {
 		// non-null -> null
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( null );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertNull( entity.getLazyProperty1() );
 			assertNotNull( entity.getLazyProperty2() );
@@ -67,14 +68,14 @@ public class MultiLazyBasicInLazyGroupUpdateToNullTest extends BaseCoreFunctiona
 	}
 
 	@Test
-	public void updateOneEagerPropertyAndOneLazyProperty() {
+	public void updateOneEagerPropertyAndOneLazyProperty(SessionFactoryScope scope) {
 		// non-null -> null
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setEagerProperty( null );
 			entity.setLazyProperty1( null );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertNull( entity.getEagerProperty() );
 			assertNull( entity.getLazyProperty1() );
@@ -83,14 +84,14 @@ public class MultiLazyBasicInLazyGroupUpdateToNullTest extends BaseCoreFunctiona
 	}
 
 	@Test
-	public void updateAllLazyProperties() {
+	public void updateAllLazyProperties(SessionFactoryScope scope) {
 		// non-null -> null
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( null );
 			entity.setLazyProperty2( null );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertNull( entity.getLazyProperty1() );
 			assertNull( entity.getLazyProperty2() );
@@ -100,7 +101,7 @@ public class MultiLazyBasicInLazyGroupUpdateToNullTest extends BaseCoreFunctiona
 
 	@Entity
 	@Table(name = "LAZY_ENTITY")
-	private static class LazyEntity {
+	static class LazyEntity {
 		@Id
 		@GeneratedValue
 		Long id;

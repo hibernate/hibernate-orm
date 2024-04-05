@@ -6,11 +6,12 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.basic;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
@@ -21,44 +22,45 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 
-import org.hibernate.SessionFactory;
-
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-9529" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class CrossEnhancementTest extends BaseCoreFunctionalTestCase {
-
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Parent.class, Child.class, ChildKey.class};
-    }
+@JiraKey( "HHH-9529" )
+@DomainModel(
+        annotatedClasses = {
+              CrossEnhancementTest.Parent.class, CrossEnhancementTest.Child.class, CrossEnhancementTest.ChildKey.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class CrossEnhancementTest {
 
     @Test
-    public void test() {
-        sessionFactory().close();
-        buildSessionFactory();
-    }
+    public void test(SessionFactoryScope scope) {
+		//        sessionFactory().close();
+		//        buildSessionFactory();
+		scope.getSessionFactory().close();
+        // TODO: I do not get this test ^ and not sure how to update it ...
+	}
 
     // --- //
 
     @Entity
     @Table( name = "PARENT" )
-    private static class Parent {
+    static class Parent {
         @Id
         String id;
     }
 
     @Embeddable
-    private static class ChildKey implements Serializable {
+    static class ChildKey implements Serializable {
         String parent;
         String type;
     }
 
     @Entity
     @Table( name = "CHILD" )
-    private static class Child {
+    static class Child {
         @EmbeddedId
         ChildKey id;
 

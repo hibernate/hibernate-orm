@@ -1,14 +1,14 @@
 package org.hibernate.orm.test.bytecode.enhancement.naturalid;
 
-import org.hibernate.Hibernate;
 import org.hibernate.annotations.NaturalId;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,23 +16,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				QueryWithProxyAsParametersTest.Parent.class,
+				QueryWithProxyAsParametersTest.Child.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @JiraKey( "HHH-17881" )
-public class QueryWithProxyAsParametersTest extends BaseCoreFunctionalTestCase {
+public class QueryWithProxyAsParametersTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				Parent.class,
-				Child.class
-		};
-	}
-
-	@Before
-	public void setUp(){
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope){
+		scope.inTransaction(
 				session -> {
 					Child child = new Child(1l, "abc", "Andrea");
 					Parent parent = new Parent(2l, "Lionello", child);
@@ -43,8 +42,8 @@ public class QueryWithProxyAsParametersTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQuery(){
-		inTransaction(
+	public void testQuery(SessionFactoryScope scope){
+		scope.inTransaction(
 				session -> {
 					Child child = session.getReference( Child.class, 1l );
 

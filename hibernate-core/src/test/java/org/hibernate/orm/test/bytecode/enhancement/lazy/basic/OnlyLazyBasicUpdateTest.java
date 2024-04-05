@@ -6,18 +6,18 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.basic;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -26,42 +26,37 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				OnlyLazyBasicUpdateTest.LazyEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ EnhancerTestContext.class, NoDirtyCheckingContext.class })
-@TestForIssue(jiraKey = { "HHH-15634", "HHH-16049" })
-public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-15634")
+@JiraKey("HHH-16049")
+public class OnlyLazyBasicUpdateTest {
 
 	private Long entityId;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { LazyEntity.class };
+	SQLStatementInspector statementInspector(SessionFactoryScope scope) {
+		return (SQLStatementInspector) scope.getSessionFactory().getSessionFactoryOptions().getStatementInspector();
 	}
 
-	@Override
-	protected void afterConfigurationBuilt(Configuration configuration) {
-		super.afterConfigurationBuilt( configuration );
-		configuration.setStatementInspector( new SQLStatementInspector() );
-	}
-
-	SQLStatementInspector statementInspector() {
-		return (SQLStatementInspector) sessionFactory().getSessionFactoryOptions().getStatementInspector();
-	}
-
-	private void initNull() {
-		doInHibernate( this::sessionFactory, s -> {
+	private void initNull(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			LazyEntity entity = new LazyEntity();
 			s.persist( entity );
 			entityId = entity.getId();
 		} );
 	}
 
-	private void initNonNull() {
-		doInHibernate( this::sessionFactory, s -> {
+	private void initNonNull(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			LazyEntity entity = new LazyEntity();
 			entity.setLazyProperty1( "lazy1_initial" );
 			entity.setLazyProperty2( "lazy2_initial" );
@@ -70,32 +65,32 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Before
-	public void clearStatementInspector() {
-		statementInspector().clear();
+	@BeforeEach
+	public void clearStatementInspector(SessionFactoryScope scope) {
+		statementInspector( scope ).clear();
 	}
 
 	@Test
-	public void updateSomeLazyProperty_nullToNull() {
-		initNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeLazyProperty_nullToNull(SessionFactoryScope scope) {
+		initNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( null );
 		} );
 
 		// When a lazy property is modified Hibernate does not perform any select
 		// but during flush an update is performed
-		statementInspector().assertUpdate();
+		statementInspector( scope ).assertUpdate();
 	}
 
 	@Test
-	public void updateSomeLazyProperty_nullToNonNull() {
-		initNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeLazyProperty_nullToNonNull(SessionFactoryScope scope) {
+		initNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "lazy1_update" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "lazy1_update", entity.getLazyProperty1() );
 
@@ -104,13 +99,13 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateSomeLazyProperty_nonNullToNonNull_differentValues() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeLazyProperty_nonNullToNonNull_differentValues(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "lazy1_update" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "lazy1_update", entity.getLazyProperty1() );
 
@@ -119,25 +114,25 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateSomeLazyProperty_nonNullToNonNull_sameValues() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeLazyProperty_nonNullToNonNull_sameValues(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( entity.getLazyProperty1() );
 		} );
 
 		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		statementInspector( scope ).assertNoUpdate();
 	}
 
 	@Test
-	public void updateSomeLazyProperty_nonNullToNull() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeLazyProperty_nonNullToNull(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( null );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertNull( entity.getLazyProperty1() );
 
@@ -146,9 +141,9 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateAllLazyProperties_nullToNull() {
-		initNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllLazyProperties_nullToNull(SessionFactoryScope scope) {
+		initNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( null );
 			entity.setLazyProperty2( null );
@@ -156,18 +151,18 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 
 		// When a lazy property is modified Hibernate does not perform any select
 		// but during flush an update is performed
-		statementInspector().assertUpdate();
+		statementInspector( scope ).assertUpdate();
 	}
 
 	@Test
-	public void updateAllLazyProperties_nullToNonNull() {
-		initNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllLazyProperties_nullToNonNull(SessionFactoryScope scope) {
+		initNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "lazy1_update" );
 			entity.setLazyProperty2( "lazy2_update" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "lazy1_update", entity.getLazyProperty1() );
 			assertEquals( "lazy2_update", entity.getLazyProperty2() );
@@ -175,14 +170,14 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateAllLazyProperties_nonNullToNonNull_differentValues() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllLazyProperties_nonNullToNonNull_differentValues(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "lazy1_update" );
 			entity.setLazyProperty2( "lazy2_update" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "lazy1_update", entity.getLazyProperty1() );
 			assertEquals( "lazy2_update", entity.getLazyProperty2() );
@@ -190,27 +185,27 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateAllLazyProperties_nonNullToNonNull_sameValues() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllLazyProperties_nonNullToNonNull_sameValues(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( entity.getLazyProperty1() );
 			entity.setLazyProperty2( entity.getLazyProperty2() );
 		} );
 
 		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		statementInspector( scope ).assertNoUpdate();
 	}
 
 	@Test
-	public void updateAllLazyProperties_nonNullToNull() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllLazyProperties_nonNullToNull(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( null );
 			entity.setLazyProperty2( null );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertNull( entity.getLazyProperty1() );
 			assertNull( entity.getLazyProperty2() );
@@ -219,7 +214,7 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 
 	@Entity
 	@Table(name = "LAZY_ENTITY")
-	private static class LazyEntity {
+	static class LazyEntity {
 		@Id
 		@GeneratedValue
 		Long id;

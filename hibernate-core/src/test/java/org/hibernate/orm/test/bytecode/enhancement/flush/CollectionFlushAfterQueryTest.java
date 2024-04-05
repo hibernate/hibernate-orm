@@ -4,37 +4,37 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
-@TestForIssue(jiraKey = "HHH-16337")
-public class CollectionFlushAfterQueryTest extends BaseCoreFunctionalTestCase {
-
-	private static final Long MY_ENTITY_ID = 1l;
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
+@DomainModel(
+		annotatedClasses = {
 				CollectionFlushAfterQueryTest.MyEntity.class,
 				CollectionFlushAfterQueryTest.MyOtherEntity.class,
 				CollectionFlushAfterQueryTest.MyAnotherEntity.class
-		};
-	}
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@JiraKey("HHH-16337")
+public class CollectionFlushAfterQueryTest {
+
+	private static final Long MY_ENTITY_ID = 1l;
 
 	@Test
-	public void testAutoFlush() {
-		inTransaction(
+	public void testAutoFlush(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					MyEntity myEntity = new MyEntity( MY_ENTITY_ID, "my entity" );
 					MyOtherEntity otherEntity = new MyOtherEntity( 2l, "my other entity" );
@@ -44,7 +44,7 @@ public class CollectionFlushAfterQueryTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					MyEntity myEntity = session.find( MyEntity.class, MY_ENTITY_ID );
 
@@ -57,7 +57,7 @@ public class CollectionFlushAfterQueryTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					MyEntity myEntity = session.find( MyEntity.class, MY_ENTITY_ID );
 					Set<MyOtherEntity> redirectUris = myEntity.getOtherEntities();

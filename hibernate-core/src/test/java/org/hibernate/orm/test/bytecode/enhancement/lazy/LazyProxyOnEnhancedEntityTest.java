@@ -13,14 +13,15 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -30,26 +31,25 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-10922" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-10922" )
+@DomainModel(
+        annotatedClasses = {
+                LazyProxyOnEnhancedEntityTest.Parent.class, LazyProxyOnEnhancedEntityTest.Child.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext( {EnhancerTestContext.class, LazyProxyOnEnhancedEntityTest.NoLazyLoadingContext.class} )
-public class LazyProxyOnEnhancedEntityTest extends BaseCoreFunctionalTestCase {
+public class LazyProxyOnEnhancedEntityTest {
 
     private Long parentID;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Parent.class, Child.class};
-    }
-
-    @Before
-    public void prepare() {
-        doInJPA( this::sessionFactory, em -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( em -> {
             Child c = new Child();
             em.persist( c );
 
@@ -61,11 +61,11 @@ public class LazyProxyOnEnhancedEntityTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
-        EventListenerRegistry registry = sessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+    public void test(SessionFactoryScope scope) {
+        EventListenerRegistry registry = scope.getSessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
         registry.prependListeners( EventType.LOAD, new ImmediateLoadTrap() );
 
-        doInJPA( this::sessionFactory, em -> {
+        scope.inTransaction( em -> {
 
             em.find( Parent.class, parentID );
 
@@ -87,7 +87,7 @@ public class LazyProxyOnEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "Parent")
     @Table( name = "PARENT" )
-    private static class Parent {
+    static class Parent {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )
@@ -112,7 +112,7 @@ public class LazyProxyOnEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "Child")
     @Table( name = "CHILD" )
-    private static class Child {
+    static class Child {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )

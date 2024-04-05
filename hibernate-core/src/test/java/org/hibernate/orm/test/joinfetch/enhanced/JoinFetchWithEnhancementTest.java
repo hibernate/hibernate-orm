@@ -6,13 +6,11 @@
  */
 package org.hibernate.orm.test.joinfetch.enhanced;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 import jakarta.persistence.Access;
@@ -28,32 +26,27 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-12298")
-@RunWith(BytecodeEnhancerRunner.class)
-public class JoinFetchWithEnhancementTest extends BaseEntityManagerFunctionalTestCase {
+@JiraKey("HHH-12298")
+@DomainModel(
+		annotatedClasses = {
+			JoinFetchWithEnhancementTest.Employee.class, JoinFetchWithEnhancementTest.OtherEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class JoinFetchWithEnhancementTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Employee.class, OtherEntity.class };
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.CLASSLOADERS, getClass().getClassLoader() );
-	}
-
-	@Before
-	public void prepare() {
-		doInJPA( this::entityManagerFactory, em -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			Employee e = new Employee( "John Smith" );
 			OtherEntity other = new OtherEntity( "test" );
 			e.getOtherEntities().add( other );
@@ -64,8 +57,8 @@ public class JoinFetchWithEnhancementTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Test
-	public void testJoinFetchWithEnhancement() {
-		Employee myEmployee = doInJPA( this::entityManagerFactory, em -> {
+	public void testJoinFetchWithEnhancement(SessionFactoryScope scope) {
+		Employee myEmployee = scope.fromTransaction( em -> {
 			Employee localEmployee = em.createQuery( "from Employee e left join fetch e.otherEntities", Employee.class )
 					.getResultList().get( 0 );
 			assertTrue( Hibernate.isPropertyInitialized( localEmployee, "otherEntities" ) );
@@ -76,7 +69,7 @@ public class JoinFetchWithEnhancementTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Entity(name = "Employee")
-	private static class Employee {
+	static class Employee {
 
 		@Id
 		private String name;
@@ -118,7 +111,7 @@ public class JoinFetchWithEnhancementTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Entity(name = "OtherEntity")
-	private static class OtherEntity {
+	static class OtherEntity {
 
 		@Id
 		private String id;

@@ -12,37 +12,38 @@ import org.hibernate.orm.test.cascade.G;
 import org.hibernate.orm.test.cascade.H;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Ovidiu Feodorov
  * @author Gail Badner
  */
-@RunWith(BytecodeEnhancerRunner.class)
-@CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
-public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected String[] getOrmXmlFiles() {
-		return new String[] {
+@DomainModel(
+		xmlMappings = {
 				"org/hibernate/orm/test/cascade/MultiPathCascade.hbm.xml"
-		};
-	}
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
+public class MultiPathCascadeTest {
 
-	@After
-	public void cleanupTest() {
-		inTransaction(
+
+	@AfterEach
+	public void cleanupTest(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from A" );
 					session.createQuery( "delete from G" );
@@ -52,12 +53,12 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMultiPathMergeModifiedDetached() {
+	public void testMultiPathMergeModifiedDetached(SessionFactoryScope scope) {
 		// persist a simple A in the database
 		A a = new A();
 		a.setData( "Anna" );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.save( a )
 		);
@@ -65,21 +66,21 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		// modify detached entity
 		modifyEntity( a );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> session.merge( a )
 		);
 
-		verifyModifications( a.getId() );
+		verifyModifications( scope, a.getId() );
 	}
 
 	@Test
-	public void testMultiPathMergeModifiedDetachedIntoProxy() {
+	public void testMultiPathMergeModifiedDetachedIntoProxy(SessionFactoryScope scope) {
 		// persist a simple A in the database
 
 		A a = new A();
 		a.setData( "Anna" );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.save( a )
 		);
@@ -87,25 +88,25 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		// modify detached entity
 		modifyEntity( a );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					A aLoaded = session.load( A.class, new Long( a.getId() ) );
-					assertTrue( aLoaded instanceof HibernateProxy );
+					assertInstanceOf( HibernateProxy.class, aLoaded );
 					assertSame( aLoaded, session.merge( a ) );
 				}
 		);
 
-		verifyModifications( a.getId() );
+		verifyModifications( scope, a.getId() );
 	}
 
 	@Test
-	public void testMultiPathUpdateModifiedDetached() {
+	public void testMultiPathUpdateModifiedDetached(SessionFactoryScope scope) {
 		// persist a simple A in the database
 
 		A a = new A();
 		a.setData( "Anna" );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.save( a )
 		);
@@ -113,27 +114,27 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		// modify detached entity
 		modifyEntity( a );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.update( a )
 		);
 
-		verifyModifications( a.getId() );
+		verifyModifications( scope, a.getId() );
 	}
 
 	@Test
-	public void testMultiPathGetAndModify() {
+	public void testMultiPathGetAndModify(SessionFactoryScope scope) {
 		// persist a simple A in the database
 
 		A a = new A();
 		a.setData( "Anna" );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.save( a )
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					A result = session.get( A.class, new Long( a.getId() ) );
 					modifyEntity( result );
@@ -141,17 +142,17 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		);
 		// retrieve the previously saved instance from the database, and update it
 
-		verifyModifications( a.getId() );
+		verifyModifications( scope, a.getId() );
 	}
 
 	@Test
-	public void testMultiPathMergeNonCascadedTransientEntityInCollection() {
+	public void testMultiPathMergeNonCascadedTransientEntityInCollection(SessionFactoryScope scope) {
 		// persist a simple A in the database
 
 		A a = new A();
 		a.setData( "Anna" );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.save( a )
 		);
@@ -159,12 +160,12 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		// modify detached entity
 		modifyEntity( a );
 
-		A merged = fromTransaction(
+		A merged = scope.fromTransaction(
 				session ->
 						(A) session.merge( a )
 		);
 
-		verifyModifications( merged.getId() );
+		verifyModifications( scope, merged.getId() );
 
 		// add a new (transient) G to collection in h
 		// there is no cascade from H to the collection, so this should fail when merged
@@ -177,7 +178,7 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		gNew.getHs().add( h );
 		h.getGs().add( gNew );
 
-		inSession(
+		scope.inSession(
 				session -> {
 					session.beginTransaction();
 					try {
@@ -197,12 +198,12 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMultiPathMergeNonCascadedTransientEntityInOneToOne() {
+	public void testMultiPathMergeNonCascadedTransientEntityInOneToOne(SessionFactoryScope scope) {
 		// persist a simple A in the database
 		A a = new A();
 		a.setData( "Anna" );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.save( a )
 		);
@@ -210,12 +211,12 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		// modify detached entity
 		modifyEntity( a );
 
-		A merged = fromTransaction(
+		A merged = scope.fromTransaction(
 				session ->
 						(A) session.merge( a )
 		);
 
-		verifyModifications( merged.getId() );
+		verifyModifications( scope, merged.getId() );
 
 		// change the one-to-one association from g to be a new (transient) A
 		// there is no cascade from G to A, so this should fail when merged
@@ -226,7 +227,7 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		g.setA( aNew );
 		aNew.setG( g );
 
-		inSession(
+		scope.inSession(
 				session -> {
 					session.beginTransaction();
 					try {
@@ -246,13 +247,13 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMultiPathMergeNonCascadedTransientEntityInManyToOne() {
+	public void testMultiPathMergeNonCascadedTransientEntityInManyToOne(SessionFactoryScope scope) {
 		// persist a simple A in the database
 
 		A a = new A();
 		a.setData( "Anna" );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.save( a )
 		);
@@ -260,12 +261,12 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		// modify detached entity
 		modifyEntity( a );
 
-		A merged = fromTransaction(
+		A merged = scope.fromTransaction(
 				session ->
 						(A) session.merge( a )
 		);
 
-		verifyModifications( a.getId() );
+		verifyModifications( scope, a.getId() );
 
 		// change the many-to-one association from h to be a new (transient) A
 		// there is no cascade from H to A, so this should fail when merged
@@ -276,7 +277,7 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		aNew.setData( "Alice" );
 		aNew.addH( h );
 
-		inSession(
+		scope.inSession(
 				session -> {
 					session.beginTransaction();
 					try {
@@ -315,8 +316,8 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 		h.getGs().add( g );
 	}
 
-	private void verifyModifications(long aId) {
-		inTransaction(
+	private void verifyModifications(SessionFactoryScope scope, long aId) {
+		scope.inTransaction(
 				session -> {
 					// retrieve the A object and check it
 					A a = session.get( A.class, new Long( aId ) );

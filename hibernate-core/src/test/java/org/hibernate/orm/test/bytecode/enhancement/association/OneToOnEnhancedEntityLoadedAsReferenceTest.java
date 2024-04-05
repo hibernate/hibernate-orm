@@ -2,14 +2,16 @@ package org.hibernate.orm.test.bytecode.enhancement.association;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,30 +20,30 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 @JiraKey("HHH-17173")
-@RunWith(BytecodeEnhancerRunner.class)
-public class OneToOnEnhancedEntityLoadedAsReferenceTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+			OneToOnEnhancedEntityLoadedAsReferenceTest.ContainingEntity.class, OneToOnEnhancedEntityLoadedAsReferenceTest.ContainedEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "10"),
+				@Setting(name = AvailableSettings.MAX_FETCH_DEPTH, value = "0")
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class OneToOnEnhancedEntityLoadedAsReferenceTest {
 
 	private long entityId;
 	private long entityId2;
 	private long containedEntityId;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { ContainingEntity.class, ContainedEntity.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, 10 );
-		configuration.setProperty( AvailableSettings.MAX_FETCH_DEPTH, 0 );
-	}
-
-	@Before
-	public void prepare() {
-		doInJPA( this::sessionFactory, em -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			ContainingEntity entity = new ContainingEntity();
 			ContainedEntity containedEntity = new ContainedEntity();
 			containedEntity.setValue( "value" );
@@ -60,8 +62,8 @@ public class OneToOnEnhancedEntityLoadedAsReferenceTest extends BaseCoreFunction
 	}
 
 	@Test
-	public void test() {
-		doInJPA( this::sessionFactory, em -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			ContainingEntity entity2 = em.getReference( ContainingEntity.class, entityId2 );
 			ContainingEntity entity = em.getReference( ContainingEntity.class, entityId );
 			ContainedEntity containedEntity = em.getReference( ContainedEntity.class, containedEntityId );

@@ -9,7 +9,9 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTest.Child;
+import static org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTest.Parent;
+import static org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTest.Person;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -17,10 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
@@ -30,14 +28,17 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -58,44 +59,31 @@ import org.hamcrest.MatcherAssert;
  *
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11147")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-11147")
+@DomainModel(
+		annotatedClasses = {
+				Parent.class, Child.class, Person.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory(applyCollectionsInDefaultFetchGroup = false)
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-		ssrb.applySetting( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-		ssrb.addService(
-				SessionFactoryBuilderService.class,
-				(SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-					SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-							metadata.getMetadataBuildingOptions().getServiceRegistry(),
-							bootstrapContext
-					);
-					// We want to test with this setting set to false explicitly,
-					// because another test already takes care of the default.
-					optionsBuilder.enableCollectionInDefaultFetchGroup( false );
-					return new SessionFactoryBuilderImpl( metadata, optionsBuilder, bootstrapContext );
-				}
-		);
-	}
+public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTest {
 
 	private static final int CHILDREN_SIZE = 10;
 	private Long lastChildID;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Parent.class, Child.class, Person.class };
-	}
-
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = new Parent();
 			for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
 				Child child = new Child();
@@ -116,28 +104,28 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 	}
 
 
-	@After
-	public void tearDown() {
-		doInHibernate( this::sessionFactory, s -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			s.createQuery( "delete from Child" ).executeUpdate();
 			s.createQuery( "delete from Parent" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	public void updateSimpleField() {
-		final Statistics stats = sessionFactory().getStatistics();
+	public void updateSimpleField(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
 		final String updatedName = "Barrabas_";
 
-		final EntityPersister childPersister = sessionFactory().getRuntimeMetamodels()
+		final EntityPersister childPersister = scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Child.class.getName() );
 
 		final int relativesAttributeIndex = childPersister.getEntityMetamodel().getPropertyIndex( "relatives" );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					stats.clear();
 					Child loadedChild = session.load( Child.class, lastChildID );
@@ -177,7 +165,7 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Child loadedChild = session.load( Child.class, lastChildID );
 					assertThat( loadedChild.getName(), is( updatedName ) );
@@ -193,11 +181,11 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 	}
 
 	@Test
-	public void testUpdateAssociation() {
+	public void testUpdateAssociation(SessionFactoryScope scope) {
 		String updatedName = "Barrabas_";
 		String parentName = "Yodit";
-		doInHibernate( this::sessionFactory, s -> {
-			final Statistics stats = sessionFactory().getStatistics();
+		scope.inTransaction( s -> {
+			final Statistics stats = scope.getSessionFactory().getStatistics();
 			stats.clear();
 			Child loadedChild = s.load( Child.class, lastChildID );
 
@@ -214,7 +202,7 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 			s.save( parent );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			Child loadedChild = s.load( Child.class, lastChildID );
 			assertThat( Hibernate.isInitialized( loadedChild ), is( false ) );
 			assertThat( loadedChild.getName(), is( updatedName ) );
@@ -226,9 +214,9 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 	}
 
 	@Test
-	public void testUpdateCollection() {
-		doInHibernate( this::sessionFactory, s -> {
-			final Statistics stats = sessionFactory().getStatistics();
+	public void testUpdateCollection(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			final Statistics stats = scope.getSessionFactory().getStatistics();
 			stats.clear();
 			Child loadedChild = s.load( Child.class, lastChildID );
 
@@ -243,7 +231,7 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 			s.persist( relative );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			Child loadedChild = s.load( Child.class, lastChildID );
 			assertThat( loadedChild.getRelatives().size(), is( 2 ) );
 		} );
@@ -251,7 +239,7 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 
 	@Entity(name = "Parent")
 	@Table(name = "PARENT")
-	private static class Parent {
+	static class Parent {
 
 		String name;
 
@@ -277,7 +265,7 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 
 	@Entity(name = "Person")
 	@Table(name = "Person")
-	private static class Person {
+	static class Person {
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		Long id;
@@ -295,7 +283,7 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 
 	@Entity(name = "Child")
 	@Table(name = "CHILD")
-	private static class Child {
+	static class Child {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

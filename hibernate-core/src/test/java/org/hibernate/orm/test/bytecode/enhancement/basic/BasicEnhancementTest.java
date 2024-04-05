@@ -10,14 +10,11 @@ import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.orm.test.legacy.Simple;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.Jira;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -26,18 +23,18 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@BytecodeEnhanced
 public class BasicEnhancementTest {
 
     @Test
@@ -62,10 +59,10 @@ public class BasicEnhancementTest {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13439")
+    @Jira("HHH-13439")
     public void enhancementInfoTest() {
         EnhancementInfo info = SimpleEntity.class.getAnnotation( EnhancementInfo.class );
-        assertNotNull( "EnhancementInfo was not applied", info );
+        assertNotNull( info, "EnhancementInfo was not applied" );
 
         assertEquals( Version.getVersionString(), info.version() );
     }
@@ -114,7 +111,7 @@ public class BasicEnhancementTest {
         ( (PersistentAttributeInterceptable) entity ).$$_hibernate_setInterceptor( null );
 
         entity.id = 1234567890L;
-        Assert.assertEquals( 1234567890L, (long) entity.getId() );
+        assertEquals( 1234567890L, (long) entity.getId() );
 
         entity.name = "Entity Name";
         assertSame( "Entity Name", entity.name );

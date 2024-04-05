@@ -22,37 +22,35 @@ import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-12226")
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-12226")
+@DomainModel(
+		annotatedClasses = {
+				LazyNotFoundManyToOneNonUpdatableNonInsertableTest.User.class,
+				LazyNotFoundManyToOneNonUpdatableNonInsertableTest.Lazy.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest {
 	private static int ID = 1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				User.class,
-				Lazy.class
-		};
-	}
-
 	@Test
-	public void test() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					Lazy p = new Lazy();
 					p.id = ID;
 					User u = new User();
@@ -62,14 +60,9 @@ public class LazyNotFoundManyToOneNonUpdatableNonInsertableTest extends BaseCore
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.delete( session.get( Lazy.class, ID ) );
-				}
-		);
+		scope.inTransaction( session -> session.delete( session.get( Lazy.class, ID ) ) );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 					User user = session.find( User.class, ID );
 					// per UserGuide (and simply correct behavior), `@NotFound` forces EAGER fetching
 					assertThat( Hibernate.isPropertyInitialized( user, "lazy" ) )

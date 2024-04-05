@@ -6,11 +6,10 @@
  */
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -23,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
 public class DirtyCheckingWithEmbeddableExtedingAnotherEmbeddableAndTwiceRemovedNonVisibleGenericMappedSuperclassTest {
 

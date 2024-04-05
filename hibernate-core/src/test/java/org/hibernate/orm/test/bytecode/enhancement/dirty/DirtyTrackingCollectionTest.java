@@ -6,12 +6,13 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -21,24 +22,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-11293" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class DirtyTrackingCollectionTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-11293" )
+@DomainModel(
+        annotatedClasses = {
+                DirtyTrackingCollectionTest.StringsEntity.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class DirtyTrackingCollectionTest {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{StringsEntity.class};
-    }
-
-    @Before
-    public void prepare() {
-        doInJPA( this::sessionFactory, em -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( em -> {
             StringsEntity entity = new StringsEntity();
             entity.id = 1L;
             entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
@@ -47,25 +48,25 @@ public class DirtyTrackingCollectionTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
-        doInJPA( this::sessionFactory, entityManager -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
             StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
             entity.someStrings.clear();
         } );
 
-        doInJPA( this::sessionFactory, entityManager -> {
+        scope.inTransaction( entityManager -> {
             StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
             assertEquals( 0, entity.someStrings.size() );
             entity.someStrings.add( "d" );
         } );
 
-        doInJPA( this::sessionFactory, entityManager -> {
+        scope.inTransaction( entityManager -> {
             StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
             assertEquals( 1, entity.someStrings.size() );
             entity.someStrings = new ArrayList<>();
         } );
 
-        doInJPA( this::sessionFactory, entityManager -> {
+        scope.inTransaction( entityManager -> {
             StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
             assertEquals( 0, entity.someStrings.size() );
         } );
@@ -75,7 +76,7 @@ public class DirtyTrackingCollectionTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "STRINGS_ENTITY" )
-    private static class StringsEntity {
+    static class StringsEntity {
 
         @Id
         Long id;

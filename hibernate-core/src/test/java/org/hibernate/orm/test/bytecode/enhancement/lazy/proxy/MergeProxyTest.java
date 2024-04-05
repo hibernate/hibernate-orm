@@ -7,23 +7,23 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.hamcrest.CoreMatchers;
 
@@ -32,22 +32,36 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  * @author Gail BadnerMergeProxyTest
  */
-@TestForIssue( jiraKey = "HHH-11147" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-11147" )
+@DomainModel(
+		annotatedClasses = {
+				Activity.class, Instruction.class, WebApplication.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class MergeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
+public class MergeProxyTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void testMergeDetachUninitializedProxy() {
-		final Activity activity = fromTransaction(
+	@JiraKey("HHH-11147")
+	public void testMergeDetachUninitializedProxy(SessionFactoryScope scope) {
+		final Activity activity = scope.fromTransaction(
 				session -> session.get( Activity.class, 0 )
 		);
 
@@ -61,14 +75,14 @@ public class MergeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		activity.setNbr( "2" );
 
-		final Activity mergedActivity = fromTransaction(
+		final Activity mergedActivity = scope.fromTransaction(
 				session -> (Activity) session.merge( activity )
 		);
 
 		assertTrue( Hibernate.isInitialized( mergedActivity ) );
 		assertThat( activity, not( CoreMatchers.sameInstance( mergedActivity ) ) );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Instruction persistentInstruction = session.get( Instruction.class, 0 );
 					assertThat( persistentInstruction.getSummary(), is( "Instruction #0" ) );
@@ -77,9 +91,9 @@ public class MergeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void testMergeDetachInitializedProxy() {
-		final Activity activityProxy = fromTransaction(
+	@JiraKey("HHH-11147")
+	public void testMergeDetachInitializedProxy(SessionFactoryScope scope) {
+		final Activity activityProxy = scope.fromTransaction(
 				session -> {
 					final Activity activity = session.load( Activity.class, 0 );
 					assertFalse( Hibernate.isInitialized( activity) );
@@ -106,14 +120,14 @@ public class MergeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		activityProxy.setNbr( "2" );
 
-		final Activity mergedActivity = fromTransaction(
+		final Activity mergedActivity = scope.fromTransaction(
 				session -> (Activity) session.merge( activityProxy )
 		);
 
 		assertTrue( Hibernate.isInitialized( mergedActivity ) );
 		assertThat( activityProxy, not( CoreMatchers.sameInstance( mergedActivity ) ) );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Instruction instruction = session.get( Instruction.class, 0 );
 					assertThat( instruction.getSummary(), is( "Instruction #0" ) );
@@ -122,9 +136,9 @@ public class MergeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11147")
-	public void testMergeDetachInitializedByAccessProxy() {
-		final Activity activityProxy = fromTransaction(
+	@JiraKey("HHH-11147")
+	public void testMergeDetachInitializedByAccessProxy(SessionFactoryScope scope) {
+		final Activity activityProxy = scope.fromTransaction(
 				session -> {
 					final Activity activity = session.load( Activity.class, 0 );
 					assertFalse( Hibernate.isInitialized( activity) );
@@ -151,14 +165,14 @@ public class MergeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		activityProxy.setNbr( "2" );
 
-		final Activity mergedActivity = fromTransaction(
+		final Activity mergedActivity = scope.fromTransaction(
 				session -> (Activity) session.merge( activityProxy )
 		);
 
 		assertTrue( Hibernate.isInitialized( mergedActivity ) );
 		assertThat( activityProxy, not( CoreMatchers.sameInstance( mergedActivity ) ) );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Instruction instruction = session.get( Instruction.class, 0 );
 					assertThat( instruction.getSummary(), is( "Instruction #0" ) );
@@ -166,31 +180,9 @@ public class MergeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Activity.class );
-		sources.addAnnotatedClass( Instruction.class );
-		sources.addAnnotatedClass( WebApplication.class );
-	}
-
-	@Before
-	public void prepareTestData() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					// create a slew of Activity objects, some with Instruction reference
 					// some without.
@@ -216,9 +208,9 @@ public class MergeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Activity" ).executeUpdate();
 					session.createQuery( "delete from Instruction" ).executeUpdate();

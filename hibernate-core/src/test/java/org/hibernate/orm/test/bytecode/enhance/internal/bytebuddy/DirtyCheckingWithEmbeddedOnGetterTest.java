@@ -16,11 +16,10 @@ import jakarta.persistence.Id;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
 import org.assertj.core.api.Assertions;
 
@@ -46,8 +45,8 @@ import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_GET_N
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_HAS_CHANGED_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_SUSPEND_NAME;
 
-@TestForIssue(jiraKey = "HHH-13764")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-13764")
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
 public class DirtyCheckingWithEmbeddedOnGetterTest {
 

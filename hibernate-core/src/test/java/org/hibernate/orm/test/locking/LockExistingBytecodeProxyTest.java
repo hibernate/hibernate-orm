@@ -2,13 +2,14 @@ package org.hibernate.orm.test.locking;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,20 +23,20 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-@RunWith( BytecodeEnhancerRunner.class )
+@DomainModel(
+		annotatedClasses = {
+				LockExistingBytecodeProxyTest.MainEntity.class,
+				LockExistingBytecodeProxyTest.ReferencedEntity.class,
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17828" )
-public class LockExistingBytecodeProxyTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				MainEntity.class,
-				ReferencedEntity.class,
-		};
-	}
+public class LockExistingBytecodeProxyTest {
 
 	@Test
-	public void testFindAndLockAfterFind() {
-		inTransaction( session -> {
+	public void testFindAndLockAfterFind(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final MainEntity main = session.find( MainEntity.class, 1L );
 			assertFalse( Hibernate.isInitialized( main.referenced ) );
 			final ReferencedEntity lazyEntity = session.find( ReferencedEntity.class, 1L, LockModeType.PESSIMISTIC_WRITE );
@@ -46,8 +47,8 @@ public class LockExistingBytecodeProxyTest extends BaseNonConfigCoreFunctionalTe
 	}
 
 	@Test
-	public void testLockAfterFind() {
-		inTransaction( session -> {
+	public void testLockAfterFind(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final MainEntity main = session.find( MainEntity.class, 1L );
 			assertFalse( Hibernate.isInitialized( main.referenced ) );
 			session.lock( main.referenced, LockModeType.PESSIMISTIC_FORCE_INCREMENT );
@@ -56,18 +57,18 @@ public class LockExistingBytecodeProxyTest extends BaseNonConfigCoreFunctionalTe
 		} );
 	}
 
-	@Before
-	public void setUp() {
-		inTransaction( session -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final ReferencedEntity e1 = new ReferencedEntity( 1L, "referenced" );
 			session.persist( e1 );
 			session.persist( new MainEntity( 1L, e1 ) );
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction( session -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.createMutationQuery( "delete from MainEntity" ).executeUpdate();
 			session.createMutationQuery( "delete from ReferencedEntity" ).executeUpdate();
 		} );

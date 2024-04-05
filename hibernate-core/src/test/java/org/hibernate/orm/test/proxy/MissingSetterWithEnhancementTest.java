@@ -18,27 +18,26 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
  * @author Christian Beikov
  */
-@TestForIssue(jiraKey = "HHH-14460")
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey("HHH-14460")
+@BytecodeEnhanced
 public class MissingSetterWithEnhancementTest {
     private ServiceRegistry serviceRegistry;
 
-    @Before
+    @BeforeEach
     public void setUp() {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		builder.applyClassLoader( getClass().getClassLoader() );
@@ -47,7 +46,7 @@ public class MissingSetterWithEnhancementTest {
 				.build();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( serviceRegistry != null ) {
             ServiceRegistryBuilder.destroy( serviceRegistry );

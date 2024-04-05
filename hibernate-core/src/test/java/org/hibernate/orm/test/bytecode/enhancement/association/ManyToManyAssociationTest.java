@@ -6,10 +6,11 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.association;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,7 +23,7 @@ import java.util.Set;
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@BytecodeEnhanced
 public class ManyToManyAssociationTest {
 
     @Test
@@ -37,34 +38,34 @@ public class ManyToManyAssociationTest {
         user.addGroup( anotherGroup );
         anotherUser.addGroup( group );
 
-        Assert.assertEquals( 2, group.getUsers().size() );
-        Assert.assertEquals( 1, anotherGroup.getUsers().size() );
+        assertEquals( 2, group.getUsers().size() );
+        assertEquals( 1, anotherGroup.getUsers().size() );
 
         group.resetUsers();
 
-        Assert.assertEquals( 1, user.getGroups().size() );
-        Assert.assertEquals( 0, anotherUser.getGroups().size() );
+        assertEquals( 1, user.getGroups().size() );
+        assertEquals( 0, anotherUser.getGroups().size() );
 
         // Test remove
         user.addGroup( group );
         anotherUser.addGroup( group );
 
-        Assert.assertEquals( 2, group.getUsers().size() );
-        Assert.assertEquals( 1, anotherGroup.getUsers().size() );
+        assertEquals( 2, group.getUsers().size() );
+        assertEquals( 1, anotherGroup.getUsers().size() );
 
         Set<Group> groups = new HashSet<>( user.getGroups() );
         groups.remove( group );
         user.setGroups( groups );
 
-        Assert.assertEquals( 1, group.getUsers().size() );
-        Assert.assertEquals( 1, anotherGroup.getUsers().size() );
+        assertEquals( 1, group.getUsers().size() );
+        assertEquals( 1, anotherGroup.getUsers().size() );
 
         groups.remove( anotherGroup );
         user.setGroups( groups );
 
-        Assert.assertEquals( 1, group.getUsers().size() );
+        assertEquals( 1, group.getUsers().size() );
         // This happens (and is expected) because there was no snapshot taken before remove
-        Assert.assertEquals( 1, anotherGroup.getUsers().size() );
+        assertEquals( 1, anotherGroup.getUsers().size() );
     }
 
     // -- //

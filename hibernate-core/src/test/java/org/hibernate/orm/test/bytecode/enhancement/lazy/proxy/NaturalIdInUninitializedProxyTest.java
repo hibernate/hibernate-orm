@@ -11,41 +11,56 @@ import jakarta.persistence.Id;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-13607" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-13607" )
+@DomainModel(
+		annotatedClasses = {
+				NaturalIdInUninitializedProxyTest.EntityMutableNaturalId.class,
+				NaturalIdInUninitializedProxyTest.EntityImmutableNaturalId.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class NaturalIdInUninitializedProxyTest extends BaseNonConfigCoreFunctionalTestCase {
+public class NaturalIdInUninitializedProxyTest {
 
 	@Test
-	public void testImmutableNaturalId() {
-		inTransaction(
+	public void testImmutableNaturalId(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final EntityImmutableNaturalId e = session.getReference( EntityImmutableNaturalId.class, 1 );
 					assertFalse( Hibernate.isInitialized( e ) );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final EntityImmutableNaturalId e = session.get( EntityImmutableNaturalId.class, 1 );
 					assertEquals( "name", e.name );
@@ -54,15 +69,15 @@ public class NaturalIdInUninitializedProxyTest extends BaseNonConfigCoreFunction
 	}
 
 	@Test
-	public void testMutableNaturalId() {
-		inTransaction(
+	public void testMutableNaturalId(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final EntityMutableNaturalId e = session.getReference( EntityMutableNaturalId.class, 1 );
 					assertFalse( Hibernate.isInitialized( e ) );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final EntityMutableNaturalId e = session.get( EntityMutableNaturalId.class, 1 );
 					assertEquals( "name", e.name );
@@ -70,30 +85,9 @@ public class NaturalIdInUninitializedProxyTest extends BaseNonConfigCoreFunction
 		);
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( EntityMutableNaturalId.class );
-		sources.addAnnotatedClass( EntityImmutableNaturalId.class );
-	}
-
-	@Before
-	public void prepareTestData() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.persist( new EntityMutableNaturalId( 1, "name" ) );
 					session.persist( new EntityImmutableNaturalId( 1, "name" ) );
@@ -101,9 +95,9 @@ public class NaturalIdInUninitializedProxyTest extends BaseNonConfigCoreFunction
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from EntityMutableNaturalId" ).executeUpdate();
 					session.createQuery( "delete from EntityImmutableNaturalId" ).executeUpdate();

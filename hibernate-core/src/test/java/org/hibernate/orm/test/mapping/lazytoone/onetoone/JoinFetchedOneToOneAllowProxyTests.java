@@ -13,96 +13,88 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.annotations.FetchMode.JOIN;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-@RunWith( BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				JoinFetchedOneToOneAllowProxyTests.Customer.class, JoinFetchedOneToOneAllowProxyTests.SupplementalInfo.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class JoinFetchedOneToOneAllowProxyTests extends BaseNonConfigCoreFunctionalTestCase {
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Customer.class );
-		sources.addAnnotatedClass( SupplementalInfo.class );
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		sqlStatementInterceptor = new SQLStatementInterceptor( ssrb );
-	}
+public class JoinFetchedOneToOneAllowProxyTests {
 
 	@Test
-	public void testOwnerIsProxy() {
-		final EntityPersister supplementalInfoDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( SupplementalInfo.class );
+	public void testOwnerIsProxy(SessionFactoryScope scope) {
+		final EntityPersister supplementalInfoDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( SupplementalInfo.class );
 		final BytecodeEnhancementMetadata supplementalInfoEnhancementMetadata = supplementalInfoDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( supplementalInfoEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
-		final EntityPersister customerDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
+		final EntityPersister customerDescriptor = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
 		final BytecodeEnhancementMetadata customerEnhancementMetadata = customerDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( customerEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
-		inTransaction(
+		SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
+
+		scope.inTransaction(
 				(session) -> {
 					final SupplementalInfo supplementalInfo = session.byId( SupplementalInfo.class ).getReference( 1 );
 
 					// we should have just the uninitialized SupplementalInfo proxy
 					//		- therefore no SQL statements should have been executed
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 0 ) );
+					assertThat( sqlStatementInspector.getSqlQueries().size(), is( 0 ) );
 
 					// access the id - should do nothing with db
 					supplementalInfo.getId();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 0 ) );
+					assertThat( sqlStatementInspector.getSqlQueries().size(), is( 0 ) );
 
 					// this should trigger loading the entity's base state which should include join fetching Customer
 					supplementalInfo.getSomething();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+					assertThat( sqlStatementInspector.getSqlQueries().size(), is( 1 ) );
 
 					// should not trigger a load and the `customer` reference should be an uninitialized enhanced proxy
 					final Customer customer = supplementalInfo.getCustomer();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+					assertThat( sqlStatementInspector.getSqlQueries().size(), is( 1 ) );
 
 					// just as above, accessing id should trigger no loads
 					customer.getId();
 					customer.getName();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+					assertThat( sqlStatementInspector.getSqlQueries().size(), is( 1 ) );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14659")
-	public void testQueryJoinFetch() {
-		SupplementalInfo info = fromTransaction( (session) -> {
+	@JiraKey("HHH-14659")
+	public void testQueryJoinFetch(SessionFactoryScope scope) {
+		SupplementalInfo info = scope.fromTransaction( (session) -> {
 			final SupplementalInfo result = session.createQuery(
 							"select s from SupplementalInfo s join fetch s.customer",
 							SupplementalInfo.class )
 					.uniqueResult();
-			assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+			assertThat( scope.getCollectingStatementInspector().getSqlQueries().size(), is( 1 ) );
 			return result;
 		} );
 
@@ -112,12 +104,12 @@ public class JoinFetchedOneToOneAllowProxyTests extends BaseNonConfigCoreFunctio
 		// The "join fetch" should have already initialized the associated entity.
 		Customer customer = info.getCustomer();
 		assertTrue( Hibernate.isInitialized( customer ) );
-		assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+		assertThat( scope.getCollectingStatementInspector().getSqlQueries().size(), is( 1 ) );
 	}
 
-	@Before
-	public void createTestData() {
-		inTransaction(
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
 					final Customer customer = new Customer( 1, "Acme Brick" );
 					session.persist( customer );
@@ -125,12 +117,12 @@ public class JoinFetchedOneToOneAllowProxyTests extends BaseNonConfigCoreFunctio
 					session.persist( supplementalInfo );
 				}
 		);
-		sqlStatementInterceptor.clear();
+		scope.getCollectingStatementInspector().clear();
 	}
 
-	@After
-	public void dropTestData() {
-		inTransaction(
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				(session) -> {
 					session.createQuery( "delete SupplementalInfo" ).executeUpdate();
 					session.createQuery( "delete Customer" ).executeUpdate();

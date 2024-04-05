@@ -6,14 +6,15 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -23,31 +24,30 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-16334")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-16334")
+@DomainModel(
+		annotatedClasses = {
+				EagerOneToManyPersistAndLoadTest.Parent.class,
+				EagerOneToManyPersistAndLoadTest.Child.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({
 		EnhancerTestContext.class, // supports laziness and dirty-checking
 		NoDirtyCheckEnhancementContext.class, // supports laziness; does not support dirty-checking,
 		DefaultEnhancementContext.class
 })
-public class EagerOneToManyPersistAndLoadTest extends BaseCoreFunctionalTestCase {
+public class EagerOneToManyPersistAndLoadTest {
 
 	public static final String CHILD_NAME = "Luigi";
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Parent.class,
-				Child.class
-		};
-	}
-
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createMutationQuery( "delete from Child" ).executeUpdate();
 					session.createMutationQuery( "delete from Parent" ).executeUpdate();
@@ -56,8 +56,8 @@ public class EagerOneToManyPersistAndLoadTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	public void testEmptyCollectionPersistLoad() {
-		inTransaction(
+	public void testEmptyCollectionPersistLoad(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( 1l );
 					session.persist( p );
@@ -76,15 +76,15 @@ public class EagerOneToManyPersistAndLoadTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	public void testEmptyCollectionPersistQueryJoinFetch() {
-		inTransaction(
+	public void testEmptyCollectionPersistQueryJoinFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( 1l );
 					session.persist( p );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Parent p = session.get( Parent.class, 1l );
 					List<Child> children = p.getChildren();
@@ -108,15 +108,15 @@ public class EagerOneToManyPersistAndLoadTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	public void testEmptyCollectionPersistQuery() {
-		inTransaction(
+	public void testEmptyCollectionPersistQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( 1l );
 					session.persist( p );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Parent p = session.get( Parent.class, 1l );
 					List<Child> children = p.getChildren();
@@ -140,8 +140,8 @@ public class EagerOneToManyPersistAndLoadTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	public void testCollectionPersistLoad() {
-		inTransaction(
+	public void testCollectionPersistLoad(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( 1l );
 					Child c = new Child( CHILD_NAME );
@@ -161,8 +161,8 @@ public class EagerOneToManyPersistAndLoadTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	public void testCollectionPersistQueryJoinFetch() {
-		inTransaction(
+	public void testCollectionPersistQueryJoinFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( 1l );
 					Child c = new Child( CHILD_NAME );
@@ -172,7 +172,7 @@ public class EagerOneToManyPersistAndLoadTest extends BaseCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Parent p = session.get( Parent.class, 1l );
 					List<Child> children = p.getChildren();
@@ -195,8 +195,8 @@ public class EagerOneToManyPersistAndLoadTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	public void testCollectionPersistQuery() {
-		inTransaction(
+	public void testCollectionPersistQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent p = new Parent( 1l );
 					Child c = new Child( CHILD_NAME );
@@ -206,7 +206,7 @@ public class EagerOneToManyPersistAndLoadTest extends BaseCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Parent p = session.get( Parent.class, 1l );
 					List<Child> children = p.getChildren();

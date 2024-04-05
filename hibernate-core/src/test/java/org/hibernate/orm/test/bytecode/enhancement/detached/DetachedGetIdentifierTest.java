@@ -1,45 +1,48 @@
 package org.hibernate.orm.test.bytecode.enhancement.detached;
 
-import org.hibernate.SessionFactory;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.junit.Assert.assertNotNull;
+import org.hibernate.SessionFactory;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-11426" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class DetachedGetIdentifierTest extends BaseCoreFunctionalTestCase {
-
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{SimpleEntity.class};
-    }
+@JiraKey( "HHH-11426" )
+@DomainModel(
+        annotatedClasses = {
+               DetachedGetIdentifierTest.SimpleEntity.class
+        }
+)
+@org.hibernate.testing.orm.junit.SessionFactory
+@BytecodeEnhanced
+public class DetachedGetIdentifierTest {
 
     @Test
-    public void test() {
+    public void test(SessionFactoryScope scope) {
         SimpleEntity[] entities = new SimpleEntity[2];
         entities[0] = new SimpleEntity();
         entities[0].name = "test";
 
-        TransactionUtil.doInJPA( this::sessionFactory, em -> {
+        scope.inTransaction( em -> {
             entities[1] = em.merge( entities[0] );
             assertNotNull( em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( entities[1] ) );
         } );
 
         // Call as detached entity
-        try ( SessionFactory sessionFactory = sessionFactory() ) {
+        try ( SessionFactory sessionFactory = scope.getSessionFactory() ) {
             assertNotNull( sessionFactory.getPersistenceUnitUtil().getIdentifier( entities[1] ) );
         }
     }
@@ -48,7 +51,7 @@ public class DetachedGetIdentifierTest extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "SimpleEntity")
     @Table( name = "SIMPLE_ENTITY" )
-    private static class SimpleEntity {
+    static class SimpleEntity {
 
         @Id
         @GeneratedValue

@@ -16,13 +16,12 @@ import jakarta.persistence.Id;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.extractor.Extractors.resultOf;
@@ -46,8 +45,8 @@ import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_GET_N
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_HAS_CHANGED_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_SUSPEND_NAME;
 
-@TestForIssue(jiraKey = "HHH-13764")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-13764")
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
 public class DirtyCheckingWithEmbeddedTest {
 
@@ -64,7 +63,8 @@ public class DirtyCheckingWithEmbeddedTest {
 				.hasDeclaredMethods( PERSISTENT_FIELD_READER_PREFIX + "name", PERSISTENT_FIELD_WRITER_PREFIX + "name" )
 				.hasDeclaredMethods( ENTITY_INSTANCE_GETTER_NAME, ENTITY_ENTRY_GETTER_NAME )
 				.hasDeclaredMethods( PREVIOUS_GETTER_NAME, PREVIOUS_SETTER_NAME, NEXT_GETTER_NAME, NEXT_SETTER_NAME )
-				.hasDeclaredMethods( TRACKER_HAS_CHANGED_NAME, TRACKER_CLEAR_NAME, TRACKER_SUSPEND_NAME, TRACKER_GET_NAME );
+				.hasDeclaredMethods(
+						TRACKER_HAS_CHANGED_NAME, TRACKER_CLEAR_NAME, TRACKER_SUSPEND_NAME, TRACKER_GET_NAME );
 	}
 
 	@Test
@@ -76,7 +76,8 @@ public class DirtyCheckingWithEmbeddedTest {
 	@Test
 	public void shouldDeclareMethodsInEmbeddedClass() {
 		assertThat( Component.class )
-				.hasDeclaredMethods( PERSISTENT_FIELD_READER_PREFIX + "component", PERSISTENT_FIELD_WRITER_PREFIX + "component" )
+				.hasDeclaredMethods(
+						PERSISTENT_FIELD_READER_PREFIX + "component", PERSISTENT_FIELD_WRITER_PREFIX + "component" )
 				.hasDeclaredMethods( TRACKER_COMPOSITE_SET_OWNER, TRACKER_COMPOSITE_CLEAR_OWNER );
 	}
 

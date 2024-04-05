@@ -6,82 +6,74 @@
  */
 package org.hibernate.orm.test.annotations.collectionelement.recreate;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.orm.test.annotations.collectionelement.recreate.BytecodeEnhancementElementCollectionRecreateCollectionsInDefaultGroupTest.MyEntity;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.boot.SessionFactoryBuilder;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
-
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				MyEntity.class,
+		}
+)
+@SessionFactory
+@BytecodeEnhanced(testEnhancedClasses = MyEntity.class)
 @EnhancementOptions(lazyLoading = true)
-@TestForIssue(jiraKey = "HHH-14387")
-public class BytecodeEnhancementElementCollectionRecreateCollectionsInDefaultGroupTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+@JiraKey("HHH-14387")
+public class BytecodeEnhancementElementCollectionRecreateCollectionsInDefaultGroupTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				MyEntity.class
-		};
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyCollectionsInDefaultFetchGroup( true );
-	}
-
-	@Before
-	public void check() {
-		inSession(
+	@BeforeEach
+	public void check(SessionFactoryScope scope) {
+		scope.inSession(
 				session ->
 						assertTrue( session.getSessionFactory().getSessionFactoryOptions()
-											.isCollectionsInDefaultFetchGroupEnabled() )
+								.isCollectionsInDefaultFetchGroupEnabled() )
 		);
 	}
 
 
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session ->
 						session.createQuery( "delete from myentity" ).executeUpdate()
 		);
 	}
 
 	@Test
-	public void testRecreateCollection() {
-		inTransaction( session -> {
+	public void testRecreateCollection(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			MyEntity entity = new MyEntity();
 			entity.setId( 1 );
 			entity.setElements( Arrays.asList( "one", "two", "four" ) );
 			session.persist( entity );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.get( MyEntity.class, 1 );
 			entity.setElements( Arrays.asList( "two", "three" ) );
 			session.persist( entity );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.get( MyEntity.class, 1 );
 			assertThat( entity.getElements() )
 					.containsExactlyInAnyOrder( "two", "three" );
@@ -89,21 +81,21 @@ public class BytecodeEnhancementElementCollectionRecreateCollectionsInDefaultGro
 	}
 
 	@Test
-	public void testRecreateCollectionFind() {
-		inTransaction( session -> {
+	public void testRecreateCollectionFind(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			MyEntity entity = new MyEntity();
 			entity.setId( 1 );
 			entity.setElements( Arrays.asList( "one", "two", "four" ) );
 			session.persist( entity );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.find( MyEntity.class, 1 );
 			entity.setElements( Arrays.asList( "two", "three" ) );
 			session.persist( entity );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.find( MyEntity.class, 1 );
 			assertThat( entity.getElements() )
 					.containsExactlyInAnyOrder( "two", "three" );
@@ -111,20 +103,20 @@ public class BytecodeEnhancementElementCollectionRecreateCollectionsInDefaultGro
 	}
 
 	@Test
-	public void testDeleteCollection() {
-		inTransaction( session -> {
+	public void testDeleteCollection(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			MyEntity entity = new MyEntity();
 			entity.setId( 1 );
 			entity.setElements( Arrays.asList( "one", "two", "four" ) );
 			session.persist( entity );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.get( MyEntity.class, 1 );
 			entity.setElements( new ArrayList<>() );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.get( MyEntity.class, 1 );
 			assertThat( entity.getElements() )
 					.isEmpty();
@@ -132,20 +124,20 @@ public class BytecodeEnhancementElementCollectionRecreateCollectionsInDefaultGro
 	}
 
 	@Test
-	public void testDeleteCollectionFind() {
-		inTransaction( session -> {
+	public void testDeleteCollectionFind(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			MyEntity entity = new MyEntity();
 			entity.setId( 1 );
 			entity.setElements( Arrays.asList( "one", "two", "four" ) );
 			session.persist( entity );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.find( MyEntity.class, 1 );
 			entity.setElements( new ArrayList<>() );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.find( MyEntity.class, 1 );
 			assertThat( entity.getElements() )
 					.isEmpty();
@@ -153,19 +145,19 @@ public class BytecodeEnhancementElementCollectionRecreateCollectionsInDefaultGro
 	}
 
 	@Test
-	public void testLoadAndCommitTransactionDoesNotDeleteCollection() {
-		inTransaction( session -> {
+	public void testLoadAndCommitTransactionDoesNotDeleteCollection(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			MyEntity entity = new MyEntity();
 			entity.setId( 1 );
 			entity.setElements( Arrays.asList( "one", "two", "four" ) );
 			session.persist( entity );
 		} );
 
-		inTransaction( session ->
-							   session.get( MyEntity.class, 1 )
+		scope.inTransaction( session ->
+				session.get( MyEntity.class, 1 )
 		);
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.get( MyEntity.class, 1 );
 			assertThat( entity.getElements() )
 					.containsExactlyInAnyOrder( "one", "two", "four" );
@@ -174,19 +166,19 @@ public class BytecodeEnhancementElementCollectionRecreateCollectionsInDefaultGro
 	}
 
 	@Test
-	public void testLoadAndCommitTransactionDoesNotDeleteCollectionFind() {
-		inTransaction( session -> {
+	public void testLoadAndCommitTransactionDoesNotDeleteCollectionFind(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			MyEntity entity = new MyEntity();
 			entity.setId( 1 );
 			entity.setElements( Arrays.asList( "one", "two", "four" ) );
 			session.persist( entity );
 		} );
 
-		inTransaction( session ->
-							   session.find( MyEntity.class, 1 )
+		scope.inTransaction( session ->
+				session.find( MyEntity.class, 1 )
 		);
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			MyEntity entity = session.find( MyEntity.class, 1 );
 			assertThat( entity.getElements() )
 					.containsExactlyInAnyOrder( "one", "two", "four" );

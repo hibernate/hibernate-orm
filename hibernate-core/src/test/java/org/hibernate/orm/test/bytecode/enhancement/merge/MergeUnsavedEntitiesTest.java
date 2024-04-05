@@ -3,12 +3,11 @@ package org.hibernate.orm.test.bytecode.enhancement.merge;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,25 +17,27 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import static jakarta.persistence.CascadeType.MERGE;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
-@TestForIssue(jiraKey = "HHH-16322")
-public class MergeUnsavedEntitiesTest extends BaseCoreFunctionalTestCase {
+import org.junit.jupiter.api.Test;
+
+
+@DomainModel(
+		annotatedClasses = {
+				MergeUnsavedEntitiesTest.Parent.class,
+				MergeUnsavedEntitiesTest.Child.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@JiraKey("HHH-16322")
+public class MergeUnsavedEntitiesTest {
 
 	public static final String CHILD_NAME = "first child";
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Parent.class,
-				Child.class
-		};
-	}
-
 	@Test
-	public void testMerge() {
-		inTransaction(
+	public void testMerge(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Parent parent = new Parent( 1l, 2l );
 					parent = session.merge( parent );
@@ -47,7 +48,7 @@ public class MergeUnsavedEntitiesTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Parent parent = session.find( Parent.class, 1l );
 					assertThat( parent.getChildren().size() ).isEqualTo( 1 );
@@ -56,14 +57,14 @@ public class MergeUnsavedEntitiesTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Parent parent = session.find( Parent.class, 1l );
 					session.merge( parent );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Parent parent = session.find( Parent.class, 1l );
 					assertThat( parent.getChildren().size() ).isEqualTo( 1 );

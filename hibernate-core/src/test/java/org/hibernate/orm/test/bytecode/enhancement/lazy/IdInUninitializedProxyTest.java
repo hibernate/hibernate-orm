@@ -11,34 +11,34 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-14571")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-14571")
+@DomainModel(
+		annotatedClasses = {
+				IdInUninitializedProxyTest.AnEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true, extendedEnhancement = true)
-public class IdInUninitializedProxyTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { AnEntity.class };
-	}
+public class IdInUninitializedProxyTest {
 
 	@Test
-	public void testIdIsAlwaysConsideredInitialized() {
-		inTransaction( session -> {
+	public void testIdIsAlwaysConsideredInitialized(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final AnEntity e = session.byId( AnEntity.class ).getReference( 1 );
 			assertFalse( Hibernate.isInitialized( e ) );
 			// This is the gist of the problem
@@ -52,9 +52,9 @@ public class IdInUninitializedProxyTest extends BaseNonConfigCoreFunctionalTestC
 		} );
 	}
 
-	@Before
-	public void prepareTestData() {
-		inTransaction( session -> {
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			AnEntity anEntity = new AnEntity();
 			anEntity.id = 1;
 			anEntity.name = "George";

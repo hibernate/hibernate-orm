@@ -6,10 +6,9 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -24,7 +23,7 @@ import java.util.Set;
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@BytecodeEnhanced
 public class DirtyTrackingTest {
 
     @Test

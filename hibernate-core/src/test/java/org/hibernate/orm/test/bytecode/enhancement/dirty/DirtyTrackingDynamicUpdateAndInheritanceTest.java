@@ -4,12 +4,13 @@ import java.util.List;
 
 import org.hibernate.annotations.DynamicUpdate;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
@@ -23,26 +24,29 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				DirtyTrackingDynamicUpdateAndInheritanceTest.SuperEntity.class,
+				DirtyTrackingDynamicUpdateAndInheritanceTest.ChildEntity.class,
+				DirtyTrackingDynamicUpdateAndInheritanceTest.AbstractVersion.class,
+				DirtyTrackingDynamicUpdateAndInheritanceTest.FileVersion.class
+		}
+)
+@SessionFactory(
+		// We want to test with this setting set to false explicitly,
+		// because another test already takes care of the default.
+		applyCollectionsInDefaultFetchGroup = false
+)
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
-public class DirtyTrackingDynamicUpdateAndInheritanceTest extends BaseCoreFunctionalTestCase {
+public class DirtyTrackingDynamicUpdateAndInheritanceTest {
 
 	public static final int ID = 1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				SuperEntity.class,
-				ChildEntity.class,
-				AbstractVersion.class,
-				FileVersion.class
-		};
-	}
-
 	@Test
 	@JiraKey("HHH-16688")
-	public void testDynamicUpdateWithInheritance() {
-		inTransaction(
+	public void testDynamicUpdateWithInheritance(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					ChildEntity entity = new ChildEntity( ID );
 					entity.setaSuper( "aSuper before" );
@@ -58,7 +62,7 @@ public class DirtyTrackingDynamicUpdateAndInheritanceTest extends BaseCoreFuncti
 		String aChildNewValue = "aChild after";
 		String bChildNewValue = "bChild after";
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					ChildEntity entity = session.find( ChildEntity.class, ID );
 					entity.setaSuper( aSuperNewValue );
@@ -69,7 +73,7 @@ public class DirtyTrackingDynamicUpdateAndInheritanceTest extends BaseCoreFuncti
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					ChildEntity entity = session.find( ChildEntity.class, ID );
 					assertThat( entity.getaSuper() ).isEqualTo( aSuperNewValue );
@@ -82,9 +86,8 @@ public class DirtyTrackingDynamicUpdateAndInheritanceTest extends BaseCoreFuncti
 
 	@Test
 	@JiraKey("HHH-16379")
-	public void testWithDynamicUpdate() {
-
-		inTransaction(
+	public void testWithDynamicUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					FileVersion version = new FileVersion();
 					version.setId( "1" );

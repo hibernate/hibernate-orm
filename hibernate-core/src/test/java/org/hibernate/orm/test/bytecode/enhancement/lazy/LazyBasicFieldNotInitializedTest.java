@@ -8,19 +8,21 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -30,33 +32,34 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-9937")
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyBasicFieldNotInitializedTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-9937")
+@DomainModel(
+        annotatedClasses = {
+               LazyBasicFieldNotInitializedTest.TestEntity.class
+        }
+)
+@ServiceRegistry(
+        settings = {
+                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyBasicFieldNotInitializedTest {
 
     private Long entityId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{TestEntity.class};
-    }
 
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             TestEntity entity = new TestEntity();
             entity.description = "desc";
             s.persist( entity );
@@ -65,18 +68,18 @@ public class LazyBasicFieldNotInitializedTest extends BaseCoreFunctionalTestCase
     }
 
     @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             TestEntity entity = s.get( TestEntity.class, entityId );
-            Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
+            assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
 
-            EntityPersister entityPersister = sessionFactory().getRuntimeMetamodels()
+            EntityPersister entityPersister = scope.getSessionFactory().getRuntimeMetamodels()
                     .getMappingMetamodel()
                     .getEntityDescriptor( TestEntity.class );
 
             boolean[] propertyLaziness = entityPersister.getPropertyLaziness();
             assertEquals( 1, propertyLaziness.length );
-            assertTrue( propertyLaziness[0] );
+            Assertions.assertTrue( propertyLaziness[0] );
 
             // Make sure NonIdentifierAttribute#isLazy is consistent (HHH-10551)
             final AttributeMapping theBytesAttr = entityPersister.findAttributeMapping( "description" );
@@ -89,7 +92,7 @@ public class LazyBasicFieldNotInitializedTest extends BaseCoreFunctionalTestCase
     
     @Entity(name = "TestEntity")
     @Table( name = "TEST_ENTITY" )
-    private static class TestEntity {
+    static class TestEntity {
 
         @Id
         @GeneratedValue

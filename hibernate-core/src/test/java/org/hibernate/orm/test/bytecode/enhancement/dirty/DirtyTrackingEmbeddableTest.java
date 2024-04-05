@@ -6,11 +6,10 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -19,7 +18,7 @@ import jakarta.persistence.Id;
 
 @JiraKey( "HHH-16774" )
 @JiraKey( "HHH-16952" )
-@RunWith( BytecodeEnhancerRunner.class )
+@BytecodeEnhanced
 public class DirtyTrackingEmbeddableTest {
 
     @Test

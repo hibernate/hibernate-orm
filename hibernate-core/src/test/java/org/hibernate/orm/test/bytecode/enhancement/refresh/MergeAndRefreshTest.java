@@ -5,11 +5,13 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.CascadeType;
@@ -20,22 +22,21 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				MergeAndRefreshTest.Phase.class,
+				MergeAndRefreshTest.PhaseDescription.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @JiraKey("HHH-17668")
-public class MergeAndRefreshTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Phase.class,
-				PhaseDescription.class
-		};
-	}
+public class MergeAndRefreshTest {
 
 	@Test
-	public void testRefresh() {
+	public void testRefresh(SessionFactoryScope scope) {
 		Long phaseId = 1L;
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					PhaseDescription description = new PhaseDescription("phase 1");
 					Phase phase = new Phase( phaseId, description );
@@ -43,13 +44,9 @@ public class MergeAndRefreshTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		Phase phase = fromTransaction(
-				session -> {
-					return session.find( Phase.class, phaseId );
-				}
-		);
+		Phase phase = scope.fromTransaction( session -> session.find( Phase.class, phaseId ) );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Phase merged = session.merge( phase );
 					session.refresh( merged );

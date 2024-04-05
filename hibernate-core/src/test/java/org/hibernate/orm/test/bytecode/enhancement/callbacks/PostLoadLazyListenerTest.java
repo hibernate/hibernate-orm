@@ -9,12 +9,13 @@ package org.hibernate.orm.test.bytecode.enhancement.callbacks;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -27,17 +28,18 @@ import jakarta.persistence.PostLoad;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JiraKey("HHH-17019")
-@RunWith(BytecodeEnhancerRunner.class)
-public class PostLoadLazyListenerTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				PostLoadLazyListenerTest.Person.class, PostLoadLazyListenerTest.Tag.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class PostLoadLazyListenerTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class, Tag.class };
-	}
-
-	@After
-	public void tearDown() {
-		inTransaction( session -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 						   session.createQuery( "delete from Tag" ).executeUpdate();
 						   session.createQuery( "delete from Person" ).executeUpdate();
 					   }
@@ -45,8 +47,8 @@ public class PostLoadLazyListenerTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void smoke() {
-		inTransaction(
+	public void smoke(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = new Person( 1, "name" );
 					Tag tag = new Tag( 100, person );
@@ -57,7 +59,7 @@ public class PostLoadLazyListenerTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Tag tag = session.find( Tag.class, 100 );
 					assertThat( tag )

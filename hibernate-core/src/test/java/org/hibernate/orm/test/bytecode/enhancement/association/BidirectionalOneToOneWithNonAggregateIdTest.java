@@ -6,12 +6,13 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,25 +26,24 @@ import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.annotations.FetchMode.SELECT;
 import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				BidirectionalOneToOneWithNonAggregateIdTest.Entity1.class,
+				BidirectionalOneToOneWithNonAggregateIdTest.Entity2.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @JiraKey("HHH-17519")
-public class BidirectionalOneToOneWithNonAggregateIdTest extends BaseCoreFunctionalTestCase {
+public class BidirectionalOneToOneWithNonAggregateIdTest  {
 
 	static final int ENTITY_ID = 1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Entity1.class,
-				Entity2.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Entity1 e1 = new Entity1( ENTITY_ID );
 					Entity2 e2 = new Entity2();
@@ -60,8 +60,8 @@ public class BidirectionalOneToOneWithNonAggregateIdTest extends BaseCoreFunctio
 
 
 	@Test
-	public void testRemovingChild() {
-		inTransaction(
+	public void testRemovingChild(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Entity1 e1 = session.byId( Entity1.class ).load( ENTITY_ID );
 					Entity2 child = e1.getChild();

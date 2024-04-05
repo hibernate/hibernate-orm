@@ -7,11 +7,13 @@
 package org.hibernate.orm.test.bytecode.enhancement.eviction;
 
 import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,27 +22,27 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class EvictionTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+        annotatedClasses = {
+               EvictionTest.Parent.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class EvictionTest {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Parent.class};
-    }
-
-    @Before
-    public void prepare() {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
         // Create a Parent
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Parent p = new Parent();
             p.name = "PARENT";
             s.persist( p );
@@ -48,8 +50,8 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
 
             // Delete the Parent
             Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
@@ -91,7 +93,7 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 
     @Entity( name = "Parent" )
     @Table( name = "PARENT" )
-    private static class Parent {
+    static class Parent {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )

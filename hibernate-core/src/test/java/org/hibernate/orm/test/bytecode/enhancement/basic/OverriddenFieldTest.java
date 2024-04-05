@@ -1,14 +1,13 @@
 package org.hibernate.orm.test.bytecode.enhancement.basic;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,31 +20,28 @@ import jakarta.persistence.Table;
  * when the entity has the same field defined twice: once in a mappedsuperclass (should be ignored)
  * and once in the concrete entity class.
  */
-@TestForIssue(jiraKey = "HHH-15505")
-@RunWith(BytecodeEnhancerRunner.class)
-public class OverriddenFieldTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { AbstractEntity.class, Fruit.class };
-	}
-
-	@Before
-	public void prepare() {
-	}
+@JiraKey("HHH-15505")
+@DomainModel(
+		annotatedClasses = {
+				OverriddenFieldTest.AbstractEntity.class, OverriddenFieldTest.Fruit.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class OverriddenFieldTest {
 
 	@Test
-	public void test() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Fruit testEntity = new Fruit();
 			testEntity.setId( 1 );
 			testEntity.setName( "John" );
 			s.persist( testEntity );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			Fruit testEntity = s.get( Fruit.class, 1 );
-			Assert.assertEquals( "John", testEntity.getName() );
+			assertEquals( "John", testEntity.getName() );
 		} );
 	}
 

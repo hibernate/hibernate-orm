@@ -20,51 +20,54 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestForIssue(jiraKey = "HHH-11147")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-11147")
+@DomainModel(
+		annotatedClasses = {
+				LazyCollectionDeletedAllowProxyTest.Post.class,
+				LazyCollectionDeletedAllowProxyTest.Tag.class,
+				LazyCollectionDeletedAllowProxyTest.AdditionalDetails.class,
+				LazyCollectionDeletedAllowProxyTest.Label.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class LazyCollectionDeletedAllowProxyTest extends BaseNonConfigCoreFunctionalTestCase {
+public class LazyCollectionDeletedAllowProxyTest {
 
 	private Long postId;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Post.class, Tag.class, AdditionalDetails.class, Label.class };
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-		ssrb.applySetting( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-	}
-
 	@Test
-	public void updatingAnAttributeDoesNotDeleteLazyCollectionsTest() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void updatingAnAttributeDoesNotDeleteLazyCollectionsTest(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Query query = s.createQuery( "from AdditionalDetails where id = :id" );
 			query.setParameter( "id", postId );
 			AdditionalDetails additionalDetails = (AdditionalDetails) query.getSingleResult();
@@ -72,16 +75,16 @@ public class LazyCollectionDeletedAllowProxyTest extends BaseNonConfigCoreFuncti
 			s.persist( additionalDetails );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			Query query = s.createQuery( "from Post where id = :id" );
 			query.setParameter( "id", postId );
 			Post retrievedPost = (Post) query.getSingleResult();
 
-			assertFalse( "No tags found", retrievedPost.getTags().isEmpty() );
+			assertFalse( retrievedPost.getTags().isEmpty(), "No tags found" );
 			retrievedPost.getTags().forEach( tag -> assertNotNull( tag ) );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			Query query = s.createQuery( "from AdditionalDetails where id = :id" );
 			query.setParameter( "id", postId );
 			AdditionalDetails additionalDetails = (AdditionalDetails) query.getSingleResult();
@@ -91,24 +94,24 @@ public class LazyCollectionDeletedAllowProxyTest extends BaseNonConfigCoreFuncti
 			post.setMessage( "new message" );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			Query query = s.createQuery( "from Post where id = :id" );
 			query.setParameter( "id", postId );
 			Post retrievedPost = (Post) query.getSingleResult();
 
 			assertEquals( "new message", retrievedPost.getMessage() );
-			assertFalse( "No tags found", retrievedPost.getTags().isEmpty() );
+			assertFalse( retrievedPost.getTags().isEmpty(), "No tags found" );
 			retrievedPost.getTags().forEach( tag -> {
 				assertNotNull( tag );
-				assertFalse( "No Labels found", tag.getLabels().isEmpty() );
+				assertFalse( tag.getLabels().isEmpty(), "No Labels found" );
 			} );
 
 		} );
 	}
 
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Post post = new Post();
 
 			Tag tag1 = new Tag( "tag1" );
@@ -134,9 +137,9 @@ public class LazyCollectionDeletedAllowProxyTest extends BaseNonConfigCoreFuncti
 		} );
 	}
 
-	@After
-	public void cleanData() {
-		doInHibernate( this::sessionFactory, s -> {
+	@AfterEach
+	public void cleanData(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Query query = s.createQuery( "from Post" );
 			List<Post> posts = query.getResultList();
 			posts.forEach( post -> {
@@ -158,7 +161,7 @@ public class LazyCollectionDeletedAllowProxyTest extends BaseNonConfigCoreFuncti
 
 	@Entity(name = "Tag")
 	@Table(name = "TAG")
-	private static class Tag {
+	static class Tag {
 
 		@Id
 		@GeneratedValue
@@ -215,7 +218,7 @@ public class LazyCollectionDeletedAllowProxyTest extends BaseNonConfigCoreFuncti
 
 	@Entity(name = "Post")
 	@Table(name = "POST")
-	private static class Post {
+	static class Post {
 
 		@Id
 		@GeneratedValue
@@ -256,7 +259,7 @@ public class LazyCollectionDeletedAllowProxyTest extends BaseNonConfigCoreFuncti
 
 	@Entity(name = "AdditionalDetails")
 	@Table(name = "ADDITIONAL_DETAILS")
-	private static class AdditionalDetails {
+	static class AdditionalDetails {
 
 		@Id
 		Long id;

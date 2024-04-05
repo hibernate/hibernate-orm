@@ -14,45 +14,52 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@RunWith(BytecodeEnhancerRunner.class)
-public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				PrivateConstructorEnhancerTest.Person.class,
+				PrivateConstructorEnhancerTest.Country.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class PrivateConstructorEnhancerTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Country.class
-		};
-	}
+	private Country country;
+	private Person person;
 
-	private Country country = new Country( "Romania" );
-	private Person person = new Person( "Vlad Mihalcea", country );
-
-	@Override
-	protected void afterSessionFactoryBuilt(SessionFactoryImplementor sessionFactory) {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	protected void setup(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			country = new Country( "Romania" );
+			person = new Person( "Vlad Mihalcea", country );
 			session.persist( country );
-
 			session.persist( person );
 		} );
 	}
 
-	@Test
-	public void testFindEntity() {
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.remove( country );
+			session.remove( person );
+		} );
+	}
 
-		doInHibernate( this::sessionFactory, session -> {
+	@Test
+	public void testFindEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			try {
 				Country country = session.find( Country.class, this.country.id );
 
@@ -66,9 +73,8 @@ public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Test
-	public void testGetReferenceEntity() {
-
-		doInHibernate( this::sessionFactory, session -> {
+	public void testGetReferenceEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			try {
 				Country country = session.getReference( Country.class, this.country.id );
 
@@ -82,9 +88,8 @@ public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Test
-	public void testLoadProxyAssociation() {
-
-		doInHibernate( this::sessionFactory, session -> {
+	public void testLoadProxyAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			try {
 				Person person = session.find( Person.class, this.person.id );
 
@@ -98,9 +103,8 @@ public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Test
-	public void testListEntity() {
-
-		doInHibernate( this::sessionFactory, session -> {
+	public void testListEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			try {
 				List<Person> persons = session.createQuery( "select p from Person p" ).getResultList();
 				assertTrue( persons.stream().anyMatch( p -> p.getCountry().getName().equals( "Romania" ) ) );
@@ -114,9 +118,8 @@ public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Test
-	public void testListJoinFetchEntity() {
-
-		doInHibernate( this::sessionFactory, session -> {
+	public void testListJoinFetchEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			try {
 				List<Person> persons = session.createQuery( "select p from Person p join fetch p.country" )
 						.getResultList();
@@ -131,7 +134,7 @@ public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Entity(name = "Person")
-	private static class Person {
+	static class Person {
 
 		@Id
 		@GeneratedValue
@@ -164,7 +167,7 @@ public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Entity(name = "Country")
-	private static class Country {
+	static class Country {
 
 		@Id
 		@GeneratedValue

@@ -6,12 +6,11 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.pk;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -26,17 +25,18 @@ import java.util.Calendar;
 /**
  * @author Gail Badner
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class EmbeddedPKTest extends BaseCoreFunctionalTestCase {
-
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{WorkOrder.class, WorkOrderPK.class};
-    }
+@DomainModel(
+        annotatedClasses = {
+              EmbeddedPKTest.WorkOrder.class, EmbeddedPKTest.WorkOrderPK.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class EmbeddedPKTest {
 
     @Test
-    public void test() {
-        TransactionUtil.doInHibernate( this::sessionFactory, s -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             s.persist( new WorkOrder() );
         } );
     }
@@ -46,7 +46,7 @@ public class EmbeddedPKTest extends BaseCoreFunctionalTestCase {
     @Entity
     @IdClass( WorkOrderPK.class )
     @Table( name = "WORK_ORDER" )
-    private static class WorkOrder {
+    static class WorkOrder {
 
         @Id
         long id;
@@ -184,7 +184,7 @@ public class EmbeddedPKTest extends BaseCoreFunctionalTestCase {
         }
     }
 
-    private static class WorkOrderPK implements Serializable {
+    static class WorkOrderPK implements Serializable {
         long id;
         long location;
 

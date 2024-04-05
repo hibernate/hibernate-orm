@@ -147,6 +147,7 @@ public class SessionFactoryExtension
 						else if ( ! explicitInspectorClass.equals( StatementInspector.class ) ) {
 							sessionFactoryBuilder.applyStatementInspector( explicitInspectorClass.getConstructor().newInstance() );
 						}
+						sessionFactoryBuilder.applyCollectionsInDefaultFetchGroup( sessionFactoryConfig.applyCollectionsInDefaultFetchGroup() );
 
 						final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.build();
 

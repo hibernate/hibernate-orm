@@ -6,13 +6,13 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.cascade;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -22,28 +22,31 @@ import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-10252" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class CascadeWithFkConstraintTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10252" )
+@DomainModel(
+        annotatedClasses = {
+            CascadeWithFkConstraintTest.Garage.class, CascadeWithFkConstraintTest.Car.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class CascadeWithFkConstraintTest  {
 
     private String garageId, car1Id, car2Id;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Garage.class, Car.class};
-    }
-
-    @Before
-    public void prepare() {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
         // Create garage, add 2 cars to garage
-        doInJPA( this::sessionFactory, em -> {
+        scope.inTransaction( em -> {
 
             Garage garage = new Garage();
             Car car1 = new Car();
@@ -62,23 +65,23 @@ public class CascadeWithFkConstraintTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
+    public void test(SessionFactoryScope scope) {
         // Remove garage
-        doInJPA( this::sessionFactory, em -> {
+        scope.inTransaction( em -> {
             Garage toRemoveGarage = em.find( Garage.class, garageId );
             em.remove( toRemoveGarage );
         } );
 
         // Check if there is no garage but cars are still present
-        doInJPA( this::sessionFactory, em -> {
+        scope.inTransaction( em -> {
             Garage foundGarage = em.find( Garage.class, garageId );
-            Assert.assertNull( foundGarage );
+            assertNull( foundGarage );
 
             Car foundCar1 = em.find( Car.class, car1Id );
-            Assert.assertEquals( car1Id, foundCar1.id );
+            assertEquals( car1Id, foundCar1.id );
 
             Car foundCar2 = em.find( Car.class, car2Id );
-            Assert.assertEquals( car2Id, foundCar2.id );
+            assertEquals( car2Id, foundCar2.id );
         } );
     }
 
@@ -86,7 +89,7 @@ public class CascadeWithFkConstraintTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "GARAGE" )
-    private static class Garage {
+    static class Garage {
 
         @Id
         String id;

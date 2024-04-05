@@ -13,30 +13,26 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
-import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.annotations.LazyGroup;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -60,28 +56,56 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-11147")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-11147")
+@DomainModel(
+		annotatedClasses = {
+				FetchGraphTest.AEntity.class,
+				FetchGraphTest.BEntity.class,
+				FetchGraphTest.CEntity.class,
+				FetchGraphTest.DEntity.class,
+				FetchGraphTest.EEntity.class,
+				FetchGraphTest.GEntity.class,
+				Activity.class,
+				Instruction.class,
+				WebApplication.class,
+				SpecializedKey.class,
+				MoreSpecializedKey.class,
+				RoleEntity.class,
+				AbstractKey.class,
+				GenericKey.class,
+				SpecializedEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
+public class FetchGraphTest {
 
 	@Test
-	public void testLoadNonOwningOneToOne() {
+	public void testLoadNonOwningOneToOne(SessionFactoryScope scope) {
 		// Test loading D and accessing E
 		// 		E is the owner of the FK, not D.  When `D#e` is accessed we
 		//		need to actually load E because its table has the FK value, not
 		//		D's table
 
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getRuntimeMetamodels()
+		assert scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( DEntity.class )
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
-		inSession(
+		scope.inSession(
 				session -> {
 					final DEntity entityD = session.load( DEntity.class, 1L );
 					assertThat( stats.getPrepareStatementCount(), is( 0L ) );
@@ -103,19 +127,19 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLoadOwningOneToOne() {
+	public void testLoadOwningOneToOne(SessionFactoryScope scope) {
 		// switch it around
 
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getRuntimeMetamodels()
+		assert scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( DEntity.class )
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
-		inSession(
+		scope.inSession(
 				session -> {
 					final EEntity entityE = session.load( EEntity.class, 17L );
 					assertThat( stats.getPrepareStatementCount(), is( 0L ) );
@@ -131,9 +155,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void basicTypeLazyGroup() {
+	public void basicTypeLazyGroup(SessionFactoryScope scope) {
 
-		inSession(
+		scope.inSession(
 				session -> {
 					final String qry = "select d from D d";
 
@@ -150,7 +174,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 				}
 		);
 
-		inSession(
+		scope.inSession(
 				session -> {
 					final DEntity dEntity = session.get( DEntity.class, 1L );
 					assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
@@ -168,7 +192,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 				}
 		);
 
-		inSession(
+		scope.inSession(
 				session -> {
 					final DEntity dEntity = session.get( DEntity.class, 1L );
 					assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
@@ -185,7 +209,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 				}
 		);
 
-		inSession(
+		scope.inSession(
 				session -> {
 					final String qry = "select e from E e join fetch e.d";
 
@@ -217,17 +241,17 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testFetchingScroll() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testFetchingScroll(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getRuntimeMetamodels()
+		assert scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( DEntity.class )
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
-		inStatelessSession(
+		scope.inStatelessSession(
 				session -> {
 					final String qry = "select e from E e join fetch e.d";
 
@@ -243,7 +267,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 				}
 		);
 
-		inStatelessSession(
+		scope.inStatelessSession(
 				session -> {
 					final String qry = "select d from D d " +
 							"join fetch d.a " +
@@ -265,7 +289,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 				}
 		);
 
-		inStatelessSession(
+		scope.inStatelessSession(
 				session -> {
 					final String qry = "select g from G g join fetch g.dEntities";
 
@@ -280,17 +304,17 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testFetchingScroll2() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testFetchingScroll2(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getRuntimeMetamodels()
+		assert scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( DEntity.class )
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
-		inStatelessSession(
+		scope.inStatelessSession(
 				session -> {
 					final String qry = "select d, d.d from D d " +
 							"join fetch d.a " +
@@ -320,15 +344,15 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLazyAssociationSameAsNonLazyInPC() {
+	public void testLazyAssociationSameAsNonLazyInPC(SessionFactoryScope scope) {
 
-		assert sessionFactory().getRuntimeMetamodels()
+		assert scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( DEntity.class )
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
-		inSession(
+		scope.inSession(
 				session -> {
 					final AEntity entityA = session.get( AEntity.class, 1L );
 
@@ -345,16 +369,16 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRandomAccess() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testRandomAccess(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		final EntityPersister persister = sessionFactory().getRuntimeMetamodels()
+		final EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( DEntity.class );
 		assert persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 
-		inSession(
+		scope.inSession(
 				session -> {
 					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 					// Load a D
@@ -456,11 +480,11 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNullManyToOneHql() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testNullManyToOneHql(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final String qry = "select e from Activity e";
 					final List<Activity> activities = session.createQuery( qry, Activity.class ).list();
@@ -493,17 +517,17 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testAbstractClassAssociation() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testAbstractClassAssociation(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		assert sessionFactory().getRuntimeMetamodels()
+		assert scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( RoleEntity.class )
 				.getInstrumentationMetadata()
 				.isEnhancedForLazyLoading();
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final String qry = "select e from RoleEntity e";
 					final List<RoleEntity> keyRoleEntities = session.createQuery( qry, RoleEntity.class ).list();
@@ -534,11 +558,11 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNonAbstractAssociationWithSubclassValue() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testNonAbstractAssociationWithSubclassValue(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final String qry = "select e from RoleEntity e";
 					final List<RoleEntity> keyRoleEntities = session.createQuery( qry, RoleEntity.class ).list();
@@ -562,8 +586,8 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryAndDeleteDEntity() {
-		inTransaction(
+	public void testQueryAndDeleteDEntity(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					List<DEntity> result = session.createQuery(
 							"select d from D d ",
@@ -584,8 +608,8 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLoadAndDeleteDEntity() {
-		inTransaction(
+	public void testLoadAndDeleteDEntity(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					DEntity entity = session.load( DEntity.class, 1L );
 					session.delete( entity );
@@ -600,8 +624,8 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetAndDeleteDEntity() {
-		inTransaction(
+	public void testGetAndDeleteDEntity(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					DEntity entity = session.get( DEntity.class, 1L );
 					session.delete( entity );
@@ -616,8 +640,8 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetAndDeleteEEntity() {
-		inTransaction(
+	public void testGetAndDeleteEEntity(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					EEntity entity = session.get( EEntity.class, 17L );
 					session.delete( entity );
@@ -627,8 +651,8 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLoadAndDeleteEEntity() {
-		inTransaction(
+	public void testLoadAndDeleteEEntity(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					EEntity entity = session.load( EEntity.class, 17L );
 					session.delete( entity );
@@ -638,8 +662,8 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testQueryAndDeleteEEntity() {
-		inTransaction(
+	public void testQueryAndDeleteEEntity(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					List<EEntity> result = session.createQuery(
 							"select e from E e",
@@ -653,45 +677,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( AEntity.class );
-		sources.addAnnotatedClass( BEntity.class );
-		sources.addAnnotatedClass( CEntity.class );
-		sources.addAnnotatedClass( DEntity.class );
-		sources.addAnnotatedClass( EEntity.class );
-		sources.addAnnotatedClass( GEntity.class );
-
-		sources.addAnnotatedClass( Activity.class );
-		sources.addAnnotatedClass( Instruction.class );
-		sources.addAnnotatedClass( WebApplication.class );
-
-		sources.addAnnotatedClass( SpecializedKey.class );
-		sources.addAnnotatedClass( MoreSpecializedKey.class );
-		sources.addAnnotatedClass( RoleEntity.class );
-		sources.addAnnotatedClass( AbstractKey.class );
-		sources.addAnnotatedClass( GenericKey.class );
-		sources.addAnnotatedClass( SpecializedEntity.class );
-	}
-
-	@Before
-	public void prepareTestData() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					DEntity d = new DEntity();
 					d.setD( "bla" );
@@ -801,9 +789,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from E" ).executeUpdate();
 					session.createQuery( "delete from D" ).executeUpdate();

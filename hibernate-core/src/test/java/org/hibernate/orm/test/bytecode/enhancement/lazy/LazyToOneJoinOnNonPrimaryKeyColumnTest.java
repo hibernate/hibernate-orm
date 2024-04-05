@@ -8,14 +8,15 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,19 +25,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+			LazyToOneJoinOnNonPrimaryKeyColumnTest.EntityA.class, LazyToOneJoinOnNonPrimaryKeyColumnTest.EntityB.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
 @JiraKey("HHH-17075")
-public class LazyToOneJoinOnNonPrimaryKeyColumnTest extends BaseNonConfigCoreFunctionalTestCase {
+public class LazyToOneJoinOnNonPrimaryKeyColumnTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityA.class, EntityB.class };
-	}
-
-	@Before
-	public void prepare() {
-		inTransaction( s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EntityA entityA = new EntityA( 1 );
 			entityA.setMyUniqueKey( "someValue" );
 			s.persist( entityA );
@@ -49,17 +51,17 @@ public class LazyToOneJoinOnNonPrimaryKeyColumnTest extends BaseNonConfigCoreFun
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction( s -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			s.createMutationQuery( "delete entityb" ).executeUpdate();
 			s.createMutationQuery( "delete entitya" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	public void testLazyLoading() {
-		inTransaction( s -> {
+	public void testLazyLoading(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EntityB entityB = s.get( EntityB.class, 2 );
 			// Trigger lazy loading
 			assertThat( entityB.getMyAssociation() )

@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.association;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,15 +17,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@BytecodeEnhanced
 public class ManyToManyAssociationListTest {
     @Test
     public void testBidirectionalExisting() {
@@ -36,8 +37,8 @@ public class ManyToManyAssociationListTest {
         user.setGroups( new ArrayList<>( Collections.singleton( group ) ) );
         user.setGroups( new ArrayList<>( Arrays.asList( group, anotherGroup ) ) );
 
-        Assert.assertEquals( 1, group.getUsers().size() );
-        Assert.assertEquals( 1, anotherGroup.getUsers().size() );
+        assertEquals( 1, group.getUsers().size() );
+        assertEquals( 1, anotherGroup.getUsers().size() );
     }
 
     // -- //

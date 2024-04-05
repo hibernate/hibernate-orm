@@ -5,14 +5,15 @@ import java.util.List;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.DirtyCheckEnhancementContext;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.NoDirtyCheckEnhancementContext;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,25 +23,24 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @JiraKey("HHH-17049")
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				ConstructorInitializationTest.Person.class,
+				ConstructorInitializationTest.LoginAccount.class,
+				ConstructorInitializationTest.AccountPreferences.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ DirtyCheckEnhancementContext.class, NoDirtyCheckEnhancementContext.class })
-public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
+public class ConstructorInitializationTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class,
-				LoginAccount.class,
-				AccountPreferences.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = new Person( 1l, "Henry" );
 					LoginAccount loginAccount = new LoginAccount();
@@ -50,7 +50,7 @@ public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<LoginAccount> accounts = session.createQuery(
 							"select la from LoginAccount la",
@@ -67,9 +67,9 @@ public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void tearDown(){
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope){
+		scope.inTransaction(
 				session-> {
 					session.createMutationQuery( "delete from Person" ).executeUpdate();
 					session.createMutationQuery( "delete from LoginAccount" ).executeUpdate();
@@ -79,15 +79,15 @@ public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void findTest() {
-		inTransaction(
+	public void findTest(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = session.find( Person.class, 1L );
 					person.setFirstName( "Liza" );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<LoginAccount> accounts = session.createQuery(
 							"select la from LoginAccount la",
@@ -105,15 +105,15 @@ public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void getReferenceTest() {
-		inTransaction(
+	public void getReferenceTest(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = session.getReference( Person.class, 1L );
 					person.setFirstName( "Liza" );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<LoginAccount> accounts = session.createQuery(
 							"select la from LoginAccount la",
@@ -131,8 +131,8 @@ public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void findTest2() {
-		inTransaction(
+	public void findTest2(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = session.find( Person.class, 1L );
 					person.setFirstName( "Liza" );
@@ -142,7 +142,7 @@ public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person person = session.find( Person.class, 1L );
 					assertThat( person.getFirstName() ).isEqualTo( "Liza" );
@@ -167,8 +167,8 @@ public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void getReferenceTest2() {
-		inTransaction(
+	public void getReferenceTest2(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = session.getReference( Person.class, 1L );
 					person.setFirstName( "Liza" );
@@ -178,7 +178,7 @@ public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person person = session.find( Person.class, 1L );
 					assertThat( person.getFirstName() ).isEqualTo( "Liza" );

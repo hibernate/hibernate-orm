@@ -7,17 +7,19 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,38 +29,38 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-13640" )
-@RunWith(BytecodeEnhancerRunner.class)
-public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
+@JiraKey( "HHH-13640" )
+@DomainModel(
+		annotatedClasses = {
+				LazyToOnesNoProxyFactoryWithSubclassesStatefulTest.Animal.class,
+				LazyToOnesNoProxyFactoryWithSubclassesStatefulTest.Primate.class,
+				LazyToOnesNoProxyFactoryWithSubclassesStatefulTest.Human.class,
+				LazyToOnesNoProxyFactoryWithSubclassesStatefulTest.OtherEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest {
 
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Animal.class );
-		sources.addAnnotatedClass( Primate.class );
-		sources.addAnnotatedClass( Human.class );
-		sources.addAnnotatedClass( OtherEntity.class );
-	}
-	
 	@Test
-	public void testNewEnhancedProxyAssociation() {
-		inTransaction(
+	public void testNewEnhancedProxyAssociation(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Human human = new Human( "A Human" );
 					OtherEntity otherEntity = new OtherEntity( "test1" );
@@ -69,9 +71,9 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 				}
 		);
 
-		inSession(
+		scope.inSession(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "human" ) );
@@ -83,8 +85,8 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 	}
 
 	@Test
-	public void testExistingInitializedAssociationLeafSubclass() {
-		inTransaction(
+	public void testExistingInitializedAssociationLeafSubclass(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Human human = new Human( "A Human" );
 					OtherEntity otherEntity = new OtherEntity( "test1" );
@@ -96,10 +98,10 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 				}
 		);
 
-		final Statistics stats = sessionFactory().getStatistics();
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		inSession(
+		scope.inSession(
 				session -> {
 
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
@@ -145,8 +147,8 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 	}
 
 	@Test
-	public void testExistingEnhancedProxyAssociationLeafSubclassOnly() {
-		inTransaction(
+	public void testExistingEnhancedProxyAssociationLeafSubclassOnly(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Human human = new Human( "A Human" );
 					OtherEntity otherEntity = new OtherEntity( "test1" );
@@ -157,9 +159,9 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 				}
 		);
 
-		inSession(
+		scope.inSession(
 				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertNull( otherEntity.animal );
@@ -176,9 +178,9 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from OtherEntity" ).executeUpdate();
 					session.createQuery( "delete from Human" ).executeUpdate();

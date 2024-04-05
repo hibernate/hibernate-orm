@@ -28,95 +28,93 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hamcrest.MatcherAssert;
-
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-11147")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-11147")
+@DomainModel(
+		annotatedClasses = {
+				SetIdentifierOnAEnhancedProxyTest.Parent.class,
+				SetIdentifierOnAEnhancedProxyTest.Child.class,
+				SetIdentifierOnAEnhancedProxyTest.Person.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunctionalTestCase {
-
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-		ssrb.applySetting( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
+public class SetIdentifierOnAEnhancedProxyTest {
 
 	private static final int CHILDREN_SIZE = 10;
 	private Long lastChildID;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Parent.class, Child.class, Person.class };
-	}
-
 	@Test
-	public void setIdTest() {
-		final Statistics stats = sessionFactory().getStatistics();
+	public void setIdTest(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					stats.clear();
 					Child loadedChild = session.load( Child.class, lastChildID );
 
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
+					assertThat( interceptor ).isInstanceOf( EnhancementAsProxyLazinessInterceptor.class );
 
 					loadedChild.setId( lastChildID );
 
 					assertEquals( 0, stats.getPrepareStatementCount() );
 
-					assertThat( loadedChild.getId(), is( lastChildID ) );
+					assertThat( loadedChild.getId() ).isEqualTo( lastChildID );
 					assertEquals( 0, stats.getPrepareStatementCount() );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Child loadedChild = session.load( Child.class, lastChildID );
-					assertThat( loadedChild, is( notNullValue() ) );
+					assertThat( loadedChild ).isNotNull();
 				}
 		);
 
 	}
 
 	@Test
-	public void setIdClassTest(){
-		final Statistics stats = sessionFactory().getStatistics();
+	public void setIdClassTest(SessionFactoryScope scope){
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					stats.clear();
 					ModelId id = new ModelId();
@@ -126,7 +124,7 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) parent;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
+					assertThat( interceptor ).isInstanceOf( EnhancementAsProxyLazinessInterceptor.class );
 
 					assertEquals( 0, stats.getPrepareStatementCount() );
 
@@ -135,27 +133,28 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 					assertEquals( 0, stats.getPrepareStatementCount() );
 
-					assertThat( parent.getId1(), is( 1L ) );
-					assertThat( parent.getId2(), is( 2L ) );
+					assertThat( parent.getId1() ).isEqualTo( 1L );
+					assertThat( parent.getId2() ).isEqualTo( 2L );
 
 					assertEquals( 0, stats.getPrepareStatementCount() );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Child loadedChild = session.load( Child.class, lastChildID );
-					assertThat( loadedChild, is( notNullValue() ) );
+					assertThat( loadedChild ).isNotNull();
 				}
 		);
 	}
 
-	@Test(expected = PersistenceException.class)
-	public void updateIdClassTest(){
-		final Statistics stats = sessionFactory().getStatistics();
+	@Test
+	public void updateIdClassTest(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		inTransaction(
+		assertThatThrownBy(
+				() -> scope.inTransaction(
 				session -> {
 					stats.clear();
 					ModelId id = new ModelId();
@@ -165,47 +164,47 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) parent;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
+					assertThat( interceptor ).isInstanceOf( EnhancementAsProxyLazinessInterceptor.class );
 
 					// should trigger an exception
 					parent.setId1( 3L );
-				}
-		);
+				} )
+		).isInstanceOf( PersistenceException.class );
 
-		inTransaction(
-				session -> {
-					Child loadedChild = session.load( Child.class, lastChildID );
-					assertThat( loadedChild, is( notNullValue() ) );
-				}
-		);
+//		scope.inTransaction(
+//				session -> {
+//					Child loadedChild = session.load( Child.class, lastChildID );
+//					assertThat( loadedChild, is( notNullValue() ) );
+//				}
+//		);
 	}
 
-	@Test(expected = PersistenceException.class)
-	public void updateIdTest() {
-		final Statistics stats = sessionFactory().getStatistics();
+	@Test
+	public void updateIdTest(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
 		Long updatedId = lastChildID + 1;
+		assertThatThrownBy(
+				() -> scope.inTransaction(
+						session -> {
+							stats.clear();
+							Child loadedChild = session.load( Child.class, lastChildID );
 
-		inTransaction(
-				session -> {
-					stats.clear();
-					Child loadedChild = session.load( Child.class, lastChildID );
+							final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
+							final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+							assertThat( interceptor ).isInstanceOf( EnhancementAsProxyLazinessInterceptor.class );
 
-					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
-					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
-
-					// should trigger an exception
-					loadedChild.setId( updatedId );
-				}
-		);
-
+							// should trigger an exception
+							loadedChild.setId( updatedId );
+						}
+				)
+		).isInstanceOf( PersistenceException.class );
 	}
 
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = new Parent();
 			parent.setId1( 1L );
 			parent.setId2( 2L );
@@ -229,9 +228,9 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		doInHibernate( this::sessionFactory, s -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			s.createQuery( "delete from Child" ).executeUpdate();
 			s.createQuery( "delete from Parent" ).executeUpdate();
 		} );
@@ -262,7 +261,7 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 	@Entity(name = "Parent")
 	@Table(name = "PARENT")
 	@IdClass( ModelId.class )
-	private static class Parent {
+	static class Parent {
 
 		String name;
 
@@ -309,7 +308,7 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 	@Entity(name = "Person")
 	@Table(name = "Person")
-	private static class Person {
+	static class Person {
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		Long id;
@@ -327,7 +326,7 @@ public class SetIdentifierOnAEnhancedProxyTest extends BaseNonConfigCoreFunction
 
 	@Entity(name = "Child")
 	@Table(name = "CHILD")
-	private static class Child {
+	static class Child {
 
 		@Id
 		Long id;

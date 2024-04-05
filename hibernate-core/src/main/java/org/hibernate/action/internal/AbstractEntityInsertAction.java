@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
@@ -176,22 +177,25 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			Object object,
 			PersistenceContext persistenceContext) {
 		if ( object != null ) {
-			final AttributeMappingsList attributeMappings = attributeMapping.getEmbeddableTypeDescriptor().getAttributeMappings();
+			final EmbeddableMappingType descriptor = attributeMapping.getEmbeddableTypeDescriptor();
+			final AttributeMappingsList attributeMappings = descriptor.getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attribute = attributeMappings.get( i );
-				if ( attribute.isPluralAttributeMapping() ) {
-					addCollectionKey(
-							attribute.asPluralAttributeMapping(),
-							attribute.getPropertyAccess().getGetter().get( object ),
-							persistenceContext
-					);
-				}
-				else if ( attribute.isEmbeddedAttributeMapping() ) {
-					visitEmbeddedAttributeMapping(
-							attribute.asEmbeddedAttributeMapping(),
-							attribute.getPropertyAccess().getGetter().get( object ),
-							persistenceContext
-					);
+				if ( descriptor.declaresAttribute( object.getClass().getName(), attributeMapping ) ) {
+					if ( attribute.isPluralAttributeMapping() ) {
+						addCollectionKey(
+								attribute.asPluralAttributeMapping(),
+								attribute.getPropertyAccess().getGetter().get( object ),
+								persistenceContext
+						);
+					}
+					else if ( attribute.isEmbeddedAttributeMapping() ) {
+						visitEmbeddedAttributeMapping(
+								attribute.asEmbeddedAttributeMapping(),
+								attribute.getPropertyAccess().getGetter().get( object ),
+								persistenceContext
+						);
+					}
 				}
 			}
 		}

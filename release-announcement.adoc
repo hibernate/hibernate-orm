@@ -149,3 +149,54 @@ or obtain a substring by start and end index.
 `stringPath[2]` is syntax sugar for `substring(stringPath, 2, 1)` and returns a `Character`.
 `stringPath[2:3]` is syntax sugar for `substring(stringPath, 2, 3-2+1)`,
 where `3-2+1` is the expression to determine the desired string length.
+
+
+[[embeddable-inheritance]]
+== Embeddable Inheritance
+
+Another new feature of this version is discriminator-based inheritance for `@Embeddable` types. An `@Embeddable` class
+may be extended by other `@Embeddable` classes, in which case the `@Embedded` properties using that type will
+rely on an additional discriminator column to store information about the composite value's subtype.
+
+When retrieving the inherited embedded property, Hibernate will read the discriminator value and instantiate the
+correct `@Embeddable` subtype with its corresponding properties.
+
+For example, a mapping like this:
+[source,java]
+----
+@Embeddable
+@DiscriminatorValue( "parent" )
+@DiscriminatorColumn( name = "embeddable_type" )
+class ParentEmbeddable implements Serializable {
+	private String parentProp;
+	// ...
+}
+
+@Embeddable
+@DiscriminatorValue( "child_one" )
+class ChildOneEmbeddable extends ParentEmbeddable {
+	private Integer childOneProp;
+	// ...
+}
+
+@Entity
+class TestEntity {
+	@Embedded
+	private ParentEmbeddable embeddable;
+	// ...
+}
+----
+
+Will result in the following table structure:
+[source,sql]
+----
+create table TestEntity (
+    -- ...
+    embeddable_type varchar(31) not null,
+    parentProp varchar(255),
+    childOneProp integer,
+    -- ...
+)
+----
+
+For more detailed information please refer to the link:{user-guide-url}#embeddable-inheritance[Embeddable inheritance] user guide chapter.

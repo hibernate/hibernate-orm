@@ -30,6 +30,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -51,6 +52,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 	private final boolean containsAnyNonScalars;
 	private final SqlSelection aggregateSelection;
 	private final EmbeddableMappingType fetchContainer;
+	private final BasicFetch<?> discriminatorFetch;
 
 	public AggregateEmbeddableResultImpl(
 			NavigablePath navigablePath,
@@ -104,6 +106,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 				null,
 				typeConfiguration
 		);
+		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, true );
 		resetFetches( creationState.visitNestedFetches( this ) );
 		this.containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
 	}
@@ -169,6 +172,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 		return new AggregateEmbeddableResultInitializer(
 				parentAccess,
 				this,
+				discriminatorFetch,
 				creationState,
 				aggregateSelection
 		);

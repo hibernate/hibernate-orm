@@ -7,10 +7,10 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -25,43 +25,53 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 /**
  * @author Steve Ebersole
  */
-public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminatorMapping {
+public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminatorMapping
+		implements EmbeddableDiscriminatorMapping {
+	private final String name;
 	private final String tableExpression;
 	private final String columnName;
 	private final String columnFormula;
 	private final boolean isPhysical;
+	private final boolean isUpdateable;
 	private final String columnDefinition;
+	private final String customReadExpression;
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
 
 	public ExplicitColumnDiscriminatorMappingImpl(
-			EntityMappingType entityDescriptor,
+			ManagedMappingType mappingType,
+			String name,
 			String tableExpression,
 			String columnExpression,
 			boolean isFormula,
 			boolean isPhysical,
+			boolean isUpdateable,
 			String columnDefinition,
+			String customReadExpression,
 			Long length,
 			Integer precision,
 			Integer scale,
-			DiscriminatorType<?> discriminatorType,
-			MappingModelCreationProcess creationProcess) {
+			DiscriminatorType<?> discriminatorType) {
 		//noinspection unchecked
-		super( entityDescriptor, (DiscriminatorType<Object>) discriminatorType, (BasicType<Object>) discriminatorType.getUnderlyingJdbcMapping() );
+		super( mappingType, (DiscriminatorType<Object>) discriminatorType, (BasicType<Object>) discriminatorType.getUnderlyingJdbcMapping() );
+		this.name = name;
 		this.tableExpression = tableExpression;
 		this.isPhysical = isPhysical;
 		this.columnDefinition = columnDefinition;
+		this.customReadExpression = customReadExpression;
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
 		if ( isFormula ) {
 			columnName = null;
 			columnFormula = columnExpression;
+			this.isUpdateable = false;
 		}
 		else {
 			columnName = columnExpression;
 			columnFormula = null;
+			this.isUpdateable = isUpdateable;
 		}
 	}
 
@@ -100,13 +110,18 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	}
 
 	@Override
+	public String getSelectableName() {
+		return name;
+	}
+
+	@Override
 	public String getSelectionExpression() {
 		return columnName == null ? columnFormula : columnName;
 	}
 
 	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return customReadExpression;
 	}
 
 	@Override
@@ -156,7 +171,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 
 	@Override
 	public boolean isUpdateable() {
-		return false;
+		return isUpdateable;
 	}
 
 	@Override

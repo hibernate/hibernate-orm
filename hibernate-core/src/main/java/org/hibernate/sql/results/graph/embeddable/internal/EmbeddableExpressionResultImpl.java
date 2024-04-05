@@ -140,6 +140,6 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 
 	@Override
 	public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		return new EmbeddableResultInitializer( this, parentAccess, creationState );
+		return new EmbeddableResultInitializer( this, parentAccess, null, creationState );
 	}
 }

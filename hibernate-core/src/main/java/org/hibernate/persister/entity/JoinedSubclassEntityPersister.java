@@ -1205,9 +1205,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(
-			PersistentClass bootEntityDescriptor,
-			MappingModelCreationProcess modelCreationProcess) {
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(PersistentClass bootEntityDescriptor) {
 		final EntityMappingType superMappingType = getSuperMappingType();
 		if ( superMappingType != null ) {
 			return superMappingType.getDiscriminatorMapping();
@@ -1218,7 +1216,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				// even though this is a JOINED hierarchy the user has defined an
 				// explicit discriminator column - so we can use the normal
 				// discriminator mapping
-				return super.generateDiscriminatorMapping( bootEntityDescriptor, modelCreationProcess );
+				return super.generateDiscriminatorMapping( bootEntityDescriptor );
 			}
 			else {
 				// otherwise, we need to use the case approach
@@ -1229,8 +1227,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						notNullColumnNames,
 						discriminatorValues,
 						discriminatorAbstract,
-						resolveDiscriminatorType(),
-						modelCreationProcess
+						resolveDiscriminatorType()
 				);
 			}
 		}

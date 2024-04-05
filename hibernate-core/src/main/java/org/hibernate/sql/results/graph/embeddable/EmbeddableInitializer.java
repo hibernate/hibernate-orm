@@ -50,4 +50,8 @@ public interface EmbeddableInitializer extends FetchParentAccess {
 	}
 
 	void resolveState(RowProcessingState rowProcessingState);
+
+	default Object getDiscriminatorValue() {
+		return null;
+	}
 }

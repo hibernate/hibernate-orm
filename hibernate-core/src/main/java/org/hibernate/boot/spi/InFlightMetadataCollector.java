@@ -7,6 +7,7 @@
 package org.hibernate.boot.spi;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -82,6 +83,10 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void registerComponent(Component component);
 
 	void registerGenericComponent(Component component);
+
+	void registerEmbeddableSubclass(XClass superclass, XClass subclass);
+
+	List<XClass> getEmbeddableSubclasses(XClass superclass);
 
 	/**
 	 * Adds an import (for use in HQL).

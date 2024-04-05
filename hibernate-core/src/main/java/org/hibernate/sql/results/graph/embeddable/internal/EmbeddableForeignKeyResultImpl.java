@@ -116,7 +116,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 	public EmbeddableInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
 		return getReferencedModePart() instanceof NonAggregatedIdentifierMapping
 				? new NonAggregatedIdentifierMappingResultInitializer( this, null, creationState )
-				: new EmbeddableResultInitializer( this, null, creationState );
+				: new EmbeddableResultInitializer( this, null, null, creationState );
 	}
 
 	@Override

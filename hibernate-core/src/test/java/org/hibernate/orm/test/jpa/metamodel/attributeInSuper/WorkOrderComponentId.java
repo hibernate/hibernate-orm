@@ -12,7 +12,7 @@ import jakarta.persistence.Embeddable;
  * @author Steve Ebersole
  */
 @Embeddable
-public class WorkOrderComponentId extends WorkOrderId {
+public class WorkOrderComponentId extends AbstractWorkOrderId {
 	private Long lineNumber;
     /* other stuffs */
 }

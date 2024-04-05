@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.embeddable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -26,6 +27,8 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
@@ -51,16 +54,19 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private final SessionFactoryImplementor sessionFactory;
 
 	protected final DomainResultAssembler<?>[] assemblers;
+	private final BasicResultAssembler<?> discriminatorAssembler;
 
 	// per-row state
 	private final Object[] rowState;
 	private State state = State.INITIAL;
 	protected Object compositeInstance;
+	private Object discriminatorValue;
 	private RowProcessingState wrappedProcessingState;
 
 	public AbstractEmbeddableInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
 			FetchParentAccess parentAccess,
+			BasicFetch<?> discriminatorFetch,
 			AssemblerCreationState creationState) {
 		this.navigablePath = resultDescriptor.getNavigablePath();
 		this.embedded = resultDescriptor.getReferencedMappingContainer();
@@ -77,6 +83,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		this.assemblers = createAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
+		discriminatorAssembler = discriminatorFetch != null ?
+				(BasicResultAssembler<?>) discriminatorFetch.createAssembler( parentAccess, creationState ) :
+				null;
 	}
 
 	protected DomainResultAssembler<?>[] createAssemblers(
@@ -151,7 +160,16 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public void resolveKey(RowProcessingState processingState) {
-		// nothing to do
+		// We need to possibly wrap the processing state if the embeddable is within an aggregate
+		if ( wrappedProcessingState == null ) {
+			wrappedProcessingState = wrapProcessingState( processingState );
+		}
+		if ( discriminatorAssembler != null ) {
+			final EmbeddableDiscriminatorMapping discriminatorMapping = embedded.getEmbeddableTypeDescriptor()
+					.getDiscriminatorMapping();
+			assert discriminatorMapping != null;
+			discriminatorValue = discriminatorAssembler.extractRawValue( wrappedProcessingState );
+		}
 	}
 
 	@Override
@@ -191,10 +209,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					return;
 				}
 
-				// We need to possibly wrap the processing state if the embeddable is within an aggregate
-				if ( wrappedProcessingState == null ) {
-					wrappedProcessingState = wrapProcessingState( processingState );
-				}
 				extractRowState( wrappedProcessingState );
 				prepareCompositeInstance( wrappedProcessingState );
 				if ( state == State.NULL ) {
@@ -275,6 +289,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		if ( compositeInstance == null ) {
 			compositeInstance = createCompositeInstance(
+					discriminatorValue,
 					navigablePath,
 					sessionFactory
 			);
@@ -334,7 +349,10 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 	}
 
-	private Object createCompositeInstance(NavigablePath navigablePath, SessionFactoryImplementor sessionFactory) {
+	private Object createCompositeInstance(
+			Object discriminatorValue,
+			NavigablePath navigablePath,
+			SessionFactoryImplementor sessionFactory) {
 		if ( state == State.NULL ) {
 			// todo (6.0) : should we initialize the composite instance if it has a parent attribute?
 //			if ( !createEmptyCompositesEnabled && embedded.getParentInjectionAttributePropertyAccess() == null ) {
@@ -345,7 +363,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		final Object instance = embedded.getEmbeddableTypeDescriptor()
 				.getRepresentationStrategy()
-				.getInstantiator()
+				.getInstantiatorForDiscriminator( discriminatorValue )
 				.instantiate( this, sessionFactory );
 		state = State.EXTRACTED;
 
@@ -367,6 +385,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public Object getOwner() {
 		return fetchParentAccess.getInitializedInstance();
+	}
+
+	@Override
+	public Object getDiscriminatorValue() {
+		return discriminatorValue;
 	}
 
 	private void handleParentInjection() {
@@ -467,6 +490,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		compositeInstance = null;
+		discriminatorValue = null;
 		state = State.INITIAL;
 		wrappedProcessingState = null;
 

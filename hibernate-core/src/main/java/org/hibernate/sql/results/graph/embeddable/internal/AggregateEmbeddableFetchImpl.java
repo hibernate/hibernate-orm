@@ -29,6 +29,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
@@ -49,6 +50,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 	private final boolean hasTableGroup;
 	private final SqlSelection aggregateSelection;
 	private final EmbeddableMappingType fetchContainer;
+	private final BasicFetch<?> discriminatorFetch;
 
 	public AggregateEmbeddableFetchImpl(
 			NavigablePath navigablePath,
@@ -99,6 +101,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 				fetchParent,
 				typeConfiguration
 		);
+		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, true );
 		resetFetches( creationState.visitNestedFetches( this ) );
 	}
 
@@ -173,6 +176,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 		return new AggregateEmbeddableFetchInitializer(
 				parentAccess,
 				this,
+				discriminatorFetch,
 				creationState,
 				aggregateSelection
 		);

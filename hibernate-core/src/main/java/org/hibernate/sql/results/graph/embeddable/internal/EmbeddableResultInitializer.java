@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 
@@ -18,8 +19,9 @@ public class EmbeddableResultInitializer extends AbstractEmbeddableInitializer {
 	public EmbeddableResultInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
 			FetchParentAccess parentAccess,
+			BasicFetch<?> discriminatorFetch,
 			AssemblerCreationState creationState) {
-		super( resultDescriptor, parentAccess, creationState );
+		super( resultDescriptor, parentAccess, discriminatorFetch, creationState );
 	}
 
 	@Override

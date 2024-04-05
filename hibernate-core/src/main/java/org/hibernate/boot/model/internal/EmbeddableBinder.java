@@ -13,8 +13,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -26,20 +28,25 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
@@ -51,6 +58,9 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
+import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
+import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
+import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
@@ -64,6 +74,9 @@ import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClas
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 /**
@@ -362,6 +375,36 @@ public class EmbeddableBinder {
 		final XClass annotatedClass = inferredData.getPropertyClass();
 		final List<PropertyData> classElements =
 				collectClassElements( propertyAccessor, context, returnedClassOrElement, annotatedClass, isIdClass );
+		// Main entry point for binding embeddable inheritance
+		bindDiscriminator(
+				component,
+				returnedClassOrElement,
+				propertyHolder,
+				subholder,
+				inferredData,
+				inheritanceStatePerClass,
+				context
+		);
+		if ( component.isPolymorphic() ) {
+			validateInheritanceIsSupported( subholder, compositeUserType );
+			final BasicType<?> discriminatorType = (BasicType<?>) component.getDiscriminator().getType();
+			// Discriminator values are used to construct the embeddable domain
+			// type hierarchy so order of processing is important
+			final Map<Object, String> discriminatorValues = new TreeMap<>();
+			final Map<String, String> subclassToSuperclass = new HashMap<>();
+			collectDiscriminatorValue( returnedClassOrElement, discriminatorType, discriminatorValues );
+			collectSubclassElements(
+					propertyAccessor,
+					context,
+					returnedClassOrElement,
+					classElements,
+					discriminatorType,
+					discriminatorValues,
+					subclassToSuperclass
+			);
+			component.setDiscriminatorValues( discriminatorValues );
+			component.setSubclassToSuperclass( subclassToSuperclass );
+		}
 		final List<PropertyData> baseClassElements =
 				collectBaseClassElements( baseInferredData, propertyAccessor, context, annotatedClass );
 		if ( baseClassElements != null
@@ -403,6 +446,7 @@ public class EmbeddableBinder {
 		if ( compositeUserType != null ) {
 			processCompositeUserType( component, compositeUserType );
 		}
+
 		AggregateComponentBinder.processAggregate(
 				component,
 				propertyHolder,
@@ -428,6 +472,125 @@ public class EmbeddableBinder {
 				.getBeanInstance();
 	}
 
+	private static void bindDiscriminator(
+			Component component,
+			XClass componentClass,
+			PropertyHolder parentHolder,
+			PropertyHolder holder,
+			PropertyData propertyData,
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			MetadataBuildingContext context) {
+		final InheritanceState inheritanceState = inheritanceStatePerClass.get( componentClass );
+		if ( inheritanceState == null ) {
+			return;
+		}
+
+		final AnnotatedDiscriminatorColumn discriminatorColumn = processEmbeddableDiscriminatorProperties(
+				componentClass,
+				propertyData,
+				parentHolder,
+				holder,
+				inheritanceState,
+				context
+		);
+		if ( discriminatorColumn != null ) {
+			bindDiscriminatorColumnToComponent( component, discriminatorColumn, holder, context );
+		}
+	}
+
+	private static AnnotatedDiscriminatorColumn processEmbeddableDiscriminatorProperties(
+			XClass annotatedClass,
+			PropertyData propertyData,
+			PropertyHolder parentHolder,
+			PropertyHolder holder,
+			InheritanceState inheritanceState,
+			MetadataBuildingContext context) {
+		final DiscriminatorColumn discriminatorColumn = annotatedClass.getAnnotation( DiscriminatorColumn.class );
+		final DiscriminatorFormula discriminatorFormula = getOverridableAnnotation(
+				annotatedClass,
+				DiscriminatorFormula.class,
+				context
+		);
+		if ( !inheritanceState.hasParents() ) {
+			if ( inheritanceState.hasSiblings() ) {
+				final String path = qualify( holder.getPath(), EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
+				final String columnPrefix;
+				final Column[] overrides;
+				if ( holder.isWithinElementCollection() ) {
+					columnPrefix = unqualify( parentHolder.getPath() );
+					overrides = parentHolder.getOverriddenColumn( path );
+				}
+				else {
+					columnPrefix = propertyData.getPropertyName();
+					overrides = holder.getOverriddenColumn( path );
+				}
+				return buildDiscriminatorColumn(
+						discriminatorColumn,
+						discriminatorFormula,
+						overrides == null ? null : overrides[0],
+						columnPrefix + DEFAULT_DISCRIMINATOR_COLUMN_NAME,
+						context
+				);
+			}
+		}
+		else {
+			// not a root entity
+			if ( discriminatorColumn != null ) {
+				throw new AnnotationException( String.format(
+						"Embeddable class '%s' is annotated '@DiscriminatorColumn' but it is not the root of the inheritance hierarchy",
+						annotatedClass.getName()
+				) );
+			}
+			if ( discriminatorFormula != null ) {
+				throw new AnnotationException( String.format(
+						"Embeddable class '%s' is annotated '@DiscriminatorFormula' but it is not the root of the inheritance hierarchy",
+						annotatedClass.getName()
+				) );
+			}
+		}
+		return null;
+	}
+
+	private static void bindDiscriminatorColumnToComponent(
+			Component component,
+			AnnotatedDiscriminatorColumn discriminatorColumn,
+			PropertyHolder holder,
+			MetadataBuildingContext context) {
+		assert component.getDiscriminator() == null;
+		LOG.tracev( "Setting discriminator for embeddable {0}", component.getComponentClassName() );
+		final AnnotatedColumns columns = new AnnotatedColumns();
+		columns.setPropertyHolder( holder );
+		columns.setBuildingContext( context );
+		discriminatorColumn.setParent( columns );
+		final BasicValue discriminatorColumnBinding = new BasicValue( context, component.getTable() );
+		component.setDiscriminator( discriminatorColumnBinding );
+		discriminatorColumn.linkWithValue( discriminatorColumnBinding );
+		discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
+	}
+
+	private static void validateInheritanceIsSupported(
+			PropertyHolder holder,
+			CompositeUserType<?> compositeUserType) {
+		if ( holder.isOrWithinEmbeddedId() ) {
+			throw new AnnotationException( String.format(
+					"Embeddable class '%s' defines an inheritance hierarchy and cannot be used in an '@EmbeddedId'",
+					holder.getClassName()
+			) );
+		}
+		else if ( holder.isInIdClass() ) {
+			throw new AnnotationException( String.format(
+					"Embeddable class '%s' defines an inheritance hierarchy and cannot be used in an '@IdClass'",
+					holder.getClassName()
+			) );
+		}
+		else if ( compositeUserType != null ) {
+			throw new AnnotationException( String.format(
+					"Embeddable class '%s' defines an inheritance hierarchy and cannot be used with a custom '@CompositeType'",
+					holder.getClassName()
+			) );
+		}
+	}
+
 	private static List<PropertyData> collectClassElements(
 			AccessType propertyAccessor,
 			MetadataBuildingContext context,
@@ -450,6 +613,75 @@ public class EmbeddableBinder {
 		}
 		return classElements;
 	}
+
+	private static void collectSubclassElements(
+			AccessType propertyAccessor,
+			MetadataBuildingContext context,
+			XClass superclass,
+			List<PropertyData> classElements,
+			BasicType<?> discriminatorType,
+			Map<Object, String> discriminatorValues,
+			Map<String, String> subclassToSuperclass) {
+		for ( final XClass subclass : context.getMetadataCollector().getEmbeddableSubclasses( superclass ) ) {
+			// collect the discriminator value details
+			final String old = collectDiscriminatorValue( subclass, discriminatorType, discriminatorValues );
+			if ( old != null ) {
+				throw new AnnotationException( String.format(
+						"Embeddable subclass '%s' defines the same discriminator value as '%s",
+						subclass.getName(),
+						old
+				) );
+			}
+			final String put = subclassToSuperclass.put( subclass.getName().intern(), superclass.getName().intern() );
+			assert put == null;
+			// collect property of subclass
+			final PropertyContainer superContainer = new PropertyContainer( subclass, superclass, propertyAccessor );
+			addElementsOfClass( classElements, superContainer, context );
+			// recursively do that same for all subclasses
+			collectSubclassElements(
+					propertyAccessor,
+					context,
+					subclass,
+					classElements,
+					discriminatorType,
+					discriminatorValues,
+					subclassToSuperclass
+			);
+		}
+	}
+
+	private static String collectDiscriminatorValue(
+			XClass annotatedClass,
+			BasicType<?> discriminatorType,
+			Map<Object, String> discriminatorValues) {
+		final String explicitValue = annotatedClass.isAnnotationPresent( DiscriminatorValue.class )
+				? annotatedClass.getAnnotation( DiscriminatorValue.class ).value()
+				: null;
+		final String discriminatorValue;
+		if ( isEmpty( explicitValue ) ) {
+			final String name = unqualify( annotatedClass.getName() );
+			if ( "character".equals( discriminatorType.getName() ) ) {
+				throw new AnnotationException( String.format(
+						"Embeddable '%s' has a discriminator of character type and must specify its '@DiscriminatorValue'",
+						name
+				) );
+			}
+			else if ( "integer".equals( discriminatorType.getName() ) ) {
+				discriminatorValue = String.valueOf( name.hashCode() );
+			}
+			else {
+				discriminatorValue = name;
+			}
+		}
+		else {
+			discriminatorValue = explicitValue;
+		}
+		return discriminatorValues.put(
+				discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValue ),
+				annotatedClass.getName().intern()
+		);
+	}
+
 
 	private static boolean isValidSuperclass(XClass superClass, boolean isIdClass) {
 		if ( superClass == null ) {

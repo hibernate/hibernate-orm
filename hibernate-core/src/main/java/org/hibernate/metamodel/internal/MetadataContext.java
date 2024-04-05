@@ -407,6 +407,9 @@ public class MetadataContext {
 			for ( EmbeddableDomainType<?> embeddable : processingEmbeddables ) {
 				final Component component = componentByEmbeddable.get( embeddable );
 				for ( Property property : component.getProperties() ) {
+					if ( component.isPolymorphic() && !component.getPropertyDeclaringClass( property ).equals( embeddable.getTypeName() ) ) {
+						continue;
+					}
 					final PersistentAttribute<Object, ?> attribute =
 							attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddable, property );
 					if ( attribute != null ) {

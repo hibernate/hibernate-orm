@@ -23,6 +23,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -38,6 +39,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
 	private final EmbeddableMappingType fetchContainer;
+	private final BasicFetch<?> discriminatorFetch;
 
 	public EmbeddableResultImpl(
 			NavigablePath navigablePath,
@@ -74,6 +76,8 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 					return tableGroupJoin.getJoinedGroup();
 				}
 		);
+
+		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, false );
 
 		afterInitialize( this, creationState );
 
@@ -139,6 +143,6 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 
 	@Override
 	public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		return new EmbeddableResultInitializer( this, parentAccess, creationState );
+		return new EmbeddableResultInitializer( this, parentAccess, discriminatorFetch, creationState );
 	}
 }

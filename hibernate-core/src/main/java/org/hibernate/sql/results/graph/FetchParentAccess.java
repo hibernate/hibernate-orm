@@ -8,11 +8,14 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.collection.internal.AbstractImmediateCollectionInitializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -60,7 +63,7 @@ public interface FetchParentAccess extends Initializer {
 		if ( parentAccess == null
 				|| parentAccess.isEntityInitializer()
 				|| parentAccess.isCollectionInitializer()
-				|| parentAccess.isEmbeddableInitializer() && parentAccess.isResultInitializer() ) {
+				|| parentAccess.isEmbeddableInitializer() ) {
 			return parentAccess;
 		}
 		return parentAccess.getOwningParent();
@@ -72,8 +75,10 @@ public interface FetchParentAccess extends Initializer {
 			ModelPart modelPart,
 			@Nullable FetchParentAccess parentAccess,
 			@Nullable FetchParentAccess owningParent) {
-		final EntityInitializer entityInitializer;
-		if ( owningParent == null || ( entityInitializer = owningParent.asEntityInitializer() ) == null ) {
+		final EntityInitializer entityInitializer = owningParent != null ?
+				owningParent.findFirstEntityInitializer() :
+				null;
+		if ( entityInitializer == null ) {
 			return null;
 		}
 
@@ -103,14 +108,34 @@ public interface FetchParentAccess extends Initializer {
 				// skipping only depends on whether the collection key is resolvable or not
 				return collectionInitializer.resolveCollectionKey( rowProcessingState ) == null;
 			}
-			final EntityInitializer entityInitializer = owningParent.asEntityInitializer();
+			EntityInitializer entityInitializer = owningParent.asEntityInitializer();
 			if ( entityInitializer == null ) {
-				// We can never skip an initializer if it is part of an embeddable domain result,
-				// because that embeddable always has to be materialized with its full state
-				assert owningParent.isEmbeddableInitializer() && owningParent.isResultInitializer();
-				return false;
+				final EmbeddableInitializer embeddableInitializer = owningParent.asEmbeddableInitializer();
+				assert embeddableInitializer != null;
+				final EmbeddableMappingType descriptor = embeddableInitializer.getInitializedPart()
+						.getEmbeddableTypeDescriptor();
+				if ( descriptor.isPolymorphic() ) {
+					// The embeddable is polymorphic, check if the current subtype defines the initialized attribute
+					final AttributeMapping attribute = getInitializedPart().asAttributeMapping();
+					if ( attribute != null ) {
+						embeddableInitializer.resolveKey( rowProcessingState );
+						final String embeddableClassName = descriptor.getDiscriminatorMapping()
+								.resolveDiscriminatorValue( embeddableInitializer.getDiscriminatorValue() )
+								.getIndicatedEntityName();
+						if ( !descriptor.declaresAttribute( embeddableClassName, attribute ) ) {
+							return true;
+						}
+					}
+				}
+				if ( embeddableInitializer.isResultInitializer() ) {
+					// We can never skip an initializer if it is part of an embeddable domain result,
+					// because that embeddable always has to be materialized with its full state
+					return false;
+				}
+				else if ( ( entityInitializer = embeddableInitializer.findFirstEntityInitializer() ) == null ) {
+					return false;
+				}
 			}
-
 			// We must resolve the key of the parent in order to determine the concrete descriptor
 			entityInitializer.resolveKey( rowProcessingState );
 			final EntityPersister concreteDescriptor = entityInitializer.getConcreteDescriptor();

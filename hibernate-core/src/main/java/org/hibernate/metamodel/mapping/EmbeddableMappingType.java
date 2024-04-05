@@ -36,6 +36,34 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 
 	boolean isCreateEmptyCompositesEnabled();
 
+	/**
+	 * Returns the {@linkplain EmbeddableDiscriminatorMapping discriminator mapping}
+	 * if this discriminator type is polymorphic, {@code null} otherwise.
+	 */
+	default EmbeddableDiscriminatorMapping getDiscriminatorMapping() {
+		return null;
+	}
+
+	/**
+	 * Returns {@code true} if this embeddable mapping type defines a
+	 * discriminator-based inheritance hierarchy, {@code false} otherwise.
+	 */
+	default boolean isPolymorphic() {
+		return getDiscriminatorMapping() != null;
+	}
+
+	/**
+	 * Returns {@code true} if the provided embeddable class contains the
+	 * specified attribute mapping, {@code false} otherwise.
+	 * @implNote This method always returns {@code true} for non-polymorphic embeddable types
+	 *
+	 * @param embeddableClassName the embeddable subclass in which the attribute must be declared
+	 * @param attributeMapping the attribute to check
+	 */
+	default boolean declaresAttribute(String embeddableClassName, AttributeMapping attributeMapping) {
+		return true;
+	}
+
 	default SelectableMapping getAggregateMapping() {
 		return null;
 	}
@@ -127,6 +155,9 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 				count += attributeMapping.getJdbcTypeCount();
 			}
 		}
+		if ( isPolymorphic() && columnIndex == count ) {
+			return getDiscriminatorMapping();
+		}
 		return null;
 	}
 
@@ -174,6 +205,9 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 				}
 				offset += jdbcTypeCount;
 			}
+		}
+		if ( isPolymorphic() && getDiscriminatorMapping().getSelectableName().equals( selectableName ) ) {
+			return offset;
 		}
 		return -1;
 	}

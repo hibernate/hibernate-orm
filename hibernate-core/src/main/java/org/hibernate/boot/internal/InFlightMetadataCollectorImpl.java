@@ -135,6 +135,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final List<Component> composites = new ArrayList<>();
 	private final Map<Class<?>, Component> genericComponentsMap = new HashMap<>();
+	private final Map<XClass, List<XClass>> embeddableSubtypes = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
@@ -282,6 +283,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	@Override
 	public Component getGenericComponent(Class<?> componentClass) {
 		return genericComponentsMap.get( componentClass );
+	}
+
+	@Override
+	public void registerEmbeddableSubclass(XClass superclass, XClass subclass) {
+		embeddableSubtypes.computeIfAbsent( superclass, c -> new ArrayList<>() ).add( subclass );
+	}
+
+	@Override
+	public List<XClass> getEmbeddableSubclasses(XClass superclass) {
+		final List<XClass> subclasses = embeddableSubtypes.get( superclass );
+		return subclasses != null ? subclasses : List.of();
 	}
 
 	@Override

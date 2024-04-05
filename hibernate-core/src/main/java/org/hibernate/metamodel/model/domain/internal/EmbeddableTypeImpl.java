@@ -11,6 +11,7 @@ import java.io.Serializable;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -25,14 +26,21 @@ import jakarta.persistence.metamodel.SingularAttribute;
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
 		implements EmbeddableDomainType<J>, Serializable {
-
 	private final boolean isDynamic;
 
 	public EmbeddableTypeImpl(
 			JavaType<J> javaType,
 			boolean isDynamic,
 			JpaMetamodelImplementor domainMetamodel) {
-		super( javaType.getTypeName(), javaType, null, domainMetamodel );
+		this( javaType, null, isDynamic, domainMetamodel );
+	}
+
+	public EmbeddableTypeImpl(
+			JavaType<J> javaType,
+			ManagedDomainType<? super J> superType,
+			boolean isDynamic,
+			JpaMetamodelImplementor domainMetamodel) {
+		super( javaType.getTypeName(), javaType, superType, domainMetamodel );
 		this.isDynamic = isDynamic;
 	}
 

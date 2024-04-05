@@ -51,8 +51,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			String[] notNullColumnNames,
 			String[] discriminatorValues,
 			boolean[] discriminatorAbstract,
-			DiscriminatorType<?> incomingDiscriminatorType,
-			MappingModelCreationProcess creationProcess) {
+			DiscriminatorType<?> incomingDiscriminatorType) {
 		//noinspection unchecked
 		super( entityDescriptor, (DiscriminatorType<Object>) incomingDiscriminatorType, (BasicType<Object>) incomingDiscriminatorType.getUnderlyingJdbcMapping() );
 

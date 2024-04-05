@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.spi.GraphImplementor;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -26,6 +27,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerProducer;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
@@ -41,6 +43,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
 	private final EmbeddableMappingType fetchContainer;
+	private final BasicFetch<?> discriminatorFetch;
 
 	public EmbeddableFetchImpl(
 			NavigablePath navigablePath,
@@ -77,6 +80,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 				}
 		);
 
+		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, false );
+
 		afterInitialize( this, creationState );
 	}
 
@@ -90,6 +95,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 		fetchTiming = original.fetchTiming;
 		tableGroup = original.tableGroup;
 		hasTableGroup = original.hasTableGroup;
+		discriminatorFetch = original.discriminatorFetch;
 	}
 
 	@Override
@@ -160,7 +166,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 
 	@Override
 	public EmbeddableInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		return new EmbeddableFetchInitializer( parentAccess, this, creationState );
+		return new EmbeddableFetchInitializer( parentAccess, this, discriminatorFetch, creationState );
 	}
 
 	@Override

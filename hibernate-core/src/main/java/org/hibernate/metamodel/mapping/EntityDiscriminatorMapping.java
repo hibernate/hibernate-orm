@@ -58,34 +58,6 @@ public interface EntityDiscriminatorMapping extends DiscriminatorMapping, FetchO
 		return -2;
 	}
 
-	/**
-	 * Retrieve the details for a particular discriminator value.
-	 *
-	 * Returns {@code null} if there is no match.
-	 */
-	DiscriminatorValueDetails resolveDiscriminatorValue(Object value);
-
-	/**
-	 * Create the appropriate SQL expression for this discriminator
-	 *
-	 * @param jdbcMappingToUse The JDBC mapping to use.  This allows opting between
-	 * the "domain result type" (aka Class) and the "underlying type" (Integer, String, etc)
-	 */
-	Expression resolveSqlExpression(
-			NavigablePath navigablePath,
-			JdbcMapping jdbcMappingToUse,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState);
-
-	@Override
-	BasicFetch<?> generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
-			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState);
-
 	@Override
 	default FetchOptions getMappedFetchOptions() {
 		return this;

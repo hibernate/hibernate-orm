@@ -28,7 +28,6 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
@@ -60,7 +59,6 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
@@ -356,7 +354,6 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -8350,13 +8347,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
+	public <R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action) {
 		final SqlAstQueryPartProcessingStateImpl processingState = (SqlAstQueryPartProcessingStateImpl) getCurrentProcessingState();
 		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
 		processingState.setNestingFetchParent( fetchParent );
-		final ImmutableFetchList fetches = visitFetches( fetchParent );
+		final R result = action.apply( fetchParent );
 		processingState.setNestingFetchParent( nestingFetchParent );
-		return fetches;
+		return result;
 	}
 
 	@Override

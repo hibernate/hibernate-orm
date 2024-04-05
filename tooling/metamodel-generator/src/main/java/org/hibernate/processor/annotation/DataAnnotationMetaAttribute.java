@@ -63,7 +63,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 				.append( "#")
 				.append(memberName)
 				.append( "\n **/\n" )
-				.append( "public static final " )
+//				.append( "public static final " )
 				.append( parent.importType( getMetaType() ) )
 				.append( "<" )
 				.append( className )
@@ -71,27 +71,29 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 				.append( getPropertyName().replace('.','_') )
 				.append(" = new ")
 				.append( impl )
-				.append( "<>(\"" )
-				.append( getPropertyName() )
-				.append( "\");" )
+				.append( "<>(" )
+				.append( fieldName() )
+				.append( ");" )
 				.toString();
 	}
 
 	@Override
 	public String getAttributeNameDeclarationString(){
-		final String fieldName =
-				getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName().replace('.', '_'));
 		return new StringBuilder()
-				.append("public static final ")
+//				.append("public static final ")
 				.append(parent.importType(String.class.getName()))
 				.append(" ")
-				.append(fieldName)
+				.append(fieldName())
 				.append(" = ")
 				.append("\"")
 				.append(getPropertyName())
 				.append("\"")
 				.append(";")
 				.toString();
+	}
+
+	private String fieldName() {
+		return getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName().replace('.', '_'));
 	}
 
 	@Override

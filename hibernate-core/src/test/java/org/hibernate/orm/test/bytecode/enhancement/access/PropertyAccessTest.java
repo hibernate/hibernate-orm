@@ -1,14 +1,14 @@
 package org.hibernate.orm.test.bytecode.enhancement.access;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -17,44 +17,46 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+@DomainModel(
+		annotatedClasses = {
+				PropertyAccessTest.SomeEntity.class,
+		}
+)
+@SessionFactory
 @JiraKey("HHH-16799")
-@RunWith(BytecodeEnhancerRunner.class)
-public class PropertyAccessTest extends BaseCoreFunctionalTestCase {
+@BytecodeEnhanced
+public class PropertyAccessTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SomeEntity.class };
-	}
 
 	@Test
-	public void test() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.persist( new SomeEntity( 1L, "field", "property" ) );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			SomeEntity entity = session.get( SomeEntity.class, 1L );
 			assertThat( entity.property ).isEqualTo( "from getter: property" );
 
 			entity.setProperty( "updated" );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			SomeEntity entity = session.get( SomeEntity.class, 1L );
 			assertThat( entity.property ).isEqualTo( "from getter: updated" );
 		} );
 	}
 
-	@After
-	public void cleanup() {
-		doInHibernate( this::sessionFactory, session -> {
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.remove( session.get( SomeEntity.class, 1L ) );
 		} );
 	}
 
 	@Entity
 	@Table(name = "SOME_ENTITY")
-	private static class SomeEntity {
+	static class SomeEntity {
 		@Id
 		Long id;
 

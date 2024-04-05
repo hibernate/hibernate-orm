@@ -5,14 +5,19 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -25,27 +30,28 @@ import jakarta.persistence.Id;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(BytecodeEnhancerRunner.class)
-@TestForIssue(jiraKey = "HHH-14874")
-public class BasicAttributesLazyGroupTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-14874")
+@DomainModel(
+		annotatedClasses = {
+				BasicAttributesLazyGroupTest.Review.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class BasicAttributesLazyGroupTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Review.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-		configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeAll
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Review review = new Review();
 					review.setComment( "My first review" );
@@ -55,9 +61,16 @@ public class BasicAttributesLazyGroupTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
+	@AfterAll
+	void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createMutationQuery( "delete Review" ).executeUpdate()
+		);
+	}
+
 	@Test
-	public void testLoad() {
-		inTransaction( session -> {
+	public void testLoad(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Review review = session.load( Review.class, 1L );
 
 			assertFalse( Hibernate.isPropertyInitialized( review, "rating" ) );
@@ -71,8 +84,8 @@ public class BasicAttributesLazyGroupTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLoad2() {
-		inTransaction( session -> {
+	public void testLoad2(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Review review = session.load( Review.class, 1L );
 
 			assertFalse( Hibernate.isPropertyInitialized( review, "rating" ) );
@@ -86,8 +99,8 @@ public class BasicAttributesLazyGroupTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLoad3() {
-		inTransaction( session -> {
+	public void testLoad3(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Review review = session.load( Review.class, 1L );
 
 			assertThat( review.getComment(), is( "My first review" ) );
@@ -96,8 +109,8 @@ public class BasicAttributesLazyGroupTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLoad4() {
-		inTransaction( session -> {
+	public void testLoad4(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Review review = session.load( Review.class, 1L );
 			assertThat( review.getRating(), is( Rating.ONE ) );
 			assertThat( review.getComment(), is( "My first review" ) );
@@ -105,8 +118,8 @@ public class BasicAttributesLazyGroupTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testHql() {
-		inTransaction( session -> {
+	public void testHql(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final List<Review> reviews = session.createQuery( "select r from Review r" ).list();
 			assertThat( reviews.size(), is( 1 ) );
 

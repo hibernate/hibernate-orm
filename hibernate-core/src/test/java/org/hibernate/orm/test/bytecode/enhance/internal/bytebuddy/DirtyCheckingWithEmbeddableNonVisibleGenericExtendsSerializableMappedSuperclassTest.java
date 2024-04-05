@@ -9,44 +9,43 @@ package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 import java.io.Serializable;
 import java.util.List;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Tuple;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy.DirtyCheckingWithEmbeddableNonVisibleGenericExtendsSerializableMappedSuperclassTest.*;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				MyEntity.class,
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(inlineDirtyChecking = true)
-public class DirtyCheckingWithEmbeddableNonVisibleGenericExtendsSerializableMappedSuperclassTest extends
-		BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				MyEntity.class
-		};
-	}
+public class DirtyCheckingWithEmbeddableNonVisibleGenericExtendsSerializableMappedSuperclassTest {
 
 	@JiraKey("HHH-17041")
 	@Test
-	public void testQueryEmbeddableFields() {
-		inTransaction(
+	public void testQueryEmbeddableFields(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					MyEntity myEntity  = new MyEntity(1, "one");
 					session.persist( myEntity );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<Tuple> result = session.createQuery( "select m.embedded.text, m.embedded.name from MyEntity m", Tuple.class ).list();
 					assertThat( result.size() ).isEqualTo( 1 );

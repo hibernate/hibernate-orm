@@ -17,43 +17,34 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.Hibernate;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.NonIdentifierAttribute;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-11117")
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyBasicFieldMergeTest extends BaseCoreFunctionalTestCase {
-
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-                Company.class,
-                Manager.class,
-        };
-    }
+@JiraKey("HHH-11117")
+@DomainModel(
+        annotatedClasses = {
+                LazyBasicFieldMergeTest.Company.class,
+                LazyBasicFieldMergeTest.Manager.class,
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyBasicFieldMergeTest {
 
     @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, session -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( session -> {
             Manager manager = new Manager();
             manager.setName("John Doe");
             manager.setResume(new byte[] {1, 2, 3});

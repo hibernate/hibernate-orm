@@ -6,12 +6,17 @@
  */
 package org.hibernate.orm.test.mapping.inheritance;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.orm.test.mapping.inheritance.BaseIdEntityByteCodeTest.BaseEntity;
+import static org.hibernate.orm.test.mapping.inheritance.BaseIdEntityByteCodeTest.ContainingEntity;
+
 import org.hibernate.annotations.LazyGroup;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Embeddable;
@@ -20,19 +25,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-@RunWith(BytecodeEnhancerRunner.class)
-public class BaseIdEntityByteCodeTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { BaseEntity.class, ContainingEntity.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				BaseEntity.class, ContainingEntity.class,
+		}
+)
+@SessionFactory
+@BytecodeEnhanced(runNotEnhancedAsWell = true, testEnhancedClasses = BaseEntity.class)
+public class BaseIdEntityByteCodeTest {
 
 	@Test
-	public void test() {
-		inTransaction( session -> {
+	void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			ContainingEntity entity1 = new ContainingEntity();
 			entity1.id = 1;
 			entity1.baseText = "initialValue";
@@ -43,12 +47,13 @@ public class BaseIdEntityByteCodeTest extends BaseCoreFunctionalTestCase {
 			session.persist( entity1 );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			ContainingEntity entity = session.load( ContainingEntity.class, 1 );
 			ContainedEmbeddable containedEmbeddable = entity.getContainedEmbeddable();
 			assertThat( containedEmbeddable.getText() ).isEqualTo( "initialValue" );
 		} );
 	}
+
 
 	@Entity(name = "base")
 	public static class BaseEntity {

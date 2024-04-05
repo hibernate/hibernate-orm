@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.cascade;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -17,18 +16,15 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
@@ -50,37 +46,25 @@ import jakarta.persistence.Table;
  *
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-10252" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10252" )
+@DomainModel(
+        annotatedClasses = {
+               CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest.Parent.class, CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest.Child.class
+        }
+)
+@SessionFactory(
+        // We want to test with this setting set to false explicitly,
+        // because another test already takes care of the default.
+        applyCollectionsInDefaultFetchGroup = false
+)
+@BytecodeEnhanced
+public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest {
     private Parent originalParent;
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Parent.class, Child.class};
-    }
-
-    @Override
-    protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-        serviceRegistryBuilder.addService(
-                SessionFactoryBuilderService.class,
-                (SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-                    SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-                            metadata.getMetadataBuildingOptions().getServiceRegistry(),
-                            bootstrapContext
-                    );
-                    // We want to test with this setting set to false explicitly,
-                    // because another test already takes care of the default.
-                    optionsBuilder.enableCollectionInDefaultFetchGroup( false );
-                    return new SessionFactoryBuilderImpl( metadata, optionsBuilder, bootstrapContext );
-                }
-        );
-    }
-
-    @Before
-    public void prepare() {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
         // Create a Parent with one Child
-        originalParent = doInHibernate( this::sessionFactory, s -> {
+        originalParent = scope.fromTransaction( s -> {
                     Parent p = new Parent();
                     p.setName( "PARENT" );
                     p.setLazy( "LAZY" );
@@ -92,13 +76,13 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest e
     }
 
     @Test
-    public void testManagedWithUninitializedAssociation() {
+    public void testManagedWithUninitializedAssociation(SessionFactoryScope scope) {
         // Delete the Parent
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
                     .setParameter( "name", "PARENT" )
                     .uniqueResult();
-            checkInterceptor( loadedParent, false );
+            checkInterceptor( scope, loadedParent, false );
             assertFalse( Hibernate.isPropertyInitialized( loadedParent, "children" ) );
             s.delete( loadedParent );
         } );
@@ -106,14 +90,14 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest e
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13129")
-    public void testManagedWithInitializedAssociation() {
+    @JiraKey("HHH-13129")
+    public void testManagedWithInitializedAssociation(SessionFactoryScope scope) {
         // Delete the Parent
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
                     .setParameter( "name", "PARENT" )
                     .uniqueResult();
-            checkInterceptor( loadedParent, false );
+            checkInterceptor( scope, loadedParent, false );
             loadedParent.getChildren();
             assertTrue( Hibernate.isPropertyInitialized( loadedParent, "children" ) );
             s.delete( loadedParent );
@@ -122,27 +106,27 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest e
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13129")
-    public void testDetachedWithUninitializedAssociation() {
-        final Parent detachedParent = doInHibernate( this::sessionFactory, s -> {
+    @JiraKey("HHH-13129")
+    public void testDetachedWithUninitializedAssociation(SessionFactoryScope scope) {
+        final Parent detachedParent = scope.fromTransaction( s -> {
             return s.get( Parent.class, originalParent.getId() );
         } );
 
         assertFalse( Hibernate.isPropertyInitialized( detachedParent, "children" ) );
 
-        checkInterceptor( detachedParent, false );
+        checkInterceptor( scope, detachedParent, false );
 
         // Delete the detached Parent with uninitialized children
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
              s.delete( detachedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13129")
-    public void testDetachedWithInitializedAssociation() {
-        final Parent detachedParent = doInHibernate( this::sessionFactory, s -> {
+    @JiraKey("HHH-13129")
+    public void testDetachedWithInitializedAssociation(SessionFactoryScope scope) {
+        final Parent detachedParent = scope.fromTransaction( s -> {
              Parent parent = s.get( Parent.class, originalParent.getId() );
              assertFalse( Hibernate.isPropertyInitialized( parent, "children" ) );
 
@@ -153,33 +137,33 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest e
 
         assertTrue( Hibernate.isPropertyInitialized( detachedParent, "children" ) );
 
-        checkInterceptor( detachedParent, false );
+        checkInterceptor( scope, detachedParent, false );
 
         // Delete the detached Parent with initialized children
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             s.delete( detachedParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13129")
-    public void testDetachedOriginal() {
+    @JiraKey("HHH-13129")
+    public void testDetachedOriginal(SessionFactoryScope scope) {
 
         // originalParent#children should be initialized
         assertTrue( Hibernate.isPropertyInitialized( originalParent, "children" ) );
 
-        checkInterceptor( originalParent, true );
+        checkInterceptor( scope, originalParent, true );
 
         // Delete the Parent
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             s.delete( originalParent );
         } );
         // If the lazy relation is not fetch on cascade there is a constraint violation on commit
     }
 
-    private void checkInterceptor(Parent parent, boolean isNullExpected) {
-        final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = sessionFactory().getRuntimeMetamodels()
+    private void checkInterceptor(SessionFactoryScope scope, Parent parent, boolean isNullExpected) {
+        final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = scope.getSessionFactory().getRuntimeMetamodels()
                 .getMappingMetamodel()
                 .getEntityDescriptor( Parent.class )
                 .getBytecodeEnhancementMetadata();
@@ -252,7 +236,7 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest e
 
     @Entity
     @Table( name = "CHILD" )
-    private static class Child {
+    static class Child {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )

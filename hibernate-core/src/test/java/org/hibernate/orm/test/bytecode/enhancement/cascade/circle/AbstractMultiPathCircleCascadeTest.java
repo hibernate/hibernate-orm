@@ -17,9 +17,10 @@ import org.hibernate.orm.test.cascade.circle.Route;
 import org.hibernate.orm.test.cascade.circle.Tour;
 import org.hibernate.orm.test.cascade.circle.Transport;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.PersistenceException;
 
@@ -33,7 +34,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
+public abstract class AbstractMultiPathCircleCascadeTest {
 	private interface EntityOperation {
 		boolean isLegacy();
 
@@ -80,23 +81,23 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 			};
 
 	@Test
-	public void testMergeEntityWithNonNullableTransientEntity() {
-		testEntityWithNonNullableTransientEntity( MERGE_OPERATION );
+	public void testMergeEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
+		testEntityWithNonNullableTransientEntity( scope, MERGE_OPERATION );
 	}
 
 	@Test
-	public void testSaveEntityWithNonNullableTransientEntity() {
-		testEntityWithNonNullableTransientEntity( SAVE_OPERATION );
+	public void testSaveEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
+		testEntityWithNonNullableTransientEntity( scope, SAVE_OPERATION );
 	}
 
 	@Test
-	public void testSaveUpdateEntityWithNonNullableTransientEntity() {
-		testEntityWithNonNullableTransientEntity( SAVE_UPDATE_OPERATION );
+	public void testSaveUpdateEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
+		testEntityWithNonNullableTransientEntity( scope, SAVE_UPDATE_OPERATION );
 	}
 
-	private void testEntityWithNonNullableTransientEntity( EntityOperation operation) {
+	private void testEntityWithNonNullableTransientEntity(SessionFactoryScope scope, EntityOperation operation) {
 
-		Route route = getUpdatedDetachedEntity();
+		Route route = getUpdatedDetachedEntity( scope );
 
 		Node node = (Node) route.getNodes().iterator().next();
 		route.getNodes().remove( node );
@@ -106,7 +107,7 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 		routeNew.getNodes().add( node );
 		node.setRoute( routeNew );
 
-		inSession(
+		scope.inSession(
 				session -> {
 					session.beginTransaction();
 					try {
@@ -131,28 +132,28 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testMergeEntityWithNonNullableEntityNull() {
-		testEntityWithNonNullableEntityNull( MERGE_OPERATION );
+	public void testMergeEntityWithNonNullableEntityNull(SessionFactoryScope scope) {
+		testEntityWithNonNullableEntityNull( scope, MERGE_OPERATION );
 	}
 
 	@Test
-	public void testSaveEntityWithNonNullableEntityNull() {
-		testEntityWithNonNullableEntityNull( SAVE_OPERATION );
+	public void testSaveEntityWithNonNullableEntityNull(SessionFactoryScope scope) {
+		testEntityWithNonNullableEntityNull( scope, SAVE_OPERATION );
 	}
 
 	@Test
-	public void testSaveUpdateEntityWithNonNullableEntityNull() {
-		testEntityWithNonNullableEntityNull( SAVE_UPDATE_OPERATION );
+	public void testSaveUpdateEntityWithNonNullableEntityNull(SessionFactoryScope scope) {
+		testEntityWithNonNullableEntityNull( scope, SAVE_UPDATE_OPERATION );
 	}
 
-	private void testEntityWithNonNullableEntityNull( EntityOperation operation) {
-		Route route = getUpdatedDetachedEntity();
+	private void testEntityWithNonNullableEntityNull(SessionFactoryScope scope, EntityOperation operation) {
+		Route route = getUpdatedDetachedEntity( scope );
 
 		Node node = (Node) route.getNodes().iterator().next();
 		route.getNodes().remove( node );
 		node.setRoute( null );
 
-		inSession(
+		scope.inSession(
 				session -> {
 					session.beginTransaction();
 					try {
@@ -176,26 +177,26 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testMergeEntityWithNonNullablePropSetToNull() {
-		testEntityWithNonNullablePropSetToNull( MERGE_OPERATION );
+	public void testMergeEntityWithNonNullablePropSetToNull(SessionFactoryScope scope) {
+		testEntityWithNonNullablePropSetToNull( scope, MERGE_OPERATION );
 	}
 
 	@Test
-	public void testSaveEntityWithNonNullablePropSetToNull() {
-		testEntityWithNonNullablePropSetToNull( SAVE_OPERATION );
+	public void testSaveEntityWithNonNullablePropSetToNull(SessionFactoryScope scope) {
+		testEntityWithNonNullablePropSetToNull( scope, SAVE_OPERATION );
 	}
 
 	@Test
-	public void testSaveUpdateEntityWithNonNullablePropSetToNull() {
-		testEntityWithNonNullablePropSetToNull( SAVE_UPDATE_OPERATION );
+	public void testSaveUpdateEntityWithNonNullablePropSetToNull(SessionFactoryScope scope) {
+		testEntityWithNonNullablePropSetToNull( scope, SAVE_UPDATE_OPERATION );
 	}
 
-	private void testEntityWithNonNullablePropSetToNull( EntityOperation operation) {
-		Route route = getUpdatedDetachedEntity();
+	private void testEntityWithNonNullablePropSetToNull(SessionFactoryScope scope, EntityOperation operation) {
+		Route route = getUpdatedDetachedEntity( scope );
 		Node node = (Node) route.getNodes().iterator().next();
 		node.setName( null );
 
-		inSession(
+		scope.inSession(
 				session -> {
 					session.beginTransaction();
 
@@ -221,31 +222,31 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testMergeRoute() {
-		testRoute( MERGE_OPERATION );
+	public void testMergeRoute(SessionFactoryScope scope) {
+		testRoute( MERGE_OPERATION, scope );
 	}
 
 	// skip SAVE_OPERATION since Route is not transient
 	@Test
-	public void testSaveUpdateRoute() {
-		testRoute( SAVE_UPDATE_OPERATION );
+	public void testSaveUpdateRoute(SessionFactoryScope scope) {
+		testRoute( SAVE_UPDATE_OPERATION, scope );
 	}
 
-	private void testRoute( EntityOperation operation) {
+	private void testRoute( EntityOperation operation, SessionFactoryScope scope) {
 
-		Route r = getUpdatedDetachedEntity();
+		Route r = getUpdatedDetachedEntity( scope );
 
-		clearCounts();
+		clearCounts( scope );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						operation.doEntityOperation( r, session )
 		);
 
-		assertInsertCount( 4 );
-		assertUpdateCount( 1 );
+		assertInsertCount( scope, 4 );
+		assertUpdateCount( scope, 1 );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Route route = session.get( Route.class, r.getRouteID() );
 					checkResults( route, true );
@@ -254,27 +255,27 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testMergePickupNode() {
-		testPickupNode( MERGE_OPERATION );
+	public void testMergePickupNode(SessionFactoryScope scope) {
+		testPickupNode( scope, MERGE_OPERATION );
 	}
 
 	@Test
-	public void testSavePickupNode() {
-		testPickupNode( SAVE_OPERATION );
+	public void testSavePickupNode(SessionFactoryScope scope) {
+		testPickupNode( scope, SAVE_OPERATION );
 	}
 
 	@Test
-	public void testSaveUpdatePickupNode() {
-		testPickupNode( SAVE_UPDATE_OPERATION );
+	public void testSaveUpdatePickupNode(SessionFactoryScope scope) {
+		testPickupNode( scope, SAVE_UPDATE_OPERATION );
 	}
 
-	private void testPickupNode( EntityOperation operation) {
+	private void testPickupNode(SessionFactoryScope scope, EntityOperation operation) {
 
-		Route r = getUpdatedDetachedEntity();
+		Route r = getUpdatedDetachedEntity( scope );
 
-		clearCounts();
+		clearCounts( scope );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Iterator it = r.getNodes().iterator();
 					Node node = (Node) it.next();
@@ -292,10 +293,10 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 				}
 		);
 
-		assertInsertCount( 4 );
-		assertUpdateCount( 0 );
+		assertInsertCount( scope, 4 );
+		assertUpdateCount( scope, 0 );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Route route = session.get( Route.class, r.getRouteID() );
 					checkResults( route, false );
@@ -304,27 +305,27 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testMergeDeliveryNode() {
-		testDeliveryNode( MERGE_OPERATION );
+	public void testMergeDeliveryNode(SessionFactoryScope scope) {
+		testDeliveryNode( scope, MERGE_OPERATION );
 	}
 
 	@Test
-	public void testSaveDeliveryNode() {
-		testDeliveryNode( SAVE_OPERATION );
+	public void testSaveDeliveryNode(SessionFactoryScope scope) {
+		testDeliveryNode( scope, SAVE_OPERATION );
 	}
 
 	@Test
-	public void testSaveUpdateDeliveryNode() {
-		testDeliveryNode( SAVE_UPDATE_OPERATION );
+	public void testSaveUpdateDeliveryNode(SessionFactoryScope scope) {
+		testDeliveryNode( scope, SAVE_UPDATE_OPERATION );
 	}
 
-	private void testDeliveryNode( EntityOperation operation) {
+	private void testDeliveryNode(SessionFactoryScope scope, EntityOperation operation) {
 
-		Route r = getUpdatedDetachedEntity();
+		Route r = getUpdatedDetachedEntity( scope );
 
-		clearCounts();
+		clearCounts( scope );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Iterator it = r.getNodes().iterator();
 					Node node = (Node) it.next();
@@ -343,10 +344,10 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 		);
 
 
-		assertInsertCount( 4 );
-		assertUpdateCount( 0 );
+		assertInsertCount( scope, 4 );
+		assertUpdateCount( scope, 0 );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Route route = session.get( Route.class, r.getRouteID() );
 					checkResults( route, false );
@@ -355,35 +356,35 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testMergeTour() {
-		testTour( MERGE_OPERATION );
+	public void testMergeTour(SessionFactoryScope scope) {
+		testTour( scope, MERGE_OPERATION );
 	}
 
 	@Test
-	public void testSaveTour() {
-		testTour( SAVE_OPERATION );
+	public void testSaveTour(SessionFactoryScope scope) {
+		testTour( scope, SAVE_OPERATION );
 	}
 
 	@Test
-	public void testSaveUpdateTour() {
-		testTour( SAVE_UPDATE_OPERATION );
+	public void testSaveUpdateTour(SessionFactoryScope scope) {
+		testTour( scope, SAVE_UPDATE_OPERATION );
 	}
 
-	private void testTour( EntityOperation operation) {
+	private void testTour(SessionFactoryScope scope, EntityOperation operation) {
 
-		Route r = getUpdatedDetachedEntity();
+		Route r = getUpdatedDetachedEntity( scope );
 
-		clearCounts();
+		clearCounts( scope );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						operation.doEntityOperation( ( (Node) r.getNodes().toArray()[0] ).getTour(), session )
 		);
 
-		assertInsertCount( 4 );
-		assertUpdateCount( 0 );
+		assertInsertCount( scope, 4 );
+		assertUpdateCount( scope, 0 );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Route route = session.get( Route.class, r.getRouteID() );
 					checkResults( route, false );
@@ -392,27 +393,27 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testMergeTransport() {
-		testTransport( MERGE_OPERATION );
+	public void testMergeTransport(SessionFactoryScope scope) {
+		testTransport( scope, MERGE_OPERATION );
 	}
 
 	@Test
-	public void testSaveTransport() {
-		testTransport( SAVE_OPERATION );
+	public void testSaveTransport(SessionFactoryScope scope) {
+		testTransport( scope, SAVE_OPERATION );
 	}
 
 	@Test
-	public void testSaveUpdateTransport() {
-		testTransport( SAVE_UPDATE_OPERATION );
+	public void testSaveUpdateTransport(SessionFactoryScope scope) {
+		testTransport( scope, SAVE_UPDATE_OPERATION );
 	}
 
-	private void testTransport( EntityOperation operation) {
+	private void testTransport(SessionFactoryScope scope, EntityOperation operation) {
 
-		Route r = getUpdatedDetachedEntity();
+		Route r = getUpdatedDetachedEntity( scope );
 
-		clearCounts();
+		clearCounts( scope );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Transport transport;
 					Node node = ( (Node) r.getNodes().toArray()[0] );
@@ -427,10 +428,10 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 				}
 		);
 
-		assertInsertCount( 4 );
-		assertUpdateCount( 0 );
+		assertInsertCount( scope, 4 );
+		assertUpdateCount( scope, 0 );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Route route = session.get( Route.class, r.getRouteID() );
 					checkResults( route, false );
@@ -445,10 +446,10 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 		return deliveryNode;
 	}
 
-	private Route getUpdatedDetachedEntity() {
+	private Route getUpdatedDetachedEntity(SessionFactoryScope scope) {
 
 		Route route = new Route();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					route.setName( "routeA" );
 
@@ -494,9 +495,9 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 		return route;
 	}
 
-	@After
-	public void cleanup() {
-		inTransaction(
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Transport" );
 					session.createQuery( "delete from Tour" );
@@ -563,24 +564,24 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testMergeData3Nodes() {
-		testData3Nodes( MERGE_OPERATION );
+	public void testMergeData3Nodes(SessionFactoryScope scope) {
+		testData3Nodes( scope, MERGE_OPERATION );
 	}
 
 	@Test
-	public void testSaveData3Nodes() {
-		testData3Nodes( SAVE_OPERATION );
+	public void testSaveData3Nodes(SessionFactoryScope scope) {
+		testData3Nodes( scope, SAVE_OPERATION );
 	}
 
 	@Test
-	public void testSaveUpdateData3Nodes() {
-		testData3Nodes( SAVE_UPDATE_OPERATION );
+	public void testSaveUpdateData3Nodes(SessionFactoryScope scope) {
+		testData3Nodes( scope, SAVE_UPDATE_OPERATION );
 	}
 
-	private void testData3Nodes( EntityOperation operation) {
+	private void testData3Nodes(SessionFactoryScope scope, EntityOperation operation) {
 
 		Route r = new Route();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					r.setName( "routeA" );
 
@@ -588,9 +589,9 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 				}
 		);
 
-		clearCounts();
+		clearCounts( scope );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Route route = session.get( Route.class, r.getRouteID() );
 					route.setName( "new routA" );
@@ -651,8 +652,8 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 				}
 		);
 
-		assertInsertCount( 6 );
-		assertUpdateCount( 1 );
+		assertInsertCount( scope, 6 );
+		assertUpdateCount( scope, 1 );
 	}
 
 	protected void checkExceptionFromNullValueForNonNullable(
@@ -668,7 +669,7 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 				}
 			}
 			else {
-				assertTrue( ( ex instanceof JDBCException ) || ( ex.getCause() instanceof JDBCException ) );
+				Assertions.assertTrue( ( ex instanceof JDBCException ) || ( ex.getCause() instanceof JDBCException ) );
 			}
 		}
 		else {
@@ -681,22 +682,22 @@ public abstract class AbstractMultiPathCircleCascadeTest extends BaseCoreFunctio
 		}
 	}
 
-	protected void clearCounts() {
-		sessionFactory().getStatistics().clear();
+	protected void clearCounts(SessionFactoryScope scope) {
+		scope.getSessionFactory().getStatistics().clear();
 	}
 
-	protected void assertInsertCount(int expected) {
-		int inserts = (int) sessionFactory().getStatistics().getEntityInsertCount();
-		assertEquals( "unexpected insert count", expected, inserts );
+	protected void assertInsertCount(SessionFactoryScope scope, int expected) {
+		int inserts = (int) scope.getSessionFactory().getStatistics().getEntityInsertCount();
+		Assertions.assertEquals( expected, inserts, "unexpected insert count" );
 	}
 
-	protected void assertUpdateCount(int expected) {
-		int updates = (int) sessionFactory().getStatistics().getEntityUpdateCount();
-		assertEquals( "unexpected update counts", expected, updates );
+	protected void assertUpdateCount(SessionFactoryScope scope, int expected) {
+		int updates = (int) scope.getSessionFactory().getStatistics().getEntityUpdateCount();
+		Assertions.assertEquals( expected, updates, "unexpected update counts" );
 	}
 
-	protected void assertDeleteCount(int expected) {
-		int deletes = (int) sessionFactory().getStatistics().getEntityDeleteCount();
-		assertEquals( "unexpected delete counts", expected, deletes );
+	protected void assertDeleteCount(SessionFactoryScope scope, int expected) {
+		int deletes = (int) scope.getSessionFactory().getStatistics().getEntityDeleteCount();
+		Assertions.assertEquals( expected, deletes, "unexpected delete counts" );
 	}
 }

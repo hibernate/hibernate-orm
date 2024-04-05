@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,30 +15,33 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Guillaume Smet
  */
-@TestForIssue(jiraKey = "HHH-12633")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-12633")
+@DomainModel(
+		annotatedClasses = {
+				LazyInitializationWithoutInlineDirtyTrackingTest.File.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext( {EnhancerTestContext.class, LazyInitializationWithoutInlineDirtyTrackingTest.NoInlineDirtyTrackingContext.class} )
-public class LazyInitializationWithoutInlineDirtyTrackingTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ File.class };
-	}
+public class LazyInitializationWithoutInlineDirtyTrackingTest {
 
 	@Test
-	public void test() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			File file = new File();
 			file.setId( 1L );
 			file.setName( "file" );
@@ -49,7 +50,7 @@ public class LazyInitializationWithoutInlineDirtyTrackingTest extends BaseCoreFu
 			s.persist( file );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			File file = s.find( File.class, 1L );
 			file.setBytes( new byte[]{ 1 } );
 			s.persist( file );

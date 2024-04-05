@@ -1,15 +1,15 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
 import org.hibernate.annotations.Proxy;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
@@ -22,38 +22,31 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				LazyAbstractManyToOneNoProxyTest.User.class,
+				LazyAbstractManyToOneNoProxyTest.UserGroup.class,
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @JiraKey("HHH-16794")
-public class LazyAbstractManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
+public class LazyAbstractManyToOneNoProxyTest {
 
 	private static final String USER_1_NAME = "Andrea";
 	private static final String USER_2_NAME = "Fab";
 	private static final String USER_GROUP_1_NAME = "group1";
 	private static final String USER_GROUP_2_NAME = "group2";
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				User.class,
-				UserGroup.class,
-		};
+	SQLStatementInspector statementInspector(SessionFactoryScope scope) {
+		return (SQLStatementInspector) scope.getSessionFactory().getSessionFactoryOptions().getStatementInspector();
 	}
 
-	@Override
-	protected void afterConfigurationBuilt(Configuration configuration) {
-		super.afterConfigurationBuilt( configuration );
-		configuration.setStatementInspector( new SQLStatementInspector() );
-	}
-
-	SQLStatementInspector statementInspector() {
-		return (SQLStatementInspector) sessionFactory().getSessionFactoryOptions().getStatementInspector();
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					UserGroup group1 = new UserGroup( 1l, USER_GROUP_1_NAME );
 					UserGroup group2 = new UserGroup( 2l, USER_GROUP_2_NAME );
@@ -70,10 +63,10 @@ public class LazyAbstractManyToOneNoProxyTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	public void testSelect() {
-		inTransaction(
+	public void testSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					SQLStatementInspector statementInspector = statementInspector();
+					SQLStatementInspector statementInspector = statementInspector( scope );
 					statementInspector.clear();
 
 					User user = session.getReference( User.class, 1 );

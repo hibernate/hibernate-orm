@@ -1,12 +1,14 @@
 package org.hibernate.orm.test.bytecode.enhancement.version;
 
 import org.hibernate.Hibernate;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -25,31 +27,31 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 
 import static org.hibernate.Hibernate.isInitialized;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-15134")
-@RunWith(BytecodeEnhancerRunner.class)
-public class VersionedEntityTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-15134")
+@DomainModel(
+        annotatedClasses = {
+              VersionedEntityTest.FooEntity.class, VersionedEntityTest.BarEntity.class, VersionedEntityTest.BazEntity.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class VersionedEntityTest {
     private final Long parentID = 1L;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{ FooEntity.class, BarEntity.class, BazEntity.class };
-    }
-
-    @Before
-    public void prepare() {
-        doInJPA(this::sessionFactory, em -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( em -> {
             final FooEntity entity = FooEntity.of( parentID, "foo" );
             em.persist( entity );
-        });
+        } );
     }
 
     @Test
-    public void testUpdateVersionedEntity() {
-        doInJPA(this::sessionFactory, em -> {
+    public void testUpdateVersionedEntity(SessionFactoryScope scope) {
+        scope.inTransaction( em -> {
             final FooEntity entity = em.getReference( FooEntity.class, parentID );
 
             assertFalse( isInitialized( entity ) );

@@ -6,11 +6,12 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.cascade;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
@@ -26,32 +27,31 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-10254" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class CascadeDetachedTest extends BaseCoreFunctionalTestCase {
-
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Author.class, Book.class};
-    }
+@JiraKey( "HHH-10254" )
+@DomainModel(
+        annotatedClasses = {
+             CascadeDetachedTest.Author.class, CascadeDetachedTest.Book.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class CascadeDetachedTest {
 
     @Test
-    public void test() {
+    public void test(SessionFactoryScope scope) {
         Book book = new Book( "978-1118063330", "Operating System Concepts 9th Edition" );
         book.addAuthor( new Author( "Abraham", "Silberschatz", new char[] { 'a', 'b' } ) );
         book.addAuthor( new Author( "Peter", "Galvin", new char[] { 'c', 'd' }  ) );
         book.addAuthor( new Author( "Greg", "Gagne", new char[] { 'e', 'f' }  ) );
 
-        doInJPA( this::sessionFactory, em -> {
+        scope.inTransaction( em -> {
                     em.persist( book );
         } );
 
-        doInJPA( this::sessionFactory, em -> {
+        scope.inTransaction( em -> {
             em.merge( book );
         } );
     }

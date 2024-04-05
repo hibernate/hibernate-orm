@@ -8,12 +8,13 @@ package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
 import java.util.List;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -23,29 +24,25 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Tuple;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy.DirtyCheckingWithEmbeddableExtendingMappedSuperclassTest.*;
 
-@RunWith(BytecodeEnhancerRunner.class)
+
+@DomainModel(annotatedClasses = { MyEntity.class, })
+@SessionFactory
+@BytecodeEnhanced(testEnhancedClasses = MyEntity.class)
 @EnhancementOptions(inlineDirtyChecking = true)
-public class DirtyCheckingWithEmbeddableExtendingMappedSuperclassTest extends
-		BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				MyEntity.class
-		};
-	}
+public class DirtyCheckingWithEmbeddableExtendingMappedSuperclassTest {
 
 	@JiraKey("HHH-17041")
 	@Test
-	public void testQueryEmbeddableFields() {
-		inTransaction(
+	public void testQueryEmbeddableFields(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					MyEntity myEntity  = new MyEntity(1, "one");
 					session.persist( myEntity );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<Tuple> result = session.createQuery( "select m.embedded.text, m.embedded.name from MyEntity m", Tuple.class ).list();
 					assertThat( result.size() ).isEqualTo( 1 );

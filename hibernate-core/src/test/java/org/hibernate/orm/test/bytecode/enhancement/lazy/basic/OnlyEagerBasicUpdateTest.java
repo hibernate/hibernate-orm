@@ -6,22 +6,21 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.basic;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -35,38 +34,33 @@ import jakarta.persistence.Table;
  * This is mostly for comparison with {@link EagerAndLazyBasicUpdateTest}/{@link OnlyLazyBasicUpdateTest},
  * because the mere presence of lazy properties in one entity may affect the behavior of eager properties, too.
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				OnlyEagerBasicUpdateTest.EagerEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ EnhancerTestContext.class, NoDirtyCheckingContext.class })
-@TestForIssue(jiraKey = "HHH-16049")
-public class OnlyEagerBasicUpdateTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-16049")
+public class OnlyEagerBasicUpdateTest {
 
 	private Long entityId;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EagerEntity.class };
+	SQLStatementInspector statementInspector(SessionFactoryScope scope) {
+		return (SQLStatementInspector) scope.getSessionFactory().getSessionFactoryOptions().getStatementInspector();
 	}
 
-	@Override
-	protected void afterConfigurationBuilt(Configuration configuration) {
-		super.afterConfigurationBuilt( configuration );
-		configuration.setStatementInspector( new SQLStatementInspector() );
-	}
-
-	SQLStatementInspector statementInspector() {
-		return (SQLStatementInspector) sessionFactory().getSessionFactoryOptions().getStatementInspector();
-	}
-
-	private void initNull() {
-		doInHibernate( this::sessionFactory, s -> {
+	private void initNull(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EagerEntity entity = new EagerEntity();
 			s.persist( entity );
 			entityId = entity.getId();
 		} );
 	}
 
-	private void initNonNull() {
-		doInHibernate( this::sessionFactory, s -> {
+	private void initNonNull(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EagerEntity entity = new EagerEntity();
 			entity.setEagerProperty1( "eager1_initial" );
 			entity.setEagerProperty2( "eager2_initial" );
@@ -75,31 +69,31 @@ public class OnlyEagerBasicUpdateTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Before
-	public void clearStatementInspector() {
-		statementInspector().clear();
+	@BeforeEach
+	public void clearStatementInspector(SessionFactoryScope scope) {
+		statementInspector( scope ).clear();
 	}
 
 	@Test
-	public void updateSomeEagerProperty_nullToNull() {
-		initNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeEagerProperty_nullToNull(SessionFactoryScope scope) {
+		initNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( null );
 		} );
 
 		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		statementInspector( scope ).assertNoUpdate();
 	}
 
 	@Test
-	public void updateSomeEagerProperty_nullToNonNull() {
-		initNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeEagerProperty_nullToNonNull(SessionFactoryScope scope) {
+		initNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( "eager1_update" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			assertEquals( "eager1_update", entity.getEagerProperty1() );
 
@@ -108,13 +102,13 @@ public class OnlyEagerBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateSomeEagerProperty_nonNullToNonNull_differentValues() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeEagerProperty_nonNullToNonNull_differentValues(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( "eager1_update" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			assertEquals( "eager1_update", entity.getEagerProperty1() );
 
@@ -123,25 +117,25 @@ public class OnlyEagerBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateSomeEagerProperty_nonNullToNonNull_sameValues() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeEagerProperty_nonNullToNonNull_sameValues(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( entity.getEagerProperty1() );
 		} );
 
 		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		statementInspector( scope ).assertNoUpdate();
 	}
 
 	@Test
-	public void updateSomeEagerProperty_nonNullToNull() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateSomeEagerProperty_nonNullToNull(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( null );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			assertNull( entity.getEagerProperty1() );
 
@@ -150,27 +144,27 @@ public class OnlyEagerBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateAllEagerProperties_nullToNull() {
-		initNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllEagerProperties_nullToNull(SessionFactoryScope scope) {
+		initNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( null );
 			entity.setEagerProperty2( null );
 		} );
 
 		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		statementInspector( scope ).assertNoUpdate();
 	}
 
 	@Test
-	public void updateAllEagerProperties_nullToNonNull() {
-		initNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllEagerProperties_nullToNonNull(SessionFactoryScope scope) {
+		initNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( "eager1_update" );
 			entity.setEagerProperty2( "eager2_update" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			assertEquals( "eager1_update", entity.getEagerProperty1() );
 			assertEquals( "eager2_update", entity.getEagerProperty2() );
@@ -178,14 +172,14 @@ public class OnlyEagerBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateAllEagerProperties_nonNullToNonNull_differentValues() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllEagerProperties_nonNullToNonNull_differentValues(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( "eager1_update" );
 			entity.setEagerProperty2( "eager2_update" );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			assertEquals( "eager1_update", entity.getEagerProperty1() );
 			assertEquals( "eager2_update", entity.getEagerProperty2() );
@@ -193,27 +187,27 @@ public class OnlyEagerBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void updateAllEagerProperties_nonNullToNonNull_sameValues() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllEagerProperties_nonNullToNonNull_sameValues(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( entity.getEagerProperty1() );
 			entity.setEagerProperty2( entity.getEagerProperty2() );
 		} );
 
 		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		statementInspector( scope ).assertNoUpdate();
 	}
 
 	@Test
-	public void updateAllEagerProperties_nonNullToNull() {
-		initNonNull();
-		doInHibernate( this::sessionFactory, s -> {
+	public void updateAllEagerProperties_nonNullToNull(SessionFactoryScope scope) {
+		initNonNull( scope );
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			entity.setEagerProperty1( null );
 			entity.setEagerProperty2( null );
 		} );
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			EagerEntity entity = s.get( EagerEntity.class, entityId );
 			assertNull( entity.getEagerProperty1() );
 			assertNull( entity.getEagerProperty2() );
@@ -222,7 +216,7 @@ public class OnlyEagerBasicUpdateTest extends BaseCoreFunctionalTestCase {
 
 	@Entity
 	@Table(name = "LAZY_ENTITY")
-	private static class EagerEntity {
+	static class EagerEntity {
 		@Id
 		@GeneratedValue
 		Long id;

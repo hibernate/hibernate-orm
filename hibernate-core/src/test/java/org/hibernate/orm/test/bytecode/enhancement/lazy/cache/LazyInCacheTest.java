@@ -14,15 +14,16 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.usertype.UserTypeLegacyBridge;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -33,35 +34,37 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+        annotatedClasses = {
+               LazyInCacheTest.Order.class, LazyInCacheTest.Product.class, LazyInCacheTest.Tag.class
+        }
+)
+@ServiceRegistry(
+        settings = {
+                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyInCacheTest {
 
     private Long orderId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Order.class, Product.class, Tag.class};
-    }
 
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
-    }
-
-    @Before
-    public void prepare() {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
         Order order = new Order();
         Product product = new Product();
         order.products.add( product );
         order.data = "some data".getBytes( Charset.defaultCharset() );
 
-        doInJPA( this::sessionFactory, em -> {
+        scope.inTransaction( em -> {
             em.persist( product );
             em.persist( order );
         } );
@@ -70,10 +73,10 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
-        doInJPA( this::sessionFactory, em -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( em -> {
             Order order = em.find( Order.class, orderId );
-            Assert.assertEquals( 1, order.products.size() );
+            assertEquals( 1, order.products.size() );
         } );
     }
 
@@ -82,7 +85,7 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
     @Entity(name = "Order")
     @Table( name = "ORDER_TABLE" )
     @Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE )
-    private static class Order {
+    static class Order {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )
@@ -102,7 +105,7 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "Product")
     @Table( name = "PRODUCT" )
-    private static class Product {
+    static class Product {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )
@@ -113,7 +116,7 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "Tag")
     @Table( name = "TAG" )
-    private static class Tag {
+    static class Tag {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )

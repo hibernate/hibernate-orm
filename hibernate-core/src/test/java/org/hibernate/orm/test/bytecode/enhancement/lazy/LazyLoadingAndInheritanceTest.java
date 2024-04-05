@@ -7,18 +7,20 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,26 +29,29 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-@RunWith(BytecodeEnhancerRunner.class)
-@TestForIssue(jiraKey = "HHH-15090")
-public class LazyLoadingAndInheritanceTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				LazyLoadingAndInheritanceTest.Containing.class,
+				LazyLoadingAndInheritanceTest.Contained.class,
+				LazyLoadingAndInheritanceTest.ContainedExtended.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@JiraKey("HHH-15090")
+public class LazyLoadingAndInheritanceTest {
 
 	private Long containingID;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Containing.class, Contained.class, ContainedExtended.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-		configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
-	}
-
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Containing containing = new Containing();
 			ContainedExtended contained = new ContainedExtended( "George" );
 			containing.contained = contained;
@@ -57,8 +62,8 @@ public class LazyLoadingAndInheritanceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void test() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Containing containing = s.load( Containing.class, containingID );
 			Contained contained = containing.contained;
 			assertThat( contained ).isNotNull();
@@ -68,7 +73,7 @@ public class LazyLoadingAndInheritanceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "Containing")
-	private static class Containing {
+	static class Containing {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
@@ -79,7 +84,7 @@ public class LazyLoadingAndInheritanceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "Contained")
-	private static class Contained {
+	static class Contained {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
@@ -96,7 +101,7 @@ public class LazyLoadingAndInheritanceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "ContainedExtended")
-	private static class ContainedExtended extends Contained {
+	static class ContainedExtended extends Contained {
 
 		ContainedExtended() {
 		}

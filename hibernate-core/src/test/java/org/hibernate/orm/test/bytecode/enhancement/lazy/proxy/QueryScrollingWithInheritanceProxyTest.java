@@ -15,17 +15,19 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -43,31 +45,30 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@RunWith(BytecodeEnhancerRunner.class)
-public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( EmployeeParent.class );
-		sources.addAnnotatedClass( Employee.class );
-		sources.addAnnotatedClass( OtherEntity.class );
-	}
+@DomainModel(
+		annotatedClasses = {
+				QueryScrollingWithInheritanceProxyTest.EmployeeParent.class,
+				QueryScrollingWithInheritanceProxyTest.Employee.class,
+				QueryScrollingWithInheritanceProxyTest.OtherEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class QueryScrollingWithInheritanceProxyTest {
 
 	@Test
-	public void testScrollableWithStatelessSession() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testScrollableWithStatelessSession(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 		ScrollableResults scrollableResults = null;
-		final StatelessSession statelessSession = sessionFactory().openStatelessSession();
+		final StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession();
 
 		try {
 			statelessSession.beginTransaction();
@@ -116,11 +117,11 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 	}
 
 	@Test
-	public void testScrollableWithSession() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testScrollableWithSession(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 		ScrollableResults scrollableResults = null;
-		final Session session = sessionFactory().openSession();
+		final Session session = scope.getSessionFactory().openSession();
 
 		try {
 			session.beginTransaction();
@@ -168,9 +169,9 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 		}
 	}
 
-	@Before
-	public void prepareTestData() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Employee e1 = new Employee( "ENG1" );
 					Employee e2 = new Employee( "ENG2" );
@@ -192,9 +193,9 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from OtherEntity" ).executeUpdate();
 					session.createQuery( "delete from Employee" ).executeUpdate();

@@ -1,17 +1,17 @@
 package org.hibernate.orm.test.bytecode.enhancement.superclass;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 import java.time.LocalDateTime;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,19 +19,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 @JiraKey("HHH-17418")
-@RunWith(BytecodeEnhancerRunner.class)
-public class MappedSuperclassTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				MappedSuperclassTest.MyEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class MappedSuperclassTest {
 	private static final LocalDateTime TEST_DATE_UPDATED_VALUE = LocalDateTime.of( 2023, 11, 10, 0, 0 );
 	private static final long TEST_ID = 1L;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { MyEntity.class };
-	}
-
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			MyEntity testEntity = new MyEntity();
 			testEntity.id = TEST_ID;
 			s.persist( testEntity );
@@ -39,16 +40,16 @@ public class MappedSuperclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void test() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			MyEntity testEntity = s.get( MyEntity.class, TEST_ID );
 			assertThat( testEntity.value() ).isEqualTo( TEST_DATE_UPDATED_VALUE );
 		} );
 	}
 
-	@After
-	public void cleanup() {
-		doInHibernate( this::sessionFactory, s -> {
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			MyEntity testEntity = s.get( MyEntity.class, TEST_ID );
 			s.remove( testEntity );
 		} );

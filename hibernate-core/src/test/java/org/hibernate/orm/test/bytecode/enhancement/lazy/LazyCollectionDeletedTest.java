@@ -7,14 +7,16 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -29,32 +31,34 @@ import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-11576" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyCollectionDeletedTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-11576")
+@DomainModel(
+        annotatedClasses = {
+                LazyCollectionDeletedTest.Post.class,
+                LazyCollectionDeletedTest.Tag.class,
+                LazyCollectionDeletedTest.AdditionalDetails.class
+        }
+)
+@ServiceRegistry(
+        settings = {
+                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyCollectionDeletedTest {
 
     private Long postId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Post.class, Tag.class, AdditionalDetails.class};
-    }
-
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Post post = new Post();
 
             Tag tag1 = new Tag( "tag1" );
@@ -75,8 +79,8 @@ public class LazyCollectionDeletedTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Query query = s.createQuery( "from AdditionalDetails where id=" + postId );
             AdditionalDetails additionalDetails = (AdditionalDetails) query.getSingleResult();
             additionalDetails.details = "New data";
@@ -85,11 +89,11 @@ public class LazyCollectionDeletedTest extends BaseCoreFunctionalTestCase {
             // additionalDetails.post.tags get deleted on commit
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Query query = s.createQuery( "from Post where id=" + postId );
             Post retrievedPost = (Post) query.getSingleResult();
 
-            assertFalse( "No tags found", retrievedPost.tags.isEmpty() );
+            assertFalse( retrievedPost.tags.isEmpty(), "No tags found" );
             retrievedPost.tags.forEach( tag -> System.out.println( "Found tag: " + tag ) );
         } );
     }
@@ -98,7 +102,7 @@ public class LazyCollectionDeletedTest extends BaseCoreFunctionalTestCase {
 
     @Entity( name = "Tag" )
     @Table( name = "TAG" )
-    private static class Tag {
+    static class Tag {
 
         @Id
         @GeneratedValue
@@ -116,7 +120,7 @@ public class LazyCollectionDeletedTest extends BaseCoreFunctionalTestCase {
 
     @Entity( name = "Post" )
     @Table( name = "POST" )
-    private static class Post {
+    static class Post {
 
         @Id
         @GeneratedValue
@@ -131,7 +135,7 @@ public class LazyCollectionDeletedTest extends BaseCoreFunctionalTestCase {
 
     @Entity( name = "AdditionalDetails" )
     @Table( name = "ADDITIONAL_DETAILS" )
-    private static class AdditionalDetails {
+    static class AdditionalDetails {
 
         @Id
         Long id;

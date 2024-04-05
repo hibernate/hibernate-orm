@@ -6,6 +6,9 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.dynamicupdate;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+
 import java.util.HashSet;
 import java.util.List;
 import jakarta.persistence.TypedQuery;
@@ -13,8 +16,6 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -22,57 +23,54 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+
 import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.DirtyCheckEnhancementContext;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.NoDirtyCheckEnhancementContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH14424")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH14424")
+@DomainModel(
+		annotatedClasses = {
+				SamplingOrder.class,
+				Customer.class,
+				User.class,
+				Role.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "100" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckEnhancementContext.class, DirtyCheckEnhancementContext.class })
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctionalTestCase {
+public class DynamicUpdateAndCollectionsTest {
 
-	boolean skipTest;
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "100" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
+	@BeforeAll
+	protected void applyMetadataSources() {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		if ( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
-			// skip the test if the bytecode provider is Javassist
-			skipTest = true;
-		}
-		else {
-			sources.addAnnotatedClass( SamplingOrder.class );
-			sources.addAnnotatedClass( Customer.class );
-			sources.addAnnotatedClass( User.class );
-			sources.addAnnotatedClass( Role.class );
-		}
+		assumeFalse( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals(
+				byteCodeProvider ) );
 	}
 
-	@Before
-	public void setUp() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					User user = new User();
 					user.setEmail( "foo@bar.com" );
@@ -97,12 +95,9 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 		);
 	}
 
-	@After
-	public void tearDown() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from SamplingOrder" ).executeUpdate();
 					session.createQuery( "delete from Customer" ).executeUpdate();
@@ -113,11 +108,8 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 	}
 
 	@Test
-	public void testLoad() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	public void testLoad(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					CriteriaBuilder cb = session.getCriteriaBuilder();
 					CriteriaQuery<SamplingOrder> cq = cb.createQuery( SamplingOrder.class );
@@ -129,21 +121,18 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<User> users = session.createQuery( "from User u", User.class ).list();
 					User user = users.get( 0 );
-					assertThat( user.getEmail(), is( "foo@bar.com" ) );
+					assertThat( user.getEmail() ).isEqualTo( "foo@bar.com" );
 				}
 		);
 	}
 
 	@Test
-	public void testRemoveCustomers() {
-		if ( skipTest ) {
-			return;
-		}
-		Long samplingOrderId = fromTransaction(
+	public void testRemoveCustomers(SessionFactoryScope scope) {
+		Long samplingOrderId = scope.fromTransaction(
 				session -> {
 					SamplingOrder samplingOrder = getSamplingOrderFetchCustomer( session );
 					samplingOrder.setCustomer( null );
@@ -151,20 +140,17 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					SamplingOrder samplingOrder = session.get( SamplingOrder.class, samplingOrderId );
-					assertThat( samplingOrder.getCustomer(), is( nullValue() ) );
+					assertThat( samplingOrder.getCustomer() ).isNull();
 				}
 		);
 	}
 
 	@Test
-	public void testAddUserRoles() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	public void testAddUserRoles(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					SamplingOrder samplingOrder = getSamplingOrderFetchCustomer( session );
 					User user = samplingOrder.getCustomer().getUser();
@@ -175,16 +161,16 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<User> users = session.createQuery( "from User u", User.class ).list();
 					User user = users.get( 0 );
-					assertThat( user.getEmail(), is( "foo@bar.com" ) );
-					assertThat( user.getRoles().size(), is( 2 ) );
+					assertThat( user.getEmail() ).isEqualTo( "foo@bar.com" );
+					assertThat( user.getRoles() ).hasSize( 2 );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					SamplingOrder samplingOrder = getSamplingOrderFetchCustomer( session );
 					User user = samplingOrder.getCustomer().getUser();
@@ -194,16 +180,16 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<User> users = session.createQuery( "from User u", User.class ).list();
 					User user = users.get( 0 );
-					assertThat( user.getEmail(), is( "foo@bar.com" ) );
-					assertThat( user.getRoles().size(), is( 3 ) );
+					assertThat( user.getEmail() ).isEqualTo( "foo@bar.com" );
+					assertThat( user.getRoles() ).hasSize( 3 );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User user = session.createQuery( "from User", User.class ).list().get( 0 );
 					Role role = new Role();
@@ -212,23 +198,20 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<User> users = session.createQuery( "from User u", User.class ).list();
 					User user = users.get( 0 );
-					assertThat( user.getEmail(), is( "foo@bar.com" ) );
-					assertThat( user.getRoles().size(), is( 4 ) );
+					assertThat( user.getEmail() ).isEqualTo( "foo@bar.com" );
+					assertThat( user.getRoles() ).hasSize( 4 );
 				}
 		);
 
 	}
 
 	@Test
-	public void testDeleteUserRoles() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	public void testDeleteUserRoles(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					SamplingOrder samplingOrder = getSamplingOrderFetchCustomer( session );
 					User user = samplingOrder.getCustomer().getUser();
@@ -236,21 +219,18 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<User> users = session.createQuery( "from User u", User.class ).list();
 					User user = users.get( 0 );
-					assertThat( user.getRoles().size(), is( 0 ) );
+					assertThat( user.getRoles() ).isEmpty();
 				}
 		);
 	}
 
 	@Test
-	public void testModifyUserMail() {
-		if ( skipTest ) {
-			return;
-		}
-		inTransaction(
+	public void testModifyUserMail(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					SamplingOrder samplingOrder = getSamplingOrderFetchCustomer( session );
 					User user = samplingOrder.getCustomer().getUser();
@@ -258,12 +238,12 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<User> users = session.createQuery( "from User u", User.class ).list();
 					User user = users.get( 0 );
-					assertThat( user.getEmail(), is( "bar@foo.com" ) );
-					assertThat( user.getRoles().size(), is( 1 ) );
+					assertThat( user.getEmail() ).isEqualTo( "bar@foo.com" );
+					assertThat( user.getRoles() ).hasSize( 1 );
 				}
 		);
 	}

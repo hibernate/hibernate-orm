@@ -7,19 +7,20 @@
 package org.hibernate.orm.test.mapping.lazytoone.collectioninitializer;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.loader.BatchFetchStyle.PADDED;
 
 /**
  * Test lazy-to-one initialization within a collection initialization,
@@ -38,31 +39,29 @@ import static org.hibernate.loader.BatchFetchStyle.PADDED;
  *     (once for UserAuthorization1, and once for UserAuthorization2)</li>
  * </ul>
  */
-@RunWith(BytecodeEnhancerRunner.class)
-@TestForIssue(jiraKey = "HHH-14730")
-public class InitLazyToOneWithinPaddedCollectionInitializationAllowProxyTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+@JiraKey("HHH-14730")
+@DomainModel(
+		annotatedClasses = {
+				User.class,
+				UserAuthorization.class,
+				Company.class,
+				CostCenter.class,
+				Offer.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.BATCH_FETCH_STYLE, value = "PADDED" ),
+				@Setting( name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "10" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class InitLazyToOneWithinPaddedCollectionInitializationAllowProxyTest {
 
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( User.class );
-		sources.addAnnotatedClass( UserAuthorization.class );
-		sources.addAnnotatedClass( Company.class );
-		sources.addAnnotatedClass( CostCenter.class );
-		sources.addAnnotatedClass( Offer.class );
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.BATCH_FETCH_STYLE, PADDED );
-		ssrb.applySetting( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, 10 );
-	}
-
-	@Override
-	protected void afterSessionFactoryBuilt(SessionFactoryImplementor sessionFactory) {
-		inTransaction( session -> {
+	@BeforeEach
+	void afterSessionFactoryBuilt(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			User user0 = new User();
 			user0.setId( 0L );
 			session.persist( user0 );
@@ -127,9 +126,20 @@ public class InitLazyToOneWithinPaddedCollectionInitializationAllowProxyTest
 		} );
 	}
 
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createMutationQuery( "delete from UserAuthorization" ).executeUpdate();
+			session.createMutationQuery( "delete from Offer" ).executeUpdate();
+			session.createMutationQuery( "delete from CostCenter" ).executeUpdate();
+			session.createMutationQuery( "delete from User" ).executeUpdate();
+			session.createMutationQuery( "delete from Company" ).executeUpdate();
+		} );
+	}
+
 	@Test
-	public void testOneReference() {
-		inTransaction( (session) -> {
+	public void testOneReference(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
 			// Add a lazy proxy of the cost center to the persistence context
 			// through the lazy to-one association from the offer.
 			Offer offer = session.find( Offer.class, 6L );
@@ -148,8 +158,8 @@ public class InitLazyToOneWithinPaddedCollectionInitializationAllowProxyTest
 	}
 
 	@Test
-	public void testTwoReferences() {
-		inTransaction( (session) -> {
+	public void testTwoReferences(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
 			// Add a lazy proxy of the cost center to the persistence context
 			// through the lazy to-one association from the offer.
 			Offer offer = session.find( Offer.class, 6L );
@@ -168,8 +178,8 @@ public class InitLazyToOneWithinPaddedCollectionInitializationAllowProxyTest
 	}
 
 	@Test
-	public void testThreeReferences() {
-		inTransaction( (session) -> {
+	public void testThreeReferences(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
 			// Add a lazy proxy of the cost center to the persistence context
 			// through the lazy to-one association from the offer.
 			Offer offer = session.find( Offer.class, 6L );

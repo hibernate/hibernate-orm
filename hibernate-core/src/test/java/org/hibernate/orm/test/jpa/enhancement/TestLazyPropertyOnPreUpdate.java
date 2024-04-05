@@ -6,16 +6,21 @@
  */
 package org.hibernate.orm.test.jpa.enhancement;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.hibernate.Hibernate;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.transaction.TransactionUtil.JPATransactionVoidFunction;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -25,170 +30,165 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+
 import java.util.Arrays;
-import java.util.Map;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
-@TestForIssue( jiraKey = "HHH-7573" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class TestLazyPropertyOnPreUpdate extends BaseEntityManagerFunctionalTestCase {
+@JiraKey("HHH-7573")
+@DomainModel(
+		annotatedClasses = {
+				TestLazyPropertyOnPreUpdate.EntityWithLazyProperty.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class TestLazyPropertyOnPreUpdate {
 
-    private EntityWithLazyProperty entity;
+	private EntityWithLazyProperty entity;
 
-    @Override
-    public Class[] getAnnotatedClasses() {
-        return new Class[]{EntityWithLazyProperty.class};
-    }
 
-    @Override
-    protected void addConfigOptions(Map options) {
-        options.put( AvailableSettings.CLASSLOADERS, getClass().getClassLoader() );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) throws Exception {
+		EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(
+				EntityWithLazyProperty.class.getName() );
+		assertTrue( ep.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() );
 
-    @Before
-    public void prepare() throws Exception {
-        EntityPersister ep = entityManagerFactory().getMappingMetamodel().getEntityDescriptor( EntityWithLazyProperty.class.getName() );
-        assertTrue( ep.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() );
+		byte[] testArray = new byte[] { 0x2A };
 
-        byte[] testArray = new byte[]{0x2A};
+		scope.inTransaction( em -> {
+			//persist the test entity.d
+			entity = new EntityWithLazyProperty();
+			entity.setSomeField( "TEST" );
+			entity.setLazyData( testArray );
+			em.persist( entity );
+		} );
 
-        doInJPA( this::entityManagerFactory, em -> {
-            //persist the test entity.d
-            entity = new EntityWithLazyProperty();
-            entity.setSomeField( "TEST" );
-            entity.setLazyData( testArray );
-            em.persist( entity );
-        } );
+		checkLazyField( scope, entity, testArray );
+	}
 
-        checkLazyField( entity, testArray );
-    }
+	/**
+	 * Set a non lazy field, therefore the lazyData field will be LazyPropertyInitializer.UNFETCHED_PROPERTY
+	 * for both state and newState so the field should not change. This should no longer cause a ClassCastException.
+	 */
+	@Test
+	public void testNoUpdate(SessionFactoryScope scope) {
+		byte[] testArray = new byte[] { 0x2A };
 
-    /**
-     * Set a non lazy field, therefore the lazyData field will be LazyPropertyInitializer.UNFETCHED_PROPERTY
-     * for both state and newState so the field should not change. This should no longer cause a ClassCastException.
-     */
-    @Test
-    public void testNoUpdate() {
-        byte[] testArray = new byte[]{0x2A};
+		doInJPA( scope::getSessionFactory, new JPATransactionVoidFunction() {
+			@Override
+			public void accept(EntityManager em) {
+				entity = em.find( EntityWithLazyProperty.class, entity.id );
+				entity.setSomeField( "TEST1" );
+				assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
+			}
 
-        doInJPA( this::entityManagerFactory, new JPATransactionVoidFunction() {
-            @Override
-            public void accept(EntityManager em) {
-                entity = em.find( EntityWithLazyProperty.class, entity.id );
-                entity.setSomeField( "TEST1" );
-                assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
-            }
+			@Override
+			public void afterTransactionCompletion() {
+				assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
+			}
+		} );
 
-            @Override
-            public void afterTransactionCompletion() {
-                assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
-            }
-        } );
+		checkLazyField( scope, entity, testArray );
+	}
 
-        checkLazyField( entity, testArray );
-    }
+	/**
+	 * Set the updateLazyFieldInPreUpdate flag so that the lazy field is updated from within the
+	 * PreUpdate annotated callback method. So state == LazyPropertyInitializer.UNFETCHED_PROPERTY and
+	 * newState == EntityWithLazyProperty.PRE_UPDATE_VALUE. This should no longer cause a ClassCastException.
+	 */
+	@Test
+	public void testPreUpdate(SessionFactoryScope scope) {
+		doInJPA( scope::getSessionFactory, new JPATransactionVoidFunction() {
+			@Override
+			public void accept(EntityManager em) {
+				entity = em.find( EntityWithLazyProperty.class, entity.id );
+				entity.setUpdateLazyFieldInPreUpdate( true );
+				entity.setSomeField( "TEST2" );
+				assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
+			}
 
-    /**
-     * Set the updateLazyFieldInPreUpdate flag so that the lazy field is updated from within the
-     * PreUpdate annotated callback method. So state == LazyPropertyInitializer.UNFETCHED_PROPERTY and
-     * newState == EntityWithLazyProperty.PRE_UPDATE_VALUE. This should no longer cause a ClassCastException.
-     */
-    @Test
-    public void testPreUpdate() {
-        doInJPA( this::entityManagerFactory, new JPATransactionVoidFunction() {
-            @Override
-            public void accept(EntityManager em) {
-                entity = em.find( EntityWithLazyProperty.class, entity.id );
-                entity.setUpdateLazyFieldInPreUpdate( true );
-                entity.setSomeField( "TEST2" );
-                assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
-            }
+			@Override
+			public void afterTransactionCompletion() {
+				assertTrue( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
+			}
+		} );
 
-            @Override
-            public void afterTransactionCompletion() {
-                assertTrue( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
-            }
-        } );
+		checkLazyField( scope, entity, EntityWithLazyProperty.PRE_UPDATE_VALUE );
+	}
 
-        checkLazyField( entity, EntityWithLazyProperty.PRE_UPDATE_VALUE );
-    }
+	/**
+	 * Set the updateLazyFieldInPreUpdate flag so that the lazy field is updated from within the
+	 * PreUpdate annotated callback method and also set the lazyData field directly to testArray1. When we reload we
+	 * should get EntityWithLazyProperty.PRE_UPDATE_VALUE.
+	 */
+	@Test
+	public void testPreUpdateOverride(SessionFactoryScope scope) {
+		byte[] testArray = new byte[] { 0x2A };
 
-    /**
-     * Set the updateLazyFieldInPreUpdate flag so that the lazy field is updated from within the
-     * PreUpdate annotated callback method and also set the lazyData field directly to testArray1. When we reload we
-     * should get EntityWithLazyProperty.PRE_UPDATE_VALUE.
-     */
-    @Test
-    public void testPreUpdateOverride() {
-        byte[] testArray = new byte[]{0x2A};
+		scope.inTransaction( em -> {
+			entity = em.find( EntityWithLazyProperty.class, entity.id );
+			entity.setUpdateLazyFieldInPreUpdate( true );
+			assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
+			entity.setLazyData( testArray );
+			assertTrue( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
+			entity.setSomeField( "TEST3" );
+		} );
 
-        doInJPA( this::entityManagerFactory, em -> {
-            entity = em.find( EntityWithLazyProperty.class, entity.id );
-            entity.setUpdateLazyFieldInPreUpdate( true );
-            assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
-            entity.setLazyData( testArray );
-            assertTrue( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
-            entity.setSomeField( "TEST3" );
-        } );
+		checkLazyField( scope, entity, EntityWithLazyProperty.PRE_UPDATE_VALUE );
+	}
 
-        checkLazyField( entity, EntityWithLazyProperty.PRE_UPDATE_VALUE );
-    }
+	private void checkLazyField(SessionFactoryScope scope, EntityWithLazyProperty entity, byte[] expected) {
+		// reload the entity and check the lazy value matches what we expect.
+		scope.inTransaction( em -> {
+			EntityWithLazyProperty testEntity = em.find( EntityWithLazyProperty.class, entity.id );
+			assertFalse( Hibernate.isPropertyInitialized( testEntity, "lazyData" ) );
+			assertTrue( Arrays.equals( expected, testEntity.lazyData ) );
+			assertTrue( Hibernate.isPropertyInitialized( testEntity, "lazyData" ) );
+		} );
+	}
 
-    private void checkLazyField(EntityWithLazyProperty entity, byte[] expected) {
-        // reload the entity and check the lazy value matches what we expect.
-        doInJPA( this::entityManagerFactory, em -> {
-            EntityWithLazyProperty testEntity = em.find( EntityWithLazyProperty.class, entity.id );
-            assertFalse( Hibernate.isPropertyInitialized( testEntity, "lazyData" ) );
-            assertTrue( Arrays.equals( expected, testEntity.lazyData ) );
-            assertTrue( Hibernate.isPropertyInitialized( testEntity, "lazyData" ) );
-        } );
-    }
+	// --- //
 
-    // --- //
+	/**
+	 * Test entity with a lazy property which requires build time instrumentation.
+	 *
+	 * @author Martin Ball
+	 */
+	@Entity
+	@Table(name = "ENTITY_WITH_LAZY_PROPERTY")
+	static class EntityWithLazyProperty {
 
-    /**
-     * Test entity with a lazy property which requires build time instrumentation.
-     *
-     * @author Martin Ball
-     */
-    @Entity
-    @Table( name = "ENTITY_WITH_LAZY_PROPERTY" )
-    private static class EntityWithLazyProperty {
+		public static final byte[] PRE_UPDATE_VALUE = new byte[] { 0x2A, 0x2A, 0x2A, 0x2A };
 
-        public static final byte[] PRE_UPDATE_VALUE = new byte[]{0x2A, 0x2A, 0x2A, 0x2A};
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Basic(fetch = FetchType.LAZY)
+		private byte[] lazyData;
 
-        @Basic( fetch = FetchType.LAZY )
-        private byte[] lazyData;
+		private String someField;
 
-        private String someField;
+		private boolean updateLazyFieldInPreUpdate;
 
-        private boolean updateLazyFieldInPreUpdate;
+		public void setLazyData(byte[] lazyData) {
+			this.lazyData = lazyData;
+		}
 
-        public void setLazyData(byte[] lazyData) {
-            this.lazyData = lazyData;
-        }
+		public void setSomeField(String someField) {
+			this.someField = someField;
+		}
 
-        public void setSomeField(String someField) {
-            this.someField = someField;
-        }
+		public void setUpdateLazyFieldInPreUpdate(boolean updateLazyFieldInPreUpdate) {
+			this.updateLazyFieldInPreUpdate = updateLazyFieldInPreUpdate;
+		}
 
-        public void setUpdateLazyFieldInPreUpdate(boolean updateLazyFieldInPreUpdate) {
-            this.updateLazyFieldInPreUpdate = updateLazyFieldInPreUpdate;
-        }
-
-        @PreUpdate
-        public void onPreUpdate() {
-            //Allow the update of the lazy field from within the pre update to check that this does not break things.
-            if ( updateLazyFieldInPreUpdate ) {
-                this.lazyData = PRE_UPDATE_VALUE;
-            }
-        }
-    }
+		@PreUpdate
+		public void onPreUpdate() {
+			//Allow the update of the lazy field from within the pre update to check that this does not break things.
+			if ( updateLazyFieldInPreUpdate ) {
+				this.lazyData = PRE_UPDATE_VALUE;
+			}
+		}
+	}
 }

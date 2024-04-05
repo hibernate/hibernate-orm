@@ -11,48 +11,49 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-13640" )
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey( "HHH-13640" )
+@DomainModel(
+		annotatedClasses = {
+				ProxyInitializeAndUpdateTest.Animal.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
-public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Animal.class );
-	}
+public class ProxyInitializeAndUpdateTest {
 
 	@Test
-	public void testInitializeWithGetter() {
-		inTransaction(
+	public void testInitializeWithGetter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -63,7 +64,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
@@ -74,7 +75,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		inSession(
+		scope.inSession(
 				session -> {
 					Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -86,8 +87,8 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	public void testInitializeWithSetter() {
-		inTransaction(
+	public void testInitializeWithSetter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -98,7 +99,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
@@ -108,7 +109,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		inSession(
+		scope.inSession(
 				session -> {
 					Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -120,8 +121,8 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	public void testMergeUpdatedOntoUninitialized() {
-		inTransaction(
+	public void testMergeUpdatedOntoUninitialized(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -131,9 +132,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		final Animal animalInitialized = doInHibernate(
-				this::sessionFactory,
-				session -> {
+		final Animal animalInitialized = scope.fromTransaction( session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
 					assertEquals( "female", animal.getSex() );
@@ -145,7 +144,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 		animalInitialized.setAge( 4 );
 		animalInitialized.setSex( "other" );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
@@ -157,7 +156,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -168,8 +167,8 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	public void testMergeUpdatedOntoUpdated() {
-		inTransaction(
+	public void testMergeUpdatedOntoUpdated(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -179,9 +178,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		final Animal animalInitialized = doInHibernate(
-				this::sessionFactory,
-				session -> {
+		final Animal animalInitialized = scope.fromTransaction( session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
 					assertEquals( "female", animal.getSex() );
@@ -193,7 +190,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 		animalInitialized.setAge( 4 );
 		animalInitialized.setSex( "other" );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -206,7 +203,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -217,8 +214,8 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	public void testMergeUninitializedOntoUninitialized() {
-		inTransaction(
+	public void testMergeUninitializedOntoUninitialized(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -228,16 +225,14 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		final Animal animalUninitialized = doInHibernate(
-				this::sessionFactory,
-				session -> {
+		final Animal animalUninitialized = scope.fromTransaction( session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					return animal;
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
@@ -247,7 +242,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -258,8 +253,8 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	public void testMergeUninitializedOntoUpdated() {
-		inTransaction(
+	public void testMergeUninitializedOntoUpdated(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Animal animal = new Animal();
 					animal.name = "animal";
@@ -269,16 +264,14 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		final Animal animalUninitialized = doInHibernate(
-				this::sessionFactory,
-				session -> {
+		final Animal animalUninitialized = scope.fromTransaction( session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					return animal;
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
@@ -293,7 +286,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
@@ -303,9 +296,9 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Animal" ).executeUpdate();
 				}

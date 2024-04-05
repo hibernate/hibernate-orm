@@ -24,49 +24,47 @@ import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-11155" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyGroupTest extends BaseCoreFunctionalTestCase {
-    private SQLStatementInterceptor sqlInterceptor;
+@JiraKey( "HHH-11155" )
+@DomainModel(
+        annotatedClasses = {
+                LazyGroupTest.Child.class, LazyGroupTest.Parent.class
+        }
+)
+@ServiceRegistry(
+        settings = {
+                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyGroupTest {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Child.class, Parent.class};
-    }
-
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
-        sqlInterceptor = new SQLStatementInterceptor( configuration );
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Child c1 = new Child( "steve", "Hibernater" );
             Child c2 = new Child( "sally", "Joe Mama" );
 
@@ -91,17 +89,20 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-10267" )
-    public void testAccess() {
-        sqlInterceptor.clear();
-
-        inTransaction(
+    @JiraKey( "HHH-10267" )
+    public void testAccess(SessionFactoryScope scope) {
+        scope.inTransaction(
                 (s) -> {
+                    SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getSessionFactory()
+                            .getSessionFactoryOptions()
+                            .getStatementInspector();
+                    statementInspector.clear();
+
                     final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
                             .setParameter( "name", "steve" )
                             .uniqueResult();
 
-                    assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+                    statementInspector.assertExecutedCount( 1 );
 
                     assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
 
@@ -109,50 +110,50 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
 
                     // parent should be an uninitialized enhanced-proxy
                     assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
-                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertThat( c1.getParent() ).isNotInstanceOf( HibernateProxy.class );
                     assertFalse( Hibernate.isInitialized( c1.getParent() ) );
 
                     // alternateParent should be an uninitialized enhanced-proxy
                     assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
-                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertThat( c1.getAlternateParent() ).isNotInstanceOf( HibernateProxy.class );
                     assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
 
                     // Now lets access nickName which ought to initialize nickName
                     c1.getNickName();
-                    assertThat( sqlInterceptor.getQueryCount(), is( 2 ) );
+                    statementInspector.assertExecutedCount( 2 );
 
                     assertTrue( Hibernate.isPropertyInitialized( c1, "nickName" ) );
 
                     // parent should be an uninitialized enhanced-proxy
                     assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
-                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertThat( c1.getParent() ).isNotInstanceOf( HibernateProxy.class );
                     assertFalse( Hibernate.isInitialized( c1.getParent() ) );
 
                     // alternateParent should be an uninitialized enhanced-proxy
                     assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
-                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertThat( c1.getAlternateParent() ).isNotInstanceOf( HibernateProxy.class );
                     assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
-
-
-                    sqlInterceptor.clear();
                 }
         );
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-11155" )
-    public void testUpdate() {
+    @JiraKey( "HHH-11155" )
+    public void testUpdate(SessionFactoryScope scope) {
         Parent p1New = new Parent();
         p1New.nombre = "p1New";
 
-        inTransaction(
+        scope.inTransaction(
                 (s) -> {
-                    sqlInterceptor.clear();
+                    SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getSessionFactory()
+                            .getSessionFactoryOptions()
+                            .getStatementInspector();
+                    statementInspector.clear();
 
                     final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
                             .setParameter( "name", "steve" )
                             .uniqueResult();
-                    assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+                    statementInspector.assertExecutedCount( 1 );
 
                     assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
 
@@ -160,18 +161,18 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
 
                     // parent should be an uninitialized enhanced-proxy
                     assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
-                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertThat( c1.getParent() ).isNotInstanceOf( HibernateProxy.class );
                     assertFalse( Hibernate.isInitialized( c1.getParent() ) );
 
                     // alternateParent should be an uninitialized enhanced-proxy
                     assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
-                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertThat( c1.getAlternateParent() ).isNotInstanceOf( HibernateProxy.class );
                     assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
 
                     // Now lets update nickName
                     c1.nickName = "new nickName";
 
-                    assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+                    statementInspector.assertExecutedCount( 1 );
 
                     assertTrue( Hibernate.isPropertyInitialized( c1, "name" ) );
 
@@ -179,12 +180,12 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
 
                     // parent should be an uninitialized enhanced-proxy
                     assertTrue( Hibernate.isPropertyInitialized( c1, "parent" ) );
-                    assertThat( c1.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertThat( c1.getParent() ).isNotInstanceOf( HibernateProxy.class );
                     assertFalse( Hibernate.isInitialized( c1.getParent() ) );
 
                     // alternateParent should be an uninitialized enhanced-proxy
                     assertTrue( Hibernate.isPropertyInitialized( c1, "alternateParent" ) );
-                    assertThat( c1.getAlternateParent(), not( instanceOf( HibernateProxy.class ) ) );
+                    assertThat( c1.getAlternateParent() ).isNotInstanceOf( HibernateProxy.class );
                     assertFalse( Hibernate.isInitialized( c1.getAlternateParent() ) );
 
                     // Now update c1.parent
@@ -195,21 +196,21 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
         );
 
         // verify updates
-        inTransaction(
+        scope.inTransaction(
                 (s) -> {
                     final Child c1 = s.createQuery( "from Child c where c.name = :name", Child.class )
                             .setParameter( "name", "steve" )
                             .uniqueResult();
 
-                    assertThat( c1.getNickName(), is( "new nickName" ) );
-                    assertThat( c1.parent.nombre, is( "p1New" ) );
+                    assertThat( c1.getNickName() ).isEqualTo( "new nickName" );
+                    assertThat( c1.parent.nombre ).isEqualTo( "p1New" );
                 }
         );
     }
 
-    @After
-    public void cleanup() {
-        doInHibernate( this::sessionFactory, s -> {
+    @AfterEach
+    public void cleanup(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             s.createQuery( "delete Child" ).executeUpdate();
             s.createQuery( "delete Parent" ).executeUpdate();
         } );
@@ -221,7 +222,7 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
 
     @Entity( name = "Parent" )
     @Table( name = "PARENT" )
-    private static class Parent {
+    static class Parent {
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )
         Long id;
@@ -244,7 +245,7 @@ public class LazyGroupTest extends BaseCoreFunctionalTestCase {
 
     @Entity( name = "Child" )
     @Table( name = "CHILD" )
-    private static class Child {
+    static class Child {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )

@@ -12,7 +12,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
@@ -29,28 +28,32 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-12260")
-@RunWith(BytecodeEnhancerRunner.class)
-public class LazyCollectionDetachTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-12260")
+@DomainModel(
+		annotatedClasses = {
+				LazyCollectionDetachTest.Parent.class, LazyCollectionDetachTest.Child.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyCollectionDetachTest {
 
 	private static final int CHILDREN_SIZE = 10;
 	private Long parentID;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Parent.class, Child.class };
-	}
-
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = new Parent();
 			parent.setChildren( new ArrayList<>() );
 			for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
@@ -63,9 +66,14 @@ public class LazyCollectionDetachTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.createQuery( "from java.lang.Object", Object.class ).list().forEach( session::remove ) );
+	}
+
 	@Test
-	public void testDetach() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testDetach(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = s.find( Parent.class, parentID );
 
 			assertThat( parent, notNullValue() );
@@ -80,8 +88,8 @@ public class LazyCollectionDetachTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDetachProxy() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testDetachProxy(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = s.getReference( Parent.class, parentID );
 
 			checkDirtyTracking( parent );
@@ -93,8 +101,8 @@ public class LazyCollectionDetachTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRefresh() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testRefresh(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = s.find( Parent.class, parentID );
 
 			assertThat( parent, notNullValue() );
@@ -111,7 +119,7 @@ public class LazyCollectionDetachTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Parent")
 	@Table(name = "PARENT")
-	private static class Parent {
+	static class Parent {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
@@ -127,7 +135,7 @@ public class LazyCollectionDetachTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Child")
 	@Table(name = "CHILD")
-	private static class Child {
+	static class Child {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

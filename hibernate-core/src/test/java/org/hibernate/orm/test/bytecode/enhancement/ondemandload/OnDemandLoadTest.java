@@ -9,15 +9,14 @@ package org.hibernate.orm.test.bytecode.enhancement.ondemandload;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -31,39 +30,42 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.Hibernate.isPropertyInitialized;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-10055" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10055" )
+@DomainModel(
+        annotatedClasses = {
+               OnDemandLoadTest.Store.class, OnDemandLoadTest.Inventory.class, OnDemandLoadTest.Product.class
+        }
+)
+@ServiceRegistry(
+        settings = {
+                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+                @Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class OnDemandLoadTest {
 
-    @Override
-    public Class[] getAnnotatedClasses() {
-        return new Class[]{Store.class, Inventory.class, Product.class};
-    }
-
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, true );
-        configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, true );
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Store store = new Store( 1L ).setName( "Acme Super Outlet" );
             s.persist( store );
 
@@ -75,41 +77,41 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void testClosedSession() {
-        sessionFactory().getStatistics().clear();
+    public void testClosedSession(SessionFactoryScope scope) {
+        scope.getSessionFactory().getStatistics().clear();
         Store[] store = new Store[1];
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             // first load the store, making sure it is not initialized
             store[0] = s.load( Store.class, 1L );
             assertNotNull( store[0] );
             assertFalse( isPropertyInitialized( store[0], "inventories" ) );
 
-            assertEquals( 1, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 0, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 0, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
         } );
 
-        assertEquals( 1, sessionFactory().getStatistics().getSessionOpenCount() );
-        assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+        assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+        assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
         store[0].getInventories();
         assertTrue( isPropertyInitialized( store[0], "inventories" ) );
 
-        assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
-        assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
+        assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+        assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
     }
 
     @Test
-    public void testClearedSession() {
-        sessionFactory().getStatistics().clear();
+    public void testClearedSession(SessionFactoryScope scope) {
+        scope.getSessionFactory().getStatistics().clear();
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             // first load the store, making sure collection is not initialized
             Store store = s.get( Store.class, 1L );
             assertNotNull( store );
             assertFalse( isInitialized( store.getInventories() ) );
-            assertEquals( 1, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 0, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 0, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
             // then clear session and try to initialize collection
             s.clear();
@@ -119,15 +121,15 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
             assertTrue( isInitialized( store.getInventories() ) );
 
             // the extra Session is the temp Sessions needed to perform the collection init (since it's lazy)
-            assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
             // clear Session again.  The collection should still be recognized as initialized from above
             s.clear();
             assertNotNull( store );
             assertTrue( isInitialized( store.getInventories() ) );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
             // lets clear the Session again and this time reload the Store
             s.clear();
@@ -137,27 +139,27 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
 
             // collection should be back to uninitialized since we have a new entity instance
             assertFalse( isInitialized( store.getInventories() ) );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 1, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
             store.getInventories().size();
             assertTrue( isInitialized( store.getInventories() ) );
 
             // the extra Session is the temp Sessions needed to perform the collection init (since it's lazy)
-            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 3, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
 
             // clear Session again.  The collection should still be recognized as initialized from above
             s.clear();
             assertNotNull( store );
             assertTrue( isInitialized( store.getInventories() ) );
-            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 3, scope.getSessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 2, scope.getSessionFactory().getStatistics().getSessionCloseCount() );
         } );
     }
 
-    @After
-    public void cleanup() throws Exception {
-        doInHibernate( this::sessionFactory, s -> {
+    @AfterEach
+    public void cleanup(SessionFactoryScope scope) throws Exception {
+        scope.inTransaction( s -> {
             Store store = s.find( Store.class, 1L );
             s.delete( store );
 
@@ -170,7 +172,7 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "STORE" )
-    private static class Store {
+    static class Store {
         @Id
         Long id;
 
@@ -207,7 +209,7 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "INVENTORY" )
-    private static class Inventory {
+    static class Inventory {
 
         @Id
         @GeneratedValue
@@ -257,7 +259,7 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "PRODUCT" )
-    private static class Product {
+    static class Product {
         @Id
         String id;
 

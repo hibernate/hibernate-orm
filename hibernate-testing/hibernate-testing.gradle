@@ -43,6 +43,8 @@ dependencies {
     implementation libs.hcann
     implementation libs.jandex
     implementation testLibs.wildFlyTxnClient
+    implementation testLibs.junit5Engine
+    implementation testLibs.junit5Launcher
 
     annotationProcessor project( ':hibernate-jpamodelgen' )
 }

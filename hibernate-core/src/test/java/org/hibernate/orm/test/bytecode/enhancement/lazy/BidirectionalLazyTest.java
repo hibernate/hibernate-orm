@@ -23,28 +23,27 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests removing non-owning side of the bidirectional association,
@@ -52,31 +51,32 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-13241")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-13241")
+@DomainModel(
+		annotatedClasses = {
+				BidirectionalLazyTest.Employer.class, BidirectionalLazyTest.Employee.class, BidirectionalLazyTest.Unrelated.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({
 		EnhancerTestContext.class, // supports laziness and dirty-checking
 		BidirectionalLazyTest.NoDirtyCheckEnhancementContext.class // supports laziness; does not support dirty-checking
 })
-public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
+public class BidirectionalLazyTest {
 
 	// NOTE : tests in this class seem redundant because they assert things that happened
 	// in previous versions that have been fixed
 
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Employer.class, Employee.class, Unrelated.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, false );
-	}
-
 	@Test
-	public void testRemoveWithDeletedAssociatedEntity() {
+	public void testRemoveWithDeletedAssociatedEntity(SessionFactoryScope scope) {
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 
 					Employer employer = new Employer( "RedHat" );
@@ -90,7 +90,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					Employer employer = session.get( Employer.class, "RedHat" );
 
@@ -109,7 +109,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					assertNull( session.find( Employer.class, "RedHat" ) );
 					assertTrue( session.createQuery( "from Employee e", Employee.class ).getResultList().isEmpty() );
@@ -118,9 +118,9 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRemoveWithNonAssociatedRemovedEntity() {
+	public void testRemoveWithNonAssociatedRemovedEntity(SessionFactoryScope scope) {
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
@@ -131,7 +131,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					// Delete an entity that is not associated with Employee
 					session.remove( session.get( Unrelated.class, 1 ) );
@@ -145,7 +145,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					assertNull( session.find( Unrelated.class, 1 ) );
 					assertNull( session.find( Employee.class, "Jack" ) );
@@ -155,9 +155,9 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRemoveWithNoRemovedEntities() {
+	public void testRemoveWithNoRemovedEntities(SessionFactoryScope scope) {
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
@@ -167,7 +167,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					// Don't delete any entities before deleting the Employee
 					final Employee employee = session.get( Employee.class, "Jack" );
@@ -178,13 +178,13 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 					Employer employer = session.get( Employer.class, "RedHat" );
 					verifyBaseState( employer );
 
-					assertThat( employee.getEmployer(), sameInstance( employer ) );
+					assertThat( employee.getEmployer() ).isInstanceOf( employer.getClass() );
 
 					checkEntityEntryState( session, employee, employer, false );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					assertNull( session.find( Employee.class, "Jack" ) );
 					session.remove( session.find( Employer.class, "RedHat" ) );
@@ -193,9 +193,9 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testRemoveEntityWithNullLazyManyToOne() {
+	public void testRemoveEntityWithNullLazyManyToOne(SessionFactoryScope scope) {
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
@@ -204,7 +204,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					Employee employee = session.get( Employee.class, "Jack" );
 					verifyBaseState( employee );
@@ -224,8 +224,8 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 	 * deleting the Employer linked to the loaded Employee
 	 */
 	@Test
-	public void testRemoveEntityWithLinkedLazyManyToOne() {
-		inTransaction(
+	public void testRemoveEntityWithLinkedLazyManyToOne(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
@@ -235,7 +235,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Employee employee = session.get( Employee.class, "Jack" );
 					verifyBaseState( employee );
@@ -244,7 +244,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 					Employer employer = session.get( Employer.class, "RedHat" );
 					verifyBaseState( employer );
 
-					assertThat( employee.getEmployer(), sameInstance( employer ) );
+					assertThat( employee.getEmployer() ).isInstanceOf( employer.getClass() );
 
 					session.remove( employer );
 					session.remove( employee );
@@ -265,7 +265,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 		final Employer employer = employee.getEmployer();
 		if ( employer != null ) {
 			assertFalse( Hibernate.isInitialized( employer ) );
-			assertThat(employer, not( instanceOf( HibernateProxy.class ) ) );
+			assertThat( employer ).isNotInstanceOf( HibernateProxy.class );
 		}
 	}
 

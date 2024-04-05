@@ -15,16 +15,18 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Cacheable;
@@ -39,41 +41,41 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve EbersolenPropertyRefTest
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+        annotatedClasses = {
+                InitFromCacheTest.Document.class
+        }
+)
+@ServiceRegistry(
+        settings = {
+                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+                @Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class InitFromCacheTest {
 
     private EntityPersister persister;
 
     private Long documentID;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Document.class};
-    }
-
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-        configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, true );
-    }
-
-    @Before
-    public void prepare() {
-        persister = sessionFactory().getRuntimeMetamodels()
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        persister = scope.getSessionFactory().getRuntimeMetamodels()
                 .getMappingMetamodel()
                 .getEntityDescriptor( Document.class );
         assertTrue( persister.hasCache() );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Document document = new Document( "HiA", "Hibernate book", "Hibernate is...." );
             s.persist( document );
             documentID = document.id;
@@ -81,11 +83,8 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void execute() {
-
-        doInHibernate(
-        		this::sessionFactory,
-				s -> {
+    public void execute(SessionFactoryScope scope) {
+       scope.inTransaction( s -> {
                     final RootGraph<Document> entityGraph = s.createEntityGraph( Document.class );
                     entityGraph.addAttributeNodes( "text", "summary" );
                     final Document document = s.createQuery( "from Document", Document.class )
@@ -98,7 +97,7 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
 					final Object cacheKey = entityDataAccess.generateCacheKey(
                             document.id,
 							persister,
-							sessionFactory(),
+							scope.getSessionFactory(),
 							null
 					);
 					final Object cachedItem = entityDataAccess.get( (SharedSessionContractImplementor) s, cacheKey );
@@ -107,9 +106,9 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
                 }
         );
 
-        sessionFactory().getStatistics().clear();
+        scope.getSessionFactory().getStatistics().clear();
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
             CriteriaQuery<Document> criteria = criteriaBuilder.createQuery( Document.class );
             criteria.from( Document.class );
@@ -122,9 +121,9 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
             assertTrue( isPropertyInitialized( d, "summary" ) );
         } );
 
-        assertEquals( 2, sessionFactory().getStatistics().getPrepareStatementCount() );
+        assertEquals( 2, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Document d = s.get( Document.class, documentID );
             assertFalse( isPropertyInitialized( d, "text" ) );
             assertFalse( isPropertyInitialized( d, "summary" ) );
@@ -137,7 +136,7 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
     @Table( name = "DOCUMENT" )
     @Cacheable
     @Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy", region = "foo" )
-    private static class Document {
+    static class Document {
 
         @Id
         @GeneratedValue

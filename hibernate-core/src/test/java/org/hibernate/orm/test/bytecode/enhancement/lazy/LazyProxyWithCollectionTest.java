@@ -9,12 +9,13 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,25 +28,26 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Christian Beikov
  */
 @Jira( "https://hibernate.atlassian.net/browse/HHH-14619" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+        annotatedClasses = {
+                LazyProxyWithCollectionTest.Parent.class,
+                LazyProxyWithCollectionTest.Child.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyProxyWithCollectionTest {
 
     private Long childId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Parent.class, Child.class};
-    }
-
-    @Before
-    public void prepare() {
-        doInJPA( this::sessionFactory, em -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( em -> {
             Child c = new Child();
             em.persist( c );
             childId = c.getId();
@@ -53,8 +55,8 @@ public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void testReference() {
-        doInJPA( this::sessionFactory, em -> {
+    public void testReference(SessionFactoryScope scope) {
+        scope.inTransaction( em -> {
             Child child = em.getReference( Child.class, childId );
             Parent parent = new Parent();
             parent.child = child;
@@ -65,8 +67,8 @@ public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void testLazyCollection() {
-        doInJPA( this::sessionFactory, em -> {
+    public void testLazyCollection(SessionFactoryScope scope) {
+        scope.inTransaction( em -> {
             Child child = em.find( Child.class, childId );
             Parent parent = new Parent();
             parent.child = child;
@@ -79,22 +81,18 @@ public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
 
     @Test
     @Jira( "https://hibernate.atlassian.net/browse/HHH-17750" )
-    public void testMerge() {
-        final Child child = doInJPA( this::sessionFactory, em -> {
-            return em.find( Child.class, childId );
-        } );
+    public void testMerge(SessionFactoryScope scope) {
+        final Child child = scope.fromTransaction( em -> em.find( Child.class, childId ) );
 
-        final Parent parent = doInJPA( this::sessionFactory, em -> {
+        final Parent parent = scope.fromTransaction( em -> {
             Parent p = new Parent();
             p.setChild( child );
             return em.merge( p );
         } );
 
-        doInJPA( this::sessionFactory, em -> {
-            em.merge( parent );
-        } );
+        scope.inTransaction( em -> em.merge( parent ) );
 
-        doInJPA( this::sessionFactory, em -> {
+        scope.inTransaction( em -> {
             assertThat( em.find( Parent.class, parent.getId() ).getChild().getId() ).isEqualTo( child.getId() );
         } );
     }
@@ -103,7 +101,7 @@ public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "PARENT" )
-    private static class Parent {
+    static class Parent {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )
@@ -127,7 +125,7 @@ public class LazyProxyWithCollectionTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "CHILD" )
-    private static class Child {
+    static class Child {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )

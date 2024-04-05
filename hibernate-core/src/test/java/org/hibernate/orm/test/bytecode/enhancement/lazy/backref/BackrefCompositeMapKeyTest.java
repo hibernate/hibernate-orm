@@ -16,15 +16,16 @@ import org.hibernate.orm.test.collection.backref.map.compkey.MapKey;
 import org.hibernate.orm.test.collection.backref.map.compkey.Part;
 import org.hibernate.orm.test.collection.backref.map.compkey.Product;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -33,20 +34,19 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@RunWith( BytecodeEnhancerRunner.class )
-@CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
-public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected String[] getOrmXmlFiles() {
-		return new String[] {
+@DomainModel(
+		xmlMappings = {
 				"org/hibernate/orm/test/collection/backref/map/compkey/Mappings.hbm.xml"
-		};
-	}
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
+public class BackrefCompositeMapKeyTest {
 
 	@Test
-	public void testOrphanDeleteOnDelete() {
-		inTransaction(
+	public void testOrphanDeleteOnDelete(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Product prod = new Product( "Widget" );
 					Part part = new Part( "Widge", "part if a Widget" );
@@ -63,18 +63,18 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					assertNull( "Orphan 'Widge' was not deleted", session.get( Part.class, "Widge" ) );
-					assertNull( "Orphan 'Get' was not deleted", session.get( Part.class, "Get" ) );
-					assertNull( "Orphan 'Widget' was not deleted", session.get( Product.class, "Widget" ) );
+					assertNull( session.get( Part.class, "Widge" ), "Orphan 'Widge' was not deleted" );
+					assertNull( session.get( Part.class, "Get" ), "Orphan 'Get' was not deleted" );
+					assertNull( session.get( Product.class, "Widget" ), "Orphan 'Widget' was not deleted" );
 				}
 		);
 	}
 
 	@Test
-	public void testOrphanDeleteAfterPersist() {
-		inTransaction(
+	public void testOrphanDeleteAfterPersist(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Product prod = new Product( "Widget" );
 					Part part = new Part( "Widge", "part if a Widget" );
@@ -88,15 +88,15 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.delete( session.get( Product.class, "Widget" ) )
 		);
 	}
 
 	@Test
-	public void testOrphanDeleteAfterPersistAndFlush() {
-		inTransaction(
+	public void testOrphanDeleteAfterPersistAndFlush(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Product prod = new Product( "Widget" );
 					Part part = new Part( "Widge", "part if a Widget" );
@@ -111,7 +111,7 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
@@ -122,10 +122,10 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOrphanDeleteAfterLock() {
+	public void testOrphanDeleteAfterLock(SessionFactoryScope scope) {
 		Product prod = new Product( "Widget" );
 		MapKey mapKey = new MapKey( "Top" );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Part part = new Part( "Widge", "part if a Widget" );
 					prod.getParts().put( mapKey, part );
@@ -136,14 +136,14 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 		);
 
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.lock( prod, LockMode.READ );
 					prod.getParts().remove( mapKey );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
@@ -153,10 +153,10 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOrphanDeleteOnSaveOrUpdate() {
+	public void testOrphanDeleteOnSaveOrUpdate(SessionFactoryScope scope) {
 		Product prod = new Product( "Widget" );
 		MapKey mapKey = new MapKey( "Top" );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Part part = new Part( "Widge", "part if a Widget" );
 					prod.getParts().put( mapKey, part );
@@ -168,12 +168,12 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 
 		prod.getParts().remove( mapKey );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.saveOrUpdate( prod )
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
@@ -183,10 +183,10 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization() {
+	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization(SessionFactoryScope scope) {
 		Product prod = new Product( "Widget" );
 		MapKey mapKey = new MapKey( "Top" );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Part part = new Part( "Widge", "part if a Widget" );
 					prod.getParts().put( mapKey, part );
@@ -200,12 +200,12 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 
 		Product cloned = (Product) SerializationHelper.clone( prod );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.saveOrUpdate( cloned )
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
@@ -215,9 +215,9 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOrphanDelete() {
+	public void testOrphanDelete(SessionFactoryScope scope) {
 		MapKey mapKey = new MapKey( "Top" );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Product prod = new Product( "Widget" );
 					Part part = new Part( "Widge", "part if a Widget" );
@@ -229,11 +229,11 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 		);
 
 
-		SessionFactoryImplementor sessionFactory = sessionFactory();
+		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		sessionFactory.getCache().evictEntityData( Product.class );
 		sessionFactory.getCache().evictEntityData( Part.class );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Product prod = session.get( Product.class, "Widget" );
 					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
@@ -246,7 +246,7 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 		sessionFactory.getCache().evictEntityData( Product.class );
 		sessionFactory.getCache().evictEntityData( Part.class );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Product prod = session.get( Product.class, "Widget" );
 					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
@@ -258,10 +258,10 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testOrphanDeleteOnMerge() {
+	public void testOrphanDeleteOnMerge(SessionFactoryScope scope) {
 		Product prod = new Product( "Widget" );
 		MapKey mapKey = new MapKey( "Top" );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Part part = new Part( "Widge", "part if a Widget" );
 					prod.getParts().put( mapKey, part );
@@ -274,12 +274,12 @@ public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
 
 		prod.getParts().remove( mapKey );
 
-		inTransaction(
+		scope.inTransaction(
 				session ->
 						session.merge( prod )
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					assertNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );

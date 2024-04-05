@@ -27,6 +27,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.BasicPluralType;
@@ -40,6 +41,9 @@ import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+
+import static org.hibernate.dialect.StructHelper.getValuedModelPart;
+import static org.hibernate.dialect.StructHelper.getValues;
 
 /**
  * A Helper for serializing and deserializing JSON, based on an {@link org.hibernate.metamodel.mapping.EmbeddableMappingType}.
@@ -57,8 +61,7 @@ public class JsonHelper {
 	}
 
 	private static void toString(EmbeddableMappingType embeddableMappingType, Object value, WrapperOptions options, JsonAppender appender) {
-		final Object[] values = embeddableMappingType.getValues( value );
-		toString( embeddableMappingType, options, appender, values, '{' );
+		toString( embeddableMappingType, options, appender, value, '{' );
 		appender.append( '}' );
 	}
 
@@ -66,10 +69,12 @@ public class JsonHelper {
 			EmbeddableMappingType embeddableMappingType,
 			WrapperOptions options,
 			JsonAppender appender,
-			Object[] values,
+			Object domainValue,
 			char separator) {
+		final Object[] values = getValues( embeddableMappingType, domainValue );
+		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < values.length; i++ ) {
-			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
+			final ValuedModelPart attributeMapping = getValuedModelPart( embeddableMappingType, numberOfAttributes, i );
 			if ( attributeMapping instanceof SelectableMapping ) {
 				final String name = ( (SelectableMapping) attributeMapping ).getSelectableName();
 				appender.append( separator );
@@ -90,7 +95,7 @@ public class JsonHelper {
 							mappingType,
 							options,
 							appender,
-							mappingType.getValues( values[i] ),
+							values[i],
 							separator
 					);
 				}
@@ -295,7 +300,8 @@ public class JsonHelper {
 			return null;
 		}
 
-		final Object[] values = new Object[embeddableMappingType.getJdbcValueCount()];
+		final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
+		final Object[] values = new Object[jdbcValueCount + ( embeddableMappingType.isPolymorphic() ? 1 : 0 )];
 		final int end = fromString( embeddableMappingType, string, 0, string.length(), values, returnEmbeddable, options );
 		assert string.substring( end ).isBlank();
 		if ( returnEmbeddable ) {

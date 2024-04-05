@@ -91,8 +91,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			return optimizer.getAccessOptimizer().getPropertyValues( compositeInstance );
 		}
 
+		return getAttributeValues( compositeInstance );
+	}
+
+	protected Object[] getAttributeValues(Object compositeInstance) {
 		final Object[] results = new Object[getNumberOfAttributeMappings()];
-		for ( int i = 0; i < results.length; i++ ) {
+		for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
 			final Getter getter = getAttributeMapping( i ).getAttributeMetadata()
 					.getPropertyAccess()
 					.getGetter();
@@ -108,9 +112,13 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			optimizer.getAccessOptimizer().setPropertyValues( component, values );
 		}
 		else {
-			for ( int i = 0; i < values.length; i++ ) {
-				getAttributeMapping( i ).getPropertyAccess().getSetter().set( component, values[i] );
-			}
+			setAttributeValues( component, values );
+		}
+	}
+
+	protected void setAttributeValues(Object component, Object[] values) {
+		for ( int i = 0; i < values.length; i++ ) {
+			getAttributeMapping( i ).getPropertyAccess().getSetter().set( component, values[i] );
 		}
 	}
 
@@ -726,6 +734,10 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						(columnIndex, selection) -> selectableMappings.add( selection )
 				)
 		);
+
+		if ( getDiscriminatorMapping() != null ) {
+			getDiscriminatorMapping().forEachSelectable( (index, selection) -> selectableMappings.add( selection ) );
+		}
 
 		this.selectableMappings = new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
 

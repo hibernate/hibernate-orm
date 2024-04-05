@@ -19,6 +19,5 @@ public class WorkOrderComponent {
 	private WorkOrderComponentId id;
 	@ManyToOne
 	@JoinColumn(name = "WORK_ORDER", nullable = false, insertable = false, updatable = false)
-	@JoinColumn(name = "PLANT_ID", nullable = false, insertable = false, updatable = false)
 	private WorkOrder workOrder;
 }

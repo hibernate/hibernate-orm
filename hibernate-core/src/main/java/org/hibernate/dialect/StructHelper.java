@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -95,18 +96,20 @@ public class StructHelper {
 	public static Object[] getJdbcValues(
 			EmbeddableMappingType embeddableMappingType,
 			int[] orderMapping,
-			Object[] attributeValues,
+			Object domainValue,
 			WrapperOptions options) throws SQLException {
 		final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
+		final int valueCount = jdbcValueCount + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
+		final Object[] values = getValues( embeddableMappingType, domainValue );
 		final Object[] jdbcValues;
-		if ( jdbcValueCount != attributeValues.length || orderMapping != null ) {
-			jdbcValues = new Object[jdbcValueCount];
+		if ( valueCount != values.length || orderMapping != null ) {
+			jdbcValues = new Object[valueCount];
 		}
 		else {
-			jdbcValues = attributeValues;
+			jdbcValues = values;
 		}
 		int jdbcIndex = 0;
-		for ( int i = 0; i < attributeValues.length; i++ ) {
+		for ( int i = 0; i < values.length; i++ ) {
 			final int attributeIndex;
 			if ( orderMapping == null ) {
 				attributeIndex = i;
@@ -115,20 +118,42 @@ public class StructHelper {
 				attributeIndex = orderMapping[i];
 			}
 			jdbcIndex += injectJdbcValue(
-					embeddableMappingType.getAttributeMapping( attributeIndex ),
-					attributeValues,
+					getValuedModelPart( embeddableMappingType, jdbcValueCount, attributeIndex ),
+					values,
 					attributeIndex,
 					jdbcValues,
 					jdbcIndex,
 					options
 			);
 		}
-		assert jdbcIndex == jdbcValueCount;
+		assert jdbcIndex == valueCount;
 		return jdbcValues;
 	}
 
+	public static Object[] getValues(EmbeddableMappingType embeddableMappingType, Object domainValue) {
+		final Object[] attributeValues = embeddableMappingType.getValues( domainValue );
+		if ( embeddableMappingType.isPolymorphic() ) {
+			final Object[] result = new Object[attributeValues.length + 1];
+			System.arraycopy( attributeValues, 0, result, 0, attributeValues.length );
+			result[attributeValues.length] = domainValue.getClass().getName();
+			return result;
+		}
+		else {
+			return attributeValues;
+		}
+	}
+
+	public static ValuedModelPart getValuedModelPart(
+			EmbeddableMappingType embeddableMappingType,
+			int numberOfAttributes,
+			int position) {
+		return position == numberOfAttributes ?
+				embeddableMappingType.getDiscriminatorMapping() :
+				embeddableMappingType.getAttributeMapping( position );
+	}
+
 	private static int injectJdbcValue(
-			AttributeMapping attributeMapping,
+			ValuedModelPart attributeMapping,
 			Object[] attributeValues,
 			int attributeIndex,
 			Object[] jdbcValues,
@@ -149,13 +174,14 @@ public class StructHelper {
 				);
 			}
 			else {
-				jdbcValueCount = embeddableMappingType.getJdbcValueCount();
+				jdbcValueCount = embeddableMappingType.getJdbcValueCount() + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
 				final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
-				final Object[] subValues = embeddableMappingType.getValues( attributeValues[attributeIndex] );
+				final int numberOfValues = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
+				final Object[] subValues = getValues( embeddableMappingType, attributeValues[attributeIndex] );
 				int offset = 0;
-				for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
+				for ( int i = 0; i < numberOfValues; i++ ) {
 					offset += injectJdbcValue(
-							embeddableMappingType.getAttributeMapping( i ),
+							getValuedModelPart( embeddableMappingType, numberOfAttributeMappings, i ),
 							subValues,
 							i,
 							jdbcValues,
@@ -226,10 +252,10 @@ public class StructHelper {
 			int[] inverseMapping,
 			Object[] sourceJdbcValues,
 			Object[] targetJdbcValues) {
-		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
+		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
 		int targetJdbcOffset = 0;
-		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
+		for ( int i = 0; i < numberOfAttributes + ( embeddableMappingType.isPolymorphic() ? 1 : 0 ); i++ ) {
+			final ValuedModelPart attributeMapping = getValuedModelPart( embeddableMappingType, numberOfAttributes, i );
 			final MappingType mappedType = attributeMapping.getMappedType();
 			final int jdbcValueCount = getJdbcValueCount( mappedType );
 

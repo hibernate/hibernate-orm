@@ -7,7 +7,11 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.hibernate.MappingException;
@@ -28,15 +32,20 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -44,7 +53,9 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -64,11 +75,14 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;
 
 import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.JSON_ARRAY;
@@ -155,6 +169,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
 	private final EmbeddableValuedModelPart valueMapping;
+	private final EmbeddableDiscriminatorMapping discriminatorMapping;
+	private final Map<String, Set<AttributeMapping>> declaredAttributesBySubclass;
 
 	private final boolean createEmptyCompositesEnabled;
 	private final SelectableMapping aggregateMapping;
@@ -175,6 +191,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		this.embeddableJtd = representationStrategy.getMappedJavaType();
 		this.valueMapping = embeddedPartBuilder.apply( this );
+		this.discriminatorMapping = generateDiscriminatorMapping( bootDescriptor, creationContext );
+		this.declaredAttributesBySubclass = bootDescriptor.isPolymorphic() ? new HashMap<>() : null;
 
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
 				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
@@ -317,6 +335,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		this.embeddableJtd = inverseMappingType.getJavaType();
 		this.representationStrategy = inverseMappingType.getRepresentationStrategy();
 		this.valueMapping = valueMapping;
+		this.discriminatorMapping = null;
+		this.declaredAttributesBySubclass = null;
 		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
 		this.aggregateMapping = null;
 		this.aggregateMappingRequiresColumnWriter = false;
@@ -400,7 +420,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		// Reset the attribute mappings that were added in previous attempts
 		attributeMappings.clear();
 
-		for ( Property bootPropertyDescriptor : bootDescriptor.getProperties() ) {
+		for ( final Property bootPropertyDescriptor : bootDescriptor.getProperties() ) {
 			final AttributeMapping attributeMapping;
 
 			final Type subtype = subtypes[attributeIndex];
@@ -594,7 +614,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						this,
 						entityPersister,
 						(EntityType) subtype,
-						getRepresentationStrategy().resolvePropertyAccess( bootPropertyDescriptor ),
+						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
 				);
@@ -611,6 +631,18 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				);
 			}
 
+			if ( isPolymorphic() ) {
+				final String declaringClass = bootDescriptor.getPropertyDeclaringClass( bootPropertyDescriptor );
+				for ( final String subclass : bootDescriptor.getDiscriminatorValues().values() ) {
+					if ( isDefinedInClassOrSuperclass( bootDescriptor, declaringClass, subclass ) ) {
+						declaredAttributesBySubclass.computeIfAbsent(
+								subclass,
+								k -> new HashSet<>()
+						).add( attributeMapping );
+					}
+				}
+			}
+
 			addAttribute( attributeMapping );
 
 			attributeIndex++;
@@ -618,11 +650,21 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		// We need the attribute mapping types to finish initialization first before we can build the column mappings
 		creationProcess.registerInitializationCallback(
-				"EmbeddableMappingType(" + getEmbeddedValueMapping().getNavigableRole().getFullPath() + ")#initColumnMappings",
+				"EmbeddableMappingType(" + valueMapping.getNavigableRole().getFullPath() + ")#initColumnMappings",
 				this::initColumnMappings
 		);
 
 		return true;
+	}
+
+	private boolean isDefinedInClassOrSuperclass(Component bootDescriptor, String declaringClass, String subclass) {
+		while ( subclass != null ) {
+			if ( declaringClass.equals( subclass ) ) {
+				return true;
+			}
+			subclass = bootDescriptor.getSuperclass( subclass );
+		}
+		return false;
 	}
 
 	private static MutabilityPlan<?> getMutabilityPlan(boolean updateable) {
@@ -654,10 +696,86 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 	}
 
+	private EmbeddableDiscriminatorMapping generateDiscriminatorMapping(
+			Component bootDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		final Value discriminator = bootDescriptor.getDiscriminator();
+		if ( discriminator == null ) {
+			return null;
+		}
 
+		final Selectable selectable = discriminator.getSelectables().get( 0 );
+		final String discriminatorColumnExpression;
+		final String columnDefinition;
+		final Long length;
+		final Integer precision;
+		final Integer scale;
+		final boolean isFormula = discriminator.hasFormula();
+		if ( isFormula ) {
+			final Formula formula = (Formula) selectable;
+			discriminatorColumnExpression = formula.getTemplate(
+					creationContext.getDialect(),
+					creationContext.getTypeConfiguration(),
+					creationContext.getFunctionRegistry()
+			);
+			columnDefinition = null;
+			length = null;
+			precision = null;
+			scale = null;
+		}
+		else {
+			final Column column = discriminator.getColumns().get( 0 );
+			assert column != null : "Embeddable discriminators require a column";
+			discriminatorColumnExpression = column.getReadExpr( creationContext.getDialect() );
+			columnDefinition = column.getSqlType();
+			length = column.getLength();
+			precision = column.getPrecision();
+			scale = column.getScale();
+		}
+
+		final DiscriminatorType<?> discriminatorType = buildDiscriminatorType(
+				bootDescriptor,
+				creationContext
+		);
+
+		return new ExplicitColumnDiscriminatorMappingImpl(
+				this,
+				bootDescriptor.getTable().getName(),
+				discriminatorColumnExpression,
+				isFormula,
+				true,
+				true,
+				columnDefinition,
+				selectable.getCustomReadExpression(),
+				length,
+				precision,
+				scale,
+				discriminatorType
+		);
+	}
+
+	private DiscriminatorType<?> buildDiscriminatorType(
+			Component bootDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		final JavaTypeRegistry javaTypeRegistry = creationContext.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry();
+		final JavaType<String> domainJavaType = javaTypeRegistry.resolveDescriptor( String.class );
+		final BasicType<?> discriminatorType = getDiscriminatorType( bootDescriptor );
+		final DiscriminatorConverter<String, ?> converter = EmbeddableDiscriminatorConverter.fromValueMappings(
+				getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
+				domainJavaType,
+				discriminatorType,
+				bootDescriptor.getDiscriminatorValues()
+		);
+		return new DiscriminatorTypeImpl<>( discriminatorType, converter );
+	}
 
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
 		return valueMapping;
+	}
+
+	@Override
+	public EmbeddableDiscriminatorMapping getDiscriminatorMapping() {
+		return discriminatorMapping;
 	}
 
 	@Override
@@ -694,6 +812,58 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
+	public boolean declaresAttribute(String embeddableClassName, AttributeMapping attributeMapping) {
+		if ( declaredAttributesBySubclass == null ) {
+			return true;
+		}
+		final Set<AttributeMapping> declaredAttributes = declaredAttributesBySubclass.get( embeddableClassName );
+		return declaredAttributes != null && declaredAttributes.contains( attributeMapping );
+	}
+
+	@Override
+	public Object getValue(Object instance, int position) {
+		final AttributeMapping attributeMapping = getAttributeMapping( position );
+		if ( declaresAttribute( instance.getClass().getName(), attributeMapping ) ) {
+			return attributeMapping.getValue( instance );
+		}
+		return null;
+	}
+
+	@Override
+	protected Object[] getAttributeValues(Object compositeInstance) {
+		final Object[] results = new Object[getNumberOfAttributeMappings()];
+		for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
+			final AttributeMapping attributeMapping = getAttributeMapping( i );
+			if ( declaresAttribute( compositeInstance.getClass().getName(), attributeMapping ) ) {
+				final Getter getter = attributeMapping.getAttributeMetadata()
+						.getPropertyAccess()
+						.getGetter();
+				results[i] = getter.get( compositeInstance );
+			}
+			else {
+				results[i] = null;
+			}
+		}
+		return results;
+	}
+
+	@Override
+	protected void setAttributeValues(Object component, Object[] values) {
+		for ( int i = 0; i < values.length; i++ ) {
+			final AttributeMapping attributeMapping = getAttributeMapping( i );
+			if ( declaresAttribute( component.getClass().getName(), attributeMapping ) ) {
+				attributeMapping.getPropertyAccess().getSetter().set( component, values[i] );
+			}
+			else if ( values[i] != null ) {
+				throw new IllegalArgumentException( String.format(
+						"Unexpected non-null value for embeddable subtype '%s'",
+						component.getClass().getName()
+				) );
+			}
+		}
+	}
+
+	@Override
 	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
 			int offset,
@@ -705,9 +875,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		int span = 0;
 		if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
-			assert values.length == size;
-
-			for ( int i = 0; i < size; i++ ) {
+			assert values.length == size + ( isPolymorphic() ? 1 : 0 );
+			int i = 0;
+			for ( ; i < size; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				if ( !attributeMapping.isPluralAttributeMapping() ) {
 					final Object attributeValue = values[i];
@@ -721,12 +891,15 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					);
 				}
 			}
+			if ( isPolymorphic() ) {
+				span += discriminatorMapping.breakDownJdbcValues( values[i], offset + span, x, y, valueConsumer, session );
+			}
 		}
 		else {
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				if ( !attributeMapping.isPluralAttributeMapping() ) {
-					final Object attributeValue = domainValue == null
+					final Object attributeValue = domainValue == null || !declaresAttribute( domainValue.getClass().getName(), attributeMapping )
 							? null
 							: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
 					span += attributeMapping.breakDownJdbcValues(
@@ -738,6 +911,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 							session
 					);
 				}
+			}
+			if ( isPolymorphic() ) {
+				final Object d = domainValue == null ? null : discriminatorMapping.getDiscriminatorValue( domainValue.getClass().getName() );
+				span += discriminatorMapping.breakDownJdbcValues( d, offset + span, x, y, valueConsumer, session );
 			}
 		}
 		return span;
@@ -755,26 +932,34 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			valueConsumer.consume( offset, x, y, domainValue, aggregateMapping );
 			return 1;
 		}
+		final int size = attributeMappings.size();
 		int span = 0;
 		if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
-			assert values.length == attributeMappings.size();
-
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			assert values.length == size + ( isPolymorphic() ? 1 : 0 );
+			int i = 0;
+			for ( ; i < size; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				final Object attributeValue = values[ i ];
 				span += attributeMapping.decompose( attributeValue, offset + span, x, y, valueConsumer, session );
 			}
+			if ( isPolymorphic() ) {
+				span += discriminatorMapping.decompose( values[i], offset + span, x, y, valueConsumer, session );
+			}
 		}
 		else {
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( !(attributeMapping instanceof PluralAttributeMapping )) {
-					final Object attributeValue = domainValue == null
+				if ( !attributeMapping.isPluralAttributeMapping() ) {
+					final Object attributeValue = domainValue == null || !declaresAttribute( domainValue.getClass().getName(), attributeMapping )
 							? null
 							: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
 					span += attributeMapping.decompose( attributeValue, offset + span, x, y, valueConsumer, session );
 				}
+			}
+			if ( isPolymorphic() ) {
+				final Object d = domainValue == null ? null : discriminatorMapping.getDiscriminatorValue( domainValue.getClass().getName() );
+				span += discriminatorMapping.decompose( d, offset + span, x, y, valueConsumer, session );
 			}
 		}
 		return span;

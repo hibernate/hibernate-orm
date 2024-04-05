@@ -5202,7 +5202,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor, creationProcess );
+		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
 		softDeleteMapping = resolveSoftDeleteMapping( this, bootEntityDescriptor, getIdentifierTableName(), creationProcess );
 
 		if ( softDeleteMapping != null ) {
@@ -5329,9 +5329,7 @@ public abstract class AbstractEntityPersister
 		return getDiscriminatorFormulaTemplate() == null;
 	}
 
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping(
-			PersistentClass bootEntityDescriptor,
-			MappingModelCreationProcess modelCreationProcess) {
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(PersistentClass bootEntityDescriptor) {
 		if ( getDiscriminatorType() == null ) {
 			return null;
 		}
@@ -5372,9 +5370,13 @@ public abstract class AbstractEntityPersister
 					discriminatorColumnExpression,
 					getDiscriminatorFormulaTemplate() != null,
 					isPhysicalDiscriminator(),
-					columnDefinition, length, precision, scale,
-					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType(),
-					modelCreationProcess
+					false,
+					columnDefinition,
+					null,
+					length,
+					precision,
+					scale,
+					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType()
 			);
 		}
 	}

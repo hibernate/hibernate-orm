@@ -18,6 +18,8 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ValueMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.BasicPluralType;
@@ -34,6 +36,8 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.dialect.StructHelper.getValuedModelPart;
 
 /**
  * @author Christian Beikov
@@ -132,7 +136,7 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 		final Object[] jdbcValues = StructHelper.getJdbcValues(
 				embeddableMappingType,
 				orderMapping,
-				embeddableMappingType.getValues( domainValue ),
+				domainValue,
 				options
 		);
 		return options.getSession()
@@ -406,13 +410,13 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 			targetJdbcValues = jdbcValues.clone();
 		}
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
-		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-			final AttributeMapping attributeMapping;
+		for ( int i = 0; i < numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 ); i++ ) {
+			final ValuedModelPart attributeMapping;
 			if ( orderMapping == null ) {
-				attributeMapping = embeddableMappingType.getAttributeMapping( i );
+				attributeMapping = getValuedModelPart( embeddableMappingType, numberOfAttributeMappings, i );
 			}
 			else {
-				attributeMapping = embeddableMappingType.getAttributeMapping( orderMapping[i] );
+				attributeMapping = getValuedModelPart( embeddableMappingType, numberOfAttributeMappings, orderMapping[i] );
 			}
 			final MappingType mappedType = attributeMapping.getMappedType();
 

@@ -139,6 +139,7 @@ import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static org.hibernate.annotations.PolymorphismType.EXPLICIT;
 import static org.hibernate.annotations.PolymorphismType.IMPLICIT;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERCLASS;
+import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
@@ -976,7 +977,13 @@ public class EntityBinder {
 				getOverridableAnnotation( annotatedClass, DiscriminatorFormula.class, context );
 
 		if ( !inheritanceState.hasParents() || annotatedClass.isAnnotationPresent( Inheritance.class ) ) {
-			return buildDiscriminatorColumn( discriminatorColumn, discriminatorFormula, context );
+			return buildDiscriminatorColumn(
+					discriminatorColumn,
+					discriminatorFormula,
+					null,
+					DEFAULT_DISCRIMINATOR_COLUMN_NAME,
+					context
+			);
 		}
 		else {
 			// not a root entity
@@ -1006,7 +1013,7 @@ public class EntityBinder {
 		final DiscriminatorColumn discriminatorColumn = annotatedClass.getAnnotation( DiscriminatorColumn.class );
 		if ( !inheritanceState.hasParents() || annotatedClass.isAnnotationPresent( Inheritance.class ) ) {
 			return useDiscriminatorColumnForJoined( discriminatorColumn )
-					? buildDiscriminatorColumn( discriminatorColumn, null, context )
+					? buildDiscriminatorColumn( discriminatorColumn, null, null, DEFAULT_DISCRIMINATOR_COLUMN_NAME, context )
 					: null;
 		}
 		else {

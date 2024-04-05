@@ -13,7 +13,6 @@ import jakarta.persistence.MappedSuperclass;
 /**
  * @author Steve Ebersole
  */
-@Embeddable
 @MappedSuperclass
 public class WorkOrderId implements Serializable {
 	private String workOrder;

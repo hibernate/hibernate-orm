@@ -18,10 +18,11 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.internal.util.CharSequenceHelper;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.ValueMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
@@ -33,6 +34,9 @@ import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+
+import static org.hibernate.dialect.StructHelper.getValuedModelPart;
+import static org.hibernate.dialect.StructHelper.getValues;
 
 /**
  * A Helper for serializing and deserializing XML, based on an {@link EmbeddableMappingType}.
@@ -490,12 +494,13 @@ public class XmlHelper {
 			Object value,
 			WrapperOptions options,
 			XMLAppender sb) {
-		final Object[] array = embeddableMappingType.getValues( value );
+		final Object[] array = getValues( embeddableMappingType, value );
+		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < array.length; i++ ) {
 			if ( array[i] == null ) {
 				continue;
 			}
-			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
+			final ValuedModelPart attributeMapping = getValuedModelPart( embeddableMappingType, numberOfAttributes, i );
 			if ( attributeMapping instanceof SelectableMapping ) {
 				final SelectableMapping selectable = (SelectableMapping) attributeMapping;
 				final String tagName = selectable.getSelectableName();

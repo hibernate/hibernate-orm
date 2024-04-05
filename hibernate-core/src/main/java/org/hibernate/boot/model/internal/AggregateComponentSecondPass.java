@@ -65,6 +65,9 @@ public class AggregateComponentSecondPass implements SecondPass {
 		final Dialect dialect = database.getDialect();
 		final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
 
+		// Sort the component properties early to ensure the aggregated
+		// columns respect the same order as the component's properties
+		final int[] originalOrder = component.sortProperties();
 		// Compute aggregated columns since we have to replace them in the table with the aggregate column
 		final List<Column> aggregatedColumns = component.getAggregatedColumns();
 		final AggregateColumn aggregateColumn = component.getAggregateColumn();
@@ -97,7 +100,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 			);
 			if ( registeredUdt == udt ) {
 				addAuxiliaryObjects = true;
-				orderColumns( registeredUdt );
+				orderColumns( registeredUdt, originalOrder );
 			}
 			else {
 				addAuxiliaryObjects = false;
@@ -184,9 +187,8 @@ public class AggregateComponentSecondPass implements SecondPass {
 		propertyHolder.getTable().getColumns().removeAll( aggregatedColumns );
 	}
 
-	private void orderColumns(UserDefinedObjectType userDefinedType) {
+	private void orderColumns(UserDefinedObjectType userDefinedType, int[] originalOrder) {
 		final Class<?> componentClass = component.getComponentClass();
-		final int[] originalOrder = component.sortProperties();
 		final String[] structColumnNames = component.getStructColumnNames();
 		if ( structColumnNames == null || structColumnNames.length == 0 ) {
 			final int[] propertyMappingIndex;
@@ -211,23 +213,27 @@ public class AggregateComponentSecondPass implements SecondPass {
 			else {
 				propertyMappingIndex = null;
 			}
+			final ArrayList<Column> orderedColumns = new ArrayList<>( userDefinedType.getColumnSpan() );
 			if ( propertyMappingIndex == null ) {
 				// If there is default ordering possible, assume alphabetical ordering
-				final ArrayList<Column> orderedColumns = new ArrayList<>( userDefinedType.getColumnSpan() );
 				final List<Property> properties = component.getProperties();
 				for ( Property property : properties ) {
 					addColumns( orderedColumns, property.getValue() );
 				}
-				userDefinedType.reorderColumns( orderedColumns );
+				if ( component.isPolymorphic() ) {
+					addColumns( orderedColumns, component.getDiscriminator() );
+				}
 			}
 			else {
-				final ArrayList<Column> orderedColumns = new ArrayList<>( userDefinedType.getColumnSpan() );
 				final List<Property> properties = component.getProperties();
 				for ( final int propertyIndex : propertyMappingIndex ) {
 					addColumns( orderedColumns, properties.get( propertyIndex ).getValue() );
 				}
-				userDefinedType.reorderColumns( orderedColumns );
 			}
+			final List<Column> reorderedColumn = context.getBuildingOptions()
+					.getColumnOrderingStrategy()
+					.orderUserDefinedTypeColumns( userDefinedType, context.getMetadataCollector() );
+			userDefinedType.reorderColumns( reorderedColumn != null ? reorderedColumn : orderedColumns );
 		}
 		else {
 			final ArrayList<Column> orderedColumns = new ArrayList<>( userDefinedType.getColumnSpan() );
@@ -279,6 +285,13 @@ public class AggregateComponentSecondPass implements SecondPass {
 						return true;
 					}
 				}
+			}
+		}
+		if ( component.isPolymorphic() ) {
+			final Column column = component.getDiscriminator().getColumns().get( 0 );
+			if ( structColumnName.equals( column.getName() ) ) {
+				orderedColumns.add( column );
+				return true;
 			}
 		}
 		return false;

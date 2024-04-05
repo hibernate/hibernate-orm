@@ -21,6 +21,10 @@ public interface EmbeddableRepresentationStrategy extends ManagedTypeRepresentat
 	 */
 	EmbeddableInstantiator getInstantiator();
 
+	default EmbeddableInstantiator getInstantiatorForSubclass(String embeddableClassName) {
+		return getInstantiator();
+	}
+
 	/**
 	 * The reflection optimizer to use for this embeddable.
 	 *

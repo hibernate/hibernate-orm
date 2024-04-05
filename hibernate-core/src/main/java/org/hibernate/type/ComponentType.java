@@ -30,6 +30,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -59,6 +60,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	protected final int propertySpan;
 	private final CascadeStyle[] cascade;
 	private final FetchMode[] joinedFetch;
+	private final int discriminatorColumnSpan;
 
 	private final boolean isAggregate;
 	private final boolean isKey;
@@ -90,6 +92,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		this.propertyNullability = new boolean[propertySpan];
 		this.cascade = new CascadeStyle[propertySpan];
 		this.joinedFetch = new FetchMode[propertySpan];
+		this.discriminatorColumnSpan = component.getDiscriminator() != null ?
+				component.getDiscriminator().getColumnSpan() :
+				0;
 
 		int i = 0;
 		for ( Property property : component.getProperties() ) {
@@ -122,6 +127,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		for ( int i = 0; i < propertySpan; i++ ) {
 			span += propertyTypes[i].getColumnSpan( mapping );
 		}
+		span += discriminatorColumnSpan;
 		return span;
 	}
 
@@ -480,7 +486,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			values[i] = propertyTypes[i].deepCopy( values[i], factory );
 		}
 
-		final Object result = instantiator().instantiate( () -> values, factory );
+		final Object result = instantiator( component ).instantiate( () -> values, factory );
 
 		//not absolutely necessary, but helps for some
 		//equals()/hashCode() implementations
@@ -516,7 +522,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		);
 
 		if ( target == null || !isMutable() ) {
-			return instantiator().instantiate( () -> replacedValues, session.getSessionFactory() );
+			return instantiator( original ).instantiate( () -> replacedValues, session.getSessionFactory() );
 		}
 		else {
 			setPropertyValues( target, replacedValues );
@@ -549,7 +555,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		);
 
 		if ( target == null || !isMutable() ) {
-			return instantiator().instantiate( () -> replacedValues, session.getSessionFactory() );
+			return instantiator( original ).instantiate( () -> replacedValues, session.getSessionFactory() );
 		}
 		else {
 			setPropertyValues( target, replacedValues );
@@ -613,7 +619,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				assembled[i] = propertyTypes[i].assemble( (Serializable) values[i], session, owner );
 			}
 
-			final Object instance = instantiator().instantiate( () -> assembled, session.getFactory() );
+			final Object instance = instantiator( owner ).instantiate( () -> assembled, session.getFactory() );
 
 			final PropertyAccess parentInjectionAccess = mappingModelPart.getParentInjectionAttributePropertyAccess();
 			if ( parentInjectionAccess != null ) {
@@ -745,7 +751,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	private Object resolve(Object[] value, SharedSessionContractImplementor session) throws HibernateException {
-		return instantiator().instantiate( () -> value, session.getFactory() );
+		return instantiator( null ).instantiate( () -> value, session.getFactory() );
 	}
 
 	private EmbeddableMappingType embeddableTypeDescriptor() {
@@ -756,8 +762,10 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return embeddableTypeDescriptor().getAggregateMapping().getJdbcMapping().getJdbcValueExtractor();
 	}
 
-	protected final EmbeddableInstantiator instantiator() {
-		return embeddableTypeDescriptor().getRepresentationStrategy().getInstantiator();
+	protected final EmbeddableInstantiator instantiator(Object compositeInstance) {
+		return embeddableTypeDescriptor().getRepresentationStrategy().getInstantiatorForSubclass(
+				compositeInstance != null ? compositeInstance.getClass().getName() : componentClass.getName()
+		);
 	}
 
 	@Override
@@ -801,7 +809,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	public Object replacePropertyValues(Object component, Object[] values, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( !isMutable() ) {
-			return instantiator().instantiate( () -> values, session.getSessionFactory() );
+			return instantiator( component ).instantiate( () -> values, session.getSessionFactory() );
 		}
 		return CompositeTypeImplementor.super.replacePropertyValues( component, values, session );
 	}

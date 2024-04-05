@@ -35,7 +35,7 @@ public interface DomainResultProducer<T> {
 	 *
 	 *
 	 * ModelPartContainer personMapping = ...;
-	 * personMapping.getValueMapping( "name" );
+	 * personMapping.getValuedModelPart( "name" );
 	 */
 
 	/**

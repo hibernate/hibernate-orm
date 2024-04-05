@@ -107,7 +107,7 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 
 	@Override
 	default int getNumberOfFetchables() {
-		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
+		return getEmbeddableTypeDescriptor().getNumberOfFetchables();
 	}
 
 	@Override

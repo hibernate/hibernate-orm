@@ -8,15 +8,16 @@ package org.hibernate.orm.test.jpa.metamodel.attributeInSuper;
 
 import java.io.Serializable;
 import java.util.Set;
+
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 
 @jakarta.persistence.Entity
 public class WorkOrder implements Serializable {
-	@EmbeddedId
-	private WorkOrderId id;
+	@Id
+	private Long id;
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "workOrder")
 	@OrderBy("operation, bomItemNumber")
 	private Set<WorkOrderComponent> components;

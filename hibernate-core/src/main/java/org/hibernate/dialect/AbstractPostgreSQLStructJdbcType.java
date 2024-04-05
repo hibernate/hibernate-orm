@@ -30,6 +30,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
@@ -45,6 +46,8 @@ import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.StructJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.dialect.StructHelper.getValuedModelPart;
+import static org.hibernate.dialect.StructHelper.getValues;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -1192,8 +1195,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 	}
 
 	private void serializeStructTo(PostgreSQLAppender appender, Object value, WrapperOptions options) {
-		final Object[] array = embeddableMappingType.getValues( value );
-		serializeValuesTo( appender, options, embeddableMappingType, array, '(' );
+		serializeValuesTo( appender, options, embeddableMappingType, value, '(' );
 		appender.append( ')' );
 	}
 
@@ -1201,19 +1203,20 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			PostgreSQLAppender appender,
 			WrapperOptions options,
 			EmbeddableMappingType embeddableMappingType,
-			Object[] array,
+			Object domainValue,
 			char separator) {
-		final int end = embeddableMappingType.getNumberOfAttributeMappings();
-		for ( int i = 0; i < end; i++ ) {
-			final AttributeMapping attributeMapping;
+		final Object[] array = getValues( embeddableMappingType, domainValue );
+		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
+		for ( int i = 0; i < array.length; i++ ) {
+			final ValuedModelPart attributeMapping;
 			final Object attributeValue;
 			if ( orderMapping == null ) {
-				attributeMapping = embeddableMappingType.getAttributeMapping( i );
-				attributeValue = array == null ? null : array[i];
+				attributeMapping = getValuedModelPart( embeddableMappingType, numberOfAttributes, i );
+				attributeValue = array[i];
 			}
 			else {
-				attributeMapping = embeddableMappingType.getAttributeMapping( orderMapping[i] );
-				attributeValue = array == null ? null : array[orderMapping[i]];
+				attributeMapping = getValuedModelPart( embeddableMappingType, numberOfAttributes, orderMapping[i] );
+				attributeValue = array[orderMapping[i]];
 			}
 			if ( attributeMapping instanceof BasicValuedMapping ) {
 				appender.append( separator );
@@ -1232,7 +1235,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 							appender,
 							options,
 							mappingType,
-							attributeValue == null ? null : mappingType.getValues( attributeValue ),
+							attributeValue,
 							separator
 					);
 					separator = ',';
@@ -1398,9 +1401,8 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 				if ( subValue != null ) {
 					final AbstractPostgreSQLStructJdbcType structJdbcType = (AbstractPostgreSQLStructJdbcType) jdbcMapping.getJdbcType();
 					final EmbeddableMappingType subEmbeddableMappingType = structJdbcType.getEmbeddableMappingType();
-					final Object[] array = subEmbeddableMappingType.getValues( subValue );
 					appender.quoteStart();
-					structJdbcType.serializeValuesTo( appender, options, subEmbeddableMappingType, array, '(' );
+					structJdbcType.serializeValuesTo( appender, options, subEmbeddableMappingType, subValue, '(' );
 					appender.append( ')' );
 					appender.quoteEnd();
 				}

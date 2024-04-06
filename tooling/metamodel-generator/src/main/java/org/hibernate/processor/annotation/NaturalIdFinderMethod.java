@@ -29,9 +29,10 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			String sessionName,
 			List<String> fetchProfiles,
 			boolean addNonnullAnnotation,
-			boolean dataRepository) {
+			boolean dataRepository,
+			String fullReturnType) {
 		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository );
+				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType );
 		this.paramNullability = paramNullability;
 	}
 
@@ -50,7 +51,8 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 	public String getAttributeDeclarationString() {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
-		preamble( declaration );
+		modifiers( declaration );
+		preamble( declaration, paramTypes );
 		tryReturn( declaration );
 		unwrapSession( declaration );
 		if ( isReactive() ) {

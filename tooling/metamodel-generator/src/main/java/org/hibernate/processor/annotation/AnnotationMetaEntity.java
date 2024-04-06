@@ -593,7 +593,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				else {
 					// For Panache subtypes, we look at the session type, but no DAO, we want static methods
-					sessionType = getter.getReturnType().toString();
+					sessionType = fullReturnType(getter);
 				}
 			}
 			else if ( element.getKind() == ElementKind.INTERFACE
@@ -702,7 +702,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * it.
 	 */
 	private String addDaoConstructor(@Nullable ExecutableElement method) {
-		final String sessionType = method == null ? this.sessionType : method.getReturnType().toString();
+		final String sessionType = method == null ? this.sessionType : fullReturnType(method);
 		final String sessionVariableName = getSessionVariableName( sessionType );
 		final String name = method == null ? sessionVariableName : method.getSimpleName().toString();
 
@@ -1110,10 +1110,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addQueryMethod(ExecutableElement method) {
-		final ExecutableType methodType =
-				(ExecutableType) context.getTypeUtils()
-						.asMemberOf((DeclaredType) element.asType(), method);
-		final TypeMirror returnType = methodType.getReturnType();
+		final TypeMirror returnType = memberMethodType(method).getReturnType();
 		final TypeKind kind = returnType.getKind();
 		if ( kind == TypeKind.VOID || kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
@@ -1562,7 +1559,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						enabledFetchProfiles( method ),
 						orderByList( method, entity ),
 						context.addNonnullAnnotation(),
-						jakartaDataRepository
+						jakartaDataRepository,
+						fullReturnType(method)
 				)
 		);
 	}
@@ -1608,7 +1606,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							this, method,
 							methodName,
 							entity.getQualifiedName().toString(),
-							returnType.toString(),
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),
@@ -1618,7 +1615,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[0],
 							sessionType[1],
 							context.addNonnullAnnotation(),
-							jakartaDataRepository
+							jakartaDataRepository,
+							fullReturnType(method)
 					)
 			);
 		}
@@ -1806,7 +1804,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[1],
 							enabledFetchProfiles( method ),
 							context.addNonnullAnnotation(),
-							jakartaDataRepository
+							jakartaDataRepository,
+							fullReturnType(method)
 					)
 			);
 		}
@@ -1829,7 +1828,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							enabledFetchProfiles( method ),
 							orderByList( method, entity ),
 							context.addNonnullAnnotation(),
-							jakartaDataRepository
+							jakartaDataRepository,
+							fullReturnType(method)
 					)
 			);
 		}
@@ -1862,7 +1862,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[1],
 									profiles,
 									context.addNonnullAnnotation(),
-									jakartaDataRepository
+									jakartaDataRepository,
+									fullReturnType(method)
 							)
 					);
 					break;
@@ -1880,7 +1881,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									sessionType[1],
 									profiles,
 									context.addNonnullAnnotation(),
-									jakartaDataRepository
+									jakartaDataRepository,
+									fullReturnType(method)
 							)
 					);
 					break;
@@ -1907,7 +1909,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									profiles,
 									orderByList( method, entity ),
 									context.addNonnullAnnotation(),
-									jakartaDataRepository
+									jakartaDataRepository,
+									fullReturnType(method)
 							)
 					);
 					break;
@@ -2265,9 +2268,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						sessionType[1],
 						orderBys,
 						context.addNonnullAnnotation(),
-						jakartaDataRepository
+						jakartaDataRepository,
+						fullReturnType(method)
 				);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
+	}
+
+	private String fullReturnType(ExecutableElement method) {
+		return typeAsString( memberMethodType(method).getReturnType() );
 	}
 
 	private static String returnTypeClass(TypeMirror returnType) {
@@ -2468,7 +2476,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		if ( reactive ) {
 			// for reactive calls, don't use the returnType param, which has been ununi-ed, we want to check the full one
-			final String returnTypeName = method.getReturnType().toString();
+			final String returnTypeName = fullReturnType(method);
 			return returnTypeName.equals( UNI_VOID )
 				|| returnTypeName.equals( UNI_BOOLEAN )
 				|| returnTypeName.equals( UNI_INTEGER );
@@ -2824,10 +2832,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private TypeMirror parameterType(VariableElement parameter) {
 		final ExecutableElement method =
 				(ExecutableElement) parameter.getEnclosingElement();
-		final ExecutableType methodType =
-				(ExecutableType) context.getTypeUtils()
-						.asMemberOf((DeclaredType) element.asType(), method);
-		final TypeMirror type = methodType.getParameterTypes()
+		final TypeMirror type = memberMethodType(method).getParameterTypes()
 				.get( method.getParameters().indexOf(parameter) );
 		switch ( type.getKind() ) {
 			case TYPEVAR:
@@ -2842,6 +2847,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			default:
 				return type;
 		}
+	}
+
+	private ExecutableType memberMethodType(ExecutableElement method) {
+		return (ExecutableType) context.getTypeUtils()
+				.asMemberOf((DeclaredType) element.asType(), method);
 	}
 
 	private static List<Boolean> parameterPatterns(ExecutableElement method) {

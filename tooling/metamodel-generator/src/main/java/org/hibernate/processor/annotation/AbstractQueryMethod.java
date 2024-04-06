@@ -49,6 +49,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	final List<OrderBy> orderBys;
 	final boolean addNonnullAnnotation;
 	final boolean dataRepository;
+	final String fullReturnType;
 
 	AbstractQueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -61,7 +62,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			boolean belongsToDao,
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
-			boolean dataRepository) {
+			boolean dataRepository,
+			String fullReturnType) {
 		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.methodName = methodName;
 		this.paramNames = paramNames;
@@ -71,6 +73,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		this.orderBys = orderBys;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.dataRepository = dataRepository;
+		this.fullReturnType = fullReturnType;
 	}
 
 	@Override
@@ -107,9 +110,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		return type.endsWith("...") ? stripped + "..." : stripped;
 	}
 
-	void preamble(StringBuilder declaration, String returnType, List<String> paramTypes) {
+	void preamble(StringBuilder declaration, List<String> paramTypes) {
 		declaration
-				.append(returnType)
+				.append(annotationMetaEntity.importType(fullReturnType))
 				.append(" ")
 				.append(methodName);
 		parameters( paramTypes, declaration );

@@ -7,14 +7,12 @@
 package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static org.hibernate.processor.util.Constants.QUERY;
-import static org.hibernate.processor.util.Constants.UNI;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -48,14 +46,16 @@ public class QueryMethod extends AbstractQueryMethod {
 			String sessionName,
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
-			boolean dataRepository) {
+			boolean dataRepository,
+			String fullReturnType) {
 		super( annotationMetaEntity, method,
 				methodName,
 				paramNames, paramTypes, returnTypeName,
 				sessionType, sessionName,
 				belongsToDao, orderBys,
 				addNonnullAnnotation,
-				dataRepository );
+				dataRepository,
+				fullReturnType );
 		this.queryString = queryString;
 		this.returnTypeClass = returnTypeClass;
 		this.containerType = containerType;
@@ -86,15 +86,14 @@ public class QueryMethod extends AbstractQueryMethod {
 	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
-		final String returnType = returnType();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( paramTypes, declaration );
-		preamble( declaration, returnType, paramTypes );
+		preamble( declaration, paramTypes );
 		collectOrdering( declaration, paramTypes );
 		chainSession( declaration );
 		tryReturn( declaration, paramTypes, containerType );
-		castResult( declaration, returnType );
+		castResult( declaration );
 		createQuery( declaration );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
@@ -142,14 +141,14 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 	}
 
-	private void castResult(StringBuilder declaration, String returnType) {
+	private void castResult(StringBuilder declaration) {
 		if ( isNative && returnTypeName != null && containerType == null
 				&& isUsingEntityManager() ) {
 			// EntityManager.createNativeQuery() does not return TypedQuery,
 			// so we need to cast to the entity type
 			declaration
 					.append("(")
-					.append(returnType)
+					.append(fullReturnType)
 					.append(") ");
 		}
 	}
@@ -211,34 +210,34 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append(")\n");
 	}
 
-	private String returnType() {
-		final StringBuilder type = new StringBuilder();
-		if ( "[]".equals(containerType) ) {
-			if ( returnTypeName == null ) {
-				throw new AssertionFailure("array return type, but no type name");
-			}
-			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
-		}
-		else {
-			final boolean returnsUni = isReactive() && isUnifiableReturnType(containerType);
-			if ( returnsUni ) {
-				type.append(annotationMetaEntity.importType(UNI)).append('<');
-			}
-			if ( containerType != null ) {
-				type.append(annotationMetaEntity.importType(containerType));
-				if ( returnTypeName != null ) {
-					type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
-				}
-			}
-			else if ( returnTypeName != null )  {
-				type.append(annotationMetaEntity.importType(returnTypeName));
-			}
-			if ( returnsUni ) {
-				type.append('>');
-			}
-		}
-		return type.toString();
-	}
+//	private String returnType() {
+//		final StringBuilder type = new StringBuilder();
+//		if ( "[]".equals(containerType) ) {
+//			if ( returnTypeName == null ) {
+//				throw new AssertionFailure("array return type, but no type name");
+//			}
+//			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
+//		}
+//		else {
+//			final boolean returnsUni = isReactive() && isUnifiableReturnType(containerType);
+//			if ( returnsUni ) {
+//				type.append(annotationMetaEntity.importType(UNI)).append('<');
+//			}
+//			if ( containerType != null ) {
+//				type.append(annotationMetaEntity.importType(containerType));
+//				if ( returnTypeName != null ) {
+//					type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
+//				}
+//			}
+//			else if ( returnTypeName != null )  {
+//				type.append(annotationMetaEntity.importType(returnTypeName));
+//			}
+//			if ( returnsUni ) {
+//				type.append('>');
+//			}
+//		}
+//		return type.toString();
+//	}
 
 	private void comment(StringBuilder declaration) {
 		declaration

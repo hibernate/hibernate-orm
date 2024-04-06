@@ -9,6 +9,7 @@ package org.hibernate.loader.ast.internal;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -97,7 +98,16 @@ public abstract class AbstractEntityBatchLoader<T>
 		initializeEntities( ids, id, entityInstance, lockOptions, readOnly, session );
 
 		final EntityKey entityKey = session.generateEntityKey( id, getLoadable().getEntityPersister() );
-		//noinspection unchecked
-		return (T) session.getPersistenceContext().getEntity( entityKey );
+		// In case the entity is not initialized (yet) session.getPersistenceContext().getEntity returns null
+		// This happens when we're recursively loading entities and another initializer was already loading it
+		final EntityHolder entityHolder = session.getPersistenceContext().getEntityHolder( entityKey );
+
+		if ( entityHolder != null ) {
+			//noinspection unchecked
+			return (T) entityHolder.getEntity();
+		}
+		else {
+			return null;
+		}
 	}
 }

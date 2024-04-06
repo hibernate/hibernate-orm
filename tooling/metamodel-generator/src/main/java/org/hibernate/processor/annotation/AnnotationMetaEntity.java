@@ -402,8 +402,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						&& !isSessionGetter(method) ) {
 					final String companionClassName = element.getQualifiedName().toString() + '$';
 					if ( context.getElementUtils().getTypeElement(companionClassName) == null ) {
-						message( method, "repository method cannot be implemented",
-								Diagnostic.Kind.ERROR );
+						message( method, "repository method cannot be implemented (skipping whole repository)",
+								Diagnostic.Kind.WARNING );
 					}
 					// NOTE EARLY EXIT with initialized = false
 					return;
@@ -411,6 +411,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 
 			primaryEntity = primaryEntity( lifecycleMethods );
+			if ( primaryEntity != null && !hasAnnotation(primaryEntity, ENTITY)
+					|| !checkEntities(lifecycleMethods)) {
+				// NOTE EARLY EXIT with initialized = false
+				return;
+			}
 
 			if ( !lifecycleMethods.isEmpty() ) {
 				validateStatelessSessionType();
@@ -453,6 +458,36 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		addQueryMethods( queryMethods );
 
 		initialized = true;
+	}
+
+	private boolean checkEntities(List<ExecutableElement> lifecycleMethods) {
+		boolean foundPersistenceEntity = false;
+		VariableElement nonPersistenceParameter = null;
+		for (ExecutableElement lifecycleMethod : lifecycleMethods) {
+			final List<? extends VariableElement> parameters = lifecycleMethod.getParameters();
+			if ( !parameters.isEmpty() ) {
+				final VariableElement parameter = parameters.get(0);
+				final TypeMirror declaredType = parameter.asType();
+				final TypeMirror parameterType = parameterType(parameter);
+				final DeclaredType type = entityType(parameterType);
+				if ( type != null ) {
+					if ( hasAnnotation( type.asElement(), ENTITY ) ) {
+						foundPersistenceEntity = true;
+					}
+					else if ( declaredType == parameterType
+							&& nonPersistenceParameter==null ) {
+						nonPersistenceParameter = parameter;
+					}
+				}
+			}
+		}
+		if ( foundPersistenceEntity && nonPersistenceParameter != null ) {
+			message(nonPersistenceParameter,
+					"parameter type '" + nonPersistenceParameter.asType()
+							+ "' is not a Jakarta Persistence entity class (skipping entire repository)",
+					Diagnostic.Kind.WARNING);
+		}
+		return nonPersistenceParameter == null;
 	}
 
 	private void validateStatelessSessionType() {
@@ -1282,7 +1317,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						"incorrect parameter type '" + parameterType + "' is not an entity type",
 						Diagnostic.Kind.ERROR );
 			}
-			else if ( !containsAnnotation( declaredType.asElement(), ENTITY )
+			else if ( !hasAnnotation( declaredType.asElement(), ENTITY )
 					// TODO: improve this (carefully consider the case of an erased type variable)
 					&& declaredParameterType == parameterType ) {
 				message( parameter,

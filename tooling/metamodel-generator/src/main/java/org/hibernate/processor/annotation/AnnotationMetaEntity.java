@@ -1451,7 +1451,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			else {
 				if ( containerType != null ) {
-					// multiple results, it has to be a criteria finder
+					// multiple results, so it has to be a criteria finder
+					// or, alternatively, Optional, which for now we treat similarly
 					createCriteriaFinder( method, declaredType, containerType.toString(), entity );
 				}
 				else {

@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.hibernate.processor.util.Constants.HIB_SESSION;
-import static org.hibernate.processor.util.Constants.UNI;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -36,14 +35,16 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			List<String> paramTypes,
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
-			boolean convertToDataExceptions) {
+			boolean convertToDataExceptions,
+			String fullReturnType) {
 		super( annotationMetaEntity, method,
 				methodName,
 				paramNames, paramTypes, entity,
 				sessionType, sessionName,
 				belongsToDao, orderBys,
 				addNonnullAnnotation,
-				convertToDataExceptions );
+				convertToDataExceptions,
+				fullReturnType );
 		this.entity = entity;
 		this.fetchProfiles = fetchProfiles;
 	}
@@ -173,16 +174,6 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		return unwrapped;
 	}
 
-	void preamble(StringBuilder declaration) {
-		modifiers( declaration );
-		entityType( declaration );
-		declaration
-				.append(" ")
-				.append(methodName);
-		parameters( paramTypes, declaration ) ;
-		declaration.append(" {\n");
-	}
-
 	void tryReturn(StringBuilder declaration) {
 		if (dataRepository) {
 			declaration
@@ -193,19 +184,19 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				.append(sessionName);
 	}
 
-	private void entityType(StringBuilder declaration) {
-		if ( isReactive() ) {
-			declaration
-					.append(annotationMetaEntity.importType(UNI))
-					.append('<');
-		}
-		declaration
-				.append(annotationMetaEntity.importType(entity));
-		if ( isReactive() ) {
-			declaration
-					.append('>');
-		}
-	}
+//	private void returnType(StringBuilder declaration) {
+//		if ( isReactive() ) {
+//			declaration
+//					.append(annotationMetaEntity.importType(UNI))
+//					.append('<');
+//		}
+//		declaration
+//				.append(annotationMetaEntity.importType(entity));
+//		if ( isReactive() ) {
+//			declaration
+//					.append('>');
+//		}
+//	}
 
 	void modifiers(StringBuilder declaration) {
 		declaration

@@ -7,8 +7,6 @@
 package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.AssertionFailure;
-import org.hibernate.processor.util.Constants;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
@@ -36,9 +34,11 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 			List<String> fetchProfiles,
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
-			boolean dataRepository) {
+			boolean dataRepository,
+			String fullReturnType) {
 		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, multivalued, paramPatterns );
+				paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, multivalued, paramPatterns,
+				fullReturnType);
 		this.containerType = containerType;
 		this.paramNullability = paramNullability;
 	}
@@ -100,31 +100,31 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		return "createQuery";
 	}
 
-	@Override
-	String returnType() {
-		final StringBuilder type = new StringBuilder();
-		if ( "[]".equals(containerType) ) {
-			if ( returnTypeName == null ) {
-				throw new AssertionFailure("array return type, but no type name");
-			}
-			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
-		}
-		else {
-			final boolean returnsUni = isReactive() && isUnifiableReturnType(containerType);
-			if ( returnsUni ) {
-				type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
-			}
-			if ( containerType != null ) {
-				type.append(annotationMetaEntity.importType(containerType)).append('<');
-			}
-			type.append(annotationMetaEntity.importType(entity));
-			if ( containerType != null ) {
-				type.append('>');
-			}
-			if ( returnsUni ) {
-				type.append('>');
-			}
-		}
-		return type.toString();
-	}
+//	@Override
+//	String returnType() {
+//		final StringBuilder type = new StringBuilder();
+//		if ( "[]".equals(containerType) ) {
+//			if ( returnTypeName == null ) {
+//				throw new AssertionFailure("array return type, but no type name");
+//			}
+//			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
+//		}
+//		else {
+//			final boolean returnsUni = isReactive() && isUnifiableReturnType(containerType);
+//			if ( returnsUni ) {
+//				type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
+//			}
+//			if ( containerType != null ) {
+//				type.append(annotationMetaEntity.importType(containerType)).append('<');
+//			}
+//			type.append(annotationMetaEntity.importType(entity));
+//			if ( containerType != null ) {
+//				type.append('>');
+//			}
+//			if ( returnsUni ) {
+//				type.append('>');
+//			}
+//		}
+//		return type.toString();
+//	}
 }

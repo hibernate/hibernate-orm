@@ -33,9 +33,10 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			boolean addNonnullAnnotation,
 			boolean convertToDataExceptions,
 			List<Boolean> multivalued,
-			List<Boolean> paramPatterns) {
+			List<Boolean> paramPatterns,
+			String fullReturnType) {
 		super(annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, orderBys, addNonnullAnnotation, convertToDataExceptions);
+				paramNames, paramTypes, orderBys, addNonnullAnnotation, convertToDataExceptions, fullReturnType);
 		this.multivalued = multivalued;
 		this.paramPatterns = paramPatterns;
 	}
@@ -46,7 +47,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
-		preamble( declaration, returnType(), paramTypes );
+		preamble( declaration, paramTypes );
 		chainSession( declaration );
 		nullChecks( paramTypes, declaration );
 		createBuilder(declaration);
@@ -64,7 +65,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	abstract String createCriteriaMethod();
 
-	abstract String returnType();
+//	abstract String returnType();
 
 	abstract String createQueryMethod();
 

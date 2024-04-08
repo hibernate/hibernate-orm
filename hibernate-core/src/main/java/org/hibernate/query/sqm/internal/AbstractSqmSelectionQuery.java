@@ -172,7 +172,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 						.performList(this);
 
 		return new KeyedResultList<>(
-				collectResults( results, page.getSize() ),
+				collectResults( results, page.getSize(), keyedPage.getKeyInterpretation() ),
 				collectKeys( results, page.getSize() ),
 				keyedPage,
 				nextPage( keyedPage, results ),

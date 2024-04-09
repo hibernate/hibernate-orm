@@ -116,7 +116,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				jdbcParameters,
 				jdbcParameterBindings
 		);
-
+		session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,

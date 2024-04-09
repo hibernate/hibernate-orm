@@ -132,7 +132,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				this.subselect.getLoadingJdbcParameters(),
 				this.subselect.getLoadingJdbcParameterBindings()
 		);
-
+		session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
 				this.subselect.getLoadingJdbcParameterBindings(),

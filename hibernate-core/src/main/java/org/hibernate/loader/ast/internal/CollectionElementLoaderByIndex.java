@@ -144,7 +144,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 		assert offset == jdbcParameters.size();
 		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
-
+		session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,

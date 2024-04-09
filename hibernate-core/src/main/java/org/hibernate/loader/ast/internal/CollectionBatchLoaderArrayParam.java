@@ -200,7 +200,7 @@ public class CollectionBatchLoaderArrayParam
 				JdbcParametersList.singleton( jdbcParameter ),
 				jdbcParameterBindings
 		);
-
+		session.autoFlushIfRequired( jdbcSelectOperation.getAffectedTableNames() );
 		session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelectOperation,
 				jdbcParameterBindings,

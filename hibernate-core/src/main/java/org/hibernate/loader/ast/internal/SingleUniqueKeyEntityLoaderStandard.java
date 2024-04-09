@@ -124,6 +124,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				session
 		);
 		assert offset == jdbcParameters.size();
+		session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 		final List<Object> list = sessionFactory.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,

@@ -111,6 +111,7 @@ public class CollectionBatchLoaderInPredicate
 
 		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
 
+		session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 		chunker.processChunks(
 				keysToInitialize,
 				countIds( keysToInitialize ),

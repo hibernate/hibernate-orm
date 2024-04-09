@@ -22,8 +22,10 @@ import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.NoCallbackExecutionContext;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -83,6 +85,7 @@ public class GeneratedValuesProcessor {
 					1,
 					new LoadQueryInfluencers( sessionFactory ),
 					LockOptions.READ,
+					timing,
 					builder::add,
 					sessionFactory
 			);
@@ -145,17 +148,18 @@ public class GeneratedValuesProcessor {
 			Object id,
 			Object[] state,
 			GeneratedValues generatedValues,
+			EventType timing,
 			SharedSessionContractImplementor session) {
 		if ( hasActualGeneratedValuesToSelect( session, entity ) ) {
 			if ( selectStatement != null ) {
 				final List<Object[]> results = executeSelect( id, session );
 				assert results.size() == 1;
-				setEntityAttributes( entity, state, results.get( 0 ) );
+				setEntityAttributes( entity, state, results.get( 0 ), timing, session );
 			}
 			else {
 				castNonNull( generatedValues );
 				final List<Object> results = generatedValues.getGeneratedValues( generatedValuesToSelect );
-				setEntityAttributes( entity, state, results.toArray( new Object[0] ) );
+				setEntityAttributes( entity, state, results.toArray( new Object[0] ), timing, session );
 			}
 		}
 	}
@@ -187,10 +191,41 @@ public class GeneratedValuesProcessor {
 		return jdbcParamBindings;
 	}
 
-	private void setEntityAttributes(Object entity, Object[] state, Object[] selectionResults) {
+	private void setEntityAttributes(
+			Object entity,
+			Object[] state,
+			Object[] selectionResults,
+			EventType timing,
+			SharedSessionContractImplementor session) {
 		for ( int i = 0; i < generatedValuesToSelect.size(); i++ ) {
 			final AttributeMapping attribute = generatedValuesToSelect.get( i );
-			final Object generatedValue = selectionResults[i];
+			Object generatedValue = selectionResults[i];
+			if ( attribute.isEmbeddedAttributeMapping() ) {
+				final EmbeddableMappingTypeImpl embeddableMappingType = (EmbeddableMappingTypeImpl) attribute.getMappedType();
+				final Object previousState = state[attribute.getStateArrayPosition()];
+				if ( generatedValue == null && previousState != null ) {
+					generatedValue = embeddableMappingType.getRepresentationStrategy()
+							.getInstantiator()
+							.instantiate(
+									() -> embeddableMappingType.getValues( previousState ),
+									session.getSessionFactory()
+							);
+				}
+				else if ( previousState != null ) {
+					final AttributeMappingsList attributeMappings = embeddableMappingType.getAttributeMappings();
+					for ( int j = 0; j < attributeMappings.size(); j++ ) {
+						final AttributeMapping embeddedAttribute = attributeMappings.get( j );
+						if ( embeddedAttribute.getGenerator() == null || !embeddedAttribute.getGenerator().getEventTypes().contains( timing ) ) {
+							final PropertyAccess propertyAccess = embeddedAttribute.getAttributeMetadata()
+									.getPropertyAccess();
+							propertyAccess.getSetter().set(
+									generatedValue,
+									propertyAccess.getGetter().get( previousState )
+							);
+						}
+					}
+				}
+			}
 			state[ attribute.getStateArrayPosition() ] = generatedValue;
 			attribute.getAttributeMetadata().getPropertyAccess().getSetter().set( entity, generatedValue );
 		}

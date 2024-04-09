@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -43,7 +44,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 @SuppressWarnings("rawtypes")
 public class BasicAttributeMapping
 		extends AbstractSingularAttributeMapping
-		implements SingularAttributeMapping, BasicValuedModelPart {
+		implements BasicValuedModelPart {
 	private final NavigableRole navigableRole;
 
 	private final String tableExpression;
@@ -103,6 +104,83 @@ public class BasicAttributeMapping
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
+				propertyAccess
+		);
+		this.navigableRole = navigableRole;
+		this.tableExpression = tableExpression;
+		this.mappedColumnExpression = mappedColumnExpression;
+		this.temporalPrecision = temporalPrecision;
+		if ( selectablePath == null ) {
+			this.selectablePath = new SelectablePath( mappedColumnExpression );
+		}
+		else {
+			this.selectablePath = selectablePath;
+		}
+		this.isFormula = isFormula;
+		this.columnDefinition = columnDefinition;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
+		this.isLob = isLob;
+		this.nullable = nullable;
+		this.insertable = insertable;
+		this.updateable = updateable;
+		this.partitioned = partitioned;
+		this.jdbcMapping = jdbcMapping;
+		this.domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
+
+		this.customReadExpression = customReadExpression;
+
+		if ( isFormula ) {
+			this.customWriteExpression = null;
+		}
+		else {
+			this.customWriteExpression = customWriteExpression;
+		}
+		this.isLazy = navigableRole.getParent().getParent() == null && declaringType.findContainingEntityMapping()
+				.getEntityPersister()
+				.getBytecodeEnhancementMetadata()
+				.getLazyAttributesMetadata()
+				.isLazyAttribute( attributeName );
+	}
+
+	public BasicAttributeMapping(
+			String attributeName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
+			FetchTiming mappedFetchTiming,
+			FetchStyle mappedFetchStyle,
+			String tableExpression,
+			String mappedColumnExpression,
+			SelectablePath selectablePath,
+			boolean isFormula,
+			String customReadExpression,
+			String customWriteExpression,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
+			Integer temporalPrecision,
+			boolean isLob,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			JdbcMapping jdbcMapping,
+			ManagedMappingType declaringType,
+			Generator generator,
+			PropertyAccess propertyAccess) {
+		super(
+				attributeName,
+				stateArrayPosition,
+				fetchableIndex,
+				attributeMetadata,
+				mappedFetchTiming,
+				mappedFetchStyle,
+				declaringType,
+				generator,
 				propertyAccess
 		);
 		this.navigableRole = navigableRole;

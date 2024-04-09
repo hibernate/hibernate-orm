@@ -23,6 +23,8 @@ import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.Generator;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
@@ -48,7 +50,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.internal.TableGroupJoinHelper;
 import org.hibernate.sql.ast.spi.AliasCollector;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
@@ -260,6 +261,33 @@ public class LoaderSelectBuilder {
 	public static SelectStatement createSelect(
 			Loadable loadable,
 			List<? extends ModelPart> partsToSelect,
+			ModelPart restrictedPart,
+			DomainResult<?> cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			EventType timing,
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SessionFactoryImplementor sessionFactory) {
+		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+				sessionFactory,
+				loadable,
+				partsToSelect,
+				restrictedPart,
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				timing,
+				lockOptions,
+				jdbcParameterConsumer
+		);
+
+		return process.generateSelect();
+	}
+
+	public static SelectStatement createSelect(
+			Loadable loadable,
+			List<? extends ModelPart> partsToSelect,
 			List<ModelPart> restrictedParts,
 			DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
@@ -360,8 +388,10 @@ public class LoaderSelectBuilder {
 	private final Consumer<JdbcParameter> jdbcParameterConsumer;
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
+
 	private int fetchDepth;
 	private RowCardinality rowCardinality = RowCardinality.SINGLE;
+	private EventType timing;
 
 	private LoaderSelectBuilder(
 			SqlAstCreationContext creationContext,
@@ -442,6 +472,31 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				jdbcParameterConsumer
 		);
+	}
+
+	private LoaderSelectBuilder(
+			SqlAstCreationContext creationContext,
+			Loadable loadable,
+			List<? extends ModelPart> partsToSelect,
+			ModelPart restrictedParts,
+			DomainResult<?> cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			EventType timing,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer) {
+		this(
+				creationContext,
+				loadable,
+				partsToSelect,
+				singletonList( restrictedParts ),
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				lockOptions,
+				jdbcParameterConsumer
+		);
+		this.timing = timing;
 	}
 
 	private static boolean determineWhetherToForceIdSelection(int numberOfKeysToLoad, List<ModelPart> restrictedParts) {
@@ -598,6 +653,7 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				this::visitFetches,
 				forceIdentifierSelection,
+				timing,
 				loadQueryInfluencers,
 				creationContext
 		);
@@ -814,6 +870,16 @@ public class LoaderSelectBuilder {
 		return (fetchable, isKeyFetchable, isABag) -> {
 			if ( !fetchable.isSelectable() ) {
 				return;
+			}
+			final Generator generator = fetchable.asAttributeMapping().getGenerator();
+			final EventType timing = creationState.getTiming();
+			if ( timing != null ) {
+				// we want to select only the generated properties
+				if ( generator == null
+						|| generator.getEventTypes().size() == 0 // don't select properties annotated with `@Generated(GenerationTime.NEVER)`
+						|| !generator.getEventTypes().contains( timing ) ) {
+					return;
+				}
 			}
 
 			final NavigablePath fetchablePath;

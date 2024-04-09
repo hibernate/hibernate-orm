@@ -18,6 +18,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.generator.EventType;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -67,6 +68,35 @@ public class LoaderSqlAstCreationState
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 
+	private final EventType timing;
+
+	public LoaderSqlAstCreationState(
+			QueryPart queryPart,
+			SqlAliasBaseManager sqlAliasBaseManager,
+			FromClauseAccess fromClauseAccess,
+			LockOptions lockOptions,
+			FetchProcessor fetchProcessor,
+			boolean forceIdentifierSelection,
+			EventType timing,
+			LoadQueryInfluencers loadQueryInfluencers,
+			SqlAstCreationContext sf) {
+		this.sqlAliasBaseManager = sqlAliasBaseManager;
+		this.fromClauseAccess = fromClauseAccess;
+		this.lockOptions = lockOptions;
+		this.fetchProcessor = fetchProcessor;
+		this.forceIdentifierSelection = forceIdentifierSelection;
+		this.timing = timing;
+		this.loadQueryInfluencers = loadQueryInfluencers;
+		this.sf = sf;
+		this.processingState = new SqlAstQueryPartProcessingStateImpl(
+				queryPart,
+				null,
+				this,
+				() -> Clause.IRRELEVANT,
+				true
+		);
+	}
+
 	public LoaderSqlAstCreationState(
 			QueryPart queryPart,
 			SqlAliasBaseManager sqlAliasBaseManager,
@@ -76,19 +106,16 @@ public class LoaderSqlAstCreationState
 			boolean forceIdentifierSelection,
 			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext sf) {
-		this.sqlAliasBaseManager = sqlAliasBaseManager;
-		this.fromClauseAccess = fromClauseAccess;
-		this.lockOptions = lockOptions;
-		this.fetchProcessor = fetchProcessor;
-		this.forceIdentifierSelection = forceIdentifierSelection;
-		this.loadQueryInfluencers = loadQueryInfluencers;
-		this.sf = sf;
-		this.processingState = new SqlAstQueryPartProcessingStateImpl(
+		this(
 				queryPart,
+				sqlAliasBaseManager,
+				fromClauseAccess,
+				lockOptions,
+				fetchProcessor,
+				forceIdentifierSelection,
 				null,
-				this,
-				() -> Clause.IRRELEVANT,
-				true
+				loadQueryInfluencers,
+				sf
 		);
 	}
 
@@ -322,5 +349,9 @@ public class LoaderSqlAstCreationState
 	@Override
 	public Set<String> getDisabledFetchProfiles() {
 		return null;
+	}
+
+	public EventType getTiming() {
+		return timing;
 	}
 }

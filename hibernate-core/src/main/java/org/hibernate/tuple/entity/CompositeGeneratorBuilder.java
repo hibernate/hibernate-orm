@@ -97,28 +97,24 @@ class CompositeGeneratorBuilder {
 		final List<Property> properties = composite.getProperties();
 		for ( int i = 0; i < properties.size(); i++ ) {
 			final Property property = properties.get(i);
-			final OnExecutionGenerator generator = (OnExecutionGenerator) generators.get(i);
-			if ( generator == null ) {
-				throw new CompositeValueGenerationException(
-						"Property of on-execution generated embeddable is not generated: "
-								+ mappingProperty.getName() + '.' + property.getName()
-				);
-			}
-			eventTypes.addAll( generator.getEventTypes() );
-			if ( generator.referenceColumnsInSql( dialect ) ) {
-				// override base-line value
-				referenceColumns = true;
-				final String[] referencedColumnValues = generator.getReferencedColumnValues( dialect );
-				if ( referencedColumnValues != null ) {
-					final int span = property.getColumnSpan();
-					if ( referencedColumnValues.length != span ) {
-						throw new CompositeValueGenerationException(
-								"Mismatch between number of collected generated column values and number of columns for composite attribute: "
-										+ mappingProperty.getName() + '.' + property.getName()
-						);
+			final OnExecutionGenerator generator = (OnExecutionGenerator) generators.get( i);
+			if ( generator != null ) {
+				eventTypes.addAll( generator.getEventTypes() );
+				if ( generator.referenceColumnsInSql( dialect ) ) {
+					// override base-line value
+					referenceColumns = true;
+					final String[] referencedColumnValues = generator.getReferencedColumnValues( dialect );
+					if ( referencedColumnValues != null ) {
+						final int span = property.getColumnSpan();
+						if ( referencedColumnValues.length != span ) {
+							throw new CompositeValueGenerationException(
+									"Mismatch between number of collected generated column values and number of columns for composite attribute: "
+											+ mappingProperty.getName() + '.' + property.getName()
+							);
+						}
+						arraycopy( referencedColumnValues, 0, columnValues, columnIndex, span );
+						columnIndex += span;
 					}
-					arraycopy( referencedColumnValues, 0, columnValues, columnIndex, span );
-					columnIndex += span;
 				}
 			}
 		}

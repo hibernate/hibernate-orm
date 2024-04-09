@@ -27,6 +27,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
@@ -254,6 +255,89 @@ public class MappingModelCreationHelper {
 				partitioned,
 				attrType,
 				declaringType,
+				propertyAccess
+		);
+	}
+	@SuppressWarnings("rawtypes")
+	public static BasicAttributeMapping buildBasicAttributeMapping(
+			String attrName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			BasicType attrType,
+			String tableExpression,
+			String attrColumnName,
+			SelectablePath selectablePath,
+			boolean isAttrFormula,
+			String readExpr,
+			String writeExpr,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
+			Integer temporalPrecision,
+			boolean isLob,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			Generator generator,
+			MappingModelCreationProcess creationProcess) {
+		final SimpleValue value = (SimpleValue) bootProperty.getValue();
+		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
+		final SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
+
+		final FetchTiming fetchTiming;
+		final FetchStyle fetchStyle;
+		final boolean partitioned;
+		if ( declaringType instanceof EmbeddableMappingType ) {
+			if ( bootProperty.isLazy() ) {
+				MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
+						"Attribute was declared lazy, but is part of an embeddable - `%s#%s` - LAZY will be ignored",
+						declaringType.getNavigableRole().getFullPath(),
+						bootProperty.getName()
+				);
+			}
+			fetchTiming = FetchTiming.IMMEDIATE;
+			fetchStyle = FetchStyle.JOIN;
+			partitioned = value.isPartitionKey() && !( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping().isVirtual();
+		}
+		else {
+			fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
+			fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+			partitioned = value.isPartitionKey();
+		}
+
+		return new BasicAttributeMapping(
+				attrName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				attributeMetadata,
+				fetchTiming,
+				fetchStyle,
+				tableExpression,
+				attrColumnName,
+				selectablePath,
+				isAttrFormula,
+				readExpr,
+				writeExpr,
+				columnDefinition,
+				length,
+				precision,
+				scale,
+				temporalPrecision,
+				isLob,
+				nullable,
+				insertable,
+				updateable,
+				partitioned,
+				attrType,
+				declaringType,
+				generator,
 				propertyAccess
 		);
 	}
@@ -1342,7 +1426,7 @@ public class MappingModelCreationHelper {
 
 		if ( bootMapKeyDescriptor instanceof Component ) {
 			final Component component = (Component) bootMapKeyDescriptor;
-			final CompositeType compositeType = (CompositeType) component.getType();
+			final CompositeType compositeType = component.getType();
 
 
 			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(

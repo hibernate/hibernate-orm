@@ -9,6 +9,7 @@ package org.hibernate.tuple.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -30,6 +31,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -326,8 +328,16 @@ public class EntityMetamodel implements Serializable {
 				else {
 					generators[i] = generator;
 					if ( generatedWithNoParameter( generator ) ) {
-						propertyInsertability[i] = false;
-						propertyUpdateability[i] = false;
+						if ( !( attribute instanceof EntityBasedCompositionAttribute ) ) {
+							final EnumSet<EventType> eventTypes = generator.getEventTypes();
+							if ( eventTypes.contains( EventType.INSERT ) ) {
+								propertyInsertability[i] = false;
+							}
+							if ( eventTypes.contains( EventType.UPDATE ) ) {
+								propertyInsertability[i] = false;
+								propertyUpdateability[i] = false;
+							}
+						}
 					}
 					if ( generator.generatesOnInsert() ) {
 						if ( generator.generatedOnExecution() ) {

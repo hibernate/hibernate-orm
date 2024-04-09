@@ -17,6 +17,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Property;
@@ -87,6 +88,44 @@ public class DiscriminatedAssociationAttributeMapping
 				fetchTiming,
 				FetchStyle.SELECT,
 				declaringType,
+				propertyAccess
+		);
+		this.navigableRole = attributeRole;
+
+		this.discriminatorMapping = DiscriminatedAssociationMapping.from(
+				attributeRole,
+				baseAssociationJtd,
+				this,
+				anyType,
+				bootValueMapping,
+				creationProcess
+		);
+		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+	}
+
+	public DiscriminatedAssociationAttributeMapping(
+			NavigableRole attributeRole,
+			JavaType<?> baseAssociationJtd,
+			ManagedMappingType declaringType,
+			int stateArrayPosition,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
+			FetchTiming fetchTiming,
+			PropertyAccess propertyAccess,
+			Property bootProperty,
+			AnyType anyType,
+			Any bootValueMapping,
+			Generator generator,
+			MappingModelCreationProcess creationProcess) {
+		super(
+				bootProperty.getName(),
+				stateArrayPosition,
+				fetchableIndex,
+				attributeMetadata,
+				fetchTiming,
+				FetchStyle.SELECT,
+				declaringType,
+				generator,
 				propertyAccess
 		);
 		this.navigableRole = attributeRole;

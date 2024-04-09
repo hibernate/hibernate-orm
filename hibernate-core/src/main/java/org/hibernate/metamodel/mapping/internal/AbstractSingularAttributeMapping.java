@@ -23,6 +23,7 @@ public abstract class AbstractSingularAttributeMapping
 		implements SingularAttributeMapping {
 
 	private final PropertyAccess propertyAccess;
+	private final Generator generator;
 
 	public AbstractSingularAttributeMapping(
 			String name,
@@ -34,6 +35,7 @@ public abstract class AbstractSingularAttributeMapping
 			PropertyAccess propertyAccess) {
 		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
+		this.generator = findContainingEntityMapping().getEntityPersister().getEntityMetamodel().getGenerators()[getStateArrayPosition()];
 	}
 
 	public AbstractSingularAttributeMapping(
@@ -47,6 +49,22 @@ public abstract class AbstractSingularAttributeMapping
 			PropertyAccess propertyAccess) {
 		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
+		this.generator = findContainingEntityMapping().getEntityPersister().getEntityMetamodel().getGenerators()[getStateArrayPosition()];
+	}
+
+	public AbstractSingularAttributeMapping(
+			String name,
+			int stateArrayPosition,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
+			FetchTiming fetchTiming,
+			FetchStyle fetchStyle,
+			ManagedMappingType declaringType,
+			Generator generator,
+			PropertyAccess propertyAccess) {
+		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType );
+		this.propertyAccess = propertyAccess;
+		this.generator = generator;
 	}
 
 	/**
@@ -55,6 +73,7 @@ public abstract class AbstractSingularAttributeMapping
 	protected AbstractSingularAttributeMapping( AbstractSingularAttributeMapping original ) {
 		super( original );
 		this.propertyAccess = original.propertyAccess;
+		this.generator = original.getGenerator();
 	}
 
 	@Override
@@ -64,7 +83,7 @@ public abstract class AbstractSingularAttributeMapping
 
 	@Override
 	public Generator getGenerator() {
-		return findContainingEntityMapping().getEntityPersister().getEntityMetamodel().getGenerators()[getStateArrayPosition()];
+		return generator;
 	}
 
 }

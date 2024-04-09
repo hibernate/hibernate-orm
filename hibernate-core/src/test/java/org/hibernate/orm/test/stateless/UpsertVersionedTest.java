@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 public class UpsertVersionedTest {
     @Test void test(SessionFactoryScope scope) {
         scope.inStatelessTransaction(s-> {
-            s.upsert(new Record(123L,1L,"hello earth"));
+            s.upsert(new Record(123L,0L,"hello earth"));
             s.upsert(new Record(456L,2L,"hello mars"));
         });
         scope.inStatelessTransaction(s-> {

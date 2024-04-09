@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Blob;
@@ -40,6 +41,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
@@ -107,7 +109,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
@@ -1755,8 +1756,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					final OutputStream connectedStream = target.setBinaryStream( 1L );
 					// the BLOB from the detached state
 					final InputStream detachedStream = original.getBinaryStream();
-					StreamCopier.copy( detachedStream, connectedStream );
+					detachedStream.transferTo( connectedStream );
 					return target;
+				}
+				catch (IOException e ) {
+					throw new HibernateException( "Unable to copy stream content", e );
 				}
 				catch (SQLException e ) {
 					throw session.getFactory().getJdbcServices().getSqlExceptionHelper()
@@ -1776,8 +1780,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					final OutputStream connectedStream = target.setAsciiStream( 1L );
 					// the CLOB from the detached state
 					final InputStream detachedStream = original.getAsciiStream();
-					StreamCopier.copy( detachedStream, connectedStream );
+					detachedStream.transferTo( connectedStream );
 					return target;
+				}
+				catch (IOException e ) {
+					throw new HibernateException( "Unable to copy stream content", e );
 				}
 				catch (SQLException e ) {
 					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
@@ -1796,8 +1803,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					final OutputStream connectedStream = target.setAsciiStream( 1L );
 					// the NCLOB from the detached state
 					final InputStream detachedStream = original.getAsciiStream();
-					StreamCopier.copy( detachedStream, connectedStream );
+					detachedStream.transferTo( connectedStream );
 					return target;
+				}
+				catch (IOException e ) {
+					throw new HibernateException( "Unable to copy stream content", e );
 				}
 				catch (SQLException e ) {
 					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );

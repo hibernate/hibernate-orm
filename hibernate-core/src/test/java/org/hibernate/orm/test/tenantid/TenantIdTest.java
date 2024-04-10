@@ -76,6 +76,11 @@ public class TenantIdTest implements SessionFactoryProducer {
             public boolean validateExistingCurrentSessions() {
                 return false;
             }
+
+            @Override
+            public boolean isRoot(String tenantId) {
+                return "root".equals( tenantId );
+            }
         } );
         return (SessionFactoryImplementor) sessionFactoryBuilder.build();
     }
@@ -102,6 +107,47 @@ public class TenantIdTest implements SessionFactoryProducer {
             session.disableFilter(TenantIdBinder.FILTER_NAME);
             assertNotNull( session.find(Account.class, acc.id) );
             assertEquals( 1, session.createQuery("from Account").getResultList().size() );
+        } );
+    }
+
+    @Test
+    public void testRoot(SessionFactoryScope scope) {
+        currentTenant = "root";
+        scope.inTransaction( session -> {
+            assertEquals( 0, session.createQuery( "from Account" ).getResultList().size() );
+        } );
+
+        currentTenant = "mine";
+        Client client = new Client( "Gavin" );
+        Account acc = new Account( client );
+        scope.inTransaction( session -> {
+            session.persist( client );
+            session.persist( acc );
+        } );
+        assertEquals( "mine", acc.tenantId );
+        scope.inTransaction( session -> {
+            assertNotNull( session.find( Account.class, acc.id ) );
+            assertEquals( 1, session.createQuery( "from Account" ).getResultList().size() );
+        } );
+
+        currentTenant = "root";
+        // Root tenants should find entities from other tenants
+        scope.inTransaction( session -> {
+            assertNotNull( session.find( Account.class, acc.id ) );
+            assertEquals( 1, session.createQuery( "from Account" ).getResultList().size() );
+        } );
+
+        // Root tenants should find entities from their own tenant
+        Client rootClient = new Client( "Sacha" );
+        Account rootAcc = new Account( rootClient );
+        scope.inTransaction( session -> {
+            session.persist( rootClient );
+            session.persist( rootAcc );
+        } );
+        assertEquals( "root", rootAcc.tenantId );
+        scope.inTransaction( session -> {
+            assertNotNull( session.find( Account.class, rootAcc.id ) );
+            assertEquals( 2, session.createQuery( "from Account" ).getResultList().size() );
         } );
     }
 

@@ -165,9 +165,8 @@ public class FilterImpl implements Filter, Serializable {
 		for ( final String parameterName : definition.getParameterNames() ) {
 			if ( parameters.get( parameterName ) == null &&
 					(getParameterResolver( parameterName ) == null || getParameterResolver( parameterName ).getClass().isInterface()) ) {
-				throw new HibernateException(
-						"Either value and resolver for filter [" + getName() + "] parameter [" + parameterName + "] not set"
-				);
+				throw new HibernateException( "Filter parameter '" + getName()
+						+ "' has neither an argument nor a resolver" );
 			}
 		}
 	}

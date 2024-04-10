@@ -60,7 +60,7 @@ class FilterDefBinder {
 		}
 
 		final Map<String, JdbcMapping> explicitParamJaMappings;
-		final Map<String, ManagedBean<? extends Supplier>> parameterResolvers;
+		final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolvers;
 		if ( filterDef.parameters().length == 0 ) {
 			explicitParamJaMappings = emptyMap();
 			parameterResolvers = emptyMap();
@@ -98,12 +98,15 @@ class FilterDefBinder {
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}
 
-	private static ManagedBean<? extends Supplier> resolveParamResolver(ParamDef paramDef, MetadataBuildingContext context) {
-		Class<? extends Supplier> clazz = paramDef.resolver();
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static ManagedBean<? extends Supplier<?>> resolveParamResolver(ParamDef paramDef, MetadataBuildingContext context) {
+		final Class<? extends Supplier> clazz = paramDef.resolver();
 		assert clazz != Supplier.class;
-
-		final ManagedBeanRegistry beanRegistry = context.getBootstrapContext().getServiceRegistry().getService( ManagedBeanRegistry.class );
-		return beanRegistry.getBean( clazz, context.getBootstrapContext().getCustomTypeProducer() );
+		final BootstrapContext bootstrapContext = context.getBootstrapContext();
+		return (ManagedBean<? extends Supplier<?>>)
+				bootstrapContext.getServiceRegistry()
+						.requireService(ManagedBeanRegistry.class)
+						.getBean(clazz, bootstrapContext.getCustomTypeProducer());
 	}
 
 	@SuppressWarnings("unchecked")

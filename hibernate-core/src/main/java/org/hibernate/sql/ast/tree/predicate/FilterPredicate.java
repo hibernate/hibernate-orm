@@ -10,15 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-import org.hibernate.MappingException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
@@ -166,7 +163,7 @@ public class FilterPredicate implements Predicate {
 				return value;
 			}
 
-			final Supplier filterParamResolver = filter.getParameterResolver( paramName );
+			final Supplier<?> filterParamResolver = filter.getParameterResolver( paramName );
 			return filterParamResolver == null ? null : filterParamResolver.get();
 		}
 	}

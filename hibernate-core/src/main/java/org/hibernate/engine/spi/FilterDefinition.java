@@ -35,7 +35,7 @@ public class FilterDefinition implements Serializable {
 	private final String filterName;
 	private final String defaultFilterCondition;
 	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
-	private final Map<String, ManagedBean<? extends Supplier>> parameterResolverMap = new HashMap<>();
+	private final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap = new HashMap<>();
 	private final boolean autoEnabled;
 
 	/**
@@ -47,8 +47,9 @@ public class FilterDefinition implements Serializable {
 		this( name, defaultCondition, explicitParamJaMappings, Collections.emptyMap(), false);
 	}
 
-	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings,
-							Map<String, ManagedBean<? extends  Supplier>> parameterResolverMap, boolean autoEnabled) {
+	public FilterDefinition(
+			String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings,
+			Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap, boolean autoEnabled) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		if ( explicitParamJaMappings != null ) {
@@ -91,8 +92,8 @@ public class FilterDefinition implements Serializable {
 		return explicitParamJaMappings.get( parameterName );
 	}
 
-	public @Nullable Supplier getParameterResolver(String parameterName) {
-		final ManagedBean<? extends Supplier> resolver = parameterResolverMap.get( parameterName );
+	public @Nullable Supplier<?> getParameterResolver(String parameterName) {
+		final ManagedBean<? extends Supplier<?>> resolver = parameterResolverMap.get( parameterName );
 		return resolver == null ? null : resolver.getBeanInstance();
 	}
 

@@ -125,7 +125,7 @@ public class TransactionTimeoutTest {
 	}
 
 	@Test
-	@RequiresDialect(DB2Dialect.class)
+	@RequiresDialect(value = DB2Dialect.class, majorVersion = 11, comment = "DBMS_LOCK.SLEEP is only supported since 11")
 	public void testDB2(EntityManagerFactoryScope scope) throws Throwable {
 		test( scope, entityManager -> {
 			entityManager.createStoredProcedureQuery( "DBMS_LOCK.SLEEP" )

@@ -24,6 +24,7 @@ public class AggregateColumn extends Column {
 	private final Component component;
 
 	public AggregateColumn(Column column, Component component) {
+		setColumnDefinition( column.getColumnDefinition() );
 		setLength( column.getLength() );
 		setPrecision( column.getPrecision() );
 		setScale( column.getScale() );

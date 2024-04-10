@@ -194,19 +194,10 @@ public class MySQLColumnValidationTest {
 			);
 		}
 
-		try {
-			schemaValidator.doValidation( scope.getMetadataImplementor(), executionOptions,
-										  contributed -> {
-											  return "test_data3".equalsIgnoreCase( contributed.getExportIdentifier() );
-										  } );
-			fail( "SchemaManagementException expected" );
-		}
-		catch (SchemaManagementException e) {
-			assertEquals(
-					"Schema-validation: wrong column type encountered in column [integral1] in table [TEST_DATA3]; found [tinyint unsigned (Types#TINYINT)], but expecting [tinyint unsigned default '0' (Types#INTEGER)]",
-					e.getMessage()
-			);
-		}
+		schemaValidator.doValidation( scope.getMetadataImplementor(), executionOptions,
+									  contributed -> {
+											return "test_data3".equalsIgnoreCase( contributed.getExportIdentifier() );
+										} );
 	}
 
 	@Entity(name = "test_entity1")
@@ -217,7 +208,7 @@ public class MySQLColumnValidationTest {
 		private Integer id;
 
 		@JdbcTypeCode( Types.TINYINT )
-		@Column(name = "integral1", columnDefinition = "tinyint")
+		@Column(name = "integral1", columnDefinition = "tinyint UNSIGNED")
 		private int integral1;
 
 		@JdbcTypeCode( Types.TINYINT )

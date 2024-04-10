@@ -69,6 +69,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 			discriminatorType = discriminatorColumn.discriminatorType();
 			column.setImplicit( false );
 			if ( !discriminatorColumn.columnDefinition().isEmpty() ) {
+				column.setColumnDefinition( discriminatorColumn.columnDefinition() );
 				column.setSqlType( discriminatorColumn.columnDefinition() );
 			}
 			if ( !discriminatorColumn.name().isEmpty() ) {

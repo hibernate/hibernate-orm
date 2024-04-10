@@ -8,12 +8,15 @@ package org.hibernate.orm.test.boot.models.categorize.access;
 
 import java.util.List;
 
-import org.hibernate.boot.models.categorize.internal.StandardPersistentAttributeMemberResolver;
+import org.hibernate.boot.models.AccessTypePlacementException;
+import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
+import org.hibernate.boot.models.categorize.spi.PersistentAttributeMemberResolver;
 import org.hibernate.models.internal.ClassDetailsRegistryStandard;
 import org.hibernate.models.internal.SourceModelBuildingContextImpl;
+import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
@@ -29,10 +32,13 @@ import org.jboss.jandex.Index;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import static jakarta.persistence.AccessType.FIELD;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
 
 /**
@@ -44,30 +50,6 @@ import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOAD
  * @author Steve Ebersole
  */
 public class CrossRuntimeAccessTests {
-
-	/**
-	 * Tests implicit FIELD access and an explicit PROPERTY access
-	 */
-	@Test
-	void testCrossRuntimeAccess() {
-		final Index jandexIndex = SourceModelTestHelper.buildJandexIndex(
-				SIMPLE_CLASS_LOADING,
-				CrossRuntimeAccessEntity.class
-		);
-
-		final SourceModelBuildingContext modelBuildingContext = new SourceModelBuildingContextImpl( SIMPLE_CLASS_LOADING, jandexIndex );
-		final ClassDetailsRegistry classDetailsRegistry = new ClassDetailsRegistryStandard( modelBuildingContext );
-		final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( CrossRuntimeAccessEntity.class.getName() );
-		final List<MemberDetails> attributeMembers = StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
-				classDetails,
-				// todo (7.0) : its not self-evident what the answer should be here.
-				//		- see below
-				ClassAttributeAccessType.IMPLICIT_PROPERTY,
-				null
-		);
-		assertThat( attributeMembers ).hasSize( 3 );
-		assertThat( attributeMembers.stream().map( MemberDetails::getName ) ).containsExactly( "id", "getName", "getAnotherName" );
-	}
 
 	@Test
 	@ServiceRegistry
@@ -81,13 +63,18 @@ public class CrossRuntimeAccessTests {
 		assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
 		categorizedDomainModel.forEachEntityHierarchy( (index, entityHierarchy) -> {
 			final EntityTypeMetadata hierarchyRoot = entityHierarchy.getRoot();
-			// todo (7.0) : its not self-evident what the answer should be here.
-			//		- boils down to whether this describes (1) where to look for annotations or (2) runtime access
-			//		- in other words, what's important here - where the annotation is placed or what its value is?
-			//		- we want the value to indicate the PropertyAccessStrategy
-			assertThat( hierarchyRoot.getClassLevelAccessType() ).isEqualTo( ClassAttributeAccessType.IMPLICIT_PROPERTY );
+
+			//the default access type for the hierarchy is FIELD because `@Id` is on the field
+			assertThat( entityHierarchy.getDefaultAccessType() ).isEqualTo( FIELD );
+			assertThat( hierarchyRoot.getClassLevelAccessType() ).isEqualTo( ClassAttributeAccessType.IMPLICIT_FIELD );
+
+			// we should have 3 attributes with the 3 fields as the "backing member" in terms of where to look for annotations.
 			assertThat( hierarchyRoot.getAttributes().stream().map( attributeMetadata -> attributeMetadata.getMember().getName() ) )
-					.containsExactly( "id", "getName", "getAnotherName" );
+					.containsExactly( "getName", "id", "anotherName" );
+
+			final AttributeMetadata attribute = hierarchyRoot.findAttribute( "anotherName" );
+			final AnnotationUsage<Column> columnUsage = attribute.getMember().getAnnotationUsage( Column.class );
+			assertThat( columnUsage.getString( "name" ) ).isEqualTo( "bite_the_dust" );
 		} );
 	}
 
@@ -97,6 +84,7 @@ public class CrossRuntimeAccessTests {
 		@Access( AccessType.PROPERTY )
 		private Integer id;
 		private String name;
+		@Column(name="bite_the_dust")
 		private String anotherName;
 
 		public Integer getId() {
@@ -107,7 +95,7 @@ public class CrossRuntimeAccessTests {
 			this.id = id;
 		}
 
-		@Access(AccessType.FIELD)
+		@Access(FIELD)
 		public String getName() {
 			return name;
 		}

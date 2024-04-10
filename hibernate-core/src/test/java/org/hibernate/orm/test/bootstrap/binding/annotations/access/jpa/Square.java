@@ -22,7 +22,6 @@ public class Square {
 
 	private long id;
 
-	@Embedded
 	private Position position;
 
 	@Id
@@ -35,6 +34,7 @@ public class Square {
 		this.id = id;
 	}
 
+	@Embedded
 	public Position getPosition() {
 		return position;
 	}

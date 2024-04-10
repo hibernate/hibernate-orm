@@ -51,8 +51,8 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
 import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
-import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -469,6 +469,11 @@ public class MetadataBuildingProcess {
 
 		xmlProcessingResult.apply( xmlPreProcessingResult.getPersistenceUnitMetadata() );
 
+		// Perform "categorization" as a means of verifying that process succeeds.
+		// At the moment we throw away the result of that process, but the next step in 7,0 is to leverage the categorization model
+		// todo (7.0) : use this categorization model
+		makeSureCategorizationSucceeds( classDetailsRegistry, sourceModelBuildingContext, modelCategorizationCollector );
+
 		return new DomainModelSource(
 				classDetailsRegistry.makeImmutableCopy(),
 				jandexIndex,
@@ -476,6 +481,28 @@ public class MetadataBuildingProcess {
 				modelCategorizationCollector.getGlobalRegistrations(),
 				rootMappingDefaults,
 				xmlPreProcessingResult.getPersistenceUnitMetadata()
+		);
+	}
+
+	private static void makeSureCategorizationSucceeds(
+			ClassDetailsRegistry classDetailsRegistry,
+			SourceModelBuildingContext sourceModelBuildingContext,
+			DomainModelCategorizationCollector modelCategorizationCollector) {
+		final ClassDetailsRegistry classDetailsRegistryImmutable = classDetailsRegistry.makeImmutableCopy();
+
+		final AnnotationDescriptorRegistry annotationDescriptorRegistryImmutable = sourceModelBuildingContext.getAnnotationDescriptorRegistry().makeImmutableCopy();
+
+		// Collect the entity hierarchies based on the set of `rootEntities`
+		final ModelCategorizationContextImpl modelCategorizationContext = new ModelCategorizationContextImpl(
+				classDetailsRegistryImmutable,
+				annotationDescriptorRegistryImmutable,
+				modelCategorizationCollector.getGlobalRegistrations()
+		);
+
+		org.hibernate.boot.models.categorize.internal.EntityHierarchyBuilder.createEntityHierarchies(
+				modelCategorizationCollector.getRootEntities(),
+				null,
+				modelCategorizationContext
 		);
 	}
 

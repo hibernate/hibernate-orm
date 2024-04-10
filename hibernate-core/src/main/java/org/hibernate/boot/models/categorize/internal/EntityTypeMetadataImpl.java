@@ -79,10 +79,9 @@ public class EntityTypeMetadataImpl
 	public EntityTypeMetadataImpl(
 			ClassDetails classDetails,
 			EntityHierarchy hierarchy,
-			AccessType defaultAccessType,
 			HierarchyTypeConsumer typeConsumer,
 			ModelCategorizationContext modelContext) {
-		super( classDetails, hierarchy, null, defaultAccessType, modelContext );
+		super( classDetails, hierarchy, null, modelContext );
 
 		// NOTE: There is no annotation for `entity-name` - it comes exclusively from XML
 		// 		mappings.  By default, the `entityName` is simply the entity class name.

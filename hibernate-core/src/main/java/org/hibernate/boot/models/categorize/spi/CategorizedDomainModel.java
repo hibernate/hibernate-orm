@@ -15,6 +15,7 @@ import org.hibernate.internal.util.KeyedConsumer;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.SourceModelContext;
 
 import org.jboss.jandex.IndexView;
 
@@ -28,7 +29,7 @@ import org.jboss.jandex.IndexView;
  *
  * @author Steve Ebersole
  */
-public interface CategorizedDomainModel {
+public interface CategorizedDomainModel extends SourceModelContext {
 	/**
 	 * Registry of all known classes
 	 */
@@ -38,8 +39,6 @@ public interface CategorizedDomainModel {
 	 * Registry of all known {@linkplain java.lang.annotation.Annotation} descriptors (classes)
 	 */
 	AnnotationDescriptorRegistry getAnnotationDescriptorRegistry();
-
-	IndexView getJandexIndex();
 
 	PersistenceUnitMetadata getPersistenceUnitMetadata();
 

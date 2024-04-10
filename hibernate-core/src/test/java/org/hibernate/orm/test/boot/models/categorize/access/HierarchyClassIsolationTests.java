@@ -9,12 +9,12 @@ package org.hibernate.orm.test.boot.models.categorize.access;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.boot.models.categorize.internal.StandardPersistentAttributeMemberResolver;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.KeyMapping;
+import org.hibernate.boot.models.categorize.spi.PersistentAttributeMemberResolver;
 import org.hibernate.models.internal.ClassDetailsRegistryStandard;
 import org.hibernate.models.internal.SourceModelBuildingContextImpl;
 import org.hibernate.models.spi.ClassDetails;
@@ -73,7 +73,7 @@ public class HierarchyClassIsolationTests {
 		final ClassDetailsRegistry classDetailsRegistry = new ClassDetailsRegistryStandard( modelBuildingContext );
 
 		final ClassDetails rootClassDetails = classDetailsRegistry.resolveClassDetails( Root.class.getName() );
-		final List<MemberDetails> rootAttributeMembers = StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
+		final List<MemberDetails> rootAttributeMembers = PersistentAttributeMemberResolver.STANDARD.resolveAttributesMembers(
 				rootClassDetails,
 				ClassAttributeAccessType.IMPLICIT_FIELD,
 				null
@@ -82,7 +82,7 @@ public class HierarchyClassIsolationTests {
 		assertThat( rootAttributeMembers.stream().map( MemberDetails::getName ) ).contains( "id", "name" );
 
 		final ClassDetails baseClassDetails = classDetailsRegistry.resolveClassDetails( Base.class.getName() );
-		final List<MemberDetails> baseAttributeMembers = StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
+		final List<MemberDetails> baseAttributeMembers = PersistentAttributeMemberResolver.STANDARD.resolveAttributesMembers(
 				baseClassDetails,
 				ClassAttributeAccessType.EXPLICIT_PROPERTY,
 				null
@@ -91,7 +91,7 @@ public class HierarchyClassIsolationTests {
 		assertThat( baseAttributeMembers.stream().map( MemberDetails::getName ) ).contains( "getAnotherName" );
 
 		final ClassDetails level1ClassDetails = classDetailsRegistry.resolveClassDetails( Level1.class.getName() );
-		final List<MemberDetails> level1AttributeMembers = StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
+		final List<MemberDetails> level1AttributeMembers = PersistentAttributeMemberResolver.STANDARD.resolveAttributesMembers(
 				level1ClassDetails,
 				ClassAttributeAccessType.IMPLICIT_FIELD,
 				null

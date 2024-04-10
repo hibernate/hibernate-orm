@@ -166,7 +166,6 @@ public class DomainModelCategorizationCollector {
 		return new CategorizedDomainModelImpl(
 				classDetailsRegistry,
 				annotationDescriptorRegistry,
-				jandexIndex,
 				persistenceUnitMetadata,
 				entityHierarchies,
 				mappedSuperclasses,

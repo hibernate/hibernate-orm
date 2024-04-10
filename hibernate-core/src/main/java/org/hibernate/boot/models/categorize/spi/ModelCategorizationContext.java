@@ -8,7 +8,6 @@ package org.hibernate.boot.models.categorize.spi;
 
 import java.util.List;
 
-import org.hibernate.boot.models.categorize.internal.StandardPersistentAttributeMemberResolver;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
@@ -27,7 +26,7 @@ public interface ModelCategorizationContext {
 	SharedCacheMode getSharedCacheMode();
 
 	default PersistentAttributeMemberResolver getPersistentAttributeMemberResolver() {
-		return StandardPersistentAttributeMemberResolver.INSTANCE;
+		return PersistentAttributeMemberResolver.STANDARD;
 	}
 
 	List<JpaEventListener> getDefaultEventListeners();

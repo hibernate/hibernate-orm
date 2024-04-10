@@ -8,10 +8,9 @@ package org.hibernate.boot.models.categorize.spi;
 
 import java.util.List;
 
+import org.hibernate.boot.models.categorize.internal.StandardPersistentAttributeMemberResolver;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-
-import jakarta.persistence.AccessType;
 
 /**
  * Contract responsible for resolving the members that identify the persistent
@@ -26,6 +25,11 @@ import jakarta.persistence.AccessType;
  * @author Steve Ebersole
  */
 public interface PersistentAttributeMemberResolver {
+	/**
+	 * Hibernate's standard resolver
+	 */
+	PersistentAttributeMemberResolver STANDARD = new StandardPersistentAttributeMemberResolver();
+
 	/**
 	 * Given the class descriptor representing a ManagedType and the implicit AccessType
 	 * to use, resolve the members that indicate persistent attributes.

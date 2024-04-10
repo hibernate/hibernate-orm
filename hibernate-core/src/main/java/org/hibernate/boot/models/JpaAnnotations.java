@@ -7,10 +7,15 @@
 package org.hibernate.boot.models;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.Locale;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
+import org.hibernate.models.AnnotationAccessException;
 import org.hibernate.models.spi.AnnotationDescriptor;
+import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AssociationOverride;

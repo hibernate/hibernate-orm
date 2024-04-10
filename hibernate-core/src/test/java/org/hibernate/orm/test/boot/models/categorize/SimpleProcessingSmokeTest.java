@@ -10,13 +10,11 @@ import java.util.List;
 
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
-import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.LifecycleCallbackCollector;
-import org.hibernate.boot.models.categorize.internal.StandardPersistentAttributeMemberResolver;
 import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
+import org.hibernate.boot.models.categorize.spi.PersistentAttributeMemberResolver;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
@@ -106,7 +104,7 @@ public class SimpleProcessingSmokeTest {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		final LifecycleCallbackCollector lifecycleCallbackCollector = new LifecycleCallbackCollector( simpleEntityClassDetails, null );
-		final List<MemberDetails> attributeMembers = StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
+		final List<MemberDetails> attributeMembers = PersistentAttributeMemberResolver.STANDARD.resolveAttributesMembers(
 				simpleEntityClassDetails,
 				ClassAttributeAccessType.IMPLICIT_FIELD,
 				lifecycleCallbackCollector

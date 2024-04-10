@@ -59,6 +59,41 @@ NOTE: Currently, the `hibernate-envers` module still uses HCANN.  That will chan
 
 7.0 adds many more checks about illegal use of annotations.
 
+=== @Access
+
+WHERE we look for annotations and HOW we access persistent state at runtime.
+
+==== 2.3.1. Default Access Type
+
+The default access type is "determined by the placement of mapping annotations on the attributes of the entity classes and mapped superclasses of the entity hierarchy which do not explicitly specify an access type".
+
+Hibernate's approach to that is to look for fields and methods annotated with `@Id` and `@EmbeddedId`.  E.g., given
+
+[source,java]
+----
+@Entity
+class Book {
+  @Id Integer id;
+  Integer getId() { ... }
+  ...
+}
+----
+
+Hibernate determines the default here to be FIELD due to the placement of `@Id` on the _field_ `Book#id`.
+
+[source,java]
+----
+@Entity
+class Book {
+  @Id @Access(PROPERTY) Integer id;
+  Integer getId() { ... }
+  ...
+}
+----
+
+Here, the default access type will still be FIELD (again, because of the placement) but the access type
+for the actual `id` attribute will be PROPERTY.
+
 
 === PersistentAttributeType
 

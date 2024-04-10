@@ -8,8 +8,8 @@ package org.hibernate.orm.test.boot.models.categorize.access;
 
 import java.util.List;
 
-import org.hibernate.boot.models.categorize.internal.StandardPersistentAttributeMemberResolver;
 import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
+import org.hibernate.boot.models.categorize.spi.PersistentAttributeMemberResolver;
 import org.hibernate.models.internal.ClassDetailsRegistryStandard;
 import org.hibernate.models.internal.SourceModelBuildingContextImpl;
 import org.hibernate.models.spi.ClassDetails;
@@ -50,7 +50,7 @@ public class ClassLevelFieldAccessTests {
 		final SourceModelBuildingContext modelBuildingContext = new SourceModelBuildingContextImpl( SIMPLE_CLASS_LOADING, jandexIndex );
 		final ClassDetailsRegistry classDetailsRegistry = new ClassDetailsRegistryStandard( modelBuildingContext );
 		final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( ImplicitFieldAccessEntity.class.getName() );
-		final List<MemberDetails> attributeMembers = StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
+		final List<MemberDetails> attributeMembers = PersistentAttributeMemberResolver.STANDARD.resolveAttributesMembers(
 				classDetails,
 				ClassAttributeAccessType.IMPLICIT_FIELD,
 				null
@@ -72,7 +72,7 @@ public class ClassLevelFieldAccessTests {
 		final SourceModelBuildingContext modelBuildingContext = new SourceModelBuildingContextImpl( SIMPLE_CLASS_LOADING, jandexIndex );
 		final ClassDetailsRegistry classDetailsRegistry = new ClassDetailsRegistryStandard( modelBuildingContext );
 		final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( ImplicitFieldAccessEntity.class.getName() );
-		final List<MemberDetails> attributeMembers = StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
+		final List<MemberDetails> attributeMembers = PersistentAttributeMemberResolver.STANDARD.resolveAttributesMembers(
 				classDetails,
 				ClassAttributeAccessType.EXPLICIT_FIELD,
 				null

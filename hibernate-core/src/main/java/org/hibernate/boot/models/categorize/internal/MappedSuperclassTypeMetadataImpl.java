@@ -35,10 +35,9 @@ public class MappedSuperclassTypeMetadataImpl
 			ClassDetails classDetails,
 			EntityHierarchy hierarchy,
 			MappedSuperclassTypeMetadataImpl superTypeMetadata,
-			AccessType defaultAccessType,
 			HierarchyTypeConsumer typeConsumer,
 			ModelCategorizationContext modelContext) {
-		super( classDetails, hierarchy, superTypeMetadata, defaultAccessType, modelContext );
+		super( classDetails, hierarchy, superTypeMetadata, modelContext );
 
 		final LifecycleCallbackCollector lifecycleCallbackCollector = new LifecycleCallbackCollector( classDetails, modelContext );
 		this.attributeList = resolveAttributes( lifecycleCallbackCollector );

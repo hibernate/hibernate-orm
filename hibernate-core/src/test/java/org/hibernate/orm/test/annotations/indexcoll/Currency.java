@@ -16,7 +16,7 @@ import jakarta.persistence.Id;
 @Entity
 public class Currency {
 	private Integer id;
-
+	private String currency;
 
 	@Id
 	@GeneratedValue
@@ -28,11 +28,7 @@ public class Currency {
 		this.id = id;
 	}
 
-
 	@Column
-	private String currency;
-
-
 	public String getCurrency() {
 		return currency;
 	}

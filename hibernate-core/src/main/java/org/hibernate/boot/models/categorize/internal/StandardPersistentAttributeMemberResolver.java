@@ -67,10 +67,6 @@ import jakarta.persistence.Version;
  * @author Steve Ebersole
  */
 public class StandardPersistentAttributeMemberResolver extends AbstractPersistentAttributeMemberResolver {
-	/**
-	 * Singleton access
-	 */
-	public static final StandardPersistentAttributeMemberResolver INSTANCE = new StandardPersistentAttributeMemberResolver();
 
 	@Override
 	protected List<MemberDetails> resolveAttributesMembers(
@@ -80,14 +76,20 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			ClassAttributeAccessType classLevelAccessType) {
 		final LinkedHashMap<String,MemberDetails> results = new LinkedHashMap<>();
 
-		processAttributeLevelAccess(
-				results::put,
-				transientFieldChecker,
-				transientMethodChecker,
-				classDetails,
-				classLevelAccessType
-		);
+//		if ( classLevelAccessType.isExplicit() ) {
+			// within a class which has an explicit class-level @Access, individual
+			// attributes may override the class-level access type by an explicit @Access
+			// local to the member - process those
+			processAttributeLevelAccess(
+					results::put,
+					transientFieldChecker,
+					transientMethodChecker,
+					classDetails,
+					classLevelAccessType
+			);
+//		}
 
+		// process members based on the class-level access
 		processClassLevelAccess(
 				results::containsKey,
 				results::put,
@@ -100,25 +102,41 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 		return new ArrayList<>( results.values() );
 	}
 
-	private <M extends MemberDetails> void processAttributeLevelAccess(
+	/**
+	 * Process members of the class looking for those with explicit @Access annotations
+	 *
+	 * @apiNote Only valid for classes with an explicit @Access
+	 */
+	private void processAttributeLevelAccess(
 			BiConsumer<String,MemberDetails> memberConsumer,
 			Function<FieldDetails,Boolean> transientFieldChecker,
 			Function<MethodDetails,Boolean> transientMethodChecker,
 			ClassDetails classDetails,
 			ClassAttributeAccessType classLevelAccessType) {
-		final List<FieldDetails> fields = classDetails.getFields();
-		for ( int i = 0; i < fields.size(); i++ ) {
-			final FieldDetails fieldDetails = fields.get( i );
-			processAttributeLevelAccessMember( fieldDetails, memberConsumer, transientFieldChecker, classDetails, classLevelAccessType );
+		if ( classLevelAccessType.getJpaAccessType() == AccessType.FIELD ) {
+			// when the class-level access is defined as FIELD we will process fields in the next phase,
+			// so just need to process methods here looking for explicit @Access annotations
+			final List<MethodDetails> methods = classDetails.getMethods();
+			for ( int i = 0; i < methods.size(); i++ ) {
+				final MethodDetails methodDetails = methods.get( i );
+				processAttributeLevelAccessMember( methodDetails, memberConsumer, transientMethodChecker, classDetails, classLevelAccessType );
+			}
 		}
-
-		final List<MethodDetails> methods = classDetails.getMethods();
-		for ( int i = 0; i < methods.size(); i++ ) {
-			final MethodDetails methodDetails = methods.get( i );
-			processAttributeLevelAccessMember( methodDetails, memberConsumer, transientMethodChecker, classDetails, classLevelAccessType );
+		else {
+			assert classLevelAccessType.getJpaAccessType() == AccessType.PROPERTY;
+			// when the class-level access is defined as PROPERTY we will process methods in the next phase,
+			// so just need to process fields here looking for explicit @Access annotations
+			final List<FieldDetails> fields = classDetails.getFields();
+			for ( int i = 0; i < fields.size(); i++ ) {
+				final FieldDetails fieldDetails = fields.get( i );
+				processAttributeLevelAccessMember( fieldDetails, memberConsumer, transientFieldChecker, classDetails, classLevelAccessType );
+			}
 		}
 	}
 
+	/**
+	 * Determine if the given member defines an attribute based on the presence of a local @Access annotation
+	 */
 	private <M extends MemberDetails> void processAttributeLevelAccessMember(
 			M memberDetails,
 			BiConsumer<String,MemberDetails> memberConsumer,
@@ -126,18 +144,20 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			ClassDetails classDetails,
 			ClassAttributeAccessType classLevelAccessType) {
 		if ( transiencyChecker.apply( memberDetails ) ) {
-			// the field is transient
+			// the member is transient
 			return;
 		}
 
 		final AnnotationUsage<Access> access = memberDetails.getAnnotationUsage( JpaAnnotations.ACCESS );
 		if ( access == null  ) {
+			// there was no local @Access, so not an attribute.
+			// make sure there are no other mapping annotations either.
 			checkForMisplacedAnnotations( classDetails, memberDetails, classLevelAccessType );
 			return;
 		}
-
-		final AccessType attributeAccessType = access.getAttributeValue( "value" );
-		validateAttributeLevelAccess( memberDetails, attributeAccessType, classDetails );
+//
+//		final AccessType attributeAccessType = access.getAttributeValue( "value" );
+//		validateAttributeLevelAccess( memberDetails, attributeAccessType, classDetails, classLevelAccessType );
 
 		memberConsumer.accept( memberDetails.resolveAttributeName(), memberDetails );
 	}
@@ -157,7 +177,7 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			return;
 		}
 
-		if ( !matchesAccessType( memberDetails, classLevelAccessType ) ) {
+		if ( classLevelAccessType.getTargetKind() != memberDetails.getKind() ) {
 			if ( containsMappingAnnotations( memberDetails ) ) {
 				if ( memberDetails.getKind() == AnnotationTarget.Kind.FIELD ) {
 					throw new AnnotationPlacementException(
@@ -198,7 +218,7 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 	}
 
 	private <M extends MemberDetails> boolean containsMappingAnnotations(M memberDetails) {
-		// todo (jpa32) : better way to do this?
+		// todo (7.0) : should we leverage JpaAnnotations and HibernateAnnotations to perform a more complete check?
 		return memberDetails.hasAnnotationUsage( Id.class )
 				|| memberDetails.hasAnnotationUsage( EmbeddedId.class )
 				|| memberDetails.hasAnnotationUsage( Version.class )
@@ -234,21 +254,16 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 				|| memberDetails.hasAnnotationUsage( JdbcTypeCode.class );
 	}
 
-	private void validateAttributeLevelAccess(
+	public static void validateAttributeLevelAccess(
 			MemberDetails annotationTarget,
 			AccessType attributeAccessType,
-			ClassDetails classDetails) {
+			ClassDetails classDetails,
+			ClassAttributeAccessType classLevelAccessType) {
 		// Apply the checks defined in section `2.3.2 Explicit Access Type` of the persistence specification
 
 		// Mainly, it is never legal to:
 		//		1. specify @Access(FIELD) on a getter
 		//		2. specify @Access(PROPERTY) on a field
-
-		// todo (jpa32) : pass along access to JpaCompliance and use a new `JpaCompliance#isAnnotationPlacementComplianceEnabled` method here
-		// 		- for now, just allow it as we interpret the actual attribute AccessType value to dictate the state access
-		if ( !isAnnotationPlacementComplianceEnabled() ) {
-			return;
-		}
 
 		if ( ( attributeAccessType == AccessType.FIELD && !annotationTarget.isField() )
 				|| ( attributeAccessType == AccessType.PROPERTY && annotationTarget.isField() ) ) {

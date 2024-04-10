@@ -95,7 +95,7 @@ public interface CacheSettings {
 	 * <ul>
 	 *     <li>an instance of {@link RegionFactory},
 	 *     <li>a {@link Class} implementing {@link RegionFactory}, or
-	 *     <li>he name of a class implementing {@link RegionFactory}.
+	 *     <li>the name of a class implementing {@link RegionFactory}.
 	 * </ul>
 	 * <p>
 	 * Defaults to {@link NoCachingRegionFactory}, so that caching is disabled.

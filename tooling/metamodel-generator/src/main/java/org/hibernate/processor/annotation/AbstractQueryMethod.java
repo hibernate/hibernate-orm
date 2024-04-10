@@ -374,8 +374,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			"\t\t\t\t\t\t.collect(toList());\n" +
 			//SHOULD BE new CursoredPageRecord<>
 			"\t\treturn new CursoredPageRecord(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
-			"\t\t\t\t_results.isLastPage() ? null : PageRequest.afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),\n" +
-			"\t\t\t\t_results.isFirstPage() ? null : PageRequest.beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()));";
+			"\t\t\t\t_results.isLastPage() ? null : afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),\n" +
+			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()));";
 
 	static final String MAKE_KEYED_PAGE
 			= "\tvar _unkeyedPage =\n" +
@@ -667,9 +667,11 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						unwrapQuery(declaration, unwrapped);
 						declaration
 								.append("\t\t\t.getKeyedResultList(_keyedPage);\n");
-						annotationMetaEntity.importType("jakarta.data.page.PageRequest");
-						annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
+						annotationMetaEntity.importType(JD_PAGE_REQUEST);
+						annotationMetaEntity.importType(JD_PAGE_REQUEST + ".Cursor");
 						annotationMetaEntity.importType("jakarta.data.page.impl.CursoredPageRecord");
+						annotationMetaEntity.staticImport(JD_PAGE_REQUEST, "beforeCursor");
+						annotationMetaEntity.staticImport(JD_PAGE_REQUEST, "afterCursor");
 						String fragment = MAKE_KEYED_SLICE
 								.replace("pageRequest",
 										parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))

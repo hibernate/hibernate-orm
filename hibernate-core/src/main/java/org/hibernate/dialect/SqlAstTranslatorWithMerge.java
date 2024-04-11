@@ -50,11 +50,11 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		);
 	}
 
-	@Override
-	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
-		renderMergeStatement(tableUpdate);
-	}
-
+//	@Override
+//	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+//		renderMergeStatement(tableUpdate);
+//	}
+//
 	/**
 	 * Renders the OptionalTableUpdate as a MERGE query.
 	 *

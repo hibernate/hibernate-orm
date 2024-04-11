@@ -55,7 +55,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 
 	@Override
 	boolean singleResult() {
-		return true;
+		return false; // we don't need to convert Query exceptions
 	}
 
 	@Override
@@ -67,16 +67,63 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		if ( paramName != null && !isPrimitive(paramType) ) {
 			nullCheck( declaration, paramName );
 		}
-		tryReturn( declaration );
+		varOrReturn( declaration );
 		if ( fetchProfiles.isEmpty() ) {
 			findWithNoFetchProfiles( declaration );
 		}
 		else {
 			findWithFetchProfiles( declaration );
 		}
+		throwIfNull( declaration );
 		convertExceptions( declaration );
 		closingBrace( declaration );
 		return declaration.toString();
+	}
+
+	private void throwIfNull(StringBuilder declaration) {
+		if ( isUsingStatelessSession() ) {
+			if (dataRepository) {
+				declaration
+						.append("\t\tif (_result == null) throw new ")
+						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
+						.append("(new ")
+						.append(annotationMetaEntity.importType("org.hibernate.ObjectNotFoundException"))
+						.append("((Object) ")
+						.append(paramName)
+						.append(", \"")
+						.append(entity)
+						.append("\"));\n")
+						.append("\t\treturn _result;\n");
+			}
+			else {
+				declaration
+						.append("\tif (_result == null) throw new ")
+						.append(annotationMetaEntity.importType("org.hibernate.ObjectNotFoundException"))
+						.append("((Object) ")
+						.append(paramName)
+						.append(", \"")
+						.append(entity)
+						.append("\");\n")
+						.append("\treturn _result;\n");
+			}
+		}
+	}
+
+	private void varOrReturn(StringBuilder declaration) {
+		if (dataRepository) {
+			declaration
+					.append("\ttry {\n");
+		}
+		if ( isUsingStatelessSession() ) {
+			declaration
+					.append("\t\tvar _result = ");
+		}
+		else {
+			declaration
+					.append("\t\treturn ");
+		}
+		declaration
+				.append(sessionName);
 	}
 
 	private void findWithFetchProfiles(StringBuilder declaration) {

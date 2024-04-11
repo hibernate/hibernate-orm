@@ -250,7 +250,7 @@ void ciBuild(buildEnv, String args) {
 			}
 		}
 	}
-	else {
+	else if ( buildEnv.node && buildEnv.node != 's390x' ) { // We couldn't get the code below to work on s390x for some reason.
 		// Pull request: we can't pass credentials to the build, since we'd be exposing secrets to e.g. tests.
 		// We do the build first, then publish the build scan separately.
 		tryFinally({
@@ -263,6 +263,10 @@ void ciBuild(buildEnv, String args) {
 				}
 			}
 		})
+	}
+	else {
+		// Don't do build scans
+		sh "./ci/build.sh $args"
 	}
 }
 

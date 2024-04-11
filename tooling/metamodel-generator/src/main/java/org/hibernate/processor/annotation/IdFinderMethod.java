@@ -34,9 +34,11 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			List<String> fetchProfiles,
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
-			String fullReturnType) {
+			String fullReturnType,
+			boolean nullable) {
 		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
-				fetchProfiles, paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType );
+				fetchProfiles, paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType,
+				nullable );
 		int idParameter = idParameter(paramNames, paramTypes);
 		this.paramName = paramNames.get(idParameter);
 		this.paramType = paramTypes.get(idParameter);
@@ -84,7 +86,11 @@ public class IdFinderMethod extends AbstractFinderMethod {
 	}
 
 	private void throwIfNull(StringBuilder declaration) {
-		if ( containerType == null ) {
+		if (containerType != null) {
+			declaration
+					.append(')');
+		}
+		else if (!nullable) {
 			declaration
 					.append(";\n");
 			if (dataRepository) {
@@ -102,7 +108,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 						.append(", \"")
 						.append(entity)
 						.append("\"));\n")
-						.append("\t\treturn _result;\n");
+						.append("\t\treturn _result");
 			}
 			else {
 				declaration
@@ -113,13 +119,11 @@ public class IdFinderMethod extends AbstractFinderMethod {
 						.append(", \"")
 						.append(entity)
 						.append("\");\n")
-						.append("\treturn _result;\n");
+						.append("\treturn _result");
 			}
 		}
-		else {
-			declaration
-					.append(");\n");
-		}
+		declaration
+				.append(";\n");
 	}
 
 	private void varOrReturn(StringBuilder declaration) {
@@ -127,15 +131,19 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			declaration
 					.append("\ttry {\n\t");
 		}
-		if ( containerType == null ) {
+		if (containerType != null) {
+			declaration
+					.append("\treturn ")
+					.append(annotationMetaEntity.staticImport(containerType, "ofNullable"))
+					.append('(');
+		}
+		else if (!nullable) {
 			declaration
 					.append("\tvar _result = ");
 		}
 		else {
 			declaration
-					.append("\treturn ")
-					.append(annotationMetaEntity.staticImport(containerType, "ofNullable"))
-					.append('(');
+					.append("\treturn ");
 		}
 		declaration
 				.append(sessionName);

@@ -47,7 +47,8 @@ public class QueryMethod extends AbstractQueryMethod {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
-			String fullReturnType) {
+			String fullReturnType,
+			boolean nullable) {
 		super( annotationMetaEntity, method,
 				methodName,
 				paramNames, paramTypes, returnTypeName,
@@ -55,7 +56,8 @@ public class QueryMethod extends AbstractQueryMethod {
 				belongsToDao, orderBys,
 				addNonnullAnnotation,
 				dataRepository,
-				fullReturnType );
+				fullReturnType,
+				nullable );
 		this.queryString = queryString;
 		this.returnTypeClass = returnTypeClass;
 		this.containerType = containerType;
@@ -97,19 +99,13 @@ public class QueryMethod extends AbstractQueryMethod {
 		createQuery( declaration );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = specialNeeds( declaration );
+		boolean unwrapped = !isUsingEntityManager();
 		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
 		execute( declaration, unwrapped );
 		convertExceptions( declaration );
 		chainSessionEnd( isUpdate, declaration );
 		closingBrace( declaration );
 		return declaration.toString();
-	}
-
-	private boolean specialNeeds(StringBuilder declaration) {
-		boolean unwrapped = !isUsingEntityManager();
-		unwrapped = unwrapIfNecessary( declaration, containerType, unwrapped );
-		return unwrapped;
 	}
 
 	@Override

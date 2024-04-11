@@ -1,5 +1,6 @@
 package org.hibernate.processor.test.data.basic;
 
+import jakarta.annotation.Nullable;
 import jakarta.data.Limit;
 import jakarta.data.Order;
 import jakarta.data.Sort;
@@ -65,6 +66,9 @@ public interface BookAuthorRepository {
 	@Find
 	Optional<Book> bookIfAny(String isbn);
 
+	@Find @Nullable
+	Book bookOrNullIfNone(String isbn);
+
 	@Find
 	Author author(String ssn);
 
@@ -115,6 +119,10 @@ public interface BookAuthorRepository {
 
 	@Query("from Book where title = :title")
 	Book bookWithTitle(String title);
+
+	@Nullable
+	@Query("from Book where title = :title")
+	Book bookWithTitleOrNullIfNone(String title);
 
 	@Query("from Book where title = :title")
 	Optional<Book> bookWithTitleMaybe(String title);

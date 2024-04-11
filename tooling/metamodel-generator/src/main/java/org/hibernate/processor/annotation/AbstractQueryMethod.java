@@ -50,6 +50,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	final boolean addNonnullAnnotation;
 	final boolean dataRepository;
 	final String fullReturnType;
+	final boolean nullable;
 
 	AbstractQueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -63,7 +64,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
-			String fullReturnType) {
+			String fullReturnType,
+			boolean nullable) {
 		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.methodName = methodName;
 		this.paramNames = paramNames;
@@ -74,6 +76,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.dataRepository = dataRepository;
 		this.fullReturnType = fullReturnType;
+		this.nullable = nullable;
 	}
 
 	@Override
@@ -580,14 +583,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			|| !orderBys.isEmpty();
 	}
 
-	boolean unwrapIfNecessary(StringBuilder declaration, @Nullable String containerType, boolean unwrapped) {
-		if ( OPTIONAL.equals(containerType) || isJakartaCursoredPage(containerType) ) {
-			unwrapQuery( declaration, unwrapped );
-			unwrapped = true;
-		}
-		return unwrapped;
-	}
-
 	protected void executeSelect(
 			StringBuilder declaration,
 			List<String> paramTypes,
@@ -595,8 +590,15 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			boolean unwrapped,
 			boolean mustUnwrap) {
 		if ( containerType == null ) {
-			declaration
-					.append("\t\t\t.getSingleResult();");
+			if ( nullable ) {
+				unwrapQuery(declaration, unwrapped);
+				declaration
+						.append("\t\t\t.getSingleResultOrNull();");
+			}
+			else {
+				declaration
+						.append("\t\t\t.getSingleResult();");
+			}
 		}
 		else {
 			switch (containerType) {
@@ -612,6 +614,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					}
 					break;
 				case OPTIONAL:
+					unwrapQuery(declaration, unwrapped);
 					declaration
 							.append("\t\t\t.uniqueResultOptional();");
 					break;

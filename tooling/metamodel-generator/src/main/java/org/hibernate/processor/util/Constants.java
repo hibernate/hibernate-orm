@@ -130,6 +130,8 @@ public final class Constants {
 	public static final String OPTIONAL = "java.util.Optional";
 	public static final String STREAM = "java.util.stream.Stream";
 
+	public static final String NULLABLE = "jakarta.annotation.Nullable";
+
 	public static final String PANACHE_ORM_REPOSITORY_BASE = "io.quarkus.hibernate.orm.panache.PanacheRepositoryBase";
 	public static final String PANACHE_ORM_ENTITY_BASE = "io.quarkus.hibernate.orm.panache.PanacheEntityBase";
 	public static final String PANACHE_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase";

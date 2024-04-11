@@ -37,10 +37,11 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			boolean convertToDataExceptions,
 			List<Boolean> multivalued,
 			List<Boolean> paramPatterns,
-			String fullReturnType) {
+			String fullReturnType,
+			boolean nullable) {
 		super(annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
 				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, convertToDataExceptions,
-				fullReturnType);
+				fullReturnType, nullable);
 		this.multivalued = multivalued;
 		this.paramPatterns = paramPatterns;
 	}

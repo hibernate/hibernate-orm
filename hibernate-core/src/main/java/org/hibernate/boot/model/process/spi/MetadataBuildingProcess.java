@@ -53,6 +53,7 @@ import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
 import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
+import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -472,7 +473,12 @@ public class MetadataBuildingProcess {
 		// Perform "categorization" as a means of verifying that process succeeds.
 		// At the moment we throw away the result of that process, but the next step in 7,0 is to leverage the categorization model
 		// todo (7.0) : use this categorization model
-		makeSureCategorizationSucceeds( classDetailsRegistry, sourceModelBuildingContext, modelCategorizationCollector );
+		// 		- also, its really the caller(s) of this `#processManagedResources` method that would be doing this
+		final Set<EntityHierarchy> entityHierarchies = makeSureCategorizationSucceeds(
+				classDetailsRegistry,
+				sourceModelBuildingContext,
+				modelCategorizationCollector
+		);
 
 		return new DomainModelSource(
 				classDetailsRegistry.makeImmutableCopy(),
@@ -484,7 +490,7 @@ public class MetadataBuildingProcess {
 		);
 	}
 
-	private static void makeSureCategorizationSucceeds(
+	private static Set<EntityHierarchy> makeSureCategorizationSucceeds(
 			ClassDetailsRegistry classDetailsRegistry,
 			SourceModelBuildingContext sourceModelBuildingContext,
 			DomainModelCategorizationCollector modelCategorizationCollector) {
@@ -499,7 +505,7 @@ public class MetadataBuildingProcess {
 				modelCategorizationCollector.getGlobalRegistrations()
 		);
 
-		org.hibernate.boot.models.categorize.internal.EntityHierarchyBuilder.createEntityHierarchies(
+		return org.hibernate.boot.models.categorize.internal.EntityHierarchyBuilder.createEntityHierarchies(
 				modelCategorizationCollector.getRootEntities(),
 				null,
 				modelCategorizationContext

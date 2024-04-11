@@ -31,7 +31,6 @@ import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.Type;
 import org.hibernate.boot.internal.AnyKeyType;
-import org.hibernate.boot.models.AccessTypePlacementException;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
@@ -76,20 +75,16 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			ClassAttributeAccessType classLevelAccessType) {
 		final LinkedHashMap<String,MemberDetails> results = new LinkedHashMap<>();
 
-//		if ( classLevelAccessType.isExplicit() ) {
-			// within a class which has an explicit class-level @Access, individual
-			// attributes may override the class-level access type by an explicit @Access
-			// local to the member - process those
-			processAttributeLevelAccess(
-					results::put,
-					transientFieldChecker,
-					transientMethodChecker,
-					classDetails,
-					classLevelAccessType
-			);
-//		}
+		// process members with an explicit @Access
+		processAttributeLevelAccess(
+				results::put,
+				transientFieldChecker,
+				transientMethodChecker,
+				classDetails,
+				classLevelAccessType
+		);
 
-		// process members based on the class-level access
+		// process members based on the class-level access-type
 		processClassLevelAccess(
 				results::containsKey,
 				results::put,
@@ -155,9 +150,6 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			checkForMisplacedAnnotations( classDetails, memberDetails, classLevelAccessType );
 			return;
 		}
-//
-//		final AccessType attributeAccessType = access.getAttributeValue( "value" );
-//		validateAttributeLevelAccess( memberDetails, attributeAccessType, classDetails, classLevelAccessType );
 
 		memberConsumer.accept( memberDetails.resolveAttributeName(), memberDetails );
 	}
@@ -204,21 +196,11 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 		}
 	}
 
-	private <M extends MemberDetails> boolean matchesAccessType(
-			M memberDetails,
-			ClassAttributeAccessType classLevelAccessType) {
-		assert classLevelAccessType != null;
-		if ( classLevelAccessType.getJpaAccessType() == AccessType.FIELD ) {
-			return memberDetails.getKind() == AnnotationTarget.Kind.FIELD;
-		}
-		else {
-			return memberDetails.getKind() == AnnotationTarget.Kind.METHOD
-					&& ( (MethodDetails) memberDetails ).getMethodKind() == MethodDetails.MethodKind.GETTER;
-		}
-	}
-
 	private <M extends MemberDetails> boolean containsMappingAnnotations(M memberDetails) {
 		// todo (7.0) : should we leverage JpaAnnotations and HibernateAnnotations to perform a more complete check?
+		//		a "difficulty" there is that not all annotations are "mapping annotations"; its objectively wrong
+		//		for these members to have any of the non-mapping annotations as well, but the additional checks obviously
+		//		take time/perf
 		return memberDetails.hasAnnotationUsage( Id.class )
 				|| memberDetails.hasAnnotationUsage( EmbeddedId.class )
 				|| memberDetails.hasAnnotationUsage( Version.class )
@@ -252,27 +234,6 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 				|| memberDetails.hasAnnotationUsage( JavaType.class )
 				|| memberDetails.hasAnnotationUsage( JdbcType.class )
 				|| memberDetails.hasAnnotationUsage( JdbcTypeCode.class );
-	}
-
-	public static void validateAttributeLevelAccess(
-			MemberDetails annotationTarget,
-			AccessType attributeAccessType,
-			ClassDetails classDetails,
-			ClassAttributeAccessType classLevelAccessType) {
-		// Apply the checks defined in section `2.3.2 Explicit Access Type` of the persistence specification
-
-		// Mainly, it is never legal to:
-		//		1. specify @Access(FIELD) on a getter
-		//		2. specify @Access(PROPERTY) on a field
-
-		if ( ( attributeAccessType == AccessType.FIELD && !annotationTarget.isField() )
-				|| ( attributeAccessType == AccessType.PROPERTY && annotationTarget.isField() ) ) {
-			throw new AccessTypePlacementException( classDetails, annotationTarget );
-		}
-	}
-
-	private boolean isAnnotationPlacementComplianceEnabled() {
-		return false;
 	}
 
 	private void processClassLevelAccess(

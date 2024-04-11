@@ -6,7 +6,10 @@
  */
 package org.hibernate.boot.models.categorize.internal;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
@@ -19,6 +22,13 @@ import org.hibernate.models.spi.AnnotationDescriptor;
  * @author Steve Ebersole
  */
 public class OrmAnnotationHelper {
+	public static final List<AnnotationDescriptor<? extends Annotation>> ALL_ANNOTATIONS = buildAllAnnotationsList();
+
+	private static List<AnnotationDescriptor<? extends Annotation>> buildAllAnnotationsList() {
+		final ArrayList<AnnotationDescriptor<? extends Annotation>> descriptors = new ArrayList<>();
+		forEachOrmAnnotation( descriptors::add );
+		return descriptors;
+	}
 
 	public static void forEachOrmAnnotation(Consumer<AnnotationDescriptor<?>> consumer) {
 		JpaAnnotations.forEachAnnotation( consumer );

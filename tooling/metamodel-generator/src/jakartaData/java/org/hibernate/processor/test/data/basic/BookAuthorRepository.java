@@ -75,6 +75,9 @@ public interface BookAuthorRepository {
 	Book byTitleAndDate(String title, LocalDate publicationDate);
 
 	@Find
+	Optional<Book> maybeByTitleAndDate(String title, LocalDate publicationDate);
+
+	@Find
 	Book bookById(@By("isbn") String id);
 
 	@Find

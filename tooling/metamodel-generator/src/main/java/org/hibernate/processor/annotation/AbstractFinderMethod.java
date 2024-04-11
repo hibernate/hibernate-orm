@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
 
 import javax.lang.model.element.ExecutableElement;
@@ -19,6 +20,7 @@ import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFrom
  * @author Gavin King
  */
 public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
+	final @Nullable String containerType;
 	final String entity;
 	final List<String> fetchProfiles;
 
@@ -27,6 +29,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			ExecutableElement method,
 			String methodName,
 			String entity,
+			@Nullable String containerType,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
@@ -46,6 +49,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				convertToDataExceptions,
 				fullReturnType );
 		this.entity = entity;
+		this.containerType = containerType;
 		this.fetchProfiles = fetchProfiles;
 	}
 

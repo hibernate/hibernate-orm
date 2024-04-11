@@ -6,6 +6,8 @@
  */
 package org.hibernate.processor.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
@@ -24,6 +26,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			AnnotationMetaEntity annotationMetaEntity,
 			ExecutableElement method,
 			String methodName, String entity,
+			@Nullable String containerType, //must be null or Optional
 			List<String> paramNames, List<String> paramTypes,
 			boolean belongsToDao,
 			String sessionType,
@@ -32,8 +35,8 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
 			String fullReturnType) {
-		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType );
+		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+				fetchProfiles, paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType );
 		int idParameter = idParameter(paramNames, paramTypes);
 		this.paramName = paramNames.get(idParameter);
 		this.paramType = paramTypes.get(idParameter);
@@ -81,7 +84,9 @@ public class IdFinderMethod extends AbstractFinderMethod {
 	}
 
 	private void throwIfNull(StringBuilder declaration) {
-		if ( isUsingStatelessSession() ) {
+		if ( containerType == null ) {
+			declaration
+					.append(";\n");
 			if (dataRepository) {
 				declaration
 						.append("\t\tif (_result == null) throw new ")
@@ -111,20 +116,26 @@ public class IdFinderMethod extends AbstractFinderMethod {
 						.append("\treturn _result;\n");
 			}
 		}
+		else {
+			declaration
+					.append(");\n");
+		}
 	}
 
 	private void varOrReturn(StringBuilder declaration) {
 		if (dataRepository) {
 			declaration
-					.append("\ttry {\n");
+					.append("\ttry {\n\t");
 		}
-		if ( isUsingStatelessSession() ) {
+		if ( containerType == null ) {
 			declaration
-					.append("\t\tvar _result = ");
+					.append("\tvar _result = ");
 		}
 		else {
 			declaration
-					.append("\t\treturn ");
+					.append("\treturn ")
+					.append(annotationMetaEntity.staticImport(containerType, "ofNullable"))
+					.append('(');
 		}
 		declaration
 				.append(sessionName);
@@ -140,7 +151,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append("\t\t\t.load(")
 				.append(paramName)
-				.append(");\n");
+				.append(")");
 	}
 
 	private void findWithNoFetchProfiles(StringBuilder declaration) {
@@ -161,7 +172,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					.append(')');
 		}
 		declaration
-				.append(");\n");
+				.append(")");
 	}
 
 	private static void nullCheck(StringBuilder declaration, String parameterName) {

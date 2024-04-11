@@ -31,14 +31,14 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.transaction.SystemException;
@@ -173,37 +173,50 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void upsert(String entityName, Object entity) {
 		checkOpen();
 		final EntityPersister persister = getEntityPersister( entityName, entity );
-		Object id = persister.getIdentifier( entity, this );
-		Boolean knownTransient = persister.isTransient( entity, this );
-		if ( knownTransient!=null && knownTransient ) {
-			throw new TransientObjectException(
-					"Object passed to upsert() has a null identifier: "
-							+ persister.getEntityName() );
-//			final Generator generator = persister.getGenerator();
-//			if ( !generator.generatedOnExecution() ) {
-//				id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
-//			}
-		}
+		final Object id = idToUpsert( entity, persister );
 		final Object[] state = persister.getValues( entity );
-		final Object oldVersion;
+		final Object oldVersion = versionToUpsert( entity, persister, state );
+		persister.merge( id, state, null, false, null, oldVersion, entity, null, this );
+	}
+
+	private Object versionToUpsert(Object entity, EntityPersister persister, Object[] state) {
 		if ( persister.isVersioned() ) {
-			oldVersion = persister.getVersion( entity );
-			if ( oldVersion == null ) {
+			final Object oldVersion = persister.getVersion( entity );
+			final Boolean knownTransient =
+					persister.getVersionMapping()
+							.getUnsavedStrategy()
+							.isUnsaved( oldVersion );
+			if ( knownTransient != null && knownTransient ) {
 				if ( seedVersion( entity, state, persister, this ) ) {
 					persister.setValues( entity, state );
 				}
+				// this is a nonsense but avoids setting version restriction
+				// parameter to null later on deep in the guts
+				return state[persister.getVersionProperty()];
 			}
 			else {
 				final Object newVersion = incrementVersion( entity, oldVersion, persister, this );
 				setVersion( state, newVersion, persister );
 				persister.setValues( entity, state );
+				return oldVersion;
 			}
 		}
 		else {
-			oldVersion = null;
+			return null;
 		}
-		persister.merge( id, state, null, false, null, oldVersion, entity, null, this );
-//		persister.setIdentifier( entity, id, this );
+	}
+
+	private Object idToUpsert(Object entity, EntityPersister persister) {
+		final Object id = persister.getIdentifier( entity, this );
+		final Boolean unsaved =
+				persister.getIdentifierMapping()
+						.getUnsavedStrategy()
+						.isUnsaved( id );
+		if ( unsaved != null && unsaved ) {
+			throw new TransientObjectException( "Object passed to upsert() has an unsaved identifier value: "
+					+ persister.getEntityName() );
+		}
+		return id;
 	}
 
 

@@ -279,14 +279,14 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						.append(" exception) {\n")
 						.append("\t\tthrow new ")
 						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
-						.append("(exception);\n")
+						.append("(exception.getMessage(), exception);\n")
 						.append("\t}\n")
 						.append("\tcatch (")
 						.append(annotationMetaEntity.importType("jakarta.persistence.NonUniqueResultException"))
 						.append(" exception) {\n")
 						.append("\t\tthrow new ")
 						.append(annotationMetaEntity.importType("jakarta.data.exceptions.NonUniqueResultException"))
-						.append("(exception);\n")
+						.append("(exception.getMessage(), exception);\n")
 						.append("\t}\n");
 			}
 			declaration
@@ -295,7 +295,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					.append(" exception) {\n")
 					.append("\t\tthrow new ")
 					.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
-					.append("(exception);\n")
+					.append("(exception.getMessage(), exception);\n")
 					.append("\t}\n");
 		}
 	}

@@ -684,6 +684,7 @@ public class SqlTypes {
 			case Types.BINARY:
 			case Types.VARBINARY:
 			case Types.LONGVARBINARY:
+				return true;
 			default:
 				return false;
 		}

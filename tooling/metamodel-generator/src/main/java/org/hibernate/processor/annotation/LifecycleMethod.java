@@ -62,12 +62,12 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		declaration.append("\t}\n");
 		if ( operationName.equals("insert") ) {
 			convertException(declaration,
-					"jakarta.persistence.EntityExistsException",
+					"org.hibernate.exception.ConstraintViolationException",
 					"jakarta.data.exceptions.EntityExistsException");
 		}
 		else {
 			convertException(declaration,
-					"jakarta.persistence.OptimisticLockException",
+					"org.hibernate.StaleStateException",
 					"jakarta.data.exceptions.OptimisticLockingFailureException");
 		}
 		convertException(declaration,

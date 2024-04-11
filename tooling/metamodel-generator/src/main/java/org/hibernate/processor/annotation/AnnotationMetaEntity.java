@@ -1482,9 +1482,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR );
 			}
 			else {
-				if ( containerType != null ) {
+				if ( containerType != null
+						&& !containerType.getQualifiedName().contentEquals(OPTIONAL) ) {
 					// multiple results, so it has to be a criteria finder
-					// or, alternatively, Optional, which for now we treat similarly
 					createCriteriaFinder( method, declaredType, containerType.toString(), entity );
 				}
 				else {
@@ -1497,6 +1497,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							message( parameter, "ordering would have no effect", Diagnostic.Kind.ERROR);
 						}
 					}
+					final String containerTypeName = containerType==null ? null : OPTIONAL;
 					final long parameterCount =
 							method.getParameters().stream()
 									.filter(AnnotationMetaEntity::isFinderParameterMappingToAttribute)
@@ -1506,10 +1507,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							message( method, "missing parameter", Diagnostic.Kind.ERROR );
 							break;
 						case 1:
-							createSingleParameterFinder( method, declaredType, entity );
+							createSingleParameterFinder( method, declaredType, entity, containerTypeName );
 							break;
 						default:
-							createMultipleParameterFinder( method, declaredType, entity );
+							createMultipleParameterFinder( method, declaredType, entity, containerTypeName );
 					}
 				}
 			}
@@ -1771,7 +1772,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private void createMultipleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
+	private void createMultipleParameterFinder(
+			ExecutableElement method, TypeMirror returnType, TypeElement entity, @Nullable String containerType) {
 		final String methodName = method.getSimpleName().toString();
 		final List<String> paramNames = parameterNames( method, entity );
 		final List<String> paramTypes = parameterTypes( method );
@@ -1796,6 +1798,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							this, method,
 							methodName,
 							returnType.toString(),
+							containerType,
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),
@@ -1816,7 +1819,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							this, method,
 							methodName,
 							returnType.toString(),
-							null,
+							containerType,
 							paramNames,
 							paramTypes,
 							parameterNullability(method, entity),
@@ -1835,7 +1838,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private void createSingleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
+	private void createSingleParameterFinder(
+			ExecutableElement method, TypeMirror returnType, TypeElement entity, @Nullable String containerType) {
 		final String methodName = method.getSimpleName().toString();
 		final VariableElement parameter =
 				method.getParameters().stream()
@@ -1855,6 +1859,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									this, method,
 									methodName,
 									returnType.toString(),
+									containerType,
 									paramNames,
 									paramTypes,
 									repository,
@@ -1873,6 +1878,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									this, method,
 									methodName,
 									returnType.toString(),
+									containerType,
 									paramNames,
 									paramTypes,
 									parameterNullability(method, entity),
@@ -1894,7 +1900,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									this, method,
 									methodName,
 									returnType.toString(),
-									null,
+									containerType,
 									paramNames,
 									paramTypes,
 									parameterNullability(method, entity),

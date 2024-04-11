@@ -16,7 +16,6 @@ import java.util.List;
  */
 public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 
-	private final @Nullable String containerType;
 	private final List<Boolean> paramNullability;
 
 	CriteriaFinderMethod(
@@ -36,10 +35,9 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
 			String fullReturnType) {
-		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, multivalued, paramPatterns,
-				fullReturnType);
-		this.containerType = containerType;
+		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, multivalued,
+				paramPatterns, fullReturnType);
 		this.paramNullability = paramNullability;
 	}
 

@@ -6,6 +6,8 @@
  */
 package org.hibernate.processor.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
@@ -22,6 +24,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			AnnotationMetaEntity annotationMetaEntity,
 			ExecutableElement method,
 			String methodName, String entity,
+			@Nullable String containerType, //must be null or Optional
 			List<String> paramNames, List<String> paramTypes,
 			List<Boolean> paramNullability,
 			boolean belongsToDao,
@@ -31,8 +34,8 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
 			String fullReturnType) {
-		super( annotationMetaEntity, method, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType );
+		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+				fetchProfiles, paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType );
 		this.paramNullability = paramNullability;
 	}
 
@@ -85,8 +88,15 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 						.append(")\n");
 			}
 		}
-		declaration
-				.append("\t\t\t.load();\n");
+		if ( containerType == null ) {
+			//TODO we should probably throw if this returns null
+			declaration
+					.append("\t\t\t.load();\n");
+		}
+		else {
+			declaration
+					.append("\t\t\t.loadOptional();\n");
+		}
 	}
 
 	private void findReactively(StringBuilder declaration) {

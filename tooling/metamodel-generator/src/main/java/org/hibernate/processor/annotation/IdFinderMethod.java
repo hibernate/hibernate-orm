@@ -86,7 +86,11 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				declaration
 						.append("\t\tif (_result == null) throw new ")
 						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
-						.append("(new ")
+						.append("(\"No '")
+						.append(annotationMetaEntity.importType(entity))
+						.append("' for given id [\" + ")
+						.append(paramName)
+						.append(" + \"]\",\n\t\t\t\tnew ")
 						.append(annotationMetaEntity.importType("org.hibernate.ObjectNotFoundException"))
 						.append("((Object) ")
 						.append(paramName)

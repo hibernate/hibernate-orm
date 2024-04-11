@@ -1,5 +1,6 @@
 package org.hibernate.processor.test.dao;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.Session;
 import org.hibernate.annotations.processing.Find;
@@ -16,6 +17,9 @@ public interface StatefulDao {
 
     @Find
     Book getBook(String isbn);
+
+    @Find @Nullable
+    Book getBookOrNull(String isbn);
 
     @Find
     Optional<Book> getBookMaybe(String isbn);

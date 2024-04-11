@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -214,6 +215,7 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
+import org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -1498,12 +1500,24 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		if ( !dynamicInstantiation.checkInstantiation( creationContext.getTypeConfiguration() ) ) {
-			final String typeName = dynamicInstantiation.getJavaType().getSimpleName();
+			final Class<?> type = dynamicInstantiation.getJavaType();
 			if ( dynamicInstantiation.isFullyAliased() ) {
-				throw new SemanticException( "Missing constructor or attributes for injection into type '" + typeName + "'", query );
+				throw new SemanticException("Missing constructor or attributes for injection into type [" + type + "]." +
+						"Expected arguments are: " + dynamicInstantiation.argumentTypes(), query);
 			}
 			else {
-				throw new SemanticException( "Missing constructor for type '" + typeName  + "'", query );
+				List<InstantiationHelper.MismatchConstructorFieldPositionInfo> list = dynamicInstantiation.findMismatchConstructorFieldPositions(creationContext.getTypeConfiguration());
+
+				String conjecture = "";
+				if (list != null && list.isEmpty() == false) {
+					conjecture = " The presumed mismatch field position is: " +
+							list.stream()
+									.map(InstantiationHelper.MismatchConstructorFieldPositionInfo::toString)
+									.collect(Collectors.joining(","));
+				}
+
+				throw new SemanticException("Unable to locate appropriate constructor on class [" + type + "]. " +
+						"Expected arguments are: " + dynamicInstantiation.argumentTypes() + conjecture, query);
 			}
 		}
 

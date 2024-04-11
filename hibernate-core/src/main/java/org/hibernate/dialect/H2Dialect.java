@@ -697,6 +697,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public String getTemporaryTableCreateOptions() {
+		return "TRANSACTIONAL";
+	}
+
+	@Override
 	public TemporaryTableKind getSupportedTemporaryTableKind() {
 		return TemporaryTableKind.LOCAL;
 	}

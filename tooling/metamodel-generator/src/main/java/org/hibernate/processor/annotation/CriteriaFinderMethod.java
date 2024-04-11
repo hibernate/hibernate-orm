@@ -34,10 +34,11 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
-			String fullReturnType) {
+			String fullReturnType,
+			boolean nullable) {
 		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
 				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, multivalued,
-				paramPatterns, fullReturnType);
+				paramPatterns, fullReturnType, nullable );
 		this.paramNullability = paramNullability;
 	}
 
@@ -60,7 +61,8 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		castResult( declaration );
 		createQuery( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = specialNeeds( declaration );
+		boolean unwrapped = !isUsingEntityManager();
+		unwrapped = enableFetchProfile( declaration, unwrapped );
 		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
 		execute( declaration, paramTypes, unwrapped );
 	}
@@ -73,13 +75,6 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 					.append(annotationMetaEntity.importType(entity))
 					.append(") ");
 		}
-	}
-
-	private boolean specialNeeds(StringBuilder declaration) {
-		boolean unwrapped = !isUsingEntityManager();
-		unwrapped = enableFetchProfile( declaration, unwrapped );
-		unwrapped = unwrapIfNecessary( declaration, containerType, unwrapped );
-		return unwrapped;
 	}
 
 	private void execute(StringBuilder declaration, List<String> paramTypes, boolean unwrapped) {

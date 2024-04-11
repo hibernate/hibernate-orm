@@ -39,7 +39,8 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean convertToDataExceptions,
-			String fullReturnType) {
+			String fullReturnType,
+			boolean nullable) {
 		super( annotationMetaEntity, method,
 				methodName,
 				paramNames, paramTypes, entity,
@@ -47,7 +48,8 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				belongsToDao, orderBys,
 				addNonnullAnnotation,
 				convertToDataExceptions,
-				fullReturnType );
+				fullReturnType,
+				nullable );
 		this.entity = entity;
 		this.containerType = containerType;
 		this.fetchProfiles = fetchProfiles;

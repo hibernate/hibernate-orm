@@ -1561,7 +1561,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						orderByList( method, entity ),
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
-						fullReturnType(method)
+						fullReturnType(method),
+						hasAnnotation(method, NULLABLE)
 				)
 		);
 	}
@@ -1832,7 +1833,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							orderByList( method, entity ),
 							context.addNonnullAnnotation(),
 							jakartaDataRepository,
-							fullReturnType(method)
+							fullReturnType(method),
+							hasAnnotation(method, NULLABLE)
 					)
 			);
 		}
@@ -1868,7 +1870,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									profiles,
 									context.addNonnullAnnotation(),
 									jakartaDataRepository,
-									fullReturnType(method)
+									fullReturnType(method),
+									hasAnnotation(method, NULLABLE)
 							)
 					);
 					break;
@@ -1916,7 +1919,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									orderByList( method, entity ),
 									context.addNonnullAnnotation(),
 									jakartaDataRepository,
-									fullReturnType(method)
+									fullReturnType(method),
+									hasAnnotation(method, NULLABLE)
 							)
 					);
 					break;
@@ -2275,7 +2279,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						orderBys,
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
-						fullReturnType(method)
+						fullReturnType(method),
+						hasAnnotation(method, NULLABLE)
 				);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
 	}

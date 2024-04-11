@@ -192,7 +192,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				.append(" exception) {\n")
 				.append("\t\tthrow new ")
 				.append(annotationMetaEntity.importType(convertedException))
-				.append("(exception);\n")
+				.append("(exception.getMessage(), exception);\n")
 				.append("\t}\n");
 	}
 

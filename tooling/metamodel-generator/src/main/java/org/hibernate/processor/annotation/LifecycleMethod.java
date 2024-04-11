@@ -55,7 +55,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	public String getAttributeDeclarationString() {
 		StringBuilder declaration = new StringBuilder();
 		preamble(declaration);
-		nullCheck(declaration);
+		nullCheck(declaration, parameterName);
 		declaration.append("\ttry {\n");
 		delegateCall(declaration);
 		returnArgument(declaration);
@@ -174,15 +174,6 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 					? entityType
 					: "void";
 		}
-	}
-
-	private void nullCheck(StringBuilder declaration) {
-		declaration
-				.append("\tif (")
-				.append(parameterName)
-				.append(" == null) throw new IllegalArgumentException(\"Null ")
-				.append(parameterName)
-				.append("\");\n");
 	}
 
 	private void convertException(StringBuilder declaration, String exception, String convertedException) {

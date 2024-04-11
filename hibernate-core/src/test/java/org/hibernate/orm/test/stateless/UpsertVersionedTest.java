@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 public class UpsertVersionedTest {
     @Test void test(SessionFactoryScope scope) {
         scope.inStatelessTransaction(s-> {
-            s.upsert(new Record(123L,0L,"hello earth"));
+            s.upsert(new Record(123L,null,"hello earth"));
             s.upsert(new Record(456L,2L,"hello mars"));
         });
         scope.inStatelessTransaction(s-> {
@@ -28,6 +28,13 @@ public class UpsertVersionedTest {
         scope.inStatelessTransaction(s-> {
             assertEquals("goodbye earth",s.get(Record.class,123L).message);
             assertEquals("hello mars",s.get(Record.class,456L).message);
+        });
+        scope.inStatelessTransaction(s-> {
+            s.upsert(new Record(456L,4L,"goodbye mars"));
+        });
+        scope.inStatelessTransaction(s-> {
+            assertEquals("goodbye earth",s.get(Record.class,123L).message);
+            assertEquals("goodbye mars",s.get(Record.class,456L).message);
         });
     }
     @Entity

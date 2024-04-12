@@ -26,7 +26,7 @@ public abstract class AbstractType implements Type {
 	protected static final Size LEGACY_DICTATED_SIZE = new Size();
 
 	@Deprecated(forRemoval = true)
-	protected static final Size LEGACY_DEFAULT_SIZE = new Size( 19, 2, 255L, Size.LobMultiplier.NONE ); // to match legacy behavior
+	protected static final Size LEGACY_DEFAULT_SIZE = new Size( 19, 2, 255L ); // to match legacy behavior
 
 	@Override
 	public boolean isAssociationType() {

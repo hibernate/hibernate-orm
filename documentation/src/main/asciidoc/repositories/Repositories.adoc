@@ -283,7 +283,15 @@ However, Hibernate provides the `@Pattern` annotation to allow for "fuzzy" match
 [source,java]
 ----
 @Find
-List<Book> book(@Pattern String title);
+List<Book> books(@Pattern String title);
+----
+
+Furthermore, if the parameter type is a list or array of the entity field type, the resulting query has an `in` condition.
+
+[source,java]
+----
+@Find
+List<Book> books(String[] ibsn);
 ----
 ====
 

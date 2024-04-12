@@ -49,6 +49,8 @@ public class Author {
 }
 ----
 
+For more information about mapping entities, see the link:{doc-introduction-url}#entities[Introduction to Hibernate 6].
+
 [NOTE]
 ====
 Jakarta Data also works with entities defined using similarly-named annotations defined by Jakarta NoSQL.
@@ -64,6 +66,8 @@ JDQL is mostly relevant to non-relational datastores; an implementation of Jakar
 Indeed, Hibernate Data Repositories supports a _superset_ of JPQL.
 So, even though we put rather a large amount of effort into advocating, designing, and specifying JDQL, we won't talk much about it here.
 ====
+
+To learn more about HQL and JPQL, see the link:{doc-query-language-url}[Guide to Hibernate Query Language].
 
 This is where the similarity between Jakarta Persistence and Jakarta Data ends.
 The following table contrasts the two programming models.

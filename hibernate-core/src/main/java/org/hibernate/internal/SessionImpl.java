@@ -19,6 +19,7 @@ import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
@@ -944,6 +945,11 @@ public class SessionImpl
 	@Override @Deprecated
 	public Object load(String entityName, Object id) throws HibernateException {
 		return this.byId( entityName ).getReference( id );
+	}
+
+	@Override
+	public <E> List<E> findAll(Class<E> entityType, Object... ids) {
+		return this.byMultipleIds( entityType ).multiLoad( ids );
 	}
 
 	@Override

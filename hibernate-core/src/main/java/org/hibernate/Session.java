@@ -692,6 +692,26 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void clear();
 
 	/**
+	 * Return the persistent instances of the given entity class with the given identifiers
+	 * as a list. The position of an instance in the list matches the position of its identifier
+	 * in the given array, and the list contains a null value if there is no persistent instance
+	 * matching a given identifier. If an instance is already associated with the session, that
+	 * instance is returned. This method never returns an uninitialized instance.
+	 * <p>
+	 * Every object returned by {@code findAll()} is either an unproxied instance of the given
+	 * entity class, or a fully-fetched proxy object.
+	 *
+	 * @param entityType the entity type
+	 * @param ids the identifiers
+	 *
+	 * @return an ordered list of persistent instances, with null elements representing missing
+	 *         entities
+	 *
+	 * @since 6.5
+	 */
+	<E> List<E> findAll(Class<E> entityType, Object... ids);
+
+	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * or null if there is no such persistent instance. If the instance is already associated
 	 * with the session, return that instance. This method never returns an uninitialized
@@ -699,8 +719,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <p>
 	 * This operation is very similar to {@link #find(Class, Object)}.
 	 * <p>
-	 * The object returned by {@code get()} or {@code find() } is either an unproxied instance
-	 * of the given entity class, of a fully-fetched proxy object.
+	 * The object returned by {@code get()} or {@code find()} is either an unproxied instance
+	 * of the given entity class, or a fully-fetched proxy object.
 	 * <p>
 	 * This operation requests {@link LockMode#NONE}, that is, no lock, allowing the object
 	 * to be retrieved from the cache without the cost of database access. However, if it is

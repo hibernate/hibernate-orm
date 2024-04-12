@@ -1,5 +1,5 @@
-[[concepts]]
-== Concepts
+[[programming-model]]
+== Programming model
 
 Jakarta Data and Jakarta Persistence both represent data in a typesafe way, using _entity classes_.
 Since Hibernate's implementation of Jakarta Data is backed by access to a relational database, these entity classes are mapped using the annotations defined by Jakarta Persistence.

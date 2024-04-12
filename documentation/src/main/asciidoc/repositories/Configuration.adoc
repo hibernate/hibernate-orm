@@ -1,0 +1,87 @@
+== Configuration and integration
+
+Getting started with Hibernate Data Repositories involves the following steps:
+
+1. set up a project with Hibernate ORM and `HibernateProcessor`,
+2. configure a persistence unit, and then
+3. inject a repository using CDI or some other implementation of `jakarta.inject`.
+
+=== Project setup
+
+You'll need the following dependencies in your project:
+
+|===
+| Dependency | Explanation
+
+| `jakarta.data:jakarta.data-api` | The Jakarta Data API
+| `org.hibernate.orm:hibernate-core` | Hibernate ORM
+| `org.hibernate.orm:hibernate-jpamodelgen` | The annotation processor itself
+| `jakarta.validation:jakarta.validation-api` | Jakarta Bean Validation (optional)
+| `org.apache.logging.log4j:log4j-core` | log4j (optional)
+| `org.jboss.weld:weld-core-impl` | Weld CDI (for example)
+| `com.h2database:h2` | h2 database (for example)
+|===
+
+You'll need to configure the annotation processor to run when your project is compiled.
+In Gradle, for example, you'll need to use `annotationProcessor`.
+
+[source,groovy]
+----
+annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.5.0'
+----
+
+=== Configuring Hibernate ORM
+
+How you configure Hibernate depends on the environment you're running in, and on your preference:
+
+- in Java SE, we often just use `hibernate.properties`, but some people prefer to use `persistence.xml`, especially in case of multiple persistence units,
+- in Quarkus, use `application.properties`, and
+- in a Jakarta EE container, use `persistence.xml`.
+
+Here's a simple `hibernate.properties` file for h2 database, just to get you started.
+
+[source,properties]
+----
+# Database connection settings
+jakarta.persistence.jdbc.url=jdbc:h2:~/h2temp;DB_CLOSE_DELAY=-1
+jakarta.persistence.jdbc.user=sa
+jakarta.persistence.jdbc.pass=
+
+# Echo all executed SQL to console
+hibernate.show_sql=true
+hibernate.format_sql=true
+hibernate.highlight_sql=true
+
+# Automatically export the schema
+hibernate.hbm2ddl.auto=create
+----
+
+Please see the link:{doc-introduction-url}#configuration[Introduction to Hibernate 6] for more information about configuring Hibernate.
+
+[CAUTION]
+====
+Depending on the libraries in your build path, `HibernateProcessor` generates different code.
+For example, if Quarkus is on the build path, the repository implementation will be generated so to obtain the `StatelessSession` directly from CDI in a way which _only_ works in Quarkus.
+====
+
+If you have multiple persistence units, you'll need to disambiguate the persistence unit for a repository interface using `@Repository(dataStore="my-persistence-unit-name")`.
+
+=== Injecting a repository
+
+In principle, any implementation of `jakarta.inject` may be used to inject a repository implementation.
+
+[source,java]
+----
+@Inject Library library;
+----
+
+However, this code will fail if the repository implementation is not able to obtain a `StatelessSession` from the bean container.
+
+It's always possible to instantiate a repository implementation directly.
+
+[source,java]
+----
+Library library = new Library_(statelessSession);
+----
+
+This is useful for testing, or for executing in an environment with no support for `jakarta.inject`.

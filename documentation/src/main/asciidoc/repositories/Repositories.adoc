@@ -305,6 +305,14 @@ List<Book> book(@Pattern String title, Year yearPublished);
 
 In this case, _every_ argument must match the corresponding field of the entity.
 
+The `_` character in a parameter name may be used to navigate associations:
+
+[source,java]
+----
+@Find
+List<Book> booksPublishedBy(String publisher_name);
+----
+
 The `@OrderBy` annotation allows results to be sorted.
 
 [source,java]

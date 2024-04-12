@@ -12,6 +12,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A {@link jakarta.persistence.DiscriminatorColumn} annotation
@@ -19,6 +21,9 @@ import jakarta.persistence.DiscriminatorType;
  * @author Emmanuel Bernard
  */
 public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AnnotatedDiscriminatorColumn.class.getName() );
+
 	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "DTYPE";
 	public static final String DEFAULT_DISCRIMINATOR_TYPE = "string";
 	private static final long DEFAULT_DISCRIMINATOR_LENGTH = 31;
@@ -65,6 +70,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 			discriminatorType = discriminatorColumn.discriminatorType();
 			column.setImplicit( false );
 			if ( !discriminatorColumn.columnDefinition().isEmpty() ) {
+				LOG.columnDefinitionNotRecommended( discriminatorColumn.getClass().getSimpleName(), discriminatorColumn.columnDefinition(), "@JdbcTypeCode" );
 				column.setSqlType( discriminatorColumn.columnDefinition() );
 			}
 			if ( !discriminatorColumn.name().isEmpty() ) {

@@ -15,6 +15,8 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
@@ -44,6 +46,8 @@ import static org.hibernate.internal.util.StringHelper.unquote;
  * @author Emmanuel Bernard
  */
 public class AnnotatedJoinColumn extends AnnotatedColumn {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AnnotatedJoinColumn.class.getName() );
 
 	private String referencedColumn;
 
@@ -231,11 +235,17 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		if ( primaryKeyJoinColumn != null ) {
 			columnName = primaryKeyJoinColumn.name();
 			columnDefinition = primaryKeyJoinColumn.columnDefinition();
+			if ( !columnDefinition.isEmpty() ) {
+				LOG.columnDefinitionNotRecommended( primaryKeyJoinColumn.getClass().getSimpleName(), primaryKeyJoinColumn.columnDefinition(), "@JdbcTypeCode" );
+			}
 			referencedColumnName = primaryKeyJoinColumn.referencedColumnName();
 		}
 		else {
 			columnName = joinColumn.name();
 			columnDefinition = joinColumn.columnDefinition();
+			if ( !columnDefinition.isEmpty() ) {
+				LOG.columnDefinitionNotRecommended( joinColumn.getClass().getSimpleName(), joinColumn.columnDefinition(), "@JdbcTypeCode" );
+			}
 			referencedColumnName = joinColumn.referencedColumnName();
 		}
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();

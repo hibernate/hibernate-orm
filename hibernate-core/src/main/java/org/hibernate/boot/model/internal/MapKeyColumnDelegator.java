@@ -10,12 +10,17 @@ import java.lang.annotation.Annotation;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MapKeyColumn;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings({ "ClassExplicitlyAnnotation" })
 public class MapKeyColumnDelegator implements Column {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MapKeyColumnDelegator.class );
+
 	private final MapKeyColumn column;
 
 	public MapKeyColumnDelegator(MapKeyColumn column) {
@@ -49,6 +54,9 @@ public class MapKeyColumnDelegator implements Column {
 
 	@Override
 	public String columnDefinition() {
+		if ( !column.columnDefinition().isEmpty() ) {
+			LOG.columnDefinitionNotRecommended( column.getClass().getSimpleName(), column.columnDefinition(), "@MapKeyJdbcTypeCode" );
+		}
 		return column.columnDefinition();
 	}
 

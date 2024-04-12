@@ -11,6 +11,8 @@ import java.util.Map;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Join;
 
 import jakarta.persistence.OrderColumn;
@@ -23,6 +25,9 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  * @author inger
  */
 public class IndexColumn extends AnnotatedColumn {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IndexColumn.class );
+
 	private int base;
 
 	public IndexColumn() {
@@ -101,6 +106,9 @@ public class IndexColumn extends AnnotatedColumn {
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
 		if ( orderColumn != null ) {
+			if ( !orderColumn.columnDefinition().isEmpty() ) {
+				LOG.columnDefinitionNotRecommended( orderColumn.getClass().getSimpleName(), orderColumn.columnDefinition(), "@ListIndexJdbcTypeCode" );
+			}
 			final String sqlType = nullIfEmpty( orderColumn.columnDefinition() );
 			final String name = orderColumn.name().isEmpty()
 					? inferredData.getPropertyName() + "_ORDER"

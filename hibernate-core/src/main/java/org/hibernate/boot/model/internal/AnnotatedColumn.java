@@ -749,8 +749,11 @@ public class AnnotatedColumn {
 	}
 
 	private static String getSqlType(MetadataBuildingContext context, jakarta.persistence.Column column) {
-		return column.columnDefinition().isEmpty() ? null
-				: context.getObjectNameNormalizer().applyGlobalQuoting( column.columnDefinition() );
+		if ( column.columnDefinition().isEmpty() ) {
+			return null;
+		}
+		LOG.columnDefinitionNotRecommended( column.getClass().getSimpleName(), column.columnDefinition(), "@JdbcTypeCode" );
+		return context.getObjectNameNormalizer().applyGlobalQuoting(column.columnDefinition());
 	}
 
 	private static AnnotatedColumn buildColumn(

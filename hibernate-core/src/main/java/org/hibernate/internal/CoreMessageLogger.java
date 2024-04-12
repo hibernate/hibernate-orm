@@ -1804,4 +1804,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "UCP properties were encountered, but the UCP ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
 		id = 517)
 	void ucpProviderClassNotFound();
+
+	@LogMessage(level = WARN)
+	@Message(value = "Hibernate ORM recommend you to replace @%s(columnDefinition=\"%s\") with %s if you want to specify data type other than inferred.",
+			id = 518)
+	void columnDefinitionNotRecommended(String annotationType, String columnDefinition, String replacement);
 }

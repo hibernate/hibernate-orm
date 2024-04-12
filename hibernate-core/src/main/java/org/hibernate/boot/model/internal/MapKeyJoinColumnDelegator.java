@@ -12,12 +12,17 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyJoinColumn;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings({ "ClassExplicitlyAnnotation" })
 public class MapKeyJoinColumnDelegator implements JoinColumn {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MapKeyJoinColumnDelegator.class );
+
 	private final MapKeyJoinColumn column;
 
 	public MapKeyJoinColumnDelegator(MapKeyJoinColumn column) {
@@ -56,6 +61,9 @@ public class MapKeyJoinColumnDelegator implements JoinColumn {
 
 	@Override
 	public String columnDefinition() {
+		if ( !column.columnDefinition().isEmpty() ) {
+			LOG.columnDefinitionNotRecommended( column.getClass().getSimpleName(), column.columnDefinition(), "@MapKeyJdbcTypeCode" );
+		}
 		return column.columnDefinition();
 	}
 

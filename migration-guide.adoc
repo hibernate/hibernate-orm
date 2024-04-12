@@ -32,12 +32,18 @@ those intermediate forms.
 
 For 6.5 this behavior is disabled by default.  To opt-in,
 
-[source]
+[source,properties]
 ----
-hibernate.type.prefer_java_type_jdbc_types=true
+hibernate.type.java_time_use_direct_jdbc=true
 ----
 
+NOTE: The name of this setting has been changed from `hibernate.type.prefer_java_type_jdbc_types` as first introduced in 6.5 CR1 to avoid confusion with the numerous `hibernate.type.prefer_<xyz>` settings.
+
+IMPORTANT: This feature is known to not work with the Sybase jConnect driver despite
+this feature being part of JDBC since 4.2 (Java 8).  We have notified the Sybase development team, but this seems unlikely to change.
+
 It is expected the default will flip for 7.0.
+
 
 [[query-cache-layout]]
 == Configurable Query Cache Layout

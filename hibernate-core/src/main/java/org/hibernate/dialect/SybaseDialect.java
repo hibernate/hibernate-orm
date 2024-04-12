@@ -141,6 +141,23 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public int resolveSqlTypeLength(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			int displaySize) {
+		// Sybase jconnect driver reports the "actual" precision in the display size
+		switch ( jdbcTypeCode ) {
+			case Types.VARCHAR:
+			case Types.REAL:
+			case Types.DOUBLE:
+				return displaySize;
+		}
+		return super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
+	}
+
+	@Override
 	public SqmTranslatorFactory getSqmTranslatorFactory() {
 		return new StandardSqmTranslatorFactory() {
 			@Override

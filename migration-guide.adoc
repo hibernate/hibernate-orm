@@ -1,168 +1,18 @@
-= 6.5 Migration Guide
+= 6.6 Migration Guide
 :toc:
 :toclevels: 4
 :docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/6.5
+:versionDocBase: {docsBase}/6.6
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {versionDocBase}/javadocs
-:fn-instant: footnote:instant[JDBC 4.2, curiously, does not define support for Instant to be directly marshalled through the driver.]
 
-This guide discusses migration to Hibernate ORM version 6.5. For migration from
+This guide discusses migration to Hibernate ORM version 6.6. For migration from
 earlier versions, see any other pertinent migration guides as well.
 
+* link:{docsBase}/6.5/migration-guide/migration-guide.html[6.5 Migration guide]
 * link:{docsBase}/6.4/migration-guide/migration-guide.html[6.4 Migration guide]
 * link:{docsBase}/6.3/migration-guide/migration-guide.html[6.3 Migration guide]
 * link:{docsBase}/6.2/migration-guide/migration-guide.html[6.2 Migration guide]
 * link:{docsBase}/6.1/migration-guide/migration-guide.html[6.1 Migration guide]
 * link:{docsBase}/6.0/migration-guide/migration-guide.html[6.0 Migration guide]
 
-
-[[java-time]]
-== Java Time Handling
-
-6.5 adds support for marshalling Java Time objects directly through the JDBC driver as defined by JDBC 4.2.
-In previous versions, Hibernate would handle Java Time objects using `java.sql.Date`, `java.sql.Time` or
-`java.sql.Timestamp` references as intermediate forms.
-
-Another behavioral change with this is handling for timezones.  `OffsetDateTime`, `OffsetTime` and
-`ZonedDateTime` all encode explicit timezone information.  With direct marshalling, Hibernate simply
-passes along the value as-is.  In the legacy behavior, since the `java.sql` variants do not
-encode timezone information, Hibernate generally has to specially handle timezones when converting to
-those intermediate forms.
-
-For 6.5 this behavior is disabled by default.  To opt-in,
-
-[source,properties]
-----
-hibernate.type.java_time_use_direct_jdbc=true
-----
-
-NOTE: The name of this setting has been changed from `hibernate.type.prefer_java_type_jdbc_types` as first introduced in 6.5 CR1 to avoid confusion with the numerous `hibernate.type.prefer_<xyz>` settings.
-
-IMPORTANT: This feature is known to not work with the Sybase jConnect driver despite
-this feature being part of JDBC since 4.2 (Java 8).  We have notified the Sybase development team, but this seems unlikely to change.
-
-It is expected the default will flip for 7.0.
-
-
-[[query-cache-layout]]
-== Configurable Query Cache Layout
-
-In Hibernate ORM 6.0 the query cache layout changed from a "shallow" representation of entities and collections,
-to a "full" representation. This was done to support re-materializing join fetched data from the query cache data
-without hitting the database.  Storing the full data in the query cache leads to a higher memory consumption,
-which in turn might also hurt application throughput due to a higher garbage collection activity.
-
-6.5 adds the ability to configure the format in which query results are stored in the query cache, either
-
-* globally via the `hibernate.cache.query_cache_layout` setting
-* per entity or collection via the `@QueryCacheLayout` annotation
-
-The global `hibernate.cache.query_cache_layout` setting defaults to the `AUTO` value,
-which will automatically choose `SHALLOW` or `FULL` for an entity/collection,
-depending on whether the entity/collection is cacheable.
-
-Applications that want to retain the `FULL` cache layout that Hibernate ORM 6.0 used should configure
-the global property `hibernate.cache.query_cache_layout=FULL`.
-Applications that want the cache layout that Hibernate ORM 5 and older versions used should configure
-the global property `hibernate.cache.query_cache_layout=SHALLOW`.
-
-[NOTE]
-====
-Even with the `SHALLOW` cache layout, the association eagerness implied through join fetches will be respected,
-and associations will be eagerly initialized. So there is no change of behavior when choosing a different cache layout.
-
-With `SHALLOW`, Hibernate might need to hit the database to materialize the associated data *if it does not exist in the second level cache*.
-====
-
-[[ddl-implicit-datatype-enum]]
-== Datatype for enums (H2)
-
-Hibernate ORM 6.5 now uses the `ENUM` datatype for `@Enumerated(EnumType.STRING)` enumeration mappings by default on H2,
-just like link:{docsBase}/6.2/migration-guide/migration-guide.html#ddl-implicit-datatype-enum[ORM 6.2 already started doing for MySQL/MariaDB].
-
-The change is backwards compatible, though schema validation might produce an error now as the expected type is `enum`,
-whereas it was `varchar` of `char` before. To revert to the original mapping,
-annotate the enum attribute with `@JdbcTypeCode(SqlTypes.VARCHAR)` or `@Column(columnDefinition = "varchar(255)")`.
-
-
-[[jdbc-metadata-on-boot]]
-== hibernate.boot.allow_jdbc_metadata_access
-
-6.5 adds a new setting named `hibernate.boot.allow_jdbc_metadata_access` as a supported replacement for
-the legacy `hibernate.temp.use_jdbc_metadata_defaults` setting which was only ever considered internal and
-unsupported for use by applications (as should have been obvious from the name).
-
-This setting controls whether Hibernate should be allowed to access the JDBC `DatabaseMetaData` during bootstrapping.
-With this setting enabled (the default), Hibernate will access the `DatabaseMetaData` to perform some internal
-configuration based on the reported capabilities of the underlying database.  Disabling this setting requires
-explicit settings for this configuration.  At a minimum this includes:
-
-* `hibernate.dialect` or `jakarta.persistence.database-product-name` to indicate the type of database
-* `jakarta.persistence.database-product-version` to indicate the database version
-
-
-[[query-result-validation]]
-== Validation of Query Result Type
-
-6.5 does more stringent checks that the reported query result type (if one) matches the actual query return type.
-This will show up as a `org.hibernate.TypeMismatchException`.
-
-
-[[sql-expectation]]
-== SQL Execution Expectation
-
-6.5 moves away from an enumeration approach to specifying the expected outcome of specific SQL executions to
-a more extendable approach of directly specifying the `Expectation` implementation to use.
-`ExecuteUpdateResultCheckStyle` and `ResultCheckStyle` approaches are still available, though deprecated.
-
-The enumerated values are replaced by -
-
-* `org.hibernate.jdbc.Expectation.None`
-* `org.hibernate.jdbc.Expectation.RowCount`
-* `org.hibernate.jdbc.Expectation.OutParameter`
-
-To update, change e.g.
-
-[source,java]
-----
-@SQLInsert(check=ResultCheckStyle.COUNT)
-----
-
-to
-
-[source,java]
-----
-@SQLInsert(verify=Expectation.RowCount.class)
-----
-
-
-[[uk-naming]]
-== Unique Key Naming
-
-Previous 6.x versions did not apply `ImplicitNamingStrategy` when determining the name of a unique key implicitly.
-
-
-[[annotation-problems]]
-== Annotation Problems
-
-6.5 makes various problems in annotations errors (fail fast) as opposed to logged warnings.
-
-
-[[annotation-processor-rename]]
-== Annotation Processor Rename
-
-The name of Hibernate's Annotation Processor has been changed to `org.hibernate.processor.HibernateProcessor`.
-This change will not affect most users as such processors are normally discovered from the `javac` "processor path", but is important to know for users using the processor manually.
-
-[[jakarta-data]]
-== Jakarta Data
-
-6.5 adds support for the Jakarta Data specification, though this support is considered tech preview as the specification is still being actively developed.
-
-
-[[auto-flush]]
-== Auto Flush
-
-The auto flush event has been split in two parts a pre-partialFlush and a partialFlush and in order to track the start and the end fo the pre-partialFlush two new methods (`void prePartialFlushStart()` and
-`void prePartialFlushEnd()`) have been added to the `SessionEventListener`.

@@ -70,6 +70,10 @@ public class SybaseASEDialect extends SybaseDialect {
 				Integer scale,
 				Long length) {
 			switch ( jdbcType.getDdlTypeCode() ) {
+				case Types.NCLOB:
+				case Types.CLOB:
+				case Types.BLOB:
+					return Size.length( getDefaultLobLength() );
 				case Types.FLOAT:
 					// Sybase ASE allows FLOAT with a precision up to 48
 					if ( precision != null ) {
@@ -162,6 +166,11 @@ public class SybaseASEDialect extends SybaseDialect {
 		// largest possible page size is 16k, so that's a
 		// hard upper limit
 		return 16_384;
+	}
+
+	@Override
+	public long getDefaultLobLength() {
+		return Integer.MAX_VALUE;
 	}
 
 	private static boolean isAnsiNull(DialectResolutionInfo info) {

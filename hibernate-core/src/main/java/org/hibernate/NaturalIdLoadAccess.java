@@ -50,6 +50,8 @@ public interface NaturalIdLoadAccess<T> {
 	 * Override the associations fetched by default by specifying
 	 * the complete list of associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default NaturalIdLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
@@ -59,6 +61,8 @@ public interface NaturalIdLoadAccess<T> {
 	 * Augment the associations fetched by default by specifying a
 	 * list of additional associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default NaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
@@ -68,6 +72,8 @@ public interface NaturalIdLoadAccess<T> {
 	 * Customize the associations fetched by specifying an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
+	 *
+	 * @since 6.3
 	 */
 	NaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 

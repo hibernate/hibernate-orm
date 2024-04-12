@@ -75,6 +75,8 @@ public interface IdentifierLoadAccess<T> {
 	 * Override the associations fetched by default by specifying
 	 * the complete list of associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default IdentifierLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
@@ -84,6 +86,8 @@ public interface IdentifierLoadAccess<T> {
 	 * Augment the associations fetched by default by specifying a
 	 * list of additional associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default IdentifierLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );

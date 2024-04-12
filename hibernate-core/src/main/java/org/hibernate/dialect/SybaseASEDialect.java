@@ -253,22 +253,6 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public int resolveSqlTypeLength(
-			String columnTypeName,
-			int jdbcTypeCode,
-			int precision,
-			int scale,
-			int displaySize) {
-		// Sybase ASE reports the "actual" precision in the display size
-		switch ( jdbcTypeCode ) {
-			case Types.REAL:
-			case Types.DOUBLE:
-				return displaySize;
-		}
-		return super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
-	}
-
-	@Override
 	public String currentDate() {
 		return "current_date()";
 	}

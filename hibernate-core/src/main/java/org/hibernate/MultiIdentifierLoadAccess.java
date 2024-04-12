@@ -126,8 +126,8 @@ public interface MultiIdentifierLoadAccess<T> {
 
 	/**
 	 * Should {@link #multiLoad} return entity instances that have been
-	 * {@link Session#remove(Object) marked for removal} in the current
-	 * session, but not yet {@code delete}d in the database?
+	 * {@linkplain Session#remove(Object) marked for removal} in the
+	 * current session, but not yet {@code delete}d in the database?
 	 * <p>
 	 * By default, instances marked for removal are replaced by null in
 	 * the returned list of entities when {@link #enableOrderedReturn}

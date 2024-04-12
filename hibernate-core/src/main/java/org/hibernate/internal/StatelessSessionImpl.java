@@ -6,6 +6,9 @@
  */
 package org.hibernate.internal;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -60,12 +63,15 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.persistence.EntityGraph;
 import jakarta.transaction.SystemException;
 
+import static java.util.Arrays.asList;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
@@ -508,6 +514,30 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		finally {
 			effectiveEntityGraph.clear();
 		}
+	}
+
+	@Override
+	public <T> List<T> getAll(Class<T> entityClass, Object... ids) {
+		for (Object id : ids) {
+			if ( id == null ) {
+				throw new IllegalArgumentException("Null id");
+			}
+		}
+		final EntityPersister persister = getEntityPersister( entityClass.getName() );
+		final JpaCriteriaQuery<T> query = getCriteriaBuilder().createQuery(entityClass);
+		final JpaRoot<T> from = query.from(entityClass);
+		query.where( from.get(persister.getIdentifierPropertyName()).in(ids) );
+		final List<T> resultList = createSelectionQuery(query).getResultList();
+		final List<Object> idList = new ArrayList<>(resultList.size());
+		for (T entity : resultList) {
+			idList.add( persister.getIdentifier(entity, this) );
+		}
+		final List<T> list = new ArrayList<>(ids.length);
+		for (Object id : ids) {
+			final int pos = idList.indexOf(id);
+			list.add( pos < 0 ? null : resultList.get(pos) );
+		}
+		return list;
 	}
 
 	private EntityPersister getEntityPersister(String entityName) {

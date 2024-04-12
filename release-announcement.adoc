@@ -32,10 +32,14 @@ For 6.5 this behavior is disabled by default.  To opt-in,
 
 [source,properties]
 ----
-hibernate.type.prefer_java_type_jdbc_types=true
+hibernate.type.java_time_use_direct_jdbc=true
 ----
 
 See the link:{javadocs-url}/org/hibernate/cfg/MappingSettings.html#PREFER_JAVA_TYPE_JDBC_TYPES[setting Javadoc] for additional details.
+
+
+IMPORTANT: This feature is known to not work with the Sybase jConnect driver despite
+this feature being part of JDBC since 4.2 (Java 8).  We have notified the Sybase development team, but this seems unlikely to change.
 
 
 [[query-cache-layout]]

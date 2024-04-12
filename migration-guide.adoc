@@ -11,15 +11,15 @@ This guide discusses migration to Hibernate ORM version 7.0. For migration from
 earlier versions, see any other pertinent migration guides as well.
 
 [[jpa-32]]
-== JPA 3.2
+== Jakarta Persistence 3.2
 
-7.0 migrates to JPA 3.2 which is fairly disruptive, mainly around:
+7.0 migrates to Jakarta Persistence 3.2 which is fairly disruptive, mainly around:
 
 * type parameters
   ** Affects much of the Criteria API - especially roots, joins, paths
   ** Affects much of the Graph API -
     *** org.hibernate.graph.Graph.addAttributeNode(java.lang.String) defines a return while
-                1jakarta.persistence.Graph.addAttributeNode(java.lang.String)` does not.
+                `jakarta.persistence.Graph.addAttributeNode(java.lang.String)` does not.
 * new JPA features colliding with previous Hibernate extension features
   ** `Nulls` (JPA) v. `NullPrecedence` (Hibernate), including JPA's new `Order#getNullPrecedence()` returning `Nulls`
         colliding with Hibernate's `SqmSortSpecification#getNullPrecedence` returning `NullPrecedence`.  Hibernate's form
@@ -30,6 +30,28 @@ earlier versions, see any other pertinent migration guides as well.
   ** JPA has added support in its Graph API for things Hibernate has supported for some time.  Some of those are collisions
         requiring changes to the Hibernate API.
   ** `Transaction#getTimeout`.  JPA 3.2 adds `#getTimeout` but uses `Integer` whereas Hibernate has historically used `int`
+
+See this https://in.relation.to/2024/04/01/jakarta-persistence-3/[blog post] for a good discussion of the changes in Jakarta Persistence 3.2.
+
+
+[[hibernate-models]]
+== Hibernate Models
+
+For many years Hibernate has used the Hibernate Commons Annotations (HCANN) library for handling various low-level tasks
+related to understanding the structure of an application domain model, reading annotations and weaving in XML
+mapping documents.
+
+However, HCANN suffers from a number of limitations that continue to be problematic.  And given
+the use of HCANN across multiple projects, doing the needed refactoring was simply not possible.
+
+The https://github.com/hibernate/hibernate-models[Hibernate Models] project was developed to be a better alternative
+to HCANN.  Hibernate Models is essentially an abstraction over reflection (`Type`, `Class`, `Member`, ...) and
+annotations.  Check out its project page for complete details.
+
+7.0 uses Hibernate Models in place of HCANN.
+
+NOTE: Currently, the `hibernate-envers` module still uses HCANN.  That will change during continued 7.0 development.
+
 
 
 [[annotation-validation]]
@@ -60,10 +82,36 @@ private Employee manager;
 ----
 
 
+[[misplaced-annotations]]
+=== Misplaced Annotations
+
+7.0 does much more in-depth checking that annotations appear in the proper place.  While previous versions
+did not necessarily throw errors, in most cases these annotations were simply ignored.  E.g.
+
+
+[source,java]
+----
+@Entity
+class Book {
+	// defines FIELD access-type
+    @Id
+    Integer id;
+
+	// previously ignored, this is an error now
+    @Column(name="category")
+    String getType() { ... }
+
+    ...
+}
+----
+
+
+
+
 [[java-beans]]
 == JavaBean Conventions
 
-Previous versions allowed some, at beast, questionable attribute naming patterns.  These are no longer supported.  E.g.
+Previous versions allowed some questionable (at best) attribute naming patterns.  These are no longer supported.  E.g.
 
 [source,java]
 ----
@@ -79,18 +127,11 @@ String isDefault();
 * Removed `SqmQualifiedJoin`.  All joins are qualified.
 * Removed `AdditionalJaxbMappingProducer`, deprecated in favor of `AdditionalMappingContributor`
 * Removed `MetadataContributor`, deprecated in favor of `AdditionalMappingContributor`
+* Removed `@Persister`.
 
 
 [[todo]]
-== Todos
+== Todos (dev)
 
-NOTE:: Look for `// todo (jpa 3.2)`
-
-* {@linkplain SqmCrossJoin} and its offspring are largely de-typed to account
-        for {@linkplain SqmCrossJoin} having only one type argument for the right-hand
-        side.  To properly handle the type parameters in the hierarchy we need to change this to
-        accept type parameter for the left-handle side as well - breaking change.
-* The changes in `jakarta.persistence.EntityManager#createNativeQuery(java.lang.String, java.lang.Class<?>)` are really unfortunate.
-        Previously that signature was `(java.lang.String, java.lang.Class)` and our override of that was able to be
-        `<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass)`.  JPA adding that wildcard means our
-        override is no longer valid.  I had to change that to ``
+* Look for `todo (jpa 3.2)` comments
+* Look for `todo (7.0)` comments

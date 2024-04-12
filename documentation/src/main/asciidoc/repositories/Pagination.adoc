@@ -1,0 +1,110 @@
+[[pagination]]
+== Pagination and dynamic sorting
+
+An automatic or annotated query method may have additional parameters which specify:
+
+- additional sorting criteria, or
+- a limit and offset restricting the results which are actually returned to the client.
+
+Before we see this, let's see how we can refer to a field of an entity in a completely typesafe way.
+
+=== The static metamodel
+
+You might already be familiar with the Jakarta Persistence static metamodel.
+For an entity class `Book`, the class `Book_` exposes objects representing the persistent fields of `Book`, for example, `Book_.title` represents the field `title`.
+
+Jakarta Data has its own static metamodel, which is different to the Jakarta Persistence metamodel. Instead of `Book_`, the Jakarta Data static metamodel for `Book` is exposed by the class `_Book`.
+
+Let's see how the static metamodel us useful.
+
+It's perfectly possible to obtain an instance of `Sort` in an untypesafe way:
+
+[source,java]
+----
+var sort = Sort.asc("title");
+----
+
+Unfortunately, since this is in regular code, and not in an annotation, the name `"title"` cannot be validated at compile time.
+
+A much better solution is to use the static metamodel.
+
+[source,java]
+----
+var sort = _Book.title.asc();
+----
+
+The static metamodel also contains the names of persistent fields.
+These are sometimes used as annotation values.
+
+[source,java]
+----
+@Find
+@OrderBy(_Book.TITLE)
+@OrderBy(_Book.ISBN)
+List<Book> books(@Pattern String title, Year yearPublished);
+----
+
+
+=== Dynamic sorting
+
+An instance of `Sort` represents a single criterion for sorting query results.
+An instance of `Order` packages multiple ``Sort``s together.
+
+A query method may accept an instance of `Sort`.
+
+[source,java]
+----
+@Find
+List<Book> books(@Pattern String title, Year yearPublished,
+                 Sort<Book> sort);
+----
+
+This method might be called as follows:
+
+[source,java]
+----
+var books =
+        library.books(pattern, year,
+                      _Book.title.ascIgnoreCase());
+----
+
+Alternatively the method may accept an instance of `Order`.
+
+[source,java]
+----
+@Find
+List<Book> books(@Pattern String title, Year yearPublished,
+                 Order<Book> order);
+----
+
+The method might now be called like this:
+
+[source,java]
+----
+var books =
+       library.books(pattern, year,
+                     Order.of(_Book.title.ascIgnoreCase(),
+                              _Book.isbn.asc());
+----
+
+=== Limits
+
+A `Limit` is the simplest way to express a subrange of query results.
+
+[source,java]
+----
+@Find
+@OrderBy(_Book.TITLE)
+List<Book> books(@Pattern String title, Year yearPublished,
+                 Limit limit);
+----
+[source,java]
+----
+var books =
+        library.books(pattern, year,
+                      Limit.of(MAX_RESULTS));
+----
+
+A more sophisticated approach is provided by `PageRequest`.
+
+=== Pagination

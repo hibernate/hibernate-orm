@@ -1,3 +1,4 @@
+[[configuration-integration]]
 == Configuration and integration
 
 Getting started with Hibernate Data Repositories involves the following steps:

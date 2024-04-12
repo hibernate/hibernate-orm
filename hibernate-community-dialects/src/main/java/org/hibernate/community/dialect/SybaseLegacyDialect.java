@@ -27,6 +27,7 @@ import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.function.SybaseTruncFunction;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -60,6 +61,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -89,6 +91,29 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Deprecated(forRemoval = true)
 	protected final boolean jtdsDriver;
+
+	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+		@Override
+		public Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Integer precision,
+				Integer scale,
+				Long length) {
+			switch ( jdbcType.getDdlTypeCode() ) {
+				case Types.NCLOB:
+				case Types.CLOB:
+				case Types.BLOB:
+					return Size.length( getDefaultLobLength() );
+				case Types.FLOAT:
+					// Sybase ASE allows FLOAT with a precision up to 48
+					if ( precision != null ) {
+						return Size.precision( Math.min( Math.max( precision, 1 ), 48 ) );
+					}
+			}
+			return super.resolveSize( jdbcType, javaType, precision, scale, length );
+		}
+	};
 
 	public SybaseLegacyDialect() {
 		this( DatabaseVersion.make( 11, 0 ) );
@@ -167,6 +192,11 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 				return new SybaseLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public SizeStrategy getSizeStrategy() {
+		return sizeStrategy;
 	}
 
 	@Override

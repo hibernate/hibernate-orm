@@ -3,6 +3,62 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.5.0.CR2 (April 12, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32268
+
+** Bug
+    * [HHH-17947] - Bidirectional association management shouldn't ignore maintaining inverse lazy objects
+    * [HHH-17935] - Running query with "root" tenant leads to "HibernateException: Either value and resolver for filter [_tenantId] parameter [tenantId] not set"
+    * [HHH-17934] - StatelessSession.upsert() with @Version-ed entity
+    * [HHH-17918] - EntityNotFoundException when loading non-proxy entities with circular dependencies
+    * [HHH-17912] - Disallow multiple valued binding for BasicCollectionType
+    * [HHH-17908] - Schema validation error for STRING enums on MySQL
+    * [HHH-17906] - Missing type inference for SqmValues
+    * [HHH-17898] - Validate derived join queries not using lateral 
+    * [HHH-17897] - Joining Multiple CTEs in a HQL
+    * [HHH-17887] - Release mode After Statment with deferred result set access does not work
+    * [HHH-17885] - Same named formula attribute of different Embedded uses same selection expression
+    * [HHH-17884] - Native enum type should respect ordering implied by EnumeratedType
+    * [HHH-17881] - Unable to use a proxy as parameter in Query when the FK does not target the PK
+    * [HHH-17872] - NPE in JtaIsolationDelegate
+    * [HHH-17871] - NullPointerException during the creation of the session if ManyToAny that references a MappedSuperClass and defined in multiple subclasses
+    * [HHH-17862] - TemporaryTable identity column sqlTypeName error
+    * [HHH-17826] - ResultSet closed while scrolling results
+    * [HHH-17801] - array_position fails with enums in Hibernate 6.4 (worked in 6.2)
+    * [HHH-17783] - Joined Entity is Added to Persistent Set Without Being Fully Initialized
+    * [HHH-17761] - Merging a bytecode enhanced entity with all properties set to null does not apply the update
+    * [HHH-17493] - Negating a SqmNegatedPredicate has no effect on Hql string
+    * [HHH-16672] - Locking entities created in the same transaction fails
+
+** Deprecation
+    * [HHH-17874] - deprecate @GenericGenerator
+
+** Improvement
+    * [HHH-17946] - Avoid creating ProxyFactory if possible
+    * [HHH-17932] - Get rid of unnecessary synchronization
+    * [HHH-17900] - infer queried entity from primary entity type of repository
+    * [HHH-17895] - Jakarta Data and Bean Validation
+    * [HHH-17891] - copy interceptor bindings from repository interface to implementation class
+    * [HHH-17882] - generate  constructor for jpms
+    * [HHH-17878] - Enable Configurable identifier generators to work with @IdGeneratorType
+    * [HHH-17736] - Improve Atlas for atps
+    * [HHH-17472] - Allow persisting Entity with manually assigned id for column annotated with @GeneratedValue
+    * [HHH-14080] - Dialect-Aware Rendering of Null Value Literals
+    * [HHH-12202] - Add convenient method ParameterType::getReturnedJavaType
+
+** New Feature
+    * [HHH-17904] - Introduce config property to enable native enum type
+    * [HHH-17875] - validate association mappings in the processor
+    * [HHH-17873] - Inheritance from Jakarta Data base super-repositories
+    * [HHH-17864] - Jakarta Data static metamodel for embeddables
+    * [HHH-17860] - Jakarta Data query-based @Delete
+
+** Task
+    * [HHH-17876] - Changes for the integration with Hibernate Reactive 2.3
+
+
 Changes in 6.5.0.CR1 (March 20, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

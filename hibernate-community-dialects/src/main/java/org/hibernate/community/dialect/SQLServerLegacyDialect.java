@@ -36,6 +36,7 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -67,6 +68,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
@@ -112,6 +114,26 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	private final StandardSequenceExporter exporter;
 	private final UniqueDelegate uniqueDelegate;
+
+	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+		@Override
+		public Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Integer precision,
+				Integer scale,
+				Long length) {
+			switch ( jdbcType.getDdlTypeCode() ) {
+				case BLOB:
+				case CLOB:
+				case NCLOB:
+					return Size.length( getDefaultLobLength() );
+				default:
+					return super.resolveSize( jdbcType, javaType, precision, scale, length );
+			}
+		}
+	};
+
 
 	public SQLServerLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -420,6 +442,11 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				return new SQLServerLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public SizeStrategy getSizeStrategy() {
+		return sizeStrategy;
 	}
 
 	@Override

@@ -357,9 +357,7 @@ class CodeTemplates {
 	static class OneToOneHandler {
 		@Advice.OnMethodEnter
 		static void enter(@FieldValue Object field, @Advice.Argument(0) Object argument, @InverseSide boolean inverseSide) {
-			// Unset the inverse attribute, which possibly initializes the old value,
-			// only if this is the inverse side, or the old value is already initialized
-			if ( ( inverseSide || Hibernate.isInitialized( field ) ) && getterSelf() != null ) {
+			if ( getterSelf() != null ) {
 				// We copy the old value, then set the field to null which we must do before
 				// unsetting the inverse attribute, as we'd otherwise run into a stack overflow situation
 				// The field is writable, so setting it to null here is actually a field write.
@@ -371,9 +369,7 @@ class CodeTemplates {
 
 		@Advice.OnMethodExit
 		static void exit(@Advice.This Object self, @Advice.Argument(0) Object argument, @InverseSide boolean inverseSide) {
-			// Update the inverse attribute, which possibly initializes the argument value,
-			// only if this is the inverse side, or the argument value is already initialized
-			if ( argument != null && ( inverseSide || Hibernate.isInitialized( argument ) ) && getter( argument ) != self ) {
+			if ( argument != null && getter( argument ) != self ) {
 				setterSelf( argument, self );
 			}
 		}
@@ -402,13 +398,10 @@ class CodeTemplates {
 	static class OneToManyOnCollectionHandler {
 		@Advice.OnMethodEnter
 		static void enter(@FieldValue Collection<?> field, @Advice.Argument(0) Collection<?> argument, @InverseSide boolean inverseSide) {
-			// If this is the inverse side or the old collection is already initialized,
-			// we must unset the respective ManyToOne of the old collection elements,
-			// because only the owning side is responsible for persisting the state.
-			if ( ( inverseSide || Hibernate.isInitialized( field ) ) && getterSelf() != null ) {
+			if ( getterSelf() != null ) {
 				Object[] array = field.toArray();
 				for ( int i = 0; i < array.length; i++ ) {
-					if ( ( inverseSide || Hibernate.isInitialized( array[i] ) ) && ( argument == null || !argument.contains( array[i] ) ) ) {
+					if ( argument == null || !argument.contains( array[i] ) ) {
 						setterNull( array[i], null );
 					}
 				}
@@ -417,13 +410,10 @@ class CodeTemplates {
 
 		@Advice.OnMethodExit
 		static void exit(@Advice.This Object self, @Advice.Argument(0) Collection<?> argument, @InverseSide boolean inverseSide) {
-			// If this is the inverse side or the new collection is already initialized,
-			// we must set the respective ManyToOne on the new collection elements,
-			// because only the owning side is responsible for persisting the state.
-			if ( argument != null && ( inverseSide || Hibernate.isInitialized( argument ) ) ) {
+			if ( argument != null ) {
 				Object[] array = argument.toArray();
 				for ( int i = 0; i < array.length; i++ ) {
-					if ( ( inverseSide || Hibernate.isInitialized( array[i] ) ) && getter( array[i] ) != self ) {
+					if ( getter( array[i] ) != self ) {
 						setterSelf( array[i], self );
 					}
 				}
@@ -454,14 +444,10 @@ class CodeTemplates {
 	static class OneToManyOnMapHandler {
 		@Advice.OnMethodEnter
 		static void enter(@FieldValue Map<?, ?> field, @Advice.Argument(0) Map<?, ?> argument, @InverseSide boolean inverseSide) {
-			// If this is the inverse side or the old collection is already initialized,
-			// we must unset the respective ManyToOne of the old collection elements,
-			// because only the owning side is responsible for persisting the state.
-			if ( ( inverseSide || Hibernate.isInitialized( field ) ) && getterSelf() != null ) {
+			if ( getterSelf() != null ) {
 				Object[] array = field.values().toArray();
 				for ( int i = 0; i < array.length; i++ ) {
-					if ( ( inverseSide || Hibernate.isInitialized( array[i] ) )
-							&& ( argument == null || !argument.containsValue( array[i] ) ) ) {
+					if ( argument == null || !argument.containsValue( array[i] ) ) {
 						setterNull( array[i], null );
 					}
 				}
@@ -470,13 +456,10 @@ class CodeTemplates {
 
 		@Advice.OnMethodExit
 		static void exit(@Advice.This Object self, @Advice.Argument(0) Map<?, ?> argument, @InverseSide boolean inverseSide) {
-			// If this is the inverse side or the new collection is already initialized,
-			// we must set the respective ManyToOne on the new collection elements,
-			// because only the owning side is responsible for persisting the state.
-			if ( argument != null && ( inverseSide || Hibernate.isInitialized( argument ) ) ) {
+			if ( argument != null ) {
 				Object[] array = argument.values().toArray();
 				for ( int i = 0; i < array.length; i++ ) {
-					if ( ( inverseSide || Hibernate.isInitialized( array[i] ) ) && getter( array[i] ) != self ) {
+					if ( getter( array[i] ) != self ) {
 						setterSelf( array[i], self );
 					}
 				}
@@ -507,8 +490,7 @@ class CodeTemplates {
 	static class ManyToOneHandler {
 		@Advice.OnMethodEnter
 		static void enter(@Advice.This Object self, @FieldValue Object field, @BidirectionalAttribute String inverseAttribute) {
-			// This is always the owning side, so we only need to update the inverse side if the collection is initialized
-			if ( getterSelf() != null && Hibernate.isPropertyInitialized( field, inverseAttribute ) ) {
+			if ( getterSelf() != null ) {
 				Collection<?> c = getter( field );
 				if ( c != null ) {
 					c.remove( self );
@@ -518,8 +500,7 @@ class CodeTemplates {
 
 		@Advice.OnMethodExit
 		static void exit(@Advice.This Object self, @Advice.Argument(0) Object argument, @BidirectionalAttribute String inverseAttribute) {
-			// This is always the owning side, so we only need to update the inverse side if the collection is initialized
-			if ( argument != null && Hibernate.isPropertyInitialized( argument, inverseAttribute ) ) {
+			if ( argument != null ) {
 				Collection<Object> c = getter( argument );
 				if ( c != null && !c.contains( self ) ) {
 					c.add( self );
@@ -541,14 +522,10 @@ class CodeTemplates {
 	static class ManyToManyHandler {
 		@Advice.OnMethodEnter
 		static void enter(@Advice.This Object self, @FieldValue Collection<?> field, @Advice.Argument(0) Collection<?> argument, @InverseSide boolean inverseSide, @BidirectionalAttribute String bidirectionalAttribute) {
-			// If this is the inverse side or the old collection is already initialized,
-			// we must remove self from the respective old collection elements inverse collections,
-			// because only the owning side is responsible for persisting the state.
-			if ( ( inverseSide || Hibernate.isInitialized( field ) ) && getterSelf() != null ) {
+			if ( getterSelf() != null ) {
 				Object[] array = field.toArray();
 				for ( int i = 0; i < array.length; i++ ) {
-					if ( ( inverseSide || Hibernate.isPropertyInitialized( array[i], bidirectionalAttribute ) )
-							&& ( argument == null || !argument.contains( array[i] ) ) ) {
+					if ( argument == null || !argument.contains( array[i] ) ) {
 						getter( array[i] ).remove( self );
 					}
 				}
@@ -557,17 +534,12 @@ class CodeTemplates {
 
 		@Advice.OnMethodExit
 		static void exit(@Advice.This Object self, @Advice.Argument(0) Collection<?> argument, @InverseSide boolean inverseSide, @BidirectionalAttribute String bidirectionalAttribute) {
-			// If this is the inverse side or the new collection is already initialized,
-			// we must add self to the respective new collection elements inverse collections,
-			// because only the owning side is responsible for persisting the state.
-			if ( argument != null && ( inverseSide || Hibernate.isInitialized( argument ) ) ) {
+			if ( argument != null ) {
 				Object[] array = argument.toArray();
 				for ( Object array1 : array ) {
-					if ( inverseSide || Hibernate.isPropertyInitialized( array1, bidirectionalAttribute ) ) {
-						Collection<Object> c = getter( array1 );
-						if ( c != null && !c.contains( self ) ) {
-							c.add( self );
-						}
+					Collection<Object> c = getter( array1 );
+					if ( c != null && !c.contains( self ) ) {
+						c.add( self );
 					}
 				}
 			}

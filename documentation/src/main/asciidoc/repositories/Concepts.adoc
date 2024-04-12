@@ -142,10 +142,17 @@ For users migrating from Spring Data, Jakarta Data also provides a _Query by Met
 We don't recommend this approach for new code.
 ====
 
+=== Organizing persistence operations
+
 Jakarta Data lets you freely assign persistence operations to repositories according to your own preference.
 In particular, Jakarta Data does not require that a repository interface inherit a built-in supertype declaring the basic "CRUD" operations.
-
 Thus, the whole programming model is much more flexible than older approaches such as Spring Data, which require a repository interface per entity class, or, at least, per so-called "aggregate".
+
+[TIP]
+====
+The concept of an "aggregate" makes sense in something like a document database.
+But relational data does not have aggregates, and you should avoid attempting to shoehorn your relational tables into this inappropriate way of thinking about data.
+====
 
 Instead, a repository in Jakarta Data may group together operations dealing with several related entities, even when the entities don't have a single "root".
 This situation is _extremely_ common in relational data models.
@@ -168,12 +175,6 @@ interface Publishing {
     void create(Author author);
 }
 ----
-
-[TIP]
-====
-The concept of an "aggregate" makes sense in something like a document database.
-But relational data does not have aggregates, and you should avoid attempting to shoehorn your relational tables into this inappropriate way of thinking about data.
-====
 
 On the other hand, as a convenience, especially for users migrating from older frameworks, Jakarta Data does define the `BasicRepository` and `CrudRepository` interfaces.
 But there's not much special about these interfaces; their operations are declared using the same annotations you'll use to declare methods of your own repositories.
@@ -360,3 +361,26 @@ A native SQL query may be specified using `@SQL`.
 @SQL("select title from books where title like :pattern order by title, isbn")
 List<String> booksByTitle(String pattern);
 ----
+
+=== Resource accessor methods
+
+Finally, a resource accessor method is one which exposes access to an underlying implementation type.
+Currently, Hibernate Data Repositories only supports one such type: `StatelessSession`.
+
+[source,java]
+----
+StatelessSession session();
+----
+
+This method returns the `StatelessSession` backing the repository.
+
+[TIP]
+====
+Usually, a resource accessor method is called from a `default` method of the same repository.
+[source,java]
+----
+default void refresh(Book book) {
+    session().refresh(book);
+}
+----
+====

@@ -38,7 +38,6 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
@@ -1011,6 +1010,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void detach(Object entity) {
 		delegate.detach( entity );
+	}
+
+	@Override
+	public <E> List<E> findAll(Class<E> entityType, Object... ids) {
+		return delegate.findAll( entityType, ids );
 	}
 
 	@Override

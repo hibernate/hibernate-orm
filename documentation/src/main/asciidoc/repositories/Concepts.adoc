@@ -62,6 +62,7 @@ Furthermore, queries may be expressed in HQL, Hibernate's superset of the Jakart
 The Jakarta Data specification defines a simple subset of JPQL called, appropriately, JDQL.
 JDQL is mostly relevant to non-relational datastores; an implementation of Jakarta Data backed by access to relational data is normally expected to support a much larger subset of JPQL.
 Indeed, Hibernate Data Repositories supports a _superset_ of JPQL.
+So, even though we put rather a large amount of effort into advocating, designing, and specifying JDQL, we won't talk much about it here.
 ====
 
 This is where the similarity between Jakarta Persistence and Jakarta Data ends.
@@ -207,7 +208,7 @@ If there is no `Book` with the given `isbn`, the method throws `EmptyResultExcep
 There's two ways around this if that's not what you want:
 
 - declare the method to return `Optional`, or
-- annotate the method `@Nullable`.
+- annotate the method `@jakarta.annotation.Nullable`.
 
 The first option is blessed by the specification:
 
@@ -273,3 +274,50 @@ For anything that's not extremely simple, we're much better off writing a query 
 
 === Annotated query methods
 
+An annotated query method is declared using:
+
+- `@Query` from Jakarta Data, or
+- `@HQL` or `@SQL` from `org.hibernate.annotations.processing`.
+
+[NOTE]
+====
+There's no strong reason to use `@HQL` in preference to `@Query`.
+This annotation exists because the functionality described here predates the existence of Jakarta Data.
+====
+
+Consider the following example:
+
+[source,java]
+----
+@Query("where title like :pattern order by title, isbn")
+List<Book> booksByTitle(String pattern);
+----
+
+You might notice that:
+
+- The `from` clause is not required in JDQL, and is inferred from the return type of the repository method.
+- Since Jakarta Persistence 3.2, neither the `select` cause nor entity aliases (identification variables) are required in JPQL, finally standardizing a very old feature of HQL.
+
+This allows simple queries to be written in a very compact form.
+
+Method parameters are automatically matched to ordinal or named parameters of the query.
+In the previous example, `pattern` matches `:pattern`.
+In the following variation, the first method parameter matches `?1`.
+
+[source,java]
+----
+@Query("where title like ?1 order by title, isbn")
+List<Book> booksByTitle(String pattern);
+----
+
+You might be imagining that the JPQL query specified within the `@Query` annotation cannot be validated at compile time, but this is not the case.
+`HibernateProcessor` is not only capable of validating the _syntax_ of the query, but it even _typechecks_ the query completely.
+This is much better than passing a string to the `createQuery()` method of `EntityManager`, and it's probably the top reason to use Jakarta Data with Hibernate.
+
+A native SQL query may be specified using `@SQL`.
+
+[source,java]
+----
+@SQL("select title from books where title like :pattern order by title, isbn")
+List<String> booksByTitle(String pattern);
+----

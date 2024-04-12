@@ -236,11 +236,11 @@ public interface MappingSettings {
 	 * {@linkplain org.hibernate.type.descriptor.jdbc.InstantJdbcType}.
 	 *
 	 * @settingDefault false
-	 * 
+	 *
 	 * @since 6.5
 	 */
 	@Incubating
-	String PREFER_JAVA_TYPE_JDBC_TYPES = "hibernate.type.prefer_java_type_jdbc_types";
+	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
 
 	/**
 	 * Indicates whether to prefer using SQL enums and the respective special JDBC types for binding/extracting

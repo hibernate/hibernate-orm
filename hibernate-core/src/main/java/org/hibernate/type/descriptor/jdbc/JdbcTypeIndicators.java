@@ -70,7 +70,7 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
-	 * @see org.hibernate.cfg.MappingSettings#PREFER_JAVA_TYPE_JDBC_TYPES
+	 * @see org.hibernate.cfg.MappingSettings#JAVA_TIME_USE_DIRECT_JDBC
 	 */
 	default boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return getCurrentBaseSqlTypeIndicators().isPreferJavaTimeJdbcTypesEnabled();

@@ -7,6 +7,7 @@
 package org.hibernate.internal;
 
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -19,6 +20,7 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
@@ -36,6 +38,7 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
@@ -118,9 +121,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 		}
 		persister.setIdentifier( entity, id, this );
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> descriptor.recreate( collection, id, this) );
 		return id;
 	}
-
 
 	// deletes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -136,6 +140,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> descriptor.remove(id, this) );
 		persister.getDeleteCoordinator().delete( entity, id, version, this );
 	}
 
@@ -171,6 +177,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			oldVersion = null;
 		}
 		persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+		// TODO: can we do better here?
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> descriptor.remove(id, this) );
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> descriptor.recreate( collection, id, this) );
 	}
 
 	@Override
@@ -181,6 +192,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final Object[] state = persister.getValues( entity );
 		final Object oldVersion = versionToUpsert( entity, persister, state );
 		persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+		// TODO: can we do better here?
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> descriptor.remove(id, this) );
+		forEachOwnedCollection( entity, id, persister,
+				(descriptor, collection) -> descriptor.recreate( collection, id, this) );
 	}
 
 	private Object versionToUpsert(Object entity, EntityPersister persister, Object[] state) {
@@ -223,6 +239,45 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return id;
 	}
 
+	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private void forEachOwnedCollection(
+			Object entity, Object key,
+			EntityPersister persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
+		persister.visitAttributeMappings( att -> {
+			if ( att.isPluralAttributeMapping() ) {
+				final PluralAttributeMapping pluralAttributeMapping = att.asPluralAttributeMapping();
+				final CollectionPersister descriptor = pluralAttributeMapping.getCollectionDescriptor();
+				if ( !descriptor.isInverse() ) {
+					final Object collection = att.getPropertyAccess().getGetter().get(entity);
+					final PersistentCollection<?> persistentCollection;
+					if (collection instanceof PersistentCollection) {
+						persistentCollection = (PersistentCollection<?>) collection;
+						if ( !persistentCollection.wasInitialized() ) {
+							return;
+						}
+					}
+					else {
+						persistentCollection = collection == null
+								? instantiateEmpty(key, descriptor)
+								: wrap(descriptor, collection);
+					}
+					action.accept(descriptor, persistentCollection);
+				}
+			}
+		} );
+	}
+
+	private PersistentCollection<?> instantiateEmpty(Object key, CollectionPersister descriptor) {
+		return descriptor.getCollectionSemantics().instantiateWrapper(key, descriptor, this);
+	}
+
+	//TODO: is this the right way to do this?
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private PersistentCollection<?> wrap(CollectionPersister descriptor, Object collection) {
+		final CollectionSemantics collectionSemantics = descriptor.getCollectionSemantics();
+		return collectionSemantics.wrap(collection, descriptor, this);
+	}
 
 	// loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

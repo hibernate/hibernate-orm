@@ -145,7 +145,7 @@ public interface CollectionPersister extends Restrictable {
 	Class<?> getElementClass();
 
 	/**
-	 * Is this an array or primitive values?
+	 * Is this an array of primitive values?
 	 */
 	boolean isPrimitiveArray();
 	/**

@@ -91,6 +91,10 @@ public interface CollectionPersister extends Restrictable {
 	 */
 	NavigableRole getNavigableRole();
 
+	/**
+	 * Get the name of this collection role (the fully qualified class name,
+	 * extended by a "property path")
+	 */
 	default String getRole() {
 		return getNavigableRole().getFullPath();
 	}
@@ -212,7 +216,7 @@ public interface CollectionPersister extends Restrictable {
 			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
-	
+
 	/**
 	 * Process queued operations within the PersistentCollection.
 	 */
@@ -220,11 +224,6 @@ public interface CollectionPersister extends Restrictable {
 			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
-	
-	/**
-	 * Get the name of this collection role (the fully qualified class name,
-	 * extended by a "property path")
-	 */
 
 	/**
 	 * Get the surrogate key generation strategy (optional operation)

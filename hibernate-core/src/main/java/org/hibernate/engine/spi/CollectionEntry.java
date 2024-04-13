@@ -404,10 +404,10 @@ public final class CollectionEntry implements Serializable {
 		//      does the collection already have
 		//      it's own up-to-date snapshot?
 		final CollectionPersister loadedPersister = getLoadedPersister();
-		Serializable snapshot = getSnapshot();
-		return collection.wasInitialized() &&
-				( loadedPersister == null || loadedPersister.isMutable() ) &&
-				(snapshot != null ? collection.isSnapshotEmpty( snapshot ) : true);
+		final Serializable snapshot = getSnapshot();
+		return collection.wasInitialized()
+			&& ( loadedPersister == null || loadedPersister.isMutable() )
+			&& ( snapshot == null || collection.isSnapshotEmpty(snapshot) );
 	}
 
 

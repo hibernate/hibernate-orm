@@ -27,15 +27,15 @@ import org.hibernate.graph.GraphSemantic;
  * <li>it does not have a first-level cache,
  * <li>nor interact with any second-level cache,
  * <li>nor does it implement transactional write-behind or automatic dirty
- *     checking, and
- * <li>nor do operations cascade to associated instances.
+ *     checking.
  * </ul>
  * <p>
- * Furthermore:
+ * Furthermore, operations performed via a stateless session:
  * <ul>
- * <li>collections are completely ignored by a stateless session, and
- * <li>operations performed via a stateless session bypass Hibernate's event
- *     model, lifecycle callbacks, and interceptors.
+ * <li>never cascade to associated instances, no matter what the
+ *     {@link jakarta.persistence.CascadeType}, and
+ * <li>bypass Hibernate's {@linkplain org.hibernate.event.spi event model},
+ *     lifecycle callbacks, and {@linkplain Interceptor interceptors}.
  * </ul>
  * <p>
  * Stateless sessions are vulnerable to data aliasing effects, due to the

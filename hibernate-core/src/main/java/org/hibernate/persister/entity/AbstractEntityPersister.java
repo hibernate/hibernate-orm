@@ -6253,9 +6253,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitAttributeMappings(
-			Consumer<? super AttributeMapping> action,
-			EntityMappingType targetType) {
+	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
 		attributeMappings.forEach( action );
 	}
 

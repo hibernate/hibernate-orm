@@ -380,7 +380,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final Object[] deletedState = createDeletedState( persister, entity, currentState, session );
 		entityEntry.setDeletedState( deletedState );
 
-		session.getInterceptor().onDelete(
+		session.getInterceptor().onRemove(
 				entity,
 				entityEntry.getId(),
 				deletedState,

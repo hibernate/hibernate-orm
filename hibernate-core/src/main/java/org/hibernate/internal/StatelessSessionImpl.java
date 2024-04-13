@@ -32,6 +32,22 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.event.spi.PostDeleteEvent;
+import org.hibernate.event.spi.PostDeleteEventListener;
+import org.hibernate.event.spi.PostInsertEvent;
+import org.hibernate.event.spi.PostInsertEventListener;
+import org.hibernate.event.spi.PostUpdateEvent;
+import org.hibernate.event.spi.PostUpdateEventListener;
+import org.hibernate.event.spi.PostUpsertEvent;
+import org.hibernate.event.spi.PostUpsertEventListener;
+import org.hibernate.event.spi.PreDeleteEvent;
+import org.hibernate.event.spi.PreDeleteEventListener;
+import org.hibernate.event.spi.PreInsertEvent;
+import org.hibernate.event.spi.PreInsertEventListener;
+import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.event.spi.PreUpdateEventListener;
+import org.hibernate.event.spi.PreUpsertEvent;
+import org.hibernate.event.spi.PreUpsertEventListener;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.values.GeneratedValues;
@@ -114,15 +130,22 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					persister.setValues( entity, state );
 				}
 			}
+			if ( firePreInsert(entity, id, state, persister) ) {
+				return id;
+			}
 			persister.getInsertCoordinator().insert( entity, id, state, this );
 		}
 		else {
+			if ( firePreInsert(entity, null, state, persister) ) {
+				return null;
+			}
 			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
 			id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 		}
 		persister.setIdentifier( entity, id, this );
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> descriptor.recreate( collection, id, this) );
+		firePostInsert(entity, id, state, persister);
 		return id;
 	}
 
@@ -140,9 +163,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
-		forEachOwnedCollection( entity, id, persister,
-				(descriptor, collection) -> descriptor.remove(id, this) );
-		persister.getDeleteCoordinator().delete( entity, id, version, this );
+		if ( !firePreDelete(entity, id, persister) ) {
+			forEachOwnedCollection( entity, id, persister,
+					(descriptor, collection) -> descriptor.remove(id, this) );
+			persister.getDeleteCoordinator().delete( entity, id, version, this );
+			firePostDelete(entity, id, persister);
+		}
 	}
 
 
@@ -176,12 +202,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else {
 			oldVersion = null;
 		}
-		persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
-		// TODO: can we do better here?
-		forEachOwnedCollection( entity, id, persister,
-				(descriptor, collection) -> descriptor.remove(id, this) );
-		forEachOwnedCollection( entity, id, persister,
-				(descriptor, collection) -> descriptor.recreate( collection, id, this) );
+		if ( !firePreUpdate(entity, id, state, persister) ) {
+			persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+			// TODO: can we do better here?
+			forEachOwnedCollection( entity, id, persister,
+					(descriptor, collection) -> descriptor.remove(id, this) );
+			forEachOwnedCollection( entity, id, persister,
+					(descriptor, collection) -> descriptor.recreate( collection, id, this) );
+			firePostUpdate(entity, id, state, persister);
+		}
 	}
 
 	@Override
@@ -190,13 +219,17 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = idToUpsert( entity, persister );
 		final Object[] state = persister.getValues( entity );
-		final Object oldVersion = versionToUpsert( entity, persister, state );
-		persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
-		// TODO: can we do better here?
-		forEachOwnedCollection( entity, id, persister,
-				(descriptor, collection) -> descriptor.remove(id, this) );
-		forEachOwnedCollection( entity, id, persister,
-				(descriptor, collection) -> descriptor.recreate( collection, id, this) );
+		if ( !firePreUpsert(entity, id, state, persister) ) {
+			final Object oldVersion = versionToUpsert( entity, persister, state );
+			persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+			// TODO: need PreUpsert and PostUpsert events!
+			// TODO: can we do better here?
+			forEachOwnedCollection( entity, id, persister,
+					(descriptor, collection) -> descriptor.remove(id, this) );
+			forEachOwnedCollection( entity, id, persister,
+					(descriptor, collection) -> descriptor.recreate( collection, id, this) );
+			firePostUpsert(entity, id, state, persister);
+		}
 	}
 
 	private Object versionToUpsert(Object entity, EntityPersister persister, Object[] state) {
@@ -237,6 +270,100 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					+ persister.getEntityName() );
 		}
 		return id;
+	}
+
+	// event processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( fastSessionServices.eventListenerGroup_PRE_INSERT.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreInsertEvent event = new PreInsertEvent( entity, id, state, persister, null );
+			for ( PreInsertEventListener listener : fastSessionServices.eventListenerGroup_PRE_INSERT.listeners() ) {
+				veto |= listener.onPreInsert( event );
+			}
+			return veto;
+		}
+	}
+
+	private boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( fastSessionServices.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreUpdateEvent event = new PreUpdateEvent( entity, id, state, null, persister, null );
+			for ( PreUpdateEventListener listener : fastSessionServices.eventListenerGroup_PRE_UPDATE.listeners() ) {
+				veto |= listener.onPreUpdate( event );
+			}
+			return veto;
+		}
+	}
+
+	private boolean firePreUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( fastSessionServices.eventListenerGroup_PRE_UPSERT.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreUpsertEvent event = new PreUpsertEvent( entity, id, state, persister, null );
+			for ( PreUpsertEventListener listener : fastSessionServices.eventListenerGroup_PRE_UPSERT.listeners() ) {
+				veto |= listener.onPreUpsert( event );
+			}
+			return veto;
+		}
+	}
+
+	private boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
+		if ( fastSessionServices.eventListenerGroup_PRE_DELETE.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreDeleteEvent event = new PreDeleteEvent( entity, id, null, persister, null );
+			for ( PreDeleteEventListener listener : fastSessionServices.eventListenerGroup_PRE_DELETE.listeners() ) {
+				veto |= listener.onPreDelete( event );
+			}
+			return veto;
+		}
+	}
+
+	private void firePostInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( !fastSessionServices.eventListenerGroup_POST_INSERT.isEmpty() ) {
+			final PostInsertEvent event = new PostInsertEvent( entity, id, state, persister, null );
+			for ( PostInsertEventListener listener : fastSessionServices.eventListenerGroup_POST_INSERT.listeners() ) {
+				listener.onPostInsert( event );
+			}
+		}
+	}
+
+	private void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( !fastSessionServices.eventListenerGroup_POST_UPDATE.isEmpty() ) {
+			final PostUpdateEvent event = new PostUpdateEvent( entity, id, state, null, null, persister, null );
+			for ( PostUpdateEventListener listener : fastSessionServices.eventListenerGroup_POST_UPDATE.listeners() ) {
+				listener.onPostUpdate( event );
+			}
+		}
+	}
+
+	private void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		if ( !fastSessionServices.eventListenerGroup_POST_UPSERT.isEmpty() ) {
+			final PostUpsertEvent event = new PostUpsertEvent( entity, id, state, null, persister, null );
+			for ( PostUpsertEventListener listener : fastSessionServices.eventListenerGroup_POST_UPSERT.listeners() ) {
+				listener.onPostUpsert( event );
+			}
+		}
+	}
+
+	private void firePostDelete(Object entity, Object id, EntityPersister persister) {
+		if (!fastSessionServices.eventListenerGroup_POST_DELETE.isEmpty()) {
+			final PostDeleteEvent event = new PostDeleteEvent( entity, id, null, persister, null );
+			for ( PostDeleteEventListener listener : fastSessionServices.eventListenerGroup_POST_DELETE.listeners() ) {
+				listener.onPostDelete( event );
+			}
+		}
 	}
 
 	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

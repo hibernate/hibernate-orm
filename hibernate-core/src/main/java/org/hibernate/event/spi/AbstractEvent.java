@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 import java.io.Serializable;
 
 /**
@@ -36,4 +38,7 @@ public abstract class AbstractEvent implements Serializable {
 		return session;
 	}
 
+	public SessionFactoryImplementor getFactory() {
+		return session.getFactory();
+	}
 }

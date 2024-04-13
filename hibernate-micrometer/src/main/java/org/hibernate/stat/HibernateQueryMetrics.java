@@ -101,7 +101,7 @@ public class HibernateQueryMetrics implements MeterBinder {
 
 		@Override
 		public void onPostLoad(PostLoadEvent event) {
-			registerQueryMetric( event.getSession().getFactory().getStatistics() );
+			registerQueryMetric( event.getFactory().getStatistics() );
 		}
 
 		void registerQueryMetric(Statistics statistics) {

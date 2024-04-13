@@ -216,16 +216,15 @@ public class DefaultMergeEventListener
 				entityIsPersistent( event, copiedAlready );
 				break;
 			default: //DELETED
-				if ( event.getSession().getPersistenceContext().getEntry( entity ) == null ) {
-					assert event.getSession().getPersistenceContext().containsDeletedUnloadedEntityKey(
-							event.getSession().generateEntityKey(
-									event.getSession()
-											.getEntityPersister( event.getEntityName(), entity )
+				if ( persistenceContext.getEntry( entity ) == null ) {
+					assert persistenceContext.containsDeletedUnloadedEntityKey(
+							source.generateEntityKey(
+									source.getEntityPersister( event.getEntityName(), entity )
 											.getIdentifier( entity, event.getSession() ),
-									event.getSession().getEntityPersister( event.getEntityName(), entity )
+									source.getEntityPersister( event.getEntityName(), entity )
 							)
 					);
-					event.getSession().getActionQueue().unScheduleUnloadedDeletion( entity );
+					source.getActionQueue().unScheduleUnloadedDeletion( entity );
 					entityIsDetached(event, copiedId, originalId, copiedAlready);
 					break;
 				}
@@ -395,7 +394,7 @@ public class DefaultMergeEventListener
 		}
 		final Object clonedIdentifier;
 		if ( copiedId == null ) {
-			clonedIdentifier = persister.getIdentifierType().deepCopy( originalId, source.getFactory() );
+			clonedIdentifier = persister.getIdentifierType().deepCopy( originalId, event.getFactory() );
 		}
 		else {
 			clonedIdentifier = copiedId;

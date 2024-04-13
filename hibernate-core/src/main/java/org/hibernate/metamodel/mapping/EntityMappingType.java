@@ -437,11 +437,8 @@ public interface EntityMappingType
 	/**
 	 * Visit the mappings, but limited to just attributes defined
 	 * in the targetType or its super-type(s) if any.
-	 *
-	 * @apiNote Passing {@code null} indicates that subclasses should be included.  This
-	 * matches legacy non-TREAT behavior and meets the need for EntityGraph processing
 	 */
-	default void visitAttributeMappings(Consumer<? super AttributeMapping> action, EntityMappingType targetType) {
+	default void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
 		getAttributeMappings().forEach( action );
 	}
 

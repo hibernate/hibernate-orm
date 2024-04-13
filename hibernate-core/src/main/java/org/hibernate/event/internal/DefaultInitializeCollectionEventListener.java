@@ -20,7 +20,6 @@ import org.hibernate.event.spi.InitializeCollectionEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -39,7 +38,8 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		final PersistentCollection<?> collection = event.getCollection();
 		final SessionImplementor source = event.getSession();
 
-		final CollectionEntry ce = source.getPersistenceContextInternal().getCollectionEntry( collection );
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
 		if ( ce == null ) {
 			throw new HibernateException( "collection was evicted" );
 		}
@@ -65,7 +65,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					LOG.trace( "Collection not cached" );
 				}
 				loadedPersister.initialize( loadedKey, source );
-				handlePotentiallyEmptyCollection( collection, source, ce, loadedPersister );
+				handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection initialized" );
 				}
@@ -78,18 +78,18 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		}
 	}
 
-	private void handlePotentiallyEmptyCollection(
+	public static void handlePotentiallyEmptyCollection(
 			PersistentCollection<?> collection,
-			SessionImplementor source,
-			CollectionEntry ce,
+			PersistenceContext persistenceContext,
+			Object loadedKey,
 			CollectionPersister loadedPersister) {
 		if ( !collection.wasInitialized() ) {
 			collection.initializeEmptyCollection( loadedPersister );
 			ResultsHelper.finalizeCollectionLoading(
-					source.getPersistenceContext(),
+					persistenceContext,
 					loadedPersister,
 					collection,
-					ce.getLoadedKey(),
+					loadedKey,
 					true
 			);
 		}

@@ -49,6 +49,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
+import static org.hibernate.event.internal.DefaultInitializeCollectionEventListener.handlePotentiallyEmptyCollection;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -503,6 +504,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				persistentCollection.setCurrentSession( this );
 				try {
 					collectionDescriptor.initialize( key, this );
+					handlePotentiallyEmptyCollection( persistentCollection, getPersistenceContextInternal(), key,
+							collectionDescriptor );
 				}
 				finally {
 					persistentCollection.unsetSession( this );

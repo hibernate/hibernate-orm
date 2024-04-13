@@ -89,6 +89,33 @@ public class FetchTest extends BaseNonConfigCoreFunctionalTestCase {
 					long count = stats.getPrepareStatementCount();
 					session.fetch( school.students);
 					assertTrue( Hibernate.isInitialized( school.students) );
+					assertEquals( 1, school.students.size() );
+
+					assertEquals( count+1, stats.getPrepareStatementCount() );
+				}
+		);
+	}
+
+	@Test
+	public void testFetchEmpty() {
+		inStatelessTransaction(
+				session -> {
+					Secondary secondary = new Secondary( "BHS" );
+					session.insert(secondary);
+				}
+		);
+
+		inStatelessSession(
+				session -> {
+					final Statistics stats = sessionFactory().getStatistics();
+					stats.clear();
+					final School school = session.get( School.class, "BHS" );
+					assertFalse( Hibernate.isInitialized( school.students) );
+					assertTrue( school.students instanceof PersistentSet );
+					long count = stats.getPrepareStatementCount();
+					session.fetch( school.students);
+					assertTrue( Hibernate.isInitialized( school.students) );
+					assertTrue( school.students.isEmpty() );
 
 					assertEquals( count+1, stats.getPrepareStatementCount() );
 				}

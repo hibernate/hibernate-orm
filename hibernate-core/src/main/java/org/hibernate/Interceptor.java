@@ -148,6 +148,8 @@ public interface Interceptor {
 	 * @return {@code true} if the user modified the {@code currentState} in any way.
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @see Session#flush()
 	 */
 	default boolean onFlushDirty(
 			Object entity,
@@ -163,7 +165,9 @@ public interface Interceptor {
 	}
 
 	/**
-	 * Called before an object is saved. The interceptor may modify the {@code state}, which will be used for
+	 * Called before an object is made persistent by a stateful session.
+	 * <p>
+	 * The interceptor may modify the {@code state}, which will be used for
 	 * the SQL {@code INSERT} and propagated to the persistent object.
 	 *
 	 * @param entity The entity instance whose state is being inserted
@@ -185,7 +189,9 @@ public interface Interceptor {
 	}
 
 	/**
-	 * Called before an object is saved. The interceptor may modify the {@code state}, which will be used for
+	 * Called before an object is made persistent by a stateful session.
+	 * <p>
+	 * The interceptor may modify the {@code state}, which will be used for
 	 * the SQL {@code INSERT} and propagated to the persistent object.
 	 *
 	 * @param entity The entity instance whose state is being inserted
@@ -197,6 +203,10 @@ public interface Interceptor {
 	 * @return {@code true} if the user modified the {@code state} in any way.
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @see Session#persist(Object)
+	 * @see Session#merge(Object)
+	 * @see Session#save(Object)
 	 */
 	default boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
@@ -206,7 +216,9 @@ public interface Interceptor {
 		return false;
 	}
 	/**
-	 *  Called before an object is deleted. It is not recommended that the interceptor modify the {@code state}.
+	 *  Called before an object is removed by a stateful session.
+	 *  <p>
+	 *  It is not recommended that the interceptor modify the {@code state}.
 	 *
 	 * @param entity The entity instance being deleted
 	 * @param id The identifier of the entity
@@ -223,7 +235,9 @@ public interface Interceptor {
 			throws CallbackException {}
 
 	/**
-	 *  Called before an object is deleted. It is not recommended that the interceptor modify the {@code state}.
+	 *  Called before an object is removed by a stateful session.
+	 *  <p>
+	 *  It is not recommended that the interceptor modify the {@code state}.
 	 *
 	 * @param entity The entity instance being deleted
 	 * @param id The identifier of the entity
@@ -232,6 +246,9 @@ public interface Interceptor {
 	 * @param types The types of the entity properties
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @see Session#remove(Object)
+	 * @see Session#delete(Object)
 	 */
 	default void onDelete(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
@@ -515,4 +532,63 @@ public interface Interceptor {
 	 * @param tx The Hibernate transaction facade object
 	 */
 	default void afterTransactionCompletion(Transaction tx) {}
+
+	/**
+	 * Called before a record is inserted by a {@link StatelessSession}.
+	 *
+	 * @param entity The entity instance being deleted
+	 * @param id The identifier of the entity
+	 * @param state The entity state
+	 * @param propertyNames The names of the entity properties.
+	 * @param propertyTypes The types of the entity properties
+	 *
+	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @see StatelessSession#insert(Object)
+	 */
+	default void onInsert(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
+
+	/**
+	 * Called before a record is updated by a {@link StatelessSession}.
+	 *
+	 * @param entity The entity instance being deleted
+	 * @param id The identifier of the entity
+	 * @param state The entity state
+	 * @param propertyNames The names of the entity properties.
+	 * @param propertyTypes The types of the entity properties
+	 *
+	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @see StatelessSession#update(Object)
+	 */
+	default void onUpdate(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
+
+	/**
+	 * Called before a record is upserted by a {@link StatelessSession}.
+	 *
+	 * @param entity The entity instance being deleted
+	 * @param id The identifier of the entity
+	 * @param state The entity state
+	 * @param propertyNames The names of the entity properties.
+	 * @param propertyTypes The types of the entity properties
+	 *
+	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @see StatelessSession#upsert(String, Object)
+	 */
+	default void onUpsert(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
+
+	/**
+	 * Called before a record is deleted by a {@link StatelessSession}.
+	 *
+	 * @param entity The entity instance being deleted
+	 * @param id The identifier of the entity
+	 * @param propertyNames The names of the entity properties.
+	 * @param propertyTypes The types of the entity properties
+	 *
+	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @see StatelessSession#delete(Object)
+	 */
+	default void onDelete(Object entity, Object id, String[] propertyNames, Type[] propertyTypes) {}
 }

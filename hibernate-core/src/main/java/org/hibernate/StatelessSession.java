@@ -30,13 +30,10 @@ import org.hibernate.graph.GraphSemantic;
  *     checking.
  * </ul>
  * <p>
- * Furthermore, operations performed via a stateless session:
- * <ul>
- * <li>never cascade to associated instances, no matter what the
- *     {@link jakarta.persistence.CascadeType}, and
- * <li>bypass Hibernate's {@linkplain org.hibernate.event.spi event model},
- *     lifecycle callbacks, and {@linkplain Interceptor interceptors}.
- * </ul>
+ * Furthermore, the basic operations of a stateless session do not have
+ * corresponding {@linkplain jakarta.persistence.CascadeType cascade types},
+ * and so an operation performed via a stateless session never cascades to
+ * associated instances.
  * <p>
  * Stateless sessions are vulnerable to data aliasing effects, due to the
  * lack of a first-level cache.

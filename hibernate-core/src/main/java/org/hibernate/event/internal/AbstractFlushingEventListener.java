@@ -115,18 +115,19 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		}
 		final EventSource session = event.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final ActionQueue actionQueue = session.getActionQueue();
 		LOG.debugf(
 				"Flushed: %s insertions, %s updates, %s deletions to %s objects",
-				session.getActionQueue().numberOfInsertions(),
-				session.getActionQueue().numberOfUpdates(),
-				session.getActionQueue().numberOfDeletions(),
+				actionQueue.numberOfInsertions(),
+				actionQueue.numberOfUpdates(),
+				actionQueue.numberOfDeletions(),
 				persistenceContext.getNumberOfManagedEntities()
 		);
 		LOG.debugf(
 				"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
-				session.getActionQueue().numberOfCollectionCreations(),
-				session.getActionQueue().numberOfCollectionUpdates(),
-				session.getActionQueue().numberOfCollectionRemovals(),
+				actionQueue.numberOfCollectionCreations(),
+				actionQueue.numberOfCollectionUpdates(),
+				actionQueue.numberOfCollectionRemovals(),
 				persistenceContext.getCollectionEntriesSize()
 		);
 		new EntityPrinter( session.getFactory() ).toString(
@@ -205,8 +206,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
 		final EventSource source = event.getSession();
-		final EventListenerGroup<FlushEntityEventListener> flushListeners = source.getFactory()
-				.getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
+		final EventListenerGroup<FlushEntityEventListener> flushListeners =
+				event.getFactory().getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
 
 		// Among other things, updateReachables() will recursively load all
 		// collections that are moving roles. This might cause entities to

@@ -10,26 +10,31 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Occurs after inserting an item in the datastore
+ * Occurs after the datastore is updated
  * 
  * @author Gavin King
  */
-public class PostInsertEvent extends AbstractEvent {
+public class PostUpsertEvent extends AbstractEvent {
 	private Object entity;
 	private EntityPersister persister;
 	private Object[] state;
 	private Object id;
-	
-	public PostInsertEvent(
+	//list of dirty properties as computed by Hibernate during a FlushEntityEvent
+	private final int[] dirtyProperties;
+
+	public PostUpsertEvent(
 			Object entity,
 			Object id,
 			Object[] state,
+			int[] dirtyProperties,
 			EntityPersister persister,
-			EventSource source) {
+			EventSource source
+	) {
 		super(source);
 		this.entity = entity;
 		this.id = id;
 		this.state = state;
+		this.dirtyProperties = dirtyProperties;
 		this.persister = persister;
 	}
 	
@@ -52,5 +57,9 @@ public class PostInsertEvent extends AbstractEvent {
 
 	public Object[] getState() {
 		return state;
+	}
+
+	public int[] getDirtyProperties() {
+		return dirtyProperties;
 	}
 }

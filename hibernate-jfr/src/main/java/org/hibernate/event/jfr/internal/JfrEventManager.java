@@ -12,7 +12,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -453,8 +452,7 @@ public class JfrEventManager implements EventManager {
 			flushEvent.end();
 			if ( flushEvent.shouldCommit() ) {
 				flushEvent.executionTime = getExecutionTime( flushEvent.startedAt );
-				EventSource session = event.getSession();
-				flushEvent.sessionIdentifier = getSessionIdentifier( session );
+				flushEvent.sessionIdentifier = getSessionIdentifier( event.getSession() );
 				flushEvent.numberOfEntitiesProcessed = event.getNumberOfEntitiesProcessed();
 				flushEvent.numberOfCollectionsProcessed = event.getNumberOfCollectionsProcessed();
 				flushEvent.isAutoFlush = autoFlush;
@@ -485,8 +483,7 @@ public class JfrEventManager implements EventManager {
 			flushEvent.end();
 			if ( flushEvent.shouldCommit() ) {
 				flushEvent.executionTime = getExecutionTime( flushEvent.startedAt );
-				EventSource session = event.getSession();
-				flushEvent.sessionIdentifier = getSessionIdentifier( session );
+				flushEvent.sessionIdentifier = getSessionIdentifier( event.getSession() );
 				flushEvent.numberOfEntitiesProcessed = event.getNumberOfEntitiesProcessed();
 				flushEvent.numberOfCollectionsProcessed = event.getNumberOfCollectionsProcessed();
 				flushEvent.isAutoFlush = true;

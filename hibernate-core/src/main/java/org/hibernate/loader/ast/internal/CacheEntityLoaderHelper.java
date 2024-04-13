@@ -169,8 +169,7 @@ public class CacheEntityLoaderHelper {
 				}
 			}
 			if ( options.isAllowNulls() ) {
-				final EntityPersister persister = event.getSession()
-						.getFactory()
+				final EntityPersister persister = event.getFactory()
 						.getRuntimeMetamodels()
 						.getMappingMetamodel()
 						.getEntityDescriptor( keyToLoad.getEntityName() );
@@ -215,7 +214,7 @@ public class CacheEntityLoaderHelper {
 					.setId( event.getEntityId() )
 					.setPersister( persister );
 
-			event.getSession().getSessionFactory()
+			event.getFactory()
 					.getFastSessionServices()
 					.firePostLoadEvent( postLoadEvent );
 		}

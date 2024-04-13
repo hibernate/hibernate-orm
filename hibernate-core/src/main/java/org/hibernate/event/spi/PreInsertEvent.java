@@ -16,11 +16,11 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class PreInsertEvent extends AbstractPreDatabaseOperationEvent {
-	private Object[] state;
+	private final Object[] state;
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *  @param entity The entity to be inserted.
+	 * @param entity The entity to be inserted.
 	 * @param id The id to use in the insertion.
 	 * @param state The state to be inserted.
 	 * @param persister The entity's persister.

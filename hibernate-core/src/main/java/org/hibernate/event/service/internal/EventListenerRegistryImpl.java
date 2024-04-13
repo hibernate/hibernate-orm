@@ -38,6 +38,7 @@ import org.hibernate.event.internal.DefaultUpdateEventListener;
 import org.hibernate.event.internal.PostDeleteEventListenerStandardImpl;
 import org.hibernate.event.internal.PostInsertEventListenerStandardImpl;
 import org.hibernate.event.internal.PostUpdateEventListenerStandardImpl;
+import org.hibernate.event.internal.PostUpsertEventListenerStandardImpl;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
@@ -68,6 +69,7 @@ import static org.hibernate.event.spi.EventType.POST_DELETE;
 import static org.hibernate.event.spi.EventType.POST_INSERT;
 import static org.hibernate.event.spi.EventType.POST_LOAD;
 import static org.hibernate.event.spi.EventType.POST_UPDATE;
+import static org.hibernate.event.spi.EventType.POST_UPSERT;
 import static org.hibernate.event.spi.EventType.PRE_COLLECTION_RECREATE;
 import static org.hibernate.event.spi.EventType.PRE_COLLECTION_REMOVE;
 import static org.hibernate.event.spi.EventType.PRE_COLLECTION_UPDATE;
@@ -75,6 +77,7 @@ import static org.hibernate.event.spi.EventType.PRE_DELETE;
 import static org.hibernate.event.spi.EventType.PRE_INSERT;
 import static org.hibernate.event.spi.EventType.PRE_LOAD;
 import static org.hibernate.event.spi.EventType.PRE_UPDATE;
+import static org.hibernate.event.spi.EventType.PRE_UPSERT;
 import static org.hibernate.event.spi.EventType.REFRESH;
 import static org.hibernate.event.spi.EventType.REPLICATE;
 import static org.hibernate.event.spi.EventType.RESOLVE_NATURAL_ID;
@@ -97,14 +100,14 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		this.eventListeners = eventListeners;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType) {
 		if ( eventListeners.length < eventType.ordinal() + 1 ) {
-			// eventTpe is a custom EventType that has not been registered.
+			// eventType is a custom EventType that has not been registered.
 			// registeredEventListeners array was not allocated enough space to
 			// accommodate it.
 			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
 		}
+		@SuppressWarnings("unchecked")
 		final EventListenerGroup<T> listeners = eventListeners[ eventType.ordinal() ];
 		if ( listeners == null ) {
 			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
@@ -278,6 +281,9 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 			// pre-update listeners
 			prepareListeners( PRE_UPDATE );
 
+			// pre-update listeners
+			prepareListeners( PRE_UPSERT );
+
 			// post-collection-recreate listeners
 			prepareListeners( POST_COLLECTION_RECREATE );
 
@@ -307,6 +313,9 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 			// post-update listeners
 			prepareListeners( POST_UPDATE, new PostUpdateEventListenerStandardImpl() );
+
+			// post-upsert listeners
+			prepareListeners( POST_UPSERT, new PostUpsertEventListenerStandardImpl() );
 
 			// update listeners
 			prepareListeners( UPDATE, new DefaultUpdateEventListener() );

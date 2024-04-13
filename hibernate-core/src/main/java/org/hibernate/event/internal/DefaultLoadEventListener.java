@@ -85,21 +85,19 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 	protected EntityPersister getPersister(final LoadEvent event) {
 		final Object instanceToLoad = event.getInstanceToLoad();
-		final EventSource source = event.getSession();
 		if ( instanceToLoad != null ) {
 			//the load() which takes an entity does not pass an entityName
 			event.setEntityClassName( instanceToLoad.getClass().getName() );
-			return source.getEntityPersister( null, instanceToLoad );
+			return event.getSession().getEntityPersister( null, instanceToLoad );
 		}
 		else {
-			return source.getFactory().getMappingMetamodel().getEntityDescriptor( event.getEntityClassName() );
+			return event.getFactory().getMappingMetamodel().getEntityDescriptor( event.getEntityClassName() );
 		}
 	}
 
 	private void doOnLoad(EntityPersister persister, LoadEvent event, LoadType loadType) {
 		try {
-			final EventSource session = event.getSession();
-			final EntityKey keyToLoad = session.generateEntityKey( event.getEntityId(), persister );
+			final EntityKey keyToLoad = event.getSession().generateEntityKey( event.getEntityId(), persister );
 			if ( loadType.isNakedEntityReturned() ) {
 				//do not return a proxy!
 				//(this option indicates we are initializing a proxy)
@@ -193,22 +191,22 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @return The loaded entity.
 	 */
 	private Object load(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
-		final EventSource session = event.getSession();
 		if ( event.getInstanceToLoad() != null ) {
+			final EventSource session = event.getSession();
 			if ( session.getPersistenceContextInternal().getEntry( event.getInstanceToLoad() ) != null ) {
 				throw new PersistentObjectException(
 						"attempted to load into an instance that was already associated with the session: "
-								+ infoString( persister, event.getEntityId(), session.getFactory() )
+								+ infoString( persister, event.getEntityId(), event.getFactory() )
 				);
 			}
-			persister.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), session);
+			persister.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), session );
 		}
 
 		final Object entity = doLoad( event, persister, keyToLoad, options );
 		boolean isOptionalInstance = event.getInstanceToLoad() != null;
 		if ( entity == null
 				&& ( !options.isAllowNulls() || isOptionalInstance ) ) {
-			session.getFactory().getEntityNotFoundDelegate()
+			event.getFactory().getEntityNotFoundDelegate()
 					.handleEntityNotFound( event.getEntityClassName(), event.getEntityId() );
 		}
 		else if ( isOptionalInstance && entity != event.getInstanceToLoad() ) {
@@ -397,7 +395,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		else {
 			if ( options != LoadEventListener.INTERNAL_LOAD_NULLABLE ) {
 				// throw an appropriate exception
-				event.getSession().getFactory().getEntityNotFoundDelegate()
+				event.getFactory().getEntityNotFoundDelegate()
 						.handleEntityNotFound( persister.getEntityName(), keyToLoad.getIdentifier() );
 			}
 			// Otherwise, if it's INTERNAL_LOAD_NULLABLE, the proxy is
@@ -448,8 +446,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 	private static Object createProxy(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
 		// return new uninitialized proxy
-		final Object proxy = persister.createProxy( event.getEntityId(), event.getSession() );
-		PersistenceContext persistenceContext = event.getSession().getPersistenceContextInternal();
+		final EventSource session = event.getSession();
+		final Object proxy = persister.createProxy( event.getEntityId(), session );
+		PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
 		persistenceContext.addProxy( keyToLoad, proxy );
 		return proxy;
@@ -477,7 +476,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			ck = cache.generateCacheKey(
 					event.getEntityId(),
 					persister,
-					source.getFactory(),
+					event.getFactory(),
 					source.getTenantIdentifier()
 			);
 			lock = cache.lockItem( source, ck, null );
@@ -520,7 +519,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Attempting to resolve: {0}",
-					infoString( persister, event.getEntityId(), session.getFactory() )
+					infoString( persister, event.getEntityId(), event.getFactory() )
 			);
 		}
 
@@ -575,7 +574,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Resolved object in second-level cache: {0}",
-						infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+						infoString( persister, event.getEntityId(), event.getFactory() )
 				);
 			}
 			return entity;
@@ -584,7 +583,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Object not resolved in any cache: {0}",
-						infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+						infoString( persister, event.getEntityId(), event.getFactory() )
 				);
 			}
 			return loadFromDatasource( event, persister );
@@ -620,7 +619,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			entity = lazyInitializer.getImplementation();
 		}
 
-		final StatisticsImplementor statistics = event.getSession().getFactory().getStatistics();
+		final StatisticsImplementor statistics = event.getFactory().getStatistics();
 		if ( event.isAssociationFetch() && statistics.isStatisticsEnabled() ) {
 			statistics.fetchEntity( event.getEntityClassName() );
 		}

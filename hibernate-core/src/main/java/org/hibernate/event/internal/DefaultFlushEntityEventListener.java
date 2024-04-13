@@ -223,10 +223,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				final Object entity = event.getEntity();
 				processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 				processIfManagedEntity( entity, DefaultFlushEntityEventListener::useTracker );
-				final EventSource source = event.getSession();
-				source.getFactory()
+				event.getFactory()
 						.getCustomEntityDirtinessStrategy()
-						.resetDirty( entity, entry.getPersister(), source );
+						.resetDirty( entity, entry.getPersister(), event.getSession() );
 				return false;
 			}
 		}
@@ -247,7 +246,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final EntityPersister persister = entry.getPersister();
 		final Object[] values = event.getPropertyValues();
 
-		logScheduleUpdate( entry, session, status, persister );
+		logScheduleUpdate( entry, event.getFactory(), status, persister );
 
 		final boolean intercepted = !entry.isBeingReplicated() && handleInterception( event );
 
@@ -299,32 +298,32 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 	}
 
-	private static void logScheduleUpdate(EntityEntry entry, EventSource session, Status status, EntityPersister persister) {
+	private static void logScheduleUpdate(EntityEntry entry, SessionFactoryImplementor factory, Status status, EntityPersister persister) {
 		if ( LOG.isTraceEnabled() ) {
 			if ( status == Status.DELETED ) {
 				if ( !persister.isMutable() ) {
 					LOG.tracev(
 							"Updating immutable, deleted entity: {0}",
-							MessageHelper.infoString(persister, entry.getId(), session.getFactory() )
+							MessageHelper.infoString(persister, entry.getId(), factory)
 					);
 				}
 				else if ( !entry.isModifiableEntity() ) {
 					LOG.tracev(
 							"Updating non-modifiable, deleted entity: {0}",
-							MessageHelper.infoString(persister, entry.getId(), session.getFactory() )
+							MessageHelper.infoString(persister, entry.getId(), factory)
 					);
 				}
 				else {
 					LOG.tracev(
 							"Updating deleted entity: {0}",
-							MessageHelper.infoString(persister, entry.getId(), session.getFactory() )
+							MessageHelper.infoString(persister, entry.getId(), factory)
 					);
 				}
 			}
 			else {
 				LOG.tracev(
 						"Updating entity: {0}",
-						MessageHelper.infoString(persister, entry.getId(), session.getFactory() )
+						MessageHelper.infoString(persister, entry.getId(), factory)
 				);
 			}
 		}
@@ -352,7 +351,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		if ( entry.getStatus() != Status.DELETED ) {
 			if ( callbackRegistry.preUpdate( entity ) ) {
-				isDirty = copyState( entity, persister.getPropertyTypes(), values, session.getFactory() );
+				isDirty = copyState( entity, persister.getPropertyTypes(), values, event.getFactory() );
 			}
 		}
 
@@ -593,10 +592,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				}
 			}
 		}
-		final EventSource session = event.getSession();
 		final DirtyCheckContextImpl context = new DirtyCheckContextImpl();
-		session.getFactory().getCustomEntityDirtinessStrategy()
-				.findDirty( event.getEntity(), event.getEntityEntry().getPersister(), session, context );
+		event.getFactory().getCustomEntityDirtinessStrategy()
+				.findDirty( event.getEntity(), event.getEntityEntry().getPersister(), event.getSession(), context );
 		return context.found;
 	}
 

@@ -134,7 +134,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Refreshing transient {0}",
-						infoString( persister, id, source.getFactory() )
+						infoString( persister, id, event.getFactory() )
 				);
 			}
 			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
@@ -145,7 +145,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Refreshing ",
-						infoString( entry.getPersister(), entry.getId(), source.getFactory() )
+						infoString( entry.getPersister(), entry.getId(), event.getFactory() )
 				);
 			}
 			if ( !entry.isExistsInDatabase() ) {

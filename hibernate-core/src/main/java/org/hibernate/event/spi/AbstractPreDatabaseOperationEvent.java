@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -63,6 +64,16 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
 	 */
 	public EntityPersister getPersister() {
 		return persister;
+	}
+
+	/**
+	 * The factory which owns the persister for the entity.
+	 *
+	 * @return The factory
+	 */
+	@Override
+	public SessionFactoryImplementor getFactory() {
+		return persister.getFactory();
 	}
 }
 

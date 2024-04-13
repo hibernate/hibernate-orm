@@ -39,6 +39,7 @@ public class GroupsPerOperation {
 		applyOperationGrouping( groupsPerOperation, Operation.INSERT, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.UPDATE, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.DELETE, settings, classLoaderAccess );
+		applyOperationGrouping( groupsPerOperation, Operation.UPSERT, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.DDL, settings, classLoaderAccess );
 
 		return groupsPerOperation;
@@ -99,10 +100,11 @@ public class GroupsPerOperation {
 		return groupsPerOperation.get( operation );
 	}
 
-	public static enum Operation {
+	public enum Operation {
 		INSERT( "persist", JPA_GROUP_PREFIX + "pre-persist", JAKARTA_JPA_GROUP_PREFIX + "pre-persist" ),
 		UPDATE( "update", JPA_GROUP_PREFIX + "pre-update", JAKARTA_JPA_GROUP_PREFIX + "pre-update" ),
 		DELETE( "remove", JPA_GROUP_PREFIX + "pre-remove", JAKARTA_JPA_GROUP_PREFIX + "pre-remove" ),
+		UPSERT( "upsert", JPA_GROUP_PREFIX + "pre-upsert", JAKARTA_JPA_GROUP_PREFIX + "pre-upsert" ),
 		DDL( "ddl", HIBERNATE_GROUP_PREFIX + "ddl", HIBERNATE_GROUP_PREFIX + "ddl" );
 
 

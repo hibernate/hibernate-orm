@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostUpdateEvent;
@@ -33,9 +32,9 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 	}
 
 	private void handlePostUpdate(Object entity, EventSource source) {
-		EntityEntry entry = source.getPersistenceContextInternal().getEntry( entity );
 		// mimic the preUpdate filter
-		if ( Status.DELETED != entry.getStatus() ) {
+		if ( source == null // it must be a StatelessSession
+				|| source.getPersistenceContextInternal().getEntry(entity).getStatus() != Status.DELETED ) {
 			callbackRegistry.postUpdate(entity);
 		}
 	}

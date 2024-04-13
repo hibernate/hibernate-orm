@@ -120,7 +120,7 @@ public class DefaultSaveOrUpdateEventListener
 				throw new AssertionFailure( "entity was deleted" );
 			}
 
-			final SessionFactoryImplementor factory = event.getSession().getFactory();
+			final SessionFactoryImplementor factory = event.getFactory();
 
 			final Object requestedId = event.getRequestedId();
 			final Object savedId;
@@ -250,7 +250,7 @@ public class DefaultSaveOrUpdateEventListener
 			}
 			LOG.tracev(
 					"Updating {0}",
-					MessageHelper.infoString( persister, event.getRequestedId(), source.getFactory() )
+					MessageHelper.infoString( persister, event.getRequestedId(), event.getFactory() )
 			);
 		}
 
@@ -293,7 +293,7 @@ public class DefaultSaveOrUpdateEventListener
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Updating {0}",
-						MessageHelper.infoString( persister, event.getRequestedId(), source.getFactory() )
+						MessageHelper.infoString( persister, event.getRequestedId(), event.getFactory() )
 				);
 			}
 

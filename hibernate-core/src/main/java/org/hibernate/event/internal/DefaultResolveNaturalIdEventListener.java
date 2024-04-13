@@ -14,7 +14,6 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -106,7 +105,7 @@ public class DefaultResolveNaturalIdEventListener
 	protected Object loadFromDatasource(ResolveNaturalIdEvent event) {
 		final EventSource session = event.getSession();
 		final EntityPersister entityPersister = event.getEntityPersister();
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final StatisticsImplementor statistics = event.getFactory().getStatistics();
 		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
 		final long startTime = statisticsEnabled ? System.nanoTime() : 0;
 

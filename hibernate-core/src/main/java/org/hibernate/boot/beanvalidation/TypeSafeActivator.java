@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.beanvalidation;
 
+import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,8 +24,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -40,6 +39,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SingleTableSubclass;
 
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.jboss.logging.Logger;
 
 import jakarta.validation.Validation;
@@ -47,6 +47,11 @@ import jakarta.validation.ValidatorFactory;
 import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.PropertyDescriptor;
+
+import static org.hibernate.boot.beanvalidation.GroupsPerOperation.buildGroupsForOperation;
+import static org.hibernate.cfg.ValidationSettings.CHECK_NULLABILITY;
+import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_FACTORY;
+import static org.hibernate.cfg.ValidationSettings.JPA_VALIDATION_FACTORY;
 
 /**
  * @author Emmanuel Bernard
@@ -62,7 +67,7 @@ class TypeSafeActivator {
 	 *
 	 * @param object The supplied ValidatorFactory instance.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings("UnusedDeclaration")
 	public static void validateSuppliedFactory(Object object) {
 		if ( !(object instanceof ValidatorFactory) ) {
 			throw new IntegrationException(
@@ -95,49 +100,46 @@ class TypeSafeActivator {
 		applyCallbackListeners( factory, activationContext );
 	}
 
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public static void applyCallbackListeners(ValidatorFactory validatorFactory, ActivationContext activationContext) {
 		final Set<ValidationMode> modes = activationContext.getValidationModes();
-		if ( ! ( modes.contains( ValidationMode.CALLBACK ) || modes.contains( ValidationMode.AUTO ) ) ) {
+		if ( !modes.contains( ValidationMode.CALLBACK ) && !modes.contains( ValidationMode.AUTO ) ) {
 			return;
 		}
 
-		final ConfigurationService cfgService = activationContext.getServiceRegistry().requireService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService = activationContext.getServiceRegistry().requireService( ClassLoaderService.class );
+		final SessionFactoryServiceRegistry serviceRegistry = activationContext.getServiceRegistry();
+		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		final EventListenerRegistry listenerRegistry = serviceRegistry.requireService( EventListenerRegistry.class );
 
 		// de-activate not-null tracking at the core level when Bean Validation is present unless the user explicitly
 		// asks for it
-		if ( cfgService.getSettings().get( Environment.CHECK_NULLABILITY ) == null ) {
+		if ( cfgService.getSettings().get( CHECK_NULLABILITY ) == null ) {
 			activationContext.getSessionFactory().getSessionFactoryOptions().setCheckNullability( false );
 		}
 
-		final BeanValidationEventListener listener = new BeanValidationEventListener(
-				validatorFactory,
-				cfgService.getSettings(),
-				classLoaderService
-		);
-
-		final EventListenerRegistry listenerRegistry = activationContext.getServiceRegistry()
-				.requireService( EventListenerRegistry.class );
+		final BeanValidationEventListener listener =
+				new BeanValidationEventListener( validatorFactory, cfgService.getSettings(), classLoaderService );
 
 		listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
 
 		listenerRegistry.appendListeners( EventType.PRE_INSERT, listener );
 		listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
 		listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
+		listenerRegistry.appendListeners( EventType.PRE_UPSERT, listener );
 
 		listener.initialize( cfgService.getSettings(), classLoaderService );
 	}
 
 	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext activationContext) {
-		final ConfigurationService cfgService = activationContext.getServiceRegistry().requireService( ConfigurationService.class );
+		final SessionFactoryServiceRegistry serviceRegistry = activationContext.getServiceRegistry();
+		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 		if ( !cfgService.getSetting( BeanValidationIntegrator.APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true  ) ) {
 			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
 			return;
 		}
 
 		final Set<ValidationMode> modes = activationContext.getValidationModes();
-		if ( ! ( modes.contains( ValidationMode.DDL ) || modes.contains( ValidationMode.AUTO ) ) ) {
+		if ( !modes.contains( ValidationMode.DDL ) && !modes.contains( ValidationMode.AUTO ) ) {
 			return;
 		}
 
@@ -145,32 +147,25 @@ class TypeSafeActivator {
 				factory,
 				activationContext.getMetadata().getEntityBindings(),
 				cfgService.getSettings(),
-				activationContext.getServiceRegistry().requireService( JdbcServices.class ).getDialect(),
-				new ClassLoaderAccessImpl(
-						null,
-						activationContext.getServiceRegistry().getService( ClassLoaderService.class )
-				)
+				serviceRegistry.requireService( JdbcServices.class ).getDialect(),
+				new ClassLoaderAccessImpl( null,
+						serviceRegistry.getService( ClassLoaderService.class ) )
 		);
 	}
 
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public static void applyRelationalConstraints(
 			ValidatorFactory factory,
 			Collection<PersistentClass> persistentClasses,
 			Map<String,Object> settings,
 			Dialect dialect,
 			ClassLoaderAccess classLoaderAccess) {
-		Class<?>[] groupsArray = GroupsPerOperation.buildGroupsForOperation(
-				GroupsPerOperation.Operation.DDL,
-				settings,
-				classLoaderAccess
-		);
-		Set<Class<?>> groups = new HashSet<>( Arrays.asList( groupsArray ) );
+		final Class<?>[] groupsArray =
+				buildGroupsForOperation( GroupsPerOperation.Operation.DDL, settings, classLoaderAccess );
+		final Set<Class<?>> groups = new HashSet<>( Arrays.asList( groupsArray ) );
 
 		for ( PersistentClass persistentClass : persistentClasses ) {
 			final String className = persistentClass.getClassName();
-
-			if ( className == null || className.length() == 0 ) {
+			if ( className == null || className.isEmpty() ) {
 				continue;
 			}
 			Class<?> clazz;
@@ -202,17 +197,21 @@ class TypeSafeActivator {
 		//no bean level constraints can be applied, go to the properties
 
 		for ( PropertyDescriptor propertyDesc : descriptor.getConstrainedProperties() ) {
-			Property property = findPropertyByName( persistentClass, prefix + propertyDesc.getPropertyName() );
-			boolean hasNotNull;
+			final Property property =
+					findPropertyByName( persistentClass, prefix + propertyDesc.getPropertyName() );
 			if ( property != null ) {
-				hasNotNull = applyConstraints(
-						propertyDesc.getConstraintDescriptors(), property, propertyDesc, groups, activateNotNull, dialect
+				final boolean hasNotNull = applyConstraints(
+						propertyDesc.getConstraintDescriptors(),
+						property,
+						propertyDesc,
+						groups,
+						activateNotNull,
+						dialect
 				);
 				if ( property.isComposite() && propertyDesc.isCascaded() ) {
-					Class<?> componentClass = ( (Component) property.getValue() ).getComponentClass();
-
+					final Component component = (Component) property.getValue();
 					/*
-					 * we can apply not null if the upper component let's us activate not null
+					 * we can apply not null if the upper component lets us activate not null
 					 * and if the property is not null.
 					 * Otherwise, all sub columns should be left nullable
 					 */
@@ -220,7 +219,7 @@ class TypeSafeActivator {
 					applyDDL(
 							prefix + propertyDesc.getPropertyName() + ".",
 							persistentClass,
-							componentClass,
+							component.getComponentClass(),
 							factory,
 							groups,
 							canSetNotNullOnColumns,
@@ -275,8 +274,8 @@ class TypeSafeActivator {
 	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
-			long min = minConstraint.getAnnotation().value();
+			final ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
+			final long min = minConstraint.getAnnotation().value();
 
 			for ( Selectable selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column ) {
@@ -291,8 +290,8 @@ class TypeSafeActivator {
 	private static void applyMax(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Max.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
-			long max = maxConstraint.getAnnotation().value();
+			final ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
+			final long max = maxConstraint.getAnnotation().value();
 
 			for ( Selectable selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column ) {
@@ -318,9 +317,10 @@ class TypeSafeActivator {
 	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
 		boolean hasNotNull = false;
 		// NotNull, NotEmpty, and NotBlank annotation add not-null on column
-		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType())
-				|| NotEmpty.class.equals( descriptor.getAnnotation().annotationType())
-				|| NotBlank.class.equals( descriptor.getAnnotation().annotationType())) {
+		final Class<? extends Annotation> annotationType = descriptor.getAnnotation().annotationType();
+		if ( NotNull.class.equals(annotationType)
+				|| NotEmpty.class.equals(annotationType)
+				|| NotBlank.class.equals(annotationType)) {
 			// single table inheritance should not be forced to null due to shared state
 			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
 				//composite should not add not-null on all columns
@@ -406,7 +406,7 @@ class TypeSafeActivator {
 		String idName = idProperty != null ? idProperty.getName() : null;
 		try {
 			if ( propertyName == null
-					|| propertyName.length() == 0
+					|| propertyName.isEmpty()
 					|| propertyName.equals( idName ) ) {
 				//default to id
 				property = idProperty;
@@ -488,11 +488,9 @@ class TypeSafeActivator {
 
 	private static ValidatorFactory resolveProvidedFactory(SessionFactoryOptions options) {
 		final Object validatorFactoryReference = options.getValidatorFactoryReference();
-
 		if ( validatorFactoryReference == null ) {
 			return null;
 		}
-
 		try {
 			return (ValidatorFactory) validatorFactoryReference;
 		}
@@ -511,7 +509,7 @@ class TypeSafeActivator {
 
 	private static ValidatorFactory resolveProvidedFactory(ConfigurationService cfgService) {
 		return cfgService.getSetting(
-				AvailableSettings.JPA_VALIDATION_FACTORY,
+				JPA_VALIDATION_FACTORY,
 				value -> {
 					try {
 						return (ValidatorFactory) value;
@@ -521,7 +519,7 @@ class TypeSafeActivator {
 								String.format(
 										Locale.ENGLISH,
 										"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
-										AvailableSettings.JPA_VALIDATION_FACTORY,
+										JPA_VALIDATION_FACTORY,
 										ValidatorFactory.class.getName(),
 										value.getClass().getName()
 								)
@@ -529,7 +527,7 @@ class TypeSafeActivator {
 					}
 				},
 				cfgService.getSetting(
-						AvailableSettings.JAKARTA_VALIDATION_FACTORY,
+						JAKARTA_VALIDATION_FACTORY,
 						value -> {
 							try {
 								return (ValidatorFactory) value;
@@ -539,7 +537,7 @@ class TypeSafeActivator {
 										String.format(
 												Locale.ENGLISH,
 												"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
-												AvailableSettings.JAKARTA_VALIDATION_FACTORY,
+												JAKARTA_VALIDATION_FACTORY,
 												ValidatorFactory.class.getName(),
 												value.getClass().getName()
 										)

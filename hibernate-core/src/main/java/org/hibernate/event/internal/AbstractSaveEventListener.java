@@ -449,7 +449,7 @@ public abstract class AbstractSaveEventListener<C>
 			Object[] values,
 			EntityPersister persister,
 			SessionImplementor source) {
-		boolean substitute = source.getInterceptor().onSave(
+		boolean substitute = source.getInterceptor().onPersist(
 				entity,
 				id,
 				values,

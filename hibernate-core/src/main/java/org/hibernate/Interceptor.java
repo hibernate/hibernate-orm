@@ -16,6 +16,15 @@ import org.hibernate.type.Type;
 /**
  * Allows user code to inspect and/or change entity property values before they are
  * written to the database, or after they are read from the database.
+ * <ul>
+ * <li>For a {@linkplain Session stateful session}, the callbacks {@link #onLoad},
+ *     {@link #onPersist}, {@link #onRemove}, and {@link #onFlushDirty} reflect the
+ *     basic lifecycle of a managed entity.
+ * <li>For a {@linkplain StatelessSession stateless session}, the relevant callbacks
+ *     are {@link #onLoad}, {@link #onInsert}, {@link #onUpdate}, {@link #onUpsert}, and
+ *     {@link #onDelete(Object entity, Object id, String[] propertyNames, Type[] propertyTypes)
+ *     onDelete}.
+ * </ul>
  * <p>
  * The {@link Session} may not be invoked from a callback (nor may a callback cause
  * a collection or proxy to be lazily initialized).
@@ -33,6 +42,11 @@ import org.hibernate.type.Type;
  * Whichever approach is used, the interceptor must be serializable for the
  * {@code Session} to be serializable. This means that {@code SessionFactory}-scoped
  * interceptors should implement {@code readResolve()}.
+ * <p>
+ * This venerable callback interface, dating to the very earliest days of Hibernate,
+ * competes with JPA entity listener callbacks: {@link jakarta.persistence.PostLoad},
+ * {@link jakarta.persistence.PrePersist} {@link jakarta.persistence.PreUpdate}, and
+ * {@link jakarta.persistence.PreRemove}.
  *
  * @see SessionBuilder#interceptor(Interceptor)
  * @see SharedSessionBuilder#interceptor()
@@ -60,12 +74,12 @@ public interface Interceptor {
 	 * @return {@code true} if the user modified the {@code state} in any way.
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
-	 * @deprecated use {@link #onLoad(Object, Object, Object[], String[], Type[])}
 	 */
-	@Deprecated(since = "6.0")
-	default boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
+	default boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
+		if (id==null || id instanceof Serializable) {
+			return onLoad(entity, (Serializable) id, state, propertyNames, types);
+		}
 		return false;
 	}
 
@@ -85,47 +99,57 @@ public interface Interceptor {
 	 * @return {@code true} if the user modified the {@code state} in any way.
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @deprecated use {@link #onLoad(Object, Object, Object[], String[], Type[])}
 	 */
-	default boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
+	@Deprecated(since = "6.0")
+	default boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
-		if (id==null || id instanceof Serializable) {
-			return onLoad(entity, (Serializable) id, state, propertyNames, types);
-		}
 		return false;
 	}
 
 	/**
-	 * Called when an object is detected to be dirty, during a flush. The interceptor may modify the detected
-	 * {@code currentState}, which will be propagated to both the database and the persistent object.
-	 * Note that not all flushes end in actual synchronization with the database, in which case the
-	 * new {@code currentState} will be propagated to the object, but not necessarily (immediately) to
-	 * the database. It is strongly recommended that the interceptor <b>not</b> modify the {@code previousState}.
+	 * Called before an object is made persistent by a stateful session.
+	 * <p>
+	 * The interceptor may modify the {@code state}, which will be used for
+	 * the SQL {@code INSERT} and propagated to the persistent object.
 	 *
-	 * @apiNote The indexes across the {@code currentState}, {@code previousState}, {@code propertyNames}, and
-	 *          {@code types} arrays match.
-	 *
-	 * @param entity The entity instance detected as being dirty and being flushed
+	 * @param entity The entity instance whose state is being inserted
 	 * @param id The identifier of the entity
-	 * @param currentState The entity's current state
-	 * @param previousState The entity's previous (load time) state.
-	 * @param propertyNames The names of the entity properties
+	 * @param state The state of the entity which will be inserted
+	 * @param propertyNames The names of the entity properties.
 	 * @param types The types of the entity properties
 	 *
-	 * @return {@code true} if the user modified the {@code currentState} in any way.
+	 * @return {@code true} if the user modified the {@code state} in any way.
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 *
-	 * @deprecated use {@link #onFlushDirty(Object, Object, Object[], Object[], String[], Type[])}
+	 * @see Session#persist(Object)
+	 * @see Session#merge(Object)
 	 */
-	@Deprecated(since = "6.0")
-	default boolean onFlushDirty(
-			Object entity,
-			Serializable id,
-			Object[] currentState,
-			Object[] previousState,
-			String[] propertyNames,
-			Type[] types) throws CallbackException {
-		return false;
+	default boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
+			throws CallbackException {
+		return onSave(entity, id, state, propertyNames, types);
+	}
+
+	/**
+	 *  Called before an object is removed by a stateful session.
+	 *  <p>
+	 *  It is not recommended that the interceptor modify the {@code state}.
+	 *
+	 * @param entity The entity instance being deleted
+	 * @param id The identifier of the entity
+	 * @param state The state of the entity
+	 * @param propertyNames The names of the entity properties.
+	 * @param types The types of the entity properties
+	 *
+	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @see Session#remove(Object)
+	 */
+	default void onRemove(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
+			throws CallbackException {
+		onDelete(entity, id, state, propertyNames, types);
 	}
 
 	/**
@@ -161,6 +185,40 @@ public interface Interceptor {
 		if (id==null || id instanceof Serializable) {
 			return onFlushDirty(entity, (Serializable) id, currentState, previousState, propertyNames, types);
 		}
+		return false;
+	}
+
+	/**
+	 * Called when an object is detected to be dirty, during a flush. The interceptor may modify the detected
+	 * {@code currentState}, which will be propagated to both the database and the persistent object.
+	 * Note that not all flushes end in actual synchronization with the database, in which case the
+	 * new {@code currentState} will be propagated to the object, but not necessarily (immediately) to
+	 * the database. It is strongly recommended that the interceptor <b>not</b> modify the {@code previousState}.
+	 *
+	 * @apiNote The indexes across the {@code currentState}, {@code previousState}, {@code propertyNames}, and
+	 *          {@code types} arrays match.
+	 *
+	 * @param entity The entity instance detected as being dirty and being flushed
+	 * @param id The identifier of the entity
+	 * @param currentState The entity's current state
+	 * @param previousState The entity's previous (load time) state.
+	 * @param propertyNames The names of the entity properties
+	 * @param types The types of the entity properties
+	 *
+	 * @return {@code true} if the user modified the {@code currentState} in any way.
+	 *
+	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @deprecated use {@link #onFlushDirty(Object, Object, Object[], Object[], String[], Type[])}
+	 */
+	@Deprecated(since = "6.0")
+	default boolean onFlushDirty(
+			Object entity,
+			Serializable id,
+			Object[] currentState,
+			Object[] previousState,
+			String[] propertyNames,
+			Type[] types) throws CallbackException {
 		return false;
 	}
 
@@ -207,7 +265,10 @@ public interface Interceptor {
 	 * @see Session#persist(Object)
 	 * @see Session#merge(Object)
 	 * @see Session#save(Object)
+	 *
+	 * @deprecated Use {@link #onPersist(Object, Object, Object[], String[], Type[])}
 	 */
+	@Deprecated(since = "6.6")
 	default boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
 		if (id==null || id instanceof Serializable) {
@@ -215,6 +276,7 @@ public interface Interceptor {
 		}
 		return false;
 	}
+
 	/**
 	 *  Called before an object is removed by a stateful session.
 	 *  <p>
@@ -249,7 +311,10 @@ public interface Interceptor {
 	 *
 	 * @see Session#remove(Object)
 	 * @see Session#delete(Object)
+	 *
+	 * @deprecated Use {@link #onRemove(Object, Object, Object[], String[], Type[])}
 	 */
+	@Deprecated(since = "6.6")
 	default void onDelete(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 			throws CallbackException {
 		if (id==null || id instanceof Serializable) {

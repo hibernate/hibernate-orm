@@ -133,12 +133,16 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			if ( firePreInsert(entity, id, state, persister) ) {
 				return id;
 			}
+			getInterceptor()
+					.onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			persister.getInsertCoordinator().insert( entity, id, state, this );
 		}
 		else {
 			if ( firePreInsert(entity, null, state, persister) ) {
 				return null;
 			}
+			getInterceptor()
+					.onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
 			id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 		}
@@ -164,6 +168,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
+			getInterceptor()
+					.onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> descriptor.remove(id, this) );
 			persister.getDeleteCoordinator().delete( entity, id, version, this );
@@ -203,6 +209,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			oldVersion = null;
 		}
 		if ( !firePreUpdate(entity, id, state, persister) ) {
+			getInterceptor()
+					.onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 			// TODO: can we do better here?
 			forEachOwnedCollection( entity, id, persister,
@@ -220,6 +228,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final Object id = idToUpsert( entity, persister );
 		final Object[] state = persister.getValues( entity );
 		if ( !firePreUpsert(entity, id, state, persister) ) {
+			getInterceptor()
+					.onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
 			persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 			// TODO: need PreUpsert and PostUpsert events!

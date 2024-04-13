@@ -1500,9 +1500,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		if ( !dynamicInstantiation.checkInstantiation( creationContext.getTypeConfiguration() ) ) {
-			final Class<?> type = dynamicInstantiation.getJavaType();
+			final String qualifiedName = dynamicInstantiation.getJavaType().getName();
 			if ( dynamicInstantiation.isFullyAliased() ) {
-				throw new SemanticException("Missing constructor or attributes for injection into type '" + type + "'" +
+				throw new SemanticException("Missing constructor or attributes for injection into type '" + qualifiedName + "'" +
 						"Expected arguments are: " + dynamicInstantiation.argumentTypes(), query);
 			}
 			else {
@@ -1516,7 +1516,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 									.collect(Collectors.joining(","));
 				}
 
-				throw new SemanticException("Unable to locate appropriate constructor on class '" + type + "'. " +
+				throw new SemanticException("Unable to locate appropriate constructor on class '" + qualifiedName + "'. " +
 						"Expected arguments are: " + dynamicInstantiation.argumentTypes() + conjecture, query);
 			}
 		}

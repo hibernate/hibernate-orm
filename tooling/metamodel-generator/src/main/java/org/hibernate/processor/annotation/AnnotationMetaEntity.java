@@ -1116,7 +1116,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) ununi( returnType );
+			final DeclaredType declaredType = (DeclaredType) ununiIfPossible(method, returnType);
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -1146,6 +1146,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					break;
 			}
 		}
+	}
+
+	private TypeMirror ununiIfPossible(ExecutableElement method, TypeMirror returnType) {
+		final TypeMirror result = ununi(returnType);
+		if ( result != returnType && repository && !usingReactiveSession(sessionType) ) {
+			message(method, "not backed by a reactive session", Diagnostic.Kind.ERROR);
+		}
+		return result;
 	}
 
 	private boolean validatedQueryReturnType(ExecutableElement method, TypeElement typeElement) {
@@ -1284,13 +1292,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR);
 			}
 			else {
-				createCriteriaDelete(method, returnType);
+				createCriteriaDelete(method);
 			}
 		}
 	}
 
 	private void addLifecycleMethod(ExecutableElement method) {
-		final TypeMirror returnType = ununi(method.getReturnType());
+		final TypeMirror returnType = ununiIfPossible( method, method.getReturnType() );
 		if ( method.getParameters().size() != 1 ) {
 			message( method,
 					"must have exactly one parameter",
@@ -1474,7 +1482,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		else if ( returnType.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) ununi( returnType );
+			final DeclaredType declaredType = (DeclaredType) ununiIfPossible(method, returnType);
 			final TypeElement entity = (TypeElement) declaredType.asElement();
 			if ( !containsAnnotation( entity, ENTITY ) ) {
 				message( method,
@@ -1581,7 +1589,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private void createCriteriaDelete(ExecutableElement method, TypeMirror returnType) {
+	private void createCriteriaDelete(ExecutableElement method) {
 		final TypeElement entity = primaryEntity;
 		if ( entity == null) {
 			message( method, "repository does not have a well-defined primary entity type",

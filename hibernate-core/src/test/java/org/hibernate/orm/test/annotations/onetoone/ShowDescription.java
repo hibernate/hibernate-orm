@@ -10,12 +10,12 @@ package org.hibernate.orm.test.annotations.onetoone;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-import org.hibernate.annotations.processing.Suppress;
+import org.hibernate.annotations.processing.Exclude;
 
 /**
  * @author Emmanuel Bernard
  */
-@Suppress
+@Exclude
 @Entity
 public class ShowDescription {
 	@Id

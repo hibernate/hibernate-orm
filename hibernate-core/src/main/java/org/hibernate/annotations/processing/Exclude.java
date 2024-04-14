@@ -25,5 +25,5 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
 @Target({PACKAGE, TYPE})
 @Retention(CLASS)
 @Incubating
-public @interface Suppress {
+public @interface Exclude {
 }

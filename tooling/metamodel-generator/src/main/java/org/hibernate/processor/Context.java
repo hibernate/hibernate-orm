@@ -30,6 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.emptyList;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * @author Max Andersen
@@ -97,6 +98,9 @@ public final class Context {
 
 	private boolean usesQuarkusOrm = false;
 	private boolean usesQuarkusReactive = false;
+
+	private String[] includes = {"*"};
+	private String[] excludes = {};
 
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
@@ -411,5 +415,37 @@ public final class Context {
 	
 	public boolean usesQuarkusReactive() {
 		return usesQuarkusReactive;
+	}
+
+	public void setInclude(String include) {
+		includes = include.split(",\\s*");
+	}
+
+	public void setExclude(String exclude) {
+		excludes = exclude.isBlank()
+				? EMPTY_STRING_ARRAY
+				: exclude.split(",\\s*");
+	}
+
+	public boolean isIncluded(String typeName) {
+		for (String include : includes) {
+			if ( matches(typeName, include) ) {
+				for (String exclude : excludes) {
+					if ( matches(typeName, exclude) ) {
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean matches(String name, String pattern) {
+		return "*".equals(pattern)
+			|| name.equals( pattern )
+			|| pattern.endsWith("*") && name.startsWith( pattern.substring(0, pattern.length()-1) )
+			|| pattern.startsWith("*") && name.endsWith( pattern.substring(1) )
+			|| pattern.startsWith("*") && pattern.endsWith("*") && name.contains( pattern.substring(1, pattern.length()-1) );
 	}
 }

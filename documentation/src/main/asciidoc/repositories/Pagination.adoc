@@ -141,7 +141,7 @@ var books =
 
 A more sophisticated approach is provided by `PageRequest`.
 
-=== Pagination
+=== Offset-based pagination
 
 A `PageRequest` is superficially similar to a `Limit`, except that it's specified in terms of:
 
@@ -167,12 +167,12 @@ var books =
 
 [CAUTION]
 ====
-It is strongly recommended that query results be totally ordered when a repository method is used for pagination.
+Query results should be totally ordered when a repository method is used for pagination.
 The easiest way to be sure that you have a well-defined total order is to specify the identifier of the entity as the last element of the order.
 For this reason, we specified `@OrderBy("isbn")` in the previous example.
 ====
 
-However, a repository method which accepts a `PageRequest` may return a `Page` instead of a `List`, making it easier to implemented pagination.
+However, a repository method which accepts a `PageRequest` may return a `Page` instead of a `List`, making it easier to implement pagination.
 
 [source,java]
 ----
@@ -197,3 +197,58 @@ while (page.hasNext()) {
     // ...
 }
 ----
+
+Pagination may be combined with dynamic sorting.
+
+[source,java]
+----
+@Find
+Page<Book> books(@Pattern String title, Year yearPublished,
+                 PageRequest pageRequest, Order<Book> order);
+----
+
+[WARNING]
+=====
+It's important to pass the same arguments to query parameters, and the same sorting criteria, with each page request!
+The repository is stateless: it doesn't remember the values passed on the previous page request.
+=====
+
+A repository method with return type `Page` uses SQL offset and limit to implement pagination.
+We'll refer to this as _offset-based pagination_.
+A problem with this approach is that it's quite vulnerable to missed or duplicate results when the database is modified between page requests.
+Therefore, Jakarta Data offers an alternative solution, which we'll call _key-based pagination_.
+
+=== Key-based pagination
+
+In key-based pagination, the query results must be totally ordered by a unique key of the result set.
+The SQL offset is replaced with a restriction on the unique key, appended to the `where` clause of the query:
+
+- a request for the _next_ page of query results uses the key value of the _last_ result on the current page to restrict the results, or
+- a request for the _previous_ page of query results uses the key value of the _first_ result on the current page to restrict the results.
+
+
+[WARNING]
+====
+For key-based pagination, it's _essential_ that the query has a total order.
+====
+
+From our point of view as users of Jakarta Data, key-based pagination works almost exactly like offset-based pagination.
+The difference is that we must declare our repository method to return `CursoredPage`.
+
+[source,java]
+----
+@Find
+@OrderBy("title")
+@OrderBy("isbn")
+CursoredPage<Book> books(@Pattern String title, Year yearPublished,
+                 PageRequest pageRequest);
+----
+
+On the other hand, with key-based pagination, Hibernate must do some work under the covers rewriting our query.
+
+[CAUTION]
+====
+Key-based pagination goes some way to protect us from skipped or duplicate results.
+The cost is that page numbers can lose synchronization with the query result set during navigation.
+This isn't usually a problem, but it's something to be aware of.
+====

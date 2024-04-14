@@ -142,3 +142,58 @@ var books =
 A more sophisticated approach is provided by `PageRequest`.
 
 === Pagination
+
+A `PageRequest` is superficially similar to a `Limit`, except that it's specified in terms of:
+
+- a page `size`, and
+- a numbered `page`.
+
+We can use a `PageRequest` just like a `Limit`.
+
+[source,java]
+----
+@Find
+@OrderBy("title")
+@OrderBy("isbn")
+List<Book> books(@Pattern String title, Year yearPublished,
+                 PageRequest pageRequest);
+----
+[source,java]
+----
+var books =
+        library.books(pattern, year,
+                      PageRequest.ofSize(PAGE_SIZE));
+----
+
+[CAUTION]
+====
+It is strongly recommended that query results be totally ordered when a repository method is used for pagination.
+The easiest way to be sure that you have a well-defined total order is to specify the identifier of the entity as the last element of the order.
+For this reason, we specified `@OrderBy("isbn")` in the previous example.
+====
+
+However, a repository method which accepts a `PageRequest` may return a `Page` instead of a `List`, making it easier to implemented pagination.
+
+[source,java]
+----
+@Find
+@OrderBy("title")
+@OrderBy("isbn")
+Page<Book> books(@Pattern String title, Year yearPublished,
+                 PageRequest pageRequest);
+----
+[source,java]
+----
+var page =
+        library.books(pattern, year,
+                      PageRequest.ofSize(PAGE_SIZE));
+var books = page.content();
+long totalPages = page.totalPages();
+// ...
+while (page.hasNext()) {
+    page = library.books(pattern, year,
+                         page.nextPageRequest().withoutTotal());
+    books = page.content();
+    // ...
+}
+----

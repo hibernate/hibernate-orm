@@ -462,3 +462,29 @@ List<String> booksByTitle(String pattern);
 ----
 
 Unfortunately, native SQL queries cannot be validated at compile time, so if there's anything wrong with our SQL, we won't find out until we run our program.
+
+=== `@By` and `@Param`
+
+Query methods match method parameters to entity fields or query parameters by name.
+Occasionally, this is inconvenient, resulting in less natural method parameter names.
+Let's reconsider an example we already saw above:
+
+[source,java]
+----
+@Find
+List<Book> books(String[] ibsn);
+----
+
+Here, because the parameter name must match the field `isbn` of `Book`, we couldn't call it `isbns`, plural.
+
+The `@By` annotation lets us work around this problem:
+
+[source,java]
+----
+@Find
+List<Book> books(@By("isbn") String[] ibsns);
+----
+
+Naturally, the name and type of the parameter are still checked at compile time; there's no loss of typesafety here, despite the string.
+
+The `@Param` annotation is significantly less useful, since we can always rename our HQL query parameter to match the method parameter, or, at worst, use an ordinal parameter instead.

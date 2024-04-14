@@ -58,6 +58,14 @@ In Gradle, for example, you'll need to use `annotationProcessor`.
 annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.5.0'
 ----
 
+=== Excluding classes from processing
+
+There's three ways to limit the annotation processor to certain classes:
+
+1. A given repository may be excluded from processing simply by specifying `@Repository(provider="acme")` where `"acme"` is any string other than the empty string or a string equal, ignoring case, to `"Hibernate"`. This is the preferred solution when there are multiple Jakarta Data Providers available.
+2. A package or type may be excluded by annotating it with the `@Exclude` annotation from `org.hibernate.annotations.processing`.
+3. The annotation processor may be limited to consider only certain types or certain packages using the `include` configuration option, for example, `-Ainclude=\*.entity.*,*Repository`. Alternatively, types or packages may be excluded using the `exclude` option, for example, `-Aexclude=*Impl`.
+
 === Configuring Hibernate ORM
 
 How you configure Hibernate depends on the environment you're running in, and on your preference:

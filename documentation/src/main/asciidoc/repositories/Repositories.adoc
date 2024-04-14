@@ -55,6 +55,7 @@ For more information about mapping entities, see the link:{doc-introduction-url}
 ====
 Jakarta Data also works with entities defined using similarly-named annotations defined by Jakarta NoSQL.
 But in this document we’re using Hibernate Data Repositories, so all mapping annotations should be understood to be the ones defined in `jakarta.persistence` or `org.hibernate.annotations`.
+For more information about entities in Jakarta Data, please consult chapter 3 of the specification.
 ====
 
 Furthermore, queries may be expressed in HQL, Hibernate's superset of the Jakarta Persistence Query Language (JPQL).
@@ -65,6 +66,7 @@ The Jakarta Data specification defines a simple subset of JPQL called, appropria
 JDQL is mostly relevant to non-relational datastores; an implementation of Jakarta Data backed by access to relational data is normally expected to support a much larger subset of JPQL.
 Indeed, Hibernate Data Repositories supports a _superset_ of JPQL.
 So, even though we put rather a large amount of effort into advocating, designing, and specifying JDQL, we won't talk much about it here.
+For information about JDQL, please consult chapter 5 of the Jakarta Data specification.
 ====
 
 To learn more about HQL and JPQL, see the link:{doc-query-language-url}[Guide to Hibernate Query Language].
@@ -220,6 +222,8 @@ interface Publishing {
 ----
 
 Now let's walk through the different kinds of method that a repository interface might declare, beginning with the easiest kind.
+If the following summary is insufficient, you'll find more detailed information about repositories in chapter 4 of the Jakarta Data specification, and in the Javadoc of the relevant annotations.
+
 
 [[default-method]]
 === Default methods

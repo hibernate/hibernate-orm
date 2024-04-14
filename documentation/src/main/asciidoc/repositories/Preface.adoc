@@ -14,3 +14,6 @@ Entity classes are mapped using the familiar annotations defined by Jakarta Pers
 On the other hand, the programming model for interacting with the database is quite different in Jakarta Data from the model you might be used to from Jakarta Persistence.
 
 Therefore, this document will show you a different way to use Hibernate.
+
+The coverage of Jakarta Data is intentionally inexhaustive.
+If exhaustion is sought, this document should be read in conjunction with the specification, which we've worked hard to keep readable.

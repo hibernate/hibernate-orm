@@ -122,3 +122,31 @@ Library library = new Library_(statelessSession);
 ----
 
 This is useful for testing, or for executing in an environment with no support for `jakarta.inject`.
+
+=== Integration with Jakarta EE
+
+Jakarta Data specifies that methods of a repository interface may be annotated with:
+
+- Jakarta Bean Validation constraint annotations, and
+- Jakarta Interceptors interceptor binding types, including,
+- in particular, the `@Transactional` interceptor binding defined by Jakarta Transactions.
+
+Note that these annotations are usually applied to a CDI bean implementation class, not to an interface,footnote:[`@Inherited` annotations are inherited from superclass to subclass, but not from interface to implementing class.] but a special exception is made for repository interfaces.
+
+Therefore, when running in a Jakarta EE environment, or in Quarkus, and when an instance of a repository interface is obtained via CDI, the semantics of such annotations is respected.
+
+[source,java]
+----
+@Transactional @Repository
+public interface Library {
+
+    @Find
+    Book book(@NotNull String isbn);
+
+    @Find
+    Book book(@NotBlank String title, @NotNull LocalDate publicationDate);
+
+}
+----
+
+As an aside, it's rather satisfying to see all these things working so nicely together, since we members of the Hibernate team played pivotal roles in the creation of the Persistence, Bean Validation, CDI, Interceptors, and Data specifications.

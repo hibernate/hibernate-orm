@@ -868,6 +868,7 @@ def buildDocsTask = tasks.register( 'buildDocs' ) { task ->
 	task.dependsOn renderIntroductionGuidesTask
 	task.dependsOn renderUserGuidesTask
 	task.dependsOn renderQueryLanguageGuidesTask
+	task.dependsOn renderRepositoriesTask
 	task.dependsOn renderIntegrationGuidesTask
 	task.dependsOn renderTopicalGuidesTask
 	task.dependsOn generateReportsTask

@@ -128,6 +128,7 @@ String isDefault();
 * Removed `AdditionalJaxbMappingProducer`, deprecated in favor of `AdditionalMappingContributor`
 * Removed `MetadataContributor`, deprecated in favor of `AdditionalMappingContributor`
 * Removed `@Persister`.
+* Removed `hibernate.mapping.precedence` and friends
 
 
 [[todo]]

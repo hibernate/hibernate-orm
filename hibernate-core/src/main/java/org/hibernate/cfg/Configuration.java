@@ -161,9 +161,6 @@ public class Configuration {
 	private Properties properties;
 	private SharedCacheMode sharedCacheMode;
 
-	@Deprecated(since = "6", forRemoval = true)
-	public static final String ARTEFACT_PROCESSING_ORDER = AvailableSettings.ARTIFACT_PROCESSING_ORDER;
-
 	/**
 	 * Create a new instance, using a default {@link BootstrapServiceRegistry}
 	 * and a newly instantiated {@link MetadataSources}.

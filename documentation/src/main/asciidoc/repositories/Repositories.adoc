@@ -363,7 +363,7 @@ List<Book> book(String title);
 ----
 
 Usually, arguments to a parameter of an automatic query method must match _exactly_ with the field of an entity.
-However, Hibernate provides the `@Pattern` annotation to allow for "fuzzy" matching using `like`.
+However, Hibernate provides the link:{doc-javadoc-url}org/hibernate/annotations/processing/Pattern.html[`@Pattern`] annotation to allow for "fuzzy" matching using `like`.
 
 [source,java]
 ----
@@ -420,7 +420,7 @@ For anything that's not extremely simple, we're much better off writing a query 
 An annotated query method is declared using:
 
 - `@Query` from Jakarta Data, or
-- `@HQL` or `@SQL` from `org.hibernate.annotations.processing`.
+- link:{doc-javadoc-url}org/hibernate/annotations/processing/HQL.html[`@HQL`] or link:{doc-javadoc-url}org/hibernate/annotations/processing/SQL.html[`@SQL`] from `org.hibernate.annotations.processing`.
 
 The `@Query` annotation is defined to accept JPQL, JDQL, or anything in between.
 In Hibernate Data Repositories, it accepts arbitrary HQL.

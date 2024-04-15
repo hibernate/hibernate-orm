@@ -16,7 +16,6 @@ import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.WrapperArrayHandling;
@@ -147,11 +146,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public boolean isNoConstraintByDefault() {
 		return delegate.isNoConstraintByDefault();
-	}
-
-	@Override
-	public List<MetadataSourceType> getSourceProcessOrdering() {
-		return delegate.getSourceProcessOrdering();
 	}
 
 	@Override

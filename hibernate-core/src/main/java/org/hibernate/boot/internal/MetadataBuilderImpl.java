@@ -60,7 +60,6 @@ import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -345,13 +344,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-	@Override
-	@Deprecated
-	public MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes) {
-		Collections.addAll( options.sourceProcessOrdering, sourceTypes );
-		return this;
-	}
-
 	public MetadataBuilder allowSpecjSyntax() {
 		this.options.specjProprietarySyntaxEnabled = true;
 		return this;
@@ -612,7 +604,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean useNationalizedCharacterData;
 		private boolean specjProprietarySyntaxEnabled;
 		private boolean noConstraintByDefault;
-		private final ArrayList<MetadataSourceType> sourceProcessOrdering;
 
 		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
@@ -757,8 +748,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					}
 			);
 
-			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
-
 			this.useNationalizedCharacterData = configService.getSetting(
 					AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA,
 					BOOLEAN,
@@ -776,28 +765,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					BOOLEAN,
 					false
 			);
-		}
-
-		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
-			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<>();
-
-			final String sourceProcessOrderingSetting = configService.getSetting(
-					AvailableSettings.ARTIFACT_PROCESSING_ORDER,
-					StandardConverters.STRING
-			);
-			if ( sourceProcessOrderingSetting != null ) {
-				final String[] orderChoices = StringHelper.split( ",; ", sourceProcessOrderingSetting, false );
-				initialSelections.addAll( CollectionHelper.arrayList( orderChoices.length ) );
-				for ( String orderChoice : orderChoices ) {
-					initialSelections.add( MetadataSourceType.parsePrecedence( orderChoice ) );
-				}
-			}
-			if ( initialSelections.isEmpty() ) {
-				initialSelections.add( MetadataSourceType.HBM );
-				initialSelections.add( MetadataSourceType.CLASS );
-			}
-
-			return initialSelections;
 		}
 
 		@Override
@@ -952,11 +919,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean isNoConstraintByDefault() {
 			return noConstraintByDefault;
-		}
-
-		@Override
-		public List<MetadataSourceType> getSourceProcessOrdering() {
-			return sourceProcessOrdering;
 		}
 
 		@Override

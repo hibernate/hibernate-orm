@@ -456,6 +456,54 @@ def renderQueryLanguageGuidePdfTask = tasks.register( 'renderQueryLanguageGuideP
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 }
 
+def renderRepositoriesHtmlTask = tasks.register( 'renderRepositoriesHtml', AsciidoctorTask ) { task ->
+	task.group = "Documentation"
+	task.description = 'Renders the Hibernate Data Repositories document in HTML format using Asciidoctor.'
+
+	task.inputs.property "hibernate-version", project.ormVersion
+
+	task.sourceDir = file( 'src/main/asciidoc/repositories' )
+	task.sources 'Hibernate_Data_Repositories.adoc'
+
+	task.outputDir = layout.buildDirectory.dir( "asciidoc/repositories/html_single" )
+
+	task.attributes linkcss: true,
+			stylesheet: "css/hibernate.css",
+			docinfo: 'private',
+			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+	task.resources {
+		from( 'src/main/asciidoc/repositories/' ) {
+			include 'images/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'images/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'css/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'js/**'
+		}
+	}
+}
+
+def renderRepositoriesPdfTask = tasks.register( 'renderRepositoriesPdf', AsciidoctorPdfTask ) { task ->
+	group = "Documentation"
+	description = 'Renders the Hibernate Data Repositories document in PDF format using Asciidoctor.'
+
+	inputs.property "hibernate-version", project.ormVersion
+
+	sourceDir = file( 'src/main/asciidoc/repositories' )
+	baseDir = file( 'src/main/asciidoc/repositories' )
+	sources {
+		include 'Hibernate_Data_Repositories.adoc'
+	}
+	outputDir = layout.buildDirectory.dir( "asciidoc/repositories/pdf" )
+
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+}
+
 //noinspection GroovyUnusedAssignment
 def renderQueryLanguageGuidesTask = tasks.register( 'renderQueryLanguageGuides' ) { task ->
 	group = "Documentation"
@@ -465,6 +513,17 @@ def renderQueryLanguageGuidesTask = tasks.register( 'renderQueryLanguageGuides' 
 
 	tasks.buildDocs.dependsOn task
 }
+
+//noinspection GroovyUnusedAssignment
+def renderRepositoriesTask = tasks.register( 'renderRepositories' ) { task ->
+	group = "Documentation"
+	description = 'Renders Hibernate Data Repositories documentation in all formats.'
+	task.dependsOn renderRepositoriesHtmlTask
+	task.dependsOn renderRepositoriesPdfTask
+
+	tasks.buildDocs.dependsOn task
+}
+
 
 
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -422,6 +422,9 @@ An annotated query method is declared using:
 - `@Query` from Jakarta Data, or
 - `@HQL` or `@SQL` from `org.hibernate.annotations.processing`.
 
+The `@Query` annotation is defined to accept JPQL, JDQL, or anything in between.
+In Hibernate Data Repositories, it accepts arbitrary HQL.
+
 [NOTE]
 ====
 There's no strong reason to use `@HQL` in preference to `@Query`.
@@ -457,7 +460,53 @@ You might be imagining that the JPQL query specified within the `@Query` annotat
 `HibernateProcessor` is not only capable of validating the _syntax_ of the query, but it even _typechecks_ the query completely.
 This is much better than passing a string to the `createQuery()` method of `EntityManager`, and it's probably the top reason to use Jakarta Data with Hibernate.
 
-A native SQL query may be specified using `@SQL`.
+When a query returns more than one object, the nicest thing to do is package each result as an instance of a Java `record` type.
+For example, we might define a `record` holding some fields of `Book` and `Author`.
+
+[source,java]
+----
+record AuthorBookSummary(String isbn, String ssn, String authorName, String title) {}
+----
+
+We need to specify that the values in the `select` clause should be packaged as instances of `AuthorBookSummary`.
+The JPQL specification provides the `select new` construct for this.
+
+[source,java]
+----
+@Query("select new AuthorBookRecord(b.isbn, a.ssn, a.name, b.title " +
+       "from Author a join books b " +
+       "where title like :pattern")
+List<AuthorBookSummary> summariesForTitle(@Pattern String pattern);
+----
+
+Note that the `from` clause is required here, since it's impossible to infer the queried entity type from the return type of the repository method.
+
+[TIP]
+====
+Since this is quite verbose, Hibernate doesn't require the use of `select new`, nor of aliases, and lets us write:
+[source,java]
+----
+@Query("select isbn, ssn, name, title " +
+       "from Author join books " +
+       "where title like :pattern")
+List<AuthorBookSummary> summariesForTitle(@Pattern String pattern);
+----
+====
+
+An annotated query method may even perform an `update`, `delete`, or `insert` statement.
+
+[source,java]
+----
+@Query("delete from Book " +
+       "where extract(year from publicationDate) < :year")
+int deleteOldBooks(int year);
+
+----
+
+The method must be declared `void`, or return `int` or `long`.
+The return value is the number of affected records.
+
+Finally, a native SQL query may be specified using `@SQL`.
 
 [source,java]
 ----

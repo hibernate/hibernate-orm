@@ -21,6 +21,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
@@ -293,7 +294,8 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
 			try {
-				if ( hasAnnotation( element, SUPPRESS)
+				if ( element.getKind() == ElementKind.MODULE
+						|| hasAnnotation( element, SUPPRESS)
 						|| hasAnnotation( context.getElementUtils().getPackageOf(element), SUPPRESS ) ) {
 					// skip it completely
 				}

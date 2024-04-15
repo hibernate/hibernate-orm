@@ -422,22 +422,6 @@ public interface MappingSettings {
 	String COLUMN_ORDERING_STRATEGY = "hibernate.column_ordering_strategy";
 
 	/**
-	 * Specifies the order in which metadata sources should be processed, is a delimited list
-	 * of values defined by {@link MetadataSourceType}.
-	 *
-	 * @settingDefault {@code "hbm,class"}, which indicates that {@code hbm.xml} files
-	 * should be processed first, followed by annotations and {@code orm.xml} files.
-	 *
-	 * @see MetadataSourceType
-	 * @see org.hibernate.boot.MetadataBuilder#applySourceProcessOrdering(MetadataSourceType...)
-	 *
-	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this attribute irrelevant
-	 */
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	@Deprecated(since = "6", forRemoval = true)
-	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
-
-	/**
 	 * Whether XML mappings should be processed.
 	 *
 	 * @apiNote This is a performance optimization appropriate when mapping details

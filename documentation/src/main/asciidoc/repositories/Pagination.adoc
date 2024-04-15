@@ -252,3 +252,22 @@ Key-based pagination goes some way to protect us from skipped or duplicate resul
 The cost is that page numbers can lose synchronization with the query result set during navigation.
 This isn't usually a problem, but it's something to be aware of.
 ====
+
+=== Advanced control over querying
+
+For more advanced usage, an automatic or annotated query method may be declared to return `jakarta.persistence.Query`, `jakarta.persistence.TypedQuery`, link:{doc-javadoc-url}org/hibernate/query/Query.html[`org.hibernate.query.Query`], or link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html[`org.hibernate.query.SelectionQuery`].
+
+[source,java]
+----
+@Find
+SelectionQuery<Book> booksQuery(@Pattern String title, Year yearPublished);
+
+default List<Book> booksQuery(String title, Year yearPublished) {
+    return books(title, yearPublished)
+            .setReadOnly(true)
+            .setTimeout(QUERY_TIMEOUT)
+            .getResultList();
+}
+----
+
+This allows for direct control over query execution, without loss of typesafety.

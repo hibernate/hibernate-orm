@@ -1,0 +1,19 @@
+:shared-attributes-dir: ../shared/
+
+include::{shared-attributes-dir}/url-attributes.adoc[]
+
+[[preface]]
+== Preface
+
+Jakarta Data is a new specification for _repositories_.
+A repository, in this context, means an interface exposing a typesafe API for interacting with a datastore.
+Jakarta Data is designed to accommodate a diverse range of database technologies, from relational databases, to document databases, to key-value stores and more.
+
+Hibernate Data Repositories is an implementation of Jakarta Data targeting relational databases and backed by Hibernate ORM.
+Entity classes are mapped using the familiar annotations defined by Jakarta Persistence, and queries may be written in the Hibernate Query Language, a superset of the Jakarta Persistence Query Language (JPQL).
+On the other hand, the programming model for interacting with the database is quite different in Jakarta Data from the model you might be used to from Jakarta Persistence.
+
+Therefore, this document will show you a different way to use Hibernate.
+
+The coverage of Jakarta Data is intentionally inexhaustive.
+If exhaustion is sought, this document should be read in conjunction with the specification, which we've worked hard to keep readable.

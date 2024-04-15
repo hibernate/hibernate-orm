@@ -23,6 +23,7 @@
  */
 package org.hibernate.jpa.test.metamodel;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -33,5 +34,6 @@ public class Entity3 {
 	@Id
 	private long id;
 
+	@Column(name = "val")
 	private String value;
 }

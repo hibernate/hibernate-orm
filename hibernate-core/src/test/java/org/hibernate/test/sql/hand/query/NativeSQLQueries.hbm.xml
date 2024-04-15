@@ -127,14 +127,14 @@
         <id name="id" column="id">
             <generator class="increment"/>
         </id>
-        <property name="description" type="text" length="15000"/>
+        <property name="description" column="DESCRIPTION" type="text" length="15000"/>
     </class>
 
     <class name="ImageHolder" table="IMAGE_HOLDER">
         <id name="id" column="id">
             <generator class="increment"/>
         </id>
-        <property name="photo" type="image" length="15000"/>
+        <property name="photo" column="PHOTO" type="image" length="15000"/>
     </class>    
 
     <resultset name="org-emp-regionCode">

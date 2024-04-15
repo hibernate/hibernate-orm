@@ -6,17 +6,9 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy;
 
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -26,20 +18,30 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.proxy.HibernateProxy;
+
+import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
-import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.getFieldByReflection;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Luis Barreiro
@@ -82,13 +84,15 @@ public class LazyLoadingTest extends BaseCoreFunctionalTestCase {
     public void test() {
         doInHibernate( this::sessionFactory, s -> {
             Child loadedChild = s.load( Child.class, lastChildID );
+            assertThat( loadedChild, not( instanceOf( HibernateProxy.class ) ) );
+            assertThat( loadedChild, instanceOf( PersistentAttributeInterceptable.class ) );
+            final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
+            final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+            assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
 
-            Object nameByReflection = getFieldByReflection( loadedChild, "name" );
-            assertNotNull( "Non-lazy field 'name' was not loaded", nameByReflection );
-
-            Object parentByReflection = getFieldByReflection( loadedChild, "parent" );
-            assertNull( "Lazy field 'parent' is initialized", parentByReflection );
-            assertFalse( loadedChild instanceof HibernateProxy );
+            assertThat( Hibernate.isPropertyInitialized( loadedChild, "name" ), is( false ) );
+            assertThat( Hibernate.isPropertyInitialized( loadedChild, "parent" ), is( false ) );
+            assertThat( Hibernate.isPropertyInitialized( loadedChild, "children" ), is( false ) );
 
             Parent loadedParent = loadedChild.parent;
             assertThat( loadedChild.name, notNullValue() );
@@ -97,23 +101,18 @@ public class LazyLoadingTest extends BaseCoreFunctionalTestCase {
 
             checkDirtyTracking( loadedChild );
 
-            parentByReflection = getFieldByReflection( loadedChild, "parent" );
-            Object childrenByReflection = getFieldByReflection( loadedParent, "children" );
-            assertNotNull( "Lazy field 'parent' is not loaded", parentByReflection );
-            assertNull( "Lazy field 'children' is initialized", childrenByReflection );
-            assertFalse( loadedParent instanceof HibernateProxy );
-            assertEquals( parentID, loadedParent.id );
+            assertThat( Hibernate.isPropertyInitialized( loadedChild, "name" ), is( true ) );
+            assertThat( Hibernate.isPropertyInitialized( loadedChild, "parent" ), is( true ) );
+            assertThat( Hibernate.isPropertyInitialized( loadedChild, "children" ), is( true ) );
 
             Collection<Child> loadedChildren = loadedParent.children;
+            assertThat( Hibernate.isInitialized( loadedChildren ), is( false ) );
 
             checkDirtyTracking( loadedChild );
             checkDirtyTracking( loadedParent );
 
-            childrenByReflection = getFieldByReflection( loadedParent, "children" );
-            assertNotNull( "Lazy field 'children' is not loaded", childrenByReflection );
-            assertFalse( loadedChildren instanceof HibernateProxy );
-            assertEquals( CHILDREN_SIZE, loadedChildren.size() );
-            assertTrue( loadedChildren.contains( loadedChild ) );
+            loadedChildren.size();
+            assertThat( Hibernate.isInitialized( loadedChildren ), is( true ) );
         } );
     }
 

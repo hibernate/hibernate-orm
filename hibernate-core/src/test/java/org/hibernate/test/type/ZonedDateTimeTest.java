@@ -23,6 +23,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.Query;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -95,9 +96,6 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 								.add( 1900, 1, 1, 0, 19, 32, 0, "Europe/Amsterdam", ZONE_PARIS )
 								.add( 1900, 1, 1, 0, 19, 32, 0, "GMT+00:19:32", ZONE_AMSTERDAM )
 								.add( 1900, 1, 1, 0, 19, 32, 0, "Europe/Amsterdam", ZONE_AMSTERDAM )
-								// Affected by HHH-13266 (JDK-8061577)
-								.add( 1892, 1, 1, 0, 0, 0, 0, "GMT+00:00", ZONE_OSLO )
-								.add( 1892, 1, 1, 0, 0, 0, 0, "Europe/Oslo", ZONE_OSLO )
 								.add( 1900, 1, 1, 0, 9, 20, 0, "GMT+00:09:21", ZONE_PARIS )
 								.add( 1900, 1, 1, 0, 9, 20, 0, "Europe/Paris", ZONE_PARIS )
 								.add( 1900, 1, 1, 0, 19, 31, 0, "GMT+00:19:32", ZONE_PARIS )
@@ -105,16 +103,29 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 								.add( 1900, 1, 1, 0, 19, 31, 0, "Europe/Amsterdam", ZONE_AMSTERDAM )
 				)
 				.skippedForDialects(
+						// MySQL/Mariadb cannot store values equal to epoch exactly, or less, in a timestamp.
+						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect
+								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
+						b -> b
+								// Affected by HHH-13266 (JDK-8061577)
+								.add( 1892, 1, 1, 0, 0, 0, 0, "GMT+00:00", ZONE_OSLO )
+								.add( 1892, 1, 1, 0, 0, 0, 0, "Europe/Oslo", ZONE_OSLO )
+				)
+				.skippedForDialects(
 						// MySQL/Mariadb/Sybase cannot store dates in 1600 in a timestamp.
-						Arrays.asList( MySQLDialect.class, MariaDBDialect.class, SybaseDialect.class ),
+						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect || dialect instanceof SybaseDialect
+								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b
 								.add( 1600, 1, 1, 0, 0, 0, 0, "GMT+00:19:32", ZONE_AMSTERDAM )
 								.add( 1600, 1, 1, 0, 0, 0, 0, "Europe/Amsterdam", ZONE_AMSTERDAM )
 				)
 				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
 				// => This used to work correctly in 5.4.1.Final and earlier
-				.add( 2018, 10, 28, 2, 0, 0, 0, "+01:00", ZONE_PARIS )
-				.add( 2018, 4, 1, 2, 0, 0, 0, "+12:00", ZONE_AUCKLAND )
+				.skippedForDialects(
+						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
+						b -> b.add( 2018, 10, 28, 2, 0, 0, 0, "+01:00", ZONE_PARIS )
+								.add( 2018, 4, 1, 2, 0, 0, 0, "+12:00", ZONE_AUCKLAND )
+				)
 				// => This has never worked correctly, unless the JDBC timezone was set to UTC
 				.withForcedJdbcTimezone( "UTC", b -> b
 						.add( 2018, 10, 28, 2, 0, 0, 0, "+02:00", ZONE_PARIS )

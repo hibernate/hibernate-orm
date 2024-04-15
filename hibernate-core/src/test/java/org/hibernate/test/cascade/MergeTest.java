@@ -14,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.junit.Test;
 
@@ -102,7 +103,8 @@ public class MergeTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
-	@Entity
+	@Entity(name = "Order")
+	@Table(name = "orders")
 	private static class Order {
 		@Id
 		@GeneratedValue
@@ -120,7 +122,7 @@ public class MergeTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Item")
 	private static class Item {
 		@Id
 		@GeneratedValue

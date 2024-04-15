@@ -17,6 +17,7 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
@@ -107,9 +108,7 @@ public abstract class AbstractSaveEventListener
 			boolean requiresImmediateIdAccess) {
 		callbackRegistry.preCreate( entity );
 
-		if ( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
+		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 
 		EntityPersister persister = source.getEntityPersister( entityName, entity );
 		Serializable generatedId = persister.getIdentifierGenerator().generate( source, entity );

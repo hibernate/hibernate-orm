@@ -12,6 +12,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Namespace.Name;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.internal.Formatter;
@@ -53,10 +54,14 @@ public class CheckForExistingForeignKeyTest {
 		 * Needed implementation. Not used in test.
 		 */
 		@Override
-		protected NameSpaceTablesInformation performTablesMigration(Metadata metadata, DatabaseInformation existingDatabase, ExecutionOptions options,
+		protected NameSpaceTablesInformation performTablesMigration(Metadata metadata,
+				DatabaseInformation existingDatabase, ExecutionOptions options,
 				Dialect dialect,
-				Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs, boolean tryToCreateSchemas,
-				Set<Identifier> exportedCatalogs, Namespace namespace, GenerationTarget[] targets) {
+				Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs,
+				boolean tryToCreateSchemas,
+				Set<Identifier> exportedCatalogs, Namespace namespace,
+				SqlStringGenerationContext sqlStringGenerationContext,
+				GenerationTarget[] targets) {
 			return null;
 		}
 	}

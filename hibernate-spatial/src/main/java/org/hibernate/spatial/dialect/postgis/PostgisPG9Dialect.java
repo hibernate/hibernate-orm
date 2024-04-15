@@ -23,7 +23,7 @@ import org.hibernate.spatial.SpatialFunction;
 public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDialect {
 
 
-	transient private PostgisSupport support = new PostgisSupport();
+	final transient private PostgisSupport support = new PostgisSupport();
 
 	/**
 	 * Creates an instance
@@ -31,7 +31,7 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 	public PostgisPG9Dialect() {
 		super();
 		registerColumnType(
-				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
+				PGGeometryTypeDescriptor.INSTANCE_WKB_2.getSqlType(),
 				"GEOMETRY"
 		);
 		for ( Map.Entry<String, SQLFunction> entry : support.functionsToRegister() ) {
@@ -46,6 +46,12 @@ public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDial
 				serviceRegistry
 		);
 		support.contributeTypes( typeContributions, serviceRegistry );
+	}
+
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return super.equivalentTypes( typeCode1, typeCode2 ) ||
+				( support.isSpatial( typeCode1 ) && support.isSpatial( typeCode2 ) );
 	}
 
 	/**

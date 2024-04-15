@@ -8,7 +8,7 @@ In a relational database, locking refers to actions taken to prevent data from c
 Your locking strategy can be either optimistic or pessimistic.
 
 Optimistic::
-http://en.wikipedia.org/wiki/Optimistic_locking[Optimistic locking] assumes that multiple transactions can complete without affecting each other,
+https://en.wikipedia.org/wiki/Optimistic_locking[Optimistic locking] assumes that multiple transactions can complete without affecting each other,
 and that therefore transactions can proceed without locking the data resources that they affect.
 Before committing, each transaction verifies that no other transaction has modified its data.
 If the check reveals conflicting modifications, the committing transaction rolls back.

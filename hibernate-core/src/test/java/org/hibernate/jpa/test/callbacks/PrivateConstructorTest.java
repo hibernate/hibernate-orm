@@ -23,7 +23,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
-import org.hibernate.proxy.pojo.javassist.JavassistProxyFactory;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -103,9 +102,6 @@ public class PrivateConstructorTest extends BaseEntityManagerFunctionalTestCase 
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
 		if ( byteCodeProvider == null || Environment.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
 			return ByteBuddyProxyFactory.class;
-		}
-		else if ( Environment.BYTECODE_PROVIDER_NAME_JAVASSIST.equals( byteCodeProvider ) ) {
-			return JavassistProxyFactory.class;
 		}
 		else {
 			throw new UnsupportedOperationException( "Unknown bytecode provider:" + byteCodeProvider );

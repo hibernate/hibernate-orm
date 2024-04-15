@@ -49,7 +49,7 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 		Properties properties = Environment.getProperties();
 		if ( H2Dialect.class.getName().equals( properties.get( Environment.DIALECT ) ) ) {
-			cfg.setProperty( Environment.URL, "jdbc:h2:mem:db-mvcc;MVCC=true" );
+			cfg.setProperty( Environment.URL, "jdbc:h2:mem:db-mvcc" );
 		}
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );

@@ -38,17 +38,14 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 
 		assertNull( extractedDatabaseMetaData.getConnectionCatalogName() );
 		assertNull( extractedDatabaseMetaData.getConnectionSchemaName() );
-		assertTrue( extractedDatabaseMetaData.getTypeInfoSet().isEmpty() );
-		assertTrue( extractedDatabaseMetaData.getExtraKeywords().isEmpty() );
 		assertFalse( extractedDatabaseMetaData.supportsNamedParameters() );
 		assertFalse( extractedDatabaseMetaData.supportsRefCursors() );
 		assertFalse( extractedDatabaseMetaData.supportsScrollableResults() );
 		assertFalse( extractedDatabaseMetaData.supportsGetGeneratedKeys() );
-		assertFalse( extractedDatabaseMetaData.supportsBatchUpdates() );
+		assertTrue( extractedDatabaseMetaData.supportsBatchUpdates() );
 		assertFalse( extractedDatabaseMetaData.supportsDataDefinitionInTransaction() );
 		assertFalse( extractedDatabaseMetaData.doesDataDefinitionCauseTransactionCommit() );
 		assertNull( extractedDatabaseMetaData.getSqlStateType() );
-		assertFalse( extractedDatabaseMetaData.doesLobLocatorUpdateCopy() );
 
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 	}
@@ -65,17 +62,14 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 
 		assertNull( extractedDatabaseMetaData.getConnectionCatalogName() );
 		assertNull( extractedDatabaseMetaData.getConnectionSchemaName() );
-		assertTrue( extractedDatabaseMetaData.getTypeInfoSet().isEmpty() );
-		assertTrue( extractedDatabaseMetaData.getExtraKeywords().isEmpty() );
 		assertTrue( extractedDatabaseMetaData.supportsNamedParameters() );
 		assertFalse( extractedDatabaseMetaData.supportsRefCursors() );
 		assertFalse( extractedDatabaseMetaData.supportsScrollableResults() );
 		assertFalse( extractedDatabaseMetaData.supportsGetGeneratedKeys() );
-		assertFalse( extractedDatabaseMetaData.supportsBatchUpdates() );
+		assertTrue( extractedDatabaseMetaData.supportsBatchUpdates() );
 		assertFalse( extractedDatabaseMetaData.supportsDataDefinitionInTransaction() );
 		assertFalse( extractedDatabaseMetaData.doesDataDefinitionCauseTransactionCommit() );
 		assertNull( extractedDatabaseMetaData.getSqlStateType() );
-		assertFalse( extractedDatabaseMetaData.doesLobLocatorUpdateCopy() );
 
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 	}

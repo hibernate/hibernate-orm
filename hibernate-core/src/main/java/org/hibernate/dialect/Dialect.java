@@ -210,6 +210,7 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.FLOAT, "float($p)" );
 		registerColumnType( Types.DOUBLE, "double precision" );
 		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
+		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.REAL, "real" );
 
 		registerColumnType( Types.DATE, "date" );
@@ -2950,6 +2951,10 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean isJdbcLogWarningsEnabledByDefault() {
 		return true;
+	}
+
+	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
+		// nothing to do
 	}
 
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {

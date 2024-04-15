@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
@@ -519,5 +520,18 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			this.entityName = entityName;
 			this.id = id;
 		}
+
+		public int hashCode() {
+			return Objects.hash( entityName, id );
+		}
+
+		public boolean equals(Object object) {
+			if (object instanceof ObjectTypeCacheEntry) {
+				ObjectTypeCacheEntry objectTypeCacheEntry = (ObjectTypeCacheEntry)object;
+				return Objects.equals( objectTypeCacheEntry.entityName, entityName ) && Objects.equals( objectTypeCacheEntry.id, id );
+			}
+			return false;
+		}
+
 	}
 }

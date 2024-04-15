@@ -114,8 +114,8 @@ public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 		LazyInitializer lazyInitializer = proxyCreateByEnvers.getHibernateLazyInitializer();
 
 		Assert.assertTrue( lazyInitializer.isUninitialized() );
-		Assert.assertNotNull( lazyInitializer.getIdentifier() );
-		Assert.assertEquals( tnae1.getId(), lazyInitializer.getIdentifier() );
+		Assert.assertNotNull( lazyInitializer.getInternalIdentifier() );
+		Assert.assertEquals( tnae1.getId(), lazyInitializer.getInternalIdentifier() );
 		Assert.assertTrue( lazyInitializer.isUninitialized() );
 
 		Assert.assertEquals( uste1.getId(), rev1.getReference().getId() );

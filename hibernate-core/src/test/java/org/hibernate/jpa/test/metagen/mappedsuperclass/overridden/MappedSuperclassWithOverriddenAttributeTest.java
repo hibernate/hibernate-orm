@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.metagen.mappedsuperclass.overridden;
 import java.util.Arrays;
 import javax.persistence.EntityManagerFactory;
 
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
 
 import org.hibernate.testing.FailureExpected;

@@ -31,10 +31,6 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 
 	private final ObjectNameNormalizer objectNameNormalizer;
 
-	public MetadataBuildingContextTestingImpl() {
-		this( new StandardServiceRegistryBuilder().build() );
-	}
-
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
 		buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		bootstrapContext = new BootstrapContextImpl( serviceRegistry, buildingOptions );

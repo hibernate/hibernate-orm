@@ -254,14 +254,14 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-	@Entity
+	@Entity(name = "TreatAnimal")
 	public static abstract class TreatAnimal {
 		@Id
 		@GeneratedValue
 		private Long id;
 	}
 
-	@Entity
+	@Entity(name = "Dog")
 	public static abstract class Dog extends TreatAnimal {
 		private boolean fast;
 
@@ -274,14 +274,14 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Dachshund")
 	public static class Dachshund extends Dog {
 		public Dachshund() {
 			super( false );
 		}
 	}
 
-	@Entity
+	@Entity(name = "Greyhound")
 	public static class Greyhound extends Dog {
 		public Greyhound() {
 			super( true );

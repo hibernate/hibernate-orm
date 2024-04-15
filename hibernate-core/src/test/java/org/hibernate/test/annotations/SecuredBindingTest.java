@@ -60,6 +60,7 @@ public class SecuredBindingTest {
 			if ( serviceRegistry != null ) {
 				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
+			ac.getStandardServiceRegistryBuilder().getBootstrapServiceRegistry().close();
 		}
 	}
 }

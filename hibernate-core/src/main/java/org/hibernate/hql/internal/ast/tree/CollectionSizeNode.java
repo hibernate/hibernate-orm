@@ -12,6 +12,7 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
+import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -89,6 +90,8 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 			buffer.append( ownerKeyColumns[i] ).append( " = " ).append( collectionKeyColumns[i] );
 		}
 
+		buffer.append( collectionDescriptor.filterFragment( collectionTableAlias,
+				collectionOwnerFromElement.getWalker().getEnabledFilters() ) );
 		buffer.append( ")" );
 
 		if ( scalarName != null ) {

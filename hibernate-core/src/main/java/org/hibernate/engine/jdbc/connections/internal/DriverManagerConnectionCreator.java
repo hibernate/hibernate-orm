@@ -24,8 +24,9 @@ public class DriverManagerConnectionCreator extends BasicConnectionCreator {
 			String url,
 			Properties connectionProps,
 			Boolean autocommit,
-			Integer isolation) {
-		super( serviceRegistry, url, connectionProps, autocommit, isolation );
+			Integer isolation,
+			String initSql) {
+		super( serviceRegistry, url, connectionProps, autocommit, isolation, initSql );
 	}
 
 	@Override

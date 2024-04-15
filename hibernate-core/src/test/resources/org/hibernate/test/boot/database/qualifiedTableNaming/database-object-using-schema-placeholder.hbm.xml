@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+				   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://www.hibernate.org/xsd/hibernate-mapping/hibernate-mapping-4.0.xsd"
+				   package="org.hibernate.test.boot.database.qualifiedTableNaming"
+				   default-access="field">
+	<database-object>
+		<!-- Note this code does not actually get executed.
+		     We just generate the script and check that ${schema} gets replaced correctly.
+		     So the actual language used here does not need to be compatible with the DB dialect under test.
+		 -->
+		<create>
+			CREATE OR REPLACE FUNCTION ${schema}.schemaPrefixedAuxObject()
+			RETURNS varchar AS
+			$BODY$
+			BEGIN
+			SELECT 'test';
+			END;
+			$BODY$
+			LANGUAGE plpgsql
+		</create>
+		<drop>DROP FUNCTION ${schema}.schemaPrefixedAuxObject()</drop>
+	</database-object>
+</hibernate-mapping>

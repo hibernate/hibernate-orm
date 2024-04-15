@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -47,7 +48,7 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public class DriverManagerConnectionProviderImpl
-		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
+		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService, ConnectionValidator {
 
 	private static final ConnectionPoolingLogger log = ConnectionPoolingLogger.CONNECTIONS_LOGGER;
 
@@ -55,6 +56,8 @@ public class DriverManagerConnectionProviderImpl
 	public static final String INITIAL_SIZE = "hibernate.connection.initial_pool_size";
 	// in TimeUnit.SECONDS
 	public static final String VALIDATION_INTERVAL = "hibernate.connection.pool_validation_interval";
+	public static final String INIT_SQL ="hibernate.connection.init_sql";
+	public static final String CONNECTION_CREATOR_FACTORY ="hibernate.connection.creator_factory_class";
 
 	private volatile PoolState state;
 
@@ -94,23 +97,24 @@ public class DriverManagerConnectionProviderImpl
 		pooledConnectionBuilder.initialSize( initialSize );
 		pooledConnectionBuilder.minSize( minSize );
 		pooledConnectionBuilder.maxSize( maxSize );
-
+		pooledConnectionBuilder.validator( this );
 		return pooledConnectionBuilder.build();
 	}
 
 	private static ConnectionCreator buildCreator(Map configurationValues, ServiceRegistryImplementor serviceRegistry) {
-		final ConnectionCreatorBuilder connectionCreatorBuilder = new ConnectionCreatorBuilder( serviceRegistry );
-
-		final String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
-		connectionCreatorBuilder.setDriver( loadDriverIfPossible( driverClassName, serviceRegistry ) );
-
 		final String url = (String) configurationValues.get( AvailableSettings.URL );
+
+		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
+		Driver driver = null;
+		if ( driverClassName != null ) {
+			driver = loadDriverIfPossible( driverClassName, serviceRegistry );
+		}
+
 		if ( url == null ) {
 			final String msg = log.jdbcUrlNotSpecified( AvailableSettings.URL );
 			log.error( msg );
 			throw new HibernateException( msg );
 		}
-		connectionCreatorBuilder.setUrl( url );
 
 		log.usingDriver( driverClassName, url );
 
@@ -123,19 +127,38 @@ public class DriverManagerConnectionProviderImpl
 		else {
 			log.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 		}
-		connectionCreatorBuilder.setConnectionProps( connectionProps );
 
 		final boolean autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues, false );
 		log.autoCommitMode( autoCommit );
-		connectionCreatorBuilder.setAutoCommit( autoCommit );
 
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( configurationValues );
 		if ( isolation != null ) {
 			log.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
 		}
-		connectionCreatorBuilder.setIsolation( isolation );
 
-		return connectionCreatorBuilder.build();
+		final String initSql = (String) configurationValues.get( INIT_SQL );
+
+		final Object connectionCreatorFactory = configurationValues.get( CONNECTION_CREATOR_FACTORY );
+		ConnectionCreatorFactory factory = null;
+		if ( connectionCreatorFactory instanceof ConnectionCreatorFactory ) {
+			factory = (ConnectionCreatorFactory) connectionCreatorFactory;
+		}
+		else if ( connectionCreatorFactory != null ) {
+			factory = loadConnectionCreatorFactory( connectionCreatorFactory.toString(), serviceRegistry );
+		}
+		if ( factory == null ) {
+			factory = ConnectionCreatorFactoryImpl.INSTANCE;
+		}
+		return factory.create(
+				driver,
+				serviceRegistry,
+				url,
+				connectionProps,
+				autoCommit,
+				isolation,
+				initSql,
+				configurationValues
+		);
 	}
 
 	private static Driver loadDriverIfPossible(String driverClassName, ServiceRegistryImplementor serviceRegistry) {
@@ -160,6 +183,31 @@ public class DriverManagerConnectionProviderImpl
 		}
 		catch ( Exception e1 ) {
 			throw new ServiceException( "Specified JDBC Driver " + driverClassName + " could not be loaded", e1 );
+		}
+	}
+
+	private static ConnectionCreatorFactory loadConnectionCreatorFactory(String connectionCreatorFactoryClassName, ServiceRegistryImplementor serviceRegistry) {
+		if ( connectionCreatorFactoryClassName == null ) {
+			log.debug( "No connection creator factory class specified" );
+			return null;
+		}
+
+		if ( serviceRegistry != null ) {
+			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+			final Class<ConnectionCreatorFactory> factoryClass = classLoaderService.classForName( connectionCreatorFactoryClassName );
+			try {
+				return factoryClass.newInstance();
+			}
+			catch ( Exception e ) {
+				throw new ServiceException( "Specified ConnectionCreatorFactory " + connectionCreatorFactoryClassName + " could not be loaded", e );
+			}
+		}
+
+		try {
+			return (ConnectionCreatorFactory) Class.forName( connectionCreatorFactoryClassName ).newInstance();
+		}
+		catch ( Exception e1 ) {
+			throw new ServiceException( "Specified ConnectionCreatorFactory " + connectionCreatorFactoryClassName + " could not be loaded", e1 );
 		}
 	}
 
@@ -205,6 +253,12 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
+	protected void validateConnectionsReturned() {
+		int allocationCount = state.pool.allConnections.size() - state.pool.availableConnections.size();
+		if ( allocationCount != 0 ) {
+			log.error( "Connection leak detected: there are " + allocationCount + " unclosed connections!");
+		}
+	}
 
 	// destroy the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -212,6 +266,7 @@ public class DriverManagerConnectionProviderImpl
 	public void stop() {
 		if ( state != null ) {
 			state.stop();
+			validateConnectionsReturned();
 		}
 	}
 
@@ -234,6 +289,10 @@ public class DriverManagerConnectionProviderImpl
 		return connectionCreator.getConnectionProperties();
 	}
 
+	@Override
+	public boolean isValid(Connection connection) throws SQLException {
+		return true;
+	}
 
 	public static class PooledConnections {
 
@@ -243,6 +302,7 @@ public class DriverManagerConnectionProviderImpl
 		private static final CoreMessageLogger log = CoreLogging.messageLogger( DriverManagerConnectionProviderImpl.class );
 
 		private final ConnectionCreator connectionCreator;
+		private final ConnectionValidator connectionValidator;
 		private final boolean autoCommit;
 		private final int minSize;
 		private final int maxSize;
@@ -253,6 +313,9 @@ public class DriverManagerConnectionProviderImpl
 				Builder builder) {
 			log.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
 			connectionCreator = builder.connectionCreator;
+			connectionValidator = builder.connectionValidator == null
+					? ConnectionValidator.ALWAYS_VALID
+					: builder.connectionValidator;
 			autoCommit = builder.autoCommit;
 			maxSize = builder.maxSize;
 			minSize = builder.minSize;
@@ -283,24 +346,77 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		public void add(Connection conn) throws SQLException {
-			conn.setAutoCommit( true );
-			conn.clearWarnings();
-			availableConnections.offer( conn );
+			final Connection connection = releaseConnection( conn );
+			if ( connection != null ) {
+				availableConnections.offer( connection );
+			}
+		}
+
+		protected Connection releaseConnection(Connection conn) {
+			Exception t = null;
+			try {
+				conn.setAutoCommit( true );
+				conn.clearWarnings();
+				if ( connectionValidator.isValid( conn ) ) {
+					return conn;
+				}
+			}
+			catch (SQLException ex) {
+				t = ex;
+			}
+			closeConnection( conn, t );
+			log.debug( "Connection release failed. Closing pooled connection", t );
+			return null;
 		}
 
 		public Connection poll() throws SQLException {
-			Connection conn = availableConnections.poll();
-			if ( conn == null ) {
-				synchronized (allConnections) {
-					if(allConnections.size() < maxSize) {
-						addConnections( 1 );
-						return poll();
+			Connection conn;
+			do {
+				conn = availableConnections.poll();
+				if ( conn == null ) {
+					synchronized (allConnections) {
+						if ( allConnections.size() < maxSize ) {
+							addConnections( 1 );
+							return poll();
+						}
 					}
+					throw new HibernateException(
+							"The internal connection pool has reached its maximum size and no connection is currently available!" );
 				}
-				throw new HibernateException( "The internal connection pool has reached its maximum size and no connection is currently available!" );
-			}
-			conn.setAutoCommit( autoCommit );
+				conn = prepareConnection( conn );
+			} while ( conn == null );
 			return conn;
+		}
+
+		protected Connection prepareConnection(Connection conn) {
+			Exception t = null;
+			try {
+				conn.setAutoCommit( autoCommit );
+				if ( connectionValidator.isValid( conn ) ) {
+					return conn;
+				}
+			}
+			catch (SQLException ex) {
+				t = ex;
+			}
+			closeConnection( conn, t );
+			log.debug( "Connection preparation failed. Closing pooled connection", t );
+			return null;
+		}
+
+		protected void closeConnection(Connection conn, Throwable t) {
+			try {
+				conn.close();
+			}
+			catch (SQLException ex) {
+				log.unableToCloseConnection( ex );
+				if ( t != null ) {
+					t.addSuppressed( ex );
+				}
+			}
+			finally {
+				allConnections.remove( conn );
+			}
 		}
 
 		public void close() throws SQLException {
@@ -350,6 +466,7 @@ public class DriverManagerConnectionProviderImpl
 
 		public static class Builder {
 			private final ConnectionCreator connectionCreator;
+			private ConnectionValidator connectionValidator;
 			private boolean autoCommit;
 			private int initialSize = 1;
 			private int minSize = 1;
@@ -372,6 +489,11 @@ public class DriverManagerConnectionProviderImpl
 
 			public Builder maxSize(int maxSize) {
 				this.maxSize = maxSize;
+				return this;
+			}
+
+			public Builder validator(ConnectionValidator connectionValidator) {
+				this.connectionValidator = connectionValidator;
 				return this;
 			}
 

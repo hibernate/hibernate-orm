@@ -7,10 +7,13 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
+import java.sql.Types;
 import java.util.UUID;
 
 import org.hibernate.internal.util.BytesHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Descriptor for {@link UUID} handling.
@@ -30,6 +33,11 @@ public class UUIDTypeDescriptor extends AbstractTypeDescriptor<UUID> {
 
 	public UUID fromString(String string) {
 		return ToStringTransformer.INSTANCE.parse( string );
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
 	}
 
 	@SuppressWarnings({ "unchecked" })

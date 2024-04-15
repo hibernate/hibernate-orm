@@ -14,9 +14,11 @@ import javax.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.util.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
@@ -32,6 +34,7 @@ import static org.mockito.Mockito.verify;
  * @author Vlad Mihalcea
  */
 @RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+@SkipForDialect(value = SybaseDialect.class, comment = "The jTDS driver doesn't implement Connection#isValid so this fails")
 public class HikariCPSkipAutoCommitTest extends BaseCoreFunctionalTestCase {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider =

@@ -280,7 +280,10 @@ public enum Database {
 				final int minorVersion = info.getDatabaseMinorVersion();
 
 				if ( majorVersion == 10 ) {
-					if ( minorVersion >= 3 ) {
+					if ( minorVersion >= 6 ) {
+						return new MariaDB106Dialect();
+					}
+					else if ( minorVersion >= 3 ) {
 						return new MariaDB103Dialect();
 					}
 					else if ( minorVersion == 2 ) {
@@ -477,7 +480,7 @@ public enum Database {
 	SQLSERVER {
 		@Override
 		public Class<? extends Dialect> latestDialect() {
-			return SQLServer2012Dialect.class;
+			return SQLServer2016Dialect.class;
 		}
 
 		@Override
@@ -498,16 +501,20 @@ public enum Database {
 						return new SQLServer2008Dialect();
 					}
 					case 11:
-					case 12:
-					case 13: {
+					case 12: {
 						return new SQLServer2012Dialect();
+					}
+					case 13:
+					case 14:
+					case 15: {
+						return new SQLServer2016Dialect();
 					}
 					default: {
 						if ( majorVersion < 8 ) {
 							return new SQLServerDialect();
 						}
 						else {
-							// assume `majorVersion > 13`
+							// assume `majorVersion > 15`
 							return latestDialectInstance( this );
 						}
 					}

@@ -66,19 +66,22 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			//try explicit identifier property
 			return path.startsWith( property.getName() + "." );
 		}
+		//try the embedded property
 		else {
-			//try the embedded property
-			//embedded property starts their path with 'id.' See PropertyPreloadedData( ) use when idClass != null in AnnotationSourceProcessor
-			if ( path.startsWith( "id." ) ) {
-				KeyValue valueIdentifier = persistentClass.getIdentifier();
-				String localPath = path.substring( 3 );
-				if ( valueIdentifier instanceof Component ) {
-					Iterator it = ( (Component) valueIdentifier ).getPropertyIterator();
-					while ( it.hasNext() ) {
-						Property idProperty = (Property) it.next();
-						if ( localPath.startsWith( idProperty.getName() ) ) return true;
+			final KeyValue valueIdentifier = persistentClass.getIdentifier();
+			if ( valueIdentifier instanceof Component ) {
+				// Embedded property starts their path with 'id.'
+				// See PropertyPreloadedData( ) use when idClass != null in AnnotationSourceProcessor
+				String localPath = path;
+				if ( path.startsWith( "id." ) ) {
+					localPath = path.substring( 3 );
+				}
+				Iterator it = ( (Component) valueIdentifier ).getPropertyIterator();
+				while ( it.hasNext() ) {
+					Property idProperty = (Property) it.next();
+					if ( localPath.equals( idProperty.getName() ) || localPath.startsWith( idProperty.getName() + "." ) ) {
+						return true;
 					}
-
 				}
 			}
 		}
@@ -103,7 +106,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			/*
 			 * HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			 */
-			if ( !manyToOne.isIgnoreNotFound() ) manyToOne.createPropertyRefConstraints( persistentClasses );
+			if ( manyToOne.getNotFoundAction() == null ) {
+				manyToOne.createPropertyRefConstraints( persistentClasses );
+			}
 		}
 		else if ( value instanceof OneToOne ) {
 			value.createForeignKey();

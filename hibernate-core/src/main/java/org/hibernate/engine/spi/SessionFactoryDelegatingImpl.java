@@ -30,6 +30,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.Settings;
@@ -242,6 +243,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public JdbcServices getJdbcServices() {
 		return delegate.getJdbcServices();
+	}
+
+	@Override
+	public SqlStringGenerationContext getSqlStringGenerationContext() {
+		return delegate.getSqlStringGenerationContext();
 	}
 
 	@Override

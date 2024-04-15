@@ -46,24 +46,6 @@ public interface ExtractedDatabaseMetaData {
 	String getConnectionSchemaName();
 
 	/**
-	 * Set of type info reported by the driver.
-	 *
-	 * @return The type information obtained from the driver.
-	 *
-	 * @see java.sql.DatabaseMetaData#getTypeInfo()
-	 */
-	LinkedHashSet<TypeInfo> getTypeInfoSet();
-
-	/**
-	 * Get the list of extra keywords (beyond standard SQL92 keywords) reported by the driver.
-	 *
-	 * @return The extra keywords used by this database.
-	 *
-	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
-	 */
-	Set<String> getExtraKeywords();
-
-	/**
 	 * Does the driver report supporting named parameters?
 	 *
 	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false
@@ -135,15 +117,6 @@ public interface ExtractedDatabaseMetaData {
 	 * @see java.sql.DatabaseMetaData#getSQLStateType()
 	 */
 	SQLStateType getSqlStateType();
-
-	/**
-	 * Did the driver report that updates to a LOB locator affect a copy of the LOB?
-	 *
-	 * @return True if updates to the state of a LOB locator update only a copy.
-	 *
-	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy()
-	 */
-	boolean doesLobLocatorUpdateCopy();
 
 	/**
 	 * Retrieve the list of {@code SequenceInformation} objects which describe the underlying database sequences.

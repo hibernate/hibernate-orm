@@ -19,8 +19,10 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
@@ -65,6 +67,8 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 
     @Test
     @SkipForDialect(value = DB2Dialect.class, comment = "We would need casts in the case clauses. See HHH-12822.")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby requires either casted parameters or literals in the result arms of CASE expressions")
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Sybase requires either casted parameters or literals in the result arms of CASE expressions")
     public void testEqualClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -89,6 +93,9 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13167")
+	@SkipForDialect(value = DB2Dialect.class, comment = "We would need casts in the case clauses. See HHH-12822.")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby requires either casted parameters or literals in the result arms of CASE expressions")
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Sybase requires either casted parameters or literals in the result arms of CASE expressions")
 	public void testMissingElseClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			Event event = new Event();

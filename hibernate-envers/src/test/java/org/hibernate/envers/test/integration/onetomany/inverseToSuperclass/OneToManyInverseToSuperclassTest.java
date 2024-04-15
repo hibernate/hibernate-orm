@@ -32,7 +32,7 @@ public class OneToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTes
 	public void initData() {
 		EntityManager em = getEntityManager();
 
-		Master m1 = new Master();
+		Root m1 = new Root();
 		DetailSubclass det1 = new DetailSubclass2();
 		DetailSubclass det2 = new DetailSubclass2();
 
@@ -41,7 +41,7 @@ public class OneToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTes
 
 		det1.setStr2( "detail 1" );
 
-		m1.setStr( "master" );
+		m1.setStr( "root" );
 		m1.setItems( new ArrayList<DetailSubclass>() );
 		m1.getItems().add( det1 );
 		det1.setParent( m1 );
@@ -53,7 +53,7 @@ public class OneToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTes
 		// Revision 2
 		em.getTransaction().begin();
 
-		m1 = em.find( Master.class, m1_id );
+		m1 = em.find( Root.class, m1_id );
 
 		det2.setStr2( "detail 2" );
 		det2.setParent( m1 );
@@ -63,8 +63,8 @@ public class OneToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTes
 		// Revision 3
 		em.getTransaction().begin();
 
-		m1 = em.find( Master.class, m1_id );
-		m1.setStr( "new master" );
+		m1 = em.find( Root.class, m1_id );
+		m1.setStr( "new root" );
 
 		det1 = m1.getItems().get( 0 );
 		det1.setStr2( "new detail" );
@@ -82,7 +82,7 @@ public class OneToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTes
 		// Revision 4
 		em.getTransaction().begin();
 
-		m1 = em.find( Master.class, m1_id );
+		m1 = em.find( Root.class, m1_id );
 
 		det1 = m1.getItems().get( 0 );
 		det1.setParent( null );
@@ -95,10 +95,10 @@ public class OneToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTes
 
 	@Test
 	public void testHistoryExists() {
-		Master rev1_1 = getAuditReader().find( Master.class, m1_id, 1 );
-		Master rev1_2 = getAuditReader().find( Master.class, m1_id, 2 );
-		Master rev1_3 = getAuditReader().find( Master.class, m1_id, 3 );
-		Master rev1_4 = getAuditReader().find( Master.class, m1_id, 4 );
+		Root rev1_1 = getAuditReader().find( Root.class, m1_id, 1 );
+		Root rev1_2 = getAuditReader().find( Root.class, m1_id, 2 );
+		Root rev1_3 = getAuditReader().find( Root.class, m1_id, 3 );
+		Root rev1_4 = getAuditReader().find( Root.class, m1_id, 4 );
 
 		assert (rev1_1 != null);
 		assert (rev1_2 != null);

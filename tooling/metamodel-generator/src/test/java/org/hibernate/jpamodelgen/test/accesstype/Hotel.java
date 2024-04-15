@@ -16,13 +16,13 @@ import javax.persistence.OneToOne;
 public class Hotel {
 
 	@OneToOne
-	private User webmaster;
+	private User webDomainExpert;
 
-	public User getWebmaster() {
-		return webmaster;
+	public User getWebDomainExpert() {
+		return webDomainExpert;
 	}
 
-	public void setWebmaster(User webmaster) {
-		this.webmaster = webmaster;
+	public void setWebDomainExpert(User webDomainExpert) {
+		this.webDomainExpert = webDomainExpert;
 	}
 }

@@ -11,16 +11,17 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'hibernate-matrix-testing'
 
 dependencies {
-    compile( project( ':hibernate-core' ) ) {
-        // Exclude access to this to avoid future use.
-        exclude group: "org.javassist", module: "javassist"
-    }
+    compile( project( ':hibernate-core' ) )
+
+    // TODO HHH-13703: get rid of this dependency
+    compile( libraries.dom4j )
 
     provided( libraries.ant )
     annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
     testCompile( project( ':hibernate-testing' ) )
     testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
+    testCompile( libraries.assertj )
 }
 
 sourceSets {
@@ -35,6 +36,12 @@ sourceSets {
         resources {
             srcDir enversDemoResourcesDir
         }
+    }
+}
+
+configurations {
+    tests {
+        description = 'Configuration for the produced test jar'
     }
 }
 
@@ -60,6 +67,20 @@ jar {
                 ].join( ',' )
         )
     }
+}
+
+sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+task testJar(type: Jar, dependsOn: testClasses) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set( 'test' )
+    from sourceSets.test.output
+}
+
+artifacts {
+    tests testJar
 }
 
 tasks."matrix_mariadb" {

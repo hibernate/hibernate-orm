@@ -24,6 +24,7 @@ import java.security.PrivilegedAction;
 import java.util.function.Function;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.ProxyConfiguration;
@@ -58,7 +59,7 @@ public final class ByteBuddyState {
 
 	private final ByteBuddy byteBuddy;
 
-	private final ProxyDefinitionHelpers proxyDefinitionHelpers;
+	private static final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
 
 	private final ClassRewriter classRewriter;
 
@@ -78,8 +79,8 @@ public final class ByteBuddyState {
 	ByteBuddyState(ClassFileVersion classFileVersion) {
 		this.byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
 
-		this.proxyCache = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
-		this.basicProxyCache = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
+		this.proxyCache = new TypeCache( TypeCache.Sort.WEAK );
+		this.basicProxyCache = new TypeCache( TypeCache.Sort.WEAK );
 
 		if ( System.getSecurityManager() != null ) {
 			this.classRewriter = new SecurityManagerClassRewriter();
@@ -87,8 +88,6 @@ public final class ByteBuddyState {
 		else {
 			this.classRewriter = new StandardClassRewriter();
 		}
-
-		this.proxyDefinitionHelpers = new ProxyDefinitionHelpers();
 	}
 
 	/**
@@ -190,6 +189,10 @@ public final class ByteBuddyState {
 		return make( makeProxyFunction.apply( byteBuddy ) );
 	}
 
+	public Unloaded<?> make(TypePool typePool, Function<ByteBuddy, DynamicType.Builder<?>> makeProxyFunction) {
+		return make( typePool, makeProxyFunction.apply( byteBuddy ) );
+	}
+
 	private Unloaded<?> make(DynamicType.Builder<?> builder) {
 		return make( null, builder );
 	}
@@ -250,7 +253,7 @@ public final class ByteBuddyState {
 
 		private final ElementMatcher<? super MethodDescription> groovyGetMetaClassFilter;
 		private final ElementMatcher<? super MethodDescription> virtualNotFinalizerFilter;
-		private final ElementMatcher<? super MethodDescription> hibernateGeneratedMethodFilter;
+		private final ElementMatcher<? super MethodDescription> proxyNonInterceptedMethodFilter;
 		private final MethodDelegation delegateToInterceptorDispatcherMethodDelegation;
 		private final FieldAccessor.PropertyConfigurable interceptorFieldAccessor;
 
@@ -258,7 +261,11 @@ public final class ByteBuddyState {
 			this.groovyGetMetaClassFilter = isSynthetic().and( named( "getMetaClass" )
 					.and( returns( td -> "groovy.lang.MetaClass".equals( td.getName() ) ) ) );
 			this.virtualNotFinalizerFilter = isVirtual().and( not( isFinalizer() ) );
-			this.hibernateGeneratedMethodFilter = nameStartsWith( "$$_hibernate_" ).and( isVirtual() );
+			this.proxyNonInterceptedMethodFilter = nameStartsWith( "$$_hibernate_" ).and( isVirtual() )
+					// HHH-15090: Don't apply extended enhancement reader/writer methods to the proxy;
+					// those need to be executed on the actual entity.
+					.and( not( nameStartsWith( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX ) ) )
+					.and( not( nameStartsWith( EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX ) ) );
 
 			PrivilegedAction<MethodDelegation> delegateToInterceptorDispatcherMethodDelegationPrivilegedAction =
 					new PrivilegedAction<MethodDelegation>() {
@@ -296,8 +303,8 @@ public final class ByteBuddyState {
 			return virtualNotFinalizerFilter;
 		}
 
-		public ElementMatcher<? super MethodDescription> getHibernateGeneratedMethodFilter() {
-			return hibernateGeneratedMethodFilter;
+		public ElementMatcher<? super MethodDescription> getProxyNonInterceptedMethodFilter() {
+			return proxyNonInterceptedMethodFilter;
 		}
 
 		public MethodDelegation getDelegateToInterceptorDispatcherMethodDelegation() {

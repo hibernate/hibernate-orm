@@ -26,8 +26,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface CollectionId {
 	/**
 	 * Collection id column(s).
+	 *
+	 * @deprecated Only basic (single column) collection-ids are supported.
+	 * Use {@link #column} instead
 	 */
-	Column[] columns();
+	@Deprecated
+	Column[] columns() default {};
+
+	Column column() default @Column;
 
 	/**
 	 * id type, type.type() must be set.

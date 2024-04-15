@@ -18,7 +18,7 @@
     	</id>
         <property name="name"/>
         <property name="lastModified" generated="always" type="binary">
-            <column name="lastModified" length="8" sql-type="TIMESTAMP"/>
+            <column name="lastModified" length="8" sql-type="timestamp"/>
         </property>
 
 	</class>

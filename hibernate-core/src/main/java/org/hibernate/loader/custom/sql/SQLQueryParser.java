@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.hibernate.QueryException;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.query.spi.ParameterParser;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.param.ParameterBinder;
@@ -85,6 +87,8 @@ public class SQLQueryParser {
 		StringBuilder result = new StringBuilder( sqlQuery.length() + 20 );
 		int left, right;
 
+		SqlStringGenerationContext sqlStringGenerationContext = factory.getSqlStringGenerationContext();
+
 		// replace {....} with corresponding column aliases
 		for ( int curr = 0; curr < sqlQuery.length(); curr = right + 1 ) {
 			if ( ( left = sqlQuery.indexOf( '{', curr ) ) < 0 ) {
@@ -107,30 +111,30 @@ public class SQLQueryParser {
 			if ( isPlaceholder ) {
 				// Domain replacement
 				if ( DOMAIN_PLACEHOLDER.equals( aliasPath ) ) {
-					final String catalogName = factory.getSettings().getDefaultCatalogName();
+					final Identifier catalogName = sqlStringGenerationContext.getDefaultCatalog();
 					if ( catalogName != null ) {
-						result.append( catalogName );
+						result.append( catalogName.render( sqlStringGenerationContext.getDialect() ) );
 						result.append( "." );
 					}
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
+					final Identifier schemaName = sqlStringGenerationContext.getDefaultSchema();
 					if ( schemaName != null ) {
-						result.append( schemaName );
+						result.append( schemaName.render( sqlStringGenerationContext.getDialect() ) );
 						result.append( "." );
 					}
 				}
 				// Schema replacement
 				else if ( SCHEMA_PLACEHOLDER.equals( aliasPath ) ) {
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
+					final Identifier schemaName = sqlStringGenerationContext.getDefaultSchema();
 					if ( schemaName != null ) {
-						result.append(schemaName);
+						result.append( schemaName.render( sqlStringGenerationContext.getDialect() ) );
 						result.append(".");
 					}
 				}
 				// Catalog replacement
 				else if ( CATALOG_PLACEHOLDER.equals( aliasPath ) ) {
-					final String catalogName = factory.getSettings().getDefaultCatalogName();
+					final Identifier catalogName = sqlStringGenerationContext.getDefaultCatalog();
 					if ( catalogName != null ) {
-						result.append( catalogName );
+						result.append( catalogName.render( sqlStringGenerationContext.getDialect() ) );
 						result.append( "." );
 					}
 				}

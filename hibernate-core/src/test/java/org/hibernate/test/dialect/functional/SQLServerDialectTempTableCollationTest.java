@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.dialect.functional;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -21,12 +20,12 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServer2005Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 
-import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -44,26 +43,39 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 	private boolean collationChanged;
 
 	@Override
-	protected Configuration constructConfiguration() {
-		Configuration configuration = super.constructConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE.toString() );
-		return configuration;
 	}
 
-	@AfterClassOnce
-	protected void revertBackOriginalDBCollation() {
+	@Override
+	protected void releaseSessionFactory() {
+		super.releaseSessionFactory();
 		if ( originalDBCollation != null && collationChanged && !changedDBCollation.equals( originalDBCollation ) ) {
 			BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
 			StandardServiceRegistryImpl serviceRegistry = buildServiceRegistry(
 					bootRegistry,
-					constructConfiguration()
+					constructAndConfigureConfiguration( bootRegistry )
 			);
-			try (Connection connection = serviceRegistry.getService( JdbcServices.class )
-					.getBootstrapJdbcConnectionAccess()
-					.obtainConnection();
-				 Statement statement = connection.createStatement()) {
-				connection.setAutoCommit( true );
-				statement.executeUpdate( "ALTER DATABASE CURRENT COLLATE " + originalDBCollation );
+			try {
+				TransactionUtil.doWithJDBC(
+						serviceRegistry,
+						connection -> {
+							try (Statement statement = connection.createStatement()) {
+								connection.setAutoCommit( true );
+								String dbName;
+								try ( ResultSet rs = statement.executeQuery( "SELECT DB_NAME()" ) ) {
+									rs.next();
+									dbName = rs.getString( 1 );
+								}
+								statement.execute( "USE master" );
+								statement.execute( "ALTER DATABASE " + dbName + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE" );
+								statement.executeUpdate( "ALTER DATABASE " + dbName + " COLLATE " + originalDBCollation );
+								statement.execute( "ALTER DATABASE " + dbName + " SET MULTI_USER WITH ROLLBACK IMMEDIATE" );
+								statement.execute( "USE " + dbName );
+							}
+						}
+				);
 			}
 			catch (SQLException e) {
 				throw new RuntimeException( "Failed to revert back database collation to " + originalDBCollation, e );
@@ -72,42 +84,71 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 				serviceRegistry.destroy();
 			}
 		}
+		// The alter database calls could lead to issues with existing connections, so we reset the shared pool here
+		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
 	}
 
+	@Override
 	protected void buildSessionFactory() {
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		StandardServiceRegistryImpl serviceRegistry = buildServiceRegistry( bootRegistry, constructConfiguration() );
+		StandardServiceRegistryImpl serviceRegistry =
+				buildServiceRegistry( bootRegistry, constructAndConfigureConfiguration( bootRegistry ) );
 
 		try {
-			try ( Connection connection = serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();
-				 Statement statement = connection.createStatement() ) {
-				connection.setAutoCommit( true );
-				try ( ResultSet rs = statement.executeQuery( "SELECT SERVERPROPERTY('collation')" ) ) {
-					rs.next();
-					String instanceCollation = rs.getString( 1 );
-					Assert.assertNotEquals( instanceCollation, changedDBCollation );
-				}
+			try {
+				TransactionUtil.doWithJDBC(
+						serviceRegistry,
+						connection -> {
+							try (Statement statement = connection.createStatement()) {
+								connection.setAutoCommit( true );
+								try ( ResultSet rs = statement.executeQuery( "SELECT DATABASEPROPERTYEX(DB_NAME(),'collation')" ) ) {
+									rs.next();
+									String instanceCollation = rs.getString( 1 );
+									Assert.assertNotEquals( instanceCollation, changedDBCollation );
+								}
+							}
+						}
+				);
 			}
 			catch (SQLException e) {
 				log.debug( e.getMessage() );
 			}
-			try ( Connection connection = serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();
-				  Statement statement = connection.createStatement() ) {
-				connection.setAutoCommit( true );
-				try ( ResultSet rs = statement.executeQuery( "SELECT CONVERT (varchar(256), DATABASEPROPERTYEX(DB_NAME(),'collation'))" ) ) {
-					rs.next();
-					originalDBCollation = rs.getString( 1 );
-				}
+			try {
+				TransactionUtil.doWithJDBC(
+						serviceRegistry,
+						connection -> {
+							try (Statement statement = connection.createStatement()) {
+								connection.setAutoCommit( true );
+								try ( ResultSet rs = statement.executeQuery( "SELECT CONVERT (varchar(256), DATABASEPROPERTYEX(DB_NAME(),'collation'))" ) ) {
+									rs.next();
+									originalDBCollation = rs.getString( 1 );
+								}
+							}
+						}
+				);
 			}
 			catch (SQLException e) {
 				log.debug( e.getMessage() );
 			}
-			try ( Connection connection = serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();
-				 Statement statement = connection.createStatement() ) {
-				connection.setAutoCommit( true );
-				statement.executeUpdate( "ALTER DATABASE CURRENT COLLATE " + changedDBCollation );
-				collationChanged = true;
-			}
+			TransactionUtil.doWithJDBC(
+					serviceRegistry,
+					connection -> {
+						try (Statement statement = connection.createStatement()) {
+							connection.setAutoCommit( true );
+							String dbName;
+							try ( ResultSet rs = statement.executeQuery( "SELECT DB_NAME()" ) ) {
+								rs.next();
+								dbName = rs.getString( 1 );
+							}
+							statement.execute( "USE master" );
+							statement.execute( "ALTER DATABASE " + dbName + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE" );
+							statement.executeUpdate( "ALTER DATABASE " + dbName + " COLLATE " + changedDBCollation );
+							statement.execute( "ALTER DATABASE " + dbName + " SET MULTI_USER WITH ROLLBACK IMMEDIATE" );
+							statement.execute( "USE " + dbName );
+							collationChanged = true;
+						}
+					}
+			);
 		}
 		catch ( SQLException e ) {
 			throw new RuntimeException( e );

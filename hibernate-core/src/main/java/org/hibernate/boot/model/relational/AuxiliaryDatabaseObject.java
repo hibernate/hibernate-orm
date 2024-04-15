@@ -42,11 +42,39 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	/**
 	 * Gets the SQL strings for creating the database object.
 	 *
-	 * @param dialect The dialect for which to generate the SQL creation strings
+	 * @param context A context to help generate the SQL creation strings
 	 *
 	 * @return the SQL strings for creating the database object.
 	 */
-	public String[] sqlCreateStrings(Dialect dialect);
+	default String[] sqlCreateStrings(SqlStringGenerationContext context) {
+		return sqlCreateStrings( context.getDialect() );
+	}
+
+	/**
+	 * Gets the SQL strings for creating the database object.
+	 *
+	 * @param dialect The dialect for which to generate the SQL creation strings
+	 *
+	 * @return the SQL strings for creating the database object.
+	 * @deprecated Hibernate ORM may never call this method,
+	 * and implementations cannot properly handle default catalogs/schemas.
+	 * Call/implement {@link #sqlCreateStrings(SqlStringGenerationContext)} instead.
+	 */
+	@Deprecated
+	default String[] sqlCreateStrings(Dialect dialect) {
+		throw new IllegalStateException( this + " does not implement sqlCreateStrings(...)" );
+	}
+
+	/**
+	 * Gets the SQL strings for dropping the database object.
+	 *
+	 * @param context A context to help generate the SQL drop strings
+	 *
+	 * @return the SQL strings for dropping the database object.
+	 */
+	default String[] sqlDropStrings(SqlStringGenerationContext context) {
+		return sqlDropStrings( context.getDialect() );
+	}
 
 	/**
 	 * Gets the SQL strings for dropping the database object.
@@ -54,8 +82,14 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 * @param dialect The dialect for which to generate the SQL drop strings
 	 *
 	 * @return the SQL strings for dropping the database object.
+	 * @deprecated Hibernate ORM may never call this method,
+	 * and implementations cannot properly handle default catalogs/schemas.
+	 * Call/implement {@link #sqlDropStrings(SqlStringGenerationContext)} instead.
 	 */
-	public String[] sqlDropStrings(Dialect dialect);
+	@Deprecated
+	default String[] sqlDropStrings(Dialect dialect) {
+		throw new IllegalStateException( this + " does not implement sqlDropStrings(...)" );
+	}
 
 	/**
 	 * Additional, optional interface for AuxiliaryDatabaseObject that want to allow

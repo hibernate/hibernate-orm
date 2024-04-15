@@ -31,6 +31,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.Query;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
 import org.hibernate.testing.SkipForDialect;
@@ -38,6 +39,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
@@ -211,6 +213,29 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		session.close();
 		testData.release();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14567")
+	public void testHqlFiltersAppliedAfterQueryCreation() {
+		TestData testData = new TestData();
+		testData.prepare();
+
+		try {
+			inTransaction( session -> {
+				Query<Salesperson> query = session.createQuery(
+						"select s from Salesperson s",
+						Salesperson.class
+				);
+				assertThat( query.list() ).hasSize( 2 );
+
+				session.enableFilter( "region" ).setParameter( "region", "APAC" );
+				assertThat( query.list() ).hasSize( 1 );
+			} );
+		}
+		finally {
+			testData.release();
+		}
 	}
 
 	@Test

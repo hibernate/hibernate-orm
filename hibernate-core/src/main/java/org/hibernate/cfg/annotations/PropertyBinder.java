@@ -273,7 +273,9 @@ public class PropertyBinder {
 		prop.setPropertyAccessorName( accessType.getType() );
 
 		if ( property != null ) {
-			prop.setValueGenerationStrategy( determineValueGenerationStrategy( property ) );
+			if ( entityBinder != null ) {
+				prop.setValueGenerationStrategy( determineValueGenerationStrategy( property ) );
+			}
 
 			if ( property.isAnnotationPresent( AttributeAccessor.class ) ) {
 				final AttributeAccessor accessor = property.getAnnotation( AttributeAccessor.class );

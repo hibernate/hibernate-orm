@@ -19,7 +19,6 @@ import javax.persistence.OneToOne;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
@@ -29,14 +28,12 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 
 public class OneToOneEagerDerivedIdFetchModeSelectTest extends BaseCoreFunctionalTestCase {
 	private Foo foo;
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-14390")
-	@FailureExpected(jiraKey = "HHH-14390")
 	public void testQuery() {
 
 		doInHibernate( this::sessionFactory, session -> {
@@ -52,7 +49,6 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest extends BaseCoreFunctiona
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-14390")
-	@FailureExpected(jiraKey = "HHH-14390")
 	public void testQueryById() {
 
 		doInHibernate( this::sessionFactory, session -> {
@@ -67,22 +63,7 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest extends BaseCoreFunctiona
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-14389")
-	public void testFindById() {
-
-		doInHibernate( this::sessionFactory, session -> {
-			Bar newBar = session.find( Bar.class, foo );
-			assertNotNull( newBar );
-			assertNotNull( newBar.getFoo() );
-			assertSame( foo, newBar.getFoo() );
-			assertEquals( foo.getId(), newBar.getFoo().getId() );
-			assertEquals( "Some details", newBar.getDetails() );
-		});
-	}
-
-	@Test
 	@TestForIssue(jiraKey = "HHH-14390")
-	@FailureExpected(jiraKey = "HHH-14390")
 	public void testFindByPrimaryKey() {
 
 		doInHibernate( this::sessionFactory, session -> {

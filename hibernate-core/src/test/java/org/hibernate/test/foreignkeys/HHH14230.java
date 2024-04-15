@@ -19,6 +19,7 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Table;
 import org.hibernate.testing.TestForIssue;
@@ -35,16 +36,18 @@ public class HHH14230 {
 
 	@Test
 	public void test() {
-		Metadata metadata = new MetadataSources(new StandardServiceRegistryBuilder().build())
-				.addAnnotatedClass(TestEntity.class).buildMetadata();
-		Table table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
-				.flatMap(namespace -> namespace.getTables().stream())
-				.filter(t -> t.getName().equals(TABLE_NAME)).findFirst().orElse(null);
-		assertNotNull(table);
-		assertEquals(1, table.getForeignKeys().size());
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+			Metadata metadata = new MetadataSources( serviceRegistry )
+					.addAnnotatedClass( TestEntity.class ).buildMetadata();
+			Table table = StreamSupport.stream( metadata.getDatabase().getNamespaces().spliterator(), false )
+					.flatMap( namespace -> namespace.getTables().stream() )
+					.filter( t -> t.getName().equals( TABLE_NAME ) ).findFirst().orElse( null );
+			assertNotNull( table );
+			assertEquals( 1, table.getForeignKeys().size() );
 
-		// ClassCastException before HHH-14230
-		assertTrue(table.getForeignKeys().keySet().iterator().next().toString().contains(JOIN_COLUMN_NAME));
+			// ClassCastException before HHH-14230
+			assertTrue( table.getForeignKeys().keySet().iterator().next().toString().contains( JOIN_COLUMN_NAME ) );
+		}
 	}
 
 	@Entity

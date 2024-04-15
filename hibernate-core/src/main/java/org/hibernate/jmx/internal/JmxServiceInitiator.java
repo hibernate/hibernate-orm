@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jmx.spi.JmxService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -29,8 +30,10 @@ public class JmxServiceInitiator implements StandardServiceInitiator<JmxService>
 
 	@Override
 	public JmxService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		return ConfigurationHelper.getBoolean( AvailableSettings.JMX_ENABLED, configurationValues, false )
-				? new JmxServiceImpl( configurationValues )
-				: DisabledJmxServiceImpl.INSTANCE;
+		if ( ConfigurationHelper.getBoolean( AvailableSettings.JMX_ENABLED, configurationValues, false ) ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedJmxSupport( AvailableSettings.JMX_ENABLED );
+			return new JmxServiceImpl( configurationValues );
+		}
+		return DisabledJmxServiceImpl.INSTANCE;
 	}
 }

@@ -93,8 +93,13 @@ public abstract class AbstractBatchImpl implements Batch {
 		return sqlStatementLogger;
 	}
 
-	protected void abortBatch() {
-		jdbcCoordinator.abortBatch();
+	protected void abortBatch(Exception cause) {
+		try {
+			jdbcCoordinator.abortBatch();
+		}
+		catch (RuntimeException e) {
+			cause.addSuppressed( e );
+		}
 	}
 
 	/**

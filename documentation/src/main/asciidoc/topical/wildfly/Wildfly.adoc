@@ -2,7 +2,7 @@
 
 == Hibernate ORM within WildFly
 
-The http://wildfly.org/[WildFly application server] includes Hibernate ORM as the default JPA provider out of the box.
+The https://wildfly.org/[WildFly application server] includes Hibernate ORM as the default JPA provider out of the box.
 
 In previous versions of Hibernate ORM, we offered a "feature pack" to enable anyone to use the very latest version in
 WildFly as soon as a new release of Hibernate ORM was published.

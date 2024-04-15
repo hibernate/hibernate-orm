@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.EntityType;
@@ -21,7 +22,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class ManyToOne extends ToOne {
-	private boolean ignoreNotFound;
+	private NotFoundAction notFoundAction;
 	private boolean isLogicalOneToOne;
 
 	/**
@@ -44,7 +45,7 @@ public class ManyToOne extends ToOne {
 				getPropertyName(),
 				isLazy(),
 				isUnwrapProxy(),
-				isIgnoreNotFound(),
+				getNotFoundAction(),
 				isLogicalOneToOne
 		);
 	}
@@ -97,12 +98,25 @@ public class ManyToOne extends ToOne {
 		return visitor.accept(this);
 	}
 
+	public NotFoundAction getNotFoundAction() {
+		return notFoundAction;
+	}
+
+	public void setNotFoundAction(NotFoundAction notFoundAction) {
+		this.notFoundAction = notFoundAction;
+	}
+
 	public boolean isIgnoreNotFound() {
-		return ignoreNotFound;
+		return notFoundAction == NotFoundAction.IGNORE;
 	}
 
 	public void setIgnoreNotFound(boolean ignoreNotFound) {
-		this.ignoreNotFound = ignoreNotFound;
+		if ( ignoreNotFound ) {
+			notFoundAction = NotFoundAction.IGNORE;
+		}
+		else {
+			notFoundAction = null;
+		}
 	}
 
 	public void markAsLogicalOneToOne() {

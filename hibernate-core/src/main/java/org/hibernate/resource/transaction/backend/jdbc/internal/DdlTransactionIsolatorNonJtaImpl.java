@@ -22,6 +22,7 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 	private final JdbcContext jdbcContext;
 
 	private Connection jdbcConnection;
+	private boolean unsetAutoCommit;
 
 	public DdlTransactionIsolatorNonJtaImpl(JdbcContext jdbcContext) {
 		this.jdbcContext = jdbcContext;
@@ -49,6 +50,7 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 						try {
 							jdbcConnection.commit();
 							jdbcConnection.setAutoCommit( true );
+							unsetAutoCommit = true;
 						}
 						catch (SQLException e) {
 							throw jdbcContext.getSqlExceptionHelper().convert(
@@ -80,10 +82,28 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 	public void release() {
 		if ( jdbcConnection != null ) {
 			try {
-				jdbcContext.getJdbcConnectionAccess().releaseConnection( jdbcConnection );
+				if ( unsetAutoCommit ) {
+					try {
+						jdbcConnection.setAutoCommit( false );
+					}
+					catch (SQLException e) {
+						throw jdbcContext.getSqlExceptionHelper().convert(
+								e,
+								"Unable to set auto commit to false for JDBC Connection used for DDL execution"
+						);
+					}
+				}
 			}
-			catch (SQLException e) {
-				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to release JDBC Connection used for DDL execution" );
+			finally {
+				try {
+					jdbcContext.getJdbcConnectionAccess().releaseConnection( jdbcConnection );
+				}
+				catch (SQLException e) {
+					throw jdbcContext.getSqlExceptionHelper().convert(
+							e,
+							"Unable to release JDBC Connection used for DDL execution"
+					);
+				}
 			}
 		}
 	}

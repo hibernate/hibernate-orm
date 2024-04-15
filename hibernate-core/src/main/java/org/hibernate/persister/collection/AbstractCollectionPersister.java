@@ -240,7 +240,6 @@ public abstract class AbstractCollectionPersister
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
 
 		final Database database = creationContext.getMetadata().getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		this.factory = creationContext.getSessionFactory();
 		this.cacheAccessStrategy = cacheAccessStrategy;
@@ -272,7 +271,7 @@ public abstract class AbstractCollectionPersister
 		isArray = collectionBinding.isArray();
 		subselectLoadable = collectionBinding.isSubselectLoadable();
 
-		qualifiedTableName = determineTableName( table, jdbcEnvironment );
+		qualifiedTableName = determineTableName( table );
 
 		int spacesSize = 1 + collectionBinding.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
@@ -455,10 +454,9 @@ public abstract class AbstractCollectionPersister
 			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(
 					creationContext.getMetadata().getIdentifierGeneratorFactory(),
 					factory.getDialect(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName(),
 					null
 					);
+			identifierGenerator.initialize( creationContext.getSessionFactory().getSqlStringGenerationContext() );
 		}
 		else {
 			identifierType = null;
@@ -614,15 +612,12 @@ public abstract class AbstractCollectionPersister
 		initCollectionPropertyMap();
 	}
 
-	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
+	protected String determineTableName(Table table) {
 		if ( table.getSubselect() != null ) {
 			return "( " + table.getSubselect() + " )";
 		}
 
-		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				jdbcEnvironment.getDialect()
-		);
+		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
 	}
 
 	private class ColumnMapperImpl implements ColumnMapper {

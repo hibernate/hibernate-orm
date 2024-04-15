@@ -45,10 +45,6 @@ public class JpaFileSchemaGeneratorWithHbm2DdlCharsetNameTest extends JpaSchemaG
 		return toFilePath(super.getDropSqlScript());
 	}
 
-	protected String toFilePath(String relativePath) {
-		return Thread.currentThread().getContextClassLoader().getResource( relativePath ).getFile();
-	}
-
 	@Override
 	protected String getResourceUrlString(String resource) {
 		return resource;

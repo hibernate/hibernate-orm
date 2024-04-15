@@ -48,4 +48,5 @@ public class JTSGeometryType extends AbstractSingleColumnStandardBasicType<Geome
 		return "jts_geometry";
 	}
 
+
 }

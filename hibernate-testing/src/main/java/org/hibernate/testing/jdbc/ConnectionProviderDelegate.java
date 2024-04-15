@@ -34,11 +34,20 @@ public class ConnectionProviderDelegate implements
 	private ServiceRegistryImplementor serviceRegistry;
 
 	private ConnectionProvider connectionProvider;
+	private boolean configured;
 
 	public ConnectionProviderDelegate() {
 	}
 
 	public ConnectionProviderDelegate(ConnectionProvider connectionProvider) {
+		this.connectionProvider = connectionProvider;
+	}
+
+	public ConnectionProvider getConnectionProvider() {
+		return connectionProvider;
+	}
+
+	public void setConnectionProvider(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
 	}
 
@@ -49,18 +58,24 @@ public class ConnectionProviderDelegate implements
 
 	@Override
 	public void configure(Map configurationValues) {
-		if ( connectionProvider == null ) {
-			@SuppressWarnings("unchecked")
-			Map<String, Object> settings = new HashMap<>( configurationValues );
-			settings.remove( AvailableSettings.CONNECTION_PROVIDER );
-			connectionProvider = ConnectionProviderInitiator.INSTANCE.initiateService(
-					settings,
-					serviceRegistry
-			);
+		if ( !configured ) {
+			if ( connectionProvider == null ) {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> settings = new HashMap<>( configurationValues );
+				settings.remove( AvailableSettings.CONNECTION_PROVIDER );
+				connectionProvider = ConnectionProviderInitiator.INSTANCE.initiateService(
+						settings,
+						serviceRegistry
+				);
+			}
+			if ( connectionProvider instanceof ServiceRegistryAwareService ) {
+				( (ServiceRegistryAwareService) connectionProvider ).injectServices( serviceRegistry );
+			}
 			if ( connectionProvider instanceof Configurable ) {
 				Configurable configurableConnectionProvider = (Configurable) connectionProvider;
-				configurableConnectionProvider.configure( settings );
+				configurableConnectionProvider.configure( configurationValues );
 			}
+			configured = true;
 		}
 	}
 

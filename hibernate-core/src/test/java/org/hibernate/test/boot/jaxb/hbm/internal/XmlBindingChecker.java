@@ -32,7 +32,8 @@ public class XmlBindingChecker {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		jaxbMarshaller.marshal( hbmMapping, bos );
 		ByteArrayInputStream is = new ByteArrayInputStream( bos.toByteArray() );
-		ServiceRegistry sr = new StandardServiceRegistryBuilder().build();
-		new XmlMappingBinderAccess( sr ).bind( is );
+		try (ServiceRegistry sr = new StandardServiceRegistryBuilder().build()) {
+			new XmlMappingBinderAccess( sr ).bind( is );
+		}
 	}
 }

@@ -11,6 +11,7 @@ import static org.junit.Assert.assertTrue;
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -39,24 +40,26 @@ public class EntityInheritanceAttributeOverrideTest extends BaseEntityManagerFun
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-			CategoryEntity.class,
-			TaxonEntity.class,
-			AbstractEntity.class
+		return new Class[] {
+				CategoryEntity.class,
+				TaxonEntity.class,
+				AbstractEntity.class
 		};
 	}
 
-	@Override
-	public void buildEntityManagerFactory() {
+	public EntityManagerFactory produceEntityManagerFactory() {
 		Triggerable warningLogged = logInspection.watchForLogMessages( "HHH000499:" );
 
 		super.buildEntityManagerFactory();
+		EntityManagerFactory entityManagerFactory = entityManagerFactory();
 
 		assertTrue("A warning should have been logged for this unsupported configuration", warningLogged.wasTriggered());
+		return entityManagerFactory;
 	}
 
 	@Test
 	public void test() {
+		produceEntityManagerFactory().close();
 	}
 
 	@Entity(name = "AbstractEntity")

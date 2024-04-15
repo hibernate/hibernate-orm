@@ -8,8 +8,6 @@ import groovy.json.JsonSlurper
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-apply from: rootProject.file( 'gradle/base-information.gradle' )
-
 apply plugin: 'idea'
 apply plugin: 'distribution'
 
@@ -110,10 +108,10 @@ task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documen
 task uploadDocumentation(type:Exec, dependsOn: assembleDocumentation) {
     description = "Uploads documentation to the JBoss doc server"
 
-    final String url = "filemgmt.jboss.org:/docs_htdocs/hibernate/orm/${rootProject.ormVersion.family}";
+    final String url = "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate/orm/${rootProject.ormVersion.family}";
 
     executable 'rsync'
-    args '-avz', '--links', '--protocol=28', "${documentationDir.absolutePath}/", url
+    args '--port=2222', '-avz', '--links', "${documentationDir.absolutePath}/", url
 
     doFirst {
         if ( rootProject.ormVersion.isSnapshot ) {
@@ -146,8 +144,6 @@ distributions {
                 from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
                 from parent.project( 'hibernate-core' ).configurations.runtime
                 from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                // for now,
-                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
             }
 
 //            into( 'lib/jpa' ) {
@@ -253,29 +249,6 @@ task buildBundles(type: Task, dependsOn: [distZip,distTar]) {
     description = "Builds all release bundles"
 }
 
-task uploadBundlesSourceForge(type: Exec, dependsOn: buildBundles) {
-    description = "Uploads release bundles to SourceForge"
-
-    final String url = "frs.sourceforge.net:/home/frs/project/hibernate/hibernate-orm/${version}";
-
-    executable 'rsync'
-    args '-vr', '-e ssh', "${project.buildDir}/distributions/", url
-
-    doFirst {
-        if ( rootProject.ormVersion.isSnapshot ) {
-            logger.error( "Cannot perform upload of SNAPSHOT bundles to SourceForge" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles to SourceForge" )
-        }
-        else {
-            logger.lifecycle( "Uploading release bundles to SourceForge..." )
-        }
-    }
-
-    doLast {
-        logger.lifecycle( 'Done uploading release bundles to SourceForge' )
-    }
-}
-
 configurations {
     bundles {
         description = 'Configuration used to group the archives output from the distribution plugin.'
@@ -287,7 +260,7 @@ artifacts {
     bundles distZip
 }
 
-task release( dependsOn: [releaseChecks, uploadDocumentation, uploadBundlesSourceForge] )
+task release( dependsOn: [releaseChecks, uploadDocumentation] )
 
 task changeLogFile( dependsOn: [releaseChecks] ) {
     group = "Release"
@@ -334,7 +307,7 @@ task ciRelease( dependsOn: [releaseChecks, addVersionCommit, release] ) {
                 tag = tag.replace( ".Final", "" )
             }
             logger.lifecycle( "Tagging '${tag}'..." )
-            executeGitCommand( 'tag', tag )
+            executeGitCommand( 'tag', '-a', tag, '-m', "Release $project.ormVersion.fullName" )
         }
 
         logger.lifecycle( "Adding commit to update version to '${project.developmentVersion}'..." )

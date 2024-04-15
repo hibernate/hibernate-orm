@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
@@ -20,7 +19,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -45,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 @Deprecated
 public class SequenceGenerator
-		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
+		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 
 	private static final Logger LOG = Logger.getLogger( SequenceGenerator.class.getName() );
 
@@ -65,7 +64,9 @@ public class SequenceGenerator
 	public static final String PARAMETERS = "parameters";
 
 	private QualifiedName logicalQualifiedSequenceName;
-	private String sequenceName;
+	private QualifiedName physicalSequenceName;
+	@Deprecated
+	private String formattedSequenceNameForLegacyGetter;
 	private Type identifierType;
 	private String sql;
 
@@ -73,12 +74,27 @@ public class SequenceGenerator
 		return identifierType;
 	}
 
+	@Override
+	@Deprecated
 	public Object generatorKey() {
 		return getSequenceName();
 	}
 
+	@Deprecated
 	public String getSequenceName() {
-		return sequenceName;
+		return formattedSequenceNameForLegacyGetter;
+	}
+
+	public QualifiedName getPhysicalSequenceName() {
+		return physicalSequenceName;
+	}
+
+	/**
+	 * @deprecated Exposed for tests only.
+	 */
+	@Deprecated
+	public String[] getAllSqlForTests() {
+		return new String[] { sql };
 	}
 
 	@Override
@@ -145,24 +161,13 @@ public class SequenceGenerator
 	}
 
 	@Override
-	@SuppressWarnings( {"deprecation"})
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return dialect.getCreateSequenceStrings( sequenceName, 1, 1 );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return dialect.getDropSequenceStrings( sequenceName );
-	}
-
-	@Override
 	public boolean supportsBulkInsertionIdentifierGeneration() {
 		return true;
 	}
 
 	@Override
-	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
-		return dialect.getSelectSequenceNextValString( getSequenceName() );
+	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
+		return context.getDialect().getSelectSequenceNextValString( context.format( getPhysicalSequenceName() ) );
 	}
 
 	@Override
@@ -182,14 +187,16 @@ public class SequenceGenerator
 					1
 			);
 		}
+		this.physicalSequenceName = sequence.getName();
 
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
+		this.formattedSequenceNameForLegacyGetter = jdbcEnvironment.getQualifiedObjectNameFormatter()
+				.format( physicalSequenceName, jdbcEnvironment.getDialect() );
+	}
 
-		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				sequence.getName(),
-				dialect
-		);
-		this.sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		String formattedPhysicalSequenceName = context.format( physicalSequenceName );
+		this.sql = context.getDialect().getSequenceNextValString( formattedPhysicalSequenceName );
 	}
 }

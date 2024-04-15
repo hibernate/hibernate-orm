@@ -9,6 +9,7 @@ package org.hibernate.dialect.unique;
 import java.util.Iterator;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.UniqueKey;
 
@@ -29,10 +30,11 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
+			SqlStringGenerationContext context) {
 		if ( hasNullable( uniqueKey ) ) {
 			return org.hibernate.mapping.Index.buildSqlCreateIndexString(
-					dialect,
+					context,
 					uniqueKey.getName(),
 					uniqueKey.getTable(),
 					uniqueKey.columnIterator(),
@@ -42,23 +44,21 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 			);
 		}
 		else {
-			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, metadata );
+			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, metadata, context );
 		}
 	}
 	
 	@Override
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
+			SqlStringGenerationContext context) {
 		if ( hasNullable( uniqueKey ) ) {
 			return org.hibernate.mapping.Index.buildSqlDropIndexString(
 					uniqueKey.getName(),
-					metadata.getDatabase().getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-							uniqueKey.getTable().getQualifiedTableName(),
-							metadata.getDatabase().getJdbcEnvironment().getDialect()
-					)
+					context.format( uniqueKey.getTable().getQualifiedTableName() )
 			);
 		}
 		else {
-			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata );
+			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata, context );
 		}
 	}
 	

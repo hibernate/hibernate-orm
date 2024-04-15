@@ -88,7 +88,7 @@ public class Employee extends AbstractPersistent {
 
 	@ElementCollection
 	@MapKeyColumn(name = "name", length = 180)
-	@Column(name = "value", nullable = false)
+	@Column(name = "val", nullable = false)
 	public Map<String, String> getAnnotations() {
 		return this.annotations;
 	}

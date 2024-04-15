@@ -7,11 +7,10 @@
 
 description = '(deprecated - use org.infinispan:infinispan-hibernate-cache-v53 instead)'
 
-apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply plugin: 'maven-publish'
-apply plugin: 'org.hibernate.build.maven-repo-auth'
+//apply plugin: 'org.hibernate.build.maven-repo-auth'
 
 ext {
 	relocatedGroupId  = 'org.infinispan'
@@ -32,4 +31,4 @@ publishing {
 	}
 }
 
-task release( dependsOn: bintrayUpload )
+task release( dependsOn: publishToSonatype )

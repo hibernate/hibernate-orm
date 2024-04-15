@@ -15,6 +15,7 @@ import javax.persistence.QueryHint;
 import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
@@ -48,6 +49,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected void addSettings(Map settings) {
+		CONNECTION_PROVIDER.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
 		settings.put( AvailableSettings.CONNECTION_PROVIDER, CONNECTION_PROVIDER );
 	}
 

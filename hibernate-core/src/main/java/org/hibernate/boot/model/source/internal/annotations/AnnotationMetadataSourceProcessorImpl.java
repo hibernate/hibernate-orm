@@ -22,6 +22,7 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
@@ -29,17 +30,16 @@ import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware.JpaOrmXmlPersistenceUnitDefaults;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
-import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
+import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
-
-import org.dom4j.Document;
 
 /**
  * @author Steve Ebersole
@@ -75,32 +75,25 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		final AttributeConverterManager attributeConverterManager = new AttributeConverterManager( rootMetadataBuildingContext );
 		this.classLoaderService = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
-		if ( rootMetadataBuildingContext.getBuildingOptions().isXmlMappingEnabled() ) {
-
+		MetadataBuildingOptions metadataBuildingOptions = rootMetadataBuildingContext.getBuildingOptions();
+		if ( metadataBuildingOptions.isXmlMappingEnabled() ) {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Ewww.  This is temporary until we migrate to Jandex + StAX for annotation binding
-
-				final JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
-						.getMetadataProvider();
-				for ( Binding xmlBinding : managedResources.getXmlMappingBindings() ) {
-	//			if ( !MappingBinder.DelayedOrmXmlData.class.isInstance( xmlBinding.getRoot() ) ) {
-	//				continue;
-	//			}
-	//
-	//			// convert the StAX representation in delayedOrmXmlData to DOM because that's what commons-annotations needs
-	//			final MappingBinder.DelayedOrmXmlData delayedOrmXmlData = (MappingBinder.DelayedOrmXmlData) xmlBinding.getRoot();
-	//			org.dom4j.Document dom4jDocument = toDom4jDocument( delayedOrmXmlData );
-					if ( !org.dom4j.Document.class.isInstance( xmlBinding.getRoot() ) ) {
-						continue;
-					}
-					org.dom4j.Document dom4jDocument = (Document) xmlBinding.getRoot();
-
-					final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( dom4jDocument );
-					for ( String className : classNames ) {
-						xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
-					}
+			final JPAXMLOverriddenMetadataProvider jpaMetadataProvider = (JPAXMLOverriddenMetadataProvider) ( (MetadataProviderInjector) reflectionManager )
+					.getMetadataProvider();
+			for ( Binding<?> xmlBinding : managedResources.getXmlMappingBindings() ) {
+				Object root = xmlBinding.getRoot();
+				if ( !(root instanceof JaxbEntityMappings) ) {
+					continue;
 				}
-				jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
+				JaxbEntityMappings entityMappings = (JaxbEntityMappings) xmlBinding.getRoot();
+
+				final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( entityMappings );
+				for ( String className : classNames ) {
+					xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
+				}
+			}
+			jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		}
 
@@ -137,22 +130,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private XClass toXClass(String className, ReflectionManager reflectionManager, ClassLoaderService cls) {
 		return reflectionManager.toXClass( cls.classForName( className ) );
 	}
-
-//	private Document toDom4jDocument(MappingBinder.DelayedOrmXmlData delayedOrmXmlData) {
-//		// todo : do we need to build a DocumentFactory instance for use here?
-//		//		historically we did that to set TCCL since, iirc, dom4j uses TCCL
-//		org.dom4j.io.STAXEventReader staxToDom4jReader = new STAXEventReader();
-//		try {
-//			return staxToDom4jReader.readDocument( delayedOrmXmlData.getStaxEventReader() );
-//		}
-//		catch (XMLStreamException e) {
-//			throw new MappingException(
-//					"An error occurred transforming orm.xml document from StAX to dom4j representation ",
-//					e,
-//					delayedOrmXmlData.getOrigin()
-//			);
-//		}
-//	}
 
 	@Override
 	public void prepare() {
@@ -252,7 +229,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private List<XClass> orderAndFillHierarchy(List<XClass> original) {
-		List<XClass> copy = new ArrayList<XClass>( original );
+		List<XClass> copy = new ArrayList<>( original.size() );
 		insertMappedSuperclasses( original, copy );
 
 		// order the hierarchy
@@ -266,16 +243,28 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private void insertMappedSuperclasses(List<XClass> original, List<XClass> copy) {
+		final boolean debug = log.isDebugEnabled();
 		for ( XClass clazz : original ) {
-			XClass superClass = clazz.getSuperclass();
-			while ( superClass != null
-					&& !reflectionManager.equals( superClass, Object.class )
-					&& !copy.contains( superClass ) ) {
-				if ( superClass.isAnnotationPresent( Entity.class )
-						|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
-					copy.add( superClass );
+			if ( clazz.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+				if ( debug ) {
+					log.debugf(
+							"Skipping explicit MappedSuperclass %s, the class will be discovered analyzing the implementing class",
+							clazz
+					);
 				}
-				superClass = superClass.getSuperclass();
+			}
+			else {
+				copy.add( clazz );
+				XClass superClass = clazz.getSuperclass();
+				while ( superClass != null
+						&& !reflectionManager.equals( superClass, Object.class )
+						&& !copy.contains( superClass ) ) {
+					if ( superClass.isAnnotationPresent( Entity.class )
+							|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+						copy.add( superClass );
+					}
+					superClass = superClass.getSuperclass();
+				}
 			}
 		}
 	}

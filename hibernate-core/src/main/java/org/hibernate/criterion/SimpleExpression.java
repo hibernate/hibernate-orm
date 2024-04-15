@@ -39,7 +39,7 @@ public class SimpleExpression implements Criterion {
 		this.op = op;
 	}
 
-	protected final String getOp() {
+	public final String getOp() {
 		return op;
 	}
 

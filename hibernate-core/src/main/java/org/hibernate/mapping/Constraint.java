@@ -18,6 +18,7 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
@@ -179,9 +180,12 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return true;
 	}
 
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
+	@Override
+	public String sqlDropString(SqlStringGenerationContext context,
+			String defaultCatalog, String defaultSchema) {
+		Dialect dialect = context.getDialect();
 		if ( isGenerated( dialect ) ) {
-			final String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
+			final String tableName = getTable().getQualifiedName( context );
 			return String.format(
 					Locale.ROOT,
 					"%s evictData constraint %s",
@@ -194,14 +198,17 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		}
 	}
 
-	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
+	@Override
+	public String sqlCreateString(Mapping p, SqlStringGenerationContext context, String defaultCatalog,
+			String defaultSchema) {
+		Dialect dialect = context.getDialect();
 		if ( isGenerated( dialect ) ) {
 			// Certain dialects (ex: HANA) don't support FKs as expected, but other constraints can still be created.
 			// If that's the case, hasAlterTable() will be true, but getAddForeignKeyConstraintString will return
 			// empty string.  Prevent blank "alter table" statements.
-			String constraintString = sqlConstraintString( dialect, getName(), defaultCatalog, defaultSchema );
+			String constraintString = sqlConstraintString( context, getName(), defaultCatalog, defaultSchema );
 			if ( !StringHelper.isEmpty( constraintString ) ) {
-				final String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
+				final String tableName = getTable().getQualifiedName( context );
 				return dialect.getAlterTableString( tableName ) + " " + constraintString;
 			}
 		}
@@ -213,7 +220,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	}
 
 	public abstract String sqlConstraintString(
-			Dialect d,
+			SqlStringGenerationContext context,
 			String constraintName,
 			String defaultCatalog,
 			String defaultSchema);

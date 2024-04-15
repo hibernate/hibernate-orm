@@ -12,6 +12,7 @@ import java.util.Arrays;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.TeradataDialect;
 
 import org.hibernate.testing.DialectChecks;
@@ -45,6 +46,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 			jiraKey = "HHH-6637",
 			comment = "Teradata requires locator to be used in same session where it was created/retrieved"
 	)
+	@SkipForDialect( value = SybaseASE15Dialect.class, comment = "Sybase doesn't support empty blobs")
 	public void testBoundedBlobLocatorAccess() throws Throwable {
 		byte[] original = buildByteArray( BLOB_SIZE, true );
 		byte[] changed = buildByteArray( BLOB_SIZE, false );

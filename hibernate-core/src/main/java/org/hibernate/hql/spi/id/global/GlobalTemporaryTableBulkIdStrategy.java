@@ -8,6 +8,7 @@ package org.hibernate.hql.spi.id.global;
 
 import java.sql.PreparedStatement;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -33,6 +34,7 @@ import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Strategy based on ANSI SQL's definition of a "global temporary table".
@@ -48,6 +50,7 @@ public class GlobalTemporaryTableBulkIdStrategy
 
 	private final AfterUseAction afterUseAction;
 
+	private ServiceRegistry serviceRegistry;
 	private boolean dropIdTables;
 	private String[] dropTableStatements;
 
@@ -102,16 +105,14 @@ public class GlobalTemporaryTableBulkIdStrategy
 			Table idTable,
 			JdbcServices jdbcServices,
 			MetadataImplementor metadata,
-			PreparationContextImpl context) {
-		context.creationStatements.add( buildIdTableCreateStatement( idTable, jdbcServices, metadata ) );
+			PreparationContextImpl context,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		context.creationStatements.add( buildIdTableCreateStatement( idTable, metadata, sqlStringGenerationContext ) );
 		if ( dropIdTables ) {
-			context.dropStatements.add( buildIdTableDropStatement( idTable, jdbcServices ) );
+			context.dropStatements.add( buildIdTableDropStatement( idTable, sqlStringGenerationContext ) );
 		}
 
-		final String renderedName = jdbcServices.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				idTable.getQualifiedTableName(),
-				jdbcServices.getJdbcEnvironment().getDialect()
-		);
+		final String renderedName = sqlStringGenerationContext.formatWithoutDefaults( idTable.getQualifiedTableName() );
 
 		return new IdTableInfoImpl( renderedName );
 	}
@@ -125,7 +126,8 @@ public class GlobalTemporaryTableBulkIdStrategy
 		IdTableHelper.INSTANCE.executeIdTableCreationStatements(
 				context.creationStatements,
 				jdbcServices,
-				connectionAccess
+				connectionAccess,
+				this.serviceRegistry = metadata.getDatabase().getServiceRegistry()
 		);
 
 		this.dropTableStatements = dropIdTables
@@ -141,7 +143,12 @@ public class GlobalTemporaryTableBulkIdStrategy
 			return;
 		}
 
-		IdTableHelper.INSTANCE.executeIdTableDropStatements( dropTableStatements, jdbcServices, connectionAccess );
+		IdTableHelper.INSTANCE.executeIdTableDropStatements(
+				dropTableStatements,
+				jdbcServices,
+				connectionAccess,
+				serviceRegistry
+		);
 	}
 
 	@Override

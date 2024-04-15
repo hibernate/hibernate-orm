@@ -44,8 +44,8 @@ public class ImmediateMixedAccessTests implements BeanContainer.LifecycleOptions
 
 	@Test
 	public void testImmediateMixedAccess() {
-		try ( final SeContainer cdiContainer = Helper.createSeContainer() ) {
-			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+		try ( final SeContainer cdiContainer = Helper.createSeContainer();
+			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build() ) {
 
 			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )

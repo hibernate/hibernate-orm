@@ -17,7 +17,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
+import org.hibernate.dialect.DerbyDialect;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -32,6 +34,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsSelectExpression() {
 		doInHibernate(
 				this::sessionFactory,
@@ -61,6 +64,7 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsSelectExpressionWithLeftJoin() {
 		doInHibernate(
 				this::sessionFactory,
@@ -90,6 +94,7 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsSelectExpressionWithInnerJoin() {
 		doInHibernate(
 				this::sessionFactory,
@@ -115,6 +120,7 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsSelectExpressionOfAliasWithInnerJoin() {
 		doInHibernate(
 				this::sessionFactory,
@@ -140,6 +146,7 @@ public class OneToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testSizeAsSelectExpressionExcludeEmptyCollection() {
 		doInHibernate(
 				this::sessionFactory,

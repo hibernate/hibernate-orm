@@ -25,8 +25,9 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-
 import org.hibernate.testing.TestForIssue;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,12 +53,19 @@ public class SchemaScriptFileGenerationFailureTest {
 		);
 	}
 
+	@After
+	public void destroy() {
+		if ( entityManagerFactoryBuilder != null ) {
+			entityManagerFactoryBuilder.cancel();
+		}
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-12192")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
 			entityManagerFactoryBuilder.generateSchema();
-			fail( "Should haave thrown IOException" );
+			fail( "Should have thrown IOException" );
 		}
 		catch (Exception e) {
 			assertTrue( e instanceof PersistenceException );
@@ -102,13 +110,13 @@ public class SchemaScriptFileGenerationFailureTest {
 
 	private Map getConfig() {
 		final Map<Object, Object> config = Environment.getProperties();
-		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
-		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
+		config.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
+		config.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" );
 		ArrayList<Class> classes = new ArrayList<>();
 
 		classes.addAll( Arrays.asList( new Class[] { TestEntity.class } ) );
-		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, classes );
+		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
 
@@ -126,7 +134,6 @@ public class SchemaScriptFileGenerationFailureTest {
 
 		@Override
 		public void close() throws IOException {
-
 		}
 	}
 }

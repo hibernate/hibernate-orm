@@ -36,7 +36,7 @@ public class HHH14112Test extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Super")
 	@Inheritance(strategy = InheritanceType.JOINED)
-	@Where(clause = "DELETED = false")
+	@Where(clause = "deleted = false")
 	public static class Super {
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

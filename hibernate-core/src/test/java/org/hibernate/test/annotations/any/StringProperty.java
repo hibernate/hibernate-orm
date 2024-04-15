@@ -16,6 +16,7 @@ import javax.persistence.Column;
 public class StringProperty implements Property {
 	private Integer id;
 	private String name;
+	@Column(name = "val")
 	private String value;
 
 	public StringProperty() {

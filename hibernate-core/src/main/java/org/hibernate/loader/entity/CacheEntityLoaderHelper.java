@@ -16,6 +16,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.engine.internal.CacheHelper;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
@@ -242,7 +243,7 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 		// make it circular-reference safe
 		final StatefulPersistenceContext statefulPersistenceContext = (StatefulPersistenceContext) session.getPersistenceContext();
 
-		if ( ( entity instanceof ManagedEntity ) ) {
+		if ( ManagedTypeHelper.isManagedEntity( entity ) ) {
 			statefulPersistenceContext.addReferenceEntry(
 					entity,
 					Status.READ_ONLY

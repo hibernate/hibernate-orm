@@ -9,8 +9,8 @@
 <hibernate-mapping>
 
 	<class
-		name="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.Master"
-		table="HIB_MASTER_ENTITY">
+		name="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.Root"
+		table="HIB_ROOT_ENTITY">
 
 		<id name="id" column="ID" type="long">
 			<generator class="increment" />
@@ -19,8 +19,8 @@
 		<property name="str" column="STR" />
 
 		<bag name="items" lazy="true" cascade="all" access="property" inverse="true"
-			table="HIB_MASTER_DETAIL">
-			<key column="ID_MASTER" />
+			table="HIB_ROOT_DETAIL">
+			<key column="ID_ROOT" />
 			<many-to-many
 				class="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.DetailSubclass2"
 				column="ID_DETAIL" />
@@ -36,11 +36,11 @@
 		</id>
 		<discriminator column="DISCRIMINATOR" type="string" />
 		
-		<bag name="masters" lazy="true" access="property" table="HIB_MASTER_DETAIL">
+		<bag name="roots" lazy="true" access="property" table="HIB_ROOT_DETAIL">
 			<key column="ID_DETAIL" />
 			<many-to-many
-				class="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.Master"
-				column="ID_MASTER" />
+				class="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass.Root"
+				column="ID_ROOT" />
 		</bag>
 
 		<subclass

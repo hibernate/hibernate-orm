@@ -9,7 +9,6 @@ package org.hibernate.jpa.boot.spi;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
@@ -100,7 +99,10 @@ public final class ProviderChecker {
 		if ( integration == null ) {
 			return null;
 		}
-		final String setting = (String) integration.get( AvailableSettings.JPA_PERSISTENCE_PROVIDER );
+		String setting = (String) integration.get(AvailableSettings.JPA_PERSISTENCE_PROVIDER);
+		if ( setting == null ) {
+			setting = (String) integration.get(AvailableSettings.JAKARTA_JPA_PERSISTENCE_PROVIDER);
+		}
 		return setting == null ? null : setting.trim();
 	}
 

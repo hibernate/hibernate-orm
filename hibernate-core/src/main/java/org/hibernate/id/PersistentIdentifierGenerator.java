@@ -6,23 +6,25 @@
  */
 package org.hibernate.id;
 
+import java.util.Properties;
+
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.Type;
 
 /**
  * An <tt>IdentifierGenerator</tt> that requires creation of database objects.
  * <br><br>
- * All <tt>PersistentIdentifierGenerator</tt>s that also implement
- * <tt>Configurable</tt> have access to a special mapping parameter: schema
+ * All <tt>PersistentIdentifierGenerator</tt>s have access to a special mapping parameter
+ * in their {@link #configure(Type, Properties, ServiceRegistry)} method: schema
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see IdentifierGenerator
- * @see Configurable
  */
-public interface PersistentIdentifierGenerator extends IdentifierGenerator, ExportableProducer {
+public interface PersistentIdentifierGenerator extends IdentifierGenerator {
 
 	/**
 	 * The configuration parameter holding the schema name
@@ -58,36 +60,14 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator, Expo
 	String IDENTIFIER_NORMALIZER = "identifier_normalizer";
 
 	/**
-	 * The SQL required to create the underlying database objects.
-	 *
-	 * @param dialect The dialect against which to generate the create command(s)
-	 *
-	 * @return The create command(s)
-	 *
-	 * @throws HibernateException problem creating the create command(s)
-	 * @deprecated Utilize the ExportableProducer contract instead
-	 */
-	@Deprecated
-	String[] sqlCreateStrings(Dialect dialect) throws HibernateException;
-
-	/**
-	 * The SQL required to remove the underlying database objects.
-	 *
-	 * @param dialect The dialect against which to generate the drop command(s)
-	 *
-	 * @return The drop command(s)
-	 *
-	 * @throws HibernateException problem creating the drop command(s)
-	 * @deprecated Utilize the ExportableProducer contract instead
-	 */
-	@Deprecated
-	String[] sqlDropStrings(Dialect dialect) throws HibernateException;
-
-	/**
 	 * Return a key unique to the underlying database objects. Prevents us from
 	 * trying to create/remove them multiple times.
 	 *
 	 * @return Object an identifying key for this generator
+	 * @deprecated No longer necessary.
 	 */
-	Object generatorKey();
+	@Deprecated
+	default Object generatorKey() {
+		return null;
+	}
 }

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -25,9 +26,8 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -67,7 +67,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private boolean hasDenormalizedTables;
 	private String comment;
 
-	private List<InitCommand> initCommands;
+	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 
 	public Table() {
 	}
@@ -112,28 +112,16 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		this.isAbstract = isAbstract;
 	}
 
-	/**
-	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
-	 */
-	@Deprecated
-	public String getQualifiedName(Dialect dialect, String defaultCatalog, String defaultSchema) {
+	public String getQualifiedName(SqlStringGenerationContext context) {
 		if ( subselect != null ) {
 			return "( " + subselect + " )";
 		}
-		String quotedName = getQuotedName( dialect );
-		String usedSchema = schema == null ?
-				defaultSchema :
-				getQuotedSchema( dialect );
-		String usedCatalog = catalog == null ?
-				defaultCatalog :
-				getQuotedCatalog( dialect );
-		return qualify( usedCatalog, usedSchema, quotedName );
+		return context.format( new QualifiedTableName( catalog, schema, name ) );
 	}
 
 	/**
-	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 * @deprecated Should build a {@link QualifiedTableName}
+	 * then use {@link SqlStringGenerationContext#format(QualifiedTableName)}.
 	 */
 	@Deprecated
 	public static String qualify(String catalog, String schema, String table) {
@@ -445,19 +433,8 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			Dialect dialect,
 			Metadata metadata,
 			TableInformation tableInfo,
-			Identifier defaultCatalog,
-			Identifier defaultSchema) throws HibernateException {
-
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				new QualifiedTableName(
-					catalog != null ? catalog : defaultCatalog,
-					schema != null ? schema : defaultSchema,
-					name
-				),
-				dialect
-		);
+			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
+		final String tableName = sqlStringGenerationContext.format( new QualifiedTableName( catalog, schema, name ) );
 
 		StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
 				.append( ' ' )
@@ -495,7 +472,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 					UniqueKey uk = getOrCreateUniqueKey( keyName );
 					uk.addColumn( column );
 					alter.append( dialect.getUniqueDelegate()
-							.getColumnDefinitionUniquenessFragment( column ) );
+							.getColumnDefinitionUniquenessFragment( column, sqlStringGenerationContext ) );
 				}
 
 				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -527,10 +504,13 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return getPrimaryKey() != null;
 	}
 
-	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
+	@Override
+	public String sqlCreateString(Mapping p, SqlStringGenerationContext context, String defaultCatalog,
+			String defaultSchema) {
+		Dialect dialect = context.getDialect();
 		StringBuilder buf = new StringBuilder( hasPrimaryKey() ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
 				.append( ' ' )
-				.append( getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
+				.append( getQualifiedName( context ) )
 				.append( " (" );
 
 		boolean identityColumn = idValue != null && idValue.isIdentityColumn( p.getIdentifierGeneratorFactory(), dialect );
@@ -579,7 +559,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				UniqueKey uk = getOrCreateUniqueKey( keyName );
 				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
-						.getColumnDefinitionUniquenessFragment( col ) );
+						.getColumnDefinitionUniquenessFragment( col, context ) );
 			}
 
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -603,7 +583,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 					.append( getPrimaryKey().sqlConstraintString( dialect ) );
 		}
 
-		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( this ) );
+		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( this, context ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			for ( String checkConstraint : checkConstraints ) {
@@ -622,8 +602,10 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return buf.append( dialect.getTableTypeString() ).toString();
 	}
 
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		return dialect.getDropTableString( getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
+	@Override
+	public String sqlDropString(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) {
+		Dialect dialect = context.getDialect();
+		return dialect.getDropTableString( getQualifiedName( context ) );
 	}
 
 	public PrimaryKey getPrimaryKey() {
@@ -829,25 +811,6 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return checkConstraints.iterator();
 	}
 
-	public Iterator<String> sqlCommentStrings(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		List<String> comments = new ArrayList<>();
-		if ( dialect.supportsCommentOn() ) {
-			String tableName = getQualifiedName( dialect, defaultCatalog, defaultSchema );
-			if ( comment != null ) {
-				comments.add( "comment on table " + tableName + " is '" + comment + "'" );
-			}
-			Iterator<Column> iter = getColumnIterator();
-			while ( iter.hasNext() ) {
-				Column column = (Column) iter.next();
-				String columnComment = column.getComment();
-				if ( columnComment != null ) {
-					comments.add( "comment on column " + tableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
-				}
-			}
-		}
-		return comments.iterator();
-	}
-
 	@Override
 	public String getExportIdentifier() {
 		return Table.qualify(
@@ -897,18 +860,30 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #addInitCommand(Function)} instead.
+	 */
+	@Deprecated
 	public void addInitCommand(InitCommand command) {
-		if ( initCommands == null ) {
-			initCommands = new ArrayList<>();
-		}
-		initCommands.add( command );
+		addInitCommand( ignored -> command );
 	}
 
-	public List<InitCommand> getInitCommands() {
-		if ( initCommands == null ) {
+	public void addInitCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
+		if ( initCommandProducers == null ) {
+			initCommandProducers = new ArrayList<>();
+		}
+		initCommandProducers.add( commandProducer );
+	}
+
+	public List<InitCommand> getInitCommands(SqlStringGenerationContext context) {
+		if ( initCommandProducers == null ) {
 			return Collections.emptyList();
 		}
 		else {
+			List<InitCommand> initCommands = new ArrayList<>();
+			for ( Function<SqlStringGenerationContext, InitCommand> producer : initCommandProducers ) {
+				initCommands.add( producer.apply( context ) );
+			}
 			return Collections.unmodifiableList( initCommands );
 		}
 	}

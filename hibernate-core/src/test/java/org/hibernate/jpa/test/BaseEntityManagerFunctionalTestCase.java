@@ -25,10 +25,15 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -193,7 +198,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	protected void addMappings(Map settings) {
 		String[] mappings = getMappings();
 		if ( mappings != null ) {
-			settings.put( AvailableSettings.HBXML_FILES, String.join( ",", mappings ) );
+			settings.put( AvailableSettings.HBM_XML_FILES, String.join( ",", mappings ) );
 		}
 	}
 
@@ -218,11 +223,19 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 			config.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
 		}
 		if ( getEjb3DD().length > 0 ) {
-			ArrayList<String> dds = new ArrayList<String>();
+			ArrayList<String> dds = new ArrayList<>();
 			dds.addAll( Arrays.asList( getEjb3DD() ) );
-			config.put( AvailableSettings.XML_FILE_NAMES, dds );
+			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
+		config.put( GlobalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		config.put( LocalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		if ( !config.containsKey( Environment.CONNECTION_PROVIDER ) ) {
+			config.put(
+					AvailableSettings.CONNECTION_PROVIDER,
+					SharedDriverManagerConnectionProviderImpl.getInstance()
+			);
+		}
 		addConfigOptions( config );
 		return config;
 	}

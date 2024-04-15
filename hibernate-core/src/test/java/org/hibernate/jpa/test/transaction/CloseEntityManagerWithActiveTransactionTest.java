@@ -26,9 +26,9 @@ import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
@@ -49,8 +49,8 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.TRANSACTION_TYPE, "JTA" );
-		options.put( org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
+		options.put( AvailableSettings.JPA_TRANSACTION_TYPE, "JTA" );
+		options.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
 	}
 
 	@Override

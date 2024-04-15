@@ -473,7 +473,9 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Double> dbexpected = expectationsFactory.getDistance( expectationsFactory.getTestPolygon() );
 		String hql = format(
-				"SELECT id, distance(geom, :filter) from %s where srid(geom) = %d", entityName( pckg ), expectationsFactory.getTestSrid()
+				"SELECT id, distance(geom, :filter) from %s where srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
 		);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
@@ -520,7 +522,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 	}
 
 	public void convexhull(String pckg) throws SQLException {
-		if ( !isSupportedByDialect( SpatialFunction.convexhull ) ) {
+		if ( !isSupportedByDialect( SpatialFunction.convexhull ) || !isSupportedByDialect( SpatialFunction.geomunion )) {
 			return;
 		}
 		Map<Integer, Geometry> dbexpected = expectationsFactory.getConvexHull( expectationsFactory.getTestPolygon() );

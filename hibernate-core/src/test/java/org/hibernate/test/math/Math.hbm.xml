@@ -20,7 +20,7 @@
 
 
         <property name="value">
-            <column name="value" not-null="true" />
+            <column name="val" not-null="true" />
         </property>
     </class>
 

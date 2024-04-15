@@ -32,75 +32,75 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 	@Test
 	public void testCachingExplicitlyDisabled() {
-		final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+		try (final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" )
-				.build();
-
-		assertThat( registry.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
+				.build()) {
+			assertThat( registry.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
+		}
 	}
 
 	@Test
 	public void testCachingImplicitlyEnabledRegistered() {
-		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
-				.build();
+		try (final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
+				.build()) {
+			final Collection<Class<? extends RegionFactory>> implementors = bsr
+					.getService( StrategySelector.class )
+					.getRegisteredStrategyImplementors( RegionFactory.class );
 
-		final Collection<Class<? extends RegionFactory>> implementors = bsr
-				.getService( StrategySelector.class )
-				.getRegisteredStrategyImplementors( RegionFactory.class );
+			assertThat( implementors.size(), equalTo( 1 ) );
 
-		assertThat( implementors.size(), equalTo( 1 ) );
+			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+					.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "" )
+					.build();
 
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
-				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "" )
-				.build();
-
-		assertThat( ssr.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
+			assertThat( ssr.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
+		}
 	}
 
 	@Test
 	public void testCachingImplicitlyEnabledNoRegistered() {
-		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
-				.build();
+		try (final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
+				.build()) {
+			final Collection<Class<? extends RegionFactory>> implementors = bsr
+					.getService( StrategySelector.class )
+					.getRegisteredStrategyImplementors( RegionFactory.class );
 
-		final Collection<Class<? extends RegionFactory>> implementors = bsr
-				.getService( StrategySelector.class )
-				.getRegisteredStrategyImplementors( RegionFactory.class );
+			assertThat( implementors.size(), equalTo( 1 ) );
 
-		assertThat( implementors.size(), equalTo( 1 ) );
+			bsr.getService( StrategySelector.class ).unRegisterStrategyImplementor(
+					RegionFactory.class,
+					implementors.iterator().next()
+			);
 
-		bsr.getService( StrategySelector.class ).unRegisterStrategyImplementor(
-				RegionFactory.class,
-				implementors.iterator().next()
-		);
+			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+					.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "" )
+					.build();
 
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
-				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "" )
-				.build();
-
-		assertThat( ssr.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
+			assertThat( ssr.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
+		}
 	}
 
 	@Test
 	public void testConnectionsRegistered() {
-		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
-				.build();
+		try (final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
+				.build()) {
+			final Collection<Class<? extends ConnectionProvider>> implementors = bsr
+					.getService( StrategySelector.class )
+					.getRegisteredStrategyImplementors( ConnectionProvider.class );
 
-		final Collection<Class<? extends ConnectionProvider>> implementors = bsr
-				.getService( StrategySelector.class )
-				.getRegisteredStrategyImplementors( ConnectionProvider.class );
+			assertThat( implementors.size(), equalTo( 0 ) );
 
-		assertThat( implementors.size(), equalTo( 0 ) );
+			bsr.getService( StrategySelector.class ).registerStrategyImplementor(
+					ConnectionProvider.class,
+					"testing",
+					DriverManagerConnectionProviderImpl.class
+			);
 
-		bsr.getService( StrategySelector.class ).registerStrategyImplementor(
-				ConnectionProvider.class,
-				"testing",
-				DriverManagerConnectionProviderImpl.class
-		);
+			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr ).build();
 
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr ).build();
+			final ConnectionProvider configuredProvider = ssr.getService( ConnectionProvider.class );
 
-		final ConnectionProvider configuredProvider = ssr.getService( ConnectionProvider.class );
-
-		assertThat( configuredProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+			assertThat( configuredProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+		}
 	}
 }

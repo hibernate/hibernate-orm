@@ -49,11 +49,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @RunWith(BytecodeEnhancerRunner.class)
 public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
-	}
 
 	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {

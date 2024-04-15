@@ -186,7 +186,7 @@ Use of this feature may or may not be portable from a JPA perspective.
 ==== Composite identifiers with associations
 
 Hibernate allows defining a composite identifier out of entity associations.
-In the following example, the `PersonAddress` entity identifier is formed of two `@ManyToOne` associations.
+In the following example, the `Book` entity identifier is formed of two `@ManyToOne` associations.
 
 [[identifiers-composite-id-mapping-example]]
 .Composite identifiers with associations

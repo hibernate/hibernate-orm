@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.annotations.reflection;
 
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -13,8 +15,13 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue( jiraKey = "HHH-11924")
+@TestForIssue(jiraKey = {"HHH-11924", "HHH-14529"})
 public class ElementCollectionConverterTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
+		super.prepareBootstrapRegistryBuilder( builder );
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

@@ -6,17 +6,15 @@
  */
 package org.hibernate.jpa.test.cacheable.api;
 
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.SharedCacheMode;
-
-import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
-
 import org.hibernate.testing.cache.CachingRegionFactory;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -33,10 +31,8 @@ public class JpaCacheApiUsageTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	@SuppressWarnings("unchecked")
 	protected void addConfigOptions(Map options) {
-//		options.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
 		options.put( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
-//		options.put( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "read-write" );
-		options.put( org.hibernate.jpa.AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.ALL );
+		options.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ALL );
 	}
 
 	@Test

@@ -59,11 +59,11 @@ public class TypeCategoryTest extends BaseEntityManagerFunctionalTestCase {
 	@Embeddable
 	public class Name {
 
-		private String first;
+		private String firstName;
 
-		private String middle;
+		private String middleName;
 
-		private String last;
+		private String lastName;
 
 		// getters and setters omitted
 	}

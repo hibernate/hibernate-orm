@@ -9,13 +9,17 @@
 
 package org.hibernate.test.annotations.lob;
 
+import org.hibernate.dialect.SybaseASE15Dialect;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 
 /**
  * @author Emmanuel Bernard
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
+@SkipForDialect( value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement binary stream handling")
 public class LobTest extends AbstractLobTest<Book, CompiledCode> {
 	@Override
 	protected Class<Book> getBookClass() {

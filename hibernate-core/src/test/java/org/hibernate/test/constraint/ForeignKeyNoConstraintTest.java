@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.constraint;
 
+import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -94,6 +95,7 @@ public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestC
 	public static class VehicleNumber {
 		@Id
 		private Integer id;
+		@Column(name = "val")
 		private String value;
 
 		public Integer getId() {

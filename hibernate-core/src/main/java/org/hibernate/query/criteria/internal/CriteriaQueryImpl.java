@@ -395,6 +395,17 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 				jpaqlBuffer.append( sep )
 						.append( ( (Renderable) orderSpec.getExpression() ).render( renderingContext ) )
 						.append( orderSpec.isAscending() ? " asc" : " desc" );
+				if ( orderSpec instanceof OrderImpl ) {
+					Boolean nullsFirst = ( (OrderImpl) orderSpec ).getNullsFirst();
+					if ( nullsFirst != null ) {
+						if ( nullsFirst ) {
+							jpaqlBuffer.append( " nulls first" );
+						}
+						else {
+							jpaqlBuffer.append( " nulls last" );
+						}
+					}
+				}
 				sep = ", ";
 			}
 		}

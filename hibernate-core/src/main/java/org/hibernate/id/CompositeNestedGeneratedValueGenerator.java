@@ -9,11 +9,15 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.Type;
 
 /**
  * For composite identifiers, defines a number of "nested" generations that
@@ -67,6 +71,17 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	 * determined {@link GenerationContextLocator#locateGenerationContext context}
 	 */
 	public interface GenerationPlan extends ExportableProducer {
+
+		/**
+		 * Initializes this instance, in particular pre-generates SQL as necessary.
+		 * <p>
+		 * This method is called after {@link #registerExportables(Database)}, before first use.
+		 *
+		 * @param context A context to help generate SQL strings
+		 */
+		default void initialize(SqlStringGenerationContext context) {
+		}
+
 		/**
 		 * Execute the value generation.
 		 *
@@ -104,6 +119,13 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	public void registerExportables(Database database) {
 		for (GenerationPlan plan : generationPlans) {
 			plan.registerExportables( database );
+		}
+	}
+
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		for (GenerationPlan plan : generationPlans) {
+			plan.initialize( context );
 		}
 	}
 }

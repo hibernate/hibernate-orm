@@ -251,9 +251,18 @@ public interface StatisticsImplementor extends Statistics, Service {
 	/**
 	 * Callback indicating a get from the query plan cache resulted in a hit.
 	 *
-	 * @param hql The query
+	 * @param query The query
 	 */
-	default void queryPlanCacheHit(String hql) {
+	default void queryPlanCacheHit(String query) {
+		//For backward compatibility
+	}
+
+	/**
+	 * Callback indicating a get from the query plan cache resulted in a miss.
+	 *
+	 * @param query The query
+	 */
+	default void queryPlanCacheMiss(String query) {
 		//For backward compatibility
 	}
 

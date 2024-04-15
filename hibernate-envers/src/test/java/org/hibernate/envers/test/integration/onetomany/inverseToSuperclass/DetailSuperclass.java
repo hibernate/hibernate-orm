@@ -13,7 +13,7 @@ public class DetailSuperclass {
 
 	private long id;
 
-	private Master parent;
+	private Root parent;
 
 	public DetailSuperclass() {
 
@@ -27,11 +27,11 @@ public class DetailSuperclass {
 		this.id = id;
 	}
 
-	public Master getParent() {
+	public Root getParent() {
 		return parent;
 	}
 
-	public void setParent(Master parent) {
+	public void setParent(Root parent) {
 		this.parent = parent;
 	}
 

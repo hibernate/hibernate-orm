@@ -9,6 +9,7 @@ package org.hibernate.spatial.integration;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.Criteria;
@@ -36,7 +37,7 @@ import static org.junit.Assert.fail;
 @SkipForDialect(value = HANASpatialDialect.class, comment = "The HANA dialect is tested via org.hibernate.spatial.dialect.hana.TestHANASpatialFunctions", jiraKey = "HHH-12426")
 public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 
-	private static HSMessageLogger LOG = Logger.getMessageLogger(
+	private static final HSMessageLogger LOG = Logger.getMessageLogger(
 			HSMessageLogger.class,
 			TestSpatialRestrictions.class.getName()
 	);
@@ -208,7 +209,11 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 			if ( entry.getValue() ) {
 				cnt++;
 				if ( !findInList( entry.getKey(), (List<JtsGeomEntity>) list ) ) {
-					fail( String.format( "Expected object with id= %d, but not found in result", entry.getKey() ) );
+					fail( String.format(
+							Locale.ENGLISH,
+							"Expected object with id= %d, but not found in result",
+							entry.getKey()
+					) );
 				}
 			}
 		}

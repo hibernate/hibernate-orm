@@ -46,15 +46,13 @@ import org.hibernate.internal.util.ReflectHelper;
 public class StreamDecorator<R> implements Stream<R> {
 
 	private final Stream<R> delegate;
-
-	private Runnable closeHandler;
+	private final Runnable closeHandler;
 
 	public StreamDecorator(
 			Stream<R> delegate,
 			Runnable closeHandler) {
-		this.delegate = delegate;
 		this.closeHandler = closeHandler;
-		this.delegate.onClose( closeHandler );
+		this.delegate = delegate.onClose( closeHandler );
 	}
 
 	@Override
@@ -301,7 +299,7 @@ public class StreamDecorator<R> implements Stream<R> {
 
 	@Override
 	public Stream<R> onClose(Runnable closeHandler) {
-		this.closeHandler = closeHandler;
+		this.delegate.onClose( closeHandler );
 		return this;
 	}
 

@@ -123,8 +123,7 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 				.addAnnotatedClass( Employee.class )
 				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.addAuxiliaryDatabaseObject( new ProcedureDefinition() );
-		SessionFactory sf = cfg.buildSessionFactory();
-		try {
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
 
@@ -136,9 +135,6 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 
 			session.getTransaction().commit();
 			session.close();
-		}
-		finally {
-			sf.close();
 		}
 	}
 }

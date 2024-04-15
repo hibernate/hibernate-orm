@@ -10,11 +10,17 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -38,13 +44,23 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public class IncrementGenerator implements IdentifierGenerator, Configurable {
+public class IncrementGenerator implements IdentifierGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
 	private Class returnClass;
+	private String column;
+	private List<QualifiedTableName> physicalTableNames;
 	private String sql;
 
 	private IntegralDataTypeHolder previousValueHolder;
+
+	/**
+	 * @deprecated Exposed for tests only.
+	 */
+	@Deprecated
+	public String[] getAllSqlForTests() {
+		return new String[] { sql };
+	}
 
 	@Override
 	public synchronized Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
@@ -62,17 +78,13 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		final ObjectNameNormalizer normalizer =
 				(ObjectNameNormalizer) params.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
 
-		String column = params.getProperty( "column" );
+		column = params.getProperty( "column" );
 		if ( column == null ) {
 			column = params.getProperty( PersistentIdentifierGenerator.PK );
 		}
 		column = normalizer.normalizeIdentifierQuoting( column ).render( jdbcEnvironment.getDialect() );
 
-		String tableList = params.getProperty( "tables" );
-		if ( tableList == null ) {
-			tableList = params.getProperty( PersistentIdentifierGenerator.TABLES );
-		}
-		String[] tables = StringHelper.split( ", ", tableList );
+		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 
 		final String schema = normalizer.toDatabaseIdentifierText(
 				params.getProperty( PersistentIdentifierGenerator.SCHEMA )
@@ -81,23 +93,40 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 				params.getProperty( PersistentIdentifierGenerator.CATALOG )
 		);
 
+		String tableList = params.getProperty( "tables" );
+		if ( tableList == null ) {
+			tableList = params.getProperty( PersistentIdentifierGenerator.TABLES );
+		}
+		physicalTableNames = new ArrayList<>();
+		for ( String tableName : StringHelper.split( ", ", tableList ) ) {
+			physicalTableNames.add( new QualifiedTableName( identifierHelper.toIdentifier( catalog ),
+					identifierHelper.toIdentifier( schema ), identifierHelper.toIdentifier( tableName ) ) );
+		}
+	}
+
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
 		StringBuilder buf = new StringBuilder();
-		for ( int i = 0; i < tables.length; i++ ) {
-			final String tableName = normalizer.toDatabaseIdentifierText( tables[i] );
-			if ( tables.length > 1 ) {
+		for ( int i = 0; i < physicalTableNames.size(); i++ ) {
+			final String tableName = context.format( physicalTableNames.get( i ) );
+			if ( physicalTableNames.size() > 1 ) {
 				buf.append( "select max(" ).append( column ).append( ") as mx from " );
 			}
-			buf.append( Table.qualify( catalog, schema, tableName ) );
-			if ( i < tables.length - 1 ) {
+			buf.append( tableName );
+			if ( i < physicalTableNames.size() - 1 ) {
 				buf.append( " union " );
 			}
 		}
-		if ( tables.length > 1 ) {
+		String maxColumn;
+		if ( physicalTableNames.size() > 1 ) {
 			buf.insert( 0, "( " ).append( " ) ids_" );
-			column = "ids_.mx";
+			maxColumn = "ids_.mx";
+		}
+		else {
+			maxColumn = column;
 		}
 
-		sql = "select max(" + column + ") from " + buf.toString();
+		sql = "select max(" + maxColumn + ") from " + buf.toString();
 	}
 
 	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {

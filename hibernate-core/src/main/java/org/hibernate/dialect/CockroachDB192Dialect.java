@@ -14,6 +14,7 @@ import java.util.Map;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
@@ -27,6 +28,10 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -232,6 +237,25 @@ public class CockroachDB192Dialect extends Dialect {
 	@Override
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
+	}
+
+	@Override
+	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
+		final StringBuilder orderByElement = new StringBuilder();
+		if ( nulls != NullPrecedence.NONE ) {
+			// Workaround for NULLS FIRST / LAST support.
+			orderByElement.append( "case when " ).append( expression ).append( " is null then " );
+			if ( nulls == NullPrecedence.FIRST ) {
+				orderByElement.append( "0 else 1" );
+			}
+			else {
+				orderByElement.append( "1 else 0" );
+			}
+			orderByElement.append( " end, " );
+		}
+		// Nulls precedence has already been handled so passing NONE value.
+		orderByElement.append( super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE ) );
+		return orderByElement.toString();
 	}
 
 	@Override
@@ -637,5 +661,24 @@ public class CockroachDB192Dialect extends Dialect {
 	@Override
 	public boolean canCreateSchema() {
 		return false;
+	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		// This method is overridden so the correct value will be returned when
+		// DatabaseMetaData is not available.
+		return NameQualifierSupport.SCHEMA;
+	}
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+			throws SQLException {
+
+		if ( dbMetaData == null ) {
+			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
+			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+		}
+
+		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 }

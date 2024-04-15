@@ -20,7 +20,7 @@ import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -207,7 +207,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-		if ( entity instanceof PersistentAttributeInterceptable ) {
+		//type-cache-pollution agent: always check for EnhancedEntity type first.
+		if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
 			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractLazyInterceptor( entity );
 			if ( interceptor == null || interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(
@@ -224,9 +225,11 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
-		if ( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
+		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, PojoEntityTuplizer::clearDirtyAttributes );
+	}
+
+	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
+		entity.$$_hibernate_clearDirtyAttributes();
 	}
 
 	@Override

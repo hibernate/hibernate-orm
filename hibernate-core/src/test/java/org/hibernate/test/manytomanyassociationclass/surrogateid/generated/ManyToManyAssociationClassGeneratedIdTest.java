@@ -10,8 +10,10 @@ import javax.persistence.PersistenceException;
 import java.util.HashSet;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.ConstraintViolationException;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
 import org.junit.Test;
@@ -24,6 +26,7 @@ import static org.junit.Assert.fail;
  *
  * @author Gail Badner
  */
+@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Missing constraint violation extractor")
 public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override
 	public String[] getMappings() {

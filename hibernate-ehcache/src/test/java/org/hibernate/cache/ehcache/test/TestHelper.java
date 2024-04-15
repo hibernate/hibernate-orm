@@ -76,11 +76,11 @@ public class TestHelper {
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
 				.configure( "hibernate-config/hibernate.cfg.xml" )
 				.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" )
-				.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE )
+				.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
 		if ( H2Dialect.class.equals( Dialect.getDialect().getClass() ) ) {
-			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc;MVCC=true" );
+			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc" );
 		}
 		return ssrb;
 	}

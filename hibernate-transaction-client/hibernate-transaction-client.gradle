@@ -1,0 +1,68 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+description = 'Wildfly Transaction Client transformed to be JTA 2.0 compatible'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+tasks.withType(PublishToMavenRepository) {
+	onlyIf {
+		repository.name == "MavenLocal"
+	}
+}
+
+configurations {
+	jakartaeeTransformJars
+}
+
+dependencies {
+	compile( libraries.jakarta_jta )
+
+	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
+			'commons-cli:commons-cli:1.4',
+			'org.slf4j:slf4j-simple:1.7.30',
+			'org.slf4j:slf4j-api:1.7.26',
+			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
+			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
+	testCompile ( libraries.wildfly_transaction_client ) {
+		transitive=false;
+	}
+}
+
+jar {
+	def sourceJarPath = project.configurations.testCompile.find { it.name.startsWith("wildfly-transaction-client-") }
+	inputs.files(sourceJarPath).skipWhenEmpty()
+	outputs.dir project.buildDir
+	doLast {
+		new File(project.buildDir, "libs").mkdirs()
+		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
+
+		println 'Initial bundle jar name [ ' + sourceJarPath + ' ]'
+
+		def finalBundleJarName = project.buildDir.path + '/libs/hibernate-transaction-client-' + project.version + ".jar"
+		println 'Default jakarta final bundle jar name [ ' + finalBundleJarName + ' ]'
+
+		def transformerArgs = [
+				sourceJarPath, finalBundleJarName,
+				'-q', // quiet output
+				'-tr', new File(getProjectDir().getParentFile(), 'rules/jakarta-renames.properties').path,
+				'-tv', new File(getProjectDir().getParentFile(), 'rules/jakarta-versions.properties').path,
+				'-td', new File(getProjectDir().getParentFile(), 'rules/jakarta-direct.properties').path,
+		]
+
+		println 'Transformer options:'
+		transformerArgs.each {
+			println '  [ ' + it + ' ]'
+		}
+
+		javaexec {
+			classpath configurations.jakartaeeTransformJars
+			main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
+			args = transformerArgs
+		}
+	}
+}

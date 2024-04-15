@@ -14,6 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -422,9 +423,16 @@ public class JoinSequence {
 	}
 
 	private boolean isSubclassAliasDereferenced(Join join, String withClauseFragment) {
-		if ( join.getJoinable() instanceof AbstractEntityPersister ) {
-			AbstractEntityPersister persister = (AbstractEntityPersister) join.getJoinable();
-			int subclassTableSpan = persister.getSubclassTableSpan();
+		Object joinable = join.getJoinable();
+		if ( joinable instanceof AbstractCollectionPersister ) {
+			final AbstractCollectionPersister collectionPersister = (AbstractCollectionPersister) joinable;
+			if ( collectionPersister.getElementType().isEntityType() ) {
+				joinable = ( collectionPersister ).getElementPersister();
+			}
+		}
+		if ( joinable instanceof AbstractEntityPersister ) {
+			final AbstractEntityPersister persister = (AbstractEntityPersister) joinable;
+			final int subclassTableSpan = persister.getSubclassTableSpan();
 			for ( int j = 1; j < subclassTableSpan; j++ ) {
 				String subclassAlias = AbstractEntityPersister.generateTableAlias( join.getAlias(), j );
 				if ( isAliasDereferenced( withClauseFragment, subclassAlias ) ) {

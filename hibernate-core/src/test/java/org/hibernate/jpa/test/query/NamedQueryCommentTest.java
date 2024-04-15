@@ -207,7 +207,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			sqlStatementInterceptor.assertExecutedCount(1);
 
 			sqlStatementInterceptor.assertExecuted(
-					"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_  USE INDEX (idx_game_id) where namedquery0_.title=?"			)
+					"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_  use index (idx_game_id) where namedquery0_.title=?"			)
 			;
 		} );
 	}

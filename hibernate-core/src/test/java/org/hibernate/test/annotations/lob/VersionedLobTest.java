@@ -10,9 +10,12 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.SybaseASE15Dialect;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -22,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Gail Badner
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
+@SkipForDialect( value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement binary stream handling")
 public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCompiledCode> {
 	@Override
 	protected Class<VersionedBook> getBookClass() {

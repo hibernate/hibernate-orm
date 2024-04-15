@@ -18,10 +18,14 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.tool.schema.Action;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.cdi.converters.ConverterBean;
 import org.hibernate.test.cdi.converters.MonitorBean;
+import org.hibernate.test.cdi.converters.MyData;
+import org.hibernate.test.cdi.converters.OrmXmlConverterBean;
 import org.hibernate.test.cdi.converters.TheEntity;
+import org.hibernate.test.cdi.converters.TheOrmXmlEntity;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
@@ -34,7 +38,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class CdiHostedConverterTest extends BaseUnitTestCase {
 	@Test
-	public void testIt() {
+	public void testAnnotations() {
 		MonitorBean.reset();
 
 		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
@@ -92,6 +96,74 @@ public class CdiHostedConverterTest extends BaseUnitTestCase {
 						sessionFactory,
 						session -> {
 							session.createQuery( "delete TheEntity" ).executeUpdate();
+						}
+				);
+
+				sessionFactory.close();
+			}
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14881\n")
+	public void testOrmXml() {
+		MonitorBean.reset();
+
+		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
+				.disableDiscovery()
+				.addBeanClasses( MonitorBean.class, OrmXmlConverterBean.class );
+		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
+			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+
+			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
+					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+					.build();
+
+			final SessionFactoryImplementor sessionFactory;
+
+			try {
+				sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
+						.addResource( "org/hibernate/test/cdi/converters/orm.xml" )
+						.buildMetadata()
+						.getSessionFactoryBuilder()
+						.build();
+			}
+			catch ( Exception e ) {
+				StandardServiceRegistryBuilder.destroy( ssr );
+				throw e;
+			}
+
+			// The CDI bean should have been built immediately...
+			assertTrue( MonitorBean.wasInstantiated() );
+			assertEquals( 0, MonitorBean.currentFromDbCount() );
+			assertEquals( 0, MonitorBean.currentToDbCount() );
+
+			try {
+				inTransaction(
+						sessionFactory,
+						session -> session.persist( new TheOrmXmlEntity( 1, "me", new MyData( "foo" ) ) )
+				);
+
+				assertEquals( 0, MonitorBean.currentFromDbCount() );
+				assertEquals( 1, MonitorBean.currentToDbCount() );
+
+				inTransaction(
+						sessionFactory,
+						session -> {
+							TheOrmXmlEntity it = session.find( TheOrmXmlEntity.class, 1 );
+							assertNotNull( it );
+						}
+				);
+
+				assertEquals( 1, MonitorBean.currentFromDbCount() );
+				assertEquals( 1, MonitorBean.currentToDbCount() );
+			}
+			finally {
+				inTransaction(
+						sessionFactory,
+						session -> {
+							session.createQuery( "delete TheOrmXmlEntity" ).executeUpdate();
 						}
 				);
 

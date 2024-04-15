@@ -12,6 +12,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -40,6 +41,7 @@ public class JPALockTest extends AbstractJPATest {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
+			connectionProvider.setConnectionProvider( (ConnectionProvider) cfg.getProperties().get( AvailableSettings.CONNECTION_PROVIDER ) );
 			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		}
 	}

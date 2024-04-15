@@ -61,7 +61,7 @@ public abstract class QueryTranslatorTestCase extends BaseCoreFunctionalTestCase
 				"legacy/Holder.hbm.xml",
 				"legacy/Many.hbm.xml",
 				"legacy/Marelo.hbm.xml",
-				"legacy/MasterDetail.hbm.xml",
+				"legacy/RootDetail.hbm.xml",
 				"legacy/Middle.hbm.xml",
 				"legacy/Multi.hbm.xml",
 				"legacy/Nameable.hbm.xml",

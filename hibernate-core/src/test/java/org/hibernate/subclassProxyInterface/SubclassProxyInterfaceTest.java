@@ -24,8 +24,8 @@ public class SubclassProxyInterfaceTest extends BaseUnitTestCase {
         final Configuration cfg = new Configuration()
 				.setProperty( Environment.DIALECT, H2Dialect.class.getName() )
 				.addClass( Person.class );
-		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		cfg.buildSessionFactory( serviceRegistry ).close();
-		ServiceRegistryBuilder.destroy( serviceRegistry );
+		try (ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() )) {
+			cfg.buildSessionFactory( serviceRegistry ).close();
+		}
 	}
 }

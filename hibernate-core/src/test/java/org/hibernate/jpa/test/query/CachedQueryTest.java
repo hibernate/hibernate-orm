@@ -12,8 +12,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.TypedQuery;
 
-import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
@@ -42,7 +41,7 @@ public class CachedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 		em.close();
 
-		HibernateEntityManagerFactory hemf =  (HibernateEntityManagerFactory) entityManagerFactory();
+		HibernateEntityManagerFactory hemf = entityManagerFactory();
 		Statistics stats = hemf.getSessionFactory().getStatistics();
 
 		assertEquals( 0, stats.getQueryCacheHitCount() );
@@ -157,10 +156,10 @@ public class CachedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.ALL );
-		options.put( Environment.GENERATE_STATISTICS, "true" );
-		options.put( Environment.USE_QUERY_CACHE, "true" );
-		options.put( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		options.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ALL );
+		options.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+		options.put( AvailableSettings.USE_QUERY_CACHE, "true" );
+		options.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
 	}
 
 	@Override

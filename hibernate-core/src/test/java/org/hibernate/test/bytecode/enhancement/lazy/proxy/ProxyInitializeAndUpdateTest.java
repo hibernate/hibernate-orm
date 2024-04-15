@@ -37,11 +37,6 @@ import static org.junit.Assert.assertTrue;
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions(lazyLoading = true)
 public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
-	}
 
 	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {

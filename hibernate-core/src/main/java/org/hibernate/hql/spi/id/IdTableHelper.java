@@ -12,13 +12,22 @@ import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
+import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 
 import org.jboss.logging.Logger;
 
@@ -113,7 +122,7 @@ public class IdTableHelper {
 			String[] dropStatements,
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess) {
-		if ( dropStatements == null ) {
+		if ( dropStatements == null || dropStatements.length == 0 ) {
 			return;
 		}
 
@@ -152,6 +161,102 @@ public class IdTableHelper {
 		catch (SQLException e) {
 			log.error( "Unable obtain JDBC Connection", e );
 		}
+	}
+
+	public void executeIdTableCreationStatements(
+			List<String> creationStatements,
+			JdbcServices jdbcServices,
+			JdbcConnectionAccess connectionAccess,
+			ServiceRegistry serviceRegistry) {
+		if ( creationStatements == null || creationStatements.isEmpty() ) {
+			return;
+		}
+		final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
+				getDdlTransactionIsolator(
+						jdbcServices,
+						connectionAccess,
+						serviceRegistry
+				)
+		);
+		try {
+			for ( String createStatement : creationStatements ) {
+				try {
+					target.accept( createStatement );
+				}
+				catch ( CommandAcceptanceException e) {
+					log.debugf( "Error attempting to export id-table [%s] : %s", createStatement, e.getMessage() );
+				}
+			}
+		}
+		finally {
+			target.release();
+		}
+	}
+
+	public void executeIdTableDropStatements(
+			String[] dropStatements,
+			JdbcServices jdbcServices,
+			JdbcConnectionAccess connectionAccess,
+			ServiceRegistry serviceRegistry) {
+		if ( dropStatements == null || dropStatements.length == 0 ) {
+			return;
+		}
+
+		final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
+				getDdlTransactionIsolator(
+						jdbcServices,
+						connectionAccess,
+						serviceRegistry
+				)
+		);
+		try {
+			for ( String dropStatement : dropStatements ) {
+				try {
+					target.accept( dropStatement );
+				}
+				catch ( CommandAcceptanceException e) {
+					log.debugf( "Error attempting to drop id-table : [%s]", e.getMessage() );
+				}
+			}
+		}
+		finally {
+			target.release();
+		}
+	}
+
+	public DdlTransactionIsolator getDdlTransactionIsolator(
+			JdbcServices jdbcServices,
+			JdbcConnectionAccess connectionAccess,
+			ServiceRegistry serviceRegistry) {
+		return serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator(
+			new JdbcContext() {
+
+				@Override
+				public JdbcConnectionAccess getJdbcConnectionAccess() {
+					return connectionAccess;
+				}
+
+				@Override
+				public Dialect getDialect() {
+					return jdbcServices.getJdbcEnvironment().getDialect();
+				}
+
+				@Override
+				public SqlStatementLogger getSqlStatementLogger() {
+					return jdbcServices.getSqlStatementLogger();
+				}
+
+				@Override
+				public SqlExceptionHelper getSqlExceptionHelper() {
+					return jdbcServices.getSqlExceptionHelper();
+				}
+
+				@Override
+				public ServiceRegistry getServiceRegistry() {
+					return serviceRegistry;
+				}
+			}
+		);
 	}
 
 }

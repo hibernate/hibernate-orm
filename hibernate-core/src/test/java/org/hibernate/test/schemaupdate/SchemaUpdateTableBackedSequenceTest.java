@@ -16,6 +16,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -34,7 +36,6 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -77,7 +78,8 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 		// lets make sure the InitCommand is there
 		assertEquals( 1, database.getDefaultNamespace().getTables().size() );
 		Table table = database.getDefaultNamespace().getTables().iterator().next();
-		assertEquals( 1, table.getInitCommands().size() );
+		SqlStringGenerationContext context = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment(), null, null );
+		assertEquals( 1, table.getInitCommands( context ).size() );
 
 		final TargetImpl target = new TargetImpl();
 

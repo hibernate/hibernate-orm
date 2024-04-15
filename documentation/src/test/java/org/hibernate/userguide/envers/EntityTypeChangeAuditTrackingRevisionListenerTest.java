@@ -75,7 +75,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 		try {
 			Map settings = buildSettings();
 			settings.put(
-				org.hibernate.jpa.AvailableSettings.LOADED_CLASSES,
+				AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(
 					ApplicationCustomer.class,
 					CustomTrackingRevisionEntity.class,

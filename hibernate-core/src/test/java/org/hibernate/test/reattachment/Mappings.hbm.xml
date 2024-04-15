@@ -22,7 +22,7 @@
 
     <class name="Child">
         <id name="name" column="NAME" type="string"/>
-        <many-to-one name="parent" class="Parent" cascade="none" />
+        <many-to-one name="parent" column="PARENT" class="Parent" cascade="none" />
     </class>
 
 </hibernate-mapping>

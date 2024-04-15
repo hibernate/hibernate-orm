@@ -9,8 +9,11 @@ package org.hibernate.cfg.annotations;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.persistence.Column;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -50,11 +53,11 @@ public class IdBagBinder extends BagBinder {
 			XProperty property,
 			boolean unique,
 			TableBinder associationTableBinder,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			MetadataBuildingContext buildingContext) {
 		boolean result = super.bindStarToManySecondPass(
 				persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns, isEmbedded,
-				property, unique, associationTableBinder, ignoreNotFound, getBuildingContext()
+				property, unique, associationTableBinder, notFoundAction, getBuildingContext()
 		);
 		CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
 		if ( collectionIdAnn != null ) {
@@ -70,7 +73,8 @@ public class IdBagBinder extends BagBinder {
 					"id"
 			);
 			Ejb3Column[] idColumns = Ejb3Column.buildColumnFromAnnotation(
-					collectionIdAnn.columns(),
+					determineColumns( collectionIdAnn ),
+					null,
 					null,
 					Nullability.FORCED_NOT_NULL,
 					propertyHolder,
@@ -129,5 +133,17 @@ public class IdBagBinder extends BagBinder {
 			}
 		}
 		return result;
+	}
+
+	private Column[] determineColumns(CollectionId collectionIdAnn) {
+		if ( collectionIdAnn.columns().length > 0 ) {
+			return collectionIdAnn.columns();
+		}
+		final Column column = collectionIdAnn.column();
+		if ( StringHelper.isNotEmpty( column.name() ) ) {
+			return new Column[] { column };
+		}
+		// this should mimic the old behavior when `#columns` was not specified
+		return new Column[0];
 	}
 }

@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.callbacks.hbmxml;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
@@ -31,7 +31,7 @@ public class MappingClassMoreThanOnceTest extends BaseUnitTestCase {
 //	@FailureExpected(jiraKey = "HHH-8775")
 	public void testBootstrapWithClassMappedMOreThanOnce() {
 		Map settings = new HashMap(  );
-		settings.put( AvailableSettings.HBXML_FILES, "org/hibernate/jpa/test/callbacks/hbmxml/ClassMappedMoreThanOnce.hbm.xml" );
+		settings.put( AvailableSettings.HBM_XML_FILES, "org/hibernate/jpa/test/callbacks/hbmxml/ClassMappedMoreThanOnce.hbm.xml" );
 
 		final EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder(
 				new BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),

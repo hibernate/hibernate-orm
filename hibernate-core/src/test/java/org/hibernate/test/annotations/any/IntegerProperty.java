@@ -17,6 +17,7 @@ import javax.persistence.Table;
 public class IntegerProperty implements Property {
 	private Integer id;
 	private String name;
+	@Column(name = "val")
 	private Integer value;
 	
 	public IntegerProperty() {

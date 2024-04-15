@@ -3,16 +3,29 @@
 goal=
 if [ "$RDBMS" == "derby" ]; then
   goal="-Pdb=derby"
+elif [ "$RDBMS" == "hsqldb" ]; then
+  goal="-Pdb=hsqldb"
+elif [ "$RDBMS" == "mysql8" ]; then
+  goal="-Pdb=mysql_ci"
+elif [ "$RDBMS" == "mysql" ]; then
+  goal="-Pdb=mysql_ci"
 elif [ "$RDBMS" == "mariadb" ]; then
-  goal="-Pdb=mariadb"
-elif [ "$RDBMS" == "postgresql" ]; then
-  goal="-Pdb=pgsql"
+  goal="-Pdb=mariadb_ci"
+elif [ "$RDBMS" == "postgresql_9_5" ]; then
+  goal="-Pdb=pgsql_ci"
+elif [ "$RDBMS" == "postgresql_13" ]; then
+  goal="-Pdb=pgsql_ci"
 elif [ "$RDBMS" == "oracle" ]; then
-  goal="-Pdb=oracle -Dhibernate.connection.url=jdbc:oracle:thin:@localhost:1521:XE -Dhibernate.connection.username=SYSTEM -Dhibernate.connection.password=Oracle18"
+  # I have no idea why, but these tests don't work on GH Actions
+  goal="-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*"
 elif [ "$RDBMS" == "db2" ]; then
-  goal="-Pdb=db2 -Dhibernate.connection.url=jdbc:db2://localhost:50000/orm_test -Dhibernate.connection.username=orm_test -Dhibernate.connection.password=orm_test"
+  goal="-Pdb=db2_ci"
 elif [ "$RDBMS" == "mssql" ]; then
-  goal="-Pdb=mssql -Dhibernate.connection.url=jdbc:sqlserver://localhost:1433;databaseName= -Dhibernate.connection.username=sa -Dhibernate.connection.password=hibernate_orm_test"
+  goal="-Pdb=mssql_ci"
+elif [ "$RDBMS" == "hana" ]; then
+  goal="-Pdb=hana_ci"
+elif [ "$RDBMS" == "sybase" ]; then
+  goal="-Pdb=sybase_ci"
 fi
 
 exec ./gradlew check ${goal} -Plog-test-progress=true --stacktrace

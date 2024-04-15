@@ -12,6 +12,6 @@
 <hibernate-mapping package="org.hibernate.test.fileimport">
     <class name="Dog" table="dog">
         <id name="id"/>
-        <many-to-one name="master" column="master_fk"/>
+        <many-to-one name="owner" column="owner_fk"/>
     </class>
 </hibernate-mapping>

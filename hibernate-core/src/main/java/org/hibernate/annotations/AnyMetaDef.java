@@ -22,7 +22,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ *
+ * @deprecated To be removed in 6.0
  */
+@Deprecated
 @java.lang.annotation.Target( { PACKAGE, TYPE, METHOD, FIELD } )
 @Retention( RUNTIME )
 @Repeatable(AnyMetaDefs.class)

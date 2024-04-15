@@ -2,5 +2,5 @@
 
 [bibliography]
 - [[[PoEAA]]] Martin Fowler. https://www.martinfowler.com/books/eaa.html[Patterns of Enterprise Application Architecture].
-  Addison-Wesley Publishing Company. 2003.
-- [[[JPwH]]] Christian Bauer & Gavin King. https://www.manning.com/books/java-persistence-with-hibernate-second-edition[Java Persistence with Hibernate, Second Edition]. Manning Publications Co. 2015.
+  Addison-Wesley Professional. 2002.
+- [[[JPwH]]] Christian Bauer & Gavin King. https://www.manning.com/books/java-persistence-with-hibernate-second-edition[Java Persistence with Hibernate, Second Edition]. Manning. 2015.

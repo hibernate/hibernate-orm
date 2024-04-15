@@ -22,11 +22,14 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
@@ -44,30 +47,43 @@ import static org.junit.Assert.fail;
 public class SQLServerDialectCollationTest extends BaseCoreFunctionalTestCase {
 
 	@Override
-	protected Configuration constructConfiguration() {
-		Configuration configuration = super.constructConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE.toString() );
-		return configuration;
 	}
 
+	@Override
 	protected void buildSessionFactory() {
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		StandardServiceRegistryImpl _serviceRegistry = buildServiceRegistry( bootRegistry, constructConfiguration() );
+		StandardServiceRegistryImpl _serviceRegistry =
+				buildServiceRegistry( bootRegistry, constructAndConfigureConfiguration( bootRegistry ) );
 
 		try {
-			try (Connection connection = _serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();
-				 Statement statement = connection.createStatement()) {
-				connection.setAutoCommit( true );
-				statement.executeUpdate( "DROP DATABASE hibernate_orm_test_collation" );
+			try {
+				TransactionUtil.doWithJDBC(
+						_serviceRegistry,
+						connection -> {
+							try (Statement statement = connection.createStatement()) {
+								connection.setAutoCommit( true );
+								statement.executeUpdate( "DROP DATABASE hibernate_orm_test_collation" );
+							}
+						}
+				);
 			}
 			catch (SQLException e) {
 				log.debug( e.getMessage() );
 			}
-			try (Connection connection = _serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();
-				 Statement statement = connection.createStatement()) {
-				connection.setAutoCommit( true );
-				statement.executeUpdate( "CREATE DATABASE hibernate_orm_test_collation COLLATE Latin1_General_CS_AS" );
-				statement.executeUpdate( "ALTER DATABASE [hibernate_orm_test_collation] SET AUTO_CLOSE OFF " );
+			try {
+				TransactionUtil.doWithJDBC(
+						_serviceRegistry,
+						connection -> {
+							try (Statement statement = connection.createStatement()) {
+								connection.setAutoCommit( true );
+								statement.executeUpdate( "CREATE DATABASE hibernate_orm_test_collation COLLATE Latin1_General_CS_AS" );
+								statement.executeUpdate( "ALTER DATABASE [hibernate_orm_test_collation] SET AUTO_CLOSE OFF " );
+							}
+						}
+				);
 			}
 			catch (SQLException e) {
 				log.debug( e.getMessage() );
@@ -147,7 +163,6 @@ public class SQLServerDialectCollationTest extends BaseCoreFunctionalTestCase {
 					'}';
 		}
 	}
-
 
 	@Override
 	protected boolean rebuildSessionFactoryOnError() {

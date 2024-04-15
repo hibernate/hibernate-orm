@@ -16,6 +16,10 @@ ext {
 			'hibernate-ehcache',
 			'hibernate-java8',
 			'hibernate-integrationtest-java-modules',
+			'hibernate-core-jakarta',
+			'hibernate-envers-jakarta',
+			'hibernate-testing-jakarta',
+			'hibernate-jpamodelgen-jakarta',
 			'release'
 	]
 }
@@ -119,14 +123,14 @@ task aggregateJavadocs(type: Javadoc) {
 		overview = project.file( 'src/main/javadoc/overview.html' )
 		windowTitle = 'Hibernate JavaDocs'
 		docTitle = "Hibernate JavaDoc ($project.version)"
-		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+		bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 		use = true
 		options.encoding = 'UTF-8'
 
 		links = [
 				'https://docs.oracle.com/javase/8/docs/api/',
-				'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-				'http://docs.jboss.org/cdi/api/2.0/',
+				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+				'https://docs.jboss.org/cdi/api/2.0/',
 				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
 		
@@ -216,10 +220,10 @@ task buildTutorialZip(type: Zip) {
 	from 'src/main/asciidoc/quickstart/tutorials'
 	destinationDir = tasks.renderGettingStartedGuides.outputDir
 	archiveName = 'hibernate-tutorials.zip'
-	expand(
+ 	expand(
 			version: project.version,
 			slf4j: "1.7.5",
-			junit: project.junitVersion,
+			junit: project.junit4Version,
 			h2: project.h2Version
 	)
 }

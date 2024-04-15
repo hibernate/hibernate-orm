@@ -1580,8 +1580,8 @@ And sometime in 2011, the last partition (or 'extension bucket') is split into t
 [[envers-links]]
 === Envers links
 
-.  http://hibernate.org[Hibernate main page]
-.  http://hibernate.org/community/[Forum]
+.  https://hibernate.org[Hibernate main page]
+.  https://hibernate.org/community/[Forum]
 .  https://hibernate.atlassian.net/[JIRA issue tracker] (when adding issues concerning Envers, be sure to select the "envers" component!)
 .  https://hibernate.zulipchat.com/#narrow/stream/132096-hibernate-user[Zulip channel]
 .  https://community.jboss.org/wiki/EnversFAQ[FAQ]

@@ -61,6 +61,11 @@ public abstract class AbstractEntityLoader
 		return load( session, id, optionalObject, id, lockOptions, readOnly );
 	}
 
+	@Override
+	public Object load(Object id, SharedSessionContractImplementor session, LockOptions lockOptions) {
+		return load( session, id, null, null, lockOptions, null );
+	}
+
 	protected Object load(
 			SharedSessionContractImplementor session,
 			Object id,

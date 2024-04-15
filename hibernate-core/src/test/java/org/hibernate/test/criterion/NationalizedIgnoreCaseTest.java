@@ -15,7 +15,9 @@ import org.hibernate.Criteria;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -30,7 +32,9 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue( jiraKey = "HHH-8657" )
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString")
+@SkipForDialect(value = DerbyDialect.class, comment = "Derby jdbc driver doesn't support setNString")
 @SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL jdbc driver doesn't support setNString")
+@SkipForDialect(value = SybaseASE15Dialect.class, comment = "jTDS jdbc driver doesn't support setNString")
 public class NationalizedIgnoreCaseTest extends BaseCoreFunctionalTestCase {
 	
 	@Override

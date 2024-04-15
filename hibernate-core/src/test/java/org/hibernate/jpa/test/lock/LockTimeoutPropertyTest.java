@@ -11,8 +11,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.Query;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertTrue;
 public class LockTimeoutPropertyTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.LOCK_TIMEOUT, "2000" );
+		options.put( AvailableSettings.JPA_LOCK_TIMEOUT, "2000" );
 	}
 
 	@Test
@@ -51,9 +51,9 @@ public class LockTimeoutPropertyTest extends BaseEntityManagerFunctionalTestCase
 	public void testTimeoutHint(){
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		boolean b= em.getProperties().containsKey( AvailableSettings.LOCK_TIMEOUT );
+		boolean b= em.getProperties().containsKey( AvailableSettings.JPA_LOCK_TIMEOUT );
 		assertTrue( b );
-		int timeout = Integer.valueOf( em.getProperties().get( AvailableSettings.LOCK_TIMEOUT ).toString() );
+		int timeout = Integer.valueOf( em.getProperties().get( AvailableSettings.JPA_LOCK_TIMEOUT ).toString() );
 		assertEquals( 2000, timeout);
 		org.hibernate.query.Query q = (org.hibernate.query.Query) em.createQuery( "select u from UnversionedLock u" );
 		timeout = q.getLockOptions().getTimeOut();
@@ -61,7 +61,7 @@ public class LockTimeoutPropertyTest extends BaseEntityManagerFunctionalTestCase
 
 		Query query = em.createQuery( "select u from UnversionedLock u" );
 		query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
-		query.setHint( AvailableSettings.LOCK_TIMEOUT, 3000 );
+		query.setHint( AvailableSettings.JPA_LOCK_TIMEOUT, 3000 );
 		q = (org.hibernate.query.Query) query;
 		timeout = q.getLockOptions().getTimeOut();
 		assertEquals( 3000, timeout );

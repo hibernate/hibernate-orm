@@ -41,15 +41,13 @@ import org.hibernate.Incubating;
 public class DoubleStreamDecorator implements DoubleStream {
 
 	private final DoubleStream delegate;
-
-	private Runnable closeHandler;
+	private final Runnable closeHandler;
 
 	public DoubleStreamDecorator(
 			DoubleStream delegate,
 			Runnable closeHandler) {
-		this.delegate = delegate;
 		this.closeHandler = closeHandler;
-		this.delegate.onClose( closeHandler );
+		this.delegate = delegate.onClose( closeHandler );
 	}
 
 	@Override
@@ -292,7 +290,7 @@ public class DoubleStreamDecorator implements DoubleStream {
 
 	@Override
 	public DoubleStream onClose(Runnable closeHandler) {
-		this.closeHandler = closeHandler;
+		this.delegate.onClose( closeHandler );
 		return this;
 	}
 

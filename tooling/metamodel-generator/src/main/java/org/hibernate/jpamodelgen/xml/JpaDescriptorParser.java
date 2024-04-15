@@ -197,11 +197,9 @@ public class JpaDescriptorParser {
 	}
 
 	private void saveTimeStampCache(FileTimeStampChecker fileStampCheck) {
-		try {
-			File file = getSerializationTmpFile();
-			ObjectOutput out = new ObjectOutputStream( new FileOutputStream( file ) );
+		final File file = getSerializationTmpFile();
+		try ( final ObjectOutput out = new ObjectOutputStream( new FileOutputStream( file ) ) ) {
 			out.writeObject( fileStampCheck );
-			out.close();
 			context.logMessage(
 					Diagnostic.Kind.OTHER, "Serialized " + fileStampCheck + " into " + file.getAbsolutePath()
 			);

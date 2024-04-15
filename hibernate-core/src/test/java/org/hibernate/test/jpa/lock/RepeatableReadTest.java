@@ -17,6 +17,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
@@ -44,6 +45,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
+			connectionProvider.setConnectionProvider( (ConnectionProvider) cfg.getProperties().get( AvailableSettings.CONNECTION_PROVIDER ) );
 			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		}
 	}

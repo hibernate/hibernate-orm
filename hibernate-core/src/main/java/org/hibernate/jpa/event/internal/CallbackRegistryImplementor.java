@@ -7,9 +7,9 @@
 package org.hibernate.jpa.event.internal;
 
 import org.hibernate.jpa.event.spi.CallbackBuilder;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
+import org.hibernate.jpa.event.spi.CallbackRegistrar;
 
-public interface CallbackRegistryImplementor extends CallbackRegistry, CallbackBuilder.CallbackRegistrar {
+public interface CallbackRegistryImplementor extends CallbackRegistrar, CallbackBuilder.CallbackRegistrar {
 
 	void release();
 

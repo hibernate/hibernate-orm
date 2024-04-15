@@ -18,6 +18,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.PositionSubstringFunction;
@@ -29,6 +30,10 @@ import org.hibernate.dialect.identity.PostgreSQL81IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -62,7 +67,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		@Override
 		public String processSql(String sql, RowSelection selection) {
 			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
+			return sql + ( hasOffset ? " limit ? offset ?" : " limit ?" );
 		}
 
 		@Override
@@ -75,6 +80,18 @@ public class PostgreSQL81Dialect extends Dialect {
 			return true;
 		}
 	};
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+			throws SQLException {
+
+		if ( dbMetaData == null ) {
+			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
+			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+		}
+
+		return super.buildIdentifierHelper( builder, dbMetaData );
+	}
 
 	/**
 	 * Constructs a PostgreSQL81Dialect
@@ -97,80 +114,89 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerColumnType( Types.BINARY, "bytea" );
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGVARBINARY, "bytea" );
-		registerColumnType( Types.CLOB, "text" );
+		registerColumnType( Types.CLOB, "oid" );
 		registerColumnType( Types.BLOB, "oid" );
 		registerColumnType( Types.NUMERIC, "numeric($p, $s)" );
 		registerColumnType( Types.OTHER, "uuid" );
 
-		registerFunction( "abs", new StandardSQLFunction("abs") );
-		registerFunction( "sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER) );
+		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
+		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
 
-		registerFunction( "acos", new StandardSQLFunction("acos", StandardBasicTypes.DOUBLE) );
-		registerFunction( "asin", new StandardSQLFunction("asin", StandardBasicTypes.DOUBLE) );
-		registerFunction( "atan", new StandardSQLFunction("atan", StandardBasicTypes.DOUBLE) );
-		registerFunction( "cos", new StandardSQLFunction("cos", StandardBasicTypes.DOUBLE) );
-		registerFunction( "cot", new StandardSQLFunction("cot", StandardBasicTypes.DOUBLE) );
-		registerFunction( "exp", new StandardSQLFunction("exp", StandardBasicTypes.DOUBLE) );
-		registerFunction( "ln", new StandardSQLFunction("ln", StandardBasicTypes.DOUBLE) );
-		registerFunction( "log", new StandardSQLFunction("log", StandardBasicTypes.DOUBLE) );
-		registerFunction( "sin", new StandardSQLFunction("sin", StandardBasicTypes.DOUBLE) );
-		registerFunction( "sqrt", new StandardSQLFunction("sqrt", StandardBasicTypes.DOUBLE) );
-		registerFunction( "cbrt", new StandardSQLFunction("cbrt", StandardBasicTypes.DOUBLE) );
-		registerFunction( "tan", new StandardSQLFunction("tan", StandardBasicTypes.DOUBLE) );
-		registerFunction( "radians", new StandardSQLFunction("radians", StandardBasicTypes.DOUBLE) );
-		registerFunction( "degrees", new StandardSQLFunction("degrees", StandardBasicTypes.DOUBLE) );
+		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "cbrt", new StandardSQLFunction( "cbrt", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
 
-		registerFunction( "stddev", new StandardSQLFunction("stddev", StandardBasicTypes.DOUBLE) );
-		registerFunction( "variance", new StandardSQLFunction("variance", StandardBasicTypes.DOUBLE) );
+		registerFunction( "stddev", new StandardSQLFunction( "stddev", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "variance", new StandardSQLFunction( "variance", StandardBasicTypes.DOUBLE ) );
 
-		registerFunction( "random", new NoArgSQLFunction("random", StandardBasicTypes.DOUBLE) );
-		registerFunction( "rand", new NoArgSQLFunction("random", StandardBasicTypes.DOUBLE) );
+		registerFunction( "random", new NoArgSQLFunction( "random", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "rand", new NoArgSQLFunction( "random", StandardBasicTypes.DOUBLE ) );
 
-		registerFunction( "round", new StandardSQLFunction("round") );
-		registerFunction( "trunc", new StandardSQLFunction("trunc") );
-		registerFunction( "ceil", new StandardSQLFunction("ceil") );
-		registerFunction( "floor", new StandardSQLFunction("floor") );
+		registerFunction( "round", new StandardSQLFunction( "round" ) );
+		registerFunction( "trunc", new StandardSQLFunction( "trunc" ) );
+		registerFunction( "ceil", new StandardSQLFunction( "ceil" ) );
+		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
 
-		registerFunction( "chr", new StandardSQLFunction("chr", StandardBasicTypes.CHARACTER) );
-		registerFunction( "lower", new StandardSQLFunction("lower") );
-		registerFunction( "upper", new StandardSQLFunction("upper") );
-		registerFunction( "substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING) );
-		registerFunction( "initcap", new StandardSQLFunction("initcap") );
-		registerFunction( "to_ascii", new StandardSQLFunction("to_ascii") );
-		registerFunction( "quote_ident", new StandardSQLFunction("quote_ident", StandardBasicTypes.STRING) );
-		registerFunction( "quote_literal", new StandardSQLFunction("quote_literal", StandardBasicTypes.STRING) );
-		registerFunction( "md5", new StandardSQLFunction("md5", StandardBasicTypes.STRING) );
-		registerFunction( "ascii", new StandardSQLFunction("ascii", StandardBasicTypes.INTEGER) );
-		registerFunction( "char_length", new StandardSQLFunction("char_length", StandardBasicTypes.LONG) );
-		registerFunction( "bit_length", new StandardSQLFunction("bit_length", StandardBasicTypes.LONG) );
-		registerFunction( "octet_length", new StandardSQLFunction("octet_length", StandardBasicTypes.LONG) );
+		registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER ) );
+		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
+		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
+		registerFunction( "substr", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
+		registerFunction( "initcap", new StandardSQLFunction( "initcap" ) );
+		registerFunction( "to_ascii", new StandardSQLFunction( "to_ascii" ) );
+		registerFunction( "quote_ident", new StandardSQLFunction( "quote_ident", StandardBasicTypes.STRING ) );
+		registerFunction( "quote_literal", new StandardSQLFunction( "quote_literal", StandardBasicTypes.STRING ) );
+		registerFunction( "md5", new StandardSQLFunction( "md5", StandardBasicTypes.STRING ) );
+		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
+		registerFunction( "char_length", new StandardSQLFunction( "char_length", StandardBasicTypes.LONG ) );
+		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", StandardBasicTypes.LONG ) );
+		registerFunction( "octet_length", new StandardSQLFunction( "octet_length", StandardBasicTypes.LONG ) );
 
-		registerFunction( "age", new StandardSQLFunction("age") );
-		registerFunction( "current_date", new NoArgSQLFunction("current_date", StandardBasicTypes.DATE, false) );
-		registerFunction( "current_time", new NoArgSQLFunction("current_time", StandardBasicTypes.TIME, false) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIMESTAMP, false) );
+		registerFunction( "age", new StandardSQLFunction( "age" ) );
+		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
+		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
+		registerFunction(
+				"current_timestamp",
+				new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false )
+		);
 		registerFunction( "date_trunc", new StandardSQLFunction( "date_trunc", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "localtime", new NoArgSQLFunction("localtime", StandardBasicTypes.TIME, false) );
-		registerFunction( "localtimestamp", new NoArgSQLFunction("localtimestamp", StandardBasicTypes.TIMESTAMP, false) );
-		registerFunction( "now", new NoArgSQLFunction("now", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "timeofday", new NoArgSQLFunction("timeofday", StandardBasicTypes.STRING) );
+		registerFunction( "localtime", new NoArgSQLFunction( "localtime", StandardBasicTypes.TIME, false ) );
+		registerFunction(
+				"localtimestamp",
+				new NoArgSQLFunction( "localtimestamp", StandardBasicTypes.TIMESTAMP, false )
+		);
+		registerFunction( "now", new NoArgSQLFunction( "now", StandardBasicTypes.TIMESTAMP ) );
+		registerFunction( "timeofday", new NoArgSQLFunction( "timeofday", StandardBasicTypes.STRING ) );
 
-		registerFunction( "current_user", new NoArgSQLFunction("current_user", StandardBasicTypes.STRING, false) );
-		registerFunction( "session_user", new NoArgSQLFunction("session_user", StandardBasicTypes.STRING, false) );
-		registerFunction( "user", new NoArgSQLFunction("user", StandardBasicTypes.STRING, false) );
-		registerFunction( "current_database", new NoArgSQLFunction("current_database", StandardBasicTypes.STRING, true) );
-		registerFunction( "current_schema", new NoArgSQLFunction("current_schema", StandardBasicTypes.STRING, true) );
+		registerFunction( "current_user", new NoArgSQLFunction( "current_user", StandardBasicTypes.STRING, false ) );
+		registerFunction( "session_user", new NoArgSQLFunction( "session_user", StandardBasicTypes.STRING, false ) );
+		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING, false ) );
+		registerFunction(
+				"current_database",
+				new NoArgSQLFunction( "current_database", StandardBasicTypes.STRING, true )
+		);
+		registerFunction( "current_schema", new NoArgSQLFunction( "current_schema", StandardBasicTypes.STRING, true ) );
 
-		registerFunction( "to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING) );
-		registerFunction( "to_date", new StandardSQLFunction("to_date", StandardBasicTypes.DATE) );
-		registerFunction( "to_timestamp", new StandardSQLFunction("to_timestamp", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "to_number", new StandardSQLFunction("to_number", StandardBasicTypes.BIG_DECIMAL) );
+		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
+		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.DATE ) );
+		registerFunction( "to_timestamp", new StandardSQLFunction( "to_timestamp", StandardBasicTypes.TIMESTAMP ) );
+		registerFunction( "to_number", new StandardSQLFunction( "to_number", StandardBasicTypes.BIG_DECIMAL ) );
 
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(","||",")" ) );
+		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
 
 		registerFunction( "locate", new PositionSubstringFunction() );
 
-		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as varchar)") );
+		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as varchar)" ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
@@ -198,6 +224,18 @@ public class PostgreSQL81Dialect extends Dialect {
 			}
 		}
 		return descriptor;
+	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		// This method is overridden so the correct value will be returned when
+		// DatabaseMetaData is not available.
+		return NameQualifierSupport.SCHEMA;
+	}
+
+	@Override
+	public String getCurrentSchemaCommand() {
+		return "select current_schema()";
 	}
 
 	@Override
@@ -258,7 +296,7 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public String getLimitString(String sql, boolean hasOffset) {
-		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
+		return sql + ( hasOffset ? " limit ? offset ?" : " limit ?" );
 	}
 
 	@Override
@@ -289,12 +327,12 @@ public class PostgreSQL81Dialect extends Dialect {
 			}
 		}
 		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if (lockMode == null ) {
+		if ( lockMode == null ) {
 			lockMode = lockOptions.getLockMode();
 		}
 		switch ( lockMode ) {
 			case UPGRADE:
-				return getForUpdateString(aliases);
+				return getForUpdateString( aliases );
 			case PESSIMISTIC_READ:
 				return getReadLockString( aliases, lockOptions.getTimeOut() );
 			case PESSIMISTIC_WRITE:
@@ -302,9 +340,9 @@ public class PostgreSQL81Dialect extends Dialect {
 			case UPGRADE_NOWAIT:
 			case FORCE:
 			case PESSIMISTIC_FORCE_INCREMENT:
-				return getForUpdateNowaitString(aliases);
+				return getForUpdateNowaitString( aliases );
 			case UPGRADE_SKIPLOCKED:
-				return getForUpdateSkipLockedString(aliases);
+				return getForUpdateSkipLockedString( aliases );
 			default:
 				return "";
 		}
@@ -316,7 +354,7 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
-	public String getCaseInsensitiveLike(){
+	public String getCaseInsensitiveLike() {
 		return "ilike";
 	}
 
@@ -423,19 +461,29 @@ public class PostgreSQL81Dialect extends Dialect {
 		@Override
 		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
 			final int sqlState = Integer.parseInt( JdbcExceptionHelper.extractSqlState( sqle ) );
-			switch (sqlState) {
+			switch ( sqlState ) {
 				// CHECK VIOLATION
-				case 23514: return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
+				case 23514:
+					return extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
 				// UNIQUE VIOLATION
-				case 23505: return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
+				case 23505:
+					return extractUsingTemplate( "violates unique constraint \"", "\"", sqle.getMessage() );
 				// FOREIGN KEY VIOLATION
-				case 23503: return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
+				case 23503:
+					return extractUsingTemplate( "violates foreign key constraint \"", "\"", sqle.getMessage() );
 				// NOT NULL VIOLATION
-				case 23502: return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
+				case 23502:
+					return extractUsingTemplate(
+							"null value in column \"",
+							"\" violates not-null constraint",
+							sqle.getMessage()
+					);
 				// TODO: RESTRICT VIOLATION
-				case 23001: return null;
+				case 23001:
+					return null;
 				// ALL OTHER
-				default: return null;
+				default:
+					return null;
 			}
 		}
 	};
@@ -455,6 +503,11 @@ public class PostgreSQL81Dialect extends Dialect {
 				if ( "55P03".equals( sqlState ) ) {
 					// LOCK NOT AVAILABLE
 					return new PessimisticLockException( message, sqlException, sql );
+				}
+
+				if ( "57014".equals( sqlState ) ) {
+					// Operation cancelled by user
+					return new QueryTimeoutException( message, sqlException, sql );
 				}
 
 				// returning null allows other delegates to operate
@@ -609,7 +662,8 @@ public class PostgreSQL81Dialect extends Dialect {
 	@Override
 	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
 		if ( position != 1 ) {
-			throw new UnsupportedOperationException( "PostgreSQL only supports REF_CURSOR parameters as the first parameter" );
+			throw new UnsupportedOperationException(
+					"PostgreSQL only supports REF_CURSOR parameters as the first parameter" );
 		}
 		return (ResultSet) statement.getObject( 1 );
 	}

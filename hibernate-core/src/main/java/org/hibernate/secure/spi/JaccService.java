@@ -12,7 +12,10 @@ import org.hibernate.service.Service;
  * Service describing Hibernate integration with JACC for security service.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public interface JaccService extends Service {
 	/**
 	 * Obtain the JACC context-id in effect for this service.  {@code null} indicates no

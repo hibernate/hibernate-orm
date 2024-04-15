@@ -95,6 +95,7 @@ dependencies {
 	karafDistro "org.apache.karaf:apache-karaf:${project.karafVersion}@tar.gz"
 
 	hibernateEnvers( project( ':hibernate-envers' ) )
+	hibernateEnvers( libraries.dom4j )
 }
 
 jar {
@@ -160,6 +161,9 @@ karaf {
 			name = 'hibernate-envers'
 			description = 'Feature for easily adding Envers support to hibernate-orm'
 			includeProject = false
+			feature ('wrap') {
+				prerequisite = true
+			}
 			configurations 'hibernateEnvers'
 			feature('hibernate-orm') {
 				version = project.version

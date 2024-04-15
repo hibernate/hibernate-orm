@@ -35,7 +35,8 @@ public interface AttributeSource extends ToolingHintContextContainer {
 	public boolean isSingular();
 
 	/**
-	 * Ugh.  This is the deprecated DOM4J entity-mode feature
+	 * This is only useful to log warnings when these deprecated attributes are populated.
+	 * It was only useful for DOM4J entity-mode, which was removed a long time ago.
 	 *
 	 * @return The xml node name
 	 */

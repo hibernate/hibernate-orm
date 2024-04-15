@@ -88,11 +88,7 @@ public class GeomEntity implements GeomEntityLike<Geometry> {
 
 		GeomEntity geomEntity = (GeomEntity) o;
 
-		if ( !id.equals( geomEntity.id ) ) {
-			return false;
-		}
-
-		return true;
+		return id.equals( geomEntity.id );
 	}
 
 	@Override

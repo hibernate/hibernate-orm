@@ -20,11 +20,13 @@ import org.hibernate.Session;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -34,7 +36,10 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -55,15 +60,24 @@ import static org.junit.Assert.assertTrue;
 })
 public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 
+	// NOTE : tests in this class seem redundant because they assert things that happened
+	// in previous versions that have been fixed
+
 	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Employer.class, Employee.class, Unrelated.class };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
 	@Test
 	public void testRemoveWithDeletedAssociatedEntity() {
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
@@ -76,27 +90,27 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					Employer employer = session.get( Employer.class, "RedHat" );
 
 					// Delete the associated entity first
 					session.remove( employer );
 
 					for ( Employee employee : employer.getEmployees() ) {
-						assertFalse( Hibernate.isPropertyInitialized( employee, "employer" ) );
-						session.remove( employee );
-						// Should be initialized because at least one entity was deleted beforehand
 						assertTrue( Hibernate.isPropertyInitialized( employee, "employer" ) );
+						session.remove( employee );
+
 						assertSame( employer, employee.getEmployer() );
+
 						// employee.getEmployer was initialized, and should be nullified in EntityEntry#deletedState
 						checkEntityEntryState( session, employee, employer, true );
 					}
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					assertNull( session.find( Employer.class, "RedHat" ) );
 					assertTrue( session.createQuery( "from Employee e", Employee.class ).getResultList().isEmpty() );
 				}
@@ -106,8 +120,8 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testRemoveWithNonAssociatedRemovedEntity() {
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
 					Employee employee = new Employee( "Jack" );
@@ -117,22 +131,22 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					// Delete an entity that is not associated with Employee
 					session.remove( session.get( Unrelated.class, 1 ) );
 					final Employee employee = session.get( Employee.class, "Jack" );
-					assertFalse( Hibernate.isPropertyInitialized( employee, "employer" ) );
-					session.remove( employee );
-					// Should be initialized because at least one entity was deleted beforehand
 					assertTrue( Hibernate.isPropertyInitialized( employee, "employer" ) );
+
+					session.remove( employee );
+
 					// employee.getEmployer was initialized, and should not be nullified in EntityEntry#deletedState
 					checkEntityEntryState( session, employee, employee.getEmployer(), false );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					assertNull( session.find( Unrelated.class, 1 ) );
 					assertNull( session.find( Employee.class, "Jack" ) );
 					session.remove( session.find( Employer.class, "RedHat" ) );
@@ -143,8 +157,8 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testRemoveWithNoRemovedEntities() {
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
 					Employee employee = new Employee( "Jack" );
@@ -153,22 +167,25 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					// Don't delete any entities before deleting the Employee
 					final Employee employee = session.get( Employee.class, "Jack" );
-					assertFalse( Hibernate.isPropertyInitialized( employee, "employer" ) );
+					verifyBaseState( employee );
+
 					session.remove( employee );
-					// There were no other deleted entities before employee was deleted,
-					// so there was no need to initialize employee.employer.
-					assertFalse( Hibernate.isPropertyInitialized( employee, "employer" ) );
-					// employee.getEmployer was not initialized, and should not be nullified in EntityEntry#deletedState
-					checkEntityEntryState( session, employee, LazyPropertyInitializer.UNFETCHED_PROPERTY, false );
+
+					Employer employer = session.get( Employer.class, "RedHat" );
+					verifyBaseState( employer );
+
+					assertThat( employee.getEmployer(), sameInstance( employer ) );
+
+					checkEntityEntryState( session, employee, employer, false );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					assertNull( session.find( Employee.class, "Jack" ) );
 					session.remove( session.find( Employer.class, "RedHat" ) );
 				}
@@ -178,8 +195,8 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testRemoveEntityWithNullLazyManyToOne() {
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					Employer employer = new Employer( "RedHat" );
 					session.persist( employer );
 					Employee employee = new Employee( "Jack" );
@@ -187,22 +204,17 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inTransaction(
+				(session) -> {
 					Employee employee = session.get( Employee.class, "Jack" );
-					assertFalse( Hibernate.isPropertyInitialized( employee, "employer" ) );
+					verifyBaseState( employee );
 
 					// Get and delete an Employer that is not associated with employee
 					Employer employer = session.get( Employer.class, "RedHat" );
-					session.remove( employer );
+					verifyBaseState( employer );
 
-					// employee.employer is uninitialized. Since the column for employee.employer
-					// is a foreign key, and there is an Employer that has already been removed,
-					// employee.employer will need to be iniitialized to determine if
-					// employee.employer is nullifiable.
-					assertFalse( Hibernate.isPropertyInitialized( employee, "employer" ) );
+					session.remove( employer );
 					session.remove( employee );
-					assertTrue( Hibernate.isPropertyInitialized( employee, "employer" ) );
 				}
 		);
 	}
@@ -226,21 +238,35 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				session -> {
 					Employee employee = session.get( Employee.class, "Jack" );
-					assertFalse( Hibernate.isPropertyInitialized( employee, "employer" ) );
+					verifyBaseState( employee );
 
 					// Get and delete an Employer that is not associated with employee
 					Employer employer = session.get( Employer.class, "RedHat" );
-					session.remove( employer );
+					verifyBaseState( employer );
 
-					// employee.employer is uninitialized. Since the column for employee.employer
-					// is a foreign key, and there is an Employer that has already been removed,
-					// employee.employer will need to be iniitialized to determine if
-					// employee.employer is nullifiable.
-					assertFalse( Hibernate.isPropertyInitialized( employee, "employer" ) );
+					assertThat( employee.getEmployer(), sameInstance( employer ) );
+
+					session.remove( employer );
 					session.remove( employee );
-					assertTrue( Hibernate.isPropertyInitialized( employee, "employer" ) );
 				}
 		);
+	}
+
+	private void verifyBaseState(Employer employer) {
+		assertTrue( Hibernate.isPropertyInitialized( employer, "name" ) );
+	}
+
+	private void verifyBaseState(Employee employee) {
+		assertTrue( Hibernate.isPropertyInitialized( employee, "name" ) );
+
+		// employer will be either null or an uninitialized enhanced-proxy
+		assertTrue( Hibernate.isPropertyInitialized( employee, "employer" ) );
+
+		final Employer employer = employee.getEmployer();
+		if ( employer != null ) {
+			assertFalse( Hibernate.isInitialized( employer ) );
+			assertThat(employer, not( instanceOf( HibernateProxy.class ) ) );
+		}
 	}
 
 	private void checkEntityEntryState(
@@ -256,7 +282,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				entityEntry.getLoadedState()[propertyNumber]
 		);
 		if ( isEmployerNullified ) {
-			assertEquals( null, entityEntry.getDeletedState()[propertyNumber] );
+			assertNull( entityEntry.getDeletedState()[ propertyNumber ] );
 		}
 		else {
 			assertEquals(
@@ -367,7 +393,7 @@ public class BidirectionalLazyTest extends BaseCoreFunctionalTestCase {
 				return true;
 			}
 			else if ( o instanceof Employee ) {
-				Employee other = Employee.class.cast( o );
+				Employee other = (Employee) o;
 				if ( name != null ) {
 					return getName().equals( other.getName() );
 				}

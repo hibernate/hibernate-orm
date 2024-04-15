@@ -61,6 +61,16 @@ public final class Projections {
 		return new IdentifierProjection();
 	}
 
+	/*
+	 * An foreign key value projection.
+	 *
+	 * @return The foreign key projection
+	 *
+	 */
+	public static ForeingKeyProjection fk(String associationPropertyName) {
+		return new ForeingKeyProjection(associationPropertyName);
+	}
+
 	/**
 	 * Create a distinct projection from a projection.
 	 *

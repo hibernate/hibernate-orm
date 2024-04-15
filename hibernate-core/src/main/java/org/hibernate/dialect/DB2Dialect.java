@@ -51,6 +51,8 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  */
 public class DB2Dialect extends Dialect {
 
+	private static final int BIND_PARAMETERS_NUMBER_LIMIT = 32_767;	
+	
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
 		public String processSql(String sql, RowSelection selection) {
@@ -583,7 +585,7 @@ public class DB2Dialect extends Dialect {
 				nullPrecedence == NullPrecedence.FIRST ? "0" : "1",
 				nullPrecedence == NullPrecedence.FIRST ? "1" : "0",
 				expression,
-				order
+				order == null ? "asc" : order
 		);
 	}
 
@@ -596,4 +598,9 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsPartitionBy() {
 		return true;
 	}
+	
+	@Override
+	public int getInExpressionCountLimit() {
+		return BIND_PARAMETERS_NUMBER_LIMIT;
+	}	
 }

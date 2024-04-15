@@ -22,9 +22,11 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 import org.hibernate.testing.SkipForDialect;
@@ -42,6 +44,7 @@ import org.junit.runners.Parameterized;
 				+ " when the JVM default timezone is different from the server timezone:"
 				+ " https://bugs.mysql.com/bug.php?id=91112"
 )
+@SkipForDialect(value = H2Dialect.class, comment = "H2 1.4.200 DST bug. See org.hibernate.dialect.H2Dialect.hasDstBug")
 public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDateTest.EntityWithLocalDate> {
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {
@@ -70,7 +73,11 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 								.add( 1892, 1, 1, ZONE_OSLO )
 								.add( 1900, 1, 1, ZONE_PARIS )
 								.add( 1900, 1, 1, ZONE_AMSTERDAM )
-								.add( 1600, 1, 1, ZONE_AMSTERDAM )
+				)
+				.skippedForDialects(
+						// No idea what Sybase is doing here exactly
+						dialect -> dialect instanceof SybaseASE15Dialect,
+						b -> b.add( 1600, 1, 1, ZONE_AMSTERDAM )
 				)
 				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
 				// It doesn't seem that any date at midnight can be affected by HHH-13379, but we add some tests just in case

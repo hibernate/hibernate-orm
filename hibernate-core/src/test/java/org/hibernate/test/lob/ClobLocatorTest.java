@@ -11,6 +11,7 @@ import java.sql.Clob;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.SybaseASE157Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.type.descriptor.java.DataHelper;
 
@@ -47,6 +48,7 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 			jiraKey = "HHH-6637",
 			comment = "Teradata requires locator to be used in same session where it was created/retrieved"
 	)
+	@SkipForDialect( value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement character stream handling")
 	public void testBoundedClobLocatorAccess() throws Throwable {
 		String original = buildString( CLOB_SIZE, 'x' );
 		String changed = buildString( CLOB_SIZE, 'y' );
@@ -131,6 +133,7 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 			value = DialectChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
 			comment = "database/driver does not support materializing a LOB locator outside the owning transaction"
 	)
+	@SkipForDialect( value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement character stream handling")
 	public void testUnboundedClobLocatorAccess() throws Throwable {
 		// Note: unbounded mutation of the underlying lob data is completely
 		// unsupported; most databases would not allow such a construct anyway.

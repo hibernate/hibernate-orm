@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jndi.internal;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
@@ -115,6 +117,16 @@ public class JndiServiceImpl implements JndiService {
 
 	private Name parseName(String jndiName, Context context) {
 		try {
+			final URI uri = new URI( jndiName );
+			final String scheme = uri.getScheme();
+			if ( scheme != null && (! allowedScheme( scheme ) ) ) {
+				throw new JndiException( "JNDI lookups for scheme '" + scheme + "' are not allowed" );
+			}
+		}
+		catch (URISyntaxException e) {
+			//Ok
+		}
+		try {
 			return context.getNameParser( "" ).parse( jndiName );
 		}
 		catch ( InvalidNameException e ) {
@@ -122,6 +134,16 @@ public class JndiServiceImpl implements JndiService {
 		}
 		catch ( NamingException e ) {
 			throw new JndiException( "Error parsing JNDI name [" + jndiName + "]", e );
+		}
+	}
+
+	private static boolean allowedScheme(final String scheme) {
+		switch ( scheme ) {
+			case "java" :
+			case "osgi" :
+				return true;
+			default:
+				return false;
 		}
 	}
 

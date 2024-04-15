@@ -10,6 +10,9 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
@@ -23,6 +26,8 @@ import org.hibernate.type.WrappedMaterializedBlobType;
  */
 public class Oracle12cDialect extends Oracle10gDialect {
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
+
+	private static final AbstractLimitHandler LIMIT_HANDLER = Oracle12LimitHandler.INSTANCE;
 
 	public Oracle12cDialect() {
 		super();
@@ -61,5 +66,10 @@ public class Oracle12cDialect extends Oracle10gDialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new Oracle12cIdentityColumnSupport();
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
 	}
 }

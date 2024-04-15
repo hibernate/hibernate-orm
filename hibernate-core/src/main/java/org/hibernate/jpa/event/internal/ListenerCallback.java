@@ -9,8 +9,11 @@ package org.hibernate.jpa.event.internal;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.hibernate.jpa.event.spi.Callback;
+import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
  * Represents a JPA callback using a dedicated listener
@@ -20,10 +23,27 @@ import org.hibernate.resource.beans.spi.ManagedBean;
  */
 class ListenerCallback extends AbstractCallback {
 
-	private final Method callbackMethod;
-	private final ManagedBean listenerManagedBean;
+	public static class Definition implements CallbackDefinition {
+		private final Class<?> listenerClass;
+		private final Method callbackMethod;
+		private final CallbackType callbackType;
 
-	ListenerCallback(ManagedBean listenerManagedBean, Method callbackMethod, CallbackType callbackType) {
+		public Definition(Class<?> listenerClass, Method callbackMethod, CallbackType callbackType) {
+			this.listenerClass = listenerClass;
+			this.callbackMethod = callbackMethod;
+			this.callbackType = callbackType;
+		}
+
+		@Override
+		public Callback createCallback(ManagedBeanRegistry beanRegistry) {
+			return new ListenerCallback( beanRegistry.getBean( listenerClass ), callbackMethod, callbackType );
+		}
+	}
+
+	private final Method callbackMethod;
+	private final ManagedBean<?> listenerManagedBean;
+
+	ListenerCallback(ManagedBean<?> listenerManagedBean, Method callbackMethod, CallbackType callbackType) {
 		super( callbackType );
 		this.listenerManagedBean = listenerManagedBean;
 		this.callbackMethod = callbackMethod;

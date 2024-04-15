@@ -57,19 +57,19 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		config.addAnnotatedClass( Order.class );
 		config.addAnnotatedClass( SupportTickets.class );
 		config.addAnnotatedClass( Country.class );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
+		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
 				serviceRegistry
-		);
+		)) {
 
-		assertTrue(
-				"fetch profile not parsed properly",
-				sessionImpl.containsFetchProfileDefinition( "customer-with-orders" )
-		);
-		assertFalse(
-				"package info should not be parsed",
-				sessionImpl.containsFetchProfileDefinition( "package-profile-1" )
-		);
-		sessionImpl.close();
+			assertTrue(
+					"fetch profile not parsed properly",
+					sessionImpl.containsFetchProfileDefinition( "customer-with-orders" )
+			);
+			assertFalse(
+					"package info should not be parsed",
+					sessionImpl.containsFetchProfileDefinition( "package-profile-1" )
+			);
+		}
 	}
 
 	@Test
@@ -148,15 +148,15 @@ public class FetchProfileTest extends BaseUnitTestCase {
 				.getContextClassLoader()
 				.getResourceAsStream( "org/hibernate/test/annotations/fetchprofile/mappings.hbm.xml" );
 		config.addInputStream( is );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
+		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
 				serviceRegistry
-		);
+		)) {
 
-		assertTrue(
-				"fetch profile not parsed properly",
-				sessionImpl.containsFetchProfileDefinition( "orders-profile" )
-		);
-		sessionImpl.close();
+			assertTrue(
+					"fetch profile not parsed properly",
+					sessionImpl.containsFetchProfileDefinition( "orders-profile" )
+			);
+		}
 
 		// now the same with no xml
 		final MetadataSources metadataSources = new MetadataSources()
@@ -187,18 +187,18 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		config.addAnnotatedClass( SupportTickets.class );
 		config.addAnnotatedClass( Country.class );
 		config.addPackage( Customer.class.getPackage().getName() );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
+		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
 				serviceRegistry
-		);
+		)) {
 
-		assertTrue(
-				"fetch profile not parsed properly",
-				sessionImpl.containsFetchProfileDefinition( "package-profile-1" )
-		);
-		assertTrue(
-				"fetch profile not parsed properly",
-				sessionImpl.containsFetchProfileDefinition( "package-profile-2" )
-		);
-		sessionImpl.close();
+			assertTrue(
+					"fetch profile not parsed properly",
+					sessionImpl.containsFetchProfileDefinition( "package-profile-1" )
+			);
+			assertTrue(
+					"fetch profile not parsed properly",
+					sessionImpl.containsFetchProfileDefinition( "package-profile-2" )
+			);
+		}
 	}
 }

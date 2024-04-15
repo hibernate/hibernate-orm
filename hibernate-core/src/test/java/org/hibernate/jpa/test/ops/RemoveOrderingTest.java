@@ -15,7 +15,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.util.Map;
 
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class RemoveOrderingTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		options.put( AvailableSettings.VALIDATION_MODE, "NONE" );
+		options.put( AvailableSettings.JPA_VALIDATION_MODE, "NONE" );
 	}
 
 	@Override

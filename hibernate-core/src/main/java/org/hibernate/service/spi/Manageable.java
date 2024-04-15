@@ -10,7 +10,11 @@ package org.hibernate.service.spi;
  * Optional {@link org.hibernate.service.Service} contract for services which can be managed in JMX
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Scheduled for removal in 6.0; see https://hibernate.atlassian.net/browse/HHH-14847
+ * and https://hibernate.atlassian.net/browse/HHH-14846
  */
+@Deprecated
 public interface Manageable {
 	/**
 	 * Get the domain name to be used in registering the management bean.  May be {@code null} to indicate Hibernate's

@@ -219,6 +219,10 @@ public interface SessionFactoryOptions {
 
 	boolean isScrollableResultSetsEnabled();
 
+	/**
+	 * @deprecated (since 5.5) Scheduled for removal in 6.0 as ResultSet wrapping is no longer needed
+	 */
+	@Deprecated
 	boolean isWrapResultSetsEnabled();
 
 	boolean isGetGeneratedKeysEnabled();
@@ -256,6 +260,11 @@ public interface SessionFactoryOptions {
 
 	boolean isPreferUserTransaction();
 
+	/**
+	 * @deprecated with no replacement.  See {@link org.hibernate.cfg.AvailableSettings#PROCEDURE_NULL_PARAM_PASSING}
+	 * for details
+	 */
+	@Deprecated
 	boolean isProcedureParameterNullPassingEnabled();
 
 	boolean isCollectionJoinSubqueryRewriteEnabled();
@@ -284,6 +293,26 @@ public interface SessionFactoryOptions {
 		return ImmutableEntityUpdateQueryHandlingMode.WARNING;
 	}
 
+	/**
+	 * The default catalog to use in generated SQL when a catalog wasn't specified in the mapping,
+	 * neither explicitly nor implicitly (see the concept of implicit catalog in XML mapping).
+	 *
+	 * @return The default catalog to use.
+	 */
+	default String getDefaultCatalog() {
+		return null;
+	}
+
+	/**
+	 * The default schema to use in generated SQL when a catalog wasn't specified in the mapping,
+	 * neither explicitly nor implicitly (see the concept of implicit schema in XML mapping).
+	 *
+	 * @return The default schema to use.
+	 */
+	default String getDefaultSchema() {
+		return null;
+	}
+
 	default boolean inClauseParameterPaddingEnabled() {
 		return false;
 	}
@@ -310,9 +339,12 @@ public interface SessionFactoryOptions {
 
 	/**
 	 * Can bytecode-enhanced entity classes be used as a "proxy"?
+	 *
+	 * @deprecated (since 5.5) use of enhanced proxies is always enabled
 	 */
+	@Deprecated
 	default boolean isEnhancementAsProxyEnabled() {
-		return false;
+		return true;
 	}
 
 	default boolean isCollectionsInDefaultFetchGroupEnabled() {

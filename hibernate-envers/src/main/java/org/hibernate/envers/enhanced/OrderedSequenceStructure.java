@@ -6,10 +6,10 @@
  */
 package org.hibernate.envers.enhanced;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -37,30 +37,15 @@ public class OrderedSequenceStructure extends SequenceStructure {
 	}
 
 	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		// delegate to auxiliary object
-		return sequenceObject.sqlCreateStrings( dialect );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		// delegate to auxiliary object
-		return sequenceObject.sqlDropStrings( dialect );
-	}
-
-	@Override
 	protected void buildSequence(Database database) {
 		database.addAuxiliaryDatabaseObject( sequenceObject );
-		this.sequenceName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				getQualifiedName(),
-				database.getJdbcEnvironment().getDialect()
-		);
+		this.physicalSequenceName = getQualifiedName();
 	}
 
 	private class OrderedSequence implements AuxiliaryDatabaseObject {
 		@Override
 		public String getExportIdentifier() {
-			return getName();
+			return getQualifiedName().render();
 		}
 
 		@Override
@@ -76,9 +61,10 @@ public class OrderedSequenceStructure extends SequenceStructure {
 		}
 
 		@Override
-		public String[] sqlCreateStrings(Dialect dialect) {
+		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
+			Dialect dialect = context.getDialect();
 			final String[] createStrings = dialect.getCreateSequenceStrings(
-					getName(),
+					context.format( getPhysicalName() ),
 					getInitialValue(),
 					getSourceIncrementSize()
 			);
@@ -93,8 +79,9 @@ public class OrderedSequenceStructure extends SequenceStructure {
 		}
 
 		@Override
-		public String[] sqlDropStrings(Dialect dialect) {
-			return dialect.getDropSequenceStrings( getName() );
+		public String[] sqlDropStrings(SqlStringGenerationContext context) {
+			Dialect dialect = context.getDialect();
+			return dialect.getDropSequenceStrings( context.format( getPhysicalName() ) );
 		}
 	}
 }

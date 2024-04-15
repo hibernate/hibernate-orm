@@ -20,7 +20,7 @@ import org.junit.Test;
 @TestForIssue(jiraKey = "HHH-12786")
 public class ByteBuddyBasicProxyFactoryTest {
 
-	private static final BasicProxyFactoryImpl BASIC_PROXY_FACTORY = new BasicProxyFactoryImpl( Entity.class, new Class[0], new ByteBuddyState() );
+	private static final BasicProxyFactoryImpl BASIC_PROXY_FACTORY = new BasicProxyFactoryImpl( Entity.class, null, new ByteBuddyState() );
 
 	@Test
 	public void testEqualsHashCode() {

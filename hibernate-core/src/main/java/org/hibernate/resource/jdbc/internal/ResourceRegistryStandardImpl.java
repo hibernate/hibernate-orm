@@ -52,7 +52,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	private final JdbcObserver jdbcObserver;
 
 	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
-	private final HashMap<ResultSet,Object> unassociatedResultSets = new HashMap<ResultSet,Object>();
+	private HashMap<ResultSet,Object> unassociatedResultSets;
 
 	private ArrayList<Blob> blobs;
 	private ArrayList<Clob> clobs;
@@ -138,7 +138,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		else {
-			final Object removed = unassociatedResultSets.remove( resultSet );
+			final Object removed = unassociatedResultSets == null ? null : unassociatedResultSets.remove( resultSet );
 			if ( removed == null ) {
 				log.unregisteredResultSetWithoutStatement();
 			}
@@ -147,6 +147,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	private static void closeAll(final HashMap<ResultSet,Object> resultSets) {
+		if ( resultSets == null ) {
+			return;
+		}
 		resultSets.forEach( (resultSet, o) -> close( resultSet ) );
 		resultSets.clear();
 	}
@@ -234,13 +237,15 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			resultSets.put( resultSet, PRESENT );
 		}
 		else {
+			if ( unassociatedResultSets == null ) {
+				this.unassociatedResultSets = new HashMap<ResultSet,Object>();
+			}
 			unassociatedResultSets.put( resultSet, PRESENT );
 		}
 	}
 
 	private JDBCException convert(SQLException e, String s) {
-		// todo : implement
-		return null;
+		return new JDBCException(s, e);
 	}
 
 	@Override

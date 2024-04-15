@@ -91,7 +91,7 @@ public class NotFoundLogicalOneToOneTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@OneToOne(fetch = FetchType.LAZY)
-		@JoinColumn(foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
+//		@JoinColumn(foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 		@NotFound(action = NotFoundAction.IGNORE)
 		public Currency getCurrency() {
 			return currency;

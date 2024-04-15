@@ -28,7 +28,7 @@ import org.geolatte.geom.codec.WktDecodeException;
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
 public class TestStoreRetrieveUsingGeolatte extends AbstractTestStoreRetrieve<Geometry, GeomEntity> {
 
-	private static HSMessageLogger LOG = Logger.getMessageLogger(
+	private static final HSMessageLogger LOG = Logger.getMessageLogger(
 			HSMessageLogger.class,
 			TestStoreRetrieveUsingGeolatte.class.getName()
 	);

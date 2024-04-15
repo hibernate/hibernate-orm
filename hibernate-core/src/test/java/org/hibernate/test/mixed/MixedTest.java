@@ -10,6 +10,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -22,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Gavin King
  */
 @SkipForDialect( SybaseASE15Dialect.class )
+@RequiresDialectFeature(value = { DialectChecks.NotH2Version2.class}, comment = "See https://github.com/h2database/h2database/issues/3385")
 public class MixedTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

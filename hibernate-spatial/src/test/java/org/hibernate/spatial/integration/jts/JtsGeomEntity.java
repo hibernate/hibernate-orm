@@ -82,11 +82,7 @@ public class JtsGeomEntity implements GeomEntityLike<Geometry> {
 
 		JtsGeomEntity geomEntity = (JtsGeomEntity) o;
 
-		if ( !id.equals( geomEntity.id ) ) {
-			return false;
-		}
-
-		return true;
+		return id.equals( geomEntity.id );
 	}
 
 	@Override

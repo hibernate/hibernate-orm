@@ -113,8 +113,14 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 			return;
 		}
 
-		final RootGraphImplementor fetchHint = (RootGraphImplementor) properties.get( GraphSemantic.FETCH.getJpaHintName() );
-		final RootGraphImplementor loadHint = (RootGraphImplementor) properties.get( GraphSemantic.LOAD.getJpaHintName() );
+		RootGraphImplementor fetchHint = (RootGraphImplementor) properties.get( GraphSemantic.FETCH.getJpaHintName() );
+		RootGraphImplementor loadHint = (RootGraphImplementor) properties.get( GraphSemantic.LOAD.getJpaHintName() );
+		if (fetchHint == null) {
+			fetchHint = (RootGraphImplementor) properties.get( GraphSemantic.FETCH.getJakartaJpaHintName() );
+		}
+		if (loadHint == null) {
+			loadHint = (RootGraphImplementor) properties.get( GraphSemantic.LOAD.getJakartaJpaHintName() );
+		}
 
 		if ( fetchHint == null && loadHint == null ) {
 			log.debugf( "Neither LOAD nor FETCH graph were found in properties" );

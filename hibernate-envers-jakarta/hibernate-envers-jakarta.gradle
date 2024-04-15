@@ -1,0 +1,207 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+import javax.inject.Inject
+
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+description = 'Hibernate\'s entity version (audit/history) support Jakarta edition'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+configurations {
+	jakartaeeTransformTool
+}
+
+// we do not want the much of the normal java plugin's behavior
+compileJava.enabled false
+processResources.enabled false
+compileTestJava.enabled false
+processTestResources.enabled false
+jar.enabled false
+javadocJar.enabled false
+sourcesJar.enabled false
+
+dependencies {
+	compile( project( ':hibernate-core-jakarta' ) )
+
+	jakartaeeTransformTool 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
+			'commons-cli:commons-cli:1.4',
+			'org.slf4j:slf4j-simple:1.7.30',
+			'org.slf4j:slf4j-api:1.7.26',
+			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
+			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
+
+	testCompile( project( ':hibernate-envers-jakarta' ) )
+	testCompile( project( ':hibernate-testing-jakarta' ) )
+	testCompile( project( path: ':hibernate-core-jakarta', configuration: 'tests' ) )
+}
+
+jar {
+	mustRunAfter project(':hibernate-envers').tasks.jar
+	mustRunAfter project(':hibernate-envers').tasks.testJar
+	dependsOn project(':hibernate-envers').tasks.jar
+	dependsOn project(':hibernate-envers').tasks.testJar
+	def baseDir = project(':hibernate-envers').buildDir
+	def baseJars = fileTree(baseDir).matching {include 'libs/*.jar' }
+	inputs.files(baseJars).skipWhenEmpty()
+	outputs.dir project.buildDir
+	doLast {
+		new File(project.buildDir, "libs").mkdirs()
+		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
+
+		baseJars.each { bundleJar ->
+			def sourceJarPath = baseDir.path + '/libs/' + bundleJar.name
+			println 'Initial bundle jar name [ ' + sourceJarPath + ' ]'
+
+			def finalBundleJarName = project.buildDir.path + '/libs/' + bundleJar.name.replaceAll( 'hibernate-envers', 'hibernate-envers-jakarta' )
+			println 'Default jakarta final bundle jar name [ ' + finalBundleJarName + ' ]'
+
+			def transformerArgs = [
+					sourceJarPath, finalBundleJarName,
+					'-q', // quiet output
+					'-tr', new File(getProjectDir().getParentFile(), 'rules/jakarta-renames.properties').path,
+					'-tv', new File(getProjectDir().getParentFile(), 'rules/jakarta-versions.properties').path,
+					'-td', new File(getProjectDir().getParentFile(), 'rules/jakarta-direct.properties').path,
+			]
+
+			println 'Transformer options:'
+			transformerArgs.each {
+				println '  [ ' + it + ' ]'
+			}
+
+			javaexec {
+				classpath configurations.jakartaeeTransformTool
+				main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
+				args = transformerArgs
+			}
+		}
+	}
+}
+
+task transformJar(type: JakartaJarTransformation) {
+	description 'Transforms the hibernate-envers jar using the JakartaTransformer tool'
+
+	dependsOn project(':hibernate-envers').tasks.jar
+	mustRunAfter project(':hibernate-envers').tasks.jar
+
+	sourceJar project(':hibernate-envers').tasks.jar.archiveFile
+	targetJar tasks.jar.archiveFile.get().asFile
+}
+
+task transformSourcesJar(type: JakartaJarTransformation) {
+	description 'Transforms the hibernate-envers sources jar using the JakartaTransformer tool'
+
+	dependsOn project(':hibernate-envers').tasks.sourcesJar
+	mustRunAfter project(':hibernate-envers').tasks.sourcesJar
+
+	sourceJar project(':hibernate-envers').tasks.sourcesJar.archiveFile
+	targetJar tasks.sourcesJar.archiveFile.get().asFile
+}
+
+task transformJavadocJar(type: JakartaJarTransformation) {
+	description 'Transforms the hibernate-envers javadoc jar using the JakartaTransformer tool'
+
+	dependsOn project(':hibernate-envers').tasks.javadocJar
+	mustRunAfter project(':hibernate-envers').tasks.javadocJar
+
+	sourceJar project(':hibernate-envers').tasks.javadocJar.archiveFile
+	targetJar tasks.javadocJar.archiveFile.get().asFile
+}
+
+configurations {
+	[apiElements, runtimeElements].each {
+		it.outgoing.artifacts.removeIf {
+			it.buildDependencies.getDependencies(null).contains(jar)
+		}
+		it.outgoing.artifact(tasks.transformJar.targetJar) {
+			builtBy tasks.transformJar
+		}
+		it.outgoing.artifact(tasks.transformSourcesJar.targetJar) {
+			builtBy tasks.transformSourcesJar
+		}
+		it.outgoing.artifact(tasks.transformJavadocJar.targetJar) {
+			builtBy tasks.transformJavadocJar
+		}
+	}
+}
+
+task unpackTestJar(type: Copy) {
+	dependsOn jar
+	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
+		def outputDir = file("${buildDir}/unpacked/" + it.name)
+		from zipTree(it)
+		into outputDir
+	}
+}
+
+test {
+	dependsOn unpackTestJar
+	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
+		def outputDir = file("${buildDir}/unpacked/" + it.name)
+		testClassesDirs += files(outputDir)
+		classpath += files(outputDir)
+	}
+	systemProperty 'file.encoding', 'utf-8'
+
+	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+		// See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+		jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+		// Weld needs this to generate proxies
+		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+	}
+}
+
+@CacheableTask
+abstract class JakartaJarTransformation extends DefaultTask {
+	private final RegularFileProperty sourceJar;
+	private final RegularFileProperty targetJar;
+
+	@Inject
+	JakartaJarTransformation(ObjectFactory objectFactory) {
+		sourceJar = objectFactory.fileProperty();
+		targetJar = objectFactory.fileProperty();
+	}
+
+	@InputFile
+	@PathSensitive( PathSensitivity.RELATIVE )
+	RegularFileProperty getSourceJar() {
+		return sourceJar;
+	}
+
+	void sourceJar(Object fileReference) {
+		sourceJar.set( project.file( fileReference ) )
+	}
+
+	@OutputFile
+	RegularFileProperty getTargetJar() {
+		return targetJar;
+	}
+
+	void targetJar(Object fileReference) {
+		targetJar.set( project.file( fileReference ) )
+	}
+
+	@TaskAction
+	void transform() {
+		project.javaexec( new Action<JavaExecSpec>() {
+			@Override
+			void execute(JavaExecSpec javaExecSpec) {
+				javaExecSpec.classpath( getProject().getConfigurations().getByName( "jakartaeeTransformTool" ) );
+				javaExecSpec.setMain( "org.eclipse.transformer.jakarta.JakartaTransformer" );
+				javaExecSpec.args(
+						sourceJar.get().getAsFile().getAbsolutePath(),
+						targetJar.get().getAsFile().getAbsolutePath(),
+						"-q",
+						"-tr", getProject().getRootProject().file( "rules/jakarta-renames.properties" ).getAbsolutePath(),
+						"-tv", getProject().getRootProject().file( "rules/jakarta-versions.properties" ).getAbsolutePath(),
+						"-td", getProject().getRootProject().file( "rules/jakarta-direct.properties" ).getAbsolutePath()
+				);
+			}
+		});
+	}
+}

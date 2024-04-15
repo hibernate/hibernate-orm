@@ -9,14 +9,13 @@ package org.hibernate.jpa.test.ejb3configuration;
 import java.util.Map;
 import javax.persistence.EntityManager;
 
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Wallet;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
@@ -35,6 +34,7 @@ public class EnableDiscardPersistenceContextOnCloseTest extends BaseEntityManage
 	@Override
 	protected Map getConfig() {
 		Map config = super.getConfig();
+		connectionProvider.setConnectionProvider( (ConnectionProvider) config.get( org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER ) );
 		config.put( AvailableSettings.DISCARD_PC_ON_CLOSE, "true");
 		config.put(
 				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,

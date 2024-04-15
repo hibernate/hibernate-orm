@@ -455,10 +455,9 @@ Hibernate will trigger a Persistence Context flush if there are pending `Account
 ==== Define a custom entity proxy
 
 By default, when it needs to use a proxy instead of the actual POJO, Hibernate is going to use a Bytecode manipulation library like
-http://jboss-javassist.github.io/javassist/[Javassist] or
-http://bytebuddy.net/[Byte Buddy].
+https://bytebuddy.net/[Byte Buddy].
 
-However, if the entity class is final, Javassist will not create a proxy and you will get a POJO even when you only need a proxy reference.
+However, if the entity class is final, a proxy will not be created; you will get a POJO even when you only need a proxy reference.
 In this case, you could proxy an interface that this particular entity implements, as illustrated by the following example.
 
 [[entity-proxy-interface-mapping]]

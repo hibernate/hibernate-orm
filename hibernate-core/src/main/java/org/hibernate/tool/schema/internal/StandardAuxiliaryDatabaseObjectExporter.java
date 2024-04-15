@@ -8,6 +8,7 @@ package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -22,12 +23,14 @@ public class StandardAuxiliaryDatabaseObjectExporter implements Exporter<Auxilia
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, Metadata metadata) {
-		return object.sqlCreateStrings( dialect );
+	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, Metadata metadata,
+			SqlStringGenerationContext context) {
+		return object.sqlCreateStrings( context );
 	}
 
 	@Override
-	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, Metadata metadata) {
-		return object.sqlDropStrings( dialect );
+	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, Metadata metadata,
+			SqlStringGenerationContext context) {
+		return object.sqlDropStrings( context );
 	}
 }

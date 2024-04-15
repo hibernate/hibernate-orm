@@ -1184,6 +1184,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(value = { DialectChecks.NotH2Version2.class}, comment = "See https://github.com/h2database/h2database/issues/3385")
 	public void testObjectType() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();

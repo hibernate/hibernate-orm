@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -26,6 +25,7 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -36,7 +36,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.Configurable;
 import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -129,7 +128,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class TableGenerator implements PersistentIdentifierGenerator, Configurable {
+public class TableGenerator implements PersistentIdentifierGenerator {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			TableGenerator.class.getName()
@@ -233,7 +232,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	private Type identifierType;
 
 	private QualifiedName qualifiedTableName;
-	private String renderedTableName;
+	private QualifiedName physicalTableName;
 
 	private String segmentColumnName;
 	private String segmentValue;
@@ -251,6 +250,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	private long accessCount;
 
 	@Override
+	@Deprecated
 	public Object generatorKey() {
 		return qualifiedTableName.render();
 	}
@@ -354,6 +354,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 */
 	public final long getTableAccessCount() {
 		return accessCount;
+	}
+
+	/**
+	 * @deprecated Exposed for tests only.
+	 */
+	@Deprecated
+	public String[] getAllSqlForTests() {
+		return new String[] { selectQuery, insertQuery, updateQuery };
 	}
 
 	@Override
@@ -525,30 +533,31 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected String buildSelectQuery(Dialect dialect) {
+	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
 		final String alias = "tbl";
 		final String query = "select " + StringHelper.qualify( alias, valueColumnName ) +
-				" from " + renderedTableName + ' ' + alias +
+				" from " + formattedPhysicalTableName + ' ' + alias +
 				" where " + StringHelper.qualify( alias, segmentColumnName ) + "=?";
 		final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 		lockOptions.setAliasSpecificLockMode( alias, LockMode.PESSIMISTIC_WRITE );
 		final Map updateTargetColumnsMap = Collections.singletonMap( alias, new String[] { valueColumnName } );
-		return dialect.applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
+		return context.getDialect().applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected String buildUpdateQuery() {
-		return "update " + renderedTableName +
+	protected String buildUpdateQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
+		return "update " + formattedPhysicalTableName +
 				" set " + valueColumnName + "=? " +
 				" where " + valueColumnName + "=? and " + segmentColumnName + "=?";
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected String buildInsertQuery() {
-		return "insert into " + renderedTableName + " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
+	protected String buildInsertQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
+		return "insert into " + formattedPhysicalTableName + " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
 	}
 
-	protected InitCommand generateInsertInitCommand() {
+	protected InitCommand generateInsertInitCommand(SqlStringGenerationContext context) {
+		String renderedTableName = context.format( physicalTableName );
 		int value = initialValue;
 		if ( storeLastUsedValue ) {
 			value = initialValue - 1;
@@ -646,7 +655,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 												rows = executeUpdate( updatePS, statsCollector );
 											}
 											catch (SQLException e) {
-												LOG.unableToUpdateQueryHiValue( renderedTableName, e );
+												LOG.unableToUpdateQueryHiValue( physicalTableName.render(), e );
 												throw e;
 											}
 										}
@@ -710,21 +719,6 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return new String[] {
-				dialect.getCreateTableString() + ' ' + renderedTableName + " ( "
-						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 ) + " not null "
-						+ ", " + valueColumnName + ' ' + dialect.getTypeName( Types.BIGINT )
-						+ ", primary key ( " + segmentColumnName + " ) )" + dialect.getTableTypeString()
-		};
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return new String[] { dialect.getDropTableString( renderedTableName ) };
-	}
-
-	@Override
 	public void registerExportables(Database database) {
 		final Dialect dialect = database.getJdbcEnvironment().getDialect();
 
@@ -762,14 +756,15 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		}
 
 		// allow physical naming strategies a chance to kick in
-		this.renderedTableName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				dialect
-		);
-		table.addInitCommand( generateInsertInitCommand() );
+		this.physicalTableName = table.getQualifiedTableName();
+		table.addInitCommand( this::generateInsertInitCommand );
+	}
 
-		this.selectQuery = buildSelectQuery( dialect );
-		this.updateQuery = buildUpdateQuery();
-		this.insertQuery = buildInsertQuery();
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		String formattedPhysicalTableName = context.format( physicalTableName );
+		this.selectQuery = buildSelectQuery( formattedPhysicalTableName, context );
+		this.updateQuery = buildUpdateQuery( formattedPhysicalTableName, context );
+		this.insertQuery = buildInsertQuery( formattedPhysicalTableName, context );
 	}
 }

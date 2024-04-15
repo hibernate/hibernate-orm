@@ -14,7 +14,10 @@ import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.NullnessHelper;
 
 /**
  * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link javax.persistence.EntityManagerFactory}
@@ -64,7 +67,19 @@ public interface HibernateEntityManagerFactory extends EntityManagerFactory, Ser
 	 */
 	@Deprecated
 	default String getEntityManagerFactoryName() {
-		return (String) getProperties().get( AvailableSettings.ENTITY_MANAGER_FACTORY_NAME );
+		return NullnessHelper.coalesceSuppliedValues(
+				() -> (String) getProperties().get( AvailableSettings.EMF_NAME ),
+				() -> {
+					final String oldSetting = (String) getProperties().get( AvailableSettings.ENTITY_MANAGER_FACTORY_NAME );
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								AvailableSettings.ENTITY_MANAGER_FACTORY_NAME,
+								AvailableSettings.EMF_NAME
+						);
+					}
+					return oldSetting;
+				}
+		);
 	}
 
 	/**

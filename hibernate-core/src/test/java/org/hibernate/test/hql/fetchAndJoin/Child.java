@@ -26,6 +26,7 @@ package org.hibernate.test.hql.fetchAndJoin;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -52,6 +53,7 @@ public class Child {
 		this.value = value;
 	}
 
+	@Column(name = "val")
 	private String value;
 
 	public long getId() {

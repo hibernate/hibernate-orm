@@ -15,6 +15,7 @@ import org.hibernate.hql.internal.ast.tree.BinaryArithmeticOperatorNode;
 import org.hibernate.hql.internal.ast.tree.BinaryLogicOperatorNode;
 import org.hibernate.hql.internal.ast.tree.BooleanLiteralNode;
 import org.hibernate.hql.internal.ast.tree.CastFunctionNode;
+import org.hibernate.hql.internal.ast.tree.FkRefNode;
 import org.hibernate.hql.internal.ast.tree.NullNode;
 import org.hibernate.hql.internal.ast.tree.SearchedCaseNode;
 import org.hibernate.hql.internal.ast.tree.SimpleCaseNode;
@@ -195,6 +196,9 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 			}
 			case NULL : {
 				return NullNode.class;
+			}
+			case FK_REF: {
+				return FkRefNode.class;
 			}
 			default:
 				return SqlNode.class;

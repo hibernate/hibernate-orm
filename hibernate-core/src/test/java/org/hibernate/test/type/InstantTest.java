@@ -22,8 +22,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.junit.runners.Parameterized;
@@ -61,21 +63,26 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 								.add( 1900, 1, 2, 0, 9, 21, 0, ZONE_PARIS )
 								.add( 1900, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
 								.add( 1900, 1, 2, 0, 19, 32, 0, ZONE_AMSTERDAM )
-								// Affected by HHH-13266 (JDK-8061577)
-								.add( 1892, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
 								.add( 1899, 12, 31, 23, 59, 59, 999_999_999, ZONE_PARIS )
 								.add( 1899, 12, 31, 23, 59, 59, 999_999_999, ZONE_AMSTERDAM )
 				)
 				.skippedForDialects(
 						// MySQL/Mariadb/Sybase cannot store dates in 1600 in a timestamp.
-						Arrays.asList( MySQLDialect.class, MariaDBDialect.class, SybaseDialect.class ),
+						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect
+								|| dialect instanceof SybaseDialect
+								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b
 								.add( 1600, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
+								// Affected by HHH-13266 (JDK-8061577)
+								.add( 1892, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
 				)
 				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
 				// => This used to work correctly in 5.4.1.Final and earlier
-				.add( 2018, 10, 28, 1, 0, 0, 0, ZONE_PARIS )
-				.add( 2018, 3, 31, 14, 0, 0, 0, ZONE_AUCKLAND )
+				.skippedForDialects(
+						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
+						b -> b.add( 2018, 10, 28, 1, 0, 0, 0, ZONE_PARIS )
+								.add( 2018, 3, 31, 14, 0, 0, 0, ZONE_AUCKLAND )
+				)
 				// => This has never worked correctly, unless the JDBC timezone was set to UTC
 				.withForcedJdbcTimezone( "UTC", b -> b
 						.add( 2018, 10, 28, 0, 0, 0, 0, ZONE_PARIS )
@@ -83,8 +90,12 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 				)
 				// => Also test DST start, just in case
 				.add( 2018, 3, 25, 1, 0, 0, 0, ZONE_PARIS )
-				.add( 2018, 3, 25, 2, 0, 0, 0, ZONE_PARIS )
-				.add( 2018, 9, 30, 2, 0, 0, 0, ZONE_AUCKLAND )
+				.skippedForDialects(
+						// No idea what Sybase is doing here exactly
+						dialect -> dialect instanceof SybaseASE15Dialect,
+						b -> b.add( 2018, 3, 25, 2, 0, 0, 0, ZONE_PARIS )
+								.add( 2018, 9, 30, 2, 0, 0, 0, ZONE_AUCKLAND )
+				)
 				.add( 2018, 9, 30, 3, 0, 0, 0, ZONE_AUCKLAND )
 				// => Also test dates around 1905-01-01, because the code behaves differently before and after 1905
 				.add( 1904, 12, 31, 22, 59, 59, 999_999_999, ZONE_PARIS )

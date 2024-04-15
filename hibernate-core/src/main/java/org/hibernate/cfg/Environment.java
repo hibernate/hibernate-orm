@@ -346,7 +346,7 @@ public final class Environment implements AvailableSettings {
 		}
 
 		if ( BYTECODE_PROVIDER_NAME_JAVASSIST.equals( providerName ) ) {
-			return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
+			throw LOG.usingRemovedJavassistBytecodeProvider();
 		}
 
 		LOG.bytecodeProvider( providerName );

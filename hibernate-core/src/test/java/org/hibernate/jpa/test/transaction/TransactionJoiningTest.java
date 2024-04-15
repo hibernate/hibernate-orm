@@ -15,10 +15,10 @@ import javax.persistence.TransactionRequiredException;
 import javax.transaction.Status;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
@@ -42,7 +42,7 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.TRANSACTION_TYPE, "JTA" );
+		options.put( AvailableSettings.JPA_TRANSACTION_TYPE, "JTA" );
 	}
 
 	@Test

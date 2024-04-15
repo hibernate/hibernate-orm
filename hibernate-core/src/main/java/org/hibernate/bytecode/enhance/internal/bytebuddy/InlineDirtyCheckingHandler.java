@@ -15,6 +15,7 @@ import javax.persistence.Id;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.Advice;
@@ -31,16 +32,27 @@ import net.bytebuddy.jar.asm.Type;
 
 final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 
+	private static final String HELPER_TYPE_NAME = Type.getInternalName( InlineDirtyCheckerEqualsHelper.class );
+	private static final Type PE_INTERCEPTABLE_TYPE = Type.getType( PersistentAttributeInterceptable.class );
+	private static final Type OBJECT_TYPE = Type.getType( Object.class );
+	private static final Type STRING_TYPE = Type.getType( String.class );
+
 	private final Implementation delegate;
 
 	private final TypeDescription managedCtClass;
 
 	private final FieldDescription.InDefinedShape persistentField;
+	private final boolean applyLazyCheck;
 
-	private InlineDirtyCheckingHandler(Implementation delegate, TypeDescription managedCtClass, FieldDescription.InDefinedShape persistentField) {
+	private InlineDirtyCheckingHandler(
+			Implementation delegate,
+			TypeDescription managedCtClass,
+			FieldDescription.InDefinedShape persistentField,
+			boolean applyLazyCheck) {
 		this.delegate = delegate;
 		this.managedCtClass = managedCtClass;
 		this.persistentField = persistentField;
+		this.applyLazyCheck = applyLazyCheck;
 	}
 
 	static Implementation wrap(
@@ -57,8 +69,12 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 					&& !persistentField.hasAnnotation( EmbeddedId.class )
 					&& !( persistentField.getType().asErasure().isAssignableTo( Collection.class )
 					&& enhancementContext.isMappedCollection( persistentField ) ) ) {
-				implementation = new InlineDirtyCheckingHandler( implementation, managedCtClass,
-						persistentField.asDefined() );
+				implementation = new InlineDirtyCheckingHandler(
+						implementation,
+						managedCtClass,
+						persistentField.asDefined(),
+						enhancementContext.hasLazyLoadableAttributes( managedCtClass )
+				);
 			}
 
 			if ( enhancementContext.isCompositeClass( persistentField.getType().asErasure() )
@@ -97,6 +113,11 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			Context implementationContext,
 			MethodDescription instrumentedMethod) {
 		// if (arg != field) {
+
+		if ( applyLazyCheck ) {
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitLdcInsn( persistentField.getName() );
+		}
 		methodVisitor.visitVarInsn( Type.getType( persistentField.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
 		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 		if ( persistentField.getDeclaringType().asErasure().equals( managedCtClass ) ) {
@@ -117,30 +138,70 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			);
 		}
 		int branchCode;
-		if ( persistentField.getType().isPrimitive() ) {
-			if ( persistentField.getType().represents( long.class ) ) {
-				methodVisitor.visitInsn( Opcodes.LCMP );
-			}
-			else if ( persistentField.getType().represents( float.class ) ) {
-				methodVisitor.visitInsn( Opcodes.FCMPL );
-			}
-			else if ( persistentField.getType().represents( double.class ) ) {
-				methodVisitor.visitInsn( Opcodes.DCMPL );
+		if ( applyLazyCheck ) {
+			if ( persistentField.getType().isPrimitive() ) {
+				final Type fieldType = Type.getType( persistentField.getDescriptor() );
+				methodVisitor.visitMethodInsn(
+						Opcodes.INVOKESTATIC,
+						HELPER_TYPE_NAME,
+						"areEquals",
+						Type.getMethodDescriptor(
+								Type.BOOLEAN_TYPE,
+								PE_INTERCEPTABLE_TYPE,
+								STRING_TYPE,
+								fieldType,
+								fieldType
+						),
+						false
+				);
 			}
 			else {
-				methodVisitor.visitInsn( Opcodes.ISUB );
+				methodVisitor.visitMethodInsn(
+						Opcodes.INVOKESTATIC,
+						HELPER_TYPE_NAME,
+						"areEquals",
+						Type.getMethodDescriptor(
+								Type.BOOLEAN_TYPE,
+								PE_INTERCEPTABLE_TYPE,
+								STRING_TYPE,
+								OBJECT_TYPE,
+								OBJECT_TYPE
+						),
+						false
+				);
 			}
-			branchCode = Opcodes.IFEQ;
+			branchCode = Opcodes.IFNE;
 		}
 		else {
-			methodVisitor.visitMethodInsn(
-					Opcodes.INVOKESTATIC,
-					Type.getInternalName( Objects.class ),
-					"deepEquals",
-					Type.getMethodDescriptor( Type.getType( boolean.class ), Type.getType( Object.class ), Type.getType( Object.class ) ),
-					false
-			);
-			branchCode = Opcodes.IFNE;
+			if ( persistentField.getType().isPrimitive() ) {
+				if ( persistentField.getType().represents( long.class ) ) {
+					methodVisitor.visitInsn( Opcodes.LCMP );
+				}
+				else if ( persistentField.getType().represents( float.class ) ) {
+					methodVisitor.visitInsn( Opcodes.FCMPL );
+				}
+				else if ( persistentField.getType().represents( double.class ) ) {
+					methodVisitor.visitInsn( Opcodes.DCMPL );
+				}
+				else {
+					methodVisitor.visitInsn( Opcodes.ISUB );
+				}
+				branchCode = Opcodes.IFEQ;
+			}
+			else {
+				methodVisitor.visitMethodInsn(
+						Opcodes.INVOKESTATIC,
+						Type.getInternalName( Objects.class ),
+						"deepEquals",
+						Type.getMethodDescriptor(
+								Type.BOOLEAN_TYPE,
+								OBJECT_TYPE,
+								OBJECT_TYPE
+						),
+						false
+				);
+				branchCode = Opcodes.IFNE;
+			}
 		}
 		Label skip = new Label();
 		methodVisitor.visitJumpInsn( branchCode, skip );
@@ -151,7 +212,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				Opcodes.INVOKEVIRTUAL,
 				managedCtClass.getInternalName(),
 				EnhancerConstants.TRACKER_CHANGER_NAME,
-				Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( String.class ) ),
+				Type.getMethodDescriptor( Type.VOID_TYPE, STRING_TYPE ),
 				false
 		);
 		// }
@@ -159,7 +220,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 		if ( implementationContext.getClassFileVersion().isAtLeast( ClassFileVersion.JAVA_V6 ) ) {
 			methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
 		}
-		return new Size( 1 + 2 * persistentField.getType().asErasure().getStackSize().getSize(), instrumentedMethod.getStackSize() );
+		return new Size( 3 + 2 * persistentField.getType().asErasure().getStackSize().getSize(), instrumentedMethod.getStackSize() );
 	}
 
 	@Override

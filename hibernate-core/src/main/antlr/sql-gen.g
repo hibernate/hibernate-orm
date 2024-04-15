@@ -199,7 +199,7 @@ orderExprs { String ordExp = null; String ordDir = null; String ordNul = null; }
 	    (dir:orderDirection { ordDir = #dir.getText(); })? (ordNul=nullOrdering)?
 	    // SQL Tokens can be passed through as-is.
 	    // These tokens could be mapping defined order by fragments which are already rendered via the dialect hook
-	        { out( #e.getType() == SQL_TOKEN ? ordExp : renderOrderByElement( ordExp, ordDir, ordNul ) ); }
+	        { out( #e.getType() == SQL_TOKEN && ordDir == null && ordNul == null ? ordExp : renderOrderByElement( ordExp, ordDir, ordNul ) ); }
 	    ( {out(", "); } orderExprs )?
 	;
 
@@ -509,6 +509,7 @@ parameter
 
 addrExpr
 	: #(r:DOT . .) { out(r); }
+	| #(fk:FK_REF .) { out(fk); }
 	| i:ALIAS_REF { out(i); }
 	| j:INDEX_OP { out(j); }
 	| v:RESULT_VARIABLE_REF { out(v); }

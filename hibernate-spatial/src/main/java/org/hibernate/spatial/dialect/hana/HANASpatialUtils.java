@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Locale;
 
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.ByteOrder;
@@ -22,6 +23,10 @@ import org.geolatte.geom.codec.WkbEncoder;
 public class HANASpatialUtils {
 
 	private static final int POSTGIS_SRID_FLAG = 0x20000000;
+
+	private HANASpatialUtils(){
+		//prevent instantiation of Utility class
+	}
 
 	@SuppressWarnings("resource")
 	public static Geometry<?> toGeometry(ResultSet rs, String name) throws SQLException {
@@ -36,7 +41,7 @@ public class HANASpatialUtils {
 		String columnName = null;
 		for ( int i = 1; i <= rs.getMetaData().getColumnCount(); i++ ) {
 			if ( name.equals( rs.getMetaData().getColumnLabel( i ) ) ||
-					name.toUpperCase().equals( rs.getMetaData().getColumnLabel( i ) ) ) {
+					name.toUpperCase( Locale.ENGLISH ).equals( rs.getMetaData().getColumnLabel( i ) ) ) {
 				tableName = rs.getMetaData().getTableName( i );
 				columnName = rs.getMetaData().getColumnName( i );
 			}
@@ -80,17 +85,20 @@ public class HANASpatialUtils {
 	}
 
 	private static ByteBuffer addCrsId(byte[] wkb, byte orderByte, int typeCode, int crsId) {
-		ByteBuffer buffer = ByteBuffer.allocate( wkb.length + 4 ); // original capacity + 4 bytes for the CRS ID
+		// original capacity + 4 bytes for the CRS ID
+		ByteBuffer buffer = ByteBuffer.allocate( wkb.length + 4 );
 		buffer.setByteOrder( ByteOrder.valueOf( orderByte ) );
 
-		buffer.put( orderByte ); // write byte order
+		// write byte order
+		buffer.put( orderByte );
 
-		buffer.putUInt( typeCode | POSTGIS_SRID_FLAG ); // set SRID flag
+		// set SRID flag
+		buffer.putUInt( typeCode | POSTGIS_SRID_FLAG );
 
-		buffer.putInt( crsId ); // write CRS ID
+		// write CRS ID
+		buffer.putInt( crsId );
 
 		// write remaining data
-
 		for ( int i = 5; i < wkb.length; i++ ) {
 			buffer.put( wkb[i] );
 		}

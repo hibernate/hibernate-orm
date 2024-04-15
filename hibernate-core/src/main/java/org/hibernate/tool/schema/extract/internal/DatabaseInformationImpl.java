@@ -14,6 +14,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
@@ -23,7 +24,7 @@ import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-import org.hibernate.tool.schema.internal.exec.ImprovedExtractionContextImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 /**
  * @author Steve Ebersole
@@ -31,29 +32,29 @@ import org.hibernate.tool.schema.internal.exec.ImprovedExtractionContextImpl;
 public class DatabaseInformationImpl
 		implements DatabaseInformation, ExtractionContext.DatabaseObjectAccess {
 	private final JdbcEnvironment jdbcEnvironment;
-	private final ImprovedExtractionContextImpl extractionContext;
+	private final SqlStringGenerationContext sqlStringGenerationContext;
+	private final ExtractionContext extractionContext;
 	private final InformationExtractor extractor;
 
-	private final Map<QualifiedSequenceName, SequenceInformation> sequenceInformationMap = new HashMap<QualifiedSequenceName, SequenceInformation>();
+	private final Map<QualifiedSequenceName, SequenceInformation> sequenceInformationMap = new HashMap<>();
 
 	public DatabaseInformationImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Namespace.Name defaultNamespace) throws SQLException {
+			SchemaManagementTool tool) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
-
-		this.extractionContext = new ImprovedExtractionContextImpl(
+		this.sqlStringGenerationContext = sqlStringGenerationContext;
+		this.extractionContext = tool.getExtractionTool().createExtractionContext(
 				serviceRegistry,
 				jdbcEnvironment,
+				sqlStringGenerationContext,
 				ddlTransactionIsolator,
-				defaultNamespace.getCatalog(),
-				defaultNamespace.getSchema(),
 				this
 		);
 
-		// todo : make this pluggable
-		this.extractor = new InformationExtractorJdbcDatabaseMetaDataImpl( extractionContext );
+		this.extractor = tool.getExtractionTool().createInformationExtractor( extractionContext );
 
 		// because we do not have defined a way to locate sequence info by name
 		initializeSequences();
@@ -79,12 +80,13 @@ public class DatabaseInformationImpl
 
 	@Override
 	public boolean catalogExists(Identifier catalog) {
-		return extractor.catalogExists( catalog );
+		return extractor.catalogExists( sqlStringGenerationContext.catalogWithDefault( catalog ) );
 	}
 
 	@Override
 	public boolean schemaExists(Namespace.Name namespace) {
-		return extractor.schemaExists( namespace.getCatalog(), namespace.getSchema() );
+		return extractor.schemaExists( sqlStringGenerationContext.catalogWithDefault( namespace.getCatalog() ),
+				sqlStringGenerationContext.schemaWithDefault( namespace.getSchema() ) );
 	}
 
 	@Override
@@ -109,15 +111,16 @@ public class DatabaseInformationImpl
 		}
 
 		return extractor.getTable(
-				tableName.getCatalogName(),
-				tableName.getSchemaName(),
+				sqlStringGenerationContext.catalogWithDefault( tableName.getCatalogName() ),
+				sqlStringGenerationContext.schemaWithDefault( tableName.getSchemaName() ),
 				tableName.getTableName()
 		);
 	}
 
 	@Override
 	public NameSpaceTablesInformation getTablesInformation(Namespace namespace) {
-		return extractor.getTables( namespace.getPhysicalName().getCatalog(), namespace.getPhysicalName().getSchema() );
+		return extractor.getTables( sqlStringGenerationContext.catalogWithDefault( namespace.getPhysicalName().getCatalog() ),
+				sqlStringGenerationContext.schemaWithDefault( namespace.getPhysicalName().getSchema() ) );
 	}
 
 	@Override

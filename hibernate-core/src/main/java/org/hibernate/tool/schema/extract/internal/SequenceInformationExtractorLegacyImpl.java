@@ -36,50 +36,31 @@ public class SequenceInformationExtractorLegacyImpl implements SequenceInformati
 			return SequenceInformationExtractorNoOpImpl.INSTANCE.extractMetadata( extractionContext );
 		}
 
-		final IdentifierHelper identifierHelper = extractionContext.getJdbcEnvironment().getIdentifierHelper();
-		final Statement statement = extractionContext.getJdbcConnection().createStatement();
-		try {
-			final ResultSet resultSet = statement.executeQuery( lookupSql );
-			try {
-				final List<SequenceInformation> sequenceInformationList = new ArrayList<>();
-				while ( resultSet.next() ) {
-					sequenceInformationList.add(
-							new SequenceInformationImpl(
-									new QualifiedSequenceName(
-											identifierHelper.toIdentifier(
-												resultSetCatalogName( resultSet )
-											),
-											identifierHelper.toIdentifier(
-													resultSetSchemaName( resultSet )
-											),
-											identifierHelper.toIdentifier(
-													resultSetSequenceName( resultSet )
-											)
-									),
-									resultSetStartValueSize( resultSet ),
-									resultSetMinValue( resultSet ),
-									resultSetMaxValue( resultSet ),
-									resultSetIncrementValue( resultSet )
-							)
-					);
+		return extractionContext.getQueryResults(
+				lookupSql,
+				null,
+				(ExtractionContext.ResultSetProcessor<Iterable<SequenceInformation>>) resultSet -> {
+					final IdentifierHelper identifierHelper = extractionContext.getJdbcEnvironment()
+							.getIdentifierHelper();
+					final List<SequenceInformation> sequenceInformationList = new ArrayList<>();
+					while ( resultSet.next() ) {
+						sequenceInformationList.add(
+								new SequenceInformationImpl(
+										new QualifiedSequenceName(
+												identifierHelper.toIdentifier( resultSetCatalogName( resultSet ) ),
+												identifierHelper.toIdentifier( resultSetSchemaName( resultSet ) ),
+												identifierHelper.toIdentifier( resultSetSequenceName( resultSet ) )
+										),
+										resultSetStartValueSize( resultSet ),
+										resultSetMinValue( resultSet ),
+										resultSetMaxValue( resultSet ),
+										resultSetIncrementValue( resultSet )
+								)
+						);
+					}
+					return sequenceInformationList;
 				}
-				return sequenceInformationList;
-			}
-			finally {
-				try {
-					resultSet.close();
-				}
-				catch (SQLException ignore) {
-				}
-			}
-		}
-		finally {
-			try {
-				statement.close();
-			}
-			catch (SQLException ignore) {
-			}
-		}
+		);
 	}
 
 	protected String sequenceNameColumn() {

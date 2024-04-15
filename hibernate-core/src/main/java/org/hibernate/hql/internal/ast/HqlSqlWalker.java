@@ -45,6 +45,7 @@ import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.FromElementFactory;
 import org.hibernate.hql.internal.ast.tree.FromReferenceNode;
 import org.hibernate.hql.internal.ast.tree.IdentNode;
+import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.hql.internal.ast.tree.IndexNode;
 import org.hibernate.hql.internal.ast.tree.InsertStatement;
 import org.hibernate.hql.internal.ast.tree.IntoClause;
@@ -524,6 +525,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
+	private boolean hasAnyForcibleNotFoundImplicitJoins;
+
+	public void registerForcibleNotFoundImplicitJoin(ImpliedFromElement impliedJoin) {
+		hasAnyForcibleNotFoundImplicitJoins = true;
+	}
+
+	public boolean hasAnyForcibleNotFoundImplicitJoins() {
+		return hasAnyForcibleNotFoundImplicitJoins;
+	}
+
 	private static class WithClauseVisitor implements NodeTraverser.VisitationStrategy {
 		private final FromElement joinFragment;
 		private final QueryTranslatorImpl queryTranslatorImpl;
@@ -557,7 +568,9 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				}
 				else {
 					referencedFromElement = fromElement;
-					joinAlias = extractAppliedAlias( dotNode );
+					if ( fromElement != null ) {
+						joinAlias = extractAppliedAlias( dotNode );
+					}
 					// TODO : temporary
 					//      needed because currently persister is the one that
 					// creates and renders the join fragments for inheritance
@@ -722,7 +735,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			final FromElement fromElement = (FromElement) fromElements.get( 0 );
 			try {
 				LOG.tracev( "Attempting to resolve property [{0}] as a non-qualified ref", identText );
-				return fromElement.getPropertyMapping( identText ).toType( identText ) != null;
+				return fromElement.isNonQualifiedPropertyRef( identText );
 			}
 			catch (QueryException e) {
 				// Should mean that no such property was found
@@ -895,7 +908,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			}
 
 			final String fragment = capableGenerator.determineBulkInsertionIdentifierGenerationSelectFragment(
-					sessionFactoryHelper.getFactory().getDialect()
+					sessionFactoryHelper.getFactory().getSqlStringGenerationContext()
 			);
 			if ( fragment != null ) {
 				// we got a fragment from the generator, so alter the sql tree...
@@ -1503,7 +1516,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	public Dialect getDialect() {
-		return sessionFactoryHelper.getFactory().getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		return sessionFactoryHelper.getFactory().getFastSessionServices().dialect;
 	}
 
 	public static void panic() {

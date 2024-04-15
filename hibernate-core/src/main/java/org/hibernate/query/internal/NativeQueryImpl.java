@@ -47,6 +47,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
@@ -612,6 +613,9 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		}
 		else if ( LockModeType.class.isInstance( value ) ) {
 			applyLockModeTypeHint( (LockModeType) value );
+		}
+		else if ( String.class.isInstance( value ) ) {
+			applyHibernateLockModeHint( LockModeTypeHelper.interpretLockMode( value ) );
 		}
 		else {
 			throw new IllegalArgumentException(

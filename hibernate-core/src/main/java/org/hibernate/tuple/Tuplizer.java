@@ -27,10 +27,6 @@ import org.hibernate.property.access.spi.Getter;
  * <li>extract and inject values through getters/setter, or by direct field access, etc
  * </ul>
  * </p>
- * That same piece of data might also be represented as a DOM structure, using
- * the tuplizer associated with the DOM4J entity-mode, which would generate instances
- * of {@link org.dom4j.Element} as the data structure and know how to access the
- * values as either nested {@link org.dom4j.Element}s or as {@link org.dom4j.Attribute}s.
  *
  * @see org.hibernate.tuple.entity.EntityTuplizer
  * @see org.hibernate.tuple.component.ComponentTuplizer

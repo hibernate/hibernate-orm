@@ -30,6 +30,7 @@ dependencies {
 
     testCompile libraries.junit
     testCompile libraries.jpa
+    testCompile libraries.validation
     testCompile project( ':hibernate-core' )
 }
 

@@ -465,7 +465,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 	@Override
 	public SessionFactory build() {
-		metadata.validate();
 		final StandardServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		BytecodeProvider bytecodeProvider = serviceRegistry.getService( BytecodeProvider.class );
 		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );

@@ -7,6 +7,7 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.util.BitSet;
+import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.ConstructorResult;
 import javax.persistence.Entity;
@@ -36,14 +37,13 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected Configuration constructAndConfigureConfiguration() {
-		Configuration configuration = super.constructAndConfigureConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		//tag::basic-custom-type-register-UserType-example[]
 		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
 			typeContributions.contributeType( BitSetUserType.INSTANCE, "bitset");
 		} );
 		//end::basic-custom-type-register-UserType-example[]
-		return configuration;
 	}
 
 	@Test
@@ -95,7 +95,7 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		query =
 			"SELECT " +
 			"   pr.id AS \"pr.id\", " +
-			"   pr.bitset AS \"pr.bitset\" " +
+			"   pr.bitset_col AS \"pr.bitset\" " +
 			"FROM Product pr " +
 			"WHERE pr.id = :id",
 		resultSetMapping = "Person"
@@ -118,6 +118,7 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		private Integer id;
 
 		@Type( type = "bitset" )
+		@Column(name = "bitset_col")
 		private BitSet bitSet;
 
 		//Constructors, getters, and setters are omitted for brevity

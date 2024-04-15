@@ -44,7 +44,7 @@ public class GeoDBDataSourceUtils extends DataSourceUtils {
 		String errorMsg = "Problem initializing GeoDB.";
 		try {
 			Class<?> geoDB = Thread.currentThread().getContextClassLoader().loadClass( "geodb.GeoDB" );
-			Method m = geoDB.getDeclaredMethod( "InitGeoDB", new Class[] { Connection.class } );
+			Method m = geoDB.getDeclaredMethod( "InitGeoDB", Connection.class );
 			m.invoke( null, conn );
 		}
 		catch (ClassNotFoundException e) {

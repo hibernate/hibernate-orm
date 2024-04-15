@@ -77,11 +77,11 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 						&& !field.getName().equals( "this$0" ) ) {
 
 					log.debugf(
-							"Extended enhancement: Transforming access to field [%s.%s] from method [%s#%s]",
-							field.getType().asErasure(),
+							"Extended enhancement: Transforming access to field [%s#%s] from method [%s#%s()]",
+							declaredOwnerType.getName(),
 							field.getName(),
-							field.getName(),
-							name
+							instrumentedType.getName(),
+							instrumentedMethod.getName()
 					);
 
 					switch ( opcode ) {
@@ -95,6 +95,11 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 							);
 							return;
 						case Opcodes.PUTFIELD:
+							if ( field.getFieldDescription().isFinal() ) {
+								// Final fields will only be written to from the constructor,
+								// so there's no point trying to replace final field writes with a method call.
+								break;
+							}
 							methodVisitor.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									owner,
@@ -107,9 +112,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 							throw new EnhancementException( "Unexpected opcode: " + opcode );
 					}
 				}
-				else {
-					super.visitFieldInsn( opcode, owner, name, desc );
-				}
+				super.visitFieldInsn( opcode, owner, name, desc );
 			}
 		};
 	}

@@ -19,6 +19,7 @@ import javax.persistence.Version;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -140,15 +141,20 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 			settings.put( AvailableSettings.JPA_CACHING_COMPLIANCE, "true" );
 		}
 
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
-				.applySettings( settings );
-
-		return (SessionFactoryImplementor) new MetadataSources( ssrb.build() )
-				.addAnnotatedClass( Person.class )
-				.addAnnotatedClass( VersionedPerson.class)
-				.buildMetadata()
-				.buildSessionFactory();
-
+		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySettings( settings )
+				.build();
+		try {
+			return (SessionFactoryImplementor) new MetadataSources( serviceRegistry )
+					.addAnnotatedClass( Person.class )
+					.addAnnotatedClass( VersionedPerson.class )
+					.buildMetadata()
+					.buildSessionFactory();
+		}
+		catch (Throwable t) {
+			serviceRegistry.close();
+			throw t;
+		}
 	}
 
 	@After

@@ -53,4 +53,13 @@ public interface ValueGeneration extends Serializable {
 	 * @return The column value to be used in the SQL.
 	 */
 	public String getDatabaseGeneratedReferencedColumnValue();
+
+	/**
+	 * Does this value generation occur with the given timing?
+	 */
+	default boolean timingMatches(GenerationTiming timing) {
+		GenerationTiming generationTiming = getGenerationTiming();
+		return timing == GenerationTiming.INSERT && generationTiming.includesInsert()
+			|| timing == GenerationTiming.ALWAYS && generationTiming.includesUpdate();
+	}
 }

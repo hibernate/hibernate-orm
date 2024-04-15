@@ -127,16 +127,10 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 	}
 
 	public static class TestBatchBuilder extends BatchBuilderImpl {
-		private int jdbcBatchSize;
-
-		@Override
-		public void setJdbcBatchSize(int jdbcBatchSize) {
-			this.jdbcBatchSize = jdbcBatchSize;
-		}
 
 		@Override
 		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-			return buildBatchTest( key, jdbcCoordinator, jdbcBatchSize );
+			return buildBatchTest( key, jdbcCoordinator, getJdbcBatchSize() );
 		}
 
 		protected BatchingBatch buildBatchTest(BatchKey key, JdbcCoordinator jdbcCoordinator, int jdbcBatchSize) {

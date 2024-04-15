@@ -136,7 +136,9 @@ public class SchemaValidator {
 
 		if ( parsedArgs.propertiesFile != null ) {
 			Properties properties = new Properties();
-			properties.load( new FileInputStream( parsedArgs.propertiesFile ) );
+			try ( final FileInputStream fis = new FileInputStream( parsedArgs.propertiesFile ) ) {
+				properties.load( fis );
+			}
 			ssrBuilder.applySettings( properties );
 		}
 

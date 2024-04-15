@@ -13,7 +13,7 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.BytecodeLogger;
+import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -35,6 +35,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	private final boolean inLineDirtyChecking;
 	private Set<String> writtenFieldNames;
+	private Set<String> collectionAttributeNames;
 
 	private Status status;
 
@@ -57,11 +58,23 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		this.entityKey = entityKey;
 
 		final EntityPersister entityPersister = session.getFactory().getMetamodel().entityPersister( entityName );
+		if ( entityPersister.hasCollections() ) {
+			Type[] propertyTypes = entityPersister.getPropertyTypes();
+			collectionAttributeNames = new HashSet<>();
+			for ( int i = 0; i < propertyTypes.length; i++ ) {
+				Type propertyType = propertyTypes[i];
+				if ( propertyType.isCollectionType() ) {
+					collectionAttributeNames.add( entityPersister.getPropertyNames()[i] );
+				}
+			}
+		}
+
 		this.inLineDirtyChecking = entityPersister.getEntityMode() == EntityMode.POJO
 				&& SelfDirtinessTracker.class.isAssignableFrom( entityPersister.getMappedClass() );
 		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to initialise the entity
-		// 	because the pre-computed update statement contains even not dirty properties and so we need all the values
-		initializeBeforeWrite = !inLineDirtyChecking || !entityPersister.getEntityMetamodel().isDynamicUpdate();
+		// because the pre-computed update statement contains even not dirty properties and so we need all the values
+		// we have to initialise it even if it's versioned to fetch the current version
+		initializeBeforeWrite = !( inLineDirtyChecking && entityPersister.getEntityMetamodel().isDynamicUpdate() ) || entityPersister.isVersioned();
 		status = Status.UNINITIALIZED;
 	}
 
@@ -158,7 +171,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public Object forceInitialize(Object target, String attributeName) {
-		BytecodeLogger.LOGGER.tracef(
+		BytecodeLogging.LOGGER.tracef(
 				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
 				entityKey.getEntityName(),
 				entityKey.getIdentifier(),
@@ -174,7 +187,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public Object forceInitialize(Object target, String attributeName, SharedSessionContractImplementor session, boolean isTemporarySession) {
-		BytecodeLogger.LOGGER.tracef(
+		BytecodeLogging.LOGGER.tracef(
 				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
 				entityKey.getEntityName(),
 				entityKey.getIdentifier(),
@@ -245,7 +258,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			return newValue;
 		}
 
-		if ( initializeBeforeWrite ) {
+		if ( initializeBeforeWrite
+				|| ( collectionAttributeNames != null && collectionAttributeNames.contains( attributeName ) ) ) {
 			// we need to force-initialize the proxy - the fetch group to which the `attributeName` belongs
 			try {
 				forceInitialize( target, attributeName );
@@ -267,6 +281,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 				writtenFieldNames = new HashSet<>();
 			}
 			writtenFieldNames.add( attributeName );
+
+			( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( attributeName );
 		}
 
 		return newValue;
@@ -321,6 +337,10 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	private void setInitialized() {
 		status = Status.INITIALIZED;
+	}
+
+	public boolean hasWrittenFieldNames() {
+		return writtenFieldNames != null && writtenFieldNames.size() != 0;
 	}
 
 	private enum Status {

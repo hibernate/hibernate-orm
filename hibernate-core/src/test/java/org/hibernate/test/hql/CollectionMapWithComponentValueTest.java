@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.hql;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -243,6 +244,7 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 
 	@Embeddable
 	public static class EmbeddableValue {
+		@Column(name = "val")
 		Integer value;
 
 		EmbeddableValue() {

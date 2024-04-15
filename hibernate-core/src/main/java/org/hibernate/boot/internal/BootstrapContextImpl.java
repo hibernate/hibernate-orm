@@ -30,7 +30,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
+import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
@@ -83,10 +83,10 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		this.classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
-		this.hcannReflectionManager = generateHcannReflectionManager();
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		this.hcannReflectionManager = generateHcannReflectionManager();
 
 		this.jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings(), false );
 		this.scanOptions = new StandardScanOptions(
@@ -309,7 +309,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private JavaReflectionManager generateHcannReflectionManager() {
 		final JavaReflectionManager reflectionManager = new JavaReflectionManager();
-		reflectionManager.setMetadataProvider( new JPAMetadataProvider( this ) );
+		reflectionManager.setMetadataProvider( new JPAXMLOverriddenMetadataProvider( this ) );
 		return reflectionManager;
 	}
 

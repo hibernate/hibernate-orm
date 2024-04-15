@@ -87,9 +87,14 @@ logger.lifecycle "Java versions for main code: " + gradle.ext.javaVersions.main
 logger.lifecycle "Java versions for tests: " + gradle.ext.javaVersions.test
 
 include 'hibernate-core'
+include 'hibernate-core-jakarta'
 include 'hibernate-entitymanager'
 include 'hibernate-testing'
+include 'hibernate-testing-jakarta'
+include 'hibernate-transaction-client'
+
 include 'hibernate-envers'
+include 'hibernate-envers-jakarta'
 include 'hibernate-spatial'
 
 include 'hibernate-java8'
@@ -126,6 +131,10 @@ include 'release'
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
 project(':metamodel-generator').name = 'hibernate-jpamodelgen'
+
+include 'metamodel-generator-jakarta'
+project(':metamodel-generator-jakarta').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator-jakarta")
+project(':metamodel-generator-jakarta').name = 'hibernate-jpamodelgen-jakarta'
 
 include 'hibernate-gradle-plugin'
 project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-gradle-plugin")

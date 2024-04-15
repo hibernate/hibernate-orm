@@ -75,7 +75,7 @@ public class TableGeneratorVisibilityTest extends BaseCoreFunctionalTestCase {
 			name = "table-generator",
 			table = "table_identifier",
 			pkColumnName = "identifier",
-			valueColumnName = "value",
+			valueColumnName = "val",
 			allocationSize = 5
 	)
 	public static class TestEntity3 {
@@ -84,7 +84,7 @@ public class TableGeneratorVisibilityTest extends BaseCoreFunctionalTestCase {
 				name = "table-generator-2",
 				table = "table_identifier_2",
 				pkColumnName = "identifier",
-				valueColumnName = "value",
+				valueColumnName = "val",
 				allocationSize = 5
 		)
 		@GeneratedValue(strategy = GenerationType.TABLE, generator = "table-generator")

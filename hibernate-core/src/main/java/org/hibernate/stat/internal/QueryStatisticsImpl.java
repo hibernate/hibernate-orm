@@ -202,6 +202,10 @@ public class QueryStatisticsImpl implements QueryStatistics {
 		planCacheHitCount.increment();
 	}
 
+	void incrementPlanCacheMissCount() {
+		planCacheMissCount.increment();
+	}
+
 	public String toString() {
 		return "QueryStatistics"
 				+ "[query=" + query

@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -191,6 +192,14 @@ public abstract class AbstractServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R getService(Class<R> serviceRole) {
+		//Fast-path for ClassLoaderService as it's extremely hot during bootstrap
+		//(and after bootstrap service loading performance is less interesting as it's
+		//ideally being cached by long term consumers)
+		if ( ClassLoaderService.class.equals( serviceRole ) ) {
+			if ( parent != null ) {
+				return parent.getService( serviceRole );
+			}
+		}
 		// TODO: should an exception be thrown if active == false???
 		R service = serviceRole.cast( initializedServiceByRole.get( serviceRole ) );
 		if ( service != null ) {

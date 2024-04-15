@@ -78,4 +78,19 @@ public interface PersistentAttributeInterceptor extends InterceptorImplementor {
 	@Deprecated
 	default void attributeInitialized(String name) {
 	}
+
+	/**
+	 *
+	 * Callback from the enhanced class that an attribute has been loaded
+	 *
+	 * @deprecated Interceptors that deal with
+	 * 	 * lazy state should implement {@link BytecodeLazyAttributeInterceptor}
+	 *
+	 * @param fieldName
+	 * @return true id the attribute is loaded false otherwise
+	 */
+	@Deprecated
+	default boolean isAttributeLoaded(String fieldName){
+		return false;
+	}
 }

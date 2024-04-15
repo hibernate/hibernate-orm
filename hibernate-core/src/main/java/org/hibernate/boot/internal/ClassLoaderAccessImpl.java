@@ -85,6 +85,7 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 		// classes in any of these packages are safe to load through the "live" ClassLoader
 		return name.startsWith( "java." )
 				|| name.startsWith( "javax." )
+				|| name.startsWith( "jakarta." )
 				|| name.startsWith( "org.hibernate." );
 
 	}

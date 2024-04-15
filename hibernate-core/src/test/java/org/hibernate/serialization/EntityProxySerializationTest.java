@@ -67,7 +67,7 @@ public class EntityProxySerializationTest extends BaseCoreFunctionalTestCase {
 		final Transaction t = s.beginTransaction();
 
 		try {
-			final Number count = (Number) s.createQuery("SELECT count(ID) FROM SimpleEntity").getSingleResult();
+			final Number count = (Number) s.createQuery("SELECT count(e.id) FROM SimpleEntity e").getSingleResult();
 			if (count.longValue() > 0L) {
 				// entity already added previously
 				return;

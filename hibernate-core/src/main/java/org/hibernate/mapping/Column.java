@@ -117,8 +117,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 		if ( lastLetter == -1 ) {
 			alias = "column";
 		}
-		else if ( name.length() > lastLetter + 1 ) {
-			alias = name.substring( 0, lastLetter + 1 );
+		else if ( alias.length() > lastLetter + 1 ) {
+			alias = alias.substring( 0, lastLetter + 1 );
 		}
 
 		boolean useRawName = name.length() + suffix.length() <= dialect.getMaxAliasLength()

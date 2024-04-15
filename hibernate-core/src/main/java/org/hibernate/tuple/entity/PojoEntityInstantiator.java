@@ -6,12 +6,10 @@
  */
 package org.hibernate.tuple.entity;
 
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.PojoInstantiator;
 
@@ -35,7 +33,9 @@ public class PojoEntityInstantiator extends PojoInstantiator {
 		this.entityMetamodel = entityMetamodel;
 
 		this.proxyInterface = persistentClass.getProxyInterface();
-		this.applyBytecodeInterception = PersistentAttributeInterceptable.class.isAssignableFrom( persistentClass.getMappedClass() );
+
+		//TODO this PojoEntityInstantiator appears to not be reused ?!
+		this.applyBytecodeInterception = ManagedTypeHelper.isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class PojoEntityInstantiator extends PojoInstantiator {
 						.getLazyAttributeNames(),
 				null
 		);
-		( (PersistentAttributeInterceptable) entity ).$$_hibernate_setInterceptor( interceptor );
+		ManagedTypeHelper.asPersistentAttributeInterceptable( entity ).$$_hibernate_setInterceptor( interceptor );
 		return entity;
 	}
 

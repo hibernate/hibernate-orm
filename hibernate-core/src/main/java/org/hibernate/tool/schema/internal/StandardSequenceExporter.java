@@ -7,9 +7,10 @@
 package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -23,26 +24,23 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Sequence sequence, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+	public String[] getSqlCreateStrings(Sequence sequence, Metadata metadata, SqlStringGenerationContext context) {
 		return dialect.getCreateSequenceStrings(
-				jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-						sequence.getName(),
-						jdbcEnvironment.getDialect()
-				),
+				getFormattedSequenceName( sequence.getName(), metadata, context ),
 				sequence.getInitialValue(),
 				sequence.getIncrementSize()
 		);
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Sequence sequence, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+	public String[] getSqlDropStrings(Sequence sequence, Metadata metadata, SqlStringGenerationContext context) {
 		return dialect.getDropSequenceStrings(
-				jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-						sequence.getName(),
-						jdbcEnvironment.getDialect()
-				)
+				getFormattedSequenceName( sequence.getName(), metadata, context )
 		);
+	}
+
+	protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata,
+			SqlStringGenerationContext context) {
+		return context.format( name );
 	}
 }

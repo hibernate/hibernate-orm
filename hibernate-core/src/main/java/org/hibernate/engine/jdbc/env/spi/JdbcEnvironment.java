@@ -55,7 +55,9 @@ public interface JdbcEnvironment extends Service {
 	 * Obtain support for formatting qualified object names.
 	 *
 	 * @return Qualified name support.
+	 * @deprecated Use a provided {@link org.hibernate.boot.model.relational.SqlStringGenerationContext} instead.
 	 */
+	@Deprecated
 	QualifiedObjectNameFormatter getQualifiedObjectNameFormatter();
 
 	/**
@@ -90,11 +92,12 @@ public interface JdbcEnvironment extends Service {
 	LobCreatorBuilder getLobCreatorBuilder();
 
 	/**
-	 * Find type information for the type identified by the given "JDBC type code".
-	 *
-	 * @param jdbcTypeCode The JDBC type code.
-	 *
-	 * @return The corresponding type info.
+	 * @deprecated This is currently not implemented an will likely be removed
+	 * (A default method is provided to facilitate removal from implementors)
 	 */
-	TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode);
+	@Deprecated
+	default TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode) {
+		throw new UnsupportedOperationException( "Support for getting TypeInfo from jdbcTypeCode has been disabled as it wasn't used. Use org.hibernate.engine.jdbc.spi.TypeInfo.extractTypeInfo as alternative, or report an issue and explain." );
+	}
+
 }

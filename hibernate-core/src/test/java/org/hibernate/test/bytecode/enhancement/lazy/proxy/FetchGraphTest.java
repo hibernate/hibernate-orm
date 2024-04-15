@@ -200,7 +200,6 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-13658")
 	public void testRandomAccess() {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -509,7 +508,6 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 	}
 

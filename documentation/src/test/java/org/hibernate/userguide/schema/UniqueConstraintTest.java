@@ -19,9 +19,11 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
@@ -44,6 +46,7 @@ public class UniqueConstraintTest extends BaseEntityManagerFunctionalTestCase {
     }
 
     @Test
+    @SkipForDialect(value = SybaseASE15Dialect.class, comment = "Missing constraint violation extractor")
     public void test() {
         //tag::schema-generation-columns-unique-constraint-persist-example[]
         Author _author = doInJPA( this::entityManagerFactory, entityManager -> {

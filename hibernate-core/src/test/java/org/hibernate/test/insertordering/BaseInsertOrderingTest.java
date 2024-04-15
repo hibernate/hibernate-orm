@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
@@ -39,6 +40,7 @@ abstract class BaseInsertOrderingTest extends BaseNonConfigCoreFunctionalTestCas
 	protected void addSettings(Map settings) {
 		settings.put( Environment.ORDER_INSERTS, "true" );
 		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
+		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
 		settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 	}
 

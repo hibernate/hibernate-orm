@@ -23,9 +23,14 @@ import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION;
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET;
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET;
+import static org.hibernate.cfg.AvailableSettings.LOADED_CLASSES;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -40,13 +45,13 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 
 	protected Map getConfig() {
 		final Map<Object, Object> config = Environment.getProperties();
-		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
-		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
-		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
+		config.put( HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
+		config.put( HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
+		config.put( HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
 		ArrayList<Class> classes = new ArrayList<Class>();
 
 		classes.addAll( Arrays.asList( new Class[] {TestEntity.class} ) );
-		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, classes );
+		config.put( LOADED_CLASSES, classes );
 		return config;
 	}
 
@@ -61,6 +66,13 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 				new BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
 				getConfig()
 		);
+	}
+
+	@After
+	public void destroy() {
+		if ( entityManagerFactoryBuilder != null ) {
+			entityManagerFactoryBuilder.cancel();
+		}
 	}
 
 	@Test

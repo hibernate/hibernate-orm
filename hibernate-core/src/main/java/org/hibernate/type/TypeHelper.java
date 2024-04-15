@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.EntityMode;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -245,6 +246,19 @@ public class TypeHelper {
 				Object[] origComponentValues = original[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( original[i], session );
 				Object[] targetComponentValues = target[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( target[i], session );
 				replaceAssociations( origComponentValues, targetComponentValues, subtypes, session, null, copyCache, foreignKeyDirection );
+				final Object[] objects = replaceAssociations(
+						origComponentValues,
+						targetComponentValues,
+						subtypes,
+						session,
+						null,
+						copyCache,
+						foreignKeyDirection
+				);
+				if ( componentType.isMutable() && target[i] != null && objects != null ) {
+					// Need to account for entity mode on the CompositeType interface, that seems not been used by any implementation
+					componentType.setPropertyValues( target[i], objects, EntityMode.POJO );
+				}
 				copied[i] = target[i];
 			}
 			else if ( !types[i].isAssociationType() ) {

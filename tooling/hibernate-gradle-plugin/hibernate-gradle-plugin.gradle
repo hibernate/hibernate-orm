@@ -16,7 +16,6 @@ apply plugin: 'maven'
 dependencies {
 	compile( project( ':hibernate-core' ) )
 	compile( libraries.jpa )
-	compile( libraries.javassist )
 	compile( libraries.byteBuddy )
 	compile gradleApi()
 	compile localGroovy()

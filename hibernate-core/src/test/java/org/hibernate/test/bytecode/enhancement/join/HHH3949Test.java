@@ -23,6 +23,7 @@ import javax.persistence.Table;
 import java.util.List;
 
 import static org.hibernate.Hibernate.isInitialized;
+import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -131,6 +132,11 @@ public class HHH3949Test extends BaseCoreFunctionalTestCase {
         for ( Person person : persons ) {
             assertTrue( isInitialized( person ) );
             if ( shouldHaveVehicle( person ) ) {
+                // We used a "join fetch", so the vehicle must be initialized
+                // before we even call the getter
+                // (which could trigger lazy initialization if the join fetch didn't work).
+                assertTrue( isPropertyInitialized( person, "vehicle" ) );
+
                 assertNotNull( person.getVehicle() );
                 assertTrue( isInitialized( person.getVehicle() ) );
                 assertNotNull( person.getVehicle().getDriver() );
@@ -146,6 +152,11 @@ public class HHH3949Test extends BaseCoreFunctionalTestCase {
         }
         for ( Vehicle vehicle : vehicles ) {
             if ( shouldHaveDriver( vehicle ) ) {
+                // We used a "join fetch", so the drover must be initialized
+                // before we even call the getter
+                // (which could trigger lazy initialization if the join fetch didn't work).
+                assertTrue( isPropertyInitialized( vehicle, "driver" ) );
+
                 assertNotNull( vehicle.getDriver() );
                 assertNotNull( vehicle.getDriver().getVehicle() );
             }

@@ -31,6 +31,12 @@
             <property name="message" value="Line has leading space characters; indentation should be performed with tabs only." />
         </module>
 
+        <module name="Regexp">
+            <property name="format" value="/^(master|slave)$/"/>
+            <property name="illegalPattern" value="true"/>
+            <property name="message" value="Conscious Language (use of terms 'master' or 'slave' not allowed)"/>
+        </module>
+
         <module name="MissingDeprecated" />
 
         <module name="MissingOverride" />

@@ -20,6 +20,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
@@ -138,19 +140,21 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 			} );
 			inTransaction( session -> {
 				session.doWork( connection -> {
-					final PreparedStatement statement = connection.prepareStatement(
+					try (PreparedStatement statement = connection.prepareStatement(
 							"SELECT " + PROPERTY_COLUMN_NAME + " FROM " + ENTITY_NAME + " WHERE " + ID_COLUMN_NAME + " = ?"
-					);
-					statement.setInt( 1, 1 );
-					statement.execute();
-					final ResultSet resultSet = statement.getResultSet();
-					resultSet.next();
-					Object nativeRead = getActualJdbcValue( resultSet, 1 );
-					assertEquals(
-							"Values written by Hibernate ORM should match the original value (same day, hour, ...)",
-							getExpectedJdbcValueAfterHibernateWrite(),
-							nativeRead
-					);
+					)) {
+						statement.setInt( 1, 1 );
+						statement.execute();
+						try (ResultSet resultSet = statement.getResultSet()) {
+							resultSet.next();
+							Object nativeRead = getActualJdbcValue( resultSet, 1 );
+							assertEquals(
+									"Values written by Hibernate ORM should match the original value (same day, hour, ...)",
+									getExpectedJdbcValueAfterHibernateWrite(),
+									nativeRead
+							);
+						}
+					}
 				} );
 			} );
 		} );
@@ -164,13 +168,14 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
 				session.doWork( connection -> {
-					final PreparedStatement statement = connection.prepareStatement(
+					try (PreparedStatement statement = connection.prepareStatement(
 							"INSERT INTO " + ENTITY_NAME + " (" + ID_COLUMN_NAME + ", " + PROPERTY_COLUMN_NAME + ") "
 							+ " VALUES ( ? , ? )"
-					);
-					statement.setInt( 1, 1 );
-					setJdbcValueForNonHibernateWrite( statement, 2 );
-					statement.execute();
+					)) {
+						statement.setInt( 1, 1 );
+						setJdbcValueForNonHibernateWrite( statement, 2 );
+						statement.execute();
+					}
 				} );
 			} );
 			inTransaction( session -> {
@@ -261,6 +266,13 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		protected AbstractParametersBuilder() {
 			dialect = determineDialect();
 			remappingDialectClasses.add( null ); // Always test without remapping
+		}
+
+		public S skippedForDialects(Predicate<Dialect> skipPredicate, Consumer<S> skippedIfDialectMatchesClasses) {
+			if ( !skipPredicate.test( dialect ) ) {
+				skippedIfDialectMatchesClasses.accept( thisAsS() );
+			}
+			return thisAsS();
 		}
 
 		public S skippedForDialects(List<Class<?>> dialectClasses, Consumer<S> skippedIfDialectMatchesClasses) {

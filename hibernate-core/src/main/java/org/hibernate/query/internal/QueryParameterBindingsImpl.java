@@ -63,6 +63,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	private Map<QueryParameter, QueryParameterBinding> parameterBindingMap;
 	private Map<QueryParameter, QueryParameterListBinding> parameterListBindingMap;
 	private Set<QueryParameter> parametersConvertedToListBindings;
+	private Set<QueryParameter> syntheticParametersFromListBindings;
 
 	public static QueryParameterBindingsImpl from(
 			ParameterMetadata parameterMetadata,
@@ -514,6 +515,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			return null;
 		}
 
+		if ( syntheticParametersFromListBindings != null ) {
+			// Clean up parameters from previous query executions
+			parameterBindingMap.keySet().removeAll( syntheticParametersFromListBindings );
+			syntheticParametersFromListBindings.clear();
+		}
+
 		if ( parameterListBindingMap == null || parameterListBindingMap.isEmpty() ) {
 			return queryString;
 		}
@@ -644,6 +651,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					expansionList.append( "?" ).append( syntheticParam.getPosition() );
 				}
 
+				registerSyntheticParamFromListBindings( syntheticParam );
 				final QueryParameterBinding syntheticBinding = makeBinding( entry.getValue().getBindType() );
 				syntheticBinding.setBindValue( bindValue );
 				parameterBindingMap.put( syntheticParam, syntheticBinding );
@@ -667,6 +675,13 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		}
 
 		return queryString;
+	}
+
+	private void registerSyntheticParamFromListBindings(QueryParameter<?> syntheticParam) {
+		if ( syntheticParametersFromListBindings == null ) {
+			syntheticParametersFromListBindings = new HashSet<>();
+		}
+		syntheticParametersFromListBindings.add( syntheticParam );
 	}
 
 	private int getMaxOrdinalPosition() {

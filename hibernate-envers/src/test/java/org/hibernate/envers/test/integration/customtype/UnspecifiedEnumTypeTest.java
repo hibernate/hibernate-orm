@@ -104,7 +104,7 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> values = session
-				.createNativeQuery( "SELECT enum1 e1, enum2 e2 FROM ENUM_ENTITY_AUD ORDER BY rev ASC" )
+				.createNativeQuery( "SELECT enum1 e1, enum2 e2 FROM ENUM_ENTITY_AUD ORDER BY REV ASC" )
 				.addScalar( "e1", IntegerType.INSTANCE )
 				.addScalar( "e2", IntegerType.INSTANCE )
 				.list();

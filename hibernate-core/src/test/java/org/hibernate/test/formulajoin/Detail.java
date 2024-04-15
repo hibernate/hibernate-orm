@@ -14,7 +14,7 @@ import java.io.Serializable;
  */
 public class Detail implements Serializable {
 	private Long id;
-	private Master master;
+	private Root root;
 	private int version;
 	private String details;
 	private boolean currentVersion;
@@ -37,11 +37,11 @@ public class Detail implements Serializable {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	public Master getMaster() {
-		return master;
+	public Root getRoot() {
+		return root;
 	}
-	public void setMaster(Master master) {
-		this.master = master;
+	public void setRoot(Root root) {
+		this.root = root;
 	}
 	public int getVersion() {
 		return version;

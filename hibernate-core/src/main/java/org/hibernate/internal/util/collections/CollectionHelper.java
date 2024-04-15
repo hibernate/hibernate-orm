@@ -220,7 +220,7 @@ public final class CollectionHelper {
 	 * The goal is to save memory.
 	 * @param set
 	 * @param <T>
-	 * @return
+	 * @return will never return null, but might return an immutable collection.
 	 */
 	public static <T> Set<T> toSmallSet(Set<T> set) {
 		switch ( set.size() ) {

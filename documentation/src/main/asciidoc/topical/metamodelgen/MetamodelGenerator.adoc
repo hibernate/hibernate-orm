@@ -12,7 +12,7 @@ static metamodel classes.
 For developers it is important that the task of the metamodel generation 
 can be automated.
 Hibernate Static Metamodel Generator is an annotation processor based on 
-http://jcp.org/en/jsr/detail?id=269[JSR_269] with the task of creating JPA 2
+https://jcp.org/en/jsr/detail?id=269[JSR_269] with the task of creating JPA 2
 static metamodel classes.
 The following example shows two JPA 2 entities `Order` and `Item`, together
 with the metamodel class `Order_` and a typesafe query.
@@ -111,7 +111,7 @@ persistence unit metadata:
 == Canonical Metamodel
 
 The structure of the metamodel classes is described in the JPA 2 
-(JSR 317) http://jcp.org/en/jsr/detail?id=317[specification], but for
+(JSR 317) https://jcp.org/en/jsr/detail?id=317[specification], but for
 completeness the definition is repeated in the following paragraphs.
 Feel free to skip ahead to the <<chapter-usage,usage chapter>>, if you
 are not interested into the gory details.
@@ -258,9 +258,9 @@ pass the processor option to the compiler plugin:
 ====
 The maven-compiler-plugin approach has the disadvantage that the maven compiler plugin 
 does currently not allow to specify multiple compiler arguments 
-(http://jira.codehaus.org/browse/MCOMPILER-62[MCOMPILER-62]) 
+(https://jira.codehaus.org/browse/MCOMPILER-62[MCOMPILER-62])
 and that messages from the Messenger API are suppressed 
-(http://jira.codehaus.org/browse/MCOMPILER-66[MCOMPILER-66]).
+(https://jira.codehaus.org/browse/MCOMPILER-66[MCOMPILER-66]).
 A better approach is to disable annotation processing for the compiler
 plugin as seen in below.
 

@@ -15,7 +15,7 @@
         <set name="sizesFromCombined" table="COLLECTION_TABLE" lazy="true" mutable="false"
              where="MAIN_CODE='MATERIAL' AND VALUE_CODE='SIZE'">
             <key column="MAIN_ID"/>
-            <element type="string" column="VALUE"/>
+            <element type="string" column="VAL"/>
         </set>
 
         <set name="ratings" table="MATERIAL_RATINGS" lazy="true" mutable="false">
@@ -35,13 +35,13 @@
         <set name="sizesFromCombined" table="COLLECTION_TABLE" lazy="true" mutable="false"
              where="MAIN_CODE='BUILDING' AND VALUE_CODE='SIZE'">
             <key column="MAIN_ID"/>
-            <element type="string" column="VALUE"/>
+            <element type="string" column="VAL"/>
        </set>
 
         <set name="ratingsFromCombined" table="COLLECTION_TABLE" lazy="true" mutable="false"
              where="MAIN_CODE='BUILDING' AND VALUE_CODE='RATING'">
             <key column="MAIN_ID"/>
-            <element type="string" column="VALUE"/>
+            <element type="string" column="VAL"/>
         </set>
 
     </class>

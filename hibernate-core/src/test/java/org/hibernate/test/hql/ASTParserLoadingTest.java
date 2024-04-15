@@ -646,6 +646,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-8901" )
 	@RequiresDialectFeature(DialectChecks.NotSupportsEmptyInListCheck.class)
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't like `x in (null)`")
 	public void testEmptyInListForDialectsNotSupportsEmptyInList() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -674,6 +675,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-2851")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
 	public void testMultipleRefsToSameParam() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1774,6 +1776,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-1830")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't see that the subquery is functionally dependent")
 	public void testAggregatedJoinAlias() {
 		Session s = openSession();
 		s.getTransaction().begin();

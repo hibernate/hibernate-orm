@@ -18,6 +18,7 @@ import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.access.AccessType;
@@ -372,6 +373,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		integrationSettings.put( AvailableSettings.JPA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_USER, ConnectionProviderBuilder.USER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
+		integrationSettings.put( "hibernate.connection.init_sql", "" );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
@@ -396,7 +398,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
 			{
-				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
 
 			@Override
@@ -437,7 +439,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
 			{
-				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
 
 			@Override
@@ -519,7 +521,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 				JdbcServices jdbcServices,
 				JdbcConnectionAccess connectionAccess,
 				MetadataImplementor metadata,
-				SessionFactoryOptions sessionFactoryOptions) {
+				SessionFactoryOptions sessionFactoryOptions,
+				SqlStringGenerationContext sqlStringGenerationContext) {
 
 		}
 

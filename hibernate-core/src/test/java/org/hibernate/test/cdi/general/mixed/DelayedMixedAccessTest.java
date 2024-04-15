@@ -42,14 +42,13 @@ public class DelayedMixedAccessTest implements BeanContainer.LifecycleOptions {
 
 	@Test
 	public void testDelayedMixedAccess() {
-		try ( final SeContainer cdiContainer = Helper.createSeContainer() ) {
-			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
-
+		try ( final SeContainer cdiContainer = Helper.createSeContainer();
+			final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.applySetting( AvailableSettings.DELAY_CDI_ACCESS, "true" )
-					.build();
+					.build() ) {
 
 			final BeanContainer beanContainer = CdiBeanContainerBuilder.fromBeanManagerReference(
 					cdiContainer.getBeanManager(),

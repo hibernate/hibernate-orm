@@ -8,11 +8,13 @@ package org.hibernate.jpa.test.metamodel;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
+@Table(name = "translation_tbl")
 public class Translation {
 	@Id
 	Integer id;

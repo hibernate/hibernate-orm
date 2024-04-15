@@ -9,6 +9,7 @@ package org.hibernate.engine.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -91,21 +92,22 @@ public class EntityEntryContext {
 		ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
 		final boolean alreadyAssociated = managedEntity != null;
 		if ( !alreadyAssociated ) {
-			if ( ManagedEntity.class.isInstance( entity ) ) {
+			if ( ManagedTypeHelper.isManagedEntity( entity ) ) {
+				final ManagedEntity managed = ManagedTypeHelper.asManagedEntity( entity );
 				if ( entityEntry.getPersister().isMutable() ) {
-					managedEntity = (ManagedEntity) entity;
+					managedEntity = managed;
 					// We know that managedEntity is not associated with the same PersistenceContext.
 					// Check if managedEntity is associated with a different PersistenceContext.
 					checkNotAssociatedWithOtherPersistenceContextIfMutable( managedEntity );
 				}
 				else {
 					// Create a holder for PersistenceContext-related data.
-					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
+					managedEntity = new ImmutableManagedEntityHolder( managed );
 					if ( immutableManagedEntityXref == null ) {
 						immutableManagedEntityXref = new IdentityHashMap<ManagedEntity, ImmutableManagedEntityHolder>();
 					}
 					immutableManagedEntityXref.put(
-							(ManagedEntity) entity,
+							managed,
 							(ImmutableManagedEntityHolder) managedEntity
 					);
 				}
@@ -150,8 +152,8 @@ public class EntityEntryContext {
 	}
 
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
-		if ( ManagedEntity.class.isInstance( entity ) ) {
-			final ManagedEntity managedEntity = (ManagedEntity) entity;
+		if ( ManagedTypeHelper.isManagedEntity( entity ) ) {
+			final ManagedEntity managedEntity = ManagedTypeHelper.asManagedEntity( entity );
 			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
 				// it is not associated
 				return null;
@@ -368,7 +370,10 @@ public class EntityEntryContext {
 
 		ManagedEntity node = head;
 		while ( node != null ) {
-			node.$$_hibernate_getEntityEntry().setLockMode( LockMode.NONE );
+			EntityEntry entityEntry = node.$$_hibernate_getEntityEntry();
+			if ( entityEntry != null ) {
+				entityEntry.setLockMode( LockMode.NONE );
+			}
 
 			node = node.$$_hibernate_getNextManagedEntity();
 		}

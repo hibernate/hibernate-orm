@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpa.test.criteria.components.joins;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -18,6 +19,7 @@ public class ManyToOneType {
 	@Id
 	@GeneratedValue
 	public Long id;
+	@Column(name = "val")
 	private String value;
 
 	public ManyToOneType() {

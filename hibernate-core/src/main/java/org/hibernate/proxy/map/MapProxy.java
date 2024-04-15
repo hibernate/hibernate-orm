@@ -116,7 +116,7 @@ public class MapProxy implements HibernateProxy, Map, Serializable {
 	private Object serializableProxy() {
 		return new SerializableMapProxy(
 				li.getEntityName(),
-				li.getIdentifier(),
+				li.getInternalIdentifier(),
 				( li.isReadOnlySettingAvailable() ? Boolean.valueOf( li.isReadOnly() ) : li.isReadOnlyBeforeAttachedToSession() ),
 				li.getSessionFactoryUuid(),
 				li.isAllowLoadOutsideTransaction()

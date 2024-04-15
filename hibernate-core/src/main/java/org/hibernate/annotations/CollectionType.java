@@ -20,9 +20,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see org.hibernate.usertype.UserCollectionType
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Custom handling for "collection types" will be handled differently in 6.0
  */
 @java.lang.annotation.Target({FIELD, METHOD})
 @Retention(RUNTIME)
+@Deprecated
 public @interface CollectionType {
 	/**
 	 * Names the type.

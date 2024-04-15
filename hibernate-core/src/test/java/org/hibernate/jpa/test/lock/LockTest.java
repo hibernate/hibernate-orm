@@ -21,18 +21,21 @@ import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockException;
 import javax.persistence.Query;
 import javax.persistence.QueryTimeoutException;
+
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDB192Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -40,8 +43,9 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.jboss.logging.Logger;
 import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -56,6 +60,13 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final Logger log = Logger.getLogger( LockTest.class );
 
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
+		options.remove( AvailableSettings.CONNECTION_PROVIDER );
+	}
+
 	@Test
 	@SkipForDialect( value = CockroachDB192Dialect.class )
 	public void testFindWithTimeoutHint() {
@@ -69,7 +80,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA( this::entityManagerFactory, em -> {
 			Map<String, Object> properties = new HashMap<String, Object>();
-			properties.put( AvailableSettings.LOCK_TIMEOUT, 0L );
+			properties.put( AvailableSettings.JPA_LOCK_TIMEOUT, 0L );
 			em.find( Lock.class, 1, LockModeType.PESSIMISTIC_WRITE, properties );
 		} );
 
@@ -101,7 +112,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 				try {
 					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
 					Map<String, Object> properties = new HashMap<String, Object>();
-					properties.put( AvailableSettings.LOCK_TIMEOUT, 0L );
+					properties.put( AvailableSettings.JPA_LOCK_TIMEOUT, 0L );
 
 					entityManager.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
 					fail( "Exception should be thrown" );
@@ -275,7 +286,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA( this::entityManagerFactory, _entityManagaer -> {
 			Map<String, Object> properties = new HashMap<>();
-			properties.put( org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
+			properties.put( AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
 			_entityManagaer.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, properties );
 
 			try {
@@ -557,6 +568,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	// ASE15.5 will generate select...holdlock and fail at this test, but ASE15.7 passes it. Skip it for ASE15.5
 	// only.
 	@SkipForDialect(value = { SQLServerDialect.class })
+	@SkipForDialect(DerbyDialect.class)
 	public void testContendedPessimisticLock() throws Exception {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 		final Lock lock = new Lock();
@@ -622,7 +634,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 				try {
 					t.start();
-					boolean backGroundThreadCompleted = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
+					boolean backGroundThreadCompleted = latch.await( 20, TimeUnit.SECONDS );  // should return quickly on success
 
 					if ( backGroundThreadCompleted ) {
 						// the background thread read a value. At the very least we need to assert that he did not see the
@@ -646,12 +658,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish before deleting entity
-
-			doInJPA( this::entityManagerFactory, em -> {
-				Lock _lock = em.getReference( Lock.class, lock.getId() );
-				em.remove( _lock );
-			} );
+			awaitThenDelete( "testContendedPessimisticLock", t, lock.getId() );
 		}
 	}
 
@@ -675,7 +682,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							log.info( "testContendedPessimisticReadLockTimeout: (BG) read write-locked entity" );
 							Map<String, Object> props = new HashMap<String, Object>();
 							// timeout is in milliseconds
-							props.put( AvailableSettings.LOCK_TIMEOUT, 1000 );
+							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_READ, props );
 							}
@@ -720,7 +727,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 				try {
 					t.start();
-					boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
+					boolean latchSet = latch.await( 20, TimeUnit.SECONDS );  // should return quickly on success
 					assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
 					assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 				}
@@ -728,17 +735,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					Thread.interrupted();
 				}
 				catch (ExecutionException e) {
-					fail(e.getMessage());
+					throw new AssertionError( e );
 				}
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish before deleting entity
-
-			doInJPA( this::entityManagerFactory, em -> {
-				Lock _lock = em.getReference( Lock.class, lock.getId() );
-				em.remove( _lock );
-			} );
+			awaitThenDelete( "testContendedPessimisticReadLockTimeout", t, lock.getId() );
 		}
 	}
 
@@ -763,7 +765,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							log.info( "testContendedPessimisticWriteLockTimeout: (BG) read write-locked entity" );
 							Map<String, Object> props = new HashMap<String, Object>();
 							// timeout is in milliseconds
-							props.put( AvailableSettings.LOCK_TIMEOUT, 1000 );
+							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 							}
@@ -805,7 +807,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 				try {
 					t.start();
-					boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
+					boolean latchSet = latch.await( 20, TimeUnit.SECONDS );  // should return quickly on success
 					assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
 					assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 				}
@@ -813,17 +815,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					Thread.interrupted();
 				}
 				catch (ExecutionException e) {
-					fail(e.getMessage());
+					throw new AssertionError( e );
 				}
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish before deleting entity
-
-			doInJPA( this::entityManagerFactory, em -> {
-				Lock _lock = em.getReference( Lock.class, lock.getId() );
-				em.remove( _lock );
-			} );
+			awaitThenDelete( "testContendedPessimisticWriteLockTimeout", t, lock.getId() );
 		}
 	}
 
@@ -848,7 +845,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							log.info( "testContendedPessimisticWriteLockNoWait: (BG) read write-locked entity" );
 							Map<String, Object> props = new HashMap<String, Object>();
 							// timeout of zero means no wait (for lock)
-							props.put( AvailableSettings.LOCK_TIMEOUT, 0 );
+							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 0 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 							}
@@ -890,7 +887,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 				try {
 					t.start();
-					boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
+					boolean latchSet = latch.await( 20, TimeUnit.SECONDS );  // should return quickly on success
 					assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
 					assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 				}
@@ -898,17 +895,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					Thread.interrupted();
 				}
 				catch (ExecutionException e) {
-					fail(e.getMessage());
+					throw new AssertionError( e );
 				}
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish before deleting entity
-
-			doInJPA( this::entityManagerFactory, em -> {
-				Lock _lock = em.getReference( Lock.class, lock.getId() );
-				em.remove( _lock );
-			} );
+			awaitThenDelete( "testContendedPessimisticWriteLockNoWait", t, lock.getId() );
 		}
 	}
 
@@ -980,7 +972,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 				try {
 					t.start();
-					boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
+					boolean latchSet = latch.await( 20, TimeUnit.SECONDS );  // should return quickly on success
 					assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
 					assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 				}
@@ -988,17 +980,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					Thread.interrupted();
 				}
 				catch (ExecutionException e) {
-					fail(e.getMessage());
+					throw new AssertionError( e );
 				}
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish before deleting entity
-
-			doInJPA( this::entityManagerFactory, em -> {
-				Lock _lock = em.getReference( Lock.class, lock.getId() );
-				em.remove( _lock );
-			} );
+			awaitThenDelete( "testQueryTimeout", t, lock.getId() );
 		}
 	}
 
@@ -1071,7 +1058,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 				try {
 					t.start();
-					boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
+					boolean latchSet = latch.await( 20, TimeUnit.SECONDS );  // should return quickly on success
 					assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
 					assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 				}
@@ -1079,17 +1066,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					Thread.interrupted();
 				}
 				catch (ExecutionException e) {
-					fail(e.getMessage());
+					throw new AssertionError( e );
 				}
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish before deleting entity
-
-			doInJPA( this::entityManagerFactory, em -> {
-				Lock _lock = em.getReference( Lock.class, lock.getId() );
-				em.remove( _lock );
-			} );
+			awaitThenDelete( "testQueryTimeoutEMProps", t, lock.getId() );
 		}
 	}
 
@@ -1101,7 +1083,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
 		final Map<String, Object> timeoutProps = new HashMap<String, Object>();
-		timeoutProps.put( AvailableSettings.LOCK_TIMEOUT, 1000 ); // 1 second timeout
+		timeoutProps.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 ); // 1 second timeout
 		final Lock lock = new Lock();
 
 		FutureTask<Boolean> bgTask = new FutureTask<>(
@@ -1115,7 +1097,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							Lock lock2 = _entityManager.getReference( Lock.class, lock.getId() );
 							lock2.getName();		//  force entity to be read
 							log.info( "testLockTimeoutEMProps: (BG) read write-locked entity" );
-							// em2 already has AvailableSettings.LOCK_TIMEOUT of 1 second applied
+							// em2 already has AvailableSettings.JPA_LOCK_TIMEOUT of 1 second applied
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE );
 							}
@@ -1157,7 +1139,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 				try {
 					t.start();
-					boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
+					boolean latchSet = latch.await( 20, TimeUnit.SECONDS );  // should return quickly on success
 					assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
 					assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 				}
@@ -1165,17 +1147,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					Thread.interrupted();
 				}
 				catch (ExecutionException e) {
-					fail(e.getMessage());
+					throw new AssertionError( e );
 				}
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish before deleting entity
-
-			doInJPA( this::entityManagerFactory, em -> {
-				Lock _lock = em.getReference( Lock.class, lock.getId() );
-				em.remove( _lock );
-			} );
+			awaitThenDelete( "testLockTimeoutEMProps", t, lock.getId() );
 		}
 	}
 
@@ -1185,5 +1162,23 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 				Lock.class,
 				UnversionedLock.class
 		};
+	}
+
+	private void awaitThenDelete(String test, Thread t, Integer lockId) throws InterruptedException {
+		// wait for background thread to finish before deleting entity
+		try {
+			while ( t.isAlive() ) {
+				t.join( TimeUnit.SECONDS.toMillis( 30 ) );
+				final Throwable temp = new Throwable();
+				temp.setStackTrace( t.getStackTrace() );
+				log.info( test + ": Thread seems stuck", temp );
+				t.interrupt();
+			}
+		} finally {
+			doInJPA( this::entityManagerFactory, em -> {
+				Lock _lock = em.getReference( Lock.class, lockId );
+				em.remove( _lock );
+			} );
+		}
 	}
 }

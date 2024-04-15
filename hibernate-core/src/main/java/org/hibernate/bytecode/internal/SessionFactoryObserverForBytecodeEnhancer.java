@@ -25,7 +25,7 @@ public final class SessionFactoryObserverForBytecodeEnhancer implements SessionF
 
 	@Override
 	public void sessionFactoryClosing(final SessionFactory factory) {
-		this.bytecodeProvider.resetCaches();
+		//unnecessary
 	}
 
 	@Override

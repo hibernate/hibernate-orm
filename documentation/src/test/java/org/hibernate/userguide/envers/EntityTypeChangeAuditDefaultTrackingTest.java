@@ -59,7 +59,7 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends BaseEntityManagerF
 		try {
 			Map settings = buildSettings();
 			settings.put(
-				org.hibernate.jpa.AvailableSettings.LOADED_CLASSES,
+				AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(
 					ApplicationCustomer.class,
 					CustomTrackingRevisionEntity.class

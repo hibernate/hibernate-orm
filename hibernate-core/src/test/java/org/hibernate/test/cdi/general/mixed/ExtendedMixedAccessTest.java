@@ -46,42 +46,45 @@ public class ExtendedMixedAccessTest implements BeanContainer.LifecycleOptions {
 	}
 
 	private void doTest(TestingExtendedBeanManager extendedBeanManager) {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, extendedBeanManager )
-				.build();
+				.build()) {
+			final BeanContainer beanContainer = ssr.getService( ManagedBeanRegistry.class ).getBeanContainer();
 
-		final BeanContainer beanContainer = ssr.getService( ManagedBeanRegistry.class ).getBeanContainer();
+			assertThat( beanContainer, instanceOf( CdiBeanContainerExtendedAccessImpl.class ) );
 
-		assertThat( beanContainer, instanceOf( CdiBeanContainerExtendedAccessImpl.class ) );
+			try (final SeContainer cdiContainer = Helper.createSeContainer()) {
+				final BeanManager beanManager = cdiContainer.getBeanManager();
+				extendedBeanManager.notifyListenerReady( beanManager );
 
-		try ( final SeContainer cdiContainer = Helper.createSeContainer() ) {
-			final BeanManager beanManager = cdiContainer.getBeanManager();
-			extendedBeanManager.notifyListenerReady( beanManager );
+				assertThat(
+						beanManager,
+						sameInstance( ( (CdiBeanContainerExtendedAccessImpl) beanContainer ).getUsableBeanManager() )
+				);
 
-			assertThat( beanManager, sameInstance( ( (CdiBeanContainerExtendedAccessImpl) beanContainer ).getUsableBeanManager() ) );
+				final ContainedBean<HostedBean> hostedBean = beanContainer.getBean(
+						HostedBean.class,
+						this,
+						FallbackBeanInstanceProducer.INSTANCE
+				);
 
-			final ContainedBean<HostedBean> hostedBean = beanContainer.getBean(
-					HostedBean.class,
-					this,
-					FallbackBeanInstanceProducer.INSTANCE
-			);
+				assertThat( hostedBean, notNullValue() );
+				assertThat( hostedBean.getBeanInstance(), notNullValue() );
 
-			assertThat( hostedBean, notNullValue() );
-			assertThat( hostedBean.getBeanInstance(), notNullValue() );
+				assertThat( hostedBean.getBeanInstance().getInjectedHostedBean(), notNullValue() );
 
-			assertThat( hostedBean.getBeanInstance().getInjectedHostedBean(), notNullValue() );
+				final ContainedBean<NonHostedBean> nonHostedBean = beanContainer.getBean(
+						NonHostedBean.class,
+						this,
+						FallbackBeanInstanceProducer.INSTANCE
+				);
 
-			final ContainedBean<NonHostedBean> nonHostedBean = beanContainer.getBean(
-					NonHostedBean.class,
-					this,
-					FallbackBeanInstanceProducer.INSTANCE
-			);
+				assertThat( nonHostedBean, notNullValue() );
+				assertThat( nonHostedBean.getBeanInstance(), notNullValue() );
 
-			assertThat( nonHostedBean, notNullValue() );
-			assertThat( nonHostedBean.getBeanInstance(), notNullValue() );
-
-			extendedBeanManager.notifyListenerShuttingDown( beanManager );
+				extendedBeanManager.notifyListenerShuttingDown( beanManager );
+			}
 		}
 	}
 

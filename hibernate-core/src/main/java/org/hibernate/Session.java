@@ -793,7 +793,22 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * @return the entity name
 	 */
 	String getEntityName(Object object);
-	
+
+	/**
+	 * Return a reference to the persistent instance with the same identity as the given
+	 * instance, which might be detached, making the assumption that the instance is still
+	 * persistent in the database. This method never results in access to the underlying
+	 * data store, and thus might return a proxy that is initialized on-demand, when a
+	 * non-identifier method is accessed.
+	 *
+	 * @param object a detached persistent instance
+	 *
+	 * @return the persistent instance or proxy
+	 */
+	default <T> T getReference(T object) {
+		throw new IllegalStateException( "getReference(Object) is not implemented in " + getClass() );
+	}
+
 	/**
 	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity type by
 	 * primary key.
@@ -1156,6 +1171,16 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 
 	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 
+	/**
+	 * Create a {@link NativeQuery} instance for the given SQL query string.
+	 *
+	 * @param queryString The SQL query
+	 *
+	 * @return The query instance for manipulation and execution
+	 *
+	 * @deprecated (since 5.2) use {@link #createNativeQuery(String)} instead
+	 */
+	@Deprecated
 	@Override
 	NativeQuery createSQLQuery(String queryString);
 }

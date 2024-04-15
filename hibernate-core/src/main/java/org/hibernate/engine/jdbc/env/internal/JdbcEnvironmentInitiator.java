@@ -114,7 +114,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					return new JdbcEnvironmentImpl(
 							registry,
 							dialect,
-							dbmd
+							dbmd,
+							jdbcConnectionAccess
 					);
 				}
 				catch (SQLException e) {

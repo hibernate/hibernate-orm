@@ -24,10 +24,9 @@ public class TenantResolverConfigurationTest extends BaseCoreFunctionalTestCase 
 	private TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();
 
 	@Override
-	protected Configuration constructAndConfigureConfiguration() {
-		Configuration configuration = super.constructAndConfigureConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		configuration.setCurrentTenantIdentifierResolver( currentTenantResolver );
-		return configuration;
 	}
 
 	@Test

@@ -25,13 +25,16 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 @TestForIssue(jiraKey = "HHH-13244")
 public class JpaProxyComplianceWithDebug extends BaseEntityManagerFunctionalTestCase {
@@ -82,17 +85,19 @@ public class JpaProxyComplianceWithDebug extends BaseEntityManagerFunctionalTest
 	@Test
 	@TestForIssue(jiraKey = "HHH-13244")
 	public void testJpaComplianceProxyWithDebug() {
+		LoggerContext context = (LoggerContext) LogManager.getContext( false );
+		Configuration configuration = context.getConfiguration();
 
 		//This could be replaced with setting the root logger level, or the "org.hibernate" logger to debug.
 		//These are simply the narrowest log settings that trigger the bug
-		Logger entityLogger = LogManager.getLogger("org.hibernate.internal.util.EntityPrinter");
-		Logger listenerLogger = LogManager.getLogger("org.hibernate.event.internal.AbstractFlushingEventListener");
+		LoggerConfig entityLogger = configuration.getLoggerConfig( "org.hibernate.internal.util.EntityPrinter");
+		LoggerConfig listenerLogger = configuration.getLoggerConfig("org.hibernate.event.internal.AbstractFlushingEventListener");
 
 		Level oldEntityLogLevel = entityLogger.getLevel();
 		Level oldListenerLogLevel = listenerLogger.getLevel();
 
-		entityLogger.setLevel((Level) Level.DEBUG);
-		listenerLogger.setLevel((Level) Level.DEBUG);
+		entityLogger.setLevel(Level.DEBUG);
+		listenerLogger.setLevel(Level.DEBUG);
 		try {
 			doInJPA(this::entityManagerFactory, entityManager -> {
 				entityManager.find(MvnoBillingAgreement.class, 1);

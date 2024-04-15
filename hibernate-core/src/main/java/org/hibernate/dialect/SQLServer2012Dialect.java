@@ -6,8 +6,14 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
+import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * Microsoft SQL Server 2012 Dialect
@@ -15,6 +21,11 @@ import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
  * @author Brett Meyer
  */
 public class SQLServer2012Dialect extends SQLServer2008Dialect {
+	private final Exporter<Sequence> sequenceExporter;
+
+	public SQLServer2012Dialect() {
+		sequenceExporter = new SqlServerSequenceExporter( this );
+	}
 
 	@Override
 	public boolean supportsSequences() {
@@ -24,6 +35,11 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 	@Override
 	public boolean supportsPooledSequences() {
 		return true;
+	}
+
+	@Override
+	public Exporter<Sequence> getSequenceExporter() {
+		return sequenceExporter;
 	}
 
 	@Override
@@ -48,8 +64,19 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		// The upper-case name should work on both case-sensitive and case-insensitive collations.
-		return "select * from INFORMATION_SCHEMA.SEQUENCES";
+		// The upper-case name is necessary here so that both case-sensitive and case-insensitive collations work
+
+		// Internally, SQL server stores start_value, minimum_value, maximum_value, and increment
+		// in sql_variant columns. SQL Server's JDBC automatically converts these values
+		// to bigint. Vert.X does support sql_variant columns, so these columns need to be
+		// explicitly converted here.
+
+		return "select sequence_name, sequence_catalog, sequence_schema, " +
+				"convert( bigint, start_value ) as start_value, " +
+				"convert( bigint, minimum_value ) as minimum_value, " +
+				"convert( bigint, maximum_value ) as maximum_value, " +
+				"convert( bigint, increment ) as increment " +
+				"from INFORMATION_SCHEMA.SEQUENCES";
 	}
 
 	@Override
@@ -82,5 +109,21 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 	@Override
 	protected LimitHandler getDefaultLimitHandler() {
 		return new SQLServer2012LimitHandler();
+	}
+
+	private class SqlServerSequenceExporter extends StandardSequenceExporter {
+
+		public SqlServerSequenceExporter(Dialect dialect) {
+			super( dialect );
+		}
+
+		@Override
+		protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata,
+				SqlStringGenerationContext context) {
+			// SQL Server does not allow the catalog in the sequence name.
+			// See https://docs.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver15&viewFallbackFrom=sql-server-ver12
+			// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
+			return context.formatWithoutCatalog( name );
+		}
 	}
 }

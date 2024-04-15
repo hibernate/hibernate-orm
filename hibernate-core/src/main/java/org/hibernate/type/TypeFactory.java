@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -41,7 +42,7 @@ import org.hibernate.usertype.UserType;
 @SuppressWarnings({"unchecked"})
 public final class TypeFactory implements Serializable, TypeBootstrapContext {
 	/**
-	 * @deprecated Use {@link TypeConfiguration}/{@link TypeConfiguration.Scope} instead
+	 * @deprecated Use {@link TypeConfiguration}
 	 */
 	@Deprecated
 	public interface TypeScope extends Serializable {
@@ -295,7 +296,7 @@ public final class TypeFactory implements Serializable, TypeBootstrapContext {
 	}
 
 	/**
-	 * @deprecated Use {@link #manyToOne(String, boolean, String, boolean, boolean, boolean, boolean)} instead.
+	 * @deprecated Use {@link #manyToOne(String, boolean, String, boolean, boolean, NotFoundAction, boolean)} instead.
 	 */
 	@Deprecated
 	public EntityType manyToOne(
@@ -303,7 +304,7 @@ public final class TypeFactory implements Serializable, TypeBootstrapContext {
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean isLogicalOneToOne) {
 		return manyToOne(
 				persistentClass,
@@ -311,13 +312,13 @@ public final class TypeFactory implements Serializable, TypeBootstrapContext {
 				uniqueKeyPropertyName,
 				lazy,
 				unwrapProxy,
-				ignoreNotFound,
+				notFoundAction,
 				isLogicalOneToOne
 		);
 	}
 
 	/**
-	 * @deprecated Use {@link #manyToOne(String, boolean, String, String, boolean, boolean, boolean, boolean)} instead.
+	 * @deprecated Use {@link #manyToOne(String, boolean, String, String, boolean, boolean, NotFoundAction, boolean)} instead.
 	 */
 	@Deprecated
 	public EntityType manyToOne(
@@ -326,7 +327,7 @@ public final class TypeFactory implements Serializable, TypeBootstrapContext {
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean isLogicalOneToOne) {
 		return manyToOne(
 				persistentClass,
@@ -335,7 +336,7 @@ public final class TypeFactory implements Serializable, TypeBootstrapContext {
 				null,
 				lazy,
 				unwrapProxy,
-				ignoreNotFound,
+				notFoundAction,
 				isLogicalOneToOne
 		);
 	}
@@ -347,7 +348,7 @@ public final class TypeFactory implements Serializable, TypeBootstrapContext {
 			String propertyName,
 			boolean lazy,
 			boolean unwrapProxy,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean isLogicalOneToOne) {
 		return new ManyToOneType(
 				typeScope,
@@ -357,7 +358,7 @@ public final class TypeFactory implements Serializable, TypeBootstrapContext {
 				propertyName,
 				lazy,
 				unwrapProxy,
-				ignoreNotFound,
+				notFoundAction,
 				isLogicalOneToOne
 		);
 	}

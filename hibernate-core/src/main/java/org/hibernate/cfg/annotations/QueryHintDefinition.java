@@ -21,6 +21,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.QueryHints;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.LockModeConverter;
 
 /**
@@ -128,6 +129,9 @@ public class QueryHintDefinition {
 
 	public Integer getTimeout(String queryName) {
 		Integer timeout = getInteger( queryName, QueryHints.TIMEOUT_JPA );
+		if ( timeout == null ) {
+			timeout = getInteger( queryName, QueryHints.TIMEOUT_JAKARTA_JPA );
+		}
 
 		if ( timeout != null ) {
 			// convert milliseconds to seconds
@@ -142,7 +146,10 @@ public class QueryHintDefinition {
 
 	public LockOptions determineLockOptions(NamedQuery namedQueryAnnotation) {
 		LockModeType lockModeType = namedQueryAnnotation.lockMode();
-		Integer lockTimeoutHint = getInteger( namedQueryAnnotation.name(), "javax.persistence.lock.timeout" );
+		Integer lockTimeoutHint = getInteger( namedQueryAnnotation.name(), AvailableSettings.JPA_LOCK_TIMEOUT );
+		if ( lockTimeoutHint == null ) {
+			lockTimeoutHint = getInteger( namedQueryAnnotation.name(), AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT );
+		}
 		Boolean followOnLocking = getBoolean( namedQueryAnnotation.name(), QueryHints.FOLLOW_ON_LOCKING );
 
 		return determineLockOptions(lockModeType, lockTimeoutHint, followOnLocking);

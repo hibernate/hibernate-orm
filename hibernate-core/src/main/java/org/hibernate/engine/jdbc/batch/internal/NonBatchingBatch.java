@@ -49,11 +49,11 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 				jdbcCoordinator.afterStatementExecution();
 			}
 			catch ( SQLException e ) {
-				abortBatch();
+				abortBatch( e );
 				throw sqlExceptionHelper().convert( e, "could not execute non-batched batch statement", statementSQL );
 			}
-			catch (JDBCException e) {
-				abortBatch();
+			catch (RuntimeException e) {
+				abortBatch( e );
 				throw e;
 			}
 		}

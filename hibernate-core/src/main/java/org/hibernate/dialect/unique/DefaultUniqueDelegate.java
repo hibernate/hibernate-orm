@@ -9,8 +9,10 @@ package org.hibernate.dialect.unique;
 import java.util.Iterator;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
 /**
@@ -34,23 +36,21 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	// legacy model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getColumnDefinitionUniquenessFragment(org.hibernate.mapping.Column column) {
+	public String getColumnDefinitionUniquenessFragment(Column column,
+			SqlStringGenerationContext context) {
 		return "";
 	}
 
 	@Override
-	public String getTableCreationUniqueConstraintsFragment(org.hibernate.mapping.Table table) {
+	public String getTableCreationUniqueConstraintsFragment(Table table,
+			SqlStringGenerationContext context) {
 		return "";
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				uniqueKey.getTable().getQualifiedTableName(),
-				dialect
-		);
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
+			SqlStringGenerationContext context) {
+		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
 
 		final String constraintName = dialect.quote( uniqueKey.getName() );
 		return dialect.getAlterTableString( tableName )
@@ -76,13 +76,9 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				uniqueKey.getTable().getQualifiedTableName(),
-				dialect
-		);
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
+			SqlStringGenerationContext context) {
+		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
 
 		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString(tableName) );
 		buf.append( getDropUnique() );

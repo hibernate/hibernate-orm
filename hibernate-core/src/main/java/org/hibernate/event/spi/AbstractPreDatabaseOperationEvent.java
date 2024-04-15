@@ -88,12 +88,20 @@ public abstract class AbstractPreDatabaseOperationEvent
 		return getSession();
 	}
 
+	/**
+	 * @deprecated Support for JACC will be removed in 6.0
+	 */
 	@Override
+	@Deprecated
 	public String getEntityName() {
 		return persister.getEntityName();
 	}
 
+	/**
+	 * @deprecated Support for JACC will be removed in 6.0
+	 */
 	@Override
+	@Deprecated
 	public Serializable getIdentifier() {
 		return id;
 	}

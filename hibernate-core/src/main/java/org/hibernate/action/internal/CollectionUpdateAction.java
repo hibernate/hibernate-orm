@@ -100,32 +100,31 @@ public final class CollectionUpdateAction extends CollectionAction {
 	}
 	
 	private void preUpdate() {
-		final EventListenerGroup<PreCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PreCollectionUpdateEvent event = new PreCollectionUpdateEvent(
+		getFastSessionServices()
+				.eventListenerGroup_PRE_COLLECTION_UPDATE
+				.fireLazyEventOnEachListener( this::newPreCollectionUpdateEvent, PreCollectionUpdateEventListener::onPreUpdateCollection );
+	}
+
+	private PreCollectionUpdateEvent newPreCollectionUpdateEvent() {
+		return new PreCollectionUpdateEvent(
 				getPersister(),
 				getCollection(),
 				eventSource()
 		);
-		for ( PreCollectionUpdateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPreUpdateCollection( event );
-		}
 	}
 
 	private void postUpdate() {
-		final EventListenerGroup<PostCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostCollectionUpdateEvent event = new PostCollectionUpdateEvent(
+		getFastSessionServices()
+				.eventListenerGroup_POST_COLLECTION_UPDATE
+				.fireLazyEventOnEachListener( this::newPostCollectionUpdateEvent, PostCollectionUpdateEventListener::onPostUpdateCollection );
+	}
+
+	private PostCollectionUpdateEvent newPostCollectionUpdateEvent() {
+		return new PostCollectionUpdateEvent(
 				getPersister(),
 				getCollection(),
 				eventSource()
 		);
-		for ( PostCollectionUpdateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostUpdateCollection( event );
-		}
 	}
+
 }

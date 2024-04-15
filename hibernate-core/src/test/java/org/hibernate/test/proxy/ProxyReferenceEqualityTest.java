@@ -63,7 +63,7 @@ public class ProxyReferenceEqualityTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Entity
+	@Entity(name = "A")
 	public static class A {
 		@Id
 		Long id;
@@ -72,7 +72,7 @@ public class ProxyReferenceEqualityTest extends BaseCoreFunctionalTestCase {
 		B b;
 	}
 
-	@Entity
+	@Entity(name = "B")
 	public static class B {
 		@Id
 		Long id;

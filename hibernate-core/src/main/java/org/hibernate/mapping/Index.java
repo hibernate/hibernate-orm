@@ -16,8 +16,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 
@@ -32,10 +32,13 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>(  );
 	private Identifier name;
 
-	public String sqlCreateString(Dialect dialect, Mapping mapping, String defaultCatalog, String defaultSchema)
+	@Override
+	public String sqlCreateString(Mapping mapping, SqlStringGenerationContext context, String defaultCatalog,
+			String defaultSchema)
 			throws HibernateException {
+		Dialect dialect = context.getDialect();
 		return buildSqlCreateIndexString(
-				dialect,
+				context,
 				getQuotedName( dialect ),
 				getTable(),
 				getColumnIterator(),
@@ -47,12 +50,12 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	}
 
 	public static String buildSqlDropIndexString(
-			Dialect dialect,
+			SqlStringGenerationContext context,
 			Table table,
 			String name,
 			String defaultCatalog,
 			String defaultSchema) {
-		return buildSqlDropIndexString( name, table.getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
+		return buildSqlDropIndexString( name, table.getQualifiedName( context ) );
 	}
 
 	public static String buildSqlDropIndexString(
@@ -62,7 +65,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	}
 
 	public static String buildSqlCreateIndexString(
-			Dialect dialect,
+			SqlStringGenerationContext context,
 			String name,
 			Table table,
 			Iterator<Column> columns,
@@ -71,9 +74,9 @@ public class Index implements RelationalModel, Exportable, Serializable {
 			String defaultCatalog,
 			String defaultSchema) {
 		return buildSqlCreateIndexString(
-				dialect,
+				context.getDialect(),
 				name,
-				table.getQualifiedName( dialect, defaultCatalog, defaultSchema ),
+				table.getQualifiedName( context ),
 				columns,
 				columnOrderMap,
 				unique
@@ -109,42 +112,17 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	}
 
 	public static String buildSqlCreateIndexString(
-			Dialect dialect,
-			String name,
-			Table table,
-			Iterator<Column> columns,
-			boolean unique,
-			String defaultCatalog,
-			String defaultSchema) {
-		return buildSqlCreateIndexString(
-				dialect,
-				name,
-				table,
-				columns,
-				Collections.EMPTY_MAP,
-				unique,
-				defaultCatalog,
-				defaultSchema
-		);
-	}
-
-	public static String buildSqlCreateIndexString(
-			Dialect dialect,
+			SqlStringGenerationContext context,
 			String name,
 			Table table,
 			Iterator<Column> columns,
 			java.util.Map<Column, String> columnOrderMap,
 			boolean unique,
 			Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				dialect
-		);
+		final String tableName = context.format( table.getQualifiedTableName() );
 
 		return buildSqlCreateIndexString(
-				dialect,
+				context.getDialect(),
 				name,
 				tableName,
 				columns,
@@ -168,10 +146,12 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	}
 
 	@Override
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
+	public String sqlDropString(SqlStringGenerationContext context,
+			String defaultCatalog, String defaultSchema) {
+		Dialect dialect = context.getDialect();
 		return "drop index " +
 				StringHelper.qualify(
-						table.getQualifiedName( dialect, defaultCatalog, defaultSchema ),
+						table.getQualifiedName( context ),
 						getQuotedName( dialect )
 				);
 	}

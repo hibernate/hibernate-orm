@@ -1002,6 +1002,9 @@ public class JoinWalker {
 		}
 	}
 
+	protected StringBuilder whereString(String alias, String[] columnNames, boolean[] valueNullnes, int batchSize) {
+		return whereString( alias, columnNames, batchSize );
+	}
 
 	protected void initPersisters(final List associations, final LockMode lockMode) throws MappingException {
 		initPersisters( associations, new LockOptions( lockMode ) );

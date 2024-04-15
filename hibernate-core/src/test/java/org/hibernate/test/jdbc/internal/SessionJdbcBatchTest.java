@@ -16,6 +16,7 @@ import javax.persistence.Id;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -45,6 +46,7 @@ public class SessionJdbcBatchTest
 	@Override
 	protected void addSettings(Map settings) {
 		settings.put( AvailableSettings.STATEMENT_BATCH_SIZE, 2 );
+		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
 		settings.put(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider

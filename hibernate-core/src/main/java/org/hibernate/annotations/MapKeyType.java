@@ -16,9 +16,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Allows defining the type of the key of a persistent map.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated 6.0 will introduce a new type-safe {@code CustomType} annotation
  */
 @java.lang.annotation.Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated
 public @interface MapKeyType {
 	/**
 	 * The map key type definition.

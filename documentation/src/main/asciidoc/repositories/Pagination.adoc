@@ -264,6 +264,7 @@ SelectionQuery<Book> booksQuery(@Pattern String title, Year yearPublished);
 
 default List<Book> booksQuery(String title, Year yearPublished) {
     return books(title, yearPublished)
+            .enableFetchProfile(_Book.PROFILE_WITH_AUTHORS);
             .setReadOnly(true)
             .setTimeout(QUERY_TIMEOUT)
             .getResultList();

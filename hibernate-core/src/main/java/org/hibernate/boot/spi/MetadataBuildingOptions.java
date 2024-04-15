@@ -14,7 +14,6 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.dialect.TimeZoneSupport;
@@ -215,15 +214,6 @@ public interface MetadataBuildingOptions {
 	 *         {@code false} if we should.
 	 */
 	boolean isNoConstraintByDefault();
-
-	/**
-	 * Retrieve the ordering in which {@linkplain MetadataSourceType sources} should be processed.
-	 *
-	 * @return The order in which sources should be processed.
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER
-	 */
-	List<MetadataSourceType> getSourceProcessOrdering();
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CHARSET_NAME

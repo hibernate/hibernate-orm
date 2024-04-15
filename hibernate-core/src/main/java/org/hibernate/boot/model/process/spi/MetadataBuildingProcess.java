@@ -68,7 +68,6 @@ import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -263,8 +262,6 @@ public class MetadataBuildingProcess {
 			@Override
 			public void prepare() {
 				hbmProcessor.prepare();
-
-
 				annotationProcessor.prepare();
 			}
 
@@ -312,41 +309,20 @@ public class MetadataBuildingProcess {
 
 			@Override
 			public void prepareForEntityHierarchyProcessing() {
-				for ( MetadataSourceType metadataSourceType : options.getSourceProcessOrdering() ) {
-					if ( metadataSourceType == MetadataSourceType.HBM ) {
-						hbmProcessor.prepareForEntityHierarchyProcessing();
-					}
-
-					if ( metadataSourceType == MetadataSourceType.CLASS ) {
-						annotationProcessor.prepareForEntityHierarchyProcessing();
-					}
-				}
+				hbmProcessor.prepareForEntityHierarchyProcessing();
+				annotationProcessor.prepareForEntityHierarchyProcessing();
 			}
 
 			@Override
 			public void processEntityHierarchies(Set<String> processedEntityNames) {
-				for ( MetadataSourceType metadataSourceType : options.getSourceProcessOrdering() ) {
-					if ( metadataSourceType == MetadataSourceType.HBM ) {
-						hbmProcessor.processEntityHierarchies( processedEntityNames );
-					}
-
-					if ( metadataSourceType == MetadataSourceType.CLASS ) {
-						annotationProcessor.processEntityHierarchies( processedEntityNames );
-					}
-				}
+				hbmProcessor.processEntityHierarchies( processedEntityNames );
+				annotationProcessor.processEntityHierarchies( processedEntityNames );
 			}
 
 			@Override
 			public void postProcessEntityHierarchies() {
-				for ( MetadataSourceType metadataSourceType : options.getSourceProcessOrdering() ) {
-					if ( metadataSourceType == MetadataSourceType.HBM ) {
-						hbmProcessor.postProcessEntityHierarchies();
-					}
-
-					if ( metadataSourceType == MetadataSourceType.CLASS ) {
-						annotationProcessor.postProcessEntityHierarchies();
-					}
-				}
+				hbmProcessor.postProcessEntityHierarchies();
+				annotationProcessor.postProcessEntityHierarchies();
 			}
 
 			@Override

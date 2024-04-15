@@ -979,6 +979,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <p>
 	 * Every object returned by {@code findAll()} is either an unproxied instance of the given
 	 * entity class, or a fully-fetched proxy object.
+	 * <p>
+	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
+	 * {@link MultiIdentifierLoadAccess}.
 	 *
 	 * @param entityType the entity type
 	 * @param ids the identifiers
@@ -987,6 +990,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *         entities
 	 *
 	 * @since 6.5
+	 *
+	 * @see #byMultipleIds(Class)
 	 */
 	<E> List<E> findAll(Class<E> entityType, Object... ids);
 
@@ -1198,6 +1203,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link MultiIdentifierLoadAccess} for executing the lookup
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
+	 *
+	 * @see #findAll(Class, Object...)
 	 */
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
 

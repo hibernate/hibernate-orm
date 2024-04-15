@@ -18,7 +18,6 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
@@ -347,27 +346,6 @@ public interface MetadataBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader);
-
-	/**
-	 * Apply a specific ordering to the processing of sources.
-	 * <p>
-	 * Unlike most of the methods of this interface (which deal with multiple
-	 * values internally), this one <em>replaces</em> any source processing
-	 * order that was already set.
-	 * <p>
-	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER}
-	 * setting if using property-based configuration.
-	 *
-	 * @param sourceTypes The types, in the order they should be processed
-	 *
-	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER
-	 *
-	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this irrelevant
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes);
 
 	/**
 	 * Apply an explicit {@link FunctionContributor}

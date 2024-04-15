@@ -8,14 +8,10 @@ package org.hibernate.orm.test.annotations.generics;
 
 import java.io.Serializable;
 
-import org.hibernate.cfg.AvailableSettings;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,7 +22,9 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -106,6 +104,29 @@ public class GenericPathComparisonTest {
 			final CriteriaQuery<UserEntity> query = cb.createQuery( UserEntity.class );
 			final Root<UserEntity> from = query.from( UserEntity.class );
 			query.where( cb.equal( from.get( "longProp" ), from.get( "id" ) ) );
+			executeQuery( session.createQuery( query ) );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17959" )
+	public void testInSubquery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> executeQuery( session.createQuery(
+				"from UserEntity where id in (select id from UserEntity where id = 1)",
+				UserEntity.class
+		) ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17959" )
+	public void testInSubqueryCriteria(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final CriteriaBuilder cb = session.getCriteriaBuilder();
+			final CriteriaQuery<UserEntity> query = cb.createQuery( UserEntity.class );
+			final Root<UserEntity> from = query.from( UserEntity.class );
+			final Subquery<Long> subquery = query.subquery( Long.class );
+			final Path<Long> id = subquery.from( UserEntity.class ).get( "id" );
+			query.where( from.get( "id" ).in( subquery.select( id ).where( cb.equal( id, 1L ) ) ) );
 			executeQuery( session.createQuery( query ) );
 		} );
 	}

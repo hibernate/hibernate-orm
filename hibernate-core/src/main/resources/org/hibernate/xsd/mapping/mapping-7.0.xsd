@@ -12,7 +12,7 @@
             xmlns:orm="http://www.hibernate.org/xsd/orm/mapping"
             targetNamespace="http://www.hibernate.org/xsd/orm/mapping"
             elementFormDefault="qualified"
-            version="3.2">
+            version="7.0">
     <xsd:annotation>
         <xsd:documentation><![CDATA[
         XSD which "extends" the JPA `orm.xml` XSD adding support for Hibernate
@@ -20,7 +20,7 @@
 
         <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                version="3.2">
+                version="7.0">
             ...
         </entity-mappings>
         ]]></xsd:documentation>

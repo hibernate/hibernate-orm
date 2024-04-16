@@ -1,9 +1,11 @@
-= Hibernate 6.6.0.CR1
+= Hibernate 7.0.0.Alpha1
 Steve Ebersole
+:toc:
+:toclevels: 2
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
 
-:family: 6.6
+:family: 7.0
 
 :docs-url: https://docs.jboss.org/hibernate/orm/{family}
 :javadocs-url: {docs-url}/javadocs
@@ -12,4 +14,43 @@ Steve Ebersole
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 :ql-guide-url: {docs-url}/querylanguage/html_single/Hibernate_Query_Language.html
 
-6.6 brings many new features, in addition to many improvements and fixes.
+7.0.0.Alpha1 is the first development release of the Hibernate 7.0 family which includes many new features, in addition to many improvements and fixes.
+
+
+[[jpa-32]]
+== Jakarta Persistence 3.2
+
+7.0 migrates to Jakarta Persistence 3.2 which can be fairly disruptive.  See the link:{migration-guide-url}#jpa-32[Migration Guide] for details.
+
+
+[[java-17]]
+== Java 17
+
+Version 3.2 of Jakarta Persistence requires Java 17.  Hibernate 7.0 therefore baselines on Java 17 whereas previous versions baseline on Java 11.
+
+
+[[mapping-xml]]
+== mapping.xsd
+
+Hibernate 7.0 provides a new XSD that represents an "extension" of the Jakarta Persistence orm.xsd weaving in Hibernate-specific mapping features.  The namespace for this extended mapping is `http://www.hibernate.org/xsd/orm/mapping`
+
+
+[[hibernate-models]]
+== Hibernate Models
+
+7.0 migrates from https://github.com/hibernate/hibernate-commons-annotations/[Hibernate Commons Annotations] (HCANN) to the new https://github.com/hibernate/hibernate-models[Hibernate Models] project for low-level processing of an application domain model, reading annotations and weaving in XML mapping documents.
+
+See the link:{migration-guide-url}#hibernate-models[Migration Guide] for details.
+
+
+[[model-validations]]
+== Domain Model Validations
+
+7.0 does much more validation of an application's domain model and especially its mapping details, e.g.
+
+* illegal combinations such as `@Basic` and `@ManyToOne` on the same attribute
+* misplaced annotations such as an annotated getter method with FIELD access
+* stricter following of JavaBean conventions
+
+See the link:{migration-guide-url}#annotation-validation[Migration Guide] for details.
+

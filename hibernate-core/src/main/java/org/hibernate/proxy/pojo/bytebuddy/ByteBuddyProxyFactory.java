@@ -8,8 +8,6 @@ package org.hibernate.proxy.pojo.bytebuddy;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -18,7 +16,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
@@ -109,35 +106,24 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 
 	/**
 	 * This technically returns a HibernateProxy, but declaring that type as the return
-	 * type for the privileged action triggers an implicit case of type pollution.
+	 * type for the newInstance() action triggers an implicit case of type pollution.
 	 * We therefore declare it as PrimeAmongSecondarySupertypes, and require the
 	 * invoker to perform the narrowing
 	 */
-	private PrimeAmongSecondarySupertypes getHibernateProxyInternal()
-			throws HibernateException {
-
-		final PrivilegedAction<PrimeAmongSecondarySupertypes> action = new PrivilegedAction<PrimeAmongSecondarySupertypes>() {
-
-			@Override
-			public PrimeAmongSecondarySupertypes run() {
-
-				try {
-					return (PrimeAmongSecondarySupertypes) proxyClass.getConstructor().newInstance();
-				}
-				catch (NoSuchMethodException e) {
-					String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );
-					LOG.error( logMessage, e );
-					throw new HibernateException( logMessage, e );
-				}
-				catch (Throwable t) {
-					String logMessage = LOG.bytecodeEnhancementFailed( entityName );
-					LOG.error( logMessage, t );
-					throw new HibernateException( logMessage, t );
-				}
-
-			}
-		};
-		return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged( action ) : action.run();
+	private PrimeAmongSecondarySupertypes getHibernateProxyInternal() throws HibernateException {
+		try {
+			return (PrimeAmongSecondarySupertypes) proxyClass.getConstructor().newInstance();
+		}
+		catch (NoSuchMethodException e) {
+			String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );
+			LOG.error( logMessage, e );
+			throw new HibernateException( logMessage, e );
+		}
+		catch (Throwable t) {
+			String logMessage = LOG.bytecodeEnhancementFailed( entityName );
+			LOG.error( logMessage, t );
+			throw new HibernateException( logMessage, t );
+		}
 	}
 
 }

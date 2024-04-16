@@ -12,6 +12,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -100,7 +101,14 @@ public class JavaTimeFractionalSecondsTests {
 	@SessionFactory
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage(SessionFactoryScope scope) {
-		final Instant start = Instant.now();
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		final Instant start;
+		if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			start = Instant.now().truncatedTo( ChronoUnit.MICROS );
+		}
+		else {
+			start = Instant.now();
+		}
 
 		scope.inTransaction( (session) -> {
 			final TestEntity testEntity = new TestEntity();
@@ -111,7 +119,6 @@ public class JavaTimeFractionalSecondsTests {
 
 		scope.inTransaction( (session) -> {
 			final TestEntity testEntity = session.find( TestEntity.class, 1 );
-			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToDefaultPrecision( start, dialect ) );
 		} );
 	}
@@ -124,7 +131,14 @@ public class JavaTimeFractionalSecondsTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not support specifying a precision on timestamps")
 	void testUsage0(SessionFactoryScope scope) {
-		final Instant start = Instant.now();
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		final Instant start;
+		if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			start = Instant.now().truncatedTo( ChronoUnit.MICROS );
+		}
+		else {
+			start = Instant.now();
+		}
 
 		scope.inTransaction( (session) -> {
 			final TestEntity0 testEntity = new TestEntity0();
@@ -135,7 +149,6 @@ public class JavaTimeFractionalSecondsTests {
 
 		scope.inTransaction( (session) -> {
 			final TestEntity0 testEntity = session.find( TestEntity0.class, 1 );
-			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToPrecision( start, 0, dialect ) );
 		} );
 	}
@@ -148,7 +161,14 @@ public class JavaTimeFractionalSecondsTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not support specifying a precision on timestamps")
 	void testUsage3(SessionFactoryScope scope) {
-		final Instant start = Instant.now();
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		final Instant start;
+		if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			start = Instant.now().truncatedTo( ChronoUnit.MICROS );
+		}
+		else {
+			start = Instant.now();
+		}
 
 		scope.inTransaction( (session) -> {
 			final TestEntity3 testEntity = new TestEntity3();
@@ -159,7 +179,6 @@ public class JavaTimeFractionalSecondsTests {
 
 		scope.inTransaction( (session) -> {
 			final TestEntity3 testEntity = session.find( TestEntity3.class, 1 );
-			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToPrecision( start, 3, dialect ) );
 		} );
 	}
@@ -175,7 +194,14 @@ public class JavaTimeFractionalSecondsTests {
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB only supports precision <= 6")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
 	void testUsage9(SessionFactoryScope scope) {
-		final Instant start = Instant.now();
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		final Instant start;
+		if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			start = Instant.now().truncatedTo( ChronoUnit.MICROS );
+		}
+		else {
+			start = Instant.now();
+		}
 
 		scope.inTransaction( (session) -> {
 			final TestEntity9 testEntity = new TestEntity9();

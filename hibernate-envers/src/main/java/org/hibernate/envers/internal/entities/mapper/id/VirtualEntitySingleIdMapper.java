@@ -63,35 +63,31 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			return;
 		}
 
-		doPrivileged( () -> {
-			final Getter getter = ReflectionTools.getGetter(
-					objFrom.getClass(),
-					propertyData,
-					getServiceRegistry()
-			);
+		final Getter getter = ReflectionTools.getGetter(
+				objFrom.getClass(),
+				propertyData,
+				getServiceRegistry()
+		);
 
-			final Setter setter = ReflectionTools.getSetter(
-					objTo.getClass(),
-					propertyData,
-					getServiceRegistry()
-			);
+		final Setter setter = ReflectionTools.getSetter(
+				objTo.getClass(),
+				propertyData,
+				getServiceRegistry()
+		);
 
-			// Get the value from the containing entity
-			final Object value = getter.get( objFrom );
-			if ( value == null ) {
-				return null;
-			}
+		// Get the value from the containing entity
+		final Object value = getter.get( objFrom );
+		if ( value == null ) {
+			return;
+		}
 
-			if ( !value.getClass().equals( propertyData.getVirtualReturnClass() ) ) {
-				setter.set( objTo, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
-			}
-			else {
-				// This means we're setting the object
-				setter.set( objTo, value );
-			}
-
-			return null;
-		} );
+		if ( !value.getClass().equals( propertyData.getVirtualReturnClass() ) ) {
+			setter.set( objTo, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
+		}
+		else {
+			// This means we're setting the object
+			setter.set( objTo, value );
+		}
 	}
 
 	@Override
@@ -105,27 +101,25 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			return false;
 		}
 
-		return doPrivileged( () -> {
-			final Setter setter = ReflectionTools.getSetter(
-					obj.getClass(),
-					propertyData,
-					getServiceRegistry()
-			);
-			final Class<?> paramClass = ReflectionTools.getType(
-					obj.getClass(),
-					propertyData,
-					getServiceRegistry()
-			);
+		final Setter setter = ReflectionTools.getSetter(
+				obj.getClass(),
+				propertyData,
+				getServiceRegistry()
+		);
+		final Class<?> paramClass = ReflectionTools.getType(
+				obj.getClass(),
+				propertyData,
+				getServiceRegistry()
+		);
 
-			if ( paramClass != null && paramClass.equals( propertyData.getVirtualReturnClass() ) ) {
-				setter.set( obj, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
-			}
-			else {
-				setter.set( obj, value );
-			}
+		if ( paramClass != null && paramClass.equals( propertyData.getVirtualReturnClass() ) ) {
+			setter.set( obj, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
+		}
+		else {
+			setter.set( obj, value );
+		}
 
-			return true;
-		} );
+		return true;
 	}
 
 	@Override

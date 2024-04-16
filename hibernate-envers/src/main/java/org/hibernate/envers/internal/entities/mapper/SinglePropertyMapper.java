@@ -107,20 +107,16 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 			map.put( propertyData.getBeanName(), value );
 		}
 		else {
-			doPrivileged( () -> {
-				final Setter setter = ReflectionTools.getSetter(
-						obj.getClass(),
-						propertyData,
-						enversService.getServiceRegistry()
-				);
+			final Setter setter = ReflectionTools.getSetter(
+					obj.getClass(),
+					propertyData,
+					enversService.getServiceRegistry()
+			);
 
-				// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
-				if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
-					setter.set( obj, value );
-				}
-
-				return null;
-			} );
+			// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
+			if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
+				setter.set( obj, value );
+			}
 		}
 	}
 

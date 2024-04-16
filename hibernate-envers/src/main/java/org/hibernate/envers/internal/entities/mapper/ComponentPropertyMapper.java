@@ -125,68 +125,64 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 			return;
 		}
 
-		doPrivileged( () -> {
-			try {
+		try {
 
-				if ( isDynamicComponentMap() ) {
-					final Object subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
-					( (Map) obj ).put( propertyData.getBeanName(), subObj );
-					delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
+			if ( isDynamicComponentMap() ) {
+				final Object subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
+				( (Map) obj ).put( propertyData.getBeanName(), subObj );
+				delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
+			}
+			else {
+				final Setter setter = ReflectionTools.getSetter(
+						obj.getClass(),
+						propertyData,
+						enversService.getServiceRegistry()
+				);
+
+				if ( isAllPropertiesNull( data ) ) {
+					// single property, but default value need not be null, so we'll set it to null anyway
+					setter.set( obj, null );
 				}
 				else {
-					final Setter setter = ReflectionTools.getSetter(
-							obj.getClass(),
-							propertyData,
-							enversService.getServiceRegistry()
-					);
-
-					if ( isAllPropertiesNull( data ) ) {
-						// single property, but default value need not be null, so we'll set it to null anyway
-						setter.set( obj, null );
-					}
-					else {
-						final Object subObj;
-						if ( embeddableInstantiator != null ) {
-							final Object[] values = new Object[delegate.properties.size()];
-							int i = 0;
-							for ( Map.Entry<PropertyData, PropertyMapper> entry : delegate.properties.entrySet() ) {
-								values[i] = entry.getValue().mapToEntityFromMap(
-										enversService,
-										data,
-										primaryKey,
-										versionsReader,
-										revision
-								);
-								i++;
-							}
-							subObj = embeddableInstantiator.instantiate(
-									() -> values,
-									versionsReader.getSessionImplementor()
-											.getSessionFactory()
-							);
-						}
-						else {
-							subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
-							delegate.mapToEntityFromMap(
+					final Object subObj;
+					if ( embeddableInstantiator != null ) {
+						final Object[] values = new Object[delegate.properties.size()];
+						int i = 0;
+						for ( Map.Entry<PropertyData, PropertyMapper> entry : delegate.properties.entrySet() ) {
+							values[i] = entry.getValue().mapToEntityFromMap(
 									enversService,
-									subObj,
 									data,
 									primaryKey,
 									versionsReader,
 									revision
 							);
+							i++;
 						}
-						// set the component
-						setter.set( obj, subObj );
+						subObj = embeddableInstantiator.instantiate(
+								() -> values,
+								versionsReader.getSessionImplementor()
+										.getSessionFactory()
+						);
 					}
+					else {
+						subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
+						delegate.mapToEntityFromMap(
+								enversService,
+								subObj,
+								data,
+								primaryKey,
+								versionsReader,
+								revision
+						);
+					}
+					// set the component
+					setter.set( obj, subObj );
 				}
 			}
-			catch ( Exception e ) {
-				throw new AuditException( e );
-			}
-
-			return null;
-		} );
+		}
+		catch ( Exception e ) {
+			throw new AuditException( e );
+		}
 	}
 
 	@Override
@@ -202,57 +198,55 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 			return null;
 		}
 
-		return doPrivileged( () -> {
-			try {
-				final Object subObj;
-				if ( isDynamicComponentMap() ) {
-					subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
-					delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
+		try {
+			final Object subObj;
+			if ( isDynamicComponentMap() ) {
+				subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
+				delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
+			}
+			else {
+				if ( isAllPropertiesNull( data ) ) {
+					// single property, but default value need not be null, so we'll set it to null anyway
+					subObj = null;
 				}
 				else {
-					if ( isAllPropertiesNull( data ) ) {
-						// single property, but default value need not be null, so we'll set it to null anyway
-						subObj = null;
-					}
-					else {
-						if ( embeddableInstantiator != null ) {
-							final Object[] values = new Object[delegate.properties.size()];
-							int i = 0;
-							for ( Map.Entry<PropertyData, PropertyMapper> entry : delegate.properties.entrySet() ) {
-								values[i] = entry.getValue().mapToEntityFromMap(
-										enversService,
-										data,
-										primaryKey,
-										versionsReader,
-										revision
-								);
-								i++;
-							}
-							subObj = embeddableInstantiator.instantiate(
-									() -> values,
-									versionsReader.getSessionImplementor()
-											.getSessionFactory()
-							);
-						}
-						else {
-							subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
-							delegate.mapToEntityFromMap(
+					if ( embeddableInstantiator != null ) {
+						final Object[] values = new Object[delegate.properties.size()];
+						int i = 0;
+						for ( Map.Entry<PropertyData, PropertyMapper> entry : delegate.properties.entrySet() ) {
+							values[i] = entry.getValue().mapToEntityFromMap(
 									enversService,
-									subObj,
 									data,
 									primaryKey,
 									versionsReader,
 									revision
 							);
+							i++;
 						}
+						subObj = embeddableInstantiator.instantiate(
+								() -> values,
+								versionsReader.getSessionImplementor()
+										.getSessionFactory()
+						);
+					}
+					else {
+						subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
+						delegate.mapToEntityFromMap(
+								enversService,
+								subObj,
+								data,
+								primaryKey,
+								versionsReader,
+								revision
+						);
 					}
 				}
-				return subObj;
 			}
-			catch ( Exception e ) {
-				throw new AuditException( e );
-			}
-		} );
+			return subObj;
+		}
+		catch ( Exception e ) {
+			throw new AuditException( e );
+		}
 	}
 
 	private boolean isAllPropertiesNull(Map data) {

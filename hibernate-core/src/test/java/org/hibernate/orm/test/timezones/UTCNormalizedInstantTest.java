@@ -2,6 +2,7 @@ package org.hibernate.orm.test.timezones;
 
 import java.time.Instant;
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -27,9 +28,13 @@ public class UTCNormalizedInstantTest {
 
 	@Test void test(SessionFactoryScope scope) {
 		final Instant instant;
-		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect ) {
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( dialect instanceof SybaseDialect ) {
 			// Sybase has 1/300th sec precision
 			instant = Instant.now().with( ChronoField.NANO_OF_SECOND, 0L );
+		}
+		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			instant = Instant.now().truncatedTo( ChronoUnit.MICROS );
 		}
 		else {
 			instant = Instant.now();
@@ -43,7 +48,6 @@ public class UTCNormalizedInstantTest {
 		});
 		scope.inSession( s-> {
 			final Zoned z = s.find(Zoned.class, id);
-			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 			assertEquals(
 					DateTimeUtils.adjustToDefaultPrecision( z.utcInstant, dialect ),
 					DateTimeUtils.adjustToDefaultPrecision( instant, dialect )
@@ -58,9 +62,13 @@ public class UTCNormalizedInstantTest {
 	@Test void testWithSystemTimeZone(SessionFactoryScope scope) {
 		TimeZone.setDefault( TimeZone.getTimeZone("CET") );
 		final Instant instant;
-		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect ) {
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( dialect instanceof SybaseDialect ) {
 			// Sybase has 1/300th sec precision
 			instant = Instant.now().with( ChronoField.NANO_OF_SECOND, 0L );
+		}
+		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			instant = Instant.now().truncatedTo( ChronoUnit.MICROS );
 		}
 		else {
 			instant = Instant.now();
@@ -74,7 +82,6 @@ public class UTCNormalizedInstantTest {
 		});
 		scope.inSession( s-> {
 			final Zoned z = s.find(Zoned.class, id);
-			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 			Instant expected = DateTimeUtils.adjustToDefaultPrecision( z.utcInstant, dialect );
 			Instant actual = DateTimeUtils.adjustToDefaultPrecision( instant, dialect );
 			assertEquals(

@@ -219,20 +219,13 @@ public class MetadataBuildingProcess {
 
 		bootstrapContext.getTypeConfiguration().scope( rootMetadataBuildingContext );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Set up the processors and start binding
-		//		NOTE : this becomes even more simplified after we move purely
-		// 		to unified model
-		final IndexView jandexView = domainModelSource.getJandexIndex();
-
 		coordinateProcessors(
 				managedResources,
 				options,
 				rootMetadataBuildingContext,
 				domainModelSource,
 				classLoaderService,
-				metadataCollector,
-				jandexView
+				metadataCollector
 		);
 
 		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
@@ -248,8 +241,7 @@ public class MetadataBuildingProcess {
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
 			DomainModelSource domainModelSource,
 			ClassLoaderService classLoaderService,
-			InFlightMetadataCollectorImpl metadataCollector,
-			IndexView jandexView) {
+			InFlightMetadataCollectorImpl metadataCollector) {
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
 			private final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
 					? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )

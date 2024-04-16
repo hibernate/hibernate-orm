@@ -58,26 +58,24 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return false;
 		}
 
-		return doPrivileged( () -> {
-			final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
-			try {
-				final Object subObj = instantiateCompositeId();
+		final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
+		try {
+			final Object subObj = instantiateCompositeId();
 
-				boolean ret = true;
-				for ( IdMapper idMapper : ids.values() ) {
-					ret &= idMapper.mapToEntityFromMap( subObj, data );
-				}
-
-				if ( ret ) {
-					setter.set( obj, subObj );
-				}
-
-				return ret;
+			boolean ret = true;
+			for ( IdMapper idMapper : ids.values() ) {
+				ret &= idMapper.mapToEntityFromMap( subObj, data );
 			}
-			catch (Exception e) {
-				throw new AuditException( e );
+
+			if ( ret ) {
+				setter.set( obj, subObj );
 			}
-		} );
+
+			return ret;
+		}
+		catch (Exception e) {
+			throw new AuditException( e );
+		}
 	}
 
 	@Override

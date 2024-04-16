@@ -21,8 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -33,15 +31,12 @@ import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.TypeCache;
-import net.bytebuddy.asm.AsmVisitorWrapper.ForDeclaredMethods;
-import net.bytebuddy.asm.MemberSubstitution;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.DynamicType.Unloaded;
@@ -51,7 +46,6 @@ import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
 
 /**
@@ -90,16 +84,8 @@ public final class ByteBuddyState {
 
 	ByteBuddyState(ClassFileVersion classFileVersion) {
 		this.byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
-
 		this.proxyCache = new TypeCache( TypeCache.Sort.WEAK );
 		this.basicProxyCache = new TypeCache( TypeCache.Sort.WEAK );
-
-		if ( SystemSecurityManager.isSecurityManagerEnabled() ) {
-			this.classRewriter = new SecurityManagerClassRewriter();
-		}
-		else {
-			this.classRewriter = new StandardClassRewriter();
-		}
 	}
 
 	/**
@@ -200,22 +186,12 @@ public final class ByteBuddyState {
 		return cache.findOrInsert(
 				referenceClass.getClassLoader(),
 				cacheKey,
-				() -> {
-					PrivilegedAction<Class<?>> delegateToPrivilegedAction = new PrivilegedAction<Class<?>>() {
-						@Override
-						public Class<?> run() {
-							return make( makeProxyFunction.apply( byteBuddy ) )
-									.load(
-											referenceClass.getClassLoader(),
-											resolveClassLoadingStrategy( referenceClass )
-									)
-									.getLoaded();
-						}
-					};
-					return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged(
-							delegateToPrivilegedAction ) :
-							delegateToPrivilegedAction.run();
-				},
+				() -> make( makeProxyFunction.apply( byteBuddy ) )
+						.load(
+								referenceClass.getClassLoader(),
+								resolveClassLoadingStrategy( referenceClass )
+						)
+						.getLoaded(),
 				cache
 		);
 	}
@@ -233,8 +209,6 @@ public final class ByteBuddyState {
 	}
 
 	private Unloaded<?> make(TypePool typePool, DynamicType.Builder<?> builder) {
-		builder = classRewriter.installReflectionMethodVisitors( builder );
-
 		Unloaded<?> unloadedClass;
 		if ( typePool != null ) {
 			unloadedClass = builder.make( typePool );
@@ -251,9 +225,6 @@ public final class ByteBuddyState {
 				LOG.warn( "Unable to save generated class %1$s", unloadedClass.getTypeDescription().getName(), e );
 			}
 		}
-
-		classRewriter.registerAuthorizedClass( unloadedClass );
-
 		return unloadedClass;
 	}
 
@@ -315,32 +286,10 @@ public final class ByteBuddyState {
 				toFullyIgnore.add( isDeclaredBy( m.getReturnType() ).and( named( m.getName() ) ).and( takesNoArguments() ) );
 			}
 
-			PrivilegedAction<MethodDelegation> delegateToInterceptorDispatcherMethodDelegationPrivilegedAction =
-					new PrivilegedAction<MethodDelegation>() {
+			this.delegateToInterceptorDispatcherMethodDelegation = MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class );
 
-				@Override
-				public MethodDelegation run() {
-					return MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class );
-				}
-			};
-
-			this.delegateToInterceptorDispatcherMethodDelegation = SystemSecurityManager.isSecurityManagerEnabled()
-					? AccessController.doPrivileged( delegateToInterceptorDispatcherMethodDelegationPrivilegedAction )
-					: delegateToInterceptorDispatcherMethodDelegationPrivilegedAction.run();
-
-			PrivilegedAction<FieldAccessor.PropertyConfigurable> interceptorFieldAccessorPrivilegedAction =
-					new PrivilegedAction<FieldAccessor.PropertyConfigurable>() {
-
-				@Override
-				public FieldAccessor.PropertyConfigurable run() {
-					return FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
-							.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
-				}
-			};
-
-			this.interceptorFieldAccessor = SystemSecurityManager.isSecurityManagerEnabled()
-					? AccessController.doPrivileged( interceptorFieldAccessorPrivilegedAction )
-					: interceptorFieldAccessorPrivilegedAction.run();
+			this.interceptorFieldAccessor = FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME )
+					.withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC );
 		}
 
 		public ElementMatcher<? super MethodDescription> getGroovyGetMetaClassFilter() {
@@ -368,71 +317,6 @@ public final class ByteBuddyState {
 				builder = builder.ignoreAlso( m );
 			}
 			return builder;
-		}
-	}
-
-	private interface ClassRewriter {
-		DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder);
-
-		void registerAuthorizedClass(Unloaded<?> unloadedClass);
-	}
-
-	private static class SecurityManagerClassRewriter implements ClassRewriter {
-
-		private final ForDeclaredMethods getDeclaredMethodMemberSubstitution;
-		private final ForDeclaredMethods getMethodMemberSubstitution;
-
-		private SecurityManagerClassRewriter() {
-			this.getDeclaredMethodMemberSubstitution = getDeclaredMethodMemberSubstitution();
-			this.getMethodMemberSubstitution = getMethodMemberSubstitution();
-		}
-
-		@Override
-		public DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
-			builder = builder.visit( getDeclaredMethodMemberSubstitution );
-			return builder.visit( getMethodMemberSubstitution );
-		}
-
-		@Override
-		public void registerAuthorizedClass(Unloaded<?> unloadedClass) {
-			// we authorize the proxy class to access the method lookup dispatcher
-			HibernateMethodLookupDispatcher.registerAuthorizedClass( unloadedClass.getTypeDescription().getName() );
-		}
-
-		private static ForDeclaredMethods getDeclaredMethodMemberSubstitution() {
-			// this should only be called if the security manager is enabled, thus the privileged calls
-			return MemberSubstitution.relaxed()
-					.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
-							"getDeclaredMethod", String.class, Class[].class ) ) ) )
-					.replaceWith(
-							AccessController.doPrivileged( new GetDeclaredMethodAction( HibernateMethodLookupDispatcher.class,
-									"getDeclaredMethod", Class.class, String.class, Class[].class ) ) )
-					.on( ElementMatchers.isTypeInitializer() );
-		}
-
-		private static ForDeclaredMethods getMethodMemberSubstitution() {
-			// this should only be called if the security manager is enabled, thus the privileged calls
-			return MemberSubstitution.relaxed()
-					.method( ElementMatchers.is( AccessController.doPrivileged( new GetDeclaredMethodAction( Class.class,
-							"getMethod", String.class, Class[].class ) ) ) )
-					.replaceWith(
-							AccessController.doPrivileged( new GetDeclaredMethodAction( HibernateMethodLookupDispatcher.class,
-									"getMethod", Class.class, String.class, Class[].class ) ) )
-					.on( ElementMatchers.isTypeInitializer() );
-		}
-	}
-
-	private static class StandardClassRewriter implements ClassRewriter {
-
-		@Override
-		public DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
-			// do nothing
-			return builder;
-		}
-
-		@Override
-		public void registerAuthorizedClass(Unloaded<?> unloadedClass) {
-			// do nothing
 		}
 	}
 

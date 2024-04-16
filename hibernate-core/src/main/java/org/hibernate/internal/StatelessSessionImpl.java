@@ -23,6 +23,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
@@ -71,6 +72,7 @@ import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.event.internal.DefaultInitializeCollectionEventListener.handlePotentiallyEmptyCollection;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -529,16 +531,35 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void initializeCollection(
-			PersistentCollection<?> collection,
-			boolean writing) throws HibernateException {
-		throw new SessionException( "collections cannot be fetched by a stateless session" );
+	public void initializeCollection(PersistentCollection<?> collection, boolean writing)
+			throws HibernateException {
+		final PersistenceContext persistenceContext = getPersistenceContextInternal();
+		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
+		if ( ce == null ) {
+			throw new HibernateException( "no entry for collection" );
+		}
+		if ( !collection.wasInitialized() ) {
+			final CollectionPersister loadedPersister = ce.getLoadedPersister();
+			final Object loadedKey = ce.getLoadedKey();
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Initializing collection {0}",
+						collectionInfoString( loadedPersister, collection, loadedKey, this ) );
+			}
+			loadedPersister.initialize( loadedKey, this );
+			handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Collection initialized" );
+			}
+			//TODO: statistics!
+//			final StatisticsImplementor statistics = getFactory().getStatistics();
+//			if ( statistics.isStatisticsEnabled() ) {
+//				statistics.fetchCollection( loadedPersister.getRole() );
+//			}
+		}
 	}
 
 	@Override
-	public Object instantiate(
-			String entityName,
-			Object id) throws HibernateException {
+	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return instantiate( getEntityPersister( entityName ), id );
 	}
 

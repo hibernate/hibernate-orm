@@ -3,6 +3,28 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.0.Alpha1 (April 16, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32214
+
+** Deprecation
+    * [HHH-17441] - Deprecate @Comment
+
+** New Feature
+    * [HHH-17460] - Ongoing JPA 3.2 work
+    * [HHH-17459] - Allow resolution callbacks on select o.h.mapping objects
+
+** Remove Feature
+    * [HHH-17961] - Drop support for hibernate.mapping.precedence
+    * [HHH-17894] - Remove AdditionalJaxbMappingProducer
+    * [HHH-17893] - Remove MetadataContributor
+    * [HHH-17892] - Remove @Persister
+
+** Task
+    * [HHH-17444] - Ongoing JPA 32 work
+
+
 Changes in 6.4.1.Final (December 15, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

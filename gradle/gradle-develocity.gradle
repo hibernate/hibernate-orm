@@ -36,21 +36,28 @@ static java.util.Optional<String> getSetting(String name) {
     return java.util.Optional.ofNullable(sysProp);
 }
 
-gradleEnterprise {
+develocity {
     server = 'https://ge.hibernate.org'
 
     buildScan {
-        captureTaskInputFiles = true
-        publishAlways()
-        publishIfAuthenticated()
+        capture {
+            fileFingerprints = true
+        }
+        publishing.onlyIf { it.authenticated }
+
+        obfuscation {
+            // Don't share ip addresses
+            ipAddresses { addresses -> addresses.collect { address -> "0.0.0.0" } }
+        }
 
         uploadInBackground = !settings.ext.isCiEnvironment
 
-        tag "jdk-${extensions.jdkVersions.test.launcher}"
-        tag extensions.db
-        value 'database', extensions.db
-        if ( extensions.hasProperty( 'ci.node' ) ) {
-            tag extensions.property( 'ci.node' )
+        tag "jdk-${settings.extensions.jdkVersions.test.launcher}"
+        tag settings.extensions.db
+        value 'database', settings.extensions.db
+
+        if ( settings.extensions.findByName( 'ci.node' ) ) {
+            tag settings.extensions.findByName( 'ci.node' )
         }
     }
 }

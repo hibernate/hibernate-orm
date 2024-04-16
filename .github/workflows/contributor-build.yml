@@ -102,7 +102,7 @@ jobs:
           # Don't populate Develocity cache in pull requests as that's potentially dangerous
           POPULATE_REMOTE_GRADLE_CACHE: "${{ github.event_name == 'push' }}"
           # WARNING: exposes secrets, so must only be passed to a step that doesn't run unapproved code.
-          GRADLE_ENTERPRISE_ACCESS_KEY: "${{ github.event_name == 'push' && secrets.GRADLE_ENTERPRISE_ACCESS_KEY || '' }}"
+          DEVELOCITY_ACCESS_KEY: "${{ github.event_name == 'push' && secrets.GRADLE_ENTERPRISE_ACCESS_KEY || '' }}"
         run: ./ci/build-github.sh
         shell: bash
       - name: Publish Develocity build scan for previous build (pull request)
@@ -111,7 +111,7 @@ jobs:
           ./gradlew buildScanPublishPrevious
         env:
           # WARNING: exposes secrets, so must only be passed to a step that doesn't run unapproved code.
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY_PR }}
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY_PR }}
       - name: Upload test reports (if Gradle failed)
         uses: actions/upload-artifact@v4
         if: failure()

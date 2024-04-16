@@ -20,7 +20,7 @@ pluginManagement {
 plugins {
     id 'org.hibernate.orm.build.env-settings'
     id 'org.hibernate.orm.build.jdks-settings'
-    id 'com.gradle.enterprise' version '3.17'
+    id 'com.gradle.develocity' version '3.17.1'
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.0'
 }
 
@@ -284,7 +284,7 @@ String overrideableVersion(String settingName, String defaultVersion) {
 
 rootProject.name = 'hibernate-orm'
 
-apply from: file( 'gradle/gradle-enterprise.gradle' )
+apply from: file( 'gradle/gradle-develocity.gradle' )
 
 if ( !JavaVersion.current().java11Compatible ) {
     throw new GradleException( "Gradle must be run with Java 11 or later" )
@@ -295,10 +295,10 @@ buildCache {
         // do not use local build cache for CI jobs, period!
         enabled = !settings.ext.isCiEnvironment
     }
-    remote(gradleEnterprise.buildCache) {
+    remote(develocity.buildCache) {
         enabled = true
         // Check access key presence to avoid build cache errors on PR builds when access key is not present
-        def accessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY")
+        def accessKey = System.getenv("DEVELOCITY_ACCESS_KEY")
         push = settings.ext.populateRemoteBuildCache && accessKey
     }
 }

@@ -1,9 +1,11 @@
-= Hibernate 6.6.0.Final
+= Hibernate 7.0.0.Alpha1
 Steve Ebersole
+:toc:
+:toclevels: 2
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
 
-:family: 6.6
+:family: 7.0
 
 :docs-url: https://docs.jboss.org/hibernate/orm/{family}
 :javadocs-url: {docs-url}/javadocs
@@ -12,224 +14,43 @@ Steve Ebersole
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 :ql-guide-url: {docs-url}/querylanguage/html_single/Hibernate_Query_Language.html
 
-[[jakarta-data]]
-== Jakarta Data
+7.0.0.Alpha1 is the first development release of the Hibernate 7.0 family which includes many new features, in addition to many improvements and fixes.
 
-Hibernate 6.6 includes a complete implementation of the Jakarta Data 1.0 Release. As https://in.relation.to/2024/04/18/jakarta-data-1/[discussed here], our implementation:
 
-- is based on compile-time code generation via an annotation processor, enabling unprecedented compile-time type safety, and
-- is backed by Hibernate's `StatelessSession`, which has been enhanced especially to meet the needs of Jakarta Data.
+[[jpa-32]]
+== Jakarta Persistence 3.2
 
-This implementation already passes the Jakarta Data TCK, and we have a request for certification pending.
+7.0 migrates to Jakarta Persistence 3.2 which can be fairly disruptive.  See the link:{migration-guide-url}#jpa-32[Migration Guide] for details.
 
-To make use of _Hibernate Data Repositories_, you'll need to depend on:
 
-- our annotation processor, `hibernate-jpamodelgen`, and
-- the Jakarta Data API, `jakarta.data-api.
+[[java-17]]
+== Java 17
 
-For example, in Gradle:
+Version 3.2 of Jakarta Persistence requires Java 17.  Hibernate 7.0 therefore baselines on Java 17 whereas previous versions baseline on Java 11.
 
-[source,groovy]
-----
-implementation 'jakarta.data:jakarta.data-api:1.0.0'
-implementation 'org.hibernate.orm:hibernate-core:6.6.0.Final'
 
-annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.6.0.Final'
-----
+[[mapping-xml]]
+== mapping.xsd
 
-For more information, please see the brand-new _Hibernate Data Repositories_ link:{docs-url}/repositories/html_single/Hibernate_Data_Repositories.html[documentation].
+Hibernate 7.0 provides a new XSD that represents an "extension" of the Jakarta Persistence orm.xsd weaving in Hibernate-specific mapping features.  The namespace for this extended mapping is `http://www.hibernate.org/xsd/orm/mapping`
 
 
-[[concrete-proxy]]
-== @ConcreteProxy
+[[hibernate-models]]
+== Hibernate Models
 
-6.6 also provides a new `@ConcreteProxy` annotation intended as an improved replacement for the deprecated `@Proxy` and `@LazyToOne` annotations.  Indicates that lazy references should be instantiated as the concrete type rather than the referenced type.
+7.0 migrates from https://github.com/hibernate/hibernate-commons-annotations/[Hibernate Commons Annotations] (HCANN) to the new https://github.com/hibernate/hibernate-models[Hibernate Models] project for low-level processing of an application domain model, reading annotations and weaving in XML mapping documents.
 
-Consider the following model and data
+See the link:{migration-guide-url}#hibernate-models[Migration Guide] for details.
 
-[source,java]
-----
-@ConcreteProxy
-@Entity
-@Inheritance
-class Payment { ... }
 
-@Entity
-class CardPayment extends Payment { ... }
+[[model-validations]]
+== Domain Model Validations
 
-session1.persist( new CardPayment( 1, ... ) );
-----
+7.0 does much more validation of an application's domain model and especially its mapping details, e.g.
 
+* illegal combinations such as `@Basic` and `@ManyToOne` on the same attribute
+* misplaced annotations such as an annotated getter method with FIELD access
+* stricter following of JavaBean conventions
 
-As a simple example -
-
-[source,java]
-----
-Payment loaded = session2.getReference( Payment.class, 1 );
-----
-
-Historically, Hibernate would create a lazy proxy for `loaded` of type `Payment`.  Attempts to cast that reference to `CardPayment` would result in a casting error.  `@ConcreteProxy` forces Hibernate to resolve the actual, concrete type and create a proxy of that type instead -
-
-[source,java]
-----
-CardPayment loaded = (CardPayment) session2.getReference( Payment.class, 1 );
-----
-
-IMPORTANT: Hibernate will try a number of different ways to determine the concrete type, but may ultimately have to fall back to hitting the database which might have an effect on performance.
-
-This feature works with both Hibernate's legacy proxy-based laziness and the newer bytecode enhancement laziness.
-
-
-[[extended-array]]
-== Extended Array support
-
-ORM 6.6 adds support for mapping arrays of embeddable aggregate types e.g.
-
-[source,java]
-----
-@Entity
-class MyEntity {
-	List<MyEmbeddable> embeddableAggregateList;
-}
-
-@Struct
-@Embeddable
-class MyEmbeddable { ... }
-
-----
-
-[[array-syntax-sugar]]
-== Syntax sugar for array functions
-
-Plenty of syntax sugar for array operations was added:
-
-
-|===
-|Function |Syntax sugar |
-
-|`array(1, 2)`
-|`[1, 2]`
-|Shorthand bracket syntax for array construction
-
-|`array_slice(array, 1, 2)`
-|`array[1:2]`
-|Shorthand bracket syntax for array slicing
-
-|`array_length(array)`
-|`length(array)`
-|Overload length function with array_length semantics on array input
-
-|`array_position(array, element)`
-|`position(element in array)`
-|Overload position function with array_position semantics on array input
-
-|`array_to_string(array, ',', 'null')`
-|`cast(array as String)`
-|Support casting array to string
-
-|`array_contains(array, element)`
-|`array contains element` or `element in array`
-|Contains predicate for containment check
-
-|`array_includes(array, array)`
-|`array includes subArray`
-|Predicate to for subset checking
-
-|`array_intersects(array, array(1, 2))`
-|`array intersects [1, 2]`
-|Overlaps predicate for overlaps check
-|===
-
-[[string-syntax-sugar]]
-== Syntax sugar for string functions
-
-The bracket syntax can now also be used for string typed expressions to select a single character by index,
-or obtain a substring by start and end index.
-
-`stringPath[2]` is syntax sugar for `substring(stringPath, 2, 1)` and returns a `Character`.
-`stringPath[2:3]` is syntax sugar for `substring(stringPath, 2, 3-2+1)`,
-where `3-2+1` is the expression to determine the desired string length.
-
-
-[[embeddable-inheritance]]
-== Embeddable Inheritance
-
-Another new feature of this version is discriminator-based inheritance for `@Embeddable` types. An `@Embeddable` class
-may be extended by other `@Embeddable` classes, in which case the `@Embedded` properties using that type will
-rely on an additional discriminator column to store information about the composite value's subtype.
-
-When retrieving the inherited embedded property, Hibernate will read the discriminator value and instantiate the
-correct `@Embeddable` subtype with its corresponding properties.
-
-For example, a mapping like this:
-[source,java]
-----
-@Embeddable
-@DiscriminatorValue( "parent" )
-@DiscriminatorColumn( name = "embeddable_type" )
-class ParentEmbeddable implements Serializable {
-	private String parentProp;
-	// ...
-}
-
-@Embeddable
-@DiscriminatorValue( "child_one" )
-class ChildOneEmbeddable extends ParentEmbeddable {
-	private Integer childOneProp;
-	// ...
-}
-
-@Entity
-class TestEntity {
-	@Embedded
-	private ParentEmbeddable embeddable;
-	// ...
-}
-----
-
-Will result in the following table structure:
-[source,sql]
-----
-create table TestEntity (
-    -- ...
-    embeddable_type varchar(31) not null,
-    parentProp varchar(255),
-    childOneProp integer,
-    -- ...
-)
-----
-
-You can choose to customize the discriminator column properties using the `@DiscriminatorColumn` annotation on the root embeddable type, and you can pick the discriminator values to use for each subtype with the `@DiscriminatorValue` annotation, just like with entities.
-
-For more detailed information please refer to the link:{user-guide-url}#embeddable-inheritance[Embeddable inheritance] user guide chapter.
-
-[[oracle-vector]]
-== Oracle Vector support
-
-Oracle engineers contributed the support for vector data types and functions to the `hibernate-vector` module
-to use with Oracle database version 23.4 and newer.
-
-For further information about vectors, consult the link:https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle documentation].
-
-[[one-to-many-mapped-by-any]]
-== `@OneToMany(mappedBy)` support for `@Any`
-
-So far, the target of `@OneToMany` had to be a `@ManyToOne`. To map a `@OneToMany` based on an any association,
-it was necessary to spell out a custom `@SQLRestriction` and specify the join columns.
-
-Targeting an `@Any` association is now supported and will default to the appropriate join columns,
-as well as add a `@SQLRestriction` to the `@OneToMany` automatically.
-
-[[apply-filter-to-load-by-key]]
-== `@Filter` support for load by key
-
-Filters can opt in to be applicable also to find by key operations
-like `Session.find()`, lazy initialization and to-one association fetching,
-by setting `@FilterDef(applyToLoadByKey = true)`.
-
-If the target row of an association is filtered by such a load by key enabled filter,
-Hibernate ORM will throw a `EntityFilterException` to prevent potential data loss
-that can happen when flushing an entity that owns such an association.
-
-Also, the `@TenantId` filter was changed to apply to load by key operations by default.
+See the link:{migration-guide-url}#annotation-validation[Migration Guide] for details.
 

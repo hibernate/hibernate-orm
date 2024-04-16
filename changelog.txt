@@ -3,27 +3,26 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
-Changes in 6.6.0.Alpha1 (April 25, 2024)
+Changes in 7.0.0.Alpha1 (April 16, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 
-https://hibernate.atlassian.net/projects/HHH/versions/32271
+https://hibernate.atlassian.net/projects/HHH/versions/32214
 
-** Bug
-    * [HHH-17969] - NPE copying SQM tree for criteria delete statement with null predicate
-
-** Improvement
-    * [HHH-17999] - Avoid runtime reflection for org.hibernate.jdbc.Expectation
-    * [HHH-17993] - Metamodel processing on bootstrap: avoid retrying same metamodel class name multiple times
-    * [HHH-17991] - Reduce overhead from @DialectOverride discovery
-    * [HHH-17988] - MetadataContext should consistently use ClassLoaderService
-    * [HHH-17987] - Improve allocation rate of ReflectHelper#setterMethodOrNull
-    * [HHH-17980] - Excessive contention during getter identification in the ByteBuddy enhancer
-    * [HHH-17954] - StatelessSession should no longer ignore changes to collections
-    * [HHH-17824] - Extend usage spectrum of @Jpa to the test method level
+** Deprecation
+    * [HHH-17441] - Deprecate @Comment
 
 ** New Feature
-    * [HHH-17955] - Bean validation and StatelessSession
-    * [HHH-17818] - Add new ConcreteProxy annotation
+    * [HHH-17460] - Ongoing JPA 3.2 work
+    * [HHH-17459] - Allow resolution callbacks on select o.h.mapping objects
+
+** Remove Feature
+    * [HHH-17961] - Drop support for hibernate.mapping.precedence
+    * [HHH-17894] - Remove AdditionalJaxbMappingProducer
+    * [HHH-17893] - Remove MetadataContributor
+    * [HHH-17892] - Remove @Persister
+
+** Task
+    * [HHH-17444] - Ongoing JPA 32 work
 
 
 Changes in 6.4.1.Final (December 15, 2023)

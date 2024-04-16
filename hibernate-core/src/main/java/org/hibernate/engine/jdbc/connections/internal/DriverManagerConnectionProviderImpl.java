@@ -6,8 +6,6 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -32,7 +30,6 @@ import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceException;
@@ -602,22 +599,7 @@ public class DriverManagerConnectionProviderImpl
 				ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( pool.getUrl() );
 				active = false;
 				if ( executorService != null ) {
-					PrivilegedAction delegateToPrivilegedAction =
-							new PrivilegedAction() {
-
-								@Override
-								public Object run() {
-									executorService.shutdown();
-									return null;
-								}
-							};
-					if ( SystemSecurityManager.isSecurityManagerEnabled() ) {
-						AccessController.doPrivileged(
-								delegateToPrivilegedAction );
-					}
-					else {
-						delegateToPrivilegedAction.run();
-					}
+					executorService.shutdown();
 				}
 				executorService = null;
 				try {

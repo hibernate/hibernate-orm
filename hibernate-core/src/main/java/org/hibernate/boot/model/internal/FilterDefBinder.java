@@ -16,6 +16,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
@@ -101,13 +102,12 @@ public class FilterDefBinder {
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}
 
-	@SuppressWarnings("rawtypes")
-	private static ManagedBean<? extends Supplier> resolveParamResolver(ClassDetails resolverClassDetails, MetadataBuildingContext context) {
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static ManagedBean<? extends Supplier<?>> resolveParamResolver(ClassDetails resolverClassDetails, MetadataBuildingContext context) {
 		final Class<? extends Supplier> clazz = resolverClassDetails.toJavaClass();
 		assert clazz != Supplier.class;
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
-		return (ManagedBean<? extends Supplier<?>>)
-				bootstrapContext.getServiceRegistry()
+		return (ManagedBean<? extends Supplier<?>>) bootstrapContext.getServiceRegistry()
 						.requireService(ManagedBeanRegistry.class)
 						.getBean(clazz, bootstrapContext.getCustomTypeProducer());
 	}

@@ -64,13 +64,11 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 	}
 
 	protected Object instantiateCompositeId() {
-		return doPrivileged( () -> {
-			try {
-				return ReflectHelper.getDefaultConstructor( compositeIdClass ).newInstance();
-			}
-			catch ( Exception e ) {
-				throw new AuditException( e );
-			}
-		} );
+		try {
+			return ReflectHelper.getDefaultConstructor( compositeIdClass ).newInstance();
+		}
+		catch ( Exception e ) {
+			throw new AuditException( e );
+		}
 	}
 }

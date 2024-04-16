@@ -94,7 +94,7 @@ jobs:
           # WARNING: exposes secrets, so must only be passed to a step that doesn't run unapproved code.
           # WARNING: As this runs on untrusted nodes, we use the same access key as for PRs:
           #          it has limited access, essentially it can only push build scans.
-          GRADLE_ENTERPRISE_ACCESS_KEY: "${{ github.event_name == 'push' && secrets.GRADLE_ENTERPRISE_ACCESS_KEY_PR || '' }}"
+          DEVELOCITY_ACCESS_KEY: "${{ github.event_name == 'push' && secrets.GRADLE_ENTERPRISE_ACCESS_KEY_PR || '' }}"
         run: ./ci/build-github.sh
         shell: bash
       - name: Publish Develocity build scan for previous build
@@ -103,7 +103,7 @@ jobs:
           ./gradlew buildScanPublishPrevious
         env:
           # WARNING: exposes secrets, so must only be passed to a step that doesn't run unapproved code.
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY_PR }}
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY_PR }}
       - name: Upload test reports (if Gradle failed)
         uses: actions/upload-artifact@v4
         if: failure()

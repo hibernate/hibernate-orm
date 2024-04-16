@@ -89,7 +89,7 @@ public class FilterDefRegistration {
 			} );
 		}
 
-		final Map<String, ManagedBean<? extends Supplier>> parameterResolvers;
+		final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolvers;
 		if ( CollectionHelper.isEmpty( this.parameterResolvers ) ) {
 			parameterResolvers = Collections.emptyMap();
 		}

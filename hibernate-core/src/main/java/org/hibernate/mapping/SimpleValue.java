@@ -48,6 +48,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -59,6 +60,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -944,7 +946,7 @@ public abstract class SimpleValue implements KeyValue {
 							classLoaderService.classForTypeName(
 									typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)
 							),
-							xProperty instanceof JavaXMember ? ((JavaXMember) xProperty ).getJavaType() : null,
+							attributeMember != null ? attributeMember.getType() : null,
 							annotations,
 							table.getCatalog(),
 							table.getSchema(),
@@ -1003,7 +1005,7 @@ public abstract class SimpleValue implements KeyValue {
 
 			return new ParameterTypeImpl(
 					classLoaderService.classForTypeName(typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)),
-					xProperty instanceof JavaXMember ? ((JavaXMember) xProperty ).getJavaType() : null,
+					attributeMember != null ? attributeMember.getType() : null,
 					annotations,
 					table.getCatalog(),
 					table.getSchema(),
@@ -1032,7 +1034,7 @@ public abstract class SimpleValue implements KeyValue {
 
 		private ParameterTypeImpl(
 				Class<?> returnedClass,
-				java.lang.reflect.Type returnedJavaType,
+				TypeDetails returnedTypeDetails,
 				Annotation[] annotationsMethod,
 				String catalog,
 				String schema,
@@ -1041,7 +1043,6 @@ public abstract class SimpleValue implements KeyValue {
 				String[] columns,
 				Long[] columnLengths) {
 			this.returnedClass = returnedClass;
-			this.returnedJavaType = returnedJavaType != null ? returnedJavaType : returnedClass;
 			this.annotationsMethod = annotationsMethod;
 			this.catalog = catalog;
 			this.schema = schema;
@@ -1049,6 +1050,17 @@ public abstract class SimpleValue implements KeyValue {
 			this.primaryKey = primaryKey;
 			this.columns = columns;
 			this.columnLengths = columnLengths;
+			if ( returnedTypeDetails != null ) {
+				if ( returnedTypeDetails.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+					this.returnedJavaType = ParameterizedTypeImpl.from( returnedTypeDetails.asParameterizedType() );
+				}
+				else {
+					this.returnedJavaType = returnedTypeDetails.determineRawClass().toJavaClass();
+				}
+			}
+			else {
+				this.returnedJavaType = null;
+			}
 		}
 
 		@Override

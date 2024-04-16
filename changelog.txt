@@ -3,85 +3,26 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
-Changes in 6.6.0.CR1 (June 14, 2024)
+Changes in 7.0.0.Alpha1 (April 16, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 
-https://hibernate.atlassian.net/projects/HHH/versions/32289
+https://hibernate.atlassian.net/projects/HHH/versions/32214
 
-** Bug
-    * [HHH-18267] - Informix insert value to identity column error
-    * [HHH-18259] - Joined Inheritence with Generated wrongly resolves columns for base entity
-    * [HHH-18256] - SQL fragment template wrongly prefixes literal type prefix
-    * [HHH-18251] - IdClass with Record not working with ToOne relation columns
-    * [HHH-18250] - Informix multi insert not supported
-    * [HHH-18246] - Informix nulls precedence support
-    * [HHH-18244] - Informix SelectItemReferenceStrategy error
-    * [HHH-18241] - revert change to semantics of 'null in ()'
-    * [HHH-18232] - DB2zDialect - Insert with GeneratedValue Id not working with DB2v12
-    * [HHH-18225] - Informix syntax error in DISTINCT clause before SKIP clause
-    * [HHH-18221] - Incomplete list of existing foreign keys - DatabaseMetaData.crossReferences(...) not used
-    * [HHH-18218] - Dynamic instantiation with generic entity attribute fails constructor argument type validation
-    * [HHH-18215] - QueryException raised for valid update SQL query - problems with aliases parsing
-    * [HHH-18214] - unhelpful error when query result type has no appropriate constructor
-    * [HHH-18213] - FirebirdDialect LimitHandler produces wrong query on Firebird 2.5 and older
-    * [HHH-18212] - Accessing a removed lazy association results in a NullPointerException 
-    * [HHH-18205] - hibernate.implicit_naming_strategy and hibernate.physical_naming_strategy ignored when using Configuration
-    * [HHH-18203] - JPMS: Cannot invoke "javax.lang.model.element.Element.getAnnotationMirrors()" because "element" is null
-    * [HHH-18202] - Error with distinct query + order by aggregate function on an association key
-    * [HHH-18201] - Addition/subtraction of duration to/from temporal parameter wrongly resolved as duration during query parsing
-    * [HHH-18179] - HibernateProcessor wrong warnings after upgrading to 6.5
-    * [HHH-18176] - upsert() with @Version-ed entity on Oracle
-    * [HHH-18175] - StatelessSession not incrementing @Version for entities with IDENTITY id generation
-    * [HHH-18172] - Fix embeddable inheritance for types extending @MappedSuperclass
-    * [HHH-18170] - Subquery randomly generating wrong SQL due to duplicate alias
-    * [HHH-18168] - Informix plural attribute size function support
-    * [HHH-18166] - Cascade behaviour different depending on bootstrap Hibernate or JPA for SAME cascade annotations
-    * [HHH-18163] - Informix foreign key on cascade delete syntax
-    * [HHH-18158] - EmbeddedId not working when Embedded is a generic record
-    * [HHH-18156] - OracleDatabaseCleaner doesn't support latest docker image "gvenzl/oracle-free"
-    * [HHH-18153] - Informix unique constraints on nullness columns
-    * [HHH-18151] - Bytecode enhancement incorrectly generates code for parameterized fields
-    * [HHH-18150] - Informix float and double precision in decimal digits
-    * [HHH-18149] - Metamodel generation fails if executed from Eclipse
-    * [HHH-18147] - Hibernate fails to persist an entity when a natural id association is a proxy
-    * [HHH-18140] - Error modify column type when project startup.
-    * [HHH-18138] - String based fetchGraphs do not resolve parameterized entity associated properties from MappedSuperclass
-    * [HHH-18137] - Hibernate Processor finder method doesn't find field from MappedSuperclass with private fields and field access
-    * [HHH-18121] - Error when using createCountQuery() from distinct dynamic instantiation query
-    * [HHH-18118] - In ScriptSourceInputFromUrl url is compared with itself
-    * [HHH-18117] - Character literal is not properly handled in query
-    * [HHH-18112] - Some dialects use the wrong default version
-    * [HHH-18107] - Package name in 2 classes doesn't correspond to the file path
-    * [HHH-18106] - @CheckHQL is reporting error when named query contains valid Java constant
-    * [HHH-18105] - Semicolon misssing in CSS file hibernate-layout.css line 98
-    * [HHH-18102] - @CheckHQL is not reporting error when non-existing enum constant is referenced in named HQL query
-    * [HHH-18098] - entities annotated @Cacheable(false) get added to second-level cache
-    * [HHH-18080] - hibernate.boot.allow_jdbc_metadata_access=false leads to warning about "0.0.0 version"
-    * [HHH-18077] - In key-based pagination next and previous keys seem to be swapped when moving to previous pages
-    * [HHH-18073] - BasicCollectionJavaType treat Set inconsistently
-
-
-Changes in 6.6.0.Alpha1 (April 25, 2024)
-------------------------------------------------------------------------------------------------------------------------
-
-https://hibernate.atlassian.net/projects/HHH/versions/32271
-
-** Bug
-    * [HHH-17969] - NPE copying SQM tree for criteria delete statement with null predicate
-
-** Improvement
-    * [HHH-17999] - Avoid runtime reflection for org.hibernate.jdbc.Expectation
-    * [HHH-17993] - Metamodel processing on bootstrap: avoid retrying same metamodel class name multiple times
-    * [HHH-17991] - Reduce overhead from @DialectOverride discovery
-    * [HHH-17988] - MetadataContext should consistently use ClassLoaderService
-    * [HHH-17987] - Improve allocation rate of ReflectHelper#setterMethodOrNull
-    * [HHH-17980] - Excessive contention during getter identification in the ByteBuddy enhancer
-    * [HHH-17954] - StatelessSession should no longer ignore changes to collections
-    * [HHH-17824] - Extend usage spectrum of @Jpa to the test method level
+** Deprecation
+    * [HHH-17441] - Deprecate @Comment
 
 ** New Feature
-    * [HHH-17955] - Bean validation and StatelessSession
-    * [HHH-17818] - Add new ConcreteProxy annotation
+    * [HHH-17460] - Ongoing JPA 3.2 work
+    * [HHH-17459] - Allow resolution callbacks on select o.h.mapping objects
+
+** Remove Feature
+    * [HHH-17961] - Drop support for hibernate.mapping.precedence
+    * [HHH-17894] - Remove AdditionalJaxbMappingProducer
+    * [HHH-17893] - Remove MetadataContributor
+    * [HHH-17892] - Remove @Persister
+
+** Task
+    * [HHH-17444] - Ongoing JPA 32 work
 
 
 Changes in 6.4.1.Final (December 15, 2023)

@@ -267,9 +267,15 @@ public interface StatelessSession extends SharedSessionContract {
 
 	/**
 	 * Fetch an association or collection that's configured for lazy loading.
+	 * <pre>
+	 * Book book = session.get(Book.class, isbn);  // book is immediately detached
+	 * session.fetch(book.getAuthors());           // fetch the associated authors
+	 * book.getAuthors().forEach(author -> ... );  // iterate the collection
+	 * </pre>
 	 * <p>
 	 * Warning: this operation in a stateless session is quite sensitive
-	 * to data aliasing effects and should be used with great care.
+	 * to data aliasing effects and should be used with great care. It's
+	 * usually better to fetch associations using eager join fetching.
 	 *
 	 * @param association a lazy-loaded association
 	 *

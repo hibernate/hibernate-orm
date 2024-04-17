@@ -16,7 +16,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers@1.13') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '11'
+@Field final String DEFAULT_JDK_VERSION = '17'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -44,7 +44,6 @@ stage('Configure') {
 		new BuildEnvironment( node: 's390x' ),
 		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
 				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
-		new BuildEnvironment( testJdkVersion: '17' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.

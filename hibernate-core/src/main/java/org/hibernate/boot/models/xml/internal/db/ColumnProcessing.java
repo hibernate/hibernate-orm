@@ -49,7 +49,7 @@ public class ColumnProcessing {
 		applyColumnDefinition( jaxbColumn, columnAnn, xmlDocumentContext );
 		applyColumnUniqueness( jaxbColumn, columnAnn, xmlDocumentContext );
 		applyColumnComment( jaxbColumn, columnAnn, xmlDocumentContext );
-		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, target, columnAnn, xmlDocumentContext );
+		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, columnAnn, xmlDocumentContext );
 
 		if ( jaxbColumn instanceof JaxbColumnSizable sizable ) {
 			applyColumnSizing( sizable, columnAnn, xmlDocumentContext );
@@ -132,7 +132,7 @@ public class ColumnProcessing {
 		}
 
 		if ( jaxbColumn instanceof JaxbCheckable checkable ) {
-			XmlAnnotationHelper.applyCheckConstraints( checkable, target, columnAnn, xmlDocumentContext );
+			XmlAnnotationHelper.applyCheckConstraints( checkable, columnAnn, xmlDocumentContext );
 		}
 	}
 

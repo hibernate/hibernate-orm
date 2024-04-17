@@ -312,12 +312,11 @@ public class XmlAnnotationHelper {
 
 		final ClassDetails userTypeImpl = resolveJavaType( jaxbType.getValue(), xmlDocumentContext );
 		typeAnn.setAttributeValue( "value", userTypeImpl );
-		typeAnn.setAttributeValue( "parameters", collectParameters( jaxbType.getParameters(), memberDetails, xmlDocumentContext ) );
+		typeAnn.setAttributeValue( "parameters", collectParameters( jaxbType.getParameters(), xmlDocumentContext ) );
 	}
 
 	public static List<AnnotationUsage<Parameter>> collectParameters(
 			List<JaxbConfigurationParameterImpl> jaxbParameters,
-			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( CollectionHelper.isEmpty( jaxbParameters ) ) {
 			return emptyList();
@@ -325,7 +324,7 @@ public class XmlAnnotationHelper {
 
 		List<AnnotationUsage<Parameter>> parameterAnnList = new ArrayList<>( jaxbParameters.size() );
 		jaxbParameters.forEach( (jaxbParam) -> {
-			final MutableAnnotationUsage<Parameter> annotationUsage = makeNestedAnnotation( Parameter.class, target, xmlDocumentContext );
+			final MutableAnnotationUsage<Parameter> annotationUsage = makeNestedAnnotation( Parameter.class, xmlDocumentContext );
 			parameterAnnList.add( annotationUsage );
 			annotationUsage.setAttributeValue( "name", jaxbParam.getName() );
 			annotationUsage.setAttributeValue( "value", jaxbParam.getValue() );
@@ -346,7 +345,7 @@ public class XmlAnnotationHelper {
 
 		final ClassDetails userTypeImpl = resolveJavaType( jaxbType.getType(), xmlDocumentContext );
 		typeAnn.setAttributeValue( "type", userTypeImpl );
-		typeAnn.setAttributeValue( "parameters", collectParameters( jaxbType.getParameters(), memberDetails, xmlDocumentContext ) );
+		typeAnn.setAttributeValue( "parameters", collectParameters( jaxbType.getParameters(), xmlDocumentContext ) );
 	}
 
 	public static void applyCollectionId(
@@ -471,27 +470,6 @@ public class XmlAnnotationHelper {
 
 	public static <A extends Annotation> void applyCheckConstraints(
 			JaxbCheckable jaxbCheckable,
-			MutableAnnotationTarget target,
-			MutableAnnotationUsage<A> annotationUsage,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbCheckable!= null && CollectionHelper.isNotEmpty( jaxbCheckable.getCheckConstraints() ) ) {
-			final List<AnnotationUsage<CheckConstraint>> checks = new ArrayList<>( jaxbCheckable.getCheckConstraints().size() );
-			final AnnotationDescriptor<CheckConstraint> checkConstraintDescriptor = xmlDocumentContext.getModelBuildingContext()
-					.getAnnotationDescriptorRegistry()
-					.getDescriptor( CheckConstraint.class );
-			for ( JaxbCheckConstraintImpl jaxbCheck : jaxbCheckable.getCheckConstraints() ) {
-				final MutableAnnotationUsage<CheckConstraint> checkAnn = XmlProcessingHelper.getOrMakeAnnotation( CheckConstraint.class, target, xmlDocumentContext );
-				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getName, "name", checkAnn, checkConstraintDescriptor );
-				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getConstraint, "constraint", checkAnn, checkConstraintDescriptor );
-				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getOptions, "options", checkAnn, checkConstraintDescriptor );
-				checks.add( checkAnn );
-			}
-			annotationUsage.setAttributeValue( "check", checks );
-		}
-	}
-
-	public static <A extends Annotation> void applyCheckConstraints(
-			JaxbCheckable jaxbCheckable,
 			MutableAnnotationUsage<A> annotationUsage,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( CollectionHelper.isNotEmpty( jaxbCheckable.getCheckConstraints() ) ) {
@@ -500,7 +478,7 @@ public class XmlAnnotationHelper {
 					.getAnnotationDescriptorRegistry()
 					.getDescriptor( CheckConstraint.class );
 			for ( JaxbCheckConstraintImpl jaxbCheck : jaxbCheckable.getCheckConstraints() ) {
-				final MutableAnnotationUsage<CheckConstraint> checkAnn = XmlProcessingHelper.getOrMakeAnnotation( CheckConstraint.class, xmlDocumentContext );
+				final MutableAnnotationUsage<CheckConstraint> checkAnn = XmlProcessingHelper.makeAnnotation( CheckConstraint.class, xmlDocumentContext );
 				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getName, "name", checkAnn, checkConstraintDescriptor );
 				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getConstraint, "constraint", checkAnn, checkConstraintDescriptor );
 				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getOptions, "options", checkAnn, checkConstraintDescriptor );
@@ -967,7 +945,7 @@ public class XmlAnnotationHelper {
 		applyOrSchema( jaxbTable, tableAnn, annotationDescriptor, xmlDocumentContext);
 		applyOr( jaxbTable, JaxbTableMapping::getOptions, "options", tableAnn, annotationDescriptor );
 		applyOr( jaxbTable, JaxbTableMapping::getComment, "comment", tableAnn, annotationDescriptor );
-		applyCheckConstraints( jaxbTable, target, tableAnn, xmlDocumentContext );
+		applyCheckConstraints( jaxbTable, tableAnn, xmlDocumentContext );
 		applyUniqueConstraints( jaxbTable.getUniqueConstraints(), target, tableAnn, xmlDocumentContext );
 		applyIndexes( jaxbTable.getIndexes(), target, tableAnn, xmlDocumentContext );
 	}
@@ -1238,17 +1216,16 @@ public class XmlAnnotationHelper {
 
 		final List<JaxbHbmFilterImpl.JaxbAliasesImpl> aliases = jaxbFilter.getAliases();
 		if ( !CollectionHelper.isEmpty( aliases ) ) {
-			filterAnn.setAttributeValue( "aliases", getSqlFragmentAliases( aliases, target, xmlDocumentContext ) );
+			filterAnn.setAttributeValue( "aliases", getSqlFragmentAliases( aliases, xmlDocumentContext ) );
 		}
 	}
 
 	private static List<AnnotationUsage<SqlFragmentAlias>> getSqlFragmentAliases(
 			List<JaxbHbmFilterImpl.JaxbAliasesImpl> aliases,
-			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
 		final List<AnnotationUsage<SqlFragmentAlias>> sqlFragmentAliases = new ArrayList<>( aliases.size() );
 		for ( JaxbHbmFilterImpl.JaxbAliasesImpl alias : aliases ) {
-			final MutableAnnotationUsage<SqlFragmentAlias> aliasAnn = makeNestedAnnotation( SqlFragmentAlias.class, target, xmlDocumentContext );
+			final MutableAnnotationUsage<SqlFragmentAlias> aliasAnn = makeNestedAnnotation( SqlFragmentAlias.class, xmlDocumentContext );
 			aliasAnn.setAttributeValue( "alias", alias.getAlias() );
 			XmlProcessingHelper.applyAttributeIfSpecified( "table", alias.getTable(), aliasAnn );
 			if ( StringHelper.isNotEmpty( alias.getEntity() ) ) {

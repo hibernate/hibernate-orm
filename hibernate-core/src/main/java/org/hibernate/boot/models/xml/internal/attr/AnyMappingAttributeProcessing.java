@@ -95,7 +95,7 @@ public class AnyMappingAttributeProcessing {
 			final ClassDetailsRegistry classDetailsRegistry = xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry();
 			valuesAnn.setAttributeValue( "value", valueList );
 			valueMappings.forEach( (valueMapping) -> {
-				final MutableAnnotationUsage<AnyDiscriminatorValue> valueAnn = XmlProcessingHelper.makeNestedAnnotation( AnyDiscriminatorValue.class, memberDetails, xmlDocumentContext );
+				final MutableAnnotationUsage<AnyDiscriminatorValue> valueAnn = XmlProcessingHelper.makeNestedAnnotation( AnyDiscriminatorValue.class, xmlDocumentContext );
 				valueList.add( valueAnn );
 
 				valueAnn.setAttributeValue( "discriminator", valueMapping.getDiscriminatorValue() );
@@ -129,7 +129,7 @@ public class AnyMappingAttributeProcessing {
 			final ArrayList<MutableAnnotationUsage<JoinColumn>> columnAnnList = CollectionHelper.arrayList( jaxbKey.getColumns().size() );
 			columnsAnn.setAttributeValue( "value", columnAnnList );
 			jaxbKey.getColumns().forEach( (jaxbColumn) -> {
-				final MutableAnnotationUsage<JoinColumn> columnAnn = XmlProcessingHelper.makeNestedAnnotation( JoinColumn.class, memberDetails, xmlDocumentContext );
+				final MutableAnnotationUsage<JoinColumn> columnAnn = XmlProcessingHelper.makeNestedAnnotation( JoinColumn.class, xmlDocumentContext );
 				columnAnnList.add( columnAnn );
 
 				ColumnProcessing.applyColumnDetails( jaxbColumn, memberDetails, columnAnn, xmlDocumentContext );

@@ -259,10 +259,9 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 		if ( localInheritanceAnnotation != null ) {
 			if ( currentValue != null ) {
 				MODEL_CATEGORIZATION_LOGGER.debugf(
-						"Ignoring @%s from %s in favor of usage from %s",
+						"Ignoring @%s from %s in favor of existing usage",
 						annotationType.getSimpleName(),
-						classDetails.getName(),
-						currentValue.getAnnotationTarget().getName()
+						classDetails.getName()
 				);
 			}
 

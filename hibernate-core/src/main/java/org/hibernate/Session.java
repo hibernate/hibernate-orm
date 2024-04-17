@@ -799,7 +799,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
-	 * @param object a persistent or transient instance
+	 * @param object a persistent instance
 	 * @param lockMode the lock level
 	 */
 	void lock(Object object, LockMode lockMode);
@@ -811,7 +811,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
-	 * @param object a persistent or transient instance
+	 * @param object a persistent instance
 	 * @param lockOptions the lock options
 	 *
 	 * @since 6.2
@@ -830,7 +830,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
 	 * @param entityName the name of the entity
-	 * @param object a persistent or transient instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockMode the lock level
 	 *
 	 * @deprecated use {@link #lock(Object, LockMode)}
@@ -881,7 +881,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * This operation requests {@link LockMode#READ}. To obtain a stronger lock,
 	 * call {@link #refresh(Object, LockMode)}.
 	 *
-	 * @param object a persistent or detached instance
+	 * @param object a persistent instance associated with this session
 	 */
 	void refresh(Object object);
 
@@ -901,7 +901,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
 	 *
 	 * @param entityName the name of the entity
-	 * @param object a persistent or detached instance
+	 * @param object a persistent instance associated with this session
 	 *
 	 * @deprecated use {@link #refresh(Object)}
 	 */
@@ -914,7 +914,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <p>
 	 * Convenient form of {@link #refresh(Object, LockOptions)}
 	 *
-	 * @param object a persistent or detached instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockMode the lock mode to use
 	 *
 	 * @see #refresh(Object, LockOptions)
@@ -925,7 +925,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Reread the state of the given managed instance from the underlying database,
 	 * obtaining the given {@link LockMode}.
 	 *
-	 * @param object a persistent or detached instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockOptions contains the lock mode to use
 	 */
 	void refresh(Object object, LockOptions lockOptions);
@@ -935,7 +935,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * obtaining the given {@link LockMode}.
 	 *
 	 * @param entityName the name of the entity
-	 * @param object a persistent or detached instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockOptions contains the lock mode to use
 	 *
 	 * @deprecated use {@link #refresh(Object, LockOptions)}
@@ -957,7 +957,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Determine the current {@link LockMode} of the given managed instance associated
 	 * with this session.
 	 *
-	 * @param object a persistent instance
+	 * @param object a persistent instance associated with this session
 	 *
 	 * @return the current lock mode
 	 */

@@ -35,7 +35,7 @@ public class OracleServerConfiguration {
 		return extended;
 	}
 
-	public OracleServerConfiguration(boolean autonomous, boolean extended) {
+	private OracleServerConfiguration(boolean autonomous, boolean extended) {
 		this.autonomous = autonomous;
 		this.extended = extended;
 	}

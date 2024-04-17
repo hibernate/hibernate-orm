@@ -87,6 +87,7 @@ The following table contrasts the two programming models.
 | SQL execution | During flush | Immediate
 | Updates | Usually implicit (dirty checking during flush) | Always explicit (by calling `@Update` method)
 | Operation cascading | Depends on `CascadeType` | Never
+| Lazy fetching | Implicit | Explicit using link:{doc-javadoc-url}org/hibernate/StatelessSession.html#fetch(java.lang.Object)[`StatelessSession.fetch()`]
 | Validation of JPQL | Runtime | Compile time
 |===
 
@@ -94,9 +95,18 @@ The fundamental difference here that Jakarta Data does not feature stateful pers
 Among other consequences:
 
 - entity instances are always detached, and so
-- updates require an explicit operation.
+- updates require an explicit operation, and
+- there's no transparent lazy association fetching.
 
 It's important to understand that a repository in Hibernate Data Repositories is backed by a `StatelessSession`, not by a Jakarta Persistence `EntityManager`.
+
+[IMPORTANT]
+====
+There's only one portable way to fetch an association in Jakarta Data, and that's by using a JPQL `join fetch` clause, in a <<query-method,`@Query` annotation>>.
+The specification does not provide a portable way to fetch an association lazily.
+To fetch an association, we need to <<stateless-fetch,call the `StatelessSession` directly>>.
+This really isn't as bad as it sounds; overuse of lazy fetching is associated with poor performance due to many round trips to the database server.
+====
 
 [NOTE]
 ====
@@ -268,6 +278,16 @@ default void refresh(Book book) {
 }
 ----
 This is very useful when we need to gain direct access to the `StatelessSession` in order to take advantage of the full power of Hibernate.
+====
+
+[[stateless-fetch]]
+[TIP]
+====
+A resource accessor method is also useful when we need to lazily fetch an association.
+[source,java]
+----
+library.session().fetch(book.authors);
+----
 ====
 
 Usually, of course, we want Jakarta Data to take care of interacting with the `StatelessSession`.

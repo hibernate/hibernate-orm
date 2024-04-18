@@ -15,30 +15,26 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import org.checkerframework.checker.units.qual.N;
-
-import static org.hibernate.type.SqlTypes.ENUM;
+import static org.hibernate.type.SqlTypes.ORDINAL_ENUM;
 
 /**
  * A {@link DdlType} representing a SQL {@code enum} type that
- * may be treated as {@code varchar} for most purposes.
+ * may be treated as {@code int} for most purposes.
  *
- * @see org.hibernate.type.SqlTypes#ENUM
+ * @see org.hibernate.type.SqlTypes#ORDINAL_ENUM
  * @see Dialect#getEnumTypeDeclaration(Class)
- *
- * @author Gavin King
  */
 
-public class NativeEnumDdlTypeImpl implements DdlType {
+public class NativeOrdinalEnumDdlTypeImpl implements DdlType {
 	private final Dialect dialect;
 
-	public NativeEnumDdlTypeImpl(Dialect dialect) {
+	public NativeOrdinalEnumDdlTypeImpl(Dialect dialect) {
 		this.dialect = dialect;
 	}
 
 	@Override
 	public int getSqlTypeCode() {
-		return ENUM;
+		return ORDINAL_ENUM;
 	}
 
 	@Override @SuppressWarnings("unchecked")
@@ -57,12 +53,12 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public String getTypeName(Long size, Integer precision, Integer scale) {
-		return "varchar(" + size +  ")";
+		return "int";
 	}
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		return "varchar";
+		return "int";
 	}
 
 	@Override

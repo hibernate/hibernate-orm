@@ -20,6 +20,8 @@ import static jakarta.persistence.EnumType.ORDINAL;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.ENUM;
 import static org.hibernate.type.SqlTypes.NAMED_ENUM;
+import static org.hibernate.type.SqlTypes.ORDINAL_ENUM;
+import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.SMALLINT;
@@ -44,11 +46,11 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		int sqlType;
 		switch ( type == null ? ORDINAL : type ) {
 			case ORDINAL:
-				if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
-					sqlType = ENUM;
+				if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( ORDINAL_ENUM ) ) {
+					sqlType = ORDINAL_ENUM;
 				}
-				else if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
-					sqlType = NAMED_ENUM;
+				else if ( preferNativeEnumTypesEnabled && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ORDINAL_ENUM ) ) {
+					sqlType = NAMED_ORDINAL_ENUM;
 				}
 				else {
 					sqlType = hasManyValues() ? SMALLINT : TINYINT;
@@ -76,7 +78,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 
 	public boolean hasManyValues() {
 		// a bit arbitrary, but gives us some headroom
-		return getJavaTypeClass().getEnumConstants().length > 128; 
+		return getJavaTypeClass().getEnumConstants().length > 128;
 	}
 
 	@Override

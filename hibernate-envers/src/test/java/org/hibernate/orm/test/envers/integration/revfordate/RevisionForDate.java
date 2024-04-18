@@ -121,4 +121,20 @@ public class RevisionForDate extends BaseEnversJPAFunctionalTestCase {
 
 		assert vr.getRevisionDate( vr.getRevisionNumberForDate( new Date( timestamp4 ) ) ).getTime() <= timestamp4;
 	}
+
+	@Test
+	@SkipForDialect(value = CockroachDialect.class, comment = "Fails because of int size")
+	public void testRevisionsForInstant() {
+		AuditReader vr = getAuditReader();
+
+		assert vr.getRevisionDate( vr.getRevisionNumberForDate( new Date( timestamp2 ).toInstant() ) ).getTime() <= timestamp2;
+		assert vr.getRevisionDate( vr.getRevisionNumberForDate( new Date( timestamp2 ).toInstant() ).intValue() + 1 )
+				.getTime() > timestamp2;
+
+		assert vr.getRevisionDate( vr.getRevisionNumberForDate( new Date( timestamp3 ).toInstant() ) ).getTime() <= timestamp3;
+		assert vr.getRevisionDate( vr.getRevisionNumberForDate( new Date( timestamp3 ).toInstant() ).intValue() + 1 )
+				.getTime() > timestamp3;
+
+		assert vr.getRevisionDate( vr.getRevisionNumberForDate( new Date( timestamp4 ).toInstant() ) ).getTime() <= timestamp4;
+	}
 }

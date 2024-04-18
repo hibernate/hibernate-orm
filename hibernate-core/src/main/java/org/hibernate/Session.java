@@ -806,7 +806,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Obtain a lock on the given managed instance associated with this session,
-	 * using the given {@link LockOptions lock options}.
+	 * using the given {@linkplain LockOptions lock options}.
 	 * <p>
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
@@ -839,7 +839,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void lock(String entityName, Object object, LockMode lockMode);
 
 	/**
-	 * Build a new {@link LockRequest lock request} that specifies:
+	 * Build a new {@linkplain LockRequest lock request} that specifies:
 	 * <ul>
 	 * <li>the {@link LockMode} to use,
 	 * <li>the {@linkplain LockRequest#setTimeOut(int) pessimistic lock timeout},

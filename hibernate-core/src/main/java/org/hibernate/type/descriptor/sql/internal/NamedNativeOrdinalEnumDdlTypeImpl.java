@@ -9,64 +9,56 @@ package org.hibernate.type.descriptor.sql.internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.converter.internal.EnumHelper;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import org.checkerframework.checker.units.qual.N;
-
-import static org.hibernate.type.SqlTypes.ENUM;
+import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
 
 /**
- * A {@link DdlType} representing a SQL {@code enum} type that
- * may be treated as {@code varchar} for most purposes.
+ * A {@link DdlType} representing a named native SQL {@code enum} type,
+ * one that often <em>cannot</em> be treated as a {@code int}.
  *
- * @see org.hibernate.type.SqlTypes#ENUM
+ * @see org.hibernate.type.SqlTypes#NAMED_ORDINAL_ENUM
  * @see Dialect#getEnumTypeDeclaration(Class)
  *
  * @author Gavin King
  */
-
-public class NativeEnumDdlTypeImpl implements DdlType {
+public class NamedNativeOrdinalEnumDdlTypeImpl implements DdlType {
 	private final Dialect dialect;
 
-	public NativeEnumDdlTypeImpl(Dialect dialect) {
+	public NamedNativeOrdinalEnumDdlTypeImpl(Dialect dialect) {
 		this.dialect = dialect;
 	}
 
 	@Override
 	public int getSqlTypeCode() {
-		return ENUM;
+		return NAMED_ORDINAL_ENUM;
 	}
 
 	@Override @SuppressWarnings("unchecked")
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
-		return dialect.getEnumTypeDeclaration(
-				type.getReturnedClass().getSimpleName(),
-				EnumHelper.getEnumeratedValues( type )
-		);
+		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) type.getReturnedClass() );
 	}
 
 	@Override
 	public String getRawTypeName() {
-		// this
 		return "enum";
 	}
 
 	@Override
 	public String getTypeName(Long size, Integer precision, Integer scale) {
-		return "varchar(" + size +  ")";
+		throw new UnsupportedOperationException( "native enum type" );
 	}
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		return "varchar";
+		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) javaType.getJavaType() );
 	}
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale) {
-		return getTypeName( length, precision, scale );
+		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) javaType.getJavaType() );
 	}
 }

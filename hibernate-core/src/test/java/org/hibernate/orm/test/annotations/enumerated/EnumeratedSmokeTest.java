@@ -67,7 +67,7 @@ public class EnumeratedSmokeTest {
 		}
 		else {
 //			Assertions.assertThat( valueConverter ).isInstanceOf( NamedEnumValueConverter.class );
-			Assertions.assertThat(jdbcType.isString() || jdbcType.getJdbcTypeCode() == SqlTypes.ENUM).isTrue();
+			Assertions.assertThat( jdbcType.isString() || jdbcType.getDefaultSqlTypeCode() == SqlTypes.ENUM ).isTrue();
 		}
 	}
 

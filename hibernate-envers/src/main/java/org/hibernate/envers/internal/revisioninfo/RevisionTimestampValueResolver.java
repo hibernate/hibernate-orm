@@ -100,7 +100,7 @@ public class RevisionTimestampValueResolver {
 				return instant;
 			}
 			else {
-				return instant.getEpochSecond();
+				return instant.toEpochMilli();
 			}
 		}
 		return null;

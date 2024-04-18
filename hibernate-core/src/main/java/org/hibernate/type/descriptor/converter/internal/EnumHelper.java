@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.converter.internal;
 import java.util.Arrays;
 
 import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -25,11 +26,14 @@ public class EnumHelper {
 		//noinspection unchecked
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType;
 		final String[] enumValues;
-		if ( jdbcType.isString() ) {
-			enumValues = getSortedEnumeratedValues( enumClass );
-		}
-		else {
-			enumValues = getEnumeratedValues( enumClass );
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			case SqlTypes.ENUM:
+			case SqlTypes.NAMED_ENUM:
+				enumValues = getSortedEnumeratedValues( enumClass );
+				break;
+			default:
+				enumValues = getEnumeratedValues( enumClass );
+				break;
 		}
 		return enumValues;
 	}

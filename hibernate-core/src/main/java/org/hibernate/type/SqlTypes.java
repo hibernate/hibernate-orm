@@ -7,6 +7,8 @@
 package org.hibernate.type;
 
 import org.hibernate.Internal;
+import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
+import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 
 import java.sql.Types;
 
@@ -635,7 +637,7 @@ public class SqlTypes {
 	 * {@link org.hibernate.dialect.MySQLDialect MySQL} where {@code ENUM}
 	 * types do not have names.
 	 *
-	 * @see org.hibernate.dialect.MySQLEnumJdbcType
+	 * @see EnumJdbcType
 	 *
 	 * @since 6.3
 	 */
@@ -651,6 +653,28 @@ public class SqlTypes {
 	 * @since 6.3
 	 */
 	public static final int NAMED_ENUM = 6001;
+
+	/**
+	 * A type code representing a SQL {@code ENUM} type for databases like
+	 * {@link org.hibernate.dialect.MySQLDialect MySQL} where {@code ENUM}
+	 * types do not have names. Enum values are ordered by ordinal.
+	 *
+	 * @see OrdinalEnumJdbcType
+	 *
+	 * @since 6.5
+	 */
+	public static final int ORDINAL_ENUM = 6002;
+
+	/**
+	 * A type code representing a SQL {@code ENUM} type for databases like
+	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} where
+	 * {@code ENUM} types must have names. Enum values are ordered by ordinal.
+	 *
+	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
+	 *
+	 * @since 6.5
+	 */
+	public static final int NAMED_ORDINAL_ENUM = 6003;
 
 
 	/**

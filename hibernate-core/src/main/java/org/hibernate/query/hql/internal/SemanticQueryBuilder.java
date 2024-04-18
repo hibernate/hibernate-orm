@@ -1502,22 +1502,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( !dynamicInstantiation.checkInstantiation( creationContext.getTypeConfiguration() ) ) {
 			final String qualifiedName = dynamicInstantiation.getJavaType().getName();
 			if ( dynamicInstantiation.isFullyAliased() ) {
-				throw new SemanticException("Missing constructor or attributes for injection into type '" + qualifiedName + "'" +
-						"Expected arguments are: " + dynamicInstantiation.argumentTypes(), query);
+				throw new SemanticException( "Missing constructor or attributes for injection into class '" + qualifiedName + "'" +
+						" of selected types [" + dynamicInstantiation.argumentTypes() + "]", query );
 			}
 			else {
 				List<InstantiationHelper.MismatchConstructorFieldPositionInfo> list = dynamicInstantiation.findMismatchConstructorFieldPositions(creationContext.getTypeConfiguration());
 
 				String conjecture = "";
-				if (list != null && list.isEmpty() == false) {
-					conjecture = " The presumed mismatch field position is: " +
+				if ( list != null && !list.isEmpty() ) {
+					conjecture = "mismatch at position " +
 							list.stream()
 									.map(InstantiationHelper.MismatchConstructorFieldPositionInfo::toString)
 									.collect(Collectors.joining(","));
 				}
 
-				throw new SemanticException("Unable to locate appropriate constructor on class '" + qualifiedName + "'. " +
-						"Expected arguments are: " + dynamicInstantiation.argumentTypes() + conjecture, query);
+				throw new SemanticException( "Missing constructor for class '" + qualifiedName + "' with parameter types ["
+						+ dynamicInstantiation.argumentTypes() + "] (" + conjecture + ")", query );
 			}
 		}
 

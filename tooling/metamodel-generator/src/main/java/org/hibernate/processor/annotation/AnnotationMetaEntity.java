@@ -597,8 +597,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			else if ( element.getKind() == ElementKind.INTERFACE
+					&& !jakartaDataRepository
 					&& ( context.usesQuarkusOrm() || context.usesQuarkusReactive() ) ) {
-				// if we don't have a getter, but we're in Quarkus, we know how to find the default sessions
+				// if we don't have a getter, and not a JD repository, but we're in Quarkus, we know how to find the default sessions
 				repository = true;
 				sessionType = setupQuarkusDaoConstructor();
 			}

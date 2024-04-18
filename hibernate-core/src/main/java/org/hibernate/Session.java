@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
@@ -75,12 +76,29 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * detached instance to the persistent state are now deprecated, and clients should now
  * migrate to the use of {@code merge()}.
  * <p>
+ * The persistent state of a managed entity may be refreshed from the database, discarding
+ * all modifications to the object held in memory, by calling {@link #refresh(Object)}.
+ * <p>
  * From {@linkplain FlushMode time to time}, a {@linkplain #flush() flush operation} is
  * triggered, and the session synchronizes state held in memory with persistent state
  * held in the database by executing SQL {@code insert}, {@code update}, and {@code delete}
  * statements. Note that SQL statements are often not executed synchronously by the methods
  * of the {@code Session} interface. If synchronous execution of SQL is desired, the
  * {@link StatelessSession} allows this.
+ * <p>
+ * Each managed instance has an associated {@link LockMode}. By default, the session
+ * obtains only {@link LockMode#READ} on an entity instance it reads from the database
+ * and {@link LockMode#WRITE} on an entity instance it writes to the database. This
+ * behavior is appropriate for programs which use optimistic locking.
+ * <ul>
+ * <li>A different lock level may be obtained by explicitly specifying the mode using
+ *     {@link #get(Class, Object, LockMode)}, {@link #find(Class, Object, LockModeType)},
+ *     {@link #refresh(Object, LockMode)}, {@link #refresh(Object, LockModeType)}, or
+ *     {@link org.hibernate.query.SelectionQuery#setLockMode(LockModeType)}.
+ * <li>The lock level of a managed instance already held by the session may be upgraded
+ *     to a more restrictive lock level by calling {@link #lock(Object, LockMode)} or
+ *     {@link #lock(Object, LockModeType)}.
+ * </ul>
  * <p>
  * A persistence context holds hard references to all its entities and prevents them
  * from being garbage collected. Therefore, a {@code Session} is a short-lived object,

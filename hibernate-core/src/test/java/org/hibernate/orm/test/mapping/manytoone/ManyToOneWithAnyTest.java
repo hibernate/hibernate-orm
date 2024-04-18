@@ -10,9 +10,8 @@ import java.util.Set;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Any;
-import org.hibernate.annotations.AnyDiscriminator;
-import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.JdbcSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -32,15 +31,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import static jakarta.persistence.DiscriminatorType.STRING;
-
 /**
+ * Allows testing a @ManyToOne mappedBy relationship with a @Any as the return variable.
+ *
  * @author Vincent Bouthinon
  */
 @Jpa(
 		annotatedClasses = {
 				ManyToOneWithAnyTest.Library.class,
-				ManyToOneWithAnyTest.Book.class
+				ManyToOneWithAnyTest.Book.class,
+				ManyToOneWithAnyTest.Shop.class
 		},
 		integrationSettings = @Setting(name = JdbcSettings.SHOW_SQL, value = "true")
 )
@@ -79,10 +79,97 @@ class ManyToOneWithAnyTest {
 		);
 	}
 
+	@Test
+	void testWithSameIdentifiantButSubTypeDifferent(EntityManagerFactoryScope scope) {
+
+		scope.inTransaction(
+				entityManager -> {
+					Session session = entityManager.unwrap( Session.class );
+					Library library = new Library();
+					library.setId( 1L );
+					library.setBooks( Set.of( new Book(), new Book() ) );
+
+					Shop shop = new Shop();
+					shop.setId( 1L );
+					shop.setBooks( Set.of( new Book(), new Book(), new Book() ) );
+
+					session.save( library );
+					session.save( shop );
+					session.flush();
+					session.clear();
+
+					library = session.byId( library.getClass() ).load( library.getId() );
+
+					Assertions.assertNotNull( library );
+					Assertions.assertEquals( 2, library.getBooks().size() );
+				}
+		);
+	}
+
+	@Entity(name = "book")
+	@Table(name = "TBOOK")
+	public static class Book {
+
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		@Any
+		@AnyKeyJavaClass(Long.class)
+		@Column(name = "STORE_ROLE")
+		@JoinColumn(name = "STORE_ID")
+		private Store store;
+
+		public void setId(final Long id) {
+			this.id = id;
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public Store getStore() {
+			return store;
+		}
+
+		public void setStore(final Store store) {
+			this.store = store;
+		}
+	}
+
 	@Entity(name = "library")
 	@Table(name = "TLIBRARY")
 	public static class Library implements Store {
 
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+		@SQLRestriction( "STORE_ROLE = 'org.hibernate.orm.test.mapping.manytoone.ManyToOneWithAnyTest$Library'" )
+		private Set<Book> books;
+
+		public void setId(final Long id) {
+			this.id = id;
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public Set<Book> getBooks() {
+			return books;
+		}
+
+		public void setBooks(final Set<Book> books) {
+			books.forEach( book -> book.setStore( this ) );
+			this.books = books;
+		}
+	}
+
+	@Entity(name = "shop")
+	@Table(name = "TSHOP")
+	public static class Shop implements Store {
 		@Id
 		@GeneratedValue
 		private Long id;
@@ -105,39 +192,6 @@ class ManyToOneWithAnyTest {
 		public void setBooks(final Set<Book> books) {
 			books.forEach( book -> book.setStore( this ) );
 			this.books = books;
-		}
-	}
-
-	@Entity(name = "book")
-	@Table(name = "TBOOK")
-	public static class Book {
-
-		@Id
-		@GeneratedValue
-		private Long id;
-
-		@Any
-		@AnyDiscriminator(STRING)
-		@AnyDiscriminatorValue(discriminator = "library", entity = Library.class)
-		@AnyKeyJavaClass(Long.class)
-		@Column(name = "STORE_ROLE")
-		@JoinColumn(name = "STORE_ID")
-		private Store store;
-
-		public void setId(final Long id) {
-			this.id = id;
-		}
-
-		public Long getId() {
-			return id;
-		}
-
-		public Store getStore() {
-			return store;
-		}
-
-		public void setStore(final Store store) {
-			this.store = store;
 		}
 	}
 

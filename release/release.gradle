@@ -322,14 +322,14 @@ def releasePreparePostGitTask = tasks.register( 'gitTasksAfterRelease' ) {
     dependsOn changeToDevelopmentVersionTask
 
     doLast {
-        logger.lifecycle( "Performing pre-steps Git commit : `${project.releaseVersion}`" )
-        executeGitCommand( 'add', '.' )
-        executeGitCommand( 'commit', '-m', "Post-steps for release : `${project.ormVersion.fullName}`" )
-
         if ( project.createTag ) {
             logger.lifecycle( "Tagging release : `${project.releaseTag}`..." )
             executeGitCommand( 'tag', '-a', project.releaseTag, '-m', "Release $project.ormVersion.fullName" )
         }
+
+        logger.lifecycle( "Performing post-steps Git commit : `${project.releaseVersion}`" )
+        executeGitCommand( 'add', '.' )
+        executeGitCommand( 'commit', '-m', "Post-steps for release : `${project.ormVersion.fullName}`" )
     }
 }
 

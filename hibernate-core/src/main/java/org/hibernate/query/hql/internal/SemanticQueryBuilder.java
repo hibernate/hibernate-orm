@@ -41,6 +41,7 @@ import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.CharSequenceHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
@@ -1510,10 +1511,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 				String conjecture = "";
 				if ( list != null && !list.isEmpty() ) {
-					conjecture = "mismatch at position " +
-							list.stream()
-									.map(InstantiationHelper.MismatchConstructorFieldPositionInfo::toString)
-									.collect(Collectors.joining(","));
+					conjecture = "mismatch at position " + StringHelper.join( ",", list );
 				}
 
 				throw new SemanticException( "Missing constructor for class '" + qualifiedName + "' with parameter types ["

@@ -33,6 +33,7 @@ class ByteBuddyEnhancementContext {
 	private final EnhancementContext enhancementContext;
 
 	private final ConcurrentHashMap<TypeDescription, Map<String, MethodDescription>> getterByTypeMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Object> locksMap = new ConcurrentHashMap<>();
 
 	ByteBuddyEnhancementContext(EnhancementContext enhancementContext) {
 		this.enhancementContext = enhancementContext;
@@ -135,15 +136,35 @@ class ByteBuddyEnhancementContext {
 	}
 
 	Optional<MethodDescription> resolveGetter(FieldDescription fieldDescription) {
-		Map<String, MethodDescription> getters = getterByTypeMap
-				.computeIfAbsent( fieldDescription.getDeclaringType().asErasure(), declaringType -> {
-					return MethodGraph.Compiler.DEFAULT.compile( declaringType )
+		//There is a non-straightforward cache here, but we really need this to be able to
+		//efficiently handle enhancement of large models.
+
+		final TypeDescription erasure = fieldDescription.getDeclaringType().asErasure();
+
+		//Always try to get with a simple "get" before doing a "computeIfAbsent" operation,
+		//otherwise large models might exhibit significant contention on the map.
+		Map<String, MethodDescription> getters = getterByTypeMap.get( erasure );
+
+		if ( getters == null ) {
+			//poor man lock striping: as CHM#computeIfAbsent has too coarse lock granularity
+			//and has been shown to trigger significant, unnecessary contention.
+			final String lockKey = erasure.toString();
+			final Object candidateLock = new Object();
+			final Object existingLock = locksMap.putIfAbsent( lockKey, candidateLock );
+			final Object lock = existingLock == null ? candidateLock : existingLock;
+			synchronized ( lock ) {
+				getters = getterByTypeMap.get( erasure );
+				if ( getters == null ) {
+					getters = MethodGraph.Compiler.DEFAULT.compile( erasure )
 							.listNodes()
 							.asMethodList()
 							.filter( IS_GETTER )
 							.stream()
 							.collect( Collectors.toMap( MethodDescription::getActualName, Function.identity() ) );
-				} );
+					getterByTypeMap.put( erasure, getters );
+				}
+			}
+		}
 
 		String capitalizedFieldName = Character.toUpperCase( fieldDescription.getName().charAt( 0 ) )
 				+ fieldDescription.getName().substring( 1 );

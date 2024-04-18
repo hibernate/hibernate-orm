@@ -16,6 +16,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.boot.models.categorize.spi.DomainModelCategorizations;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
 import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
@@ -40,10 +41,8 @@ import jakarta.persistence.MappedSuperclass;
  *
  * @author Steve Ebersole
  */
-
-public class DomainModelCategorizationCollector {
+public class DomainModelCategorizationCollector implements DomainModelCategorizations {
 	private final boolean areIdGeneratorsGlobal;
-	private final IndexView jandexIndex;
 
 	private final GlobalRegistrationsImpl globalRegistrations;
 	private final SourceModelBuildingContext modelsContext;
@@ -55,26 +54,28 @@ public class DomainModelCategorizationCollector {
 	public DomainModelCategorizationCollector(
 			boolean areIdGeneratorsGlobal,
 			GlobalRegistrations globalRegistrations,
-			IndexView jandexIndex,
 			SourceModelBuildingContext modelsContext) {
 		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
-		this.jandexIndex = jandexIndex;
 		this.globalRegistrations = (GlobalRegistrationsImpl) globalRegistrations;
 		this.modelsContext = modelsContext;
 	}
 
+	@Override
 	public GlobalRegistrationsImpl getGlobalRegistrations() {
 		return globalRegistrations;
 	}
 
+	@Override
 	public Set<ClassDetails> getRootEntities() {
 		return rootEntities;
 	}
 
+	@Override
 	public Map<String, ClassDetails> getMappedSuperclasses() {
 		return mappedSuperclasses;
 	}
 
+	@Override
 	public Map<String, ClassDetails> getEmbeddables() {
 		return embeddables;
 	}

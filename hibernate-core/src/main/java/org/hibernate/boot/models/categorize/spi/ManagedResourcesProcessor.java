@@ -142,7 +142,6 @@ public class ManagedResourcesProcessor {
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
 				globalRegistrations,
-				jandexIndex,
 				sourceModelBuildingContext
 		);
 

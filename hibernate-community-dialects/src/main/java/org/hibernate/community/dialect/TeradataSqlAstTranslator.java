@@ -41,9 +41,7 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			forUpdateClause.merge( getLockOptions() );
 			super.renderForUpdateClause( querySpec, forUpdateClause );
 		}
-		else {
-			super.visitQuerySpec( querySpec );
-		}
+		super.visitQuerySpec( querySpec );
 	}
 
 	@Override

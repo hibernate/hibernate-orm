@@ -26,6 +26,8 @@ import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_S
 public class OracleServerConfiguration {
 	private final boolean autonomous;
 	private final boolean extended;
+	private final int driverMajorVersion;
+	private final int driverMinorVersion;
 
 	public boolean isAutonomous() {
 		return autonomous;
@@ -35,16 +37,39 @@ public class OracleServerConfiguration {
 		return extended;
 	}
 
+	public int getDriverMajorVersion() {
+		return driverMajorVersion;
+	}
+
+	public int getDriverMinorVersion() {
+		return driverMinorVersion;
+	}
+
 	public OracleServerConfiguration(boolean autonomous, boolean extended) {
+		this( autonomous, extended, 19, 0 );
+	}
+
+	public OracleServerConfiguration(
+			boolean autonomous,
+			boolean extended,
+			int driverMajorVersion,
+			int driverMinorVersion) {
 		this.autonomous = autonomous;
 		this.extended = extended;
+		this.driverMajorVersion = driverMajorVersion;
+		this.driverMinorVersion = driverMinorVersion;
 	}
 
 	public static OracleServerConfiguration fromDialectResolutionInfo(DialectResolutionInfo info) {
 		Boolean extended = null;
 		Boolean autonomous = null;
+		Integer majorVersion = null;
+		Integer minorVersion = null;
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
+			majorVersion = databaseMetaData.getDriverMajorVersion();
+			minorVersion = databaseMetaData.getDriverMinorVersion();
+
 			try (final Statement statement = databaseMetaData.getConnection().createStatement()) {
 				final ResultSet rs = statement.executeQuery(
 						"select cast('string' as varchar2(32000)), " +
@@ -77,7 +102,19 @@ public class OracleServerConfiguration {
 					false
 			);
 		}
-		return new OracleServerConfiguration( autonomous, extended );
+		if ( majorVersion == null ) {
+			try {
+				java.sql.Driver driver = java.sql.DriverManager.getDriver( "jdbc:oracle:thin:" );
+				majorVersion = driver.getMajorVersion();
+				minorVersion = driver.getMinorVersion();
+			}
+			catch (SQLException ex) {
+				majorVersion = 19;
+				minorVersion = 0;
+			}
+
+		}
+		return new OracleServerConfiguration( autonomous, extended, majorVersion, minorVersion );
 	}
 
 	private static boolean isAutonomous(String cloudServiceParam) {
@@ -86,11 +123,14 @@ public class OracleServerConfiguration {
 
 	private static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
 		try (final Statement statement = databaseMetaData.getConnection().createStatement()) {
-			return statement.executeQuery( "select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JDCS')" ).next();
+			return statement.executeQuery(
+							"select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JDCS')" )
+					.next();
 		}
 		catch (SQLException ex) {
 			// Ignore
 		}
 		return false;
 	}
+
 }

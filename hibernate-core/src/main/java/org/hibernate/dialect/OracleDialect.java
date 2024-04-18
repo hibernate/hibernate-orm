@@ -185,6 +185,11 @@ public class OracleDialect extends Dialect {
 	// Is MAX_STRING_SIZE set to EXTENDED?
 	protected final boolean extended;
 
+	protected final int driverMajorVersion;
+
+	protected final int driverMinorVersion;
+
+
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
 	}
@@ -193,6 +198,8 @@ public class OracleDialect extends Dialect {
 		super(version);
 		autonomous = false;
 		extended = false;
+		driverMajorVersion = 19;
+		driverMinorVersion = 0;
 	}
 
 	public OracleDialect(DialectResolutionInfo info) {
@@ -203,6 +210,8 @@ public class OracleDialect extends Dialect {
 		super( info );
 		autonomous = serverConfiguration.isAutonomous();
 		extended = serverConfiguration.isExtended();
+		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
+		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
 	}
 
 	@Deprecated( since = "6.4" )
@@ -1620,5 +1629,13 @@ public class OracleDialect extends Dialect {
 	@Override
 	public boolean supportsFromClauseInUpdate() {
 		return true;
+	}
+
+	public int getDriverMajorVersion() {
+		return driverMajorVersion;
+	}
+
+	public int getDriverMinorVersion() {
+		return driverMinorVersion;
 	}
 }

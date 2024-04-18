@@ -137,7 +137,9 @@ public interface StatelessSession extends SharedSessionContract {
 	void delete(String entityName, Object entity);
 
 	/**
-	 * Use a SQL {@code merge into} statement to perform an upsert.
+	 * Use a SQL {@code merge into} statement to perform an upsert,
+	 * that is, to insert the record if it does not exist, or update
+	 * it if it already exists.
 	 *
 	 * @param entity a detached entity instance
 	 * @throws TransientObjectException is the entity is transient

@@ -18,7 +18,7 @@ import org.gradle.api.initialization.Settings;
 public class JpaVersion {
 	public static final String EXT_KEY = "jakartaJpaVersion";
 	public static final String VERSION_KEY = "jakartaJpaVersionOverride";
-	public static final String DEFAULT_VERSION = "3.2.0-B02";
+	public static final String DEFAULT_VERSION = "3.2.0-M2";
 
 	private final String name;
 	private final String osgiName;

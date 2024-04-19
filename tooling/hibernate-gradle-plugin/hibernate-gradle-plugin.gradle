@@ -79,6 +79,9 @@ pluginBundle {
 
 test {
 	useJUnitPlatform()
+	if ( project.hasProperty( 'excludeTests' ) ) {
+		exclude project.property( 'excludeTests' )
+	}
 }
 
 // Publish to the Gradle Plugin Portal

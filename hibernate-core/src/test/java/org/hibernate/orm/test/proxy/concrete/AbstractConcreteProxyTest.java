@@ -41,11 +41,13 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		inspector.clear();
 		// test find and association
 		inSession( session -> {
+			//tag::entity-concrete-proxy-find[]
 			final SingleParent parent1 = session.find( SingleParent.class, 1L );
 			assertThat( parent1.getSingle(), instanceOf( SingleSubChild1.class ) );
 			assertThat( Hibernate.isInitialized( parent1.getSingle() ), is( false ) );
 			final SingleSubChild1 proxy = (SingleSubChild1) parent1.getSingle();
 			assertThat( Hibernate.isInitialized( proxy ), is( false ) );
+			//end::entity-concrete-proxy-find[]
 			inspector.assertExecutedCount( 1 );
 			inspector.assertNumberOfJoins( 0, SqlAstJoinType.LEFT, 1 );
 			inspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "disc_col", 1 );
@@ -68,9 +70,13 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		inspector.clear();
 		// test get reference
 		inSession( session -> {
+			//tag::entity-concrete-proxy-reference[]
 			final SingleChild1 proxy1 = session.getReference( SingleChild1.class, 1L );
 			assertThat( proxy1, instanceOf( SingleSubChild1.class ) );
 			assertThat( Hibernate.isInitialized( proxy1 ), is( false ) );
+			final SingleSubChild1 subChild1 = (SingleSubChild1) proxy1;
+			assertThat( Hibernate.isInitialized( subChild1 ), is( false ) );
+			//end::entity-concrete-proxy-reference[]
 			inspector.assertExecutedCount( 1 );
 			inspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "disc_col", 2 );
 			inspector.clear();
@@ -286,6 +292,9 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		return (SQLStatementInspector) sessionFactory().getSessionFactoryOptions().getStatementInspector();
 	}
 
+	// InheritanceType.SINGLE_TABLE
+
+	//tag::entity-concrete-proxy-mapping[]
 	@Entity( name = "SingleParent" )
 	public static class SingleParent {
 		@Id
@@ -306,8 +315,6 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 			return single;
 		}
 	}
-
-	// InheritanceType.SINGLE_TABLE
 
 	@Entity( name = "SingleBase" )
 	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
@@ -350,6 +357,9 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 			this.subChild1Prop = subChild1Prop;
 		}
 	}
+
+	// Other subtypes omitted for brevity
+	//end::entity-concrete-proxy-mapping[]
 
 	@Entity( name = "SingleChild2" )
 	public static class SingleChild2 extends SingleBase {

@@ -218,7 +218,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( queryOptions.getTupleTransformer() != null ) {
 			return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 		}
-		else if ( resultType == null ) {
+		else if ( resultType == null || resultType == Object.class ) {
 			return RowTransformerStandardImpl.instance();
 		}
 		else {

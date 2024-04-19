@@ -462,6 +462,10 @@ https://bytebuddy.net/[Byte Buddy].
 However, if the entity class is final, a proxy will not be created; you will get a POJO even when you only need a proxy reference.
 In this case, you could proxy an interface that this particular entity implements, as illustrated by the following example.
 
+NOTE: Supplying a custom proxy class has been allowed historically, but has never seen much use. Also, setting the `lazy` property to `false`, effectively disallowing proxy creation for an entity type, can easily lead to performance degradation due to the N + 1 query issue. As of 6.2 `@Proxy` has been formally deprecated.
+
+See the <<concrete-proxy,@ConcreteProxy>> paragraph if you wish to resolve the concrete type of proxies for the purpose of `instanceof` checks and typecasts.
+
 [[entity-proxy-interface-mapping]]
 .Final entity class implementing the `Identifiable` interface
 ====
@@ -492,6 +496,62 @@ include::{extrasdir}/entity/entity-proxy-persist-mapping.sql[]
 
 As you can see in the associated SQL snippet, Hibernate issues no SQL SELECT query since the proxy can be
 constructed without needing to fetch the actual entity POJO.
+
+[[concrete-proxy]]
+==== Create proxies that resolve their inheritance subtype
+
+When working with lazy associations or entity references for types that define and inheritance hierarchy Hibernate often creates proxies starting from the root class, with no information about the actual subtype that's referenced by the lazy instance. This can be a problem when using `instanceof` to check the type of said lazy entity references or when trying to cast to the concrete subtype.
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation can be used on an entity hierarchy root mapping to specify that Hibernate should always try to resolve the actual subtype corresponding to the proxy instance created. This effectively means that proxies for that entity hierarchy will always be created from the correct subclass, allowing to preserve laziness and enable using type checks and casts.
+
+[[entity-concrete-proxy-mapping]]
+.Root entity class annotated with `@ConcreteProxy`
+====
+[source,java]
+----
+include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-mapping,indent=0]
+----
+====
+
+In the following example we load the parent's lazy association and resolve to the concrete `SingleSubChild1` type:
+
+[[entity-concrete-proxy-find]]
+.Loading parent entity with lazy association
+====
+[source,java]
+----
+include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-find,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/entity/entity-concrete-proxy-find.sql[]
+----
+====
+
+IMPORTANT: This added functionality does not come free: in order to determine the concrete type to use when creating the Proxy instance, Hibernate might need to access the association target's table(s) to discover the actual subtype corresponding to a specific identifier value.
+
+The concrete type will be determined:
+
+* With *single table* inheritance, the discriminator column value will be left joined when fetching associations or simply read from the entity table when getting references.
+* When using *joined* inheritance, all subtype tables will need to be left joined to determine the concrete type. Note however that when using an explicit discriminator column, the behavior is the same as for single-table inheritance.
+* Finally, for *table-per-class* inheritance, all subtype tables will need to be (union) queried to determine the concrete type.
+
+In the following example, you can see how Hibernate issues a query to resolve the concrete proxy type for an entity reference:
+
+[[entity-concrete-proxy-reference]]
+.Resolving the concrete proxy type for `getReference()`:
+====
+[source,java]
+----
+include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-reference,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/entity/entity-concrete-proxy-reference.sql[]
+----
+====
 
 [[entity-persister]]
 ==== Define a custom entity persister

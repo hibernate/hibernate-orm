@@ -28,19 +28,55 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Christian Beikov
  */
-@DomainModel(standardModels = StandardDomainModel.CONTACTS)
+@DomainModel(
+		standardModels = StandardDomainModel.CONTACTS,
+		annotatedClasses =  {CountQueryTests.LogSupport.class, CountQueryTests.Contract.class}
+)
 @SessionFactory
-@JiraKey("HHH-17410")
 public class CountQueryTests {
 
 	@Test
+	@JiraKey( "HHH-17967" )
+	public void testForHHH17967(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					JpaCriteriaQuery<Contract> cq = cb.createQuery( Contract.class );
+					Root<Contract> root = cq.from( Contract.class );
+					cq.select( root );
+					TypedQuery<Long> query = session.createQuery( cq.createCountQuery() );
+					try {
+						// Leads to NPE on pre-6.5 versions
+						query.getSingleResult();
+					}
+					catch (Exception e) {
+						fail( e );
+					}
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-17410")
 	public void testBasic(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -58,6 +94,7 @@ public class CountQueryTests {
 	}
 
 	@Test
+	@JiraKey("HHH-17410")
 	public void testFetches(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -75,6 +112,7 @@ public class CountQueryTests {
 	}
 
 	@Test
+	@JiraKey("HHH-17410")
 	public void testConstructor(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -89,6 +127,7 @@ public class CountQueryTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRecursiveCtes.class)
+	@JiraKey("HHH-17410")
 	public void testCte(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -107,6 +146,7 @@ public class CountQueryTests {
 	}
 
 	@Test
+	@JiraKey("HHH-17410")
 	public void testValues(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -126,6 +166,7 @@ public class CountQueryTests {
 	}
 
 	@Test
+	@JiraKey("HHH-17410")
 	public void testParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -134,7 +175,7 @@ public class CountQueryTests {
 					final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaParameterExpression<Contact.Gender> parameter = cb.parameter( Contact.Gender.class );
-					
+
 					cq.multiselect( root.get( "id" ), root.get( "name" ) );
 					cq.where( root.get( "gender" ).equalTo( parameter ) );
 					final Long count = session.createQuery( cq.createCountQuery() )
@@ -239,4 +280,23 @@ public class CountQueryTests {
 			session.createMutationQuery( "delete Contact" ).executeUpdate();
 		} );
 	}
+
+	@MappedSuperclass
+	public static abstract class LogSupport {
+		@Column(name = "SOMESTRING")
+		private String s;
+	}
+
+	@Entity
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	public static class Contract extends LogSupport {
+		@Id
+		@Column(name = "PK")
+		@SequenceGenerator(name = "CONTRACT_GENERATOR", sequenceName = "CONTRACT_SEQ", allocationSize = 1)
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "CONTRACT_GENERATOR")
+		private Long syntheticId;
+		@Column(name = "CUSTOMER_NAME")
+		private String customerName;
+	}
+
 }

@@ -78,6 +78,10 @@ public class CategorizationHelper {
 	 * Also performs some simple validation around multiple natures being indicated
 	 */
 	public static AttributeMetadata.AttributeNature determineAttributeNature(ClassDetails declarer, MemberDetails backingMember) {
+		if ( MODEL_CATEGORIZATION_LOGGER.isTraceEnabled() ) {
+			MODEL_CATEGORIZATION_LOGGER.tracef( "Determining attribute-nature for %s", backingMember.resolveAttributeName() );
+		}
+
 		final EnumSet<AttributeMetadata.AttributeNature> natures = EnumSet.noneOf( AttributeMetadata.AttributeNature.class );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -168,6 +172,7 @@ public class CategorizationHelper {
 		if ( !plural ) {
 			// first implicit basic nature
 			if ( implicitlyBasic ) {
+				//noinspection StatementWithEmptyBody
 				if ( specifiesJdbcType && implicitlyEmbedded ) {
 					// special case for embedded and JSON...
 					// don't infer BASIC

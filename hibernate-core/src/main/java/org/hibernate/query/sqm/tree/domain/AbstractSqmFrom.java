@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -252,6 +253,29 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 		joins.add( join );
 		findRoot().addOrderedJoin( join );
+	}
+
+	@Internal
+	public void removeLeftFetchJoins() {
+		if ( joins != null ) {
+			for ( SqmJoin<T, ?> join : new ArrayList<>(joins) ) {
+				if ( join instanceof AbstractSqmAttributeJoin ) {
+					final AbstractSqmAttributeJoin<T, ?> attributeJoin = (AbstractSqmAttributeJoin<T, ?>) join;
+					if ( attributeJoin.isFetched() ) {
+						if ( join.getSqmJoinType() == SqmJoinType.LEFT ) {
+							joins.remove( join );
+							final List<SqmJoin<?, ?>> orderedJoins = findRoot().getOrderedJoins();
+							if (orderedJoins != null) {
+								orderedJoins.remove( join );
+							}
+						}
+						else {
+							attributeJoin.clearFetched();
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Override

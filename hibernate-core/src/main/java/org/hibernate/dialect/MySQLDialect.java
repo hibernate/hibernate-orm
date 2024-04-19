@@ -70,6 +70,7 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -671,7 +672,7 @@ public class MySQLDialect extends Dialect {
 				)
 		);
 
-		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 	}
 
 	@Override

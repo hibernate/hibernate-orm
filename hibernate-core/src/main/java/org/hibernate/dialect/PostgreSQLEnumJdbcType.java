@@ -28,6 +28,7 @@ import java.sql.Types;
 import static java.util.Arrays.sort;
 import static java.util.Collections.emptySet;
 import static org.hibernate.type.SqlTypes.NAMED_ENUM;
+import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
@@ -50,6 +51,11 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 
 	@Override
 	public int getJdbcTypeCode() {
+		return OTHER;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
 		return NAMED_ENUM;
 	}
 

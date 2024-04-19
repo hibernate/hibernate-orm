@@ -62,7 +62,7 @@ import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
-import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
+import org.hibernate.boot.models.internal.SourceModelRegistryPreFiller;
 import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
@@ -228,7 +228,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		return new SourceModelBuildingContextImpl(
 				classLoading,
 				bootstrapContext.getJandexView(),
-				ManagedResourcesProcessor::preFillRegistries
+				SourceModelRegistryPreFiller::preFillRegistries
 		);
 	}
 

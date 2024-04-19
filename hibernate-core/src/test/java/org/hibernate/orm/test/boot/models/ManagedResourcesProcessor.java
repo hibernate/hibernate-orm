@@ -4,17 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.boot.models.categorize.spi;
+package org.hibernate.orm.test.boot.models;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
@@ -23,8 +21,12 @@ import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
-import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
+import org.hibernate.boot.models.categorize.spi.EntityHierarchyCollection;
+import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
+import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
+import org.hibernate.boot.models.internal.SourceModelRegistryPreFiller;
 import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -34,17 +36,12 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.models.internal.SourceModelBuildingContextImpl;
-import org.hibernate.models.internal.jandex.JandexClassDetails;
 import org.hibernate.models.internal.jandex.JandexIndexerHelper;
-import org.hibernate.models.internal.jdk.JdkBuilders;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
-import org.hibernate.models.spi.RegistryPrimer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
@@ -114,7 +111,7 @@ public class ManagedResourcesProcessor {
 		final SourceModelBuildingContextImpl sourceModelBuildingContext = new SourceModelBuildingContextImpl(
 				classLoading,
 				jandexIndex,
-				ManagedResourcesProcessor::preFillRegistries
+				SourceModelRegistryPreFiller::preFillRegistries
 		);
 
 
@@ -194,7 +191,7 @@ public class ManagedResourcesProcessor {
 				globalRegistrations
 		);
 
-		final Set<EntityHierarchy> entityHierarchies;
+		final EntityHierarchyCollection entityHierarchies;
 		if ( ModelCategorizationLogging.MODEL_CATEGORIZATION_LOGGER.isDebugEnabled() ) {
 			final Map<String,ClassDetails> unusedMappedSuperClasses = new HashMap<>( modelCategorizationCollector.getMappedSuperclasses() );
 			entityHierarchies = createEntityHierarchies(
@@ -216,7 +213,8 @@ public class ManagedResourcesProcessor {
 			);
 		}
 
-		return modelCategorizationCollector.createResult(
+		return createResult(
+				modelCategorizationCollector,
 				entityHierarchies,
 				xmlPreProcessingResult.getPersistenceUnitMetadata(),
 				classDetailsRegistryImmutable,
@@ -262,42 +260,6 @@ public class ManagedResourcesProcessor {
 		return CompositeIndex.create( suppliedJandexIndex, jandexIndexer.complete() );
 	}
 
-	public static void preFillRegistries(RegistryPrimer.Contributions contributions, SourceModelBuildingContext buildingContext) {
-		OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
-
-		buildingContext.getAnnotationDescriptorRegistry().getDescriptor( TenantId.class );
-
-		final IndexView jandexIndex = buildingContext.getJandexIndex();
-		if ( jandexIndex == null ) {
-			return;
-		}
-
-		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
-		final AnnotationDescriptorRegistry annotationDescriptorRegistry = buildingContext.getAnnotationDescriptorRegistry();
-
-		for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
-			final String className = knownClass.name().toString();
-
-			if ( knownClass.isAnnotation() ) {
-				// it is always safe to load the annotation classes - we will never be enhancing them
-				//noinspection rawtypes
-				final Class annotationClass = buildingContext
-						.getClassLoading()
-						.classForName( className );
-				//noinspection unchecked
-				annotationDescriptorRegistry.resolveDescriptor(
-						annotationClass,
-						(t) -> JdkBuilders.buildAnnotationDescriptor( annotationClass, buildingContext.getAnnotationDescriptorRegistry() )
-				);
-			}
-
-			classDetailsRegistry.resolveClassDetails(
-					className,
-					(name) -> new JandexClassDetails( knownClass, buildingContext )
-			);
-		}
-	}
-
 	/**
 	 * For testing use only
 	 */
@@ -310,6 +272,22 @@ public class ManagedResourcesProcessor {
 				managedResources,
 				metadataBuildingOptions,
 				bootstrapContext
+		);
+	}
+	public static CategorizedDomainModel createResult(
+			DomainModelCategorizationCollector modelCategorizationCollector,
+			EntityHierarchyCollection entityHierarchies,
+			PersistenceUnitMetadata persistenceUnitMetadata,
+			ClassDetailsRegistry classDetailsRegistry,
+			AnnotationDescriptorRegistry annotationDescriptorRegistry) {
+		return new CategorizedDomainModelImpl(
+				classDetailsRegistry,
+				annotationDescriptorRegistry,
+				persistenceUnitMetadata,
+				entityHierarchies,
+				modelCategorizationCollector.getMappedSuperclasses(),
+				modelCategorizationCollector.getEmbeddables(),
+				modelCategorizationCollector.getGlobalRegistrations()
 		);
 	}
 }

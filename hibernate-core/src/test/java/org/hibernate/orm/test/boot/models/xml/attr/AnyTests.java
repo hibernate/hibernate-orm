@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.boot.models.xml.attr;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,7 +17,7 @@ import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.internal.AnyKeyType;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.orm.test.boot.models.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -34,7 +35,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.ManagedResourcesProcessor.processManagedResources;
 
 /**
  * @author Steve Ebersole
@@ -60,8 +61,9 @@ public class AnyTests {
 				bootstrapContext
 		);
 
-		assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 3 );
-		final EntityHierarchy entity3Hierarchy = categorizedDomainModel.getEntityHierarchies()
+		final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+		assertThat( hierarchies ).hasSize( 3 );
+		final EntityHierarchy entity3Hierarchy = hierarchies
 				.stream()
 				.filter( hierarchy -> hierarchy.getRoot().getEntityName().endsWith( "Entity3" ) )
 				.findFirst()

@@ -7,11 +7,11 @@
 package org.hibernate.orm.test.boot.models.categorize.access;
 
 import java.util.List;
-import java.util.Set;
 
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.orm.test.boot.models.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.models.categorize.spi.EntityHierarchyCollection;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.KeyMapping;
 import org.hibernate.boot.models.categorize.spi.PersistentAttributeMemberResolver;
@@ -105,9 +105,9 @@ public class HierarchyClassIsolationTests {
 	void testCategorization(ServiceRegistryScope scope) {
 		final CategorizedDomainModel categorizedDomainModel = CategorizationTestsHelper.buildCategorizedDomainModel( scope, Root.class, Base.class, Level1.class );
 
-		final Set<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies();
-		assertThat( entityHierarchies ).hasSize( 1 );
-		final EntityHierarchy entityHierarchy = entityHierarchies.iterator().next();
+		final EntityHierarchyCollection entityHierarchies = categorizedDomainModel.getEntityHierarchies();
+		assertThat( entityHierarchies.getHierarchies() ).hasSize( 1 );
+		final EntityHierarchy entityHierarchy = entityHierarchies.getHierarchies().iterator().next();
 		final EntityTypeMetadata rootEntityDescriptor = entityHierarchy.getRoot();
 
 		assertThat( rootEntityDescriptor.getClassLevelAccessType() ).isEqualTo( ClassAttributeAccessType.IMPLICIT_FIELD );

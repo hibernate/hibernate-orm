@@ -6,13 +6,13 @@
  */
 package org.hibernate.orm.test.boot.models.xml.complete;
 
-import java.util.Set;
+import java.util.Collection;
 
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.orm.test.boot.models.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
@@ -28,7 +28,7 @@ import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.ManagedResourcesProcessor.processManagedResources;
 
 public class DiscriminatorValueTest {
 	@Test
@@ -46,7 +46,7 @@ public class DiscriminatorValueTest {
 					bootstrapContext
 			);
 
-			final Set<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies();
+			final Collection<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
 			assertThat( entityHierarchies ).hasSize( 3 );
 
 			for ( EntityHierarchy entityHierarchy : entityHierarchies ) {

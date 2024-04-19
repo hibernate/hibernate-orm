@@ -4,26 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.boot.models.categorize.internal;
+package org.hibernate.orm.test.boot.models;
 
 import java.util.Map;
-import java.util.Set;
 
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.models.categorize.spi.EntityHierarchyCollection;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
-import org.jboss.jandex.IndexView;
-
 /**
  * @author Steve Ebersole
  */
 public class CategorizedDomainModelImpl implements CategorizedDomainModel {
-	private final Set<EntityHierarchy> entityHierarchies;
+	private final EntityHierarchyCollection entityHierarchies;
 	private final Map<String, ClassDetails> mappedSuperclasses;
 	private final Map<String, ClassDetails> embeddables;
 	private final GlobalRegistrations globalRegistrations;
@@ -36,7 +32,7 @@ public class CategorizedDomainModelImpl implements CategorizedDomainModel {
 			ClassDetailsRegistry classDetailsRegistry,
 			AnnotationDescriptorRegistry annotationDescriptorRegistry,
 			PersistenceUnitMetadata persistenceUnitMetadata,
-			Set<EntityHierarchy> entityHierarchies,
+			EntityHierarchyCollection entityHierarchies,
 			Map<String, ClassDetails> mappedSuperclasses,
 			Map<String, ClassDetails> embeddables,
 			GlobalRegistrations globalRegistrations) {
@@ -70,7 +66,7 @@ public class CategorizedDomainModelImpl implements CategorizedDomainModel {
 	}
 
 	@Override
-	public Set<EntityHierarchy> getEntityHierarchies() {
+	public EntityHierarchyCollection getEntityHierarchies() {
 		return entityHierarchies;
 	}
 

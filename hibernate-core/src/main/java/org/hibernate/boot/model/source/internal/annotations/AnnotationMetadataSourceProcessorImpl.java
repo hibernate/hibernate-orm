@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.source.internal.annotations;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -23,13 +24,18 @@ import org.hibernate.boot.model.internal.AnnotationBinder;
 import org.hibernate.boot.model.internal.InheritanceState;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
+import org.hibernate.boot.models.categorize.ModelCategorizationLogging;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.EntityHierarchyBuilder;
+import org.hibernate.boot.models.categorize.internal.HierarchyTypeConsumer;
 import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
 import org.hibernate.boot.models.categorize.spi.DomainModelCategorizations;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.models.categorize.spi.EntityHierarchyCollection;
 import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
+import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
+import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
@@ -52,6 +58,7 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
 
+import static org.hibernate.boot.models.categorize.ModelCategorizationLogging.MODEL_CATEGORIZATION_LOGGER;
 import static org.hibernate.models.spi.ClassDetails.VOID_CLASS_DETAILS;
 import static org.hibernate.models.spi.ClassDetails.VOID_OBJECT_CLASS_DETAILS;
 
@@ -313,11 +320,23 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				domainModelCategorizations.getGlobalRegistrations()
 		);
 
-		final Set<EntityHierarchy> entityHierarchies = EntityHierarchyBuilder.createEntityHierarchies(
+		final UnusedMappedSuperclassNotifier unusedMappedSuperclassNotifier;
+		if ( MODEL_CATEGORIZATION_LOGGER.isDebugEnabled() ) {
+			unusedMappedSuperclassNotifier = new UnusedMappedSuperclassNotifier( domainModelCategorizations );
+		}
+		else {
+			unusedMappedSuperclassNotifier = null;
+		}
+
+		final EntityHierarchyCollection hierarchyCollection = EntityHierarchyBuilder.createEntityHierarchies(
 				domainModelCategorizations.getRootEntities(),
-				null,
+				unusedMappedSuperclassNotifier,
 				modelCategorizationContext
 		);
+
+		if ( unusedMappedSuperclassNotifier != null ) {
+			unusedMappedSuperclassNotifier.validate();
+		}
 
 
 
@@ -341,6 +360,30 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
 				AnnotationBinder.bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
 				processedEntityNames.add( clazz.getName() );
+			}
+		}
+	}
+
+	private static final class UnusedMappedSuperclassNotifier implements HierarchyTypeConsumer {
+		private final Set<ClassDetails> knownMappedSuperClassDetails;
+
+		public UnusedMappedSuperclassNotifier(DomainModelCategorizations domainModelCategorizations) {
+			this.knownMappedSuperClassDetails = new HashSet<>( domainModelCategorizations.getMappedSuperclasses().values() );
+		}
+
+		@Override
+		public void acceptType(IdentifiableTypeMetadata type) {
+			if ( type instanceof MappedSuperclassTypeMetadata ) {
+				knownMappedSuperClassDetails.remove( type.getClassDetails() );
+			}
+		}
+
+		public void validate() {
+			if ( !knownMappedSuperClassDetails.isEmpty() ) {
+				MODEL_CATEGORIZATION_LOGGER.debug( "The application managed resources contained the following unused mapped-superclasses:" );
+				knownMappedSuperClassDetails.forEach( (classDetails) -> {
+					MODEL_CATEGORIZATION_LOGGER.debugf( "    * %s", classDetails.getName() );
+				} );
 			}
 		}
 	}

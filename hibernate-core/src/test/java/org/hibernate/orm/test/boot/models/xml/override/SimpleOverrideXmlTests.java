@@ -6,11 +6,13 @@
  */
 package org.hibernate.orm.test.boot.models.xml.override;
 
+import java.util.Collection;
+
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.orm.test.boot.models.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
@@ -26,7 +28,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.ManagedResourcesProcessor.processManagedResources;
 
 /**
  * @author Steve Ebersole
@@ -49,9 +51,10 @@ public class SimpleOverrideXmlTests {
 					bootstrapContext
 			);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
+			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			assertThat( hierarchies ).hasSize( 1 );
 
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
+			final EntityHierarchy hierarchy = hierarchies.iterator().next();
 			final EntityTypeMetadata root = hierarchy.getRoot();
 			assertThat( root.getClassDetails().getClassName() ).isEqualTo( SimpleEntity.class.getName() );
 			assertThat( root.getNumberOfAttributes() ).isEqualTo( 2 );

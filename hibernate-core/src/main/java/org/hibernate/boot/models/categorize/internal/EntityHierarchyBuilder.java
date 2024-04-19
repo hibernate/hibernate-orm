@@ -8,10 +8,12 @@ package org.hibernate.boot.models.categorize.internal;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.models.categorize.spi.EntityHierarchyCollection;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -48,7 +50,7 @@ public class EntityHierarchyBuilder {
 	 *
 	 * @return a set of {@code EntityHierarchySource} instances.
 	 */
-	public static Set<EntityHierarchy> createEntityHierarchies(
+	public static EntityHierarchyCollection createEntityHierarchies(
 			Set<ClassDetails> rootEntities,
 			HierarchyTypeConsumer typeConsumer,
 			ModelCategorizationContext buildingContext) {
@@ -64,7 +66,7 @@ public class EntityHierarchyBuilder {
 	 *
 	 * @return a set of {@code EntityHierarchySource} instances.
 	 */
-	public static Set<EntityHierarchy> createEntityHierarchies(
+	public static EntityHierarchyCollection createEntityHierarchies(
 			HierarchyTypeConsumer typeConsumer,
 			ModelCategorizationContext buildingContext) {
 		return createEntityHierarchies(
@@ -80,7 +82,7 @@ public class EntityHierarchyBuilder {
 		this.modelContext = modelContext;
 	}
 
-	private Set<EntityHierarchy> process(
+	private EntityHierarchyCollection process(
 			Set<ClassDetails> rootEntities,
 			HierarchyTypeConsumer typeConsumer) {
 		final Set<EntityHierarchy> hierarchies = CollectionHelper.setOfSize( rootEntities.size() );
@@ -96,7 +98,7 @@ public class EntityHierarchyBuilder {
 			) );
 		} );
 
-		return hierarchies;
+		return new EntityHierarchyCollectionImpl( hierarchies );
 	}
 
 	private AccessType determineDefaultAccessTypeForHierarchy(ClassDetails rootEntityType) {
@@ -228,7 +230,7 @@ public class EntityHierarchyBuilder {
 	/**
 	 * Used in tests
 	 */
-	public static Set<EntityHierarchy> createEntityHierarchies(ModelCategorizationContext processingContext) {
+	public static EntityHierarchyCollection createEntityHierarchies(ModelCategorizationContext processingContext) {
 		return new EntityHierarchyBuilder( processingContext ).process(
 				collectRootEntityTypes( processingContext.getClassDetailsRegistry() ),
 				EntityHierarchyBuilder::ignore

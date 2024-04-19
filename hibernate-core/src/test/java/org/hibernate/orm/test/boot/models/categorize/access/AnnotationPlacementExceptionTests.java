@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.boot.models.categorize.access;
 
 import org.hibernate.boot.models.AnnotationPlacementException;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.orm.test.boot.models.categorize.CategorizationTestsHelper;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -19,7 +18,6 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import static org.junit.jupiter.api.Assertions.fail;
 

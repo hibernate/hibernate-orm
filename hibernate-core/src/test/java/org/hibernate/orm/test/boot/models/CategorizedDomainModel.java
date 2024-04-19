@@ -4,11 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.boot.models.categorize.spi;
+package org.hibernate.orm.test.boot.models;
 
+import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
+import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.models.categorize.spi.EntityHierarchyCollection;
+import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.KeyedConsumer;
@@ -16,8 +19,6 @@ import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.SourceModelContext;
-
-import org.jboss.jandex.IndexView;
 
 /**
  * The application's domain model, understood at a very rudimentary level - we know
@@ -50,13 +51,13 @@ public interface CategorizedDomainModel extends SourceModelContext {
 	/**
 	 * All entity hierarchies defined in the persistence unit
 	 */
-	Set<EntityHierarchy> getEntityHierarchies();
+	EntityHierarchyCollection getEntityHierarchies();
 
 	/**
 	 * Iteration over the {@linkplain #getEntityHierarchies() entity hierarchies}
 	 */
 	default void forEachEntityHierarchy(IndexedConsumer<EntityHierarchy> hierarchyConsumer) {
-		final Set<EntityHierarchy> entityHierarchies = getEntityHierarchies();
+		final Collection<EntityHierarchy> entityHierarchies = getEntityHierarchies().getHierarchies();
 		if ( entityHierarchies.isEmpty() ) {
 			return;
 		}

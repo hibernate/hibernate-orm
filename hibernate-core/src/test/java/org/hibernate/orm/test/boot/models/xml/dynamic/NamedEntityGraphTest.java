@@ -6,16 +6,16 @@
  */
 package org.hibernate.orm.test.boot.models.xml.dynamic;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
+import org.hibernate.orm.test.boot.models.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.models.spi.AnnotationUsage;
@@ -28,7 +28,7 @@ import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedSubgraph;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.ManagedResourcesProcessor.processManagedResources;
 
 public class NamedEntityGraphTest {
 	@Test
@@ -46,7 +46,7 @@ public class NamedEntityGraphTest {
 					bootstrapContext
 			);
 
-			final Set<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies();
+			final Collection<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
 			assertThat( entityHierarchies ).hasSize( 2 );
 
 			entityHierarchies.forEach(

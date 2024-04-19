@@ -16,11 +16,11 @@ import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedRes
 import org.hibernate.orm.test.boot.models.MyStringConverter;
 import org.hibernate.orm.test.boot.models.MyUuidConverter;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.orm.test.boot.models.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
-import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
+import org.hibernate.orm.test.boot.models.ManagedResourcesProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.models.spi.ClassDetails;
@@ -81,8 +81,8 @@ public class SimpleProcessorTests {
 			final BootstrapContextTesting bootstrapContext = new BootstrapContextTesting( jandexIndex, serviceRegistry, metadataBuildingOptions );
 			final CategorizedDomainModel categorizedDomainModel = ManagedResourcesProcessor.processManagedResources( managedResources, bootstrapContext );
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 2 );
-			final Iterator<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().iterator();
+			assertThat( categorizedDomainModel.getEntityHierarchies().getHierarchies() ).hasSize( 2 );
+			final Iterator<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies().iterator();
 			final EntityHierarchy one = hierarchies.next();
 			final EntityHierarchy two = hierarchies.next();
 

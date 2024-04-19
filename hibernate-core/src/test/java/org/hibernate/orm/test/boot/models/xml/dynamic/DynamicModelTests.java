@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.boot.models.xml.dynamic;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -23,7 +24,7 @@ import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.orm.test.boot.models.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
@@ -46,7 +47,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.ManagedResourcesProcessor.processManagedResources;
 
 /**
  * @author Steve Ebersole
@@ -67,8 +68,9 @@ public class DynamicModelTests {
 					bootstrapContext
 			);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
+			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			assertThat( hierarchies ).hasSize( 1 );
+			final EntityHierarchy hierarchy = hierarchies.iterator().next();
 			final EntityTypeMetadata rootEntity = hierarchy.getRoot();
 			assertThat( rootEntity.getClassDetails().getClassName() ).isNull();
 			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( "SimpleEntity" );
@@ -100,8 +102,9 @@ public class DynamicModelTests {
 					bootstrapContext
 			);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
+			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			assertThat( hierarchies ).hasSize( 1 );
+			final EntityHierarchy hierarchy = hierarchies.iterator().next();
 			final EntityTypeMetadata rootEntity = hierarchy.getRoot();
 			assertThat( rootEntity.getClassDetails().getClassName() ).isNull();
 			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( "Contact" );
@@ -154,8 +157,9 @@ public class DynamicModelTests {
 					bootstrapContext
 			);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
+			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			assertThat( hierarchies ).hasSize( 1 );
+			final EntityHierarchy hierarchy = hierarchies.iterator().next();
 			final EntityTypeMetadata rootEntity = hierarchy.getRoot();
 			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( Employee.class.getName() );
 
@@ -181,8 +185,9 @@ public class DynamicModelTests {
 					bootstrapContext
 			);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityTypeMetadata rootEntity = categorizedDomainModel.getEntityHierarchies().iterator().next().getRoot();
+			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			assertThat( hierarchies ).hasSize( 1 );
+			final EntityTypeMetadata rootEntity = hierarchies.iterator().next().getRoot();
 			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( Employee.class.getName() );
 
 			final FieldDetails oneToMany = rootEntity.getClassDetails().findFieldByName( "oneToMany" );

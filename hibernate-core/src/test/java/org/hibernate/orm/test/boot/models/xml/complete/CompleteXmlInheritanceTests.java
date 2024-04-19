@@ -6,10 +6,12 @@
  */
 package org.hibernate.orm.test.boot.models.xml.complete;
 
+import java.util.Collection;
+
 import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.orm.test.boot.models.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -26,7 +28,7 @@ import jakarta.persistence.Id;
 
 import static jakarta.persistence.InheritanceType.JOINED;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.ManagedResourcesProcessor.processManagedResources;
 import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
 
 /**
@@ -54,8 +56,9 @@ public class CompleteXmlInheritanceTests {
 			);
 			final CategorizedDomainModel categorizedDomainModel = processManagedResources( managedResources, bootstrapContext );
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
+			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			assertThat( hierarchies ).hasSize( 1 );
+			final EntityHierarchy hierarchy = hierarchies.iterator().next();
 			assertThat( hierarchy.getInheritanceType() ).isEqualTo( JOINED );
 
 			final EntityTypeMetadata rootMetadata = hierarchy.getRoot();

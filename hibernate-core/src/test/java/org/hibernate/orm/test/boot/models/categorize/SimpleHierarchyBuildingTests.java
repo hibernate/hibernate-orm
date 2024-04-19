@@ -15,7 +15,7 @@ import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSo
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.EntityHierarchyBuilder;
 import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.models.categorize.spi.EntityHierarchyCollection;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
@@ -91,11 +91,11 @@ public class SimpleHierarchyBuildingTests {
 				modelCategorizationCollector.getGlobalRegistrations()
 		);
 
-		final Set<EntityHierarchy> entityHierarchies = EntityHierarchyBuilder.createEntityHierarchies(
+		final EntityHierarchyCollection entityHierarchies = EntityHierarchyBuilder.createEntityHierarchies(
 				rootEntities,
 				null,
 				modelCategorizationContext
 		);
-		assertThat( entityHierarchies ).hasSize( rootEntities.size() );
+		assertThat( entityHierarchies.getHierarchies() ).hasSize( rootEntities.size() );
 	}
 }

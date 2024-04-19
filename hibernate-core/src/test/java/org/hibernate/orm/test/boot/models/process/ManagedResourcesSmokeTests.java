@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.boot.models.process;
 
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
@@ -18,10 +18,10 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.BasicKeyMapping;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.orm.test.boot.models.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
+import org.hibernate.orm.test.boot.models.ManagedResourcesProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.models.spi.ClassDetails;
@@ -68,7 +68,7 @@ public class ManagedResourcesSmokeTests {
 					bootstrapContext
 			);
 
-			final Set<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies();
+			final Collection<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
 			assertThat( entityHierarchies ).hasSize( 1 );
 			final EntityHierarchy entityHierarchy = entityHierarchies.iterator().next();
 			final EntityTypeMetadata entityDescriptor = entityHierarchy.getRoot();

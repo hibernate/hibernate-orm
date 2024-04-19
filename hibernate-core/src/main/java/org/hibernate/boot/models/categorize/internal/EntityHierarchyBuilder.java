@@ -8,10 +8,8 @@ package org.hibernate.boot.models.categorize.internal;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
-import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
@@ -32,8 +30,6 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-
-import static org.hibernate.boot.models.categorize.ModelCategorizationLogging.MODEL_CATEGORIZATION_LOGGER;
 
 /**
  * Builds {@link EntityHierarchy} references from
@@ -106,40 +102,9 @@ public class EntityHierarchyBuilder {
 	private AccessType determineDefaultAccessTypeForHierarchy(ClassDetails rootEntityType) {
 		assert rootEntityType != null;
 
-//		// look for `@Access` at class level
-//		final AccessType classAnnotationValue = resolveDefaultAccessTypeFromClassAnnotation( rootEntityType );
-//		if ( classAnnotationValue != null ) {
-//			return classAnnotationValue;
-//		}
-
 		// look for `@Id` or `@EmbeddedId`
-		// todo (jpa32) : technically we could probably look for member with any "mapping" annotation
-		final AccessType accessFromAttribute = resolveDefaultAccessTypeFromMembers( rootEntityType );
-		if ( accessFromAttribute != null ) {
-			return accessFromAttribute;
-		}
-
-
-//		// 2.3.1 Default Access Type
-//		//    It is an error if a default access type cannot be determined and an access type is not explicitly specified
-//		//    by means of annotations or the XML descriptor.
-//		throw new AccessTypeDeterminationException( rootEntityType );
-
-		return null;
-	}
-
-	private AccessType resolveDefaultAccessTypeFromClassAnnotation(ClassDetails rootEntityType) {
-		ClassDetails current = rootEntityType;
-		while ( current != null ) {
-			final AnnotationUsage<Access> accessAnnotation = current.getAnnotationUsage( JpaAnnotations.ACCESS );
-			if ( accessAnnotation != null ) {
-				return accessAnnotation.getAttributeValue( "value" );
-			}
-
-			current = current.getSuperClass();
-		}
-
-		return null;
+		// todo (7.0) : technically we could probably look for member with any "mapping" annotation
+		return resolveDefaultAccessTypeFromMembers( rootEntityType );
 	}
 
 	private AccessType resolveDefaultAccessTypeFromMembers(ClassDetails rootEntityType) {
@@ -210,42 +175,8 @@ public class EntityHierarchyBuilder {
 			return false;
 		}
 
-		if ( !memberDetails.hasAnnotationUsage( Id.class )
-				&& !memberDetails.hasAnnotationUsage( EmbeddedId.class ) ) {
-			return false;
-		}
-
-//		if ( explicitClassAccessType == null ) {
-//			// if there is not an *explicit* class-level @Access annotation, there should not
-//			// be any member-level @Access annotations either.
-//			//
-//			// See _2.3.1. Default Access Type_ and footnote #9 -
-//			//
-//			// 		It is an error if a default access type cannot be determined and an access type is not explicitly
-//			// 		specified by a class-level Access annotation or the XML descriptor. The behavior of applications
-//			// 		which mix the placement of mapping annotations on fields and properties within an entity hierarchy
-//			// 		without explicitly specifying the class-level Access annotation is undefined.[9]
-//			//
-//			// 		[9] An Access annotation of a field or property getter is considered a "mapping annotation" for
-//			// 		the purposes of this section. Therefore, an attribute-level Access annotation may not be used to
-//			// 		selectively override the access type of an attribute of an entity class with a defaulted access type.
-//
-//			if ( memberDetails.hasAnnotationUsage( Access.class ) ) {
-//				throw new AnnotationPlacementException(
-//						String.format(
-//								Locale.ROOT,
-//								"Unable to determine the default AccessType due to an illegal use of @Access - " +
-//										"[%s.%s] is annotated with @Access which is illegal unless the declaring class " +
-//										"(%s) is also annotated with @Access.",
-//								classDetails.getName(),
-//								memberDetails.getName(),
-//								classDetails.getName()
-//								)
-//				);
-//			}
-//		}
-
-		return true;
+		return memberDetails.hasAnnotationUsage( Id.class )
+				|| memberDetails.hasAnnotationUsage( EmbeddedId.class );
 	}
 
 	private Set<ClassDetails> collectRootEntityTypes() {
@@ -268,7 +199,7 @@ public class EntityHierarchyBuilder {
 	public static boolean isRoot(ClassDetails classInfo) {
 		// perform a series of opt-out checks against the super-type hierarchy
 
-		// an entity is considered a root of the hierarchy if:
+		// an entity is considered a root of the hierarchy if either:
 		// 		1) it has no super-types
 		//		2) its super types contain no entities (MappedSuperclasses are allowed)
 
@@ -276,10 +207,14 @@ public class EntityHierarchyBuilder {
 			return true;
 		}
 
+		// todo (7.0) : alternatively consider an approach of tracking roots here as we walk the supers
+		//		to avoid potentially walking the same supers multiple times (from diff subs)
+		//		- see `#collectRootEntityTypes`
+
 		ClassDetails current = classInfo.getSuperClass();
 		while (  current != null ) {
-			if ( current.getAnnotationUsage( JpaAnnotations.ENTITY ) != null && !current.isAbstract() ) {
-				// a non-abstract super type has `@Entity` -> classInfo cannot be a root entity
+			if ( current.getAnnotationUsage( Entity.class ) != null ) {
+				// a super type has `@Entity` -> classInfo cannot be a root entity
 				return false;
 			}
 			current = current.getSuperClass();

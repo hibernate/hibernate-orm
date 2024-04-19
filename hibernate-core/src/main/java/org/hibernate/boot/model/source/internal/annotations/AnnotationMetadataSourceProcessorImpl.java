@@ -91,6 +91,11 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		assert classLoaderService != null;
 
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// todo (7.0) : I *think* a lot of this could be moved into `#prepare` and `#prepareForEntityHierarchyProcessing`
+		//		- is there any real benefit to that?
+
 		final InFlightMetadataCollector metadataCollector = rootMetadataBuildingContext.getMetadataCollector();
 		final ConverterRegistry converterRegistry = metadataCollector.getConverterRegistry();
 		final BootstrapContext bootstrapContext = rootMetadataBuildingContext.getBootstrapContext();
@@ -196,10 +201,10 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		}
 	}
 
-	private static void applyKnownClass(
+	public static void applyKnownClass(
 			ClassDetails classDetails,
-			HashSet<String> categorizedClassNames,
-			LinkedHashSet<ClassDetails> knownClasses,
+			Set<String> categorizedClassNames,
+			Set<ClassDetails> knownClasses,
 			DomainModelCategorizationCollector modelCategorizationCollector) {
 		modelCategorizationCollector.apply( classDetails );
 		knownClasses.add( classDetails );
@@ -296,6 +301,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void processEntityHierarchies(Set<String> processedEntityNames) {
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// New "categorization" stuff
+
 		final InFlightMetadataCollector metadataCollector = rootMetadataBuildingContext.getMetadataCollector();
 		final SourceModelBuildingContext sourceModelBuildingContext = metadataCollector.getSourceModelBuildingContext();
 
@@ -313,9 +321,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 
 
-
-
-
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Old stuff
 
 		final List<ClassDetails> orderedClasses = orderAndFillHierarchy( knownClasses );
 		Map<ClassDetails, InheritanceState> inheritanceStatePerClass = AnnotationBinder.buildInheritanceStates(

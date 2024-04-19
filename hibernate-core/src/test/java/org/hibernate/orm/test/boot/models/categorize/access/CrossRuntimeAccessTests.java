@@ -45,7 +45,7 @@ public class CrossRuntimeAccessTests {
 				CrossRuntimeAccessEntity.class
 		);
 
-		assertThat( categorizedDomainModel.getEntityHierarchies().getHierarchies() ).hasSize( 1 );
+		assertThat( categorizedDomainModel.getEntityHierarchyCollection().getHierarchies() ).hasSize( 1 );
 		categorizedDomainModel.forEachEntityHierarchy( (index, entityHierarchy) -> {
 			final EntityTypeMetadata hierarchyRoot = entityHierarchy.getRoot();
 

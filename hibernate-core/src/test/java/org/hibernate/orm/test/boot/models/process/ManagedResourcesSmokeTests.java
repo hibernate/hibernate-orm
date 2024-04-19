@@ -68,7 +68,7 @@ public class ManagedResourcesSmokeTests {
 					bootstrapContext
 			);
 
-			final Collection<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			final Collection<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchyCollection().getHierarchies();
 			assertThat( entityHierarchies ).hasSize( 1 );
 			final EntityHierarchy entityHierarchy = entityHierarchies.iterator().next();
 			final EntityTypeMetadata entityDescriptor = entityHierarchy.getRoot();

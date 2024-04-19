@@ -48,7 +48,7 @@ public class ColumnTests {
 				bootstrapContext
 		);
 
-		final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+		final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchyCollection().getHierarchies();
 		assertThat( hierarchies ).hasSize( 1 );
 
 		final EntityHierarchy hierarchy = hierarchies.iterator().next();
@@ -82,7 +82,7 @@ public class ColumnTests {
 				bootstrapContext
 		);
 
-		final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+		final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchyCollection().getHierarchies();
 		assertThat( hierarchies ).hasSize( 1 );
 
 		final EntityHierarchy hierarchy = hierarchies.iterator().next();

@@ -66,7 +66,7 @@ public class CategorizedDomainModelImpl implements CategorizedDomainModel {
 	}
 
 	@Override
-	public EntityHierarchyCollection getEntityHierarchies() {
+	public EntityHierarchyCollection getEntityHierarchyCollection() {
 		return entityHierarchies;
 	}
 

@@ -61,7 +61,7 @@ public class AnyTests {
 				bootstrapContext
 		);
 
-		final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+		final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchyCollection().getHierarchies();
 		assertThat( hierarchies ).hasSize( 3 );
 		final EntityHierarchy entity3Hierarchy = hierarchies
 				.stream()

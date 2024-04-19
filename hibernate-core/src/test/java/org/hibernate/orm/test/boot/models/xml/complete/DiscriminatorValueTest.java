@@ -46,7 +46,7 @@ public class DiscriminatorValueTest {
 					bootstrapContext
 			);
 
-			final Collection<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			final Collection<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchyCollection().getHierarchies();
 			assertThat( entityHierarchies ).hasSize( 3 );
 
 			for ( EntityHierarchy entityHierarchy : entityHierarchies ) {

@@ -81,8 +81,8 @@ public class SimpleProcessorTests {
 			final BootstrapContextTesting bootstrapContext = new BootstrapContextTesting( jandexIndex, serviceRegistry, metadataBuildingOptions );
 			final CategorizedDomainModel categorizedDomainModel = ManagedResourcesProcessor.processManagedResources( managedResources, bootstrapContext );
 
-			assertThat( categorizedDomainModel.getEntityHierarchies().getHierarchies() ).hasSize( 2 );
-			final Iterator<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies().iterator();
+			assertThat( categorizedDomainModel.getEntityHierarchyCollection().getHierarchies() ).hasSize( 2 );
+			final Iterator<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchyCollection().getHierarchies().iterator();
 			final EntityHierarchy one = hierarchies.next();
 			final EntityHierarchy two = hierarchies.next();
 

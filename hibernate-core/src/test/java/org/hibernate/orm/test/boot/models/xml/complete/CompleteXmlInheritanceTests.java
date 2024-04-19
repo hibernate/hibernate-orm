@@ -56,7 +56,7 @@ public class CompleteXmlInheritanceTests {
 			);
 			final CategorizedDomainModel categorizedDomainModel = processManagedResources( managedResources, bootstrapContext );
 
-			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchyCollection().getHierarchies();
 			assertThat( hierarchies ).hasSize( 1 );
 			final EntityHierarchy hierarchy = hierarchies.iterator().next();
 			assertThat( hierarchy.getInheritanceType() ).isEqualTo( JOINED );

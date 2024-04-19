@@ -41,7 +41,7 @@ public class RowIdTest {
 					bootstrapContext
 			);
 
-			final Collection<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			final Collection<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchyCollection().getHierarchies();
 			assertThat( entityHierarchies ).hasSize( 3 );
 
 			entityHierarchies.forEach(

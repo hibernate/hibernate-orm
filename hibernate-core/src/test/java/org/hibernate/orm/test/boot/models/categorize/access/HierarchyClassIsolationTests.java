@@ -105,7 +105,7 @@ public class HierarchyClassIsolationTests {
 	void testCategorization(ServiceRegistryScope scope) {
 		final CategorizedDomainModel categorizedDomainModel = CategorizationTestsHelper.buildCategorizedDomainModel( scope, Root.class, Base.class, Level1.class );
 
-		final EntityHierarchyCollection entityHierarchies = categorizedDomainModel.getEntityHierarchies();
+		final EntityHierarchyCollection entityHierarchies = categorizedDomainModel.getEntityHierarchyCollection();
 		assertThat( entityHierarchies.getHierarchies() ).hasSize( 1 );
 		final EntityHierarchy entityHierarchy = entityHierarchies.getHierarchies().iterator().next();
 		final EntityTypeMetadata rootEntityDescriptor = entityHierarchy.getRoot();

@@ -57,7 +57,7 @@ public class EntityLifecycleTests {
 					bootstrapContext
 			);
 
-			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchies().getHierarchies();
+			final Collection<EntityHierarchy> hierarchies = categorizedDomainModel.getEntityHierarchyCollection().getHierarchies();
 			assertThat( hierarchies ).hasSize( 1 );
 			final EntityTypeMetadata rootEntity = hierarchies
 					.iterator()

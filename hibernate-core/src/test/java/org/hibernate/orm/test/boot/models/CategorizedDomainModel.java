@@ -51,13 +51,13 @@ public interface CategorizedDomainModel extends SourceModelContext {
 	/**
 	 * All entity hierarchies defined in the persistence unit
 	 */
-	EntityHierarchyCollection getEntityHierarchies();
+	EntityHierarchyCollection getEntityHierarchyCollection();
 
 	/**
-	 * Iteration over the {@linkplain #getEntityHierarchies() entity hierarchies}
+	 * Iteration over the {@linkplain #getEntityHierarchyCollection() entity hierarchies}
 	 */
 	default void forEachEntityHierarchy(IndexedConsumer<EntityHierarchy> hierarchyConsumer) {
-		final Collection<EntityHierarchy> entityHierarchies = getEntityHierarchies().getHierarchies();
+		final Collection<EntityHierarchy> entityHierarchies = getEntityHierarchyCollection().getHierarchies();
 		if ( entityHierarchies.isEmpty() ) {
 			return;
 		}

@@ -25,6 +25,7 @@ import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.ManyToMany;
@@ -134,7 +135,11 @@ public class CategorizationHelper {
 				|| elementCollection != null
 				|| manyToAny != null;
 
-		final boolean implicitlyBasic = backingMember.getAnnotationUsage( JpaAnnotations.TEMPORAL ) != null
+		final boolean specifiesJdbcType = backingMember.getAnnotationUsage( HibernateAnnotations.JDBC_TYPE_CODE ) != null
+				|| backingMember.getAnnotationUsage( HibernateAnnotations.JDBC_TYPE ) != null;
+
+		final boolean implicitlyBasic = specifiesJdbcType
+				|| backingMember.getAnnotationUsage( JpaAnnotations.TEMPORAL ) != null
 				|| backingMember.getAnnotationUsage( JpaAnnotations.LOB ) != null
 				|| backingMember.getAnnotationUsage( JpaAnnotations.ENUMERATED ) != null
 				|| backingMember.getAnnotationUsage( JpaAnnotations.VERSION ) != null
@@ -144,11 +149,12 @@ public class CategorizationHelper {
 				|| backingMember.getAnnotationUsage( HibernateAnnotations.TZ_STORAGE ) != null
 				|| backingMember.getAnnotationUsage( HibernateAnnotations.TYPE ) != null
 				|| backingMember.getAnnotationUsage( TenantId.class ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.JAVA_TYPE ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.JDBC_TYPE_CODE ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.JDBC_TYPE ) != null;
+				|| backingMember.getAnnotationUsage( HibernateAnnotations.JAVA_TYPE ) != null;
 
-		final boolean implicitlyEmbedded = backingMember.getAnnotationUsage( HibernateAnnotations.EMBEDDABLE_INSTANTIATOR ) != null
+		final boolean refersToEmbeddable = backingMember.getType().determineRawClass().hasAnnotationUsage( Embeddable.class );
+
+		final boolean implicitlyEmbedded = refersToEmbeddable
+				|| backingMember.getAnnotationUsage( HibernateAnnotations.EMBEDDABLE_INSTANTIATOR ) != null
 				|| backingMember.getAnnotationUsage( HibernateAnnotations.COMPOSITE_TYPE ) != null;
 
 		final boolean implicitlyAny = backingMember.getAnnotationUsage( HibernateAnnotations.ANY_DISCRIMINATOR ) != null
@@ -162,7 +168,13 @@ public class CategorizationHelper {
 		if ( !plural ) {
 			// first implicit basic nature
 			if ( implicitlyBasic ) {
-				natures.add( AttributeMetadata.AttributeNature.BASIC );
+				if ( specifiesJdbcType && implicitlyEmbedded ) {
+					// special case for embedded and JSON...
+					// don't infer BASIC
+				}
+				else {
+					natures.add( AttributeMetadata.AttributeNature.BASIC );
+				}
 			}
 
 			// then embedded

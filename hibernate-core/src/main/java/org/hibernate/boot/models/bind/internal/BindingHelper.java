@@ -42,7 +42,7 @@ public class BindingHelper {
 			return defaultValue;
 		}
 
-		return ann.getAttributeValue( attributeName, defaultValue );
+		return ann.getAttributeValue( attributeName );
 	}
 
 	public static <T,A extends Annotation> T getValue(AnnotationUsage<A> ann, String attributeName, AnnotationDescriptor<A> descriptor) {
@@ -59,7 +59,7 @@ public class BindingHelper {
 			return defaultValueSupplier.get();
 		}
 
-		return ann.getAttributeValue( attributeName, defaultValueSupplier );
+		return ann.getAttributeValue( attributeName );
 	}
 
 	public static <A extends Annotation> String getGloballyQuotedValue(

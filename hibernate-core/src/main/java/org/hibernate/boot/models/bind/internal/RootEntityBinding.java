@@ -194,7 +194,7 @@ public class RootEntityBinding extends EntityBinding {
 		final var optimisticLocking = classDetails.getAnnotationUsage( OptimisticLocking.class );
 
 		if ( optimisticLocking != null ) {
-			final var optimisticLockingType = optimisticLocking.getEnum( "type", OptimisticLockType.VERSION );
+			final var optimisticLockingType = optimisticLocking.getEnum( "type" );
 			rootClass.setOptimisticLockStyle( OptimisticLockStyle.valueOf( optimisticLockingType.name() ) );
 		}
 	}

@@ -266,7 +266,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private OptimisticLockStyle determineOptimisticLockStyle(HierarchyMetadataCollector metadataCollector) {
 		final AnnotationUsage<OptimisticLocking> optimisticLockingAnnotation = metadataCollector.getOptimisticLockingAnnotation();
 		if ( optimisticLockingAnnotation != null ) {
-			optimisticLockingAnnotation.getEnum( "type", DEFAULT_LOCKING_STRATEGY );
+			optimisticLockingAnnotation.getEnum( "type" );
 		}
 		return DEFAULT_LOCKING_STRATEGY;
 	}

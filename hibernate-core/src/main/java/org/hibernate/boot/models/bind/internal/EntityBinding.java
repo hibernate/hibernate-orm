@@ -59,6 +59,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.SharedCacheMode;
 
 import static org.hibernate.boot.models.bind.ModelBindingLogging.MODEL_BINDING_MSG_LOGGER;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * @author Steve Ebersole
@@ -186,8 +187,8 @@ public abstract class EntityBinding extends IdentifiableTypeBinding {
 		filters.forEach( (filter) -> {
 			persistentClass.addFilter(
 					filter.getString( "name" ),
-					filter.getString( "condition", (String) null ),
-					filter.getAttributeValue( "deduceAliasInjectionPoints", true ),
+					nullIfEmpty( filter.getString( "condition" ) ),
+					filter.getAttributeValue( "deduceAliasInjectionPoints" ),
 					extractFilterAliasTableMap( filter ),
 					extractFilterAliasEntityMap( filter )
 			);

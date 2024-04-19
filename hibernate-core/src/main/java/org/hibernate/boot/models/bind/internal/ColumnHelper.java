@@ -107,7 +107,7 @@ public class ColumnHelper {
 			final Formula formula = new Formula( formulaAnn.getString( "value" ) );
 			value.addFormula( formula );
 
-			discriminatorType = formulaAnn.getEnum( "discriminatorType", DiscriminatorType.STRING );
+			discriminatorType = formulaAnn.getEnum( "discriminatorType" );
 		}
 		else {
 			final Column column = new Column();

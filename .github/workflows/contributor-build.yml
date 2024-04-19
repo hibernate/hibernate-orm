@@ -7,9 +7,6 @@
 name: Hibernate ORM build
 
 on:
-  push:
-    branches:
-      - '6.4'
   pull_request:
     branches:
       - '6.4'

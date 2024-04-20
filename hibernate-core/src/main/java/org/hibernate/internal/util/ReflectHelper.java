@@ -514,6 +514,9 @@ public final class ReflectHelper {
 		Method getter = null;
 		for ( int i = 0; getter == null && i < interfaces.length; ++i ) {
 			final Class<?> anInterface = interfaces[i];
+			if ( shouldSkipInterfaceCheck( anInterface ) ) {
+				continue;
+			}
 			getter = getGetterOrNull( anInterface, propertyName );
 			if ( getter == null ) {
 				// if no getter found yet, check all implemented interfaces of interface
@@ -659,6 +662,23 @@ public final class ReflectHelper {
 	}
 
 	public static Method setterMethodOrNull(final Class<?> containerClass, final  String propertyName, final Class<?> propertyType) {
+
+		//Computes the most likely setter name - there might be fallback choices to try, but we try this one first
+		//to try not overwhelming the system with swallowed exceptions.
+		final String likelyMethodName = likelySetterMethodNameForProperty( propertyName );
+
+		//First let's test the most obvious solution: a public method having exactly the expected name and type;
+		//this has the benefit of including parent types and interfaces w/o extensively bothering the reflection api
+		//which is very allocation intensive - this is noticeable on bootstrap costs on large models.
+		try {
+			final Method setter = containerClass.getMethod( likelyMethodName, propertyType );
+			ensureAccessibility( setter );
+			return setter;
+		}
+		catch ( NoSuchMethodException e ) {
+			//No luck: we'll need to run the more expensive but thorough process
+		}
+
 		Class<?> checkClass = containerClass;
 		Method setter = null;
 
@@ -668,11 +688,11 @@ public final class ReflectHelper {
 				break;
 			}
 
-			setter = setterOrNull( checkClass, propertyName, propertyType );
+			setter = setterOrNull( checkClass, propertyName, propertyType, likelyMethodName );
 
 			// if no setter found yet, check all implemented interfaces
 			if ( setter == null ) {
-				setter = setterOrNull( checkClass.getInterfaces(), propertyName, propertyType );
+				setter = setterOrNull( checkClass.getInterfaces(), propertyName, propertyType, likelyMethodName );
 			}
 			else {
 				ensureAccessibility( setter );
@@ -712,6 +732,9 @@ public final class ReflectHelper {
 		Method setter = null;
 		for ( int i = 0; setter == null && i < interfaces.length; ++i ) {
 			final Class<?> anInterface = interfaces[i];
+			if ( shouldSkipInterfaceCheck( anInterface ) ) {
+				continue;
+			}
 			setter = setterOrNullBySetterName( anInterface, setterName, propertyType );
 			if ( setter == null ) {
 				// if no setter found yet, check all implemented interfaces of interface
@@ -719,6 +742,21 @@ public final class ReflectHelper {
 			}
 		}
 		return setter;
+	}
+
+	private static boolean shouldSkipInterfaceCheck(final Class anInterface) {
+		final String interfaceName = anInterface.getName();
+		//Skip checking any interface that we've added ourself via bytecode enhancement:
+		//there's many of those and it's pointless to look there.
+		if ( interfaceName.startsWith( "org.hibernate.engine." ) ) {
+			return true;
+		}
+		//Also skip jakarta.persistence prefixed interfaces, as otherwise we'll be scanning
+		//among mapping annotations as well:
+		if ( interfaceName.startsWith( "jakarta.persistence." ) ) {
+			return true;
+		}
+		return false;
 	}
 
 	private static Method setterOrNullBySetterName(Class<?> theClass, String setterName, Class<?> propertyType) {
@@ -752,22 +790,30 @@ public final class ReflectHelper {
 		return setter;
 	}
 
-	private static Method setterOrNull(Class<?>[] interfaces, String propertyName, Class<?> propertyType) {
+	private static Method setterOrNull(Class<?>[] interfaces, String propertyName, Class<?> propertyType, String likelyMethodName) {
 		Method setter = null;
 		for ( int i = 0; setter == null && i < interfaces.length; ++i ) {
 			final Class<?> anInterface = interfaces[i];
-			setter = setterOrNull( anInterface, propertyName, propertyType );
+			if ( shouldSkipInterfaceCheck( anInterface ) ) {
+				continue;
+			}
+			setter = setterOrNull( anInterface, propertyName, propertyType, likelyMethodName );
 			if ( setter == null ) {
 				// if no setter found yet, check all implemented interfaces of interface
-				setter = setterOrNull( anInterface.getInterfaces(), propertyName, propertyType );
+				setter = setterOrNull( anInterface.getInterfaces(), propertyName, propertyType, likelyMethodName );
 			}
 		}
 		return setter;
 	}
 
-	private static Method setterOrNull(Class<?> theClass, String propertyName, Class<?> propertyType) {
+	private static Method setterOrNull(Class<?> theClass, String propertyName, Class propertyType, String likelyMethodName) {
+		try {
+			return theClass.getDeclaredMethod( likelyMethodName, propertyType );
+		}
+		catch ( NoSuchMethodException e ) {
+			//Ignore, so we try the old method for best compatibility (even though it's less efficient) next:
+		}
 		Method potentialSetter = null;
-
 		for ( Method method : theClass.getDeclaredMethods() ) {
 			final String methodName = method.getName();
 			if ( method.getParameterCount() == 1 && methodName.startsWith( "set" ) ) {
@@ -783,6 +829,16 @@ public final class ReflectHelper {
 		}
 
 		return potentialSetter;
+	}
+
+	private static String likelySetterMethodNameForProperty(final String propertyName) {
+		final char firstCharacter = propertyName.charAt( 0 );
+		if ( Character.isLowerCase( firstCharacter ) ) {
+			return "set" + Character.toUpperCase( firstCharacter ) + propertyName.substring( 1 );
+		}
+		else {
+			return "set" + propertyName;
+		}
 	}
 
 	/**

@@ -114,6 +114,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.ReflectHelper.isClass;
@@ -309,6 +310,42 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return sessionJdbcBatchSize == null
 				? fastSessionServices.defaultJdbcBatchSize
 				: sessionJdbcBatchSize;
+	}
+
+	void afterTransactionBeginEvents() {
+		getInterceptor().afterTransactionBegin( getTransactionIfAccessible() );
+	}
+
+	void beforeTransactionCompletionEvents() {
+		try {
+			getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
+		}
+		catch (Throwable t) {
+			log.exceptionInBeforeTransactionCompletionInterceptor( t );
+		}
+	}
+
+	void afterTransactionCompletionEvents(boolean successful) {
+		getEventListenerManager().transactionCompletion(successful);
+
+		final StatisticsImplementor statistics = getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.endTransaction(successful);
+		}
+
+		try {
+			getInterceptor().afterTransactionCompletion( getTransactionIfAccessible() );
+		}
+		catch (Throwable t) {
+			log.exceptionInAfterTransactionCompletionInterceptor( t );
+		}
+	}
+
+	private Transaction getTransactionIfAccessible() {
+		// We do not want an exception to be thrown if the transaction
+		// is not accessible. If the transaction is not accessible,
+		// then return null.
+		return fastSessionServices.isJtaTransactionAccessible ? accessTransaction() : null;
 	}
 
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {

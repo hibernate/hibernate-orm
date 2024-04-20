@@ -59,6 +59,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.persistence.EntityGraph;
@@ -152,6 +153,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> descriptor.recreate( collection, id, this) );
 		firePostInsert(entity, id, state, persister);
+		final StatisticsImplementor statistics = getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.insertEntity( persister.getEntityName() );
+		}
 		return id;
 	}
 
@@ -176,6 +181,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					(descriptor, collection) -> descriptor.remove(id, this) );
 			persister.getDeleteCoordinator().delete( entity, id, version, this );
 			firePostDelete(entity, id, persister);
+			final StatisticsImplementor statistics = getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.deleteEntity( persister.getEntityName() );
+			}
 		}
 	}
 
@@ -220,6 +229,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> descriptor.recreate( collection, id, this) );
 			firePostUpdate(entity, id, state, persister);
+			final StatisticsImplementor statistics = getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateEntity( persister.getEntityName() );
+			}
 		}
 	}
 
@@ -234,7 +247,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					.onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
 			persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
-			// TODO: need PreUpsert and PostUpsert events!
 			// TODO: can we do better here?
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> descriptor.remove(id, this) );
@@ -884,15 +896,18 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void afterTransactionBegin() {
+		afterTransactionBeginEvents();
 	}
 
 	@Override
 	public void beforeTransactionCompletion() {
 		flushBeforeTransactionCompletion();
+		beforeTransactionCompletionEvents();
 	}
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+		afterTransactionCompletionEvents( successful );
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}

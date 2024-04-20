@@ -84,27 +84,27 @@ public class Set extends Collection {
 			PrimaryKey pk = collectionTable.getPrimaryKey();
 			if ( pk == null ) {
 				pk = new PrimaryKey( getCollectionTable() );
-			}
-			pk.addColumns( getKey() );
-			for ( Selectable selectable : getElement().getSelectables() ) {
-				if ( selectable instanceof Column ) {
-					Column col = (Column) selectable;
-					if ( !col.isNullable() ) {
-						pk.addColumn( col );
-					}
-					else {
-						return;
+				pk.addColumns( getKey() );
+				for ( Selectable selectable : getElement().getSelectables() ) {
+					if ( selectable instanceof Column ) {
+						Column col = (Column) selectable;
+						if ( !col.isNullable() ) {
+							pk.addColumn( col );
+						}
+						else {
+							return;
+						}
 					}
 				}
+				if ( pk.getColumnSpan() != getKey().getColumnSpan() ) {
+					collectionTable.setPrimaryKey( pk );
+				}
+//				else {
+					//for backward compatibility, allow a set with no not-null
+					//element columns, using all columns in the row locator SQL
+					//TODO: create an implicit not null constraint on all cols?
+//				}
 			}
-			if ( pk.getColumnSpan() != getKey().getColumnSpan() ) {
-				collectionTable.setPrimaryKey( pk );
-			}
-//			else {
-				//for backward compatibility, allow a set with no not-null
-				//element columns, using all columns in the row locator SQL
-				//TODO: create an implicit not null constraint on all cols?
-//			}
 		}
 //		else {
 			//create an index on the key columns??

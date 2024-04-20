@@ -19,6 +19,8 @@ import java.util.function.BiFunction;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
@@ -103,6 +105,7 @@ public class MetadataContext {
 	 */
 	private final List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
 	private final MappingMetamodel metamodel;
+	private final ClassLoaderService classLoaderService;
 
 	public MetadataContext(
 			JpaMetamodelImplementor jpaMetamodel,
@@ -112,6 +115,7 @@ public class MetadataContext {
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.jpaMetamodel = jpaMetamodel;
+		this.classLoaderService = jpaMetamodel.getServiceRegistry().getService( ClassLoaderService.class );
 		this.metamodel = mappingMetamodel;
 		this.knownMappedSuperclasses = bootMetamodel.getMappedSuperclassMappingsCopy();
 		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
@@ -652,7 +656,7 @@ public class MetadataContext {
 		}
 		final String metamodelClassName = managedTypeClass.getName() + '_';
 		try {
-			final Class<?> metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
+			final Class<?> metamodelClass = classLoaderService.classForName( metamodelClassName );
 			// we found the class; so populate it...
 			registerAttributes( metamodelClass, managedType );
 			try {
@@ -662,7 +666,7 @@ public class MetadataContext {
 				// ignore
 			}
 		}
-		catch (ClassNotFoundException ignore) {
+		catch (ClassLoadingException ignore) {
 			// nothing to do...
 		}
 

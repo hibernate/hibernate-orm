@@ -151,7 +151,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		persister.setIdentifier( entity, id, this );
 		forEachOwnedCollection( entity, id, persister,
-				(descriptor, collection) -> descriptor.recreate( collection, id, this) );
+				(descriptor, collection) -> {
+					descriptor.recreate( collection, id, this);
+					final StatisticsImplementor statistics = getFactory().getStatistics();
+					if ( statistics.isStatisticsEnabled() ) {
+						statistics.recreateCollection( descriptor.getRole() );
+					}
+				} );
 		firePostInsert(entity, id, state, persister);
 		final StatisticsImplementor statistics = getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
@@ -178,7 +184,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			getInterceptor()
 					.onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
 			forEachOwnedCollection( entity, id, persister,
-					(descriptor, collection) -> descriptor.remove(id, this) );
+					(descriptor, collection) -> {
+						descriptor.remove( id, this );
+						final StatisticsImplementor statistics = getFactory().getStatistics();
+						if ( statistics.isStatisticsEnabled() ) {
+							statistics.removeCollection( descriptor.getRole() );
+						}
+					} );
 			persister.getDeleteCoordinator().delete( entity, id, version, this );
 			firePostDelete(entity, id, persister);
 			final StatisticsImplementor statistics = getFactory().getStatistics();
@@ -223,11 +235,16 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			getInterceptor()
 					.onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
-			// TODO: can we do better here?
 			forEachOwnedCollection( entity, id, persister,
-					(descriptor, collection) -> descriptor.remove(id, this) );
-			forEachOwnedCollection( entity, id, persister,
-					(descriptor, collection) -> descriptor.recreate( collection, id, this) );
+					(descriptor, collection) -> {
+						// TODO: can we do better here?
+						descriptor.remove( id, this );
+						descriptor.recreate( collection, id, this );
+						final StatisticsImplementor statistics = getFactory().getStatistics();
+						if ( statistics.isStatisticsEnabled() ) {
+							statistics.updateCollection( descriptor.getRole() );
+						}
+					} );
 			firePostUpdate(entity, id, state, persister);
 			final StatisticsImplementor statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
@@ -247,11 +264,17 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					.onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
 			persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
-			// TODO: can we do better here?
+			// TODO: statistics for upsert!
 			forEachOwnedCollection( entity, id, persister,
-					(descriptor, collection) -> descriptor.remove(id, this) );
-			forEachOwnedCollection( entity, id, persister,
-					(descriptor, collection) -> descriptor.recreate( collection, id, this) );
+					(descriptor, collection) -> {
+						// TODO: can we do better here?
+						descriptor.remove( id, this );
+						descriptor.recreate( collection, id, this );
+						final StatisticsImplementor statistics = getFactory().getStatistics();
+						if ( statistics.isStatisticsEnabled() ) {
+							statistics.updateCollection( descriptor.getRole() );
+						}
+					} );
 			firePostUpsert(entity, id, state, persister);
 		}
 	}
@@ -562,11 +585,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Collection initialized" );
 			}
-			//TODO: statistics!
-//			final StatisticsImplementor statistics = getFactory().getStatistics();
-//			if ( statistics.isStatisticsEnabled() ) {
-//				statistics.fetchCollection( loadedPersister.getRole() );
-//			}
+			final StatisticsImplementor statistics = getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.fetchCollection( loadedPersister.getRole() );
+			}
 		}
 	}
 
@@ -710,6 +732,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				proxyInterceptor.setSession( this );
 				try {
 					proxyInterceptor.forceInitialize( association, null );
+					// TODO: statistics?? call statistics.fetchEntity()
 				}
 				finally {
 					proxyInterceptor.unsetSession();
@@ -731,6 +754,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					collectionDescriptor.initialize( key, this );
 					handlePotentiallyEmptyCollection( persistentCollection, getPersistenceContextInternal(), key,
 							collectionDescriptor );
+					final StatisticsImplementor statistics = getFactory().getStatistics();
+					if ( statistics.isStatisticsEnabled() ) {
+						statistics.fetchCollection( collectionDescriptor.getRole() );
+					}
 				}
 				finally {
 					persistentCollection.unsetSession( this );

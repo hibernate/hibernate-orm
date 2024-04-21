@@ -932,21 +932,16 @@ public class BinderHelper {
 		final Iterator<Annotation> annotations =
 				Arrays.stream( element.getAnnotations() )
 						.flatMap( annotation -> {
-							try {
-								final Method value = annotation.annotationType().getDeclaredMethod("value");
-								final Class<?> returnType = value.getReturnType();
-								if ( returnType.isArray()
-										&& returnType.getComponentType().isAnnotationPresent(Repeatable.class)
-										&& returnType.getComponentType().isAnnotationPresent(DialectOverride.OverridesAnnotation.class) ) {
-									return Stream.of( (Annotation[]) value.invoke(annotation) );
+								final Method valueExtractor = isRepeableAndDialectOverride( annotation );
+								if ( valueExtractor != null ) {
+									try {
+										return Stream.of( (Annotation[]) valueExtractor.invoke( annotation ) );
+									}
+									catch (Exception e) {
+										throw new AssertionFailure("could not read @DialectOverride annotation", e);
+									}
 								}
-							}
-							catch (NoSuchMethodException ignored) {
-							}
-							catch (Exception e) {
-								throw new AssertionFailure("could not read @DialectOverride annotation", e);
-							}
-							return Stream.of(annotation);
+							return Stream.of( annotation );
 						} ).iterator();
 		while ( annotations.hasNext() ) {
 			final Annotation annotation = annotations.next();
@@ -978,6 +973,47 @@ public class BinderHelper {
 			}
 		}
 		return element.getAnnotation( annotationType );
+	}
+
+	//Wondering: should we make this cache non-static and store in the metadata context so that we can clear it after bootstrap?
+	//(not doing it now as it would make the patch more invasive - and there might be drawbacks to consider, such as
+	//needing to re-initialize this cache again during hot-reload scenarios: it might be nice to be able to plug the
+	//cache, so that runtimes can choose the most fitting strategy)
+	private static final ClassValue<AnnotationCacheValue> annotationMetaCacheForRepeatableDialectOverride = new ClassValue() {
+		@Override
+		protected Object computeValue(final Class type) {
+			final Method valueMethod;
+			try {
+				valueMethod = type.getDeclaredMethod( "value" );
+			}
+			catch ( NoSuchMethodException e ) {
+				return NOT_REPEATABLE;
+			}
+			final Class<?> returnType = valueMethod.getReturnType();
+			if ( returnType.isArray()
+					&& returnType.getComponentType().isAnnotationPresent( Repeatable.class )
+					&& returnType.getComponentType().isAnnotationPresent( DialectOverride.OverridesAnnotation.class ) ) {
+				return new AnnotationCacheValue( valueMethod );
+			}
+			else {
+				return NOT_REPEATABLE;
+			}
+		}
+	};
+
+	private static final AnnotationCacheValue NOT_REPEATABLE = new AnnotationCacheValue( null );
+
+	private static class AnnotationCacheValue {
+		final Method valueMethod;
+		private AnnotationCacheValue(final Method valueMethod) {
+			//null is intentionally allowed: it means this annotations was NOT a Repeatable & DialectOverride.OverridesAnnotation annotation,
+			//which is also an information we want to cache (negative caching).
+			this.valueMethod = valueMethod;
+		}
+	}
+
+	private static Method isRepeableAndDialectOverride(final Annotation annotation) {
+		return annotationMetaCacheForRepeatableDialectOverride.get( annotation.annotationType() ).valueMethod;
 	}
 
 	public static FetchMode getFetchMode(FetchType fetch) {

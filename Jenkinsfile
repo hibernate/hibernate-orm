@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+
 import groovy.transform.Field
 import io.jenkins.blueocean.rest.impl.pipeline.PipelineNodeGraphVisitor
 import io.jenkins.blueocean.rest.impl.pipeline.FlowNodeWrapper

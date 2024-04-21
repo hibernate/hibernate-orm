@@ -28,7 +28,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 
 	/**
 	 * Removes a persistent collection from its loaded owner.
-	 *
+	 * <p>
 	 * Use this constructor when the collection is non-null.
 	 *
 	 * @param collection The collection to remove; must be non-null
@@ -58,7 +58,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 
 	/**
 	 * Removes a persistent collection from a specified owner.
-	 *
+	 * <p>
 	 * Use this constructor when the collection to be removed has not been loaded.
 	 *
 	 * @param affectedOwner The collection's owner; must be non-null
@@ -85,8 +85,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 
 	/**
 	 * Removes a persistent collection for an unloaded proxy.
-	 *
+	 * <p>
 	 * Use this constructor when the owning entity is has not been loaded.
+	 *
 	 * @param persister The collection's persister
 	 * @param id The collection key
 	 * @param session The session

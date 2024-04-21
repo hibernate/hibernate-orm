@@ -290,8 +290,9 @@ public class MetadataContext {
 			LOG.trace( "Wrapping up metadata context..." );
 		}
 
-		boolean staticMetamodelScanEnabled =
+		final boolean staticMetamodelScanEnabled =
 				this.jpaStaticMetaModelPopulationSetting != JpaStaticMetaModelPopulationSetting.DISABLED;
+		final Set<String> processedMetamodelClasses = new HashSet<>();
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
@@ -336,7 +337,7 @@ public class MetadataContext {
 					( (AttributeContainer<?>) jpaMapping ).getInFlightAccess().finishUp();
 
 					if ( staticMetamodelScanEnabled ) {
-						populateStaticMetamodel( jpaMapping );
+						populateStaticMetamodel( jpaMapping, processedMetamodelClasses );
 					}
 				}
 				finally {
@@ -380,7 +381,7 @@ public class MetadataContext {
 					( (AttributeContainer<?>) jpaType ).getInFlightAccess().finishUp();
 
 					if ( staticMetamodelScanEnabled ) {
-						populateStaticMetamodel( jpaType );
+						populateStaticMetamodel( jpaType, processedMetamodelClasses );
 					}
 				}
 				finally {
@@ -420,7 +421,7 @@ public class MetadataContext {
 					embeddables.put( embeddable.getJavaType(), embeddable );
 
 					if ( staticMetamodelScanEnabled ) {
-						populateStaticMetamodel( embeddable );
+						populateStaticMetamodel( embeddable, processedMetamodelClasses );
 					}
 				}
 			}
@@ -648,43 +649,39 @@ public class MetadataContext {
 		return attributes;
 	}
 
-	private <X> void populateStaticMetamodel(ManagedDomainType<X> managedType) {
+	private <X> void populateStaticMetamodel(ManagedDomainType<X> managedType, Set<String> processedMetamodelClassName) {
 		final Class<X> managedTypeClass = managedType.getJavaType();
 		if ( managedTypeClass == null ) {
 			// should indicate MAP entity mode, skip...
 			return;
 		}
 		final String metamodelClassName = managedTypeClass.getName() + '_';
-		try {
-			final Class<?> metamodelClass = classLoaderService.classForName( metamodelClassName );
-			// we found the class; so populate it...
-			registerAttributes( metamodelClass, managedType );
+		if ( processedMetamodelClassName.add( metamodelClassName ) ) {
 			try {
-				injectField( metamodelClass, "class_", managedType, false );
+				final Class<?> metamodelClass = classLoaderService.classForName( metamodelClassName );
+				// we found the class; so populate it...
+				registerAttributes( metamodelClass, managedType );
+				try {
+					injectField( metamodelClass, "class_", managedType, false );
+				}
+				catch ( NoSuchFieldException e ) {
+					// ignore
+				}
 			}
-			catch (NoSuchFieldException e) {
-				// ignore
+			catch ( ClassLoadingException ignore ) {
+				// nothing to do...
 			}
-		}
-		catch (ClassLoadingException ignore) {
-			// nothing to do...
-		}
 
-		// todo : this does not account for @MappedSuperclass, mainly because this is not being tracked in our
-		// internal metamodel as populated from the annotations properly
-		ManagedDomainType<? super X> superType = managedType.getSuperType();
-		if ( superType != null ) {
-			populateStaticMetamodel( superType );
+			// todo : this does not account for @MappedSuperclass, mainly because this is not being tracked in our
+			// internal metamodel as populated from the annotations properly
+			ManagedDomainType<? super X> superType = managedType.getSuperType();
+			if ( superType != null ) {
+				populateStaticMetamodel( superType, processedMetamodelClassName );
+			}
 		}
 	}
 
-	private final Set<Class<?>> processedMetamodelClasses = new HashSet<>();
-
 	private <X> void registerAttributes(Class<?> metamodelClass, ManagedDomainType<X> managedType) {
-		if ( !processedMetamodelClasses.add( metamodelClass ) ) {
-			return;
-		}
-
 		// push the attributes on to the metamodel class...
 		for ( Attribute<X, ?> attribute : managedType.getDeclaredAttributes() ) {
 			registerAttribute( metamodelClass, attribute );

@@ -374,7 +374,7 @@ Hibernate has a slightly easier way to do it:
 boolean authorsFetched = Hibernate.isInitialized(book.getAuthors());
 ----
 
-But the static methods of the link:{doc-javadoc-url}org/hibernate/Hibernate.html[`Hibernate`] class let us do a lot more, and it's worth getting a bit familiar them.
+But the static methods of the link:{doc-javadoc-url}org/hibernate/Hibernate.html[`Hibernate`] class let us do a lot more, and it's worth getting a bit familiar with them.
 
 Of particular interest are the operations which let us work with unfetched collections without fetching their state from the database.
 For example, consider this code:

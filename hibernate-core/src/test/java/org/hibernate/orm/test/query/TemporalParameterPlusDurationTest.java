@@ -21,54 +21,54 @@ public class TemporalParameterPlusDurationTest {
 	@Test
 	void timestampVsTimestampParameterPlusDuration(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			session.createQuery( "select count(*) from SimpleEntity where inst > :i + 1 second + 2 second", SimpleEntity.class )
+			session.createQuery( "from SimpleEntity where inst > :i + 1 second + 2 second", SimpleEntity.class )
 					.setParameter( "i", Instant.now() )
-					.getResultCount();
+					.getResultList();
 		} );
 	}
 
 	@Test
 	void timestampParameterPlusDurationVsTimestamp(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			session.createQuery( "select count(*) from SimpleEntity where :i + 1 second + 2 second > inst", SimpleEntity.class )
+			session.createQuery( "from SimpleEntity where :i + 1 second + 2 second > inst", SimpleEntity.class )
 					.setParameter( "i", Instant.now() )
-					.getResultCount();
+					.getResultList();
 		} );
 	}
 
 	@Test
 	void dateVsDateParameterPlusDuration(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			session.createQuery( "select count(*) from SimpleEntity where ldate > :i + 3 day + 2 day", SimpleEntity.class )
+			session.createQuery( "from SimpleEntity where ldate > :i + 3 day + 2 day", SimpleEntity.class )
 					.setParameter( "i", LocalDate.now() )
-					.getResultCount();
+					.getResultList();
 		} );
 	}
 
 	@Test
 	void dateParameterPlusDurationVsDate(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			session.createQuery( "select count(*) from SimpleEntity where :i + 3 day + 2 day > ldate", SimpleEntity.class )
+			session.createQuery( "from SimpleEntity where :i + 3 day + 2 day > ldate", SimpleEntity.class )
 					.setParameter( "i", LocalDate.now() )
-					.getResultCount();
+					.getResultList();
 		} );
 	}
 
 	@Test
 	void durationVsDurationParameterPlusDuration(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			session.createQuery( "select count(*) from SimpleEntity where dur > :i + 1 second", Number.class )
+			session.createQuery( "from SimpleEntity where dur > :i + 1 second", SimpleEntity.class )
 					.setParameter( "i", Duration.ofMinutes( 1 ) )
-					.getResultCount();
+					.getResultList();
 		} );
 	}
 
 	@Test
 	void durationParameterVsDurationPlusDuration(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			session.createQuery( "select count(*) from SimpleEntity where :i + 1 second > dur", Number.class )
+			session.createQuery( "from SimpleEntity where :i + 1 second > dur", SimpleEntity.class )
 					.setParameter( "i", Duration.ofMinutes( 1 ) )
-					.getResultCount();
+					.getResultList();
 		} );
 	}
 

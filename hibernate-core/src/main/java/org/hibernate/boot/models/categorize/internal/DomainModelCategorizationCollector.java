@@ -117,8 +117,8 @@ public class DomainModelCategorizationCollector implements DomainModelCategoriza
 
 		getGlobalRegistrations().collectImportRename( classDetails );
 
-		// todo : named queries
-		// todo : named graphs
+		// todo (7.0) : named queries
+		// todo (7.0) : named graphs
 
 		if ( classDetails.getAnnotationUsage( MappedSuperclass.class ) != null ) {
 			if ( classDetails.getClassName() != null ) {

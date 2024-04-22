@@ -7,7 +7,6 @@
 package org.hibernate.boot.model.source.internal.annotations;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,13 +23,11 @@ import org.hibernate.boot.model.internal.AnnotationBinder;
 import org.hibernate.boot.model.internal.InheritanceState;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
-import org.hibernate.boot.models.categorize.ModelCategorizationLogging;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.EntityHierarchyBuilder;
 import org.hibernate.boot.models.categorize.internal.HierarchyTypeConsumer;
 import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
 import org.hibernate.boot.models.categorize.spi.DomainModelCategorizations;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchyCollection;
 import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
@@ -335,7 +332,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		);
 
 		if ( unusedMappedSuperclassNotifier != null ) {
-			unusedMappedSuperclassNotifier.validate();
+			unusedMappedSuperclassNotifier.validate( domainModelCategorizations );
 		}
 
 
@@ -378,12 +375,28 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			}
 		}
 
-		public void validate() {
+		public void validate(DomainModelCategorizations domainModelCategorizations) {
+			if ( !knownMappedSuperClassDetails.isEmpty() ) {
+				// the managed resources included mapped-superclasses which were not used within any entity hierarchy.
+				// mapped-superclass can also be used with embeddables, so ignore any which are part of an embeddable hierarchy.
+				domainModelCategorizations.getEmbeddables().forEach( (embeddableName, embeddableClassDetails) -> {
+					ignoreEmbeddableMappedSuperclasses( embeddableClassDetails );
+				} );
+			}
 			if ( !knownMappedSuperClassDetails.isEmpty() ) {
 				MODEL_CATEGORIZATION_LOGGER.debug( "The application managed resources contained the following unused mapped-superclasses:" );
 				knownMappedSuperClassDetails.forEach( (classDetails) -> {
 					MODEL_CATEGORIZATION_LOGGER.debugf( "    * %s", classDetails.getName() );
 				} );
+			}
+		}
+
+		private void ignoreEmbeddableMappedSuperclasses(ClassDetails embeddableClassDetails) {
+			ClassDetails superClassDetails = embeddableClassDetails.getSuperClass();
+			while ( superClassDetails != null ) {
+				// no real need to check for the annotation
+				knownMappedSuperClassDetails.remove( superClassDetails );
+				superClassDetails = superClassDetails.getSuperClass();
 			}
 		}
 	}

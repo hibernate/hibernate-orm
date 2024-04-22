@@ -12,6 +12,8 @@ import java.lang.annotation.Target;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityManager;
+
 import org.hibernate.Remove;
 
 import static java.lang.annotation.ElementType.PACKAGE;
@@ -46,6 +48,15 @@ public @interface NamedQuery {
 	 * The text of the HQL query.
 	 */
 	String query();
+
+	/**
+	 * Optional query result class that is used by default when creating the query.
+	 * May be overridden by explicitly passing a class object to
+	 * {@link EntityManager#createNamedQuery(String, Class)}.
+	 *
+	 * @see jakarta.persistence.NamedQuery#resultClass()
+	 */
+	Class<?> resultClass() default void.class;
 
 	/**
 	 * The flush mode for this query.

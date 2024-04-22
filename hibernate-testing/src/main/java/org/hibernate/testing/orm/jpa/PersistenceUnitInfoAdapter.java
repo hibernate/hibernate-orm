@@ -40,6 +40,16 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 		return HibernatePersistenceProvider.class.getName();
 	}
 
+	@Override
+	public String getScopeAnnotationName() {
+		return null;
+	}
+
+	@Override
+	public List<String> getQualifierAnnotationNames() {
+		return List.of();
+	}
+
 	public PersistenceUnitTransactionType getTransactionType() {
 		return null;
 	}

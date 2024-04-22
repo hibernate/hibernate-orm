@@ -30,7 +30,7 @@ import org.hibernate.query.spi.QueryImplementor;
  *
  * @author Steve Ebersole
  */
-public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento implements NamedCallableQueryMemento {
+public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento<Object> implements NamedCallableQueryMemento {
 	private final String callableName;
 
 	private final ParameterStrategy parameterStrategy;
@@ -64,6 +64,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			Map<String, Object> hints) {
 		super(
 				name,
+				Object.class,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -132,7 +133,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public <T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+	public QueryImplementor<Object> toQuery(SharedSessionContractImplementor session) {
 		return new ProcedureCallImpl<>( session, this );
 	}
 
@@ -142,7 +143,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public NamedQueryMemento makeCopy(String name) {
+	public NamedQueryMemento<Object> makeCopy(String name) {
 		return new NamedCallableQueryMementoImpl(
 				name,
 				callableName,

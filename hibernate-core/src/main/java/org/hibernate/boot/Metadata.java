@@ -115,24 +115,24 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named query metadata, or {@code null}.
 	 */
-	NamedHqlQueryDefinition getNamedHqlQueryMapping(String name);
+	NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name);
 
 	/**
 	 * Visit all named HQL query definitions
 	 */
-	void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer);
+	void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer);
 
 	/**
 	 * Retrieve named SQL query metadata.
 	 *
 	 * @return The named query metadata, or {@code null}
 	 */
-	NamedNativeQueryDefinition getNamedNativeQueryMapping(String name);
+	NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name);
 
 	/**
 	 * Visit all named native query definitions
 	 */
-	void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer);
+	void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer);
 
 	/**
 	 * Retrieve named procedure metadata.

@@ -35,10 +35,10 @@ public class SimpleNamedQueryTests {
 				.getQueryEngine()
 				.getNamedObjectRepository();
 
-		final NamedSqmQueryMemento simpleMemento = namedObjectRepository.getSqmQueryMemento( "simple" );
+		final NamedSqmQueryMemento<?> simpleMemento = namedObjectRepository.getSqmQueryMemento( "simple" );
 		assertThat( simpleMemento, notNullValue() );
 
-		final NamedSqmQueryMemento restrictedMemento = namedObjectRepository.getSqmQueryMemento( "restricted" );
+		final NamedSqmQueryMemento<?> restrictedMemento = namedObjectRepository.getSqmQueryMemento( "restricted" );
 		assertThat( restrictedMemento, notNullValue() );
 	}
 
@@ -54,10 +54,10 @@ public class SimpleNamedQueryTests {
 				.getQueryEngine()
 				.getNamedObjectRepository();
 
-		final NamedSqmQueryMemento simpleMemento = namedObjectRepository.getSqmQueryMemento( "simple" );
+		final NamedSqmQueryMemento<?> simpleMemento = namedObjectRepository.getSqmQueryMemento( "simple" );
 		assertThat( simpleMemento, notNullValue() );
 
-		final NamedSqmQueryMemento restrictedMemento = namedObjectRepository.getSqmQueryMemento( "restricted" );
+		final NamedSqmQueryMemento<?> restrictedMemento = namedObjectRepository.getSqmQueryMemento( "restricted" );
 		assertThat( restrictedMemento, notNullValue() );
 	}
 

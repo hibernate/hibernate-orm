@@ -539,7 +539,7 @@
             <xsd:element name="basic" type="orm:basic"
                          minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="version" type="orm:version"
-                         minOccurs="0" maxOccurs="unbounded"/>
+                         minOccurs="0"/>
             <xsd:element name="many-to-one" type="orm:many-to-one"
                          minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="one-to-many" type="orm:one-to-many"
@@ -799,6 +799,7 @@
         <xsd:attribute name="precision" type="xsd:int"/>
         <xsd:attribute name="scale" type="xsd:int"/>
         <xsd:attribute name="comment" type="xsd:string"/>
+        <xsd:attribute name="second-precision" type="xsd:int"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->

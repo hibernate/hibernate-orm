@@ -19,6 +19,8 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
+import jakarta.persistence.TypedQueryReference;
+
 /**
  * Repository for references to named things related to queries. This includes:
  * <ul>
@@ -31,20 +33,22 @@ import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 @Incubating
 public interface NamedObjectRepository {
 
+	<R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named SQM Memento
 
-	NamedSqmQueryMemento getSqmQueryMemento(String queryName);
-	void visitSqmQueryMementos(Consumer<NamedSqmQueryMemento> action);
-	void registerSqmQueryMemento(String name, NamedSqmQueryMemento descriptor);
+	NamedSqmQueryMemento<?> getSqmQueryMemento(String queryName);
+	void visitSqmQueryMementos(Consumer<NamedSqmQueryMemento<?>> action);
+	void registerSqmQueryMemento(String name, NamedSqmQueryMemento<?> descriptor);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named NativeQuery Memento
 
-	NamedNativeQueryMemento getNativeQueryMemento(String queryName);
-	void visitNativeQueryMementos(Consumer<NamedNativeQueryMemento> action);
-	void registerNativeQueryMemento(String name, NamedNativeQueryMemento descriptor);
+	NamedNativeQueryMemento<?> getNativeQueryMemento(String queryName);
+	void visitNativeQueryMementos(Consumer<NamedNativeQueryMemento<?>> action);
+	void registerNativeQueryMemento(String name, NamedNativeQueryMemento<?> descriptor);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -765,7 +765,7 @@ public class MappingModelCreationHelper {
 			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
 		}
 		else {
-			fkTargetPart = declaringType.findContainingEntityMapping().findAttributeMapping( lhsPropertyName );
+			fkTargetPart = declaringType.findContainingEntityMapping().findSubPart( lhsPropertyName );
 		}
 
 		if ( keyType instanceof BasicType ) {

@@ -48,7 +48,7 @@ public class HbmNamedQueryConfigurationTest {
 		NamedObjectRepository namedObjectRepository = scope.getSessionFactory()
 				.getQueryEngine()
 				.getNamedObjectRepository();
-		NamedSqmQueryMemento sqmQueryMemento = namedObjectRepository.getSqmQueryMemento( Bar.FIND_ALL );
+		NamedSqmQueryMemento<?> sqmQueryMemento = namedObjectRepository.getSqmQueryMemento( Bar.FIND_ALL );
 		assertTrue( sqmQueryMemento.getCacheable() );
 	}
 

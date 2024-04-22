@@ -114,7 +114,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	public SqmSelectionQueryImpl(
-			NamedHqlQueryMementoImpl memento,
+			NamedHqlQueryMementoImpl<?> memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
 		this(
@@ -128,7 +128,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	public SqmSelectionQueryImpl(
-			NamedCriteriaQueryMementoImpl memento,
+			NamedCriteriaQueryMementoImpl<?> memento,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		//noinspection unchecked

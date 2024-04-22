@@ -371,6 +371,24 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
+	public <T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityClass) {
+		final EntityDomainType<T> entityType = entity( entityClass );
+		if ( entityType == null ) {
+			throw new IllegalArgumentException( "Given class is not an entity: " + entityClass.getName() );
+		}
+		else {
+			final Map<String, EntityGraph<? extends T>> results = new HashMap<>();
+			for ( RootGraphImplementor<?> entityGraph : entityGraphMap.values() ) {
+				if ( entityGraph.appliesTo( entityType ) ) {
+					//noinspection unchecked
+					results.put( entityGraph.getName(), (EntityGraph<? extends T>) entityGraph );
+				}
+			}
+			return results;
+		}
+	}
+
+	@Override
 	public String qualifyImportableName(String queryName) {
 		final ImportInfo<?> importInfo = resolveImport( queryName );
 		return importInfo == null ? null : importInfo.importedName;

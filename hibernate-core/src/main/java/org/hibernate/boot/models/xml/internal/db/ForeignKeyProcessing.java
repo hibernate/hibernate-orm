@@ -10,6 +10,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
@@ -53,12 +54,12 @@ public class ForeignKeyProcessing {
 
 	public static MutableAnnotationUsage<ForeignKey> createNestedForeignKeyAnnotation(
 			JaxbForeignKeyImpl jaxbForeignKey,
-			MemberDetails memberDetails,
+			AnnotationTarget annotationTarget,
 			XmlDocumentContext xmlDocumentContext) {
 		assert jaxbForeignKey != null;
 
 		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage(
-				memberDetails,
+				annotationTarget,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 

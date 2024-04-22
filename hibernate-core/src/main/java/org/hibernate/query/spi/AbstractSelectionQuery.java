@@ -81,7 +81,7 @@ public abstract class AbstractSelectionQuery<R>
 		super( session );
 	}
 
-	protected void applyOptions(NamedQueryMemento memento) {
+	protected void applyOptions(NamedQueryMemento<?> memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::applyHint );
 		}

@@ -117,22 +117,22 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public NamedHqlQueryDefinition getNamedHqlQueryMapping(String name) {
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
 		return delegate.getNamedHqlQueryMapping( name );
 	}
 
 	@Override
-	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 		delegate.visitNamedHqlQueryDefinitions( definitionConsumer );
 	}
 
 	@Override
-	public NamedNativeQueryDefinition getNamedNativeQueryMapping(String name) {
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
 		return delegate.getNamedNativeQueryMapping( name );
 	}
 
 	@Override
-	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 		delegate.visitNamedNativeQueryDefinitions( definitionConsumer );
 	}
 

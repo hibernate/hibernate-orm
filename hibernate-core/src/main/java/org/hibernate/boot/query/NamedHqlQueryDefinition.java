@@ -23,13 +23,13 @@ import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
+public interface NamedHqlQueryDefinition<E> extends NamedQueryDefinition<E> {
 	String getHqlString();
 
 	@Override
-	NamedSqmQueryMemento resolve(SessionFactoryImplementor factory);
+	NamedSqmQueryMemento<E> resolve(SessionFactoryImplementor factory);
 
-	class Builder extends AbstractNamedQueryBuilder<Builder> {
+	class Builder<E> extends AbstractNamedQueryBuilder<E, Builder<E>> {
 		private String hqlString;
 
 		private Integer firstResult;
@@ -42,7 +42,7 @@ public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
 		}
 
 		@Override
-		protected Builder getThis() {
+		protected Builder<E> getThis() {
 			return this;
 		}
 
@@ -50,24 +50,25 @@ public interface NamedHqlQueryDefinition extends NamedQueryDefinition {
 			return hqlString;
 		}
 
-		public Builder setHqlString(String hqlString) {
+		public Builder<E> setHqlString(String hqlString) {
 			this.hqlString = hqlString;
 			return this;
 		}
 
-		public Builder setFirstResult(Integer firstResult) {
+		public Builder<E> setFirstResult(Integer firstResult) {
 			this.firstResult = firstResult;
 			return getThis();
 		}
 
-		public Builder setMaxResults(Integer maxResults) {
+		public Builder<E> setMaxResults(Integer maxResults) {
 			this.maxResults = maxResults;
 			return getThis();
 		}
 
-		public NamedHqlQueryDefinitionImpl build() {
-			return new NamedHqlQueryDefinitionImpl(
+		public NamedHqlQueryDefinitionImpl<E> build() {
+			return new NamedHqlQueryDefinitionImpl<>(
 					getName(),
+					getResultClass(),
 					hqlString,
 					firstResult,
 					maxResults,

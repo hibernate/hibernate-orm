@@ -21,6 +21,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.TypedQueryReference;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
@@ -232,6 +233,16 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public RootGraphImplementor<?> findEntityGraphByName(String name) {
 		return delegate.findEntityGraphByName( name );
+	}
+
+	@Override
+	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
+		return delegate.getNamedQueries( resultType );
+	}
+
+	@Override
+	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(Class<E> entityType) {
+		return delegate.getNamedEntityGraphs( entityType );
 	}
 
 	@Override

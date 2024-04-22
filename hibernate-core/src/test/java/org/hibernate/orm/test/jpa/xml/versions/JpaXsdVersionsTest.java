@@ -146,6 +146,16 @@ public class JpaXsdVersionsTest {
 			return persistenceSchemaVersion;
 		}
 
+		@Override
+		public String getScopeAnnotationName() {
+			return null;
+		}
+
+		@Override
+		public List<String> getQualifierAnnotationNames() {
+			return List.of();
+		}
+
 		private final List<String> mappingFileNames = new ArrayList<String>();
 
 		public List<String> getMappingFileNames() {

@@ -6,20 +6,20 @@
  */
 package org.hibernate.query.named;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
  * @author Gavin King
  */
-public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
+public abstract class AbstractNamedQueryMemento<R> implements NamedQueryMemento<R> {
 	private final String name;
+	private final @Nullable Class<R> resultType;
 
 	private final Boolean cacheable;
 	private final String cacheRegion;
@@ -37,6 +37,7 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 
 	protected AbstractNamedQueryMemento(
 			String name,
+			@Nullable Class<R> resultType,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
@@ -47,6 +48,7 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 			String comment,
 			Map<String, Object> hints) {
 		this.name = name;
+		this.resultType = resultType;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.cacheMode = cacheMode;
@@ -61,6 +63,11 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 	@Override
 	public String getRegistrationName() {
 		return name;
+	}
+
+	@Override
+	public @Nullable Class<R> getResultType() {
+		return resultType;
 	}
 
 	@Override
@@ -108,141 +115,4 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 		return hints;
 	}
 
-	public static abstract class AbstractBuilder<T extends AbstractBuilder> {
-		protected final String name;
-
-		protected Set<String> querySpaces;
-		protected Boolean cacheable;
-		protected String cacheRegion;
-		protected CacheMode cacheMode;
-
-		protected FlushMode flushMode;
-		protected Boolean readOnly;
-
-		protected Integer timeout;
-		protected Integer fetchSize;
-
-		protected String comment;
-
-		protected Map<String,Object> hints;
-
-		public AbstractBuilder(String name) {
-			this.name = name;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		protected abstract T getThis();
-
-
-		public T addQuerySpaces(Set<String> querySpaces) {
-			if ( querySpaces == null || querySpaces.isEmpty() ) {
-				return getThis();
-			}
-
-			if ( this.querySpaces == null ) {
-				this.querySpaces = new HashSet<>();
-			}
-			this.querySpaces.addAll( querySpaces );
-			return getThis();
-		}
-
-		public T addQuerySpace(String space) {
-			if ( this.querySpaces == null ) {
-				this.querySpaces = new HashSet<>();
-			}
-			this.querySpaces.add( space );
-			return getThis();
-		}
-
-		public T setCacheable(Boolean cacheable) {
-			this.cacheable = cacheable;
-			return getThis();
-		}
-
-		public T setCacheRegion(String cacheRegion) {
-			this.cacheRegion = cacheRegion;
-			return getThis();
-		}
-
-		public T setCacheMode(CacheMode cacheMode) {
-			this.cacheMode = cacheMode;
-			return getThis();
-		}
-
-		public T setTimeout(Integer timeout) {
-			this.timeout = timeout;
-			return getThis();
-		}
-
-		public T setFlushMode(FlushMode flushMode) {
-			this.flushMode = flushMode;
-			return getThis();
-		}
-
-		public T setReadOnly(Boolean readOnly) {
-			this.readOnly = readOnly;
-			return getThis();
-		}
-
-		public T setReadOnly(boolean readOnly) {
-			this.readOnly = readOnly;
-			return getThis();
-		}
-
-		public T setFetchSize(Integer fetchSize) {
-			this.fetchSize = fetchSize;
-			return getThis();
-		}
-
-		public T setComment(String comment) {
-			this.comment = comment;
-			return getThis();
-		}
-
-		public Set<String> getQuerySpaces() {
-			return querySpaces;
-		}
-
-		public Boolean getCacheable() {
-			return cacheable;
-		}
-
-		public String getCacheRegion() {
-			return cacheRegion;
-		}
-
-		public CacheMode getCacheMode() {
-			return cacheMode;
-		}
-
-		public FlushMode getFlushMode() {
-			return flushMode;
-		}
-
-		public Boolean getReadOnly() {
-			return readOnly;
-		}
-
-		public Integer getTimeout() {
-			return timeout;
-		}
-
-		public Integer getFetchSize() {
-			return fetchSize;
-		}
-
-		public String getComment() {
-			return comment;
-		}
-
-		public void addHint(String name, Object value) {
-			if ( hints == null ) {
-				hints = new HashMap<>();
-			}
-			hints.put( name, value );
-		}
-	}
 }

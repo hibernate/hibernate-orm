@@ -25,7 +25,6 @@ import jakarta.persistence.OneToMany;
 public class Luggage implements Serializable {
 	private Integer id;
 	private String owner;
-	@Column(name = "`type`")
 	private String type;
 	private Set<Clothes> hasInside = new HashSet<Clothes>();
 
@@ -55,6 +54,7 @@ public class Luggage implements Serializable {
 		this.owner = owner;
 	}
 
+	@Column(name = "`type`")
 	public String getType() {
 		return type;
 	}

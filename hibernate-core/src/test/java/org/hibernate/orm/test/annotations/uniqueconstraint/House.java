@@ -19,12 +19,12 @@ import jakarta.validation.constraints.NotNull;
 @Entity
 @Table(uniqueConstraints = {@UniqueConstraint(name = "uniqueWithInherited", columnNames = {"room_id", "cost"} )})
 public class House extends Building {
+    @Id
 	@Column(nullable = false)
     public Long id;
 	@NotNull
     public Integer cost;
 
-    @Id
     public Long getId() {
         return id;
     }

@@ -9,6 +9,8 @@ package org.hibernate.boot.models.categorize.spi;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.models.spi.ClassDetails;
+
 /**
  * Metadata about an {@linkplain jakarta.persistence.metamodel.IdentifiableType identifiable type}
  *
@@ -52,6 +54,20 @@ public interface IdentifiableTypeMetadata extends ManagedTypeMetadata, TableOwne
 	 * Visit each direct subtype
 	 */
 	void forEachSubType(Consumer<IdentifiableTypeMetadata> consumer);
+
+	default boolean isSubType(ClassDetails classDetailsToCheck) {
+		for ( IdentifiableTypeMetadata subType : getSubTypes() ) {
+			if ( subType.getClassDetails().equals( classDetailsToCheck ) ) {
+				// the current subtype metadata is the class we are looking for
+				return true;
+			}
+			if ( subType.isSubType( classDetailsToCheck ) ) {
+				// the class we are looking for is a subtype of the current subtype
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Event listeners in effect for this type, minus

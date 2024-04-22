@@ -171,13 +171,13 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 			return this;
 		}
 
-		public void addJaxbEntityMappings(List<JaxbEntityMappingsImpl> additionalJaxbMappings) {
-			if ( additionalJaxbMappings == null ) {
-				return;
+		public Builder addJaxbEntityMappings(List<JaxbEntityMappingsImpl> additionalJaxbMappings) {
+			if ( additionalJaxbMappings != null ) {
+				for ( JaxbEntityMappingsImpl additionalJaxbMapping : additionalJaxbMappings ) {
+					addXmlBinding( new Binding<>( additionalJaxbMapping, new Origin( OTHER, "additional" ) ) );
+				}
 			}
-			for ( JaxbEntityMappingsImpl additionalJaxbMapping : additionalJaxbMappings ) {
-				addXmlBinding( new Binding<>( additionalJaxbMapping, new Origin( OTHER, "additional" ) ) );
-			}
+			return this;
 		}
 	}
 }

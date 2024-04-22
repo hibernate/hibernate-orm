@@ -285,6 +285,7 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Table(name = "C")
 	public static class CEntity extends BaseEntity {
 		private String c1;
+		@Basic(fetch = FetchType.LAZY)
 		private String c2;
 		private String c3;
 		private Long c4;
@@ -301,7 +302,6 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 			return c2;
 		}
 
-		@Basic(fetch = FetchType.LAZY)
 		public void setC2(String c2) {
 			this.c2 = c2;
 		}

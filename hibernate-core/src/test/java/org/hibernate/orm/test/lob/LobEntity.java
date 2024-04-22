@@ -32,10 +32,10 @@ public class LobEntity {
         this.id = id;
     }
 
-    @Lob
-    @Column(length = BLOB_LENGTH)
     private Blob blob;
 
+    @Lob
+    @Column(length = BLOB_LENGTH)
     public Blob getBlob() {
         return blob;
     }

@@ -43,21 +43,18 @@ public abstract class AbstractIdentifiableTypeMetadata
 
 	/**
 	 * Used when creating the hierarchy root-root
-	 *
-	 * @param implicitAccessType This is the hierarchy default
 	 */
 	public AbstractIdentifiableTypeMetadata(
 			ClassDetails classDetails,
 			EntityHierarchy hierarchy,
 			MappedSuperclassTypeMetadata superTypeMetadata,
-			AccessType implicitAccessType,
 			ModelCategorizationContext processingContext) {
 		super( classDetails, processingContext );
 
 		this.hierarchy = hierarchy;
 		this.superType = superTypeMetadata;
 
-		this.classLevelAccessType = CategorizationHelper.determineAccessType( classDetails, implicitAccessType );
+		this.classLevelAccessType = CategorizationHelper.determineAccessType( classDetails, hierarchy.getDefaultAccessType() );
 	}
 
 

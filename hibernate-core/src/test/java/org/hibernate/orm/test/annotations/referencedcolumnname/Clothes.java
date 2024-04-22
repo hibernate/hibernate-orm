@@ -18,7 +18,6 @@ import jakarta.persistence.Id;
 @Entity
 public class Clothes {
 	private Integer id;
-	@Column(name = "`type`")
 	private String type;
 	private String flavor;
 
@@ -40,6 +39,7 @@ public class Clothes {
 		this.id = id;
 	}
 
+	@Column(name = "`type`")
 	public String getType() {
 		return type;
 	}

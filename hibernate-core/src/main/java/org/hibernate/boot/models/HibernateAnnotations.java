@@ -21,13 +21,7 @@ import org.hibernate.models.spi.AnnotationDescriptor;
 import static org.hibernate.models.internal.AnnotationHelper.createOrmDescriptor;
 
 /**
- * Details about Hibernate annotations.
- *
- * @apiNote Here we only collect "stateless" annotations - namely those where we do not care about
- * meta-annotations, which is the vast majority.
- *
- * @implNote Suppressed for deprecation and removal because we refer to many deprecated annotations; suppressed
- * for unused because
+ * Descriptors for Hibernate annotations.
  *
  * @author Steve Ebersole
  */

@@ -15,17 +15,11 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.boot.models.categorize.spi.DomainModelCategorizations;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
-import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
-import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.IndexView;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
@@ -34,16 +28,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
 
 /**
- * In-flight holder for various types of "global" registrations.  Also acts as the
- * {@linkplain #createResult builder} for {@linkplain CategorizedDomainModel} as returned
- * by {@linkplain ManagedResourcesProcessor#processManagedResources}
+ * In-flight holder for various types of "global" registrations and various metadata gleaned
+ * during {@linkplain AnnotationMetadataSourceProcessorImpl} processing.
  *
  * @author Steve Ebersole
  */
-
-public class DomainModelCategorizationCollector {
+public class DomainModelCategorizationCollector implements DomainModelCategorizations {
 	private final boolean areIdGeneratorsGlobal;
-	private final IndexView jandexIndex;
 
 	private final GlobalRegistrationsImpl globalRegistrations;
 	private final SourceModelBuildingContext modelsContext;
@@ -55,26 +46,28 @@ public class DomainModelCategorizationCollector {
 	public DomainModelCategorizationCollector(
 			boolean areIdGeneratorsGlobal,
 			GlobalRegistrations globalRegistrations,
-			IndexView jandexIndex,
 			SourceModelBuildingContext modelsContext) {
 		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
-		this.jandexIndex = jandexIndex;
 		this.globalRegistrations = (GlobalRegistrationsImpl) globalRegistrations;
 		this.modelsContext = modelsContext;
 	}
 
+	@Override
 	public GlobalRegistrationsImpl getGlobalRegistrations() {
 		return globalRegistrations;
 	}
 
+	@Override
 	public Set<ClassDetails> getRootEntities() {
 		return rootEntities;
 	}
 
+	@Override
 	public Map<String, ClassDetails> getMappedSuperclasses() {
 		return mappedSuperclasses;
 	}
 
+	@Override
 	public Map<String, ClassDetails> getEmbeddables() {
 		return embeddables;
 	}
@@ -124,8 +117,8 @@ public class DomainModelCategorizationCollector {
 
 		getGlobalRegistrations().collectImportRename( classDetails );
 
-		// todo : named queries
-		// todo : named graphs
+		// todo (7.0) : named queries
+		// todo (7.0) : named graphs
 
 		if ( classDetails.getAnnotationUsage( MappedSuperclass.class ) != null ) {
 			if ( classDetails.getClassName() != null ) {
@@ -149,29 +142,4 @@ public class DomainModelCategorizationCollector {
 		}
 	}
 
-	/**
-	 * Builder for {@linkplain CategorizedDomainModel} based on our internal state plus
-	 * the incoming set of managed types.
-	 *
-	 * @param entityHierarchies All entity hierarchies defined in the persistence-unit, built based
-	 * on {@linkplain #getRootEntities()}
-	 *
-	 * @see ManagedResourcesProcessor#processManagedResources
-	 */
-	public CategorizedDomainModel createResult(
-			Set<EntityHierarchy> entityHierarchies,
-			PersistenceUnitMetadata persistenceUnitMetadata,
-			ClassDetailsRegistry classDetailsRegistry,
-			AnnotationDescriptorRegistry annotationDescriptorRegistry) {
-		return new CategorizedDomainModelImpl(
-				classDetailsRegistry,
-				annotationDescriptorRegistry,
-				jandexIndex,
-				persistenceUnitMetadata,
-				entityHierarchies,
-				mappedSuperclasses,
-				embeddables,
-				getGlobalRegistrations()
-		);
-	}
 }

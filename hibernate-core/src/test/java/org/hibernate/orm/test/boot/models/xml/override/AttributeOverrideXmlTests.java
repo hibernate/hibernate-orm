@@ -13,14 +13,21 @@ import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
+import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
-import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
+import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
+import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
+import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
+import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.orm.test.jpa.xml.Employee;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -32,7 +39,7 @@ import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.model.process.spi.MetadataBuildingProcess.processManagedResources;
+import static org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl.forEachKnownClassName;
 
 /**
  * @author Steve Ebersole
@@ -51,14 +58,50 @@ public class AttributeOverrideXmlTests {
 		final ManagedResources managedResources = MetadataBuildingProcess.prepare( metadataSources, bootstrapContext );
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
 
-		final DomainModelSource domainModelSource = processManagedResources(
-				managedResources,
-				metadataCollector,
-				bootstrapContext,
-				new MetadataBuilderImpl.MappingDefaultsImpl( registry )
+
+		final SourceModelBuildingContext sourceModelBuildingContext = metadataCollector.getSourceModelBuildingContext();
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+
+		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
+				false,
+				metadataCollector.getGlobalRegistrations(),
+				sourceModelBuildingContext
 		);
 
-		final ClassDetailsRegistry classDetailsRegistry = domainModelSource.getClassDetailsRegistry();
+		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
+				managedResources,
+				metadataCollector.getPersistenceUnitMetadata()
+		);
+
+		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
+				new MetadataBuilderImpl.MappingDefaultsImpl( registry ),
+				xmlPreProcessingResult.getPersistenceUnitMetadata()
+		);
+
+		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
+				"orm",
+				bootstrapContext,
+				options,
+				metadataCollector,
+				rootMappingDefaults
+		);
+
+		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
+				xmlPreProcessingResult,
+				modelCategorizationCollector,
+				sourceModelBuildingContext,
+				bootstrapContext,
+				rootMetadataBuildingContext.getEffectiveDefaults()
+		);
+		xmlProcessingResult.apply( xmlPreProcessingResult.getPersistenceUnitMetadata() );
+
+		forEachKnownClassName(
+				managedResources,
+				xmlPreProcessingResult,
+				sourceModelBuildingContext,
+				classDetailsRegistry::resolveClassDetails
+		);
+
 		final ClassDetails employeeClassDetails = classDetailsRegistry.getClassDetails( Employee.class.getName() );
 		assertThat( employeeClassDetails.getFields() ).hasSize( 4 );
 

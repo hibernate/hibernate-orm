@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.models.categorize.spi;
 
+import org.hibernate.models.spi.AnnotationTarget;
+
 import jakarta.persistence.AccessType;
 
 /**
@@ -25,21 +27,29 @@ public enum ClassAttributeAccessType {
 	EXPLICIT_PROPERTY(true, AccessType.PROPERTY),
 
 	/**
-	 * The class implicitly defined field access.
+	 * The class is using field access from its hierarchy's "default access type". See section
+	 * <i>2.3.1 Default Access Type</i> for more details, but roughly stated this is deduced based
+	 * on the placement of {@linkplain jakarta.persistence.Id @Id} /
+	 * {@linkplain jakarta.persistence.EmbeddedId @EmbeddedId} annotations
 	 */
 	IMPLICIT_FIELD(false, AccessType.FIELD),
 
 	/**
-	 * The class implicitly defined property access.
+	 * The class is using property access from its hierarchy's "default access type". See section
+	 * <i>2.3.1 Default Access Type</i> for more details, but roughly stated this is deduced based
+	 * on the placement of {@linkplain jakarta.persistence.Id @Id} /
+	 * {@linkplain jakarta.persistence.EmbeddedId @EmbeddedId} annotations
 	 */
 	IMPLICIT_PROPERTY(false, AccessType.PROPERTY);
 
 	private final boolean explicit;
 	private final AccessType jpaAccessType;
+	private final AnnotationTarget.Kind targetKind;
 
 	ClassAttributeAccessType(boolean explicit, AccessType jpaAccessType) {
 		this.explicit = explicit;
 		this.jpaAccessType = jpaAccessType;
+		this.targetKind = jpaAccessType == AccessType.FIELD ? AnnotationTarget.Kind.FIELD : AnnotationTarget.Kind.METHOD;
 	}
 
 	/**
@@ -54,5 +64,12 @@ public enum ClassAttributeAccessType {
 	 */
 	public AccessType getJpaAccessType() {
 		return jpaAccessType;
+	}
+
+	/**
+	 * The annotation target kind which correlates to the given {@linkplain #getJpaAccessType() access type}
+	 */
+	public AnnotationTarget.Kind getTargetKind() {
+		return targetKind;
 	}
 }

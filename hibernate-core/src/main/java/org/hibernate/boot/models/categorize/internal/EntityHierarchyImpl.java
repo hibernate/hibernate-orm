@@ -6,6 +6,9 @@
  */
 package org.hibernate.boot.models.categorize.internal;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.annotations.Cache;
@@ -26,6 +29,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
@@ -55,34 +59,47 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			AccessType defaultCacheAccessType,
 			HierarchyTypeConsumer typeConsumer,
 			ModelCategorizationContext modelBuildingContext) {
+		assert rootEntityClassDetails.hasAnnotationUsage( Entity.class );
+
 		this.defaultAccessType = defaultAccessType;
 
-		final ClassDetails absoluteRootClassDetails = findRootRoot( rootEntityClassDetails );
 		final HierarchyMetadataCollector metadataCollector = new HierarchyMetadataCollector( this, rootEntityClassDetails, typeConsumer );
+		final List<ClassDetails> orderedSupers = resolveOrderedSupers( rootEntityClassDetails );
 
-		if ( CategorizationHelper.isEntity( absoluteRootClassDetails ) ) {
+		if ( orderedSupers.isEmpty() ) {
 			this.rootEntityTypeMetadata = new EntityTypeMetadataImpl(
-					absoluteRootClassDetails,
+					rootEntityClassDetails,
 					this,
-					defaultAccessType,
 					metadataCollector,
 					modelBuildingContext
 			);
 			this.absoluteRootTypeMetadata = rootEntityTypeMetadata;
 		}
 		else {
-			assert CategorizationHelper.isMappedSuperclass( absoluteRootClassDetails );
-			this.absoluteRootTypeMetadata = processRootMappedSuperclasses(
+			final ClassDetails absoluteRootClassDetails = orderedSupers.get( 0 );
+			MappedSuperclassTypeMetadataImpl currentSuperTypeMetadata = new MappedSuperclassTypeMetadataImpl(
 					absoluteRootClassDetails,
 					this,
-					defaultAccessType,
+					null,
 					metadataCollector,
 					modelBuildingContext
 			);
+			this.absoluteRootTypeMetadata = currentSuperTypeMetadata;
+			if ( orderedSupers.size() > 1 ) {
+				for ( int i = 1; i < orderedSupers.size(); i++ ) {
+					currentSuperTypeMetadata = new MappedSuperclassTypeMetadataImpl(
+							orderedSupers.get(i),
+							this,
+							currentSuperTypeMetadata,
+							metadataCollector,
+							modelBuildingContext
+					);
+				}
+			}
 			this.rootEntityTypeMetadata = new EntityTypeMetadataImpl(
 					rootEntityClassDetails,
 					this,
-					(AbstractIdentifiableTypeMetadata) absoluteRootTypeMetadata,
+					currentSuperTypeMetadata,
 					metadataCollector,
 					modelBuildingContext
 			);
@@ -98,49 +115,6 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 		this.cacheRegion = determineCacheRegion( metadataCollector, defaultCacheAccessType );
 		this.naturalIdCacheRegion = determineNaturalIdCacheRegion( metadataCollector, cacheRegion );
-	}
-
-	private static IdentifiableTypeMetadata processRootMappedSuperclasses(
-			ClassDetails absoluteRootClassDetails,
-			EntityHierarchyImpl entityHierarchy,
-			jakarta.persistence.AccessType defaultAccessType,
-			HierarchyMetadataCollector metadataCollector,
-			ModelCategorizationContext modelBuildingContext) {
-		return new MappedSuperclassTypeMetadataImpl(
-				absoluteRootClassDetails,
-				entityHierarchy,
-				null,
-				defaultAccessType,
-				metadataCollector,
-				modelBuildingContext
-		);
-	}
-
-	private ClassDetails findRootRoot(ClassDetails rootEntityClassDetails) {
-		if ( rootEntityClassDetails.getSuperClass() != null ) {
-			final ClassDetails match = walkSupers( rootEntityClassDetails.getSuperClass() );
-			if ( match != null ) {
-				return match;
-			}
-		}
-		return rootEntityClassDetails;
-	}
-
-	private ClassDetails walkSupers(ClassDetails type) {
-		assert type != null;
-
-		if ( type.getSuperClass() != null ) {
-			final ClassDetails match = walkSupers( type.getSuperClass() );
-			if ( match != null ) {
-				return match;
-			}
-		}
-
-		if ( CategorizationHelper.isIdentifiable( type ) ) {
-			return type;
-		}
-
-		return null;
 	}
 
 	@Override
@@ -312,4 +286,36 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		} );
 	}
 
+	private static List<ClassDetails> resolveOrderedSupers(ClassDetails rootEntityClassDetails) {
+		final ClassDetails rootEntityDirectSuper = resolveManagedSuper( rootEntityClassDetails );
+		if ( rootEntityDirectSuper == null ) {
+			return Collections.emptyList();
+		}
+
+		final ArrayList<ClassDetails> supers = new ArrayList<>();
+		collectSupers( rootEntityDirectSuper, supers );
+		return supers;
+	}
+
+	private static ClassDetails resolveManagedSuper(ClassDetails managedTypeClassDetails) {
+		assert managedTypeClassDetails != null;
+
+		ClassDetails superClassDetails = managedTypeClassDetails.getSuperClass();
+		while ( superClassDetails != null
+				&& !CategorizationHelper.isIdentifiable( superClassDetails ) ) {
+			superClassDetails = superClassDetails.getSuperClass();
+		}
+
+		return superClassDetails;
+	}
+
+	private static void collectSupers(ClassDetails managedTypeClassDetails, List<ClassDetails> orderedList) {
+		final ClassDetails managedSuperClassDetails = resolveManagedSuper( managedTypeClassDetails );
+		if ( managedSuperClassDetails != null ) {
+			// add supers first
+			collectSupers( managedSuperClassDetails, orderedList );
+		}
+
+		orderedList.add( managedTypeClassDetails );
+	}
 }

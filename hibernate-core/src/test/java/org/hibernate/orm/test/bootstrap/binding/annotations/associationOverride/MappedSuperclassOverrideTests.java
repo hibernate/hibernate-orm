@@ -118,6 +118,7 @@ public class MappedSuperclassOverrideTests {
 	public static class Address {
 		@Id
 		private Integer id;
+		@Column(name = "STREET")
 		private String street;
 		private String city;
 
@@ -131,7 +132,6 @@ public class MappedSuperclassOverrideTests {
 		}
 
 
-		@Column(name = "STREET")
 		public String getStreet() {
 			return street;
 		}

@@ -83,6 +83,7 @@ public class SimpleEntityWithNamedMappings {
 	private Integer id;
 
 	private String name;
+	@Basic( fetch = FetchType.LAZY )
 	private String notes;
 
 	protected SimpleEntityWithNamedMappings() {
@@ -114,7 +115,6 @@ public class SimpleEntityWithNamedMappings {
 		this.name = name;
 	}
 
-	@Basic( fetch = FetchType.LAZY )
 	public String getNotes() {
 		return notes;
 	}

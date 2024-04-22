@@ -609,6 +609,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final boolean xmlMappingEnabled;
 		private final boolean allowExtensionsInCdi;
 
+		public MetadataBuildingOptionsImpl(BootstrapContext bootstrapContext) {
+			this( bootstrapContext.getServiceRegistry() );
+			setBootstrapContext( bootstrapContext );
+		}
+
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
 			this.identifierGeneratorFactory = serviceRegistry.getService( IdentifierGeneratorFactory.class );

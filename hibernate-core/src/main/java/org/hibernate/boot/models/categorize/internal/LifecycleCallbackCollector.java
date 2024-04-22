@@ -128,4 +128,32 @@ public class LifecycleCallbackCollector implements AllMemberConsumer {
 		}
 		return null;
 	}
+
+	public MethodDetails getPrePersist() {
+		return prePersist;
+	}
+
+	public MethodDetails getPostPersist() {
+		return postPersist;
+	}
+
+	public MethodDetails getPreUpdate() {
+		return preUpdate;
+	}
+
+	public MethodDetails getPostUpdate() {
+		return postUpdate;
+	}
+
+	public MethodDetails getPreRemove() {
+		return preRemove;
+	}
+
+	public MethodDetails getPostRemove() {
+		return postRemove;
+	}
+
+	public MethodDetails getPostLoad() {
+		return postLoad;
+	}
 }

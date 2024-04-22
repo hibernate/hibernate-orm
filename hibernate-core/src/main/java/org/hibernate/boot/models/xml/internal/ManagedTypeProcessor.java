@@ -29,7 +29,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedEntityGraphImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTenantIdImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -46,6 +45,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.ModelsClassLogging;
+import org.hibernate.models.internal.ModifierUtils;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.spi.AnnotationUsage;
@@ -78,7 +78,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class ManagedTypeProcessor {
-	private static final int MEMBER_MODIFIERS = buildMemberModifiers();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity
@@ -162,7 +161,7 @@ public class ManagedTypeProcessor {
 							jaxbId.getName(),
 							attributeJavaType,
 							classDetails,
-							MEMBER_MODIFIERS,
+							ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 							false,
 							false,
 							xmlDocumentContext.getModelBuildingContext()
@@ -178,7 +177,7 @@ public class ManagedTypeProcessor {
 						embeddedId.getName(),
 						attributeJavaType,
 						classDetails,
-						MEMBER_MODIFIERS,
+						ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						false,
 						xmlDocumentContext.getModelBuildingContext()
@@ -197,7 +196,7 @@ public class ManagedTypeProcessor {
 							jaxbBasic.getName(),
 							attributeJavaType,
 							classDetails,
-							MEMBER_MODIFIERS,
+							ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 							false,
 							false,
 							xmlDocumentContext.getModelBuildingContext()
@@ -214,7 +213,7 @@ public class ManagedTypeProcessor {
 							jaxbEmbedded.getName(),
 							attributeJavaType,
 							classDetails,
-							MEMBER_MODIFIERS,
+							ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 							false,
 							false,
 							xmlDocumentContext.getModelBuildingContext()
@@ -228,7 +227,7 @@ public class ManagedTypeProcessor {
 							jaxbManyToOne.getName(),
 							attributeJavaType,
 							classDetails,
-							MEMBER_MODIFIERS,
+							ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 							false,
 							false,
 							xmlDocumentContext.getModelBuildingContext()
@@ -242,7 +241,7 @@ public class ManagedTypeProcessor {
 							jaxbAnyMapping.getName(),
 							attributeJavaType,
 							classDetails,
-							MEMBER_MODIFIERS,
+							ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 							false,
 							false,
 							xmlDocumentContext.getModelBuildingContext()
@@ -262,7 +261,7 @@ public class ManagedTypeProcessor {
 						tenantId.getName(),
 						attributeJavaType,
 						classDetails,
-						MEMBER_MODIFIERS,
+						ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						false,
 						xmlDocumentContext.getModelBuildingContext()
@@ -281,7 +280,7 @@ public class ManagedTypeProcessor {
 							jaxbId.getName(),
 							attributeJavaType,
 							classDetails,
-							MEMBER_MODIFIERS,
+							ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 							false,
 							false,
 							xmlDocumentContext.getModelBuildingContext()
@@ -297,7 +296,7 @@ public class ManagedTypeProcessor {
 						embeddedId.getName(),
 						attributeJavaType,
 						classDetails,
-						MEMBER_MODIFIERS,
+						ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						false,
 						xmlDocumentContext.getModelBuildingContext()
@@ -314,7 +313,7 @@ public class ManagedTypeProcessor {
 					jaxbBasic.getName(),
 					determineDynamicAttributeJavaType( jaxbBasic, xmlDocumentContext ),
 					classDetails,
-					MEMBER_MODIFIERS,
+					ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 					false,
 					false,
 					xmlDocumentContext.getModelBuildingContext()
@@ -328,7 +327,7 @@ public class ManagedTypeProcessor {
 					jaxbEmbedded.getName(),
 					determineDynamicAttributeJavaType( jaxbEmbedded, xmlDocumentContext ),
 					classDetails,
-					MEMBER_MODIFIERS,
+					ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 					false,
 					false,
 					xmlDocumentContext.getModelBuildingContext()
@@ -342,7 +341,7 @@ public class ManagedTypeProcessor {
 					jaxbOneToOne.getName(),
 					determineDynamicAttributeJavaType( jaxbOneToOne, xmlDocumentContext ),
 					classDetails,
-					MEMBER_MODIFIERS,
+					ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 					false,
 					false,
 					xmlDocumentContext.getModelBuildingContext()
@@ -356,7 +355,7 @@ public class ManagedTypeProcessor {
 					jaxbManyToOne.getName(),
 					determineDynamicAttributeJavaType( jaxbManyToOne, xmlDocumentContext ),
 					classDetails,
-					MEMBER_MODIFIERS,
+					ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 					false,
 					false,
 					xmlDocumentContext.getModelBuildingContext()
@@ -370,7 +369,7 @@ public class ManagedTypeProcessor {
 					jaxbAnyMapping.getName(),
 					determineDynamicAttributeJavaType( jaxbAnyMapping, xmlDocumentContext ),
 					classDetails,
-					MEMBER_MODIFIERS,
+					ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 					false,
 					false,
 					xmlDocumentContext.getModelBuildingContext()
@@ -384,7 +383,7 @@ public class ManagedTypeProcessor {
 					jaxbElementCollection.getName(),
 					determineDynamicAttributeJavaType( jaxbElementCollection, xmlDocumentContext ),
 					classDetails,
-					MEMBER_MODIFIERS,
+					ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 					false,
 					true,
 					xmlDocumentContext.getModelBuildingContext()
@@ -398,7 +397,7 @@ public class ManagedTypeProcessor {
 					jaxbOneToMany.getName(),
 					determineDynamicAttributeJavaType( jaxbOneToMany, xmlDocumentContext ),
 					classDetails,
-					MEMBER_MODIFIERS,
+					ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 					false,
 					true,
 					xmlDocumentContext.getModelBuildingContext()
@@ -412,7 +411,7 @@ public class ManagedTypeProcessor {
 					jaxbManyToMany.getName(),
 					determineDynamicAttributeJavaType( jaxbManyToMany, xmlDocumentContext ),
 					classDetails,
-					MEMBER_MODIFIERS,
+					ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 					false,
 					true,
 					xmlDocumentContext.getModelBuildingContext()
@@ -430,7 +429,7 @@ public class ManagedTypeProcessor {
 					jaxbPluralAnyMapping.getName(),
 					attributeType,
 					classDetails,
-					MEMBER_MODIFIERS,
+					ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 					false,
 					true,
 					xmlDocumentContext.getModelBuildingContext()

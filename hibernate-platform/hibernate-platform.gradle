@@ -40,7 +40,7 @@ dependencies {
         api jakartaLibs.jpa
         api jakartaLibs.jta
 
-        runtime libs.antlr
+        runtime libs.antlrRuntime
         runtime libs.logging
         runtime libs.byteBuddy
         runtime libs.byteBuddyAgent

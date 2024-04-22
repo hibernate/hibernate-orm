@@ -6,12 +6,19 @@
  */
 package org.hibernate.boot.models.xml.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationOverrideImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBaseAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalId;
@@ -19,8 +26,10 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAnyMappingImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
 import org.hibernate.boot.models.xml.internal.attr.AnyMappingAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
+import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.ElementCollectionAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.EmbeddedAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.ManyToManyAttributeProcessing;
@@ -28,11 +37,21 @@ import org.hibernate.boot.models.xml.internal.attr.ManyToOneAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.OneToManyAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.OneToOneAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.PluralAnyMappingAttributeProcessing;
+import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
+import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
+import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
+import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AssociationOverrides;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
 
 /**
  * Helper for handling persistent attributes defined in mapping XML in metadata-complete mode
@@ -208,5 +227,100 @@ public class AttributeProcessor {
 				memberAdjuster.adjust( memberDetails, jaxbPluralAnyMapping, xmlDocumentContext );
 			}
 		}
+
+		for ( int i = 0; i < attributesContainer.getTransients().size(); i++ ) {
+			final JaxbTransientImpl jaxbTransient = attributesContainer.getTransients().get( i );
+			CommonAttributeProcessing.applyTransient(
+					jaxbTransient,
+					mutableClassDetails,
+					classAccessType,
+					xmlDocumentContext
+			);
+		}
+	}
+
+	public static void processAttributeOverrides(
+			List<JaxbAttributeOverrideImpl> attributeOverrides,
+			MutableClassDetails mutableClassDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		final List<MutableAnnotationUsage<AttributeOverride>> attributeOverrideList = new ArrayList<>( attributeOverrides.size() );
+		for ( JaxbAttributeOverrideImpl attributeOverride : attributeOverrides ) {
+			final MutableAnnotationUsage<AttributeOverride> attributeOverrideAnn = XmlProcessingHelper.makeNestedAnnotation(
+					AttributeOverride.class,
+					mutableClassDetails,
+					xmlDocumentContext
+			);
+			attributeOverrideList.add( attributeOverrideAnn );
+
+			final MutableAnnotationUsage<Column> attributeOverrideColumnAnn = XmlProcessingHelper.makeNestedAnnotation(
+					Column.class,
+					mutableClassDetails,
+					xmlDocumentContext
+			);
+			ColumnProcessing.applyColumnDetails( attributeOverride.getColumn(), attributeOverrideColumnAnn, xmlDocumentContext );
+			attributeOverrideAnn.setAttributeValue( "name", attributeOverride.getName() );
+			attributeOverrideAnn.setAttributeValue( "column", attributeOverrideColumnAnn );
+		}
+
+		final MutableAnnotationUsage<AttributeOverrides> attributeOverridesAnn = XmlProcessingHelper.getOrMakeAnnotation(
+				AttributeOverrides.class,
+				mutableClassDetails,
+				xmlDocumentContext
+		);
+		attributeOverridesAnn.setAttributeValue( "value", attributeOverrideList );
+	}
+
+	public static void processAssociationOverrides(
+			List<JaxbAssociationOverrideImpl> associationOverrides,
+			MutableClassDetails mutableClassDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		final List<MutableAnnotationUsage<AssociationOverride>> associationOverrideList = new ArrayList<>( associationOverrides.size() );
+		for ( JaxbAssociationOverrideImpl associationOverride : associationOverrides ) {
+			final MutableAnnotationUsage<AssociationOverride> attributeOverrideAnn = XmlProcessingHelper.makeNestedAnnotation(
+					AssociationOverride.class,
+					mutableClassDetails,
+					xmlDocumentContext
+			);
+			associationOverrideList.add( attributeOverrideAnn );
+
+			attributeOverrideAnn.setAttributeValue( "name", associationOverride.getName() );
+			attributeOverrideAnn.setAttributeValue(
+					"joinColumns",
+					JoinColumnProcessing.createJoinColumns(
+							associationOverride.getJoinColumns(),
+							mutableClassDetails,
+							xmlDocumentContext
+					)
+			);
+			final JaxbForeignKeyImpl foreignKeys = associationOverride.getForeignKeys();
+			if ( foreignKeys != null ) {
+				attributeOverrideAnn.setAttributeValue(
+						"foreignKey",
+						ForeignKeyProcessing.createNestedForeignKeyAnnotation(
+								foreignKeys,
+								mutableClassDetails,
+								xmlDocumentContext
+						)
+				);
+			}
+			final JaxbJoinTableImpl joinTable = associationOverride.getJoinTable();
+			if ( joinTable != null ) {
+				attributeOverrideAnn.setAttributeValue(
+						"joinTable",
+						TableProcessing.createNestedJoinTable(
+								joinTable,
+								mutableClassDetails,
+								xmlDocumentContext
+						)
+				);
+			}
+		}
+
+		final MutableAnnotationUsage<AssociationOverrides> associationOverridesAnn = XmlProcessingHelper.getOrMakeAnnotation(
+				AssociationOverrides.class,
+				mutableClassDetails,
+				xmlDocumentContext
+		);
+		associationOverridesAnn.setAttributeValue( "value", associationOverrideList );
 	}
 }

@@ -132,6 +132,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.TypedQueryReference;
 
 import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
@@ -1079,6 +1080,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
 		getMappingMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
+	}
+
+	@Override
+	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
+		return queryEngine.getNamedObjectRepository().getNamedQueries( resultType );
+	}
+
+	@Override
+	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(Class<E> entityType) {
+		return getJpaMetamodel().getNamedEntityGraphs( entityType );
 	}
 
 	@Override

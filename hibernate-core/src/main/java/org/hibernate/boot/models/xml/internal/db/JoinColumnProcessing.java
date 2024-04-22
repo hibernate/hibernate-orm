@@ -21,7 +21,9 @@ import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
 
@@ -117,9 +119,9 @@ public class JoinColumnProcessing {
 	public static void transferJoinColumn(
 			JaxbColumnJoined jaxbJoinColumn,
 			MutableAnnotationUsage<? extends Annotation> joinColumnUsage,
-			MutableMemberDetails memberDetails,
+			AnnotationTarget annotationTarget,
 			XmlDocumentContext xmlDocumentContext) {
-		ColumnProcessing.applyColumnDetails( jaxbJoinColumn, memberDetails, joinColumnUsage, xmlDocumentContext );
+		ColumnProcessing.applyColumnDetails( jaxbJoinColumn, annotationTarget, joinColumnUsage, xmlDocumentContext );
 		XmlAnnotationHelper.applyOptionalAttribute(
 				joinColumnUsage,
 				"referencedColumnName",
@@ -130,7 +132,7 @@ public class JoinColumnProcessing {
 		if ( jaxbForeignKey != null ) {
 			joinColumnUsage.setAttributeValue(
 					"foreignKey",
-					ForeignKeyProcessing.createNestedForeignKeyAnnotation( jaxbForeignKey, memberDetails, xmlDocumentContext )
+					ForeignKeyProcessing.createNestedForeignKeyAnnotation( jaxbForeignKey, annotationTarget, xmlDocumentContext )
 			);
 		}
 	}
@@ -143,7 +145,7 @@ public class JoinColumnProcessing {
 	 */
 	public static List<AnnotationUsage<JoinColumn>> transformJoinColumnList(
 			List<JaxbJoinColumnImpl> jaxbJoinColumns,
-			MutableMemberDetails memberDetails,
+			AnnotationTarget annotationTarget,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
 			return Collections.emptyList();
@@ -151,7 +153,7 @@ public class JoinColumnProcessing {
 		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
 		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
 			final MutableAnnotationUsage<JoinColumn> joinColumnAnn = JpaAnnotations.JOIN_COLUMN.createUsage(
-					memberDetails,
+					annotationTarget,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			transferJoinColumn( jaxbJoinColumn, joinColumnAnn, null, xmlDocumentContext );
@@ -177,7 +179,7 @@ public class JoinColumnProcessing {
 
 	public static List<AnnotationUsage<JoinColumn>> createJoinColumns(
 			List<JaxbJoinColumnImpl> jaxbJoinColumns,
-			MutableMemberDetails memberDetails,
+			AnnotationTarget annotationTarget,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
 			return Collections.emptyList();
@@ -185,13 +187,13 @@ public class JoinColumnProcessing {
 		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
 		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
 			final MutableAnnotationUsage<JoinColumn> joinColumnUsage = JpaAnnotations.JOIN_COLUMN.createUsage(
-					memberDetails,
+					annotationTarget,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			transferJoinColumn(
 					jaxbJoinColumn,
 					joinColumnUsage,
-					memberDetails,
+					annotationTarget,
 					xmlDocumentContext
 			);
 			joinColumns.add( joinColumnUsage );

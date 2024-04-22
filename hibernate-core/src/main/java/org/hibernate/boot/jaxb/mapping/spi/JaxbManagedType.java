@@ -7,6 +7,7 @@
 package org.hibernate.boot.jaxb.mapping.spi;
 
 import jakarta.persistence.AccessType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Common interface for JAXB bindings representing entities, mapped-superclasses and embeddables (JPA collective
@@ -17,21 +18,21 @@ import jakarta.persistence.AccessType;
  */
 public interface JaxbManagedType {
 
-	String getDescription();
+	@Nullable String getDescription();
 
-	void setDescription(String value);
+	void setDescription(@Nullable String value);
 
-	String getClazz();
+	@Nullable String getClazz();
 
-	void setClazz(String className);
+	void setClazz(@Nullable String className);
 
-	Boolean isMetadataComplete();
+	@Nullable Boolean isMetadataComplete();
 
-	void setMetadataComplete(Boolean isMetadataComplete);
+	void setMetadataComplete(@Nullable Boolean isMetadataComplete);
 
-	AccessType getAccess();
+	@Nullable AccessType getAccess();
 
-	void setAccess(AccessType value);
+	void setAccess(@Nullable AccessType value);
 
-	JaxbAttributesContainer getAttributes();
+	@Nullable JaxbAttributesContainer getAttributes();
 }

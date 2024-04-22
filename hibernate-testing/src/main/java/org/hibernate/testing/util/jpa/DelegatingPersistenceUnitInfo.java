@@ -34,6 +34,16 @@ public class DelegatingPersistenceUnitInfo implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public String getScopeAnnotationName() {
+		return delegate.getScopeAnnotationName();
+	}
+
+	@Override
+	public List<String> getQualifierAnnotationNames() {
+		return delegate.getQualifierAnnotationNames();
+	}
+
+	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
 		return delegate.getTransactionType();
 	}

@@ -24,9 +24,9 @@ import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
-import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -87,8 +87,9 @@ public abstract class QueryBinder {
 
 		final QueryHintDefinition hints = new QueryHintDefinition( queryName, namedQuery.getList( "hints" ) );
 
-		final NamedHqlQueryDefinition queryMapping = new NamedHqlQueryDefinitionImpl.Builder( queryName )
+		final NamedHqlQueryDefinition<?> queryMapping = new NamedHqlQueryDefinitionImpl.Builder<>( queryName )
 				.setHqlString( queryString )
+				.setResultClass( loadClass( namedQuery.getClassDetails( "resultClass" ), context ) )
 				.setCacheable( hints.getCacheability() )
 				.setCacheMode( hints.getCacheMode() )
 				.setCacheRegion( hints.getString( HibernateHints.HINT_CACHE_REGION ) )
@@ -106,6 +107,15 @@ public abstract class QueryBinder {
 		else {
 			context.getMetadataCollector().addNamedQuery( queryMapping );
 		}
+	}
+
+	private static Class<Object> loadClass(ClassDetails classDetails, MetadataBuildingContext context) {
+		return ClassDetails.VOID_CLASS_DETAILS == classDetails
+				? null
+				: context.getBootstrapContext()
+						.getServiceRegistry()
+						.requireService( ClassLoaderService.class )
+						.classForName( classDetails.getName() );
 	}
 
 	public static void bindNativeQuery(
@@ -127,14 +137,15 @@ public abstract class QueryBinder {
 
 		final String resultSetMappingName = namedNativeQuery.getString( "resultSetMapping" );
 		final ClassDetails resultClassDetails = namedNativeQuery.getClassDetails( "resultClass" );
-		final String resultSetMappingClassName = ClassDetails.VOID_CLASS_DETAILS == resultClassDetails
+		final Class<Object> resultClass = ClassDetails.VOID_CLASS_DETAILS == resultClassDetails
 				? null
-				: resultClassDetails.getName();
+				: context.getBootstrapContext().getServiceRegistry().requireService( ClassLoaderService.class )
+				.classForName( resultClassDetails.getClassName() );
 
-		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( registrationName )
+		final NamedNativeQueryDefinition.Builder<?> builder = new NamedNativeQueryDefinition.Builder<>( registrationName )
 				.setSqlString( queryString )
+				.setResultClass( resultClass )
 				.setResultSetMappingName( resultSetMappingName )
-				.setResultSetMappingClassName( resultSetMappingClassName )
 				.setQuerySpaces( null )
 				.setCacheable( hints.getCacheability() )
 				.setCacheMode( hints.getCacheMode() )
@@ -146,7 +157,7 @@ public abstract class QueryBinder {
 				.setComment( hints.getString( HibernateHints.HINT_COMMENT ) )
 				.addHints( hints.getHintsMap() );
 
-		final NamedNativeQueryDefinition queryDefinition = builder.build();
+		final NamedNativeQueryDefinition<?> queryDefinition = builder.build();
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding named native query: %s => %s", queryDefinition.getRegistrationName(), queryDefinition.getSqlQueryString() );
@@ -165,13 +176,16 @@ public abstract class QueryBinder {
 			AnnotationUsage<SQLSelect> sqlSelect,
 			ClassDetails annotatedClass,
 			MetadataBuildingContext context) {
-		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( name )
+		final NamedNativeQueryDefinition.Builder<?> builder = new NamedNativeQueryDefinition.Builder<>( name )
 				.setFlushMode( FlushMode.MANUAL )
 				.setSqlString( sqlSelect.getString( "sql" ) )
 				.setQuerySpaces( setOf( sqlSelect.getList( "querySpaces" ) ) );
 
 		if ( annotatedClass != null ) {
-			builder.setResultSetMappingClassName( annotatedClass.getName() );
+			builder.setResultClass(
+					context.getBootstrapContext().getServiceRegistry().requireService( ClassLoaderService.class )
+							.classForName( annotatedClass.getClassName() )
+			);
 		}
 
 		final AnnotationUsage<SqlResultSetMapping> resultSetMapping = sqlSelect.getNestedUsage( "resultSetMapping" );
@@ -201,9 +215,10 @@ public abstract class QueryBinder {
 
 		final String resultSetMappingName = namedNativeQuery.getString( "resultSetMapping" );
 		final ClassDetails resultClassDetails = namedNativeQuery.getClassDetails( "resultClass" );
-		final String resultSetMappingClassName = ClassDetails.VOID_CLASS_DETAILS == resultClassDetails
+		final Class<Object> resultClass = ClassDetails.VOID_CLASS_DETAILS == resultClassDetails
 				? null
-				: resultClassDetails.getName();
+				: context.getBootstrapContext().getServiceRegistry().requireService( ClassLoaderService.class )
+				.classForName( resultClassDetails.getClassName() );
 
 		final Integer timeout = namedNativeQuery.getInteger( "timeout" );
 		final Integer fetchSize = namedNativeQuery.getInteger( "fetchSize" );
@@ -212,10 +227,10 @@ public abstract class QueryBinder {
 		final HashSet<String> querySpaces = new HashSet<>( determineProperSizing( querySpacesList.size() ) );
 		querySpaces.addAll( querySpacesList );
 
-		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( registrationName )
+		final NamedNativeQueryDefinition.Builder<?> builder = new NamedNativeQueryDefinition.Builder<>( registrationName )
 				.setSqlString( namedNativeQuery.getString( "query" ) )
 				.setResultSetMappingName( resultSetMappingName )
-				.setResultSetMappingClassName( resultSetMappingClassName )
+				.setResultClass( resultClass )
 				.setCacheable( namedNativeQuery.getBoolean( "cacheable" ) )
 				.setCacheRegion( nullIfEmpty( namedNativeQuery.getString( "cacheRegion" ) ) )
 				.setCacheMode( getCacheMode( namedNativeQuery )  )
@@ -235,7 +250,7 @@ public abstract class QueryBinder {
 			);
 		}
 		else {
-			final NamedNativeQueryDefinition queryDefinition = builder.build();
+			final NamedNativeQueryDefinition<?> queryDefinition = builder.build();
 
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
@@ -250,7 +265,7 @@ public abstract class QueryBinder {
 	}
 
 	public static NamedProcedureCallDefinition createStoredProcedure(
-			NamedNativeQueryDefinitionBuilder builder,
+			NamedNativeQueryDefinition.Builder<?> builder,
 			MetadataBuildingContext context,
 			Supplier<RuntimeException> exceptionProducer) {
 		final String sqlString = builder.getSqlString().trim();
@@ -298,17 +313,10 @@ public abstract class QueryBinder {
 			nameStoredProcedureQueryAnn.setAttributeValue( "resultSetMappings", resultSetMappings );
 		}
 
-		final String resultSetMappingClassName = builder.getResultSetMappingClassName();
-		if ( resultSetMappingClassName != null ) {
+		final Class<?> resultClass = builder.getResultClass();
+		if ( resultClass != null ) {
 			final List<ClassDetails> resultClasses = new ArrayList<>( 1 );
-			final ClassDetails classDetails;
-			if ( StringHelper.isEmpty( resultSetMappingClassName ) ) {
-				classDetails = ClassDetails.VOID_CLASS_DETAILS;
-			}
-			else {
-				classDetails = nameStoredProcedureQueryAnn.getClassDetails( resultSetMappingClassName );
-			}
-
+			final ClassDetails classDetails = nameStoredProcedureQueryAnn.getClassDetails( resultClass.getName() );
 			resultClasses.add( classDetails );
 			nameStoredProcedureQueryAnn.setAttributeValue( "resultClasses", resultClasses );
 		}
@@ -344,7 +352,7 @@ public abstract class QueryBinder {
 			String name,
 			AnnotationUsage<HQLSelect> hqlSelect,
 			MetadataBuildingContext context) {
-		final NamedHqlQueryDefinition hqlQueryDefinition = new NamedHqlQueryDefinition.Builder( name )
+		final NamedHqlQueryDefinition<?> hqlQueryDefinition = new NamedHqlQueryDefinition.Builder<>( name )
 				.setFlushMode( FlushMode.MANUAL )
 				.setHqlString( hqlSelect.getString( "query" ) )
 				.build();
@@ -369,8 +377,9 @@ public abstract class QueryBinder {
 		final Integer timeout = namedQuery.getInteger( "timeout" );
 		final Integer fetchSize = namedQuery.getInteger( "fetchSize" );
 
-		final NamedHqlQueryDefinition.Builder builder = new NamedHqlQueryDefinition.Builder( registrationName )
+		final NamedHqlQueryDefinition.Builder<?> builder = new NamedHqlQueryDefinition.Builder<>( registrationName )
 				.setHqlString( namedQuery.getString( "query" ) )
+				.setResultClass( loadClass( namedQuery.getClassDetails( "resultClass" ), context ) )
 				.setCacheable( namedQuery.getBoolean( "cacheable" ) )
 				.setCacheRegion( nullIfEmpty( namedQuery.getString( "cacheRegion" ) ) )
 				.setCacheMode( getCacheMode( namedQuery ) )
@@ -380,7 +389,7 @@ public abstract class QueryBinder {
 				.setReadOnly( namedQuery.getBoolean( "readOnly" ) )
 				.setComment( nullIfEmpty( namedQuery.getString( "comment" ) ) );
 
-		final NamedHqlQueryDefinitionImpl hqlQueryDefinition = builder.build();
+		final NamedHqlQueryDefinitionImpl<?> hqlQueryDefinition = builder.build();
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding named query: %s => %s", hqlQueryDefinition.getRegistrationName(), hqlQueryDefinition.getHqlString() );

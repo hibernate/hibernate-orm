@@ -26,9 +26,9 @@ import java.util.List;
  */
 public class CollectionLoaderNamedQuery implements CollectionLoader {
 	private final CollectionPersister persister;
-	private final NamedQueryMemento namedQueryMemento;
+	private final NamedQueryMemento<?> namedQueryMemento;
 
-	public CollectionLoaderNamedQuery(CollectionPersister persister, NamedQueryMemento namedQueryMemento) {
+	public CollectionLoaderNamedQuery(CollectionPersister persister, NamedQueryMemento<?> namedQueryMemento) {
 		this.persister = persister;
 		this.namedQueryMemento = namedQueryMemento;
 	}

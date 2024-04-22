@@ -6,12 +6,14 @@
  */
 package org.hibernate.sql.results.internal;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingResultInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -32,6 +34,8 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private final Class<T> domainResultJavaType;
 
 	private final int assemblerCount;
+	private Class<?> resultElementClass;
+	private Class<?> resultJavaType;
 
 	private static final Logger LOGGER = LoadingLogger.LOGGER;
 
@@ -54,18 +58,23 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	@Override
 	public Class<?> getResultJavaType() {
-		if ( resultAssemblers.size() == 1 ) {
-			return resultAssemblers.get( 0 ).getAssembledJavaType().getJavaTypeClass();
+		if ( resultJavaType == null ) {
+			if ( resultElementClass == null ) {
+				resultElementClass = getResultElementClass();
+			}
+			if ( resultAssemblers.size() == 1 ) {
+				return resultElementClass;
+			}
+			resultJavaType = Array.newInstance( resultElementClass, 0 ).getClass();
 		}
-
-		return Object[].class;
+		return resultJavaType;
 	}
 
 	@Override
 	public List<JavaType<?>> getResultJavaTypes() {
 		List<JavaType<?>> javaTypes = new ArrayList<>( resultAssemblers.size() );
 		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
-			javaTypes.add( resultAssembler.getAssembledJavaType() );
+			javaTypes.add( getAssembledJavaType( resultAssembler ) );
 		}
 		return javaTypes;
 	}
@@ -86,7 +95,10 @@ public class StandardRowReader<T> implements RowReader<T> {
 		LOGGER.trace( "StandardRowReader#readRow" );
 		coordinateInitializers( rowProcessingState );
 
-		final Object[] resultRow = new Object[ assemblerCount ];
+		if ( resultElementClass == null ) {
+			resultElementClass = getResultElementClass();
+		}
+		final Object[] resultRow = getResultRowArray( resultElementClass, assemblerCount );
 		final boolean debugEnabled = LOGGER.isDebugEnabled();
 
 		for ( int i = 0; i < assemblerCount; i++ ) {
@@ -100,6 +112,10 @@ public class StandardRowReader<T> implements RowReader<T> {
 		afterRow( rowProcessingState );
 
 		return rowTransformer.transformRow( resultRow );
+	}
+
+	private <k> k[] getResultRowArray(Class<k> clazz, int size) {
+		return (k[]) Array.newInstance( clazz, size );
 	}
 
 	private void afterRow(RowProcessingState rowProcessingState) {
@@ -116,6 +132,39 @@ public class StandardRowReader<T> implements RowReader<T> {
 	@Override
 	public void finishUp(JdbcValuesSourceProcessingState processingState) {
 		initializers.endLoading( processingState.getExecutionContext() );
+	}
+
+	private Class<?> getResultElementClass() {
+		Class<?> result = null;
+		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
+			final JavaType assembledJavaType = getAssembledJavaType( resultAssembler );
+			if ( result != Object.class ) {
+				if ( assembledJavaType == null ) {
+					return Object.class;
+				}
+				else {
+					final Class javaTypeClass = assembledJavaType.getJavaTypeClass();
+					if ( result == null ) {
+						result = javaTypeClass;
+					}
+					else if ( result != javaTypeClass ) {
+						return Object.class;
+					}
+				}
+			}
+			else {
+				return result;
+			}
+		}
+		return result;
+	}
+
+	private static JavaType getAssembledJavaType(DomainResultAssembler resultAssembler) {
+		final Initializer initializer = resultAssembler.getInitializer();
+		if ( initializer != null && initializer instanceof NonAggregatedIdentifierMappingResultInitializer ) {
+			return ( (NonAggregatedIdentifierMappingResultInitializer) initializer ).getInitializedJavaType();
+		}
+		return resultAssembler.getAssembledJavaType();
 	}
 
 }

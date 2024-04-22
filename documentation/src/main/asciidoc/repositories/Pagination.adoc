@@ -253,6 +253,11 @@ The cost is that page numbers can lose synchronization with the query result set
 This isn't usually a problem, but it's something to be aware of.
 ====
 
+****
+Direct API support for key-based pagination originated in the work of Hibernate team member Christian Beikov back in 2015 in the Blaze-Persistence framework.
+It was adopted from there by the Jakarta Data specification, and is now even available in Hibernate ORM via the link:{doc-javadoc-url}org/hibernate/query/KeyedPage.html[`KeyedPage`]/link:{doc-javadoc-url}org/hibernate/query/KeyedResultList.html[`KeyedResultList`] API.
+****
+
 === Advanced control over querying
 
 For more advanced usage, an automatic or annotated query method may be declared to return `jakarta.persistence.Query`, `jakarta.persistence.TypedQuery`, link:{doc-javadoc-url}org/hibernate/query/Query.html[`org.hibernate.query.Query`], or link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html[`org.hibernate.query.SelectionQuery`].

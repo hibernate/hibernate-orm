@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Defines transformation of a raw row in the domain query result row.
@@ -23,6 +24,10 @@ public interface RowTransformer<T> {
 	 * Transform the "raw" row values into the ultimate query result (for a row)
 	 */
 	T transformRow(Object[] row);
+
+	default T transformRow(Object[] row, JavaType<?> resultJavaType) {
+		return transformRow( row );
+	}
 
 	/**
 	 * How many result elements will this transformation produce?

@@ -12,12 +12,14 @@ import java.util.List;
 import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingResultInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.ObjectJavaType;
 
 import org.jboss.logging.Logger;
 
@@ -32,6 +34,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private final Class<T> domainResultJavaType;
 
 	private final int assemblerCount;
+	private JavaType<?> assemblersResultJavaType;
 
 	private static final Logger LOGGER = LoadingLogger.LOGGER;
 
@@ -65,7 +68,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	public List<JavaType<?>> getResultJavaTypes() {
 		List<JavaType<?>> javaTypes = new ArrayList<>( resultAssemblers.size() );
 		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
-			javaTypes.add( resultAssembler.getAssembledJavaType() );
+			javaTypes.add( getAssembledJavaType( resultAssembler ) );
 		}
 		return javaTypes;
 	}
@@ -86,7 +89,10 @@ public class StandardRowReader<T> implements RowReader<T> {
 		LOGGER.trace( "StandardRowReader#readRow" );
 		coordinateInitializers( rowProcessingState );
 
-		final Object[] resultRow = new Object[ assemblerCount ];
+		if ( assemblersResultJavaType == null ) {
+			assemblersResultJavaType = getResultAssemblersJavaType();
+		}
+		final Object[] resultRow = new Object[assemblerCount];
 		final boolean debugEnabled = LOGGER.isDebugEnabled();
 
 		for ( int i = 0; i < assemblerCount; i++ ) {
@@ -99,7 +105,10 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 		afterRow( rowProcessingState );
 
-		return rowTransformer.transformRow( resultRow );
+		if ( assemblersResultJavaType == null ) {
+			assemblersResultJavaType = getResultAssemblersJavaType();
+		}
+		return rowTransformer.transformRow( resultRow, assemblersResultJavaType );
 	}
 
 	private void afterRow(RowProcessingState rowProcessingState) {
@@ -116,6 +125,38 @@ public class StandardRowReader<T> implements RowReader<T> {
 	@Override
 	public void finishUp(JdbcValuesSourceProcessingState processingState) {
 		initializers.endLoading( processingState.getExecutionContext() );
+	}
+
+	private JavaType<?> getResultAssemblersJavaType() {
+		JavaType<?> result = null;
+		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
+			final JavaType assembledJavaType = getAssembledJavaType( resultAssembler );
+			if ( result != ObjectJavaType.INSTANCE ) {
+				if ( assembledJavaType == null ) {
+					return ObjectJavaType.INSTANCE;
+				}
+				else {
+					if ( result == null ) {
+						result = assembledJavaType;
+					}
+					else if ( result != assembledJavaType ) {
+						return ObjectJavaType.INSTANCE;
+					}
+				}
+			}
+			else {
+				return result;
+			}
+		}
+		return result;
+	}
+
+	private static JavaType getAssembledJavaType(DomainResultAssembler resultAssembler) {
+		final Initializer initializer = resultAssembler.getInitializer();
+		if ( initializer != null && initializer instanceof NonAggregatedIdentifierMappingResultInitializer ) {
+			return ( (NonAggregatedIdentifierMappingResultInitializer) initializer ).getJavaType();
+		}
+		return resultAssembler.getAssembledJavaType();
 	}
 
 }

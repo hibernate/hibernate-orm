@@ -33,6 +33,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -106,6 +107,10 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 	@Override
 	public EmbeddableValuedModelPart getInitializedPart() {
 		return embedded;
+	}
+
+	public JavaType getJavaType() {
+		return representationEmbeddable.getJavaType();
 	}
 
 	@Override

@@ -61,7 +61,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	}
 
 	@Override
-	NamedNativeQueryMemento toMemento(String name);
+	NamedNativeQueryMemento<?> toMemento(String name);
 
 	@Override
 	NativeQueryImplementor<R> addScalar(String columnAlias);

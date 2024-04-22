@@ -42,7 +42,7 @@ import jakarta.persistence.TemporalType;
  */
 public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, NameableQuery {
 	@Override
-	NamedQueryMemento toMemento(String name);
+	NamedQueryMemento<R> toMemento(String name);
 
 	@Override
 	ParameterMetadataImplementor getParameterMetadata();

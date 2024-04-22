@@ -523,15 +523,18 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			String path,
 			MetadataBuildingContext context) {
 		int precision;
+		int secondPrecision;
 		final AnnotationUsage<Column> annotatedColumn = element.getAnnotationUsage( Column.class );
 		if ( annotatedColumn != null ) {
 			if ( StringHelper.isNotEmpty( annotatedColumn.getString( "name" ) ) ) {
 				return annotatedColumn;
 			}
 			precision = annotatedColumn.getInteger( "precision" );
+			secondPrecision = annotatedColumn.getInteger( "secondPrecision" );
 		}
 		else {
 			precision = 0;
+			secondPrecision = -1;
 		}
 
 		// Base the name of the synthetic dateTime field on the name of the original attribute
@@ -563,6 +566,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				(created) -> {
 					AnnotationUsageHelper.applyStringAttributeIfSpecified( "name", implicitName.getText(), created );
 					created.setAttributeValue( "precision", precision );
+					created.setAttributeValue( "secondPrecision", secondPrecision );
 				},
 				context.getMetadataCollector().getSourceModelBuildingContext()
 		);
@@ -644,6 +648,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		private final String columnDefinition;
 		private final String table;
 		private final int precision;
+		private final int secondPrecision;
 
 		private ColumnImpl(
 				String name,
@@ -653,7 +658,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				boolean updatable,
 				String columnDefinition,
 				String table,
-				int precision) {
+				int precision,
+				int secondPrecision) {
 			this.name = name;
 			this.unique = unique;
 			this.nullable = nullable;
@@ -662,6 +668,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			this.columnDefinition = columnDefinition;
 			this.table = table;
 			this.precision = precision;
+			this.secondPrecision = secondPrecision;
 		}
 
 		@Override
@@ -717,6 +724,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		@Override
 		public int scale() {
 			return 0;
+		}
+
+		@Override
+		public int secondPrecision() {
+			return secondPrecision;
 		}
 
 		@Override

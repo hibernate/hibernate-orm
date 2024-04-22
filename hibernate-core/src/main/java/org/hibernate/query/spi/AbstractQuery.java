@@ -81,7 +81,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	protected void applyOptions(NamedQueryMemento memento) {
+	protected void applyOptions(NamedQueryMemento<?> memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::setHint );
 		}

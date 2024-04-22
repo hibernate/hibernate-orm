@@ -23,6 +23,7 @@ import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
@@ -36,7 +37,7 @@ public class ColumnProcessing {
 
 	public static <A extends Annotation> void applyColumnDetails(
 			JaxbColumnCommon jaxbColumn,
-			MutableAnnotationTarget target,
+			AnnotationTarget target,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbColumn == null ) {
@@ -98,7 +99,7 @@ public class ColumnProcessing {
 
 	public static <A extends Annotation> void applyColumnDetails(
 			JaxbColumn jaxbColumn,
-			MutableAnnotationTarget target,
+			AnnotationTarget target,
 			MutableAnnotationUsage<A> columnAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbColumn == null ) {
@@ -170,6 +171,8 @@ public class ColumnProcessing {
 		XmlProcessingHelper.applyAttributeIfSpecified( "precision", jaxbColumn.getPrecision(), columnAnn );
 
 		XmlProcessingHelper.applyAttributeIfSpecified( "scale", jaxbColumn.getScale(), columnAnn );
+
+		XmlProcessingHelper.applyAttributeIfSpecified( "secondPrecision", jaxbColumn.getSecondPrecision(), columnAnn );
 	}
 
 	private static <A extends Annotation> void applyColumnUniqueness(

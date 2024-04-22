@@ -784,6 +784,11 @@ public class AnnotatedColumn {
 		}
 		else {
 			annotatedColumn.setPrecision( column.getInteger( "precision" ) );
+			// The passed annotation could also be a MapKeyColumn
+			Integer secondPrecision = column.getAnnotationType() == jakarta.persistence.Column.class
+					? column.getInteger( "secondPrecision" )
+					: null;
+			annotatedColumn.setTemporalPrecision( secondPrecision == null || secondPrecision == -1 ? null : secondPrecision );
 		}
 		annotatedColumn.setScale( column.getInteger( "scale" ) );
 		annotatedColumn.handleArrayLength( inferredData );

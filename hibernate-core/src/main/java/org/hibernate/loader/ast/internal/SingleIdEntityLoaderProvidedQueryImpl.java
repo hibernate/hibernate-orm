@@ -25,11 +25,11 @@ import jakarta.persistence.Parameter;
  */
 public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
-	private final NamedQueryMemento namedQueryMemento;
+	private final NamedQueryMemento<?> namedQueryMemento;
 
 	public SingleIdEntityLoaderProvidedQueryImpl(
 			EntityMappingType entityDescriptor,
-			NamedQueryMemento namedQueryMemento) {
+			NamedQueryMemento<?> namedQueryMemento) {
 		this.entityDescriptor = entityDescriptor;
 		this.namedQueryMemento = namedQueryMemento;
 	}

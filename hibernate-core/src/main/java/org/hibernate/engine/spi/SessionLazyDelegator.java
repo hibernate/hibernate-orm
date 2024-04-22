@@ -54,6 +54,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockOption;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.TypedQuery;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
@@ -567,6 +568,11 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <R> Query<R> createQuery(String queryString, Class<R> resultClass) {
 		return this.lazySession.get().createQuery( queryString, resultClass );
+	}
+
+	@Override
+	public <R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference) {
+		return this.lazySession.get().createQuery( typedQueryReference );
 	}
 
 	@SuppressWarnings("rawtypes")

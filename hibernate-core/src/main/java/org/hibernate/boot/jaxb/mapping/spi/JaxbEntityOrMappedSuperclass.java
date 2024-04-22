@@ -6,25 +6,27 @@
  */
 package org.hibernate.boot.jaxb.mapping.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * JAXB binding interface for commonality between entity and mapped-superclass mappings
  *
  * @author Steve Ebersole
  */
 public interface JaxbEntityOrMappedSuperclass extends JaxbManagedType, JaxbLifecycleCallbackContainer {
-	JaxbIdClassImpl getIdClass();
+	@Nullable JaxbIdClassImpl getIdClass();
 
-	void setIdClass(JaxbIdClassImpl value);
+	void setIdClass(@Nullable JaxbIdClassImpl value);
 
-	JaxbEmptyTypeImpl getExcludeDefaultListeners();
+	@Nullable JaxbEmptyTypeImpl getExcludeDefaultListeners();
 
-	void setExcludeDefaultListeners(JaxbEmptyTypeImpl value);
+	void setExcludeDefaultListeners(@Nullable JaxbEmptyTypeImpl value);
 
-	JaxbEmptyTypeImpl getExcludeSuperclassListeners();
+	@Nullable JaxbEmptyTypeImpl getExcludeSuperclassListeners();
 
-	void setExcludeSuperclassListeners(JaxbEmptyTypeImpl value);
+	void setExcludeSuperclassListeners(@Nullable JaxbEmptyTypeImpl value);
 
-	JaxbEntityListenerContainerImpl getEntityListenerContainer();
+	@Nullable JaxbEntityListenerContainerImpl getEntityListenerContainer();
 
-	void setEntityListenerContainer(JaxbEntityListenerContainerImpl value);
+	void setEntityListenerContainer(@Nullable JaxbEntityListenerContainerImpl value);
 }

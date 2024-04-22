@@ -11,90 +11,92 @@ import java.util.List;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.engine.OptimisticLockStyle;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
 public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
-	String getName();
-	void setName(String name);
+	@Nullable String getName();
+	void setName(@Nullable String name);
 
-	JaxbTableImpl getTable();
-	void setTable(JaxbTableImpl value);
+	@Nullable JaxbTableImpl getTable();
+	void setTable(@Nullable JaxbTableImpl value);
 
-	String getTableExpression();
-	void setTableExpression(String value);
+	@Nullable String getTableExpression();
+	void setTableExpression(@Nullable String value);
 
 	List<JaxbSecondaryTableImpl> getSecondaryTables();
 	List<JaxbSynchronizedTableImpl> getSynchronizeTables();
 
 	List<JaxbPrimaryKeyJoinColumnImpl> getPrimaryKeyJoinColumns();
 
-	JaxbForeignKeyImpl getPrimaryKeyForeignKey();
-	void setPrimaryKeyForeignKey(JaxbForeignKeyImpl value);
+	@Nullable JaxbForeignKeyImpl getPrimaryKeyForeignKey();
+	void setPrimaryKeyForeignKey(@Nullable JaxbForeignKeyImpl value);
 
-	String getRowid();
-	void setRowid(String value);
+	@Nullable String getRowid();
+	void setRowid(@Nullable String value);
 
-	String getSqlRestriction();
-	void setSqlRestriction(String value);
+	@Nullable String getSqlRestriction();
+	void setSqlRestriction(@Nullable String value);
 
-	JaxbSqlSelectImpl getSqlSelect();
-	String getHqlSelect();
+	@Nullable JaxbSqlSelectImpl getSqlSelect();
+	@Nullable String getHqlSelect();
 
-	JaxbCustomSqlImpl getSqlInsert();
+	@Nullable JaxbCustomSqlImpl getSqlInsert();
 	void setSqlInsert(JaxbCustomSqlImpl value);
 
-	JaxbCustomSqlImpl getSqlUpdate();
-	void setSqlUpdate(JaxbCustomSqlImpl value);
+	@Nullable JaxbCustomSqlImpl getSqlUpdate();
+	void setSqlUpdate(@Nullable JaxbCustomSqlImpl value);
 
-	JaxbCustomSqlImpl getSqlDelete();
-	void setSqlDelete(JaxbCustomSqlImpl value);
+	@Nullable JaxbCustomSqlImpl getSqlDelete();
+	void setSqlDelete(@Nullable JaxbCustomSqlImpl value);
 
-	Boolean isDynamicInsert();
-	void setDynamicInsert(Boolean value);
+	@Nullable Boolean isDynamicInsert();
+	void setDynamicInsert(@Nullable Boolean value);
 
-	Boolean isDynamicUpdate();
-	void setDynamicUpdate(Boolean value);
+	@Nullable Boolean isDynamicUpdate();
+	void setDynamicUpdate(@Nullable Boolean value);
 
-	Boolean isSelectBeforeUpdate();
-	void setSelectBeforeUpdate(Boolean value);
+	@Nullable Boolean isSelectBeforeUpdate();
+	void setSelectBeforeUpdate(@Nullable Boolean value);
 
-	JaxbCachingImpl getCaching();
-	void setCaching(JaxbCachingImpl value);
+	@Nullable JaxbCachingImpl getCaching();
+	void setCaching(@Nullable JaxbCachingImpl value);
 
-	Integer getBatchSize();
-	void setBatchSize(Integer value);
+	@Nullable Integer getBatchSize();
+	void setBatchSize(@Nullable Integer value);
 
-	Boolean isLazy();
-	void setLazy(Boolean value);
+	@Nullable Boolean isLazy();
+	void setLazy(@Nullable Boolean value);
 
-	Boolean isMutable();
-	void setMutable(Boolean value);
+	@Nullable Boolean isMutable();
+	void setMutable(@Nullable Boolean value);
 
-	OptimisticLockStyle getOptimisticLocking();
-	void setOptimisticLocking(OptimisticLockStyle value);
+	@Nullable OptimisticLockStyle getOptimisticLocking();
+	void setOptimisticLocking(@Nullable OptimisticLockStyle value);
 
-	JaxbInheritanceImpl getInheritance();
-	void setInheritance(JaxbInheritanceImpl value);
+	@Nullable JaxbInheritanceImpl getInheritance();
+	void setInheritance(@Nullable JaxbInheritanceImpl value);
 
-	String getProxy();
-	void setProxy(String value);
+	@Nullable String getProxy();
+	void setProxy(@Nullable String value);
 
-	PolymorphismType getPolymorphism();
-	void setPolymorphism(PolymorphismType value);
+	@Nullable PolymorphismType getPolymorphism();
+	void setPolymorphism(@Nullable PolymorphismType value);
 
-	String getDiscriminatorValue();
-	void setDiscriminatorValue(String value);
+	@Nullable String getDiscriminatorValue();
+	void setDiscriminatorValue(@Nullable String value);
 
-	JaxbDiscriminatorColumnImpl getDiscriminatorColumn();
-	void setDiscriminatorColumn(JaxbDiscriminatorColumnImpl value);
+	@Nullable JaxbDiscriminatorColumnImpl getDiscriminatorColumn();
+	void setDiscriminatorColumn(@Nullable JaxbDiscriminatorColumnImpl value);
 
-	JaxbDiscriminatorFormulaImpl getDiscriminatorFormula();
-	void setDiscriminatorFormula(JaxbDiscriminatorFormulaImpl value);
+	@Nullable JaxbDiscriminatorFormulaImpl getDiscriminatorFormula();
+	void setDiscriminatorFormula(@Nullable JaxbDiscriminatorFormulaImpl value);
 
-	JaxbSequenceGeneratorImpl getSequenceGenerators();
+	@Nullable JaxbSequenceGeneratorImpl getSequenceGenerators();
 
-	JaxbTableGeneratorImpl getTableGenerators();
+	@Nullable JaxbTableGeneratorImpl getTableGenerators();
 
 	List<JaxbGenericIdGeneratorImpl> getIdentifierGenerators();
 
@@ -114,13 +116,13 @@ public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
 
 	List<JaxbFetchProfileImpl> getFetchProfiles();
 
-	JaxbTenantIdImpl getTenantId();
-	void setTenantId(JaxbTenantIdImpl value);
+	@Nullable JaxbTenantIdImpl getTenantId();
+	void setTenantId(@Nullable JaxbTenantIdImpl value);
 
-	JaxbAttributesContainerImpl getAttributes();
-	void setAttributes(JaxbAttributesContainerImpl value);
+	@Nullable JaxbAttributesContainerImpl getAttributes();
+	void setAttributes(@Nullable JaxbAttributesContainerImpl value);
 
-	Boolean isCacheable();
-	void setCacheable(Boolean value);
+	@Nullable Boolean isCacheable();
+	void setCacheable(@Nullable Boolean value);
 
 }

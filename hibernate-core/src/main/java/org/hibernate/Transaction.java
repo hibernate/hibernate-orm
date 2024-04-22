@@ -8,6 +8,7 @@ package org.hibernate;
 
 import jakarta.persistence.EntityTransaction;
 import jakarta.transaction.Synchronization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
@@ -66,7 +67,7 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @return The timeout, in seconds.
 	 */
-	int getTimeout();
+	@Nullable Integer getTimeout();
 
 	/**
 	 * Attempt to mark the underlying transaction for rollback only.

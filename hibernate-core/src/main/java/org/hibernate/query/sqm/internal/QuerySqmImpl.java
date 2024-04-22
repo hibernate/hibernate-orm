@@ -153,7 +153,7 @@ public class QuerySqmImpl<R>
 	 * Creates a Query instance from a named HQL memento
 	 */
 	public QuerySqmImpl(
-			NamedHqlQueryMementoImpl memento,
+			NamedHqlQueryMementoImpl<?> memento,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		super( session );
@@ -182,7 +182,7 @@ public class QuerySqmImpl<R>
 	}
 
 	public QuerySqmImpl(
-			NamedCriteriaQueryMementoImpl memento,
+			NamedCriteriaQueryMementoImpl<?> memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
 		this( (SqmStatement<R>) memento.getSqmStatement(), resultType, session );
@@ -1031,7 +1031,7 @@ public class QuerySqmImpl<R>
 	// Named query externalization
 
 	@Override
-	public NamedQueryMemento toMemento(String name) {
+	public NamedQueryMemento<R> toMemento(String name) {
 		if ( CRITERIA_HQL_STRING.equals( getQueryString() ) ) {
 			final SqmStatement<R> sqmStatement;
 			if ( !getSession().isCriteriaCopyTreeEnabled() ) {
@@ -1041,8 +1041,9 @@ public class QuerySqmImpl<R>
 				// the statement has already been copied
 				sqmStatement = getSqmStatement();
 			}
-			return new NamedCriteriaQueryMementoImpl(
+			return new NamedCriteriaQueryMementoImpl<>(
 					name,
+					getResultType(),
 					sqmStatement,
 					getQueryOptions().getLimit().getFirstRow(),
 					getQueryOptions().getLimit().getMaxRows(),
@@ -1060,8 +1061,9 @@ public class QuerySqmImpl<R>
 			);
 		}
 
-		return new NamedHqlQueryMementoImpl(
+		return new NamedHqlQueryMementoImpl<>(
 				name,
+				getResultType(),
 				getQueryString(),
 				getQueryOptions().getLimit().getFirstRow(),
 				getQueryOptions().getLimit().getMaxRows(),

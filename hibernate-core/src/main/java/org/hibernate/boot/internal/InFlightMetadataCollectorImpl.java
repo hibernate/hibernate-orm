@@ -159,8 +159,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private Database database;
 
-	private final Map<String, NamedHqlQueryDefinition> namedQueryMap = new HashMap<>();
-	private final Map<String, NamedNativeQueryDefinition> namedNativeQueryMap = new HashMap<>();
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueryMap = new HashMap<>();
+	private final Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap = new HashMap<>();
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap = new HashMap<>();
 
@@ -740,7 +740,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named query handling
 
-	public NamedHqlQueryDefinition getNamedHqlQueryMapping(String name) {
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid query name" );
 		}
@@ -748,12 +748,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 		namedQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public void addNamedQuery(NamedHqlQueryDefinition def) {
+	public void addNamedQuery(NamedHqlQueryDefinition<?> def) {
 		if ( def == null ) {
 			throw new IllegalArgumentException( "Named query definition is null" );
 		}
@@ -768,7 +768,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		applyNamedQuery( def.getRegistrationName(), def );
 	}
 
-	private void applyNamedQuery(String name, NamedHqlQueryDefinition query) {
+	private void applyNamedQuery(String name, NamedHqlQueryDefinition<?> query) {
 		checkQueryName( name );
 		namedQueryMap.put( name.intern(), query );
 	}
@@ -780,7 +780,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public void addDefaultQuery(NamedHqlQueryDefinition queryDefinition) {
+	public void addDefaultQuery(NamedHqlQueryDefinition<?> queryDefinition) {
 		applyNamedQuery( queryDefinition.getRegistrationName(), queryDefinition );
 		defaultNamedQueryNames.add( queryDefinition.getRegistrationName() );
 	}
@@ -789,17 +789,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	// Named native-query handling
 
 	@Override
-	public NamedNativeQueryDefinition getNamedNativeQueryMapping(String name) {
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 		namedNativeQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public void addNamedNativeQuery(NamedNativeQueryDefinition def) {
+	public void addNamedNativeQuery(NamedNativeQueryDefinition<?> def) {
 		if ( def == null ) {
 			throw new IllegalArgumentException( "Named native query definition object is null" );
 		}
@@ -814,13 +814,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		applyNamedNativeQuery( def.getRegistrationName(), def );
 	}
 
-	private void applyNamedNativeQuery(String name, NamedNativeQueryDefinition query) {
+	private void applyNamedNativeQuery(String name, NamedNativeQueryDefinition<?> query) {
 		checkQueryName( name );
 		namedNativeQueryMap.put( name.intern(), query );
 	}
 
 	@Override
-	public void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query) {
+	public void addDefaultNamedNativeQuery(NamedNativeQueryDefinition<?> query) {
 		applyNamedNativeQuery( query.getRegistrationName(), query );
 		defaultNamedNativeQueryNames.add( query.getRegistrationName() );
 	}

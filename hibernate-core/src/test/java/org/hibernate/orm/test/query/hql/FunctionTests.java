@@ -2105,7 +2105,7 @@ public class FunctionTests {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class, comment = "We extract the offset with a format function")
 	public void testExtractFunctionTimeZoneOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e", Integer.class)
+				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e", ZoneOffset.class)
 						.list()
 		);
 	}

@@ -115,6 +115,8 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.ReflectHelper.isClass;
@@ -962,8 +964,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			query.addEntity( resultClass, LockMode.READ );
 		}
 		else if ( resultClass != Object.class && resultClass != Object[].class ) {
-			if ( isClass( resultClass )
-					&& getTypeConfiguration().getJavaTypeRegistry().findDescriptor( resultClass ) == null ) {
+			if ( isClass( resultClass ) && !hasJavaTypeDescriptor( resultClass ) ) {
 				// not a basic type
 				query.setTupleTransformer( new NativeQueryConstructorTransformer<>( resultClass ) );
 			}
@@ -971,6 +972,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				query.addResultTypeClass( resultClass );
 			}
 		}
+	}
+
+	private <T> boolean hasJavaTypeDescriptor(Class<T> resultClass) {
+		final JavaType<Object> descriptor = getTypeConfiguration().getJavaTypeRegistry().findDescriptor( resultClass );
+		return descriptor != null && descriptor.getClass() != UnknownBasicJavaType.class;
 	}
 
 	@Override

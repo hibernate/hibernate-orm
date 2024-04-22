@@ -31,18 +31,9 @@ public interface RowReader<R> {
 	Class<R> getDomainResultResultJavaType();
 
 	/**
-	 * The row result Java type, before any transformations.
-	 *
-	 * @apiNote along with {@link #getResultJavaTypes()}, describes the "raw"
-	 * values as determined from the {@link org.hibernate.sql.results.graph.DomainResult}
-	 * references associated with the JdbcValues being processed
-	 */
-	Class<?> getResultJavaType();
-
-	/**
 	 * The individual JavaType for each DomainResult
 	 */
-	List<JavaType<?>> getResultJavaTypes();
+	List<@Nullable JavaType<?>> getResultJavaTypes();
 
 	int getInitializerCount();
 

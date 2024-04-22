@@ -20,7 +20,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
-import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.internal.log.DeprecationLogger;
 
@@ -49,7 +49,7 @@ public class NamedQueryBinder {
 			String prefix) {
 		final String registrationName = prefix + namedQueryBinding.getName();
 
-		final NamedHqlQueryDefinition.Builder queryBuilder = new NamedHqlQueryDefinition.Builder( registrationName )
+		final NamedHqlQueryDefinition.Builder<?> queryBuilder = new NamedHqlQueryDefinition.Builder<>( registrationName )
 				.setComment( namedQueryBinding.getComment() )
 				.setCacheable( namedQueryBinding.isCacheable() )
 				.setCacheMode( namedQueryBinding.getCacheMode() )
@@ -111,7 +111,7 @@ public class NamedQueryBinder {
 
 		final String registrationName = prefix + namedQueryBinding.getName();
 
-		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( registrationName )
+		final NamedNativeQueryDefinition.Builder<?> builder = new NamedNativeQueryDefinition.Builder<>( registrationName )
 				.setComment( namedQueryBinding.getComment() )
 				.setCacheable( namedQueryBinding.isCacheable() )
 				.setCacheMode( namedQueryBinding.getCacheMode() )
@@ -197,7 +197,7 @@ public class NamedQueryBinder {
 
 	private static boolean processNamedQueryContentItem(
 			Object content,
-			NamedNativeQueryDefinitionBuilder queryBuilder,
+			NamedNativeQueryDefinition.Builder<?> queryBuilder,
 			ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			HbmLocalMetadataBuildingContext context) {

@@ -31,8 +31,11 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
  */
 public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	private final String name;
+
 	private final Properties properties = new Properties();
 
+	private String scopeAnnotationName;
+	private List<String> qualifierAnnotationNames = List.of();
 	private PersistenceUnitTransactionType transactionType;
 	private SharedCacheMode cacheMode;
 	private ValidationMode validationMode;
@@ -48,6 +51,24 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	@Override
 	public String getPersistenceUnitName() {
 		return name;
+	}
+
+	@Override
+	public String getScopeAnnotationName() {
+		return scopeAnnotationName;
+	}
+
+	public void setScopeAnnotationName(String scopeAnnotationName) {
+		this.scopeAnnotationName = scopeAnnotationName;
+	}
+
+	@Override
+	public List<String> getQualifierAnnotationNames() {
+		return qualifierAnnotationNames;
+	}
+
+	public void setQualifierAnnotationNames(List<String> qualifierAnnotationNames) {
+		this.qualifierAnnotationNames = qualifierAnnotationNames;
 	}
 
 	@Override

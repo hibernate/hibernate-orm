@@ -22,7 +22,7 @@ import org.hibernate.query.named.NamedQueryMemento;
  * @author Steve Ebersole
  */
 @Incubating
-public interface NamedCallableQueryMemento extends NamedQueryMemento {
+public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 	/**
 	 * Informational access to the name of the database function or procedure
 	 */
@@ -89,5 +89,10 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento {
 
 	interface ParameterMemento extends NamedQueryMemento.ParameterMemento {
 		ProcedureParameterImplementor<?> resolve(SharedSessionContractImplementor session);
+	}
+
+	@Override
+	default Class<?> getResultType() {
+		return Object.class;
 	}
 }

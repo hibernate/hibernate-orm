@@ -861,8 +861,8 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private NamedQueryMemento getNamedQueryMemento(MetadataImplementor bootModel) {
-		final NamedQueryMemento memento =
+	private NamedQueryMemento<?> getNamedQueryMemento(MetadataImplementor bootModel) {
+		final NamedQueryMemento<?> memento =
 				factory.getQueryEngine().getNamedObjectRepository()
 						.resolve( factory, bootModel, queryLoaderName );
 		if ( memento == null ) {
@@ -878,7 +878,7 @@ public abstract class AbstractEntityPersister
 	protected SingleIdEntityLoader<?> buildSingleIdEntityLoader() {
 		if ( hasNamedQueryLoader() ) {
 			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
-			final NamedQueryMemento memento = getNamedQueryMemento( null );
+			final NamedQueryMemento<?> memento = getNamedQueryMemento( null );
 			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
 		}
 		return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );

@@ -18,15 +18,20 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularAssociationAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularFetchModeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbStandardAttribute;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Transient;
+
+import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
  * @author Steve Ebersole
@@ -126,5 +131,18 @@ public class CommonAttributeProcessing {
 			final MutableAnnotationUsage<Fetch> fetchAnn = XmlProcessingHelper.makeAnnotation( Fetch.class, memberDetails, xmlDocumentContext );
 			fetchAnn.setAttributeValue( "value", fetchMode );
 		}
+	}
+
+	public static void applyTransient(
+			JaxbTransientImpl jaxbTransient,
+			MutableClassDetails declarer,
+			AccessType classAccessType,
+			XmlDocumentContext xmlDocumentContext) {
+		final MutableMemberDetails memberDetails = XmlProcessingHelper.getAttributeMember(
+			jaxbTransient.getName(),
+			classAccessType,
+			declarer
+		);
+		XmlProcessingHelper.makeAnnotation( Transient.class, memberDetails, xmlDocumentContext );
 	}
 }

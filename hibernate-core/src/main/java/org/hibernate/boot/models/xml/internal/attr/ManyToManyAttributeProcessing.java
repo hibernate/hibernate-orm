@@ -102,7 +102,7 @@ public class ManyToManyAttributeProcessing {
 					"targetEntity",
 					xmlDocumentContext.getModelBuildingContext()
 							.getClassDetailsRegistry()
-							.resolveClassDetails( targetEntity )
+							.resolveClassDetails( xmlDocumentContext.resolveClassName( targetEntity ) )
 			);
 		}
 	}

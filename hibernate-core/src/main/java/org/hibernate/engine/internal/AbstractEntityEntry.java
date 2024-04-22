@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeHelper;
 
@@ -324,13 +325,16 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@Override
 	public Object getLoadedValue(String propertyName) {
-		return loadedState == null || propertyName == null
-				? null
-				: loadedState[ propertyIndex( propertyName ) ];
+		if ( loadedState == null || propertyName == null ) {
+			return null;
+		}
+		final int index = propertyIndex( propertyName );
+		return index < 0 ? null : loadedState[index];
 	}
 
 	private int propertyIndex(String propertyName) {
-		return persister.findAttributeMapping( propertyName ).getStateArrayPosition();
+		final AttributeMapping attributeMapping = persister.findAttributeMapping( propertyName );
+		return attributeMapping != null ? attributeMapping.getStateArrayPosition() : -1;
 	}
 
 	@Override

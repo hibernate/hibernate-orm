@@ -1270,9 +1270,12 @@ public abstract class AbstractEntityPersister
 				final AssociationType associationType = (AssociationType) propertyType;
 				final String ukName = associationType.getLHSPropertyName();
 				if ( ukName != null ) {
-					final int index = aep.findAttributeMapping( ukName ).getStateArrayPosition();
-					final Type type = aep.getPropertyTypes()[index];
-					uniqueKeys.add( new UniqueKeyEntry( ukName, index, type ) );
+					final AttributeMapping attributeMapping = aep.findAttributeMapping( ukName );
+					if ( attributeMapping != null ) {
+						final int index = attributeMapping.getStateArrayPosition();
+						final Type type = aep.getPropertyTypes()[index];
+						uniqueKeys.add( new UniqueKeyEntry( ukName, index, type ) );
+					}
 				}
 			}
 		}
@@ -4542,10 +4545,10 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		else if ( identifierMapping instanceof NonAggregatedIdentifierMapping ) {
-			final EmbeddedAttributeMapping embeddedAttributeMapping =
-					(EmbeddedAttributeMapping) findAttributeMapping( NavigableRole.IDENTIFIER_MAPPER_PROPERTY );
-			final AttributeMapping mapping = embeddedAttributeMapping == null ? null
-					: embeddedAttributeMapping.getMappedType().findAttributeMapping( basePropertyName );
+			final AttributeMapping mapping = ( (NonAggregatedIdentifierMapping) identifierMapping ).findSubPart(
+					propertyName,
+					null
+			).asAttributeMapping();
 			if ( mapping != null ) {
 				baseValue = mapping.getAttributeMetadata().getPropertyAccess().getGetter().get( object );
 				if ( dotIndex != -1 ) {

@@ -2192,7 +2192,7 @@ public class HbmXmlTransformer {
 				version.setColumn( new JaxbColumnImpl() );
 				version.getColumn().setName( hbmVersion.getColumnAttribute() );
 			}
-			target.getAttributes().getVersion().add( version );
+			target.getAttributes().setVersion( version );
 		}
 	}
 
@@ -2208,7 +2208,7 @@ public class HbmXmlTransformer {
 			}
 			//noinspection deprecation
 			version.setTemporal( TemporalType.TIMESTAMP );
-			target.getAttributes().getVersion().add( version );
+			target.getAttributes().setVersion( version );
 		}
 	}
 

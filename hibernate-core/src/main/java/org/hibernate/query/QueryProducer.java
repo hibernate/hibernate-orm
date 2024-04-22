@@ -9,6 +9,7 @@ package org.hibernate.query;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -104,6 +105,22 @@ public interface QueryProducer {
 	 * @see jakarta.persistence.EntityManager#createQuery(String,Class)
 	 */
 	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
+
+	/**
+	 * Create a typed {@link Query} instance for the given typed query reference.
+	 *
+	 * @param typedQueryReference the type query reference
+	 *
+	 * @return The {@link Query} instance for execution
+	 *
+	 * @throws IllegalArgumentException if a query has not been
+	 * defined with the name of the typed query reference or if
+	 * the query result is found to not be assignable to
+	 * result class of the typed query reference
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(TypedQueryReference)
+	 */
+	<R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
 	/**
 	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}.

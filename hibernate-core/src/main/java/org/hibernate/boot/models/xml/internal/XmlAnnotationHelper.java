@@ -97,6 +97,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.AnnotationDescriptor;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
@@ -144,6 +145,7 @@ import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
@@ -420,7 +422,7 @@ public class XmlAnnotationHelper {
 
 	public static <A extends Annotation> void applyUniqueConstraints(
 			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
-			MutableAnnotationTarget target,
+			AnnotationTarget target,
 			MutableAnnotationUsage<A> annotationUsage,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( CollectionHelper.isEmpty( jaxbUniqueConstraints ) ) {
@@ -444,7 +446,7 @@ public class XmlAnnotationHelper {
 
 	public static <A extends Annotation> void applyIndexes(
 			List<JaxbIndexImpl> jaxbIndexes,
-			MutableAnnotationTarget target,
+			AnnotationTarget target,
 			MutableAnnotationUsage<A> annotationUsage,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( CollectionHelper.isEmpty( jaxbIndexes ) ) {
@@ -471,7 +473,7 @@ public class XmlAnnotationHelper {
 
 	public static <A extends Annotation> void applyCheckConstraints(
 			JaxbCheckable jaxbCheckable,
-			MutableAnnotationTarget target,
+			AnnotationTarget target,
 			MutableAnnotationUsage<A> annotationUsage,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbCheckable!= null && CollectionHelper.isNotEmpty( jaxbCheckable.getCheckConstraints() ) ) {
@@ -480,7 +482,7 @@ public class XmlAnnotationHelper {
 					.getAnnotationDescriptorRegistry()
 					.getDescriptor( CheckConstraint.class );
 			for ( JaxbCheckConstraintImpl jaxbCheck : jaxbCheckable.getCheckConstraints() ) {
-				final MutableAnnotationUsage<CheckConstraint> checkAnn = XmlProcessingHelper.getOrMakeAnnotation( CheckConstraint.class, target, xmlDocumentContext );
+				final MutableAnnotationUsage<CheckConstraint> checkAnn = XmlProcessingHelper.makeNestedAnnotation( CheckConstraint.class, target, xmlDocumentContext );
 				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getName, "name", checkAnn, checkConstraintDescriptor );
 				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getConstraint, "constraint", checkAnn, checkConstraintDescriptor );
 				applyOr( jaxbCheck, JaxbCheckConstraintImpl::getOptions, "options", checkAnn, checkConstraintDescriptor );
@@ -959,7 +961,7 @@ public class XmlAnnotationHelper {
 
 	public static <A extends Annotation> void applyTableAttributes(
 			JaxbTableMapping jaxbTable,
-			MutableAnnotationTarget target,
+			AnnotationTarget target,
 			MutableAnnotationUsage<A> tableAnn,
 			AnnotationDescriptor<A> annotationDescriptor,
 			XmlDocumentContext xmlDocumentContext) {
@@ -1498,7 +1500,7 @@ public class XmlAnnotationHelper {
 	}
 
 	public static void applyDiscriminatorFormula(
-			JaxbDiscriminatorFormulaImpl jaxbDiscriminatorFormula,
+			@Nullable JaxbDiscriminatorFormulaImpl jaxbDiscriminatorFormula,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbDiscriminatorFormula == null ) {

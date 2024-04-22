@@ -31,7 +31,7 @@ public class XmlCacheableNamedQueryTests {
 	void testCacheableQueryOverride(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final NamedObjectRepository namedObjectRepository = sessionFactory.getQueryEngine().getNamedObjectRepository();
-		final NamedSqmQueryMemento queryMemento = namedObjectRepository.getSqmQueryMemento( SimpleEntity.FIND_ALL );
+		final NamedSqmQueryMemento<?> queryMemento = namedObjectRepository.getSqmQueryMemento( SimpleEntity.FIND_ALL );
 		assertThat( queryMemento ).isNotNull();
 		assertThat( queryMemento.getCacheable() ).isNotNull();
 		assertThat( queryMemento.getCacheable() ).isTrue();

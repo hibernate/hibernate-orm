@@ -19,4 +19,8 @@ public interface JaxbColumnSizable extends JaxbColumn {
 	default Integer getScale() {
 		return null;
 	}
+
+	default Integer getSecondPrecision() {
+		return null;
+	}
 }

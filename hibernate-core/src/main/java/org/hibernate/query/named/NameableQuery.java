@@ -19,5 +19,5 @@ public interface NameableQuery {
 	/**
 	 * Convert the query into the memento
 	 */
-	NamedQueryMemento toMemento(String name);
+	NamedQueryMemento<?> toMemento(String name);
 }

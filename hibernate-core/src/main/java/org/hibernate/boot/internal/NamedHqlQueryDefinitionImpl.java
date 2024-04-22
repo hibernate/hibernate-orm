@@ -17,10 +17,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
-public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition implements NamedHqlQueryDefinition {
+public class NamedHqlQueryDefinitionImpl<E> extends AbstractNamedQueryDefinition<E> implements NamedHqlQueryDefinition<E> {
 	private final String hqlString;
 	private final Integer firstResult;
 	private final Integer maxResults;
@@ -28,6 +30,7 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 
 	public NamedHqlQueryDefinitionImpl(
 			String name,
+			@Nullable Class<E> resultType,
 			String hqlString,
 			Integer firstResult,
 			Integer maxResults,
@@ -44,6 +47,7 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 			Map<String,Object> hints) {
 		super(
 				name,
+				resultType,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -67,9 +71,10 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 	}
 
 	@Override
-	public NamedSqmQueryMemento resolve(SessionFactoryImplementor factory) {
-		return new NamedHqlQueryMementoImpl(
+	public NamedSqmQueryMemento<E> resolve(SessionFactoryImplementor factory) {
+		return new NamedHqlQueryMementoImpl<>(
 				getRegistrationName(),
+				getResultType(),
 				hqlString,
 				firstResult,
 				maxResults,

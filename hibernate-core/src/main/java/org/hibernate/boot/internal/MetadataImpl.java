@@ -97,8 +97,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, FetchProfile> fetchProfileMap;
 	private final Map<String, String> imports;
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap;
-	private final Map<String, NamedHqlQueryDefinition> namedQueryMap;
-	private final Map<String, NamedNativeQueryDefinition> namedNativeQueryMap;
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueryMap;
+	private final Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap;
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
@@ -118,8 +118,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, FetchProfile> fetchProfileMap,
 			Map<String, String> imports,
 			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
-			Map<String, NamedHqlQueryDefinition> namedQueryMap,
-			Map<String, NamedNativeQueryDefinition> namedNativeQueryMap,
+			Map<String, NamedHqlQueryDefinition<?>> namedQueryMap,
+			Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap,
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
 			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
@@ -240,22 +240,22 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public NamedHqlQueryDefinition getNamedHqlQueryMapping(String name) {
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
 		return namedQueryMap.get( name );
 	}
 
 	@Override
-	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 		namedQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public NamedNativeQueryDefinition getNamedNativeQueryMapping(String name) {
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 		namedNativeQueryMap.values().forEach( definitionConsumer );
 	}
 
@@ -364,16 +364,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		);
 	}
 
-	private Map<String, NamedSqmQueryMemento> buildNamedSqmMementos(SessionFactoryImplementor sessionFactory) {
-		final HashMap<String, NamedSqmQueryMemento> map = new HashMap<>();
+	private Map<String, NamedSqmQueryMemento<?>> buildNamedSqmMementos(SessionFactoryImplementor sessionFactory) {
+		final HashMap<String, NamedSqmQueryMemento<?>> map = new HashMap<>();
 		if ( namedQueryMap != null ) {
 			namedQueryMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
 		}
 		return map;
 	}
 
-	private Map<String, NamedNativeQueryMemento> buildNamedNativeMementos(SessionFactoryImplementor sessionFactory) {
-		final HashMap<String, NamedNativeQueryMemento> map = new HashMap<>();
+	private Map<String, NamedNativeQueryMemento<?>> buildNamedNativeMementos(SessionFactoryImplementor sessionFactory) {
+		final HashMap<String, NamedNativeQueryMemento<?>> map = new HashMap<>();
 		if ( namedNativeQueryMap != null ) {
 			namedNativeQueryMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
 		}
@@ -636,11 +636,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return bootstrapContext;
 	}
 
-	public Map<String, NamedHqlQueryDefinition> getNamedQueryMap() {
+	public Map<String, NamedHqlQueryDefinition<?>> getNamedQueryMap() {
 		return namedQueryMap;
 	}
 
-	public Map<String, NamedNativeQueryDefinition> getNamedNativeQueryMap() {
+	public Map<String, NamedNativeQueryDefinition<?>> getNamedNativeQueryMap() {
 		return namedNativeQueryMap;
 	}
 

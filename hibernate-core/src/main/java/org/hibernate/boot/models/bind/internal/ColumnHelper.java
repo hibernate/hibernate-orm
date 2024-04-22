@@ -9,16 +9,13 @@ package org.hibernate.boot.models.bind.internal;
 import java.util.function.Supplier;
 
 import org.hibernate.annotations.DiscriminatorFormula;
-import org.hibernate.boot.models.bind.internal.BindingHelper;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationUsage;
 
@@ -41,7 +38,8 @@ public class ColumnHelper {
 				true,
 				255,
 				0,
-				0
+				0,
+				-1
 		);
 	}
 
@@ -57,7 +55,8 @@ public class ColumnHelper {
 				nullableByDefault,
 				255,
 				0,
-				0
+				0,
+				-1
 		);
 	}
 
@@ -68,7 +67,8 @@ public class ColumnHelper {
 			boolean nullableByDefault,
 			int lengthByDefault,
 			int precisionByDefault,
-			int scaleByDefault) {
+			int scaleByDefault,
+			int secondPrecisionByDefault) {
 		final Column result = new Column();
 		result.setName( columnName( annotationUsage, defaultNameSupplier ) );
 
@@ -77,6 +77,7 @@ public class ColumnHelper {
 		result.setSqlType( BindingHelper.getValue( annotationUsage, "columnDefinition", (String) null ) );
 		result.setLength( BindingHelper.getValue( annotationUsage, "length", lengthByDefault ) );
 		result.setPrecision( BindingHelper.getValue( annotationUsage, "precision", precisionByDefault ) );
+		result.setPrecision( BindingHelper.getValue( annotationUsage, "secondPrecision", secondPrecisionByDefault ) );
 		result.setScale( BindingHelper.getValue( annotationUsage, "scale", scaleByDefault ) );
 		return result;
 	}

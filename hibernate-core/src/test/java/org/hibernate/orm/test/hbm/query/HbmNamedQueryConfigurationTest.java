@@ -44,7 +44,7 @@ public class HbmNamedQueryConfigurationTest extends BaseEntityManagerFunctionalT
 		NamedObjectRepository namedObjectRepository = entityManagerFactory()
 				.getQueryEngine()
 				.getNamedObjectRepository();
-		NamedSqmQueryMemento sqmQueryMemento = namedObjectRepository.getSqmQueryMemento( Bar.FIND_ALL );
+		NamedSqmQueryMemento<?> sqmQueryMemento = namedObjectRepository.getSqmQueryMemento( Bar.FIND_ALL );
 		assertTrue( sqmQueryMemento.getCacheable() );
 	}
 

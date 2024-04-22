@@ -180,12 +180,12 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 *
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
-	void addNamedQuery(NamedHqlQueryDefinition query) throws DuplicateMappingException;
+	void addNamedQuery(NamedHqlQueryDefinition<?> query) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named SQL query to this collector.
 	 */
-	void addNamedNativeQuery(NamedNativeQueryDefinition query) throws DuplicateMappingException;
+	void addNamedNativeQuery(NamedNativeQueryDefinition<?> query) throws DuplicateMappingException;
 
 	/**
 	 * Adds the metadata for a named SQL result set mapping to this collector.
@@ -318,9 +318,9 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-	void addDefaultQuery(NamedHqlQueryDefinition queryDefinition);
+	void addDefaultQuery(NamedHqlQueryDefinition<?> queryDefinition);
 
-	void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query);
+	void addDefaultNamedNativeQuery(NamedNativeQueryDefinition<?> query);
 
 	void addDefaultResultSetMapping(NamedResultSetMappingDescriptor definition);
 

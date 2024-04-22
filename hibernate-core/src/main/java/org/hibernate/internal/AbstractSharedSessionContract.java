@@ -111,6 +111,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -887,8 +888,20 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	@Override
+	public <R> QueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference) {
+		//noinspection unchecked
+		final QueryImplementor<R> query = (QueryImplementor<R>) createNamedQuery(
+				typedQueryReference.getName(),
+				typedQueryReference.getResultType()
+		);
+		for ( Map.Entry<String, Object> entry : typedQueryReference.getHints().entrySet() ) {
+			query.setHint( entry.getKey(), entry.getValue() );
+		}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		return query;
+	}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic native (SQL) query handling
 
 	@Override @SuppressWarnings("rawtypes")

@@ -14,11 +14,14 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.query.NamedQueryDefinition;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractNamedQueryDefinition implements NamedQueryDefinition {
+public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefinition<R> {
 	private final String name;
+	private final @Nullable Class<R> resultType;
 
 	private final Boolean cacheable;
 	private final String cacheRegion;
@@ -38,6 +41,7 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 
 	public AbstractNamedQueryDefinition(
 			String name,
+			@Nullable Class<R> resultType,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
@@ -49,6 +53,7 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 			String comment,
 			Map<String,Object> hints) {
 		this.name = name;
+		this.resultType = resultType;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.cacheMode = cacheMode;
@@ -64,6 +69,11 @@ public abstract class AbstractNamedQueryDefinition implements NamedQueryDefiniti
 	@Override
 	public String getRegistrationName() {
 		return name;
+	}
+
+	@Override
+	public @Nullable Class<R> getResultType() {
+		return resultType;
 	}
 
 	public Boolean getCacheable() {

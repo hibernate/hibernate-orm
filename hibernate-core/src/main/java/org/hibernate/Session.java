@@ -23,6 +23,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -1573,6 +1574,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	@Override
 	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
+
+	@Override
+	<R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);

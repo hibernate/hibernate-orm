@@ -137,8 +137,8 @@ public class Configuration {
 	private List<UserTypeRegistration> userTypeRegistrations;
 	private final List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
 	private final List<FunctionContributor> functionContributorRegistrations = new ArrayList<>();
-	private final Map<String, NamedHqlQueryDefinition> namedQueries = new HashMap<>();
-	private final Map<String, NamedNativeQueryDefinition> namedSqlQueries = new HashMap<>();
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueries = new HashMap<>();
+	private final Map<String, NamedNativeQueryDefinition<?>> namedSqlQueries = new HashMap<>();
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappings = new HashMap<>();
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
@@ -1155,7 +1155,7 @@ public class Configuration {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo : decide about these
 
-	public Map<String, NamedNativeQueryDefinition> getNamedSQLQueries() {
+	public Map<String, NamedNativeQueryDefinition<?>> getNamedSQLQueries() {
 		return namedSqlQueries;
 	}
 
@@ -1168,7 +1168,7 @@ public class Configuration {
 	}
 
 
-	public Map<String, NamedHqlQueryDefinition> getNamedQueries() {
+	public Map<String, NamedHqlQueryDefinition<?>> getNamedQueries() {
 		return namedQueries;
 	}
 

@@ -191,8 +191,8 @@ public abstract class AbstractSelectionQuery<R>
 		}
 	}
 
-	protected void applyOptions(NamedSqmQueryMemento memento) {
-		applyOptions( (NamedQueryMemento) memento );
+	protected void applyOptions(NamedSqmQueryMemento<?> memento) {
+		applyOptions( (NamedQueryMemento<?>) memento );
 
 		if ( memento.getFirstResult() != null ) {
 			setFirstResult( memento.getFirstResult() );
@@ -214,7 +214,7 @@ public abstract class AbstractSelectionQuery<R>
 		}
 	}
 
-	protected void applyOptions(NamedQueryMemento memento) {
+	protected void applyOptions(NamedQueryMemento<?> memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::applyHint );
 		}

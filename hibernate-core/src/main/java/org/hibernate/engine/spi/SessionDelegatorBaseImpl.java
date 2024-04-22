@@ -70,6 +70,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockOption;
 import jakarta.persistence.RefreshOption;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
@@ -559,6 +560,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(TypedQueryReference<T> typedQueryReference) {
+		return queryDelegate().createQuery( typedQueryReference );
 	}
 
 	@Override @SuppressWarnings("rawtypes")

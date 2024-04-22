@@ -13,6 +13,7 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -37,6 +38,9 @@ public interface QueryProducerImplementor extends QueryProducer {
 
 	@Override
 	<R> QueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
+
+	@Override
+	<R> QueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	QueryImplementor createNamedQuery(String name);

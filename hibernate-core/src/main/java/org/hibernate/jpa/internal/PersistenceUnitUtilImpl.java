@@ -69,14 +69,12 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 
 	@Override
 	public void load(Object entity, String attributeName) {
-		// todo (jpa 3.2) : implement this
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		Hibernate.initializeProperty( entity, attributeName );
 	}
 
 	@Override
 	public <E> void load(E entity, Attribute<? super E, ?> attribute) {
-		// todo (jpa 3.2) : implement this
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		load( entity, attribute.getName() );
 	}
 
 	@Override
@@ -86,14 +84,12 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 
 	@Override
 	public boolean isInstance(Object entity, Class<?> entityClass) {
-		// todo (jpa 3.2) : implement this
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return entityClass.isAssignableFrom( Hibernate.getClassLazy( entity ) );
 	}
 
 	@Override
 	public <T> Class<? extends T> getClass(T entity) {
-		// todo (jpa 3.2) : implement this
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return Hibernate.getClassLazy( entity );
 	}
 
 	@Override
@@ -129,8 +125,26 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 
 	@Override
 	public Object getVersion(Object entity) {
-		// todo (jpa 3.2) : implement this
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		if ( entity == null ) {
+			throw new IllegalArgumentException( "Passed entity cannot be null" );
+		}
+
+		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			return getVersionFromPersister( lazyInitializer.getImplementation() );
+		}
+		else if ( isManagedEntity( entity ) ) {
+			final EntityEntry entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
+			if ( entityEntry != null ) {
+				return entityEntry.getVersion();
+			}
+			else {
+				return getVersionFromPersister( entity );
+			}
+		}
+		else {
+			return getVersionFromPersister( entity );
+		}
 	}
 
 	private Object getIdentifierFromPersister(Object entity) {
@@ -148,6 +162,23 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
 		}
 		return persister.getIdentifier( entity, null );
+	}
+
+	private Object getVersionFromPersister(Object entity) {
+		final Class<?> entityClass = Hibernate.getClass( entity );
+		final EntityPersister persister;
+		try {
+			persister = sessionFactory.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( entityClass );
+			if ( persister == null ) {
+				throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
+			}
+		}
+		catch (MappingException ex) {
+			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
+		}
+		return persister.getVersion( entity );
 	}
 
 }

@@ -349,6 +349,31 @@ public final class Hibernate {
 		return true;
 	}
 
+	/**
+	 * Initializes the property with the given name of the given entity instance.
+	 * <p>
+	 * This operation is equivalent to {@link jakarta.persistence.PersistenceUnitUtil#load(Object, String)}.
+	 *
+	 * @param proxy The entity instance or proxy
+	 * @param attributeName the name of a persistent attribute of the object
+	 */
+	public static void initializeProperty(Object proxy, String attributeName) {
+		final Object entity;
+		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		if ( lazyInitializer != null ) {
+			entity = lazyInitializer.getImplementation();
+		}
+		else {
+			entity = proxy;
+		}
+
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			PersistentAttributeInterceptor interceptor =
+					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+			interceptor.readObject( entity, attributeName, null );
+		}
+	}
+
     /**
      * If the given object is not a proxy, return it. But, if it is a proxy, ensure
 	 * that the proxy is initialized, and return a direct reference to its proxied

@@ -112,7 +112,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		}
 
 		List<String> classesToEnhance = new ArrayList<>();
-		if(classNames.length() >= 1) {
+		if(classNames != null && classNames.length() >= 1) {
 			classesToEnhance = Arrays.asList(classNames.split(","));
 		}
 

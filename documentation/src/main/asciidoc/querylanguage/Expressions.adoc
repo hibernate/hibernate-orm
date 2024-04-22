@@ -740,9 +740,9 @@ The following functions are abbreviations for `extract()`:
 | `year(x)` | `extract(year from x)` | ✖
 | `month(x)` | `extract(month from x)` | ✖
 | `day(x)` | `extract(day from x)` | ✖
-| `hour(x)` | `extract(year from x)` | ✖
-| `minute(x)` | `extract(year from x)` | ✖
-| `second(x)` | `extract(year from x)` | ✖
+| `hour(x)` | `extract(hour from x)` | ✖
+| `minute(x)` | `extract(minute from x)` | ✖
+| `second(x)` | `extract(second from x)` | ✖
 |===
 
 TIP: These abbreviations aren't part of the JPQL standard, but on the other hand they're a lot less verbose.

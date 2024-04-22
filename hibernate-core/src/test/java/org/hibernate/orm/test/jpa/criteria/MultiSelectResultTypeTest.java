@@ -2,6 +2,8 @@ package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.List;
 
+import org.hibernate.query.QueryTypeMismatchException;
+
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -15,6 +17,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.fail;
 
 @Jpa(
 		annotatedClasses = {
@@ -45,6 +48,7 @@ public class MultiSelectResultTypeTest {
 					List<Integer[]> idPairs = entityManager.createQuery( q ).getResultList();
 					assertThat( idPairs.size() ).isEqualTo( 1 );
 					Integer[] ids = idPairs.get( 0 );
+					assertThat( ids[0] ).isEqualTo( 1 );
 				}
 		);
 	}
@@ -60,6 +64,7 @@ public class MultiSelectResultTypeTest {
 					List<int[]> idPairs = entityManager.createQuery( q ).getResultList();
 					assertThat( idPairs.size() ).isEqualTo( 1 );
 					int[] ids = idPairs.get( 0 );
+					assertThat( ids[0] ).isEqualTo( 1 );
 				}
 		);
 	}
@@ -75,8 +80,8 @@ public class MultiSelectResultTypeTest {
 					List<Object[]> values = entityManager.createQuery( q ).getResultList();
 					assertThat( values.size() ).isEqualTo( 1 );
 					Object[] value = values.get( 0 );
-					Integer id = (Integer) value[0];
-					String name = (String) value[1];
+					assertThat( value[0] ).isEqualTo( 1 );
+					assertThat( value[1] ).isEqualTo( "a" );
 				}
 		);
 	}
@@ -91,7 +96,45 @@ public class MultiSelectResultTypeTest {
 					q.select( r.get( "id" ) );
 					List<Integer> idPairs = entityManager.createQuery( q ).getResultList();
 					assertThat( idPairs.size() ).isEqualTo( 1 );
-					Integer id = idPairs.get( 0 );
+					assertThat( idPairs.get( 0 ) ).isEqualTo( 1 );
+				}
+		);
+	}
+
+	@Test
+	public void testValidateSelectItemAgainstArrayComponentType(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+					CriteriaQuery<String[]> q = cb.createQuery( String[].class );
+					Root<TestEntity> r = q.from( TestEntity.class );
+					q.select( r.get( "id" ) );
+					try {
+						entityManager.createQuery( q );
+						fail( "Should fail with a type validation error" );
+					}
+					catch (QueryTypeMismatchException ex) {
+						assertThat( ex.getMessage() ).contains( String[].class.getName(), Integer.class.getName() );
+					}
+				}
+		);
+	}
+
+	@Test
+	public void testValidateSelectItemAgainstArrayComponentType2(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+					CriteriaQuery<String[]> q = cb.createQuery( String[].class );
+					Root<TestEntity> r = q.from( TestEntity.class );
+					q.multiselect( r.get( "name" ), r.get( "id" ) );
+					try {
+						entityManager.createQuery( q );
+						fail( "Should fail with a type validation error" );
+					}
+					catch (QueryTypeMismatchException ex) {
+						assertThat( ex.getMessage() ).contains( String.class.getName(), Integer.class.getName() );
+					}
 				}
 		);
 	}

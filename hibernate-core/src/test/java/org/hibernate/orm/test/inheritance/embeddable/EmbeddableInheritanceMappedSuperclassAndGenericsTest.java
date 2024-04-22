@@ -28,15 +28,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Marco Belladelli
  */
 @DomainModel( annotatedClasses = {
-		EmbeddableInheritanceMappedSuperclassAdnGenericsTest.AbstractSuperclass.class,
-		EmbeddableInheritanceMappedSuperclassAdnGenericsTest.Range.class,
-		EmbeddableInheritanceMappedSuperclassAdnGenericsTest.IntegerRange.class,
-		EmbeddableInheritanceMappedSuperclassAdnGenericsTest.ToleranceRange.class,
-		EmbeddableInheritanceMappedSuperclassAdnGenericsTest.TestEntity.class,
+		EmbeddableInheritanceMappedSuperclassAndGenericsTest.AbstractSuperclass.class,
+		EmbeddableInheritanceMappedSuperclassAndGenericsTest.Range.class,
+		EmbeddableInheritanceMappedSuperclassAndGenericsTest.IntegerRange.class,
+		EmbeddableInheritanceMappedSuperclassAndGenericsTest.ToleranceRange.class,
+		EmbeddableInheritanceMappedSuperclassAndGenericsTest.TestEntity.class,
 } )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18172" )
-public class EmbeddableInheritanceMappedSuperclassAdnGenericsTest {
+public class EmbeddableInheritanceMappedSuperclassAndGenericsTest {
 	@Test
 	public void testFind(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -62,9 +62,9 @@ public class EmbeddableInheritanceMappedSuperclassAdnGenericsTest {
 	@Test
 	public void testQueryEmbeddable(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final IntegerRange result = session.createQuery(
+			final Range<?> result = session.createQuery(
 					"select range from TestEntity where id = 1",
-					IntegerRange.class
+					Range.class
 			).getSingleResult();
 			assertThat( result.getName() ).isEqualTo( "tolerance_range" );
 			assertThat( result ).isExactlyInstanceOf( ToleranceRange.class );
@@ -74,9 +74,9 @@ public class EmbeddableInheritanceMappedSuperclassAdnGenericsTest {
 	@Test
 	public void testQueryJoinedEmbeddable(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final IntegerRange result = session.createQuery(
+			final Range<?> result = session.createQuery(
 					"select r from TestEntity t join t.range r where id = 2",
-					IntegerRange.class
+					Range.class
 			).getSingleResult();
 			assertThat( result.getName() ).isEqualTo( "integer_range" );
 			assertThat( result ).isExactlyInstanceOf( IntegerRange.class );

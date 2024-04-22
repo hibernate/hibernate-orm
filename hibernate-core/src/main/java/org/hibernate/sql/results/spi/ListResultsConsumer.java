@@ -25,6 +25,8 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * ResultsConsumer for creating a List of results
  *
@@ -247,20 +249,35 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 	private JavaType<R> resolveDomainResultJavaType(
 			Class<R> domainResultResultJavaType,
-			List<JavaType<?>> resultJavaTypes,
+			List<@Nullable JavaType<?>> resultJavaTypes,
 			TypeConfiguration typeConfiguration) {
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 
 		if ( domainResultResultJavaType != null ) {
-			return javaTypeRegistry.resolveDescriptor( domainResultResultJavaType );
+			final JavaType<R> resultJavaType = javaTypeRegistry.resolveDescriptor( domainResultResultJavaType );
+			// Could be that the user requested a more general type than the actual type,
+			// so resolve the most concrete type since this type is used to determine equality of objects
+			if ( resultJavaTypes.size() == 1 && isMoreConcrete( resultJavaType, resultJavaTypes.get( 0 ) ) ) {
+				//noinspection unchecked
+				return (JavaType<R>) resultJavaTypes.get( 0 );
+			}
+			return resultJavaType;
 		}
 
 		if ( resultJavaTypes.size() == 1 ) {
+			final JavaType<?> firstJavaType = resultJavaTypes.get( 0 );
+			if ( firstJavaType == null ) {
+				return javaTypeRegistry.resolveDescriptor( Object.class );
+			}
 			//noinspection unchecked
-			return (JavaType<R>) resultJavaTypes.get( 0 );
+			return (JavaType<R>) firstJavaType;
 		}
 
 		return javaTypeRegistry.resolveDescriptor( Object[].class );
+	}
+
+	private static boolean isMoreConcrete(JavaType<?> resultJavaType, @Nullable JavaType<?> javaType) {
+		return javaType != null && resultJavaType.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
 	}
 
 	@Override

@@ -251,34 +251,7 @@ public class QuerySqmImpl<R>
 				bindCriteriaParameter((SqmJpaCriteriaParameterWrapper<?>) sqmParameter);
 			}
 		}
-
-		if ( sqm instanceof SqmSelectStatement<?> ) {
-			SqmUtil.verifyIsSelectStatement( sqm, null );
-			final SqmQueryPart<R> queryPart = ( (SqmSelectStatement<R>) sqm ).getQueryPart();
-			// For criteria queries, we have to validate the fetch structure here
-			queryPart.validateQueryStructureAndFetchOwners();
-			visitQueryReturnType(
-					queryPart,
-					expectedResultType,
-					producer.getFactory()
-			);
-		}
-		else {
-			if ( expectedResultType != null ) {
-				throw new IllegalQueryOperationException( "Result type given for a non-SELECT Query", hql, null );
-			}
-			if ( sqm instanceof SqmUpdateStatement<?> ) {
-				final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqm;
-				verifyImmutableEntityUpdate( CRITERIA_HQL_STRING, updateStatement, producer.getFactory() );
-				if ( updateStatement.getSetClause() == null
-						|| updateStatement.getSetClause().getAssignments().isEmpty() ) {
-					throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
-				}
-			}
-			else if ( sqm instanceof SqmInsertStatement<?> ) {
-				verifyInsertTypesMatch( CRITERIA_HQL_STRING, (SqmInsertStatement<R>) sqm );
-			}
-		}
+		validateStatement( sqm, expectedResultType );
 
 		resultType = expectedResultType;
 		tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
@@ -298,7 +271,12 @@ public class QuerySqmImpl<R>
 
 	private void validateStatement(SqmStatement<R> sqmStatement, Class<R> resultType) {
 		if ( sqmStatement instanceof SqmSelectStatement<?> ) {
-			SqmUtil.verifyIsSelectStatement( sqmStatement, hql );
+			final SqmQueryPart<R> queryPart = ( (SqmSelectStatement<R>) sqm ).getQueryPart();
+			if ( hql == CRITERIA_HQL_STRING ) {
+				// For criteria queries, we have to validate the fetch structure here
+				queryPart.validateQueryStructureAndFetchOwners();
+			}
+			visitQueryReturnType( queryPart, resultType, getSessionFactory() );
 		}
 		else {
 			if ( resultType != null ) {
@@ -307,6 +285,10 @@ public class QuerySqmImpl<R>
 			if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
 				final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqmStatement;
 				verifyImmutableEntityUpdate( hql, updateStatement, getSessionFactory() );
+				if ( updateStatement.getSetClause() == null
+						|| updateStatement.getSetClause().getAssignments().isEmpty() ) {
+					throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
+				}
 				verifyUpdateTypesMatch( hql, updateStatement );
 			}
 			else if ( sqmStatement instanceof SqmInsertStatement<?> ) {

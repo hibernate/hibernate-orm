@@ -108,7 +108,7 @@ public class AddNamedQueryTest {
 					// first, lets check the underlying stored query def
 					SessionFactoryImplementor sfi = scope.getEntityManagerFactory()
 							.unwrap( SessionFactoryImplementor.class );
-					NamedSqmQueryMemento def = sfi.getQueryEngine()
+					NamedSqmQueryMemento<?> def = sfi.getQueryEngine()
 							.getNamedObjectRepository()
 							.getSqmQueryMemento( name );
 					assertEquals( LockMode.OPTIMISTIC, def.getLockOptions().getLockMode() );
@@ -139,7 +139,7 @@ public class AddNamedQueryTest {
 					// first, lets check the underlying stored query def
 					SessionFactoryImplementor sfi = scope.getEntityManagerFactory()
 							.unwrap( SessionFactoryImplementor.class );
-					NamedSqmQueryMemento def = sfi.getQueryEngine()
+					NamedSqmQueryMemento<?> def = sfi.getQueryEngine()
 							.getNamedObjectRepository()
 							.getSqmQueryMemento( name );
 					assertEquals( FlushMode.COMMIT, def.getFlushMode() );

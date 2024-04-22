@@ -16,6 +16,7 @@ import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.internal.dynamic.DynamicAnnotationUsage;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
@@ -139,7 +140,7 @@ public class XmlProcessingHelper {
 	 */
 	public static <A extends Annotation> MutableAnnotationUsage<A> makeNestedAnnotation(
 			Class<A> annotationType,
-			MutableAnnotationTarget target,
+			AnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
 		return new DynamicAnnotationUsage<>(
 				xmlDocumentContext.getModelBuildingContext()

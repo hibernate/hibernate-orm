@@ -8,6 +8,7 @@ package org.hibernate.engine.spi;
 
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -162,6 +163,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
 		return queryDelegate().createQuery( queryString, resultType );
+	}
+
+	@Override
+	public <R> QueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference) {
+		return queryDelegate().createQuery( typedQueryReference );
 	}
 
 	@Override @SuppressWarnings("rawtypes")

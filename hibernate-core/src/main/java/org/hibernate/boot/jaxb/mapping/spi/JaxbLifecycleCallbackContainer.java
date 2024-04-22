@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.jaxb.mapping.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * JAXB binding interface for commonality between things which
  * allow callback declarations.  This includes <ul>
@@ -20,24 +22,24 @@ package org.hibernate.boot.jaxb.mapping.spi;
  * @author Steve Ebersole
  */
 public interface JaxbLifecycleCallbackContainer {
-	JaxbPrePersistImpl getPrePersist();
-	void setPrePersist(JaxbPrePersistImpl value);
+	@Nullable JaxbPrePersistImpl getPrePersist();
+	void setPrePersist(@Nullable JaxbPrePersistImpl value);
 
-	JaxbPostPersistImpl getPostPersist();
-	void setPostPersist(JaxbPostPersistImpl value);
+	@Nullable JaxbPostPersistImpl getPostPersist();
+	void setPostPersist(@Nullable JaxbPostPersistImpl value);
 
-	JaxbPreRemoveImpl getPreRemove();
-	void setPreRemove(JaxbPreRemoveImpl value);
+	@Nullable JaxbPreRemoveImpl getPreRemove();
+	void setPreRemove(@Nullable JaxbPreRemoveImpl value);
 
-	JaxbPostRemoveImpl getPostRemove();
-	void setPostRemove(JaxbPostRemoveImpl value);
+	@Nullable JaxbPostRemoveImpl getPostRemove();
+	void setPostRemove(@Nullable JaxbPostRemoveImpl value);
 
-	JaxbPreUpdateImpl getPreUpdate();
-	void setPreUpdate(JaxbPreUpdateImpl value);
+	@Nullable JaxbPreUpdateImpl getPreUpdate();
+	void setPreUpdate(@Nullable JaxbPreUpdateImpl value);
 
-	JaxbPostUpdateImpl getPostUpdate();
-	void setPostUpdate(JaxbPostUpdateImpl value);
+	@Nullable JaxbPostUpdateImpl getPostUpdate();
+	void setPostUpdate(@Nullable JaxbPostUpdateImpl value);
 
-	JaxbPostLoadImpl getPostLoad();
-	void setPostLoad(JaxbPostLoadImpl value);
+	@Nullable JaxbPostLoadImpl getPostLoad();
+	void setPostLoad(@Nullable JaxbPostLoadImpl value);
 }

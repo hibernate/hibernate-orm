@@ -930,7 +930,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			results.add( result );
 
 			result.setAttributeValue(
-					"entityClass",
+					"targetClass",
 					sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbConstructorResult.getTargetClass() )
 			);
 

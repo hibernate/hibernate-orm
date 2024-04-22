@@ -700,8 +700,8 @@ public abstract class AbstractCollectionPersister
 		logStaticSQL();
 	}
 
-	private NamedQueryMemento getNamedQueryMemento(MetadataImplementor bootModel) {
-		final NamedQueryMemento memento =
+	private NamedQueryMemento<?> getNamedQueryMemento(MetadataImplementor bootModel) {
+		final NamedQueryMemento<?> memento =
 				factory.getQueryEngine().getNamedObjectRepository()
 						.resolve( factory, bootModel, queryLoaderName );
 		if ( memento == null ) {
@@ -850,7 +850,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * For Hibernate Reactive
 	 */
-	protected CollectionLoader createNamedQueryCollectionLoader(CollectionPersister persister, NamedQueryMemento namedQueryMemento) {
+	protected CollectionLoader createNamedQueryCollectionLoader(CollectionPersister persister, NamedQueryMemento<?> namedQueryMemento) {
 		return new CollectionLoaderNamedQuery(persister, namedQueryMemento);
 	}
 

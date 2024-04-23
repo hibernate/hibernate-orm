@@ -6,13 +6,12 @@
  */
 package org.hibernate.jdbc;
 
-import java.lang.reflect.Constructor;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.InstantiationException;
 import org.hibernate.Internal;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -42,26 +41,20 @@ public class Expectations {
 	 * @since 6.5
 	 */
 	@Internal
-	public static Expectation createExpectation(Constructor<? extends Expectation> expectation, boolean callable) {
+	public static Expectation createExpectation(Supplier<? extends Expectation> expectation, boolean callable) {
 		final Expectation instance = instantiate( expectation, callable );
 		instance.validate( callable );
 		return instance;
 	}
 
-	private static Expectation instantiate(Constructor<? extends Expectation> constructor, boolean callable) {
-		if ( constructor == null ) {
+	private static Expectation instantiate(Supplier<? extends Expectation> supplier, boolean callable) {
+		if ( supplier == null ) {
 			return callable
 					? new Expectation.OutParameter()
 					: new Expectation.RowCount();
 		}
 		else {
-			try {
-				return constructor.newInstance();
-			}
-			catch ( Exception e ) {
-				throw new InstantiationException( "Could not instantiate Expectation",
-						constructor.getDeclaringClass(), e );
-			}
+			return supplier.get();
 		}
 	}
 

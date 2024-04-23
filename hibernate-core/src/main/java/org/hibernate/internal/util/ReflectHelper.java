@@ -10,6 +10,7 @@ import java.beans.Introspector;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -17,6 +18,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -39,7 +41,6 @@ import jakarta.persistence.Transient;
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-@SuppressWarnings("unchecked")
 public final class ReflectHelper {
 
 	public static final Class<?>[] NO_PARAM_SIGNATURE = ArrayHelper.EMPTY_CLASS_ARRAY;
@@ -295,6 +296,35 @@ public final class ReflectHelper {
 			throw new PropertyNotFoundException(
 					"Object class [" + clazz.getName() + "] must declare a default (no-argument) constructor"
 			);
+		}
+	}
+
+	public static <T> Supplier<T> getDefaultSupplier(Class<T> clazz) {
+		if ( isAbstractClass( clazz ) ) {
+			throw new IllegalArgumentException( "Abstract class cannot be instantiated: " + clazz.getName() );
+		}
+
+		try {
+			final Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
+			ensureAccessibility( constructor );
+			return () -> {
+				try {
+					return constructor.newInstance();
+				}
+				catch ( InstantiationException|IllegalAccessException|InvocationTargetException e ) {
+					throw new org.hibernate.InstantiationException( "Constructor threw exception", clazz, e );
+				}
+			};
+		}
+		catch ( NoSuchMethodException nme ) {
+			return () -> {
+				try {
+					return clazz.newInstance();
+				}
+				catch ( InstantiationException|IllegalAccessException e ) {
+					throw new org.hibernate.InstantiationException( "Default constructor threw exception", clazz, e );
+				}
+			};
 		}
 	}
 

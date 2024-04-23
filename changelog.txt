@@ -3,6 +3,64 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.5.Final (April 23, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32262
+
+** Bug
+    * [HHH-17975] - Envers revision cannot be found when the lookup is made based on an Instant
+    * [HHH-17965] - @ElementCollection with @CollectionTable throws o.h.MappingException Foreign key must have same number of columns as the referenced primary key
+    * [HHH-17947] - Bidirectional association management shouldn't ignore maintaining inverse lazy objects
+    * [HHH-17916] - CCE when @CompositeType attribute is contained in a generic @MappedSuperclass
+    * [HHH-17908] - Schema validation error for STRING enums on MySQL
+    * [HHH-17906] - Missing type inference for SqmValues
+    * [HHH-17898] - Validate derived join queries not using lateral 
+    * [HHH-17887] - Release mode After Statment with deferred result set access does not work
+    * [HHH-17885] - Same named formula attribute of different Embedded uses same selection expression
+    * [HHH-17884] - Native enum type should respect ordering implied by EnumeratedType
+    * [HHH-17881] - Unable to use a proxy as parameter in Query when the FK does not target the PK
+    * [HHH-17872] - NPE in JtaIsolationDelegate
+    * [HHH-17871] - NullPointerException during the creation of the session if ManyToAny that references a MappedSuperClass and defined in multiple subclasses
+    * [HHH-17867] - WrongClassException when trying to query by the base type with joined inheritance type
+    * [HHH-17857] - Query with consecutive OneToMany and ManyToOne join will fail with AssertionError
+    * [HHH-17854] - @SqlRestriction("xyz IS NULL") generates 2 SQL clauses when using entity graph
+    * [HHH-17835] - Converted primitive boolean columns can no longer be used in comparable functions
+    * [HHH-17832] - Select with circular bidirectional association with joined inheritance subclass SyntaxErrorException
+    * [HHH-17830] - Missing custom join conditions for inner joined element collection join
+    * [HHH-17828] - Find and locking a lazy referenced entity fails with Bytecode Enhancement enabled
+    * [HHH-17826] - ResultSet closed while scrolling results
+    * [HHH-17825] - Attribute 'name' in @UniqueConstraint Annotation ignored
+    * [HHH-17823] - Failing to execute HQL queries when entity is located in a package containing `fk` package
+    * [HHH-17808] - NPE when null vector is read with VectorJdbcType
+    * [HHH-17803] - NPE in TupleMappingModelExpressible constructor when enum is used in "in" clause tuple within subquery
+    * [HHH-17801] - array_position fails with enums in Hibernate 6.4 (worked in 6.2)
+    * [HHH-17776] - java.lang.NullPointerException when subquery doesn't have from clause
+    * [HHH-17769] - Query#setFirst/MaxResults with CTEs leads to incorrect rendering of offset/limit
+    * [HHH-17765] - Query method parameter checker unable to cope with multiline queries
+    * [HHH-17763] - Hibernate Schema Validation filter is not working after upgrading to Hibernate 6
+    * [HHH-17759] - Undocumented escape behavior of colon characters in native queries
+    * [HHH-17755] - OneToMany mapping with IdClass does not set id as foreign key
+    * [HHH-17750] - JPA entities containing LAZY loaded relations cannot be merged in another transaction
+    * [HHH-17743] - hibernate.allow_update_outside_transaction=true property is not working after migration from Hibernate 5.6.15 to 6.4.1 version
+    * [HHH-17742] - Race condition in ConcreteSqmSelectQueryPlan#withCacheableSqmInterpretation
+    * [HHH-17734] - Hibernate should prioritize provider_class over datasource
+    * [HHH-17730] - Merge causes "IllegalAccessException can not set final field" when using record as embedded id
+    * [HHH-17726] - Additional java types missing same type in wrap/unwrap
+    * [HHH-17711] - Multiple level joined inheritance leads to incorrect discriminator alias
+    * [HHH-17701] - @Converter ignored for attributes used in tuples leading to NullPointerException in TupleMappingModelExpressible constructor
+    * [HHH-17695] - Persistence fails when nested JSON aggregate is null
+    * [HHH-17671] - SqmPredicate copy fails
+    * [HHH-17661] - The jpamodelgen component caused compilation failure
+    * [HHH-17638] - OneToMany association annotated with @NotFound generates different JOINs for SELECT and COUNT
+    * [HHH-17613] - Generated metamodel contains invalid import when using generics
+    * [HHH-17600] - Annotation @ListIndexBase is not properly handled
+    * [HHH-17579] - Metamodel Generator with JDK11 and ormXml fails
+    * [HHH-17508] - java.lang.IllegalStateException when using union query as source for CTE expression
+    * [HHH-17493] - Negating a SqmNegatedPredicate has no effect on Hql string
+    * [HHH-17275] - NullPointerException from BooleanJavaType
+
+
 Changes in 6.4.4.Final (February 08, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

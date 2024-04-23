@@ -29,7 +29,6 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
-import org.hibernate.boot.models.bind.spi.TableReference;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
@@ -46,7 +45,6 @@ import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.AnnotationUsage;
@@ -186,8 +184,8 @@ public abstract class EntityBinding extends IdentifiableTypeBinding {
 		filters.forEach( (filter) -> {
 			persistentClass.addFilter(
 					filter.getString( "name" ),
-					filter.getString( "condition", (String) null ),
-					filter.getAttributeValue( "deduceAliasInjectionPoints", true ),
+					filter.getString( "condition" ),
+					filter.getAttributeValue( "deduceAliasInjectionPoints" ),
 					extractFilterAliasTableMap( filter ),
 					extractFilterAliasEntityMap( filter )
 			);

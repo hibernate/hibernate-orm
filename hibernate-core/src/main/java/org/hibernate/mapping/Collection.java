@@ -6,7 +6,6 @@
  */
 package org.hibernate.mapping;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -108,10 +107,10 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	private String loaderName;
 
-	private Constructor<? extends Expectation> insertExpectation;
-	private Constructor<? extends Expectation> updateExpectation;
-	private Constructor<? extends Expectation> deleteExpectation;
-	private Constructor<? extends Expectation> deleteAllExpectation;
+	private Supplier<? extends Expectation> insertExpectation;
+	private Supplier<? extends Expectation> updateExpectation;
+	private Supplier<? extends Expectation> deleteExpectation;
+	private Supplier<? extends Expectation> deleteAllExpectation;
 
 	/**
 	 * hbm.xml binding
@@ -877,35 +876,35 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return softDeleteColumn;
 	}
 
-	public Constructor<? extends Expectation> getInsertExpectation() {
+	public Supplier<? extends Expectation> getInsertExpectation() {
 		return insertExpectation;
 	}
 
-	public void setInsertExpectation(Constructor<? extends Expectation> insertExpectation) {
+	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
 		this.insertExpectation = insertExpectation;
 	}
 
-	public Constructor<? extends Expectation> getUpdateExpectation() {
+	public Supplier<? extends Expectation> getUpdateExpectation() {
 		return updateExpectation;
 	}
 
-	public void setUpdateExpectation(Constructor<? extends Expectation> updateExpectation) {
+	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
 		this.updateExpectation = updateExpectation;
 	}
 
-	public Constructor<? extends Expectation> getDeleteExpectation() {
+	public Supplier<? extends Expectation> getDeleteExpectation() {
 		return deleteExpectation;
 	}
 
-	public void setDeleteExpectation(Constructor<? extends Expectation> deleteExpectation) {
+	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
 		this.deleteExpectation = deleteExpectation;
 	}
 
-	public Constructor<? extends Expectation> getDeleteAllExpectation() {
+	public Supplier<? extends Expectation> getDeleteAllExpectation() {
 		return deleteAllExpectation;
 	}
 
-	public void setDeleteAllExpectation(Constructor<? extends Expectation> deleteAllExpectation) {
+	public void setDeleteAllExpectation(Supplier<? extends Expectation> deleteAllExpectation) {
 		this.deleteAllExpectation = deleteAllExpectation;
 	}
 }

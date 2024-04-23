@@ -101,10 +101,9 @@ public class ElementCollectionAttributeProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<CollectionTable> collectionTableAnn = XmlProcessingHelper.getOrMakeAnnotation(
-				CollectionTable.class,
-				memberDetails,
-				xmlDocumentContext
+		final MutableAnnotationUsage<CollectionTable> collectionTableAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.COLLECTION_TABLE,
+				xmlDocumentContext.getModelBuildingContext()
 		);
 		final AnnotationDescriptor<CollectionTable> collectionTableDescriptor = xmlDocumentContext.getModelBuildingContext()
 				.getAnnotationDescriptorRegistry()

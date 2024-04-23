@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
@@ -16,6 +15,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
@@ -51,19 +51,23 @@ public class CommonPluralAttributeProcessing {
 		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
 
 		if ( jaxbPluralAttribute.getFetchMode() != null ) {
-			final MutableAnnotationUsage<Fetch> fetchAnn = XmlProcessingHelper.getOrMakeAnnotation( Fetch.class, memberDetails, xmlDocumentContext );
+			final MutableAnnotationUsage<Fetch> fetchAnn = memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.FETCH,
+					buildingContext
+			);
 			fetchAnn.setAttributeValue( "value", jaxbPluralAttribute.getFetchMode() );
 		}
 
 		if ( jaxbPluralAttribute.getClassification() != null ) {
-			final MutableAnnotationUsage<CollectionClassification> collectionClassificationAnn = XmlProcessingHelper.getOrMakeAnnotation(
-					CollectionClassification.class,
-					memberDetails,
-					xmlDocumentContext
-			);
-			collectionClassificationAnn.setAttributeValue( "value", jaxbPluralAttribute.getClassification() );
 			if ( jaxbPluralAttribute.getClassification() == LimitedCollectionClassification.BAG ) {
-				XmlProcessingHelper.getOrMakeAnnotation( Bag.class, memberDetails, xmlDocumentContext );
+				memberDetails.applyAnnotationUsage( HibernateAnnotations.BAG, buildingContext );
+			}
+			else {
+				final MutableAnnotationUsage<CollectionClassification> collectionClassificationAnn = memberDetails.applyAnnotationUsage(
+						HibernateAnnotations.COLLECTION_CLASSIFICATION,
+						buildingContext
+				);
+				collectionClassificationAnn.setAttributeValue( "value", jaxbPluralAttribute.getClassification() );
 			}
 		}
 
@@ -75,10 +79,9 @@ public class CommonPluralAttributeProcessing {
 		XmlAnnotationHelper.applyCollectionId( jaxbPluralAttribute.getCollectionId(), memberDetails, xmlDocumentContext );
 
 		if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getOrderBy() ) ) {
-			final MutableAnnotationUsage<OrderBy> orderByAnn = XmlProcessingHelper.getOrMakeAnnotation(
-					OrderBy.class,
-					memberDetails,
-					xmlDocumentContext
+			final MutableAnnotationUsage<OrderBy> orderByAnn = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.ORDER_BY,
+					buildingContext
 			);
 			orderByAnn.setAttributeValue( "value", jaxbPluralAttribute.getOrderBy() );
 		}
@@ -86,51 +89,55 @@ public class CommonPluralAttributeProcessing {
 		applyOrderColumn( jaxbPluralAttribute, memberDetails, xmlDocumentContext );
 
 		if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getSort() ) ) {
-			final MutableAnnotationUsage<SortComparator> sortAnn = XmlProcessingHelper.getOrMakeAnnotation(
-					SortComparator.class,
-					memberDetails,
-					xmlDocumentContext
+			final MutableAnnotationUsage<SortComparator> sortAnn = memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.SORT_COMPARATOR,
+					buildingContext
 			);
 			final ClassDetails comparatorClassDetails = classDetailsRegistry.resolveClassDetails( jaxbPluralAttribute.getSort() );
 			sortAnn.setAttributeValue( "value", comparatorClassDetails );
 		}
 
 		if ( jaxbPluralAttribute.getSortNatural() != null ) {
-			XmlProcessingHelper.getOrMakeAnnotation( SortNatural.class, memberDetails, xmlDocumentContext );
+			memberDetails.applyAnnotationUsage( HibernateAnnotations.SORT_NATURAL, buildingContext );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// map-key
 
 		if ( jaxbPluralAttribute.getMapKey() != null ) {
-			final MutableAnnotationUsage<MapKey> mapKeyAnn = XmlProcessingHelper.getOrMakeAnnotation( MapKey.class, memberDetails, xmlDocumentContext );
-			applyOr(
-					jaxbPluralAttribute.getMapKey(),
-					JaxbMapKeyImpl::getName,
-					"name",
-					mapKeyAnn,
-					buildingContext.getAnnotationDescriptorRegistry().getDescriptor( MapKey.class )
+			final MutableAnnotationUsage<MapKey> mapKeyAnn = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAP_KEY,
+					buildingContext
 			);
+			if ( jaxbPluralAttribute.getMapKey() != null ) {
+				XmlAnnotationHelper.applyOptionalAttribute( mapKeyAnn, "name", jaxbPluralAttribute.getMapKey().getName() );
+			}
 		}
 
 		if ( jaxbPluralAttribute.getMapKeyClass() != null ) {
 			final String className = xmlDocumentContext.resolveClassName( jaxbPluralAttribute.getMapKeyClass().getClazz() );
 			final ClassDetails mapKeyClass = classDetailsRegistry.resolveClassDetails( className );
-			XmlProcessingHelper.getOrMakeAnnotation( MapKeyClass.class, memberDetails, xmlDocumentContext ).setAttributeValue( "value", mapKeyClass );
+			final MutableAnnotationUsage<MapKeyClass> mapKeyClassAnn = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAP_KEY_CLASS,
+					buildingContext
+			);
+			mapKeyClassAnn.setAttributeValue( "value", mapKeyClass );
 		}
 
 		if ( jaxbPluralAttribute.getMapKeyTemporal() != null ) {
-			XmlProcessingHelper.getOrMakeAnnotation( MapKeyTemporal.class, memberDetails, xmlDocumentContext ).setAttributeValue(
-					"value",
-					jaxbPluralAttribute.getMapKeyTemporal()
+			final MutableAnnotationUsage<MapKeyTemporal> mapKeyTemporalAnn = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAP_KEY_TEMPORAL,
+					buildingContext
 			);
+			mapKeyTemporalAnn.setAttributeValue( "value", jaxbPluralAttribute.getMapKeyTemporal() );
 		}
 
 		if ( jaxbPluralAttribute.getMapKeyEnumerated() != null ) {
-			XmlProcessingHelper.getOrMakeAnnotation( MapKeyEnumerated.class, memberDetails, xmlDocumentContext ).setAttributeValue(
-					"value",
-					jaxbPluralAttribute.getMapKeyEnumerated()
+			final MutableAnnotationUsage<MapKeyEnumerated> mapKeyEnumeratedAnn = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAP_KEY_ENUMERATED,
+					buildingContext
 			);
+			mapKeyEnumeratedAnn.setAttributeValue( "value", jaxbPluralAttribute.getMapKeyEnumerated() );
 		}
 
 		jaxbPluralAttribute.getMapKeyConverts().forEach( (jaxbConvert) -> {
@@ -167,20 +174,16 @@ public class CommonPluralAttributeProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<OrderColumn> orderColumnAnn = XmlProcessingHelper.getOrMakeAnnotation(
-				OrderColumn.class,
-				memberDetails,
-				xmlDocumentContext
+		final MutableAnnotationUsage<OrderColumn> orderColumnAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.ORDER_COLUMN,
+				xmlDocumentContext.getModelBuildingContext()
 		);
-		final AnnotationDescriptor<OrderColumn> orderColumnDescriptor = xmlDocumentContext.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( OrderColumn.class );
 
-		applyOr( jaxbOrderColumn, JaxbOrderColumnImpl::getName, "name", orderColumnAnn, orderColumnDescriptor );
-		applyOr( jaxbOrderColumn, JaxbOrderColumnImpl::isNullable, "nullable", orderColumnAnn, orderColumnDescriptor );
-		applyOr( jaxbOrderColumn, JaxbOrderColumnImpl::isInsertable, "insertable", orderColumnAnn, orderColumnDescriptor );
-		applyOr( jaxbOrderColumn, JaxbOrderColumnImpl::isUpdatable, "updatable", orderColumnAnn, orderColumnDescriptor );
-		applyOr( jaxbOrderColumn, JaxbOrderColumnImpl::getColumnDefinition, "columnDefinition", orderColumnAnn, orderColumnDescriptor );
-		applyOr( jaxbOrderColumn, JaxbOrderColumnImpl::getOptions, "options", orderColumnAnn, orderColumnDescriptor );
+		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "name", jaxbOrderColumn.getName() );
+		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "nullable", jaxbOrderColumn.isNullable() );
+		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "insertable", jaxbOrderColumn.isInsertable() );
+		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "updatable", jaxbOrderColumn.isUpdatable() );
+		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "columnDefinition", jaxbOrderColumn.getColumnDefinition() );
+		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "options", jaxbOrderColumn.getOptions() );
 	}
 }

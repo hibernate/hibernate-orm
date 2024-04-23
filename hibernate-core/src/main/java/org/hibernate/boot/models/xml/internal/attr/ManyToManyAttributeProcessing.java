@@ -7,20 +7,19 @@
 package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 
 import jakarta.persistence.AccessType;
 import jakarta.persistence.ManyToMany;
 
-import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.getOrMakeAnnotation;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -74,18 +73,15 @@ public class ManyToManyAttributeProcessing {
 			JaxbManyToManyImpl jaxbManyToMany,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<ManyToMany> manyToManyAnn = getOrMakeAnnotation(
-				ManyToMany.class,
-				memberDetails,
-				xmlDocumentContext
+		final MutableAnnotationUsage<ManyToMany> manyToManyAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.MANY_TO_MANY,
+				xmlDocumentContext.getModelBuildingContext()
 		);
-		final AnnotationDescriptor<ManyToMany> manyToManyDescriptor = xmlDocumentContext
-				.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( ManyToMany.class );
 
-		XmlAnnotationHelper.applyOr( jaxbManyToMany, JaxbManyToManyImpl::getFetch, "fetch", manyToManyAnn, manyToManyDescriptor );
-		XmlAnnotationHelper.applyOr( jaxbManyToMany, JaxbManyToManyImpl::getMappedBy, "mappedBy", manyToManyAnn, manyToManyDescriptor );
+		if ( jaxbManyToMany != null ) {
+			XmlAnnotationHelper.applyOptionalAttribute( manyToManyAnn, "fetch", jaxbManyToMany.getFetch() );
+			XmlAnnotationHelper.applyOptionalAttribute( manyToManyAnn, "mappedBy", jaxbManyToMany.getMappedBy() );
+		}
 
 		return manyToManyAnn;
 	}

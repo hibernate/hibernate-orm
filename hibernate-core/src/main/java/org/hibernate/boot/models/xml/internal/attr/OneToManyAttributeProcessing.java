@@ -10,12 +10,13 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
@@ -77,12 +78,20 @@ public class OneToManyAttributeProcessing {
 		} );
 
 		if ( jaxbOneToMany.getOnDelete() != null ) {
-			XmlProcessingHelper.getOrMakeAnnotation( OnDelete.class, memberDetails, xmlDocumentContext ).setAttributeValue( "action", jaxbOneToMany.getOnDelete() );
+			final MutableAnnotationUsage<OnDelete> onDeleteAnn = memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.ON_DELETE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			onDeleteAnn.setAttributeValue( "action", jaxbOneToMany.getOnDelete() );
 		}
 
 		if ( jaxbOneToMany.getNotFound() != null ) {
 			if ( jaxbOneToMany.getNotFound() != NotFoundAction.EXCEPTION ) {
-				XmlProcessingHelper.getOrMakeAnnotation( NotFound.class, memberDetails, xmlDocumentContext ).setAttributeValue( "action", jaxbOneToMany.getNotFound() );
+				final MutableAnnotationUsage<NotFound> notFoundAnn = memberDetails.applyAnnotationUsage(
+						HibernateAnnotations.NOT_FOUND,
+						xmlDocumentContext.getModelBuildingContext()
+				);
+				notFoundAnn.setAttributeValue( "action", jaxbOneToMany.getNotFound() );
 			}
 		}
 
@@ -93,15 +102,16 @@ public class OneToManyAttributeProcessing {
 			JaxbOneToManyImpl jaxbOneToMany,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<OneToMany> oneToManyAnn = XmlProcessingHelper.getOrMakeAnnotation( OneToMany.class, memberDetails, xmlDocumentContext );
-		final AnnotationDescriptor<OneToMany> oneToManyDescriptor = xmlDocumentContext
-				.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( OneToMany.class );
+		final MutableAnnotationUsage<OneToMany> oneToManyAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.ONE_TO_MANY,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 
-		XmlAnnotationHelper.applyOr( jaxbOneToMany, JaxbOneToManyImpl::getFetch, "fetch", oneToManyAnn, oneToManyDescriptor );
-		XmlAnnotationHelper.applyOr( jaxbOneToMany, JaxbOneToManyImpl::getMappedBy, "mappedBy", oneToManyAnn, oneToManyDescriptor );
-		XmlAnnotationHelper.applyOr( jaxbOneToMany, JaxbOneToManyImpl::isOrphanRemoval, "orphanRemoval", oneToManyAnn, oneToManyDescriptor );
+		if ( jaxbOneToMany != null ) {
+			XmlAnnotationHelper.applyOptionalAttribute( oneToManyAnn, "fetch", jaxbOneToMany.getFetch() );
+			XmlAnnotationHelper.applyOptionalAttribute( oneToManyAnn, "mappedBy", jaxbOneToMany.getMappedBy() );
+			XmlAnnotationHelper.applyOptionalAttribute( oneToManyAnn, "orphanRemoval", jaxbOneToMany.isOrphanRemoval() );
+		}
 
 		return oneToManyAnn;
 	}

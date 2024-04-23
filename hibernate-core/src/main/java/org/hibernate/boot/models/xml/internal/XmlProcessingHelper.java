@@ -15,8 +15,6 @@ import org.hibernate.boot.models.MemberResolutionException;
 import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.internal.dynamic.DynamicAnnotationUsage;
-import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
@@ -111,70 +109,6 @@ public class XmlProcessingHelper {
 		return null;
 	}
 
-	/**
-	 * Find an existing annotation, or create one.
-	 * Used when applying XML in override mode.
-	 */
-	public static <A extends Annotation> MutableAnnotationUsage<A> getOrMakeAnnotation(
-			Class<A> annotationType,
-			MutableAnnotationTarget target,
-			XmlDocumentContext xmlDocumentContext) {
-		final AnnotationUsage<A> existing = target.getAnnotationUsage( annotationType );
-		if ( existing != null ) {
-			return (MutableAnnotationUsage<A>) existing;
-		}
-
-		return makeAnnotation( annotationType, target, xmlDocumentContext );
-	}
-
-	public static <A extends Annotation> MutableAnnotationUsage<A> getOrMakeAnnotation(
-			Class<A> annotationType,
-			XmlDocumentContext xmlDocumentContext) {
-
-		return makeAnnotation( annotationType,  xmlDocumentContext );
-	}
-
-	/**
-	 * Make a nested AnnotationUsage.  The usage is created with the given target,
-	 * but it is not added to the target's annotations.
-	 */
-	public static <A extends Annotation> MutableAnnotationUsage<A> makeNestedAnnotation(
-			Class<A> annotationType,
-			AnnotationTarget target,
-			XmlDocumentContext xmlDocumentContext) {
-		return new DynamicAnnotationUsage<>(
-				xmlDocumentContext.getModelBuildingContext()
-						.getAnnotationDescriptorRegistry()
-						.getDescriptor( annotationType ),
-				xmlDocumentContext.getModelBuildingContext()
-		);
-	}
-
-	public static <A extends Annotation> MutableAnnotationUsage<A> makeNestedAnnotation(
-			Class<A> annotationType,
-			XmlDocumentContext xmlDocumentContext) {
-		return makeNestedAnnotation( annotationType, null, xmlDocumentContext );
-	}
-
-	/**
-	 * Make an AnnotationUsage.
-	 * Used when applying XML in complete mode or when {@linkplain #getOrMakeAnnotation}
-	 * needs to make.
-	 */
-	public static <A extends Annotation> MutableAnnotationUsage<A> makeAnnotation(
-			Class<A> annotationType,
-			MutableAnnotationTarget target,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> created = makeNestedAnnotation( annotationType, target, xmlDocumentContext );
-		target.addAnnotationUsage( created );
-		return created;
-	}
-
-	public static <A extends Annotation> MutableAnnotationUsage<A> makeAnnotation(
-			Class<A> annotationType,
-			XmlDocumentContext xmlDocumentContext) {
-		return makeNestedAnnotation( annotationType, xmlDocumentContext );
-	}
 
 	/**
 	 * Find an existing annotation by name, or create one.
@@ -199,7 +133,11 @@ public class XmlProcessingHelper {
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( name == null ) {
-			return makeAnnotation( annotationType, target, xmlDocumentContext );
+			return xmlDocumentContext
+					.getModelBuildingContext()
+					.getAnnotationDescriptorRegistry()
+					.getDescriptor( annotationType )
+					.createUsage( null, xmlDocumentContext.getModelBuildingContext() );
 		}
 
 		final AnnotationUsage<A> existing = target.getNamedAnnotationUsage( annotationType, name, attributeToMatch );
@@ -221,7 +159,11 @@ public class XmlProcessingHelper {
 			String nameAttributeName,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> created = makeNestedAnnotation( annotationType, target, xmlDocumentContext );
+		final MutableAnnotationUsage<A> created = xmlDocumentContext
+				.getModelBuildingContext()
+				.getAnnotationDescriptorRegistry()
+				.getDescriptor( annotationType )
+				.createUsage( null, xmlDocumentContext.getModelBuildingContext() );
 		target.addAnnotationUsage( created );
 		created.setAttributeValue( nameAttributeName, name );
 		return created;

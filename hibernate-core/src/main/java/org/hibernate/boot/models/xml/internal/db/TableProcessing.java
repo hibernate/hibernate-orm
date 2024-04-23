@@ -12,7 +12,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
-import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
@@ -39,23 +38,6 @@ public class TableProcessing {
 		);
 		applyJoinTable( jaxbJoinTable, joinTableUsage, target, xmlDocumentContext );
 		return joinTableUsage;
-	}
-
-	public static MutableAnnotationUsage<JoinTable> createNestedJoinTable(
-			JaxbJoinTableImpl jaxbJoinTable,
-			AnnotationTarget annotationTarget,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbJoinTable == null ) {
-			return null;
-		}
-
-		final MutableAnnotationUsage<JoinTable> joinTableAnn = XmlProcessingHelper.makeNestedAnnotation(
-				JoinTable.class,
-				annotationTarget,
-				xmlDocumentContext
-		);
-		applyJoinTable( jaxbJoinTable, joinTableAnn, annotationTarget, xmlDocumentContext );
-		return joinTableAnn;
 	}
 
 	private static void applyJoinTable(

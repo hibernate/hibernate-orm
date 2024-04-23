@@ -19,6 +19,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingDiscriminatorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
@@ -56,7 +58,10 @@ public class AnyMappingAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<Any> anyAnn = XmlProcessingHelper.makeAnnotation( Any.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<Any> anyAnn = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.ANY,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 
 		CommonAttributeProcessing.applyAttributeBasics( jaxbHbmAnyMapping, memberDetails, anyAnn, accessType, xmlDocumentContext );
 
@@ -73,7 +78,10 @@ public class AnyMappingAttributeProcessing {
 			MutableAnnotationUsage<Any> anyAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		final JaxbAnyMappingDiscriminatorImpl jaxbDiscriminator = jaxbHbmAnyMapping.getDiscriminator();
-		final MutableAnnotationUsage<AnyDiscriminator> anyDiscriminatorAnn = XmlProcessingHelper.makeAnnotation( AnyDiscriminator.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<AnyDiscriminator> anyDiscriminatorAnn = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.ANY_DISCRIMINATOR,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 
 		if ( jaxbDiscriminator == null ) {
 			return;
@@ -83,29 +91,39 @@ public class AnyMappingAttributeProcessing {
 		XmlProcessingHelper.applyAttributeIfSpecified( "value", discriminatorType, anyDiscriminatorAnn );
 
 		final JaxbColumnImpl jaxbColumn = jaxbDiscriminator.getColumn();
-		final MutableAnnotationUsage<Column> columnAnn = XmlProcessingHelper.makeAnnotation( Column.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<Column> columnAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.COLUMN,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 		if ( jaxbColumn != null ) {
 			ColumnProcessing.applyColumnDetails( jaxbColumn, memberDetails, columnAnn, xmlDocumentContext );
 		}
 
+		final ClassDetailsRegistry classDetailsRegistry = xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry();
 		final List<JaxbAnyDiscriminatorValueMappingImpl> valueMappings = jaxbDiscriminator.getValueMappings();
 		if ( CollectionHelper.isNotEmpty( valueMappings ) ) {
-			final MutableAnnotationUsage<AnyDiscriminatorValues> valuesAnn = XmlProcessingHelper.makeAnnotation( AnyDiscriminatorValues.class, memberDetails, xmlDocumentContext );
+			final MutableAnnotationUsage<AnyDiscriminatorValues> discriminatorValuesUsage = memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.ANY_DISCRIMINATOR_VALUES,
+					xmlDocumentContext.getModelBuildingContext()
+			);
 			final List<MutableAnnotationUsage<AnyDiscriminatorValue>> valueList = CollectionHelper.arrayList( valueMappings.size() );
-			final ClassDetailsRegistry classDetailsRegistry = xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry();
-			valuesAnn.setAttributeValue( "value", valueList );
-			valueMappings.forEach( (valueMapping) -> {
-				final MutableAnnotationUsage<AnyDiscriminatorValue> valueAnn = XmlProcessingHelper.makeNestedAnnotation( AnyDiscriminatorValue.class, memberDetails, xmlDocumentContext );
-				valueList.add( valueAnn );
+			discriminatorValuesUsage.setAttributeValue( "value", valueList );
 
-				valueAnn.setAttributeValue( "discriminator", valueMapping.getDiscriminatorValue() );
+			valueMappings.forEach( (valueMapping) -> {
+				final MutableAnnotationUsage<AnyDiscriminatorValue> discriminatorValueUsage = HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(
+						null,
+						xmlDocumentContext.getModelBuildingContext()
+				);
+				valueList.add( discriminatorValueUsage );
+
+				discriminatorValueUsage.setAttributeValue( "discriminator", valueMapping.getDiscriminatorValue() );
 
 				final String name = StringHelper.qualifyConditionally(
 						xmlDocumentContext.getXmlDocument().getDefaults().getPackage(),
 						valueMapping.getCorrespondingEntityName()
 				);
 				final ClassDetails entityClassDetails = classDetailsRegistry.resolveClassDetails( name );
-				valueAnn.setAttributeValue( "entity", entityClassDetails );
+				discriminatorValueUsage.setAttributeValue( "entity", entityClassDetails );
 			} );
 		}
 	}
@@ -117,22 +135,31 @@ public class AnyMappingAttributeProcessing {
 			XmlDocumentContext xmlDocumentContext) {
 		final JaxbAnyMappingKeyImpl jaxbKey = jaxbHbmAnyMapping.getKey();
 		if ( StringHelper.isNotEmpty( jaxbKey.getType() ) ) {
-			final MutableAnnotationUsage<AnyKeyType> keyTypeAnn = XmlProcessingHelper.makeAnnotation( AnyKeyType.class, memberDetails, xmlDocumentContext );
-			keyTypeAnn.setAttributeValue( "value", jaxbKey.getType() );
+			final MutableAnnotationUsage<AnyKeyType> keyTypeUsage = memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.ANY_KEY_TYPE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			keyTypeUsage.setAttributeValue( "value", jaxbKey.getType() );
 		}
 
 		if ( jaxbKey.getColumns().isEmpty() ) {
-			XmlProcessingHelper.makeAnnotation( JoinColumn.class, memberDetails, xmlDocumentContext );
+			memberDetails.applyAnnotationUsage( JpaAnnotations.JOIN_COLUMN, xmlDocumentContext.getModelBuildingContext() );
 		}
 		else {
-			final MutableAnnotationUsage<JoinColumns> columnsAnn = XmlProcessingHelper.makeAnnotation( JoinColumns.class, memberDetails, xmlDocumentContext );
+			final MutableAnnotationUsage<JoinColumns> joinColumnsUsage = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.JOIN_COLUMNS,
+					xmlDocumentContext.getModelBuildingContext()
+			);
 			final ArrayList<MutableAnnotationUsage<JoinColumn>> columnAnnList = CollectionHelper.arrayList( jaxbKey.getColumns().size() );
-			columnsAnn.setAttributeValue( "value", columnAnnList );
+			joinColumnsUsage.setAttributeValue( "value", columnAnnList );
 			jaxbKey.getColumns().forEach( (jaxbColumn) -> {
-				final MutableAnnotationUsage<JoinColumn> columnAnn = XmlProcessingHelper.makeNestedAnnotation( JoinColumn.class, memberDetails, xmlDocumentContext );
-				columnAnnList.add( columnAnn );
+				final MutableAnnotationUsage<JoinColumn> joinColumnUsage = JpaAnnotations.JOIN_COLUMN.createUsage(
+						null,
+						xmlDocumentContext.getModelBuildingContext()
+				);
+				columnAnnList.add( joinColumnUsage );
 
-				ColumnProcessing.applyColumnDetails( jaxbColumn, memberDetails, columnAnn, xmlDocumentContext );
+				ColumnProcessing.applyColumnDetails( jaxbColumn, memberDetails, joinColumnUsage, xmlDocumentContext );
 			} );
 		}
 	}

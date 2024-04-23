@@ -8,7 +8,6 @@ package org.hibernate.boot.models.bind.internal;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.DiscriminatorFormula;
-import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
@@ -194,7 +193,7 @@ public class RootEntityBinding extends EntityBinding {
 		final var optimisticLocking = classDetails.getAnnotationUsage( OptimisticLocking.class );
 
 		if ( optimisticLocking != null ) {
-			final var optimisticLockingType = optimisticLocking.getEnum( "type", OptimisticLockType.VERSION );
+			final var optimisticLockingType = optimisticLocking.getEnum( "type" );
 			rootClass.setOptimisticLockStyle( OptimisticLockStyle.valueOf( optimisticLockingType.name() ) );
 		}
 	}

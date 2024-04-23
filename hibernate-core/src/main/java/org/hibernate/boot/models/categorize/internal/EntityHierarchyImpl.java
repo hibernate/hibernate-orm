@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.NaturalIdCache;
+import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.ModelCategorizationLogging;
@@ -266,7 +267,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private OptimisticLockStyle determineOptimisticLockStyle(HierarchyMetadataCollector metadataCollector) {
 		final AnnotationUsage<OptimisticLocking> optimisticLockingAnnotation = metadataCollector.getOptimisticLockingAnnotation();
 		if ( optimisticLockingAnnotation != null ) {
-			optimisticLockingAnnotation.getEnum( "type", DEFAULT_LOCKING_STRATEGY );
+			final OptimisticLockType lockingType = optimisticLockingAnnotation.getEnum( "type" );
+			return OptimisticLockStyle.fromLockType( lockingType );
 		}
 		return DEFAULT_LOCKING_STRATEGY;
 	}

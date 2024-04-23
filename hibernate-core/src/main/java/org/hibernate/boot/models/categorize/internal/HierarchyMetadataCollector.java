@@ -33,8 +33,6 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.Version;
 
-import static org.hibernate.boot.models.categorize.ModelCategorizationLogging.MODEL_CATEGORIZATION_LOGGER;
-
 /**
  * Used to collect useful details about a hierarchy as we build its metadata
  *
@@ -257,15 +255,6 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 	private <A extends Annotation> AnnotationUsage<A> applyLocalAnnotation(Class<A> annotationType, ClassDetails classDetails, AnnotationUsage<A> currentValue) {
 		final AnnotationUsage<A> localInheritanceAnnotation = classDetails.getAnnotationUsage( annotationType );
 		if ( localInheritanceAnnotation != null ) {
-			if ( currentValue != null ) {
-				MODEL_CATEGORIZATION_LOGGER.debugf(
-						"Ignoring @%s from %s in favor of usage from %s",
-						annotationType.getSimpleName(),
-						classDetails.getName(),
-						currentValue.getAnnotationTarget().getName()
-				);
-			}
-
 			// the one "closest" to the root-entity should win
 			return localInheritanceAnnotation;
 		}

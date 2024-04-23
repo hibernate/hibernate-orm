@@ -72,7 +72,7 @@ public class ColumnProcessing {
 		applyColumnDefinition( jaxbColumn, columnAnn, xmlDocumentContext );
 		applyColumnUniqueness( jaxbColumn, columnAnn, xmlDocumentContext );
 		applyColumnComment( jaxbColumn, columnAnn, xmlDocumentContext );
-		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, columnAnn, xmlDocumentContext );
+		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, null, columnAnn, xmlDocumentContext );
 
 		if ( jaxbColumn instanceof JaxbColumnSizable sizable ) {
 			applyColumnSizing( sizable, columnAnn, xmlDocumentContext );
@@ -94,7 +94,7 @@ public class ColumnProcessing {
 		applyColumnSizing( jaxbColumn, columnAnn, xmlDocumentContext );
 		applyColumnUniqueness( jaxbColumn, columnAnn, xmlDocumentContext );
 		applyColumnComment( jaxbColumn, columnAnn, xmlDocumentContext );
-		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, columnAnn, xmlDocumentContext );
+		XmlAnnotationHelper.applyCheckConstraints( jaxbColumn, null, columnAnn, xmlDocumentContext );
 	}
 
 	public static <A extends Annotation> void applyColumnDetails(

@@ -22,6 +22,7 @@ import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
@@ -328,11 +329,11 @@ public class AdditionalMappingContributorTests {
 								modelBuildingContext
 						);
 
-						jdkClassDetails.applyAnnotationUsage(
+						final MutableAnnotationUsage<Entity> entityUsage = jdkClassDetails.applyAnnotationUsage(
 								JpaAnnotations.ENTITY,
-								(entityUsage) -> entityUsage.setAttributeValue( "name", "___Entity5___" ),
 								modelBuildingContext
 						);
+						entityUsage.setAttributeValue( "name", "___Entity5___" );
 
 						final MutableMemberDetails idField = (MutableMemberDetails) jdkClassDetails.findFieldByName( "id" );
 						idField.applyAnnotationUsage( JpaAnnotations.ID, modelBuildingContext );
@@ -368,11 +369,11 @@ public class AdditionalMappingContributorTests {
 						assertThat( modelBuildingContext ).isSameAs( buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
 
 						final DynamicClassDetails classDetails = new DynamicClassDetails( "Entity6", modelBuildingContext );
-						classDetails.applyAnnotationUsage(
+						final MutableAnnotationUsage<Entity> entityUsage = classDetails.applyAnnotationUsage(
 								JpaAnnotations.ENTITY,
-								(config) -> config.setAttributeValue( "name", "Entity6" ),
 								modelBuildingContext
 						);
+						entityUsage.setAttributeValue( "name", "Entity6" );
 						classDetails.applyAttribute(
 								"id",
 								classDetailsRegistry.resolveClassDetails( Integer.class.getName() ),

@@ -155,6 +155,8 @@ public interface HibernateAnnotations {
 	AnnotationDescriptor<SqlFragmentAlias> SQL_FRAGMENT_ALIAS = createOrmDescriptor( SqlFragmentAlias.class );
 	AnnotationDescriptor<SQLInserts> SQL_INSERTS = createOrmDescriptor( SQLInserts.class );
 	AnnotationDescriptor<SQLInsert> SQL_INSERT = createOrmDescriptor( SQLInsert.class, SQL_INSERTS );
+	AnnotationDescriptor<SQLRestriction> SQL_RESTRICTION = createOrmDescriptor( SQLRestriction.class, SQL_INSERTS );
+	AnnotationDescriptor<SQLJoinTableRestriction> SQL_RESTRICTION_JOIN_TABLE = createOrmDescriptor( SQLJoinTableRestriction.class, SQL_INSERTS );
 	AnnotationDescriptor<SQLUpdates> SQL_UPDATES = createOrmDescriptor( SQLUpdates.class );
 	AnnotationDescriptor<SQLUpdate> SQL_UPDATE = createOrmDescriptor( SQLUpdate.class, SQL_UPDATES );
 	AnnotationDescriptor<Struct> STRUCT = createOrmDescriptor( Struct.class );
@@ -162,6 +164,7 @@ public interface HibernateAnnotations {
 	AnnotationDescriptor<Synchronize> SYNCHRONIZE = createOrmDescriptor( Synchronize.class );
 	AnnotationDescriptor<Tables> TABLES = createOrmDescriptor( Tables.class );
 	AnnotationDescriptor<Table> TABLE = createOrmDescriptor( Table.class, TABLES );
+	AnnotationDescriptor<TenantId> TENANT_ID = createOrmDescriptor( TenantId.class );
 	AnnotationDescriptor<TimeZoneColumn> TZ_COLUMN = createOrmDescriptor( TimeZoneColumn.class );
 	AnnotationDescriptor<TimeZoneStorage> TZ_STORAGE = createOrmDescriptor( TimeZoneStorage.class );
 	AnnotationDescriptor<Type> TYPE = createOrmDescriptor( Type.class );

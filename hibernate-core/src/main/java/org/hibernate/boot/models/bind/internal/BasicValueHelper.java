@@ -50,9 +50,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import static jakarta.persistence.EnumType.ORDINAL;
 import static java.util.Collections.singletonMap;
-import static org.hibernate.annotations.TimeZoneStorageType.AUTO;
 import static org.hibernate.annotations.TimeZoneStorageType.COLUMN;
 
 /**
@@ -167,7 +165,7 @@ public class BasicValueHelper {
 			return;
 		}
 
-		basicValue.setEnumerationStyle( enumerated.getEnum( "value", ORDINAL ) );
+		basicValue.setEnumerationStyle( enumerated.getEnum( "value" ) );
 	}
 
 	public static void bindTemporalPrecision(
@@ -196,7 +194,7 @@ public class BasicValueHelper {
 		final AnnotationUsage<TimeZoneStorage> storageAnn = member.getAnnotationUsage( TimeZoneStorage.class );
 		final AnnotationUsage<TimeZoneColumn> columnAnn = member.getAnnotationUsage( TimeZoneColumn.class );
 		if ( storageAnn != null ) {
-			final TimeZoneStorageType strategy = storageAnn.getEnum( "value", AUTO );
+			final TimeZoneStorageType strategy = storageAnn.getEnum( "value" );
 			if ( strategy != COLUMN && columnAnn != null ) {
 				throw new AnnotationPlacementException(
 						"Illegal combination of @TimeZoneStorage(" + strategy.name() + ") and @TimeZoneColumn"
@@ -207,10 +205,16 @@ public class BasicValueHelper {
 
 		if ( columnAnn != null ) {
 			final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) basicValue.getColumn();
-			column.setName( columnAnn.getString( "name", property.getName() + "_tz" ) );
-			column.setSqlType( columnAnn.getString( "columnDefinition", (String) null ) );
+			final String name = columnAnn.getString( "name" );
+			if ( StringHelper.isEmpty( name ) ) {
+				column.setName( property.getName() + "_tz" );
+			}
+			else {
+				column.setName( name );
+			}
+			column.setSqlType( columnAnn.getString( "columnDefinition" ) );
 
-			final var tableName = columnAnn.getString( "table", (String) null );
+			final var tableName = columnAnn.getString( "table" );
 			TableReference tableByName = null;
 			if ( tableName != null ) {
 				final Identifier identifier = Identifier.toIdentifier( tableName );
@@ -218,8 +222,8 @@ public class BasicValueHelper {
 				basicValue.setTable( tableByName.table() );
 			}
 
-			property.setInsertable( columnAnn.getBoolean( "insertable", true ) );
-			property.setUpdateable( columnAnn.getBoolean( "updatable", true ) );
+			property.setInsertable( columnAnn.getBoolean( "insertable" ) );
+			property.setUpdateable( columnAnn.getBoolean( "updatable" ) );
 		}
 	}
 
@@ -283,7 +287,7 @@ public class BasicValueHelper {
 		final var columnAnn = member.getAnnotationUsage( annotationType );
 		final var column = ColumnHelper.bindColumn( columnAnn, defaultNameSupplier );
 
-		var tableName = BindingHelper.getValue( columnAnn, "table", "" );
+		var tableName = columnAnn.getString( "table" );
 		if ( StringHelper.isEmpty( tableName ) ) {
 			basicValue.setTable( primaryTable );
 		}

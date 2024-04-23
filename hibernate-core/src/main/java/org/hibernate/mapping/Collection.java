@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,7 +38,7 @@ import org.hibernate.type.Type;
 import org.hibernate.usertype.UserCollectionType;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationClass;
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 
 /**
  * A mapping model object representing a collection. Subclasses specialize to particular kinds of collection.
@@ -107,10 +108,10 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	private String loaderName;
 
-	private Class<? extends Expectation> insertExpectation;
-	private Class<? extends Expectation> updateExpectation;
-	private Class<? extends Expectation> deleteExpectation;
-	private Class<? extends Expectation> deleteAllExpectation;
+	private Constructor<? extends Expectation> insertExpectation;
+	private Constructor<? extends Expectation> updateExpectation;
+	private Constructor<? extends Expectation> deleteExpectation;
+	private Constructor<? extends Expectation> deleteAllExpectation;
 
 	/**
 	 * hbm.xml binding
@@ -593,7 +594,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
 		this.insertCheckStyle = checkStyle;
-		this.insertExpectation = expectationClass( checkStyle );
+		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -616,7 +617,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
 		this.updateCheckStyle = checkStyle;
-		this.updateExpectation = expectationClass( checkStyle );
+		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -639,7 +640,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
 		this.deleteCheckStyle = checkStyle;
-		this.deleteExpectation = expectationClass( checkStyle );
+		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {
@@ -665,7 +666,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.customSQLDeleteAll = customSQLDeleteAll;
 		this.customDeleteAllCallable = callable;
 		this.deleteAllCheckStyle = checkStyle;
-		this.deleteAllExpectation = expectationClass( checkStyle );
+		this.deleteAllExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDeleteAll() {
@@ -876,35 +877,35 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return softDeleteColumn;
 	}
 
-	public Class<? extends Expectation> getInsertExpectation() {
+	public Constructor<? extends Expectation> getInsertExpectation() {
 		return insertExpectation;
 	}
 
-	public void setInsertExpectation(Class<? extends Expectation> insertExpectation) {
+	public void setInsertExpectation(Constructor<? extends Expectation> insertExpectation) {
 		this.insertExpectation = insertExpectation;
 	}
 
-	public Class<? extends Expectation> getUpdateExpectation() {
+	public Constructor<? extends Expectation> getUpdateExpectation() {
 		return updateExpectation;
 	}
 
-	public void setUpdateExpectation(Class<? extends Expectation> updateExpectation) {
+	public void setUpdateExpectation(Constructor<? extends Expectation> updateExpectation) {
 		this.updateExpectation = updateExpectation;
 	}
 
-	public Class<? extends Expectation> getDeleteExpectation() {
+	public Constructor<? extends Expectation> getDeleteExpectation() {
 		return deleteExpectation;
 	}
 
-	public void setDeleteExpectation(Class<? extends Expectation> deleteExpectation) {
+	public void setDeleteExpectation(Constructor<? extends Expectation> deleteExpectation) {
 		this.deleteExpectation = deleteExpectation;
 	}
 
-	public Class<? extends Expectation> getDeleteAllExpectation() {
+	public Constructor<? extends Expectation> getDeleteAllExpectation() {
 		return deleteAllExpectation;
 	}
 
-	public void setDeleteAllExpectation(Class<? extends Expectation> deleteAllExpectation) {
+	public void setDeleteAllExpectation(Constructor<? extends Expectation> deleteAllExpectation) {
 		this.deleteAllExpectation = deleteAllExpectation;
 	}
 }

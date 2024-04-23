@@ -1202,14 +1202,9 @@ public class XmlAnnotationHelper {
 			JaxbEntityListenerImpl jaxbEntityListener,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<EntityListeners> applied = classDetails.applyAnnotationUsage(
+		final MutableAnnotationUsage<EntityListeners> listenersUsage = classDetails.applyAnnotationUsage(
 				JpaAnnotations.ENTITY_LISTENERS,
 				xmlDocumentContext.getModelBuildingContext()
-		);
-		final MutableAnnotationUsage<EntityListeners> listenersUsage = XmlProcessingHelper.getOrMakeAnnotation(
-				EntityListeners.class,
-				classDetails,
-				xmlDocumentContext
 		);
 
 		final MutableClassDetails entityListenerClass = xmlDocumentContext.resolveJavaType( jaxbEntityListener.getClazz() );

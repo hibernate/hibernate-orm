@@ -999,7 +999,7 @@ public class BinderHelper {
 		}
 
 		// no override was found.  return the base annotation (if one)
-		return element.getAnnotationUsage( annotationType );
+		return element.getSingleAnnotationUsage( annotationType );
 	}
 
 	public static boolean overrideMatchesDialect(AnnotationUsage<? extends Annotation> override, Dialect dialect) {

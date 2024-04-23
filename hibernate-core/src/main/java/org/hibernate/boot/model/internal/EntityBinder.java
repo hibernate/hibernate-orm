@@ -161,6 +161,7 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyAttributeIfSpecified;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
+import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -1431,9 +1432,9 @@ public class EntityBinder {
 					sqlInsert.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlInsert.getEnum( "check" ) )
 			);
-			final Class<Expectation> expectationClass = sqlInsert.getClassDetails("verify").toJavaClass();
+			final Class<? extends Expectation> expectationClass = sqlInsert.getClassDetails( "verify" ).toJavaClass();
 			if ( expectationClass != Expectation.class ) {
-				persistentClass.setInsertExpectation( expectationClass );
+				persistentClass.setInsertExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 
@@ -1447,9 +1448,9 @@ public class EntityBinder {
 					sqlUpdate.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlUpdate.getEnum( "check" ) )
 			);
-			final Class<Expectation> expectationClass = sqlUpdate.getClassDetails("verify").toJavaClass();
+			final Class<? extends Expectation> expectationClass = sqlUpdate.getClassDetails( "verify" ).toJavaClass();
 			if ( expectationClass != Expectation.class ) {
-				persistentClass.setUpdateExpectation( expectationClass );
+				persistentClass.setUpdateExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 
@@ -1463,9 +1464,9 @@ public class EntityBinder {
 					sqlDelete.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlDelete.getEnum( "check" ) )
 			);
-			final Class<Expectation> expectationClass = sqlDelete.getClassDetails("verify").toJavaClass();
+			final Class<? extends Expectation> expectationClass = sqlDelete.getClassDetails( "verify" ).toJavaClass();
 			if ( expectationClass != Expectation.class ) {
-				persistentClass.setDeleteExpectation( expectationClass );
+				persistentClass.setDeleteExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 
@@ -2290,9 +2291,9 @@ public class EntityBinder {
 					sqlInsert.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlInsert.getEnum( "check" ) )
 			);
-			final Class<Expectation> expectationClass = sqlInsert.getClassDetails("verify").toJavaClass();
+			final Class<? extends Expectation> expectationClass = sqlInsert.getClassDetails( "verify" ).toJavaClass();
 			if ( expectationClass != Expectation.class ) {
-				join.setInsertExpectation( expectationClass );
+				join.setInsertExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 		else if ( matchingTable != null ) {
@@ -2315,9 +2316,9 @@ public class EntityBinder {
 					sqlUpdate.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlUpdate.getEnum( "check" ) )
 			);
-			final Class<Expectation> expectationClass = sqlUpdate.getClassDetails("verify").toJavaClass();
+			final Class<? extends Expectation> expectationClass = sqlUpdate.getClassDetails( "verify" ).toJavaClass();
 			if ( expectationClass != Expectation.class ) {
-				join.setUpdateExpectation( expectationClass );
+				join.setUpdateExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 		else if ( matchingTable != null ) {
@@ -2340,9 +2341,9 @@ public class EntityBinder {
 					sqlDelete.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlDelete.getEnum( "check" ) )
 			);
-			final Class<Expectation> expectationClass = sqlDelete.getClassDetails("verify").toJavaClass();
+			final Class<? extends Expectation> expectationClass = sqlDelete.getClassDetails( "verify" ).toJavaClass();
 			if ( expectationClass != Expectation.class ) {
-				join.setDeleteExpectation( expectationClass );
+				join.setDeleteExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 		else if ( matchingTable != null ) {

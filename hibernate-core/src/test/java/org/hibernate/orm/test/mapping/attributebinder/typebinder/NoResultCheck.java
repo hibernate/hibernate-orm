@@ -20,9 +20,9 @@ public @interface NoResultCheck {
 	class Binder implements TypeBinder<NoResultCheck> {
 		@Override
 		public void bind(NoResultCheck annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass) {
-			persistentClass.setInsertExpectation(Expectation.None.class);
-			persistentClass.setUpdateExpectation(Expectation.None.class);
-			persistentClass.setDeleteExpectation(Expectation.None.class);
+			persistentClass.setInsertExpectation(Expectation.None::new);
+			persistentClass.setUpdateExpectation(Expectation.None::new);
+			persistentClass.setDeleteExpectation(Expectation.None::new);
 		}
 
 		@Override

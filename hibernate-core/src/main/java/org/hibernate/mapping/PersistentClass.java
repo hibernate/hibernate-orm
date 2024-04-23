@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.Supplier;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -29,7 +30,6 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -43,7 +43,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationClass;
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 import static org.hibernate.sql.Template.collectColumnNames;
 
@@ -121,9 +121,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
 
-	private Class<? extends Expectation> insertExpectation;
-	private Class<? extends Expectation> updateExpectation;
-	private Class<? extends Expectation> deleteExpectation;
+	private Supplier<? extends Expectation> insertExpectation;
+	private Supplier<? extends Expectation> updateExpectation;
+	private Supplier<? extends Expectation> deleteExpectation;
 
 	private boolean isCached;
 	private CacheLayout queryCacheLayout;
@@ -798,7 +798,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
 		this.insertCheckStyle = checkStyle;
-		this.insertExpectation = expectationClass( checkStyle );
+		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -821,7 +821,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
 		this.updateCheckStyle = checkStyle;
-		this.updateExpectation = expectationClass( checkStyle );
+		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -844,7 +844,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
 		this.deleteCheckStyle = checkStyle;
-		this.deleteExpectation = expectationClass( checkStyle );
+		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {
@@ -1258,27 +1258,27 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return null;
 	}
 
-	public Class<? extends Expectation> getInsertExpectation() {
+	public Supplier<? extends Expectation> getInsertExpectation() {
 		return insertExpectation;
 	}
 
-	public void setInsertExpectation(Class<? extends Expectation> insertExpectation) {
+	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
 		this.insertExpectation = insertExpectation;
 	}
 
-	public Class<? extends Expectation> getUpdateExpectation() {
+	public Supplier<? extends Expectation> getUpdateExpectation() {
 		return updateExpectation;
 	}
 
-	public void setUpdateExpectation(Class<? extends Expectation> updateExpectation) {
+	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
 		this.updateExpectation = updateExpectation;
 	}
 
-	public Class<? extends Expectation> getDeleteExpectation() {
+	public Supplier<? extends Expectation> getDeleteExpectation() {
 		return deleteExpectation;
 	}
 
-	public void setDeleteExpectation(Class<? extends Expectation> deleteExpectation) {
+	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
 		this.deleteExpectation = deleteExpectation;
 	}
 }

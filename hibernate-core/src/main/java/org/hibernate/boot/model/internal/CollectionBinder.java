@@ -175,6 +175,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.model.source.internal.hbm.ModelBinder.useEntityWhereClauseForCollections;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
+import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -1345,9 +1346,9 @@ public abstract class CollectionBinder {
 					sqlInsert.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlInsert.getEnum( "check" ) )
 			);
-			final ClassDetails verifier = sqlInsert.getClassDetails( "verify" );
-			if ( !verifier.getName().equals( Expectation.class.getName() ) ) {
-				collection.setInsertExpectation( verifier.toJavaClass() );
+			final Class<? extends Expectation> expectationClass = sqlInsert.getClassDetails( "verify" ).toJavaClass();
+			if ( expectationClass != Expectation.class ) {
+				collection.setInsertExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 
@@ -1358,9 +1359,9 @@ public abstract class CollectionBinder {
 					sqlUpdate.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlUpdate.getEnum( "check" ) )
 			);
-			final ClassDetails verifier = sqlUpdate.getClassDetails( "verify" );
-			if ( !verifier.getName().equals( Expectation.class.getName() ) ) {
-				collection.setUpdateExpectation( verifier.toJavaClass() );
+			final Class<? extends Expectation> expectationClass = sqlUpdate.getClassDetails( "verify" ).toJavaClass();
+			if ( expectationClass != Expectation.class ) {
+				collection.setUpdateExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 
@@ -1371,9 +1372,9 @@ public abstract class CollectionBinder {
 					sqlDelete.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlDelete.getEnum( "check" ) )
 			);
-			final ClassDetails verifier = sqlDelete.getClassDetails( "verify" );
-			if ( !verifier.getName().equals( Expectation.class.getName() ) ) {
-				collection.setDeleteExpectation( verifier.toJavaClass() );
+			final Class<? extends Expectation> expectationClass = sqlDelete.getClassDetails( "verify" ).toJavaClass();
+			if ( expectationClass != Expectation.class ) {
+				collection.setDeleteExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 
@@ -1384,9 +1385,9 @@ public abstract class CollectionBinder {
 					sqlDeleteAll.getBoolean( "callable" ),
 					fromResultCheckStyle( sqlDeleteAll.getEnum( "check" ) )
 			);
-			final ClassDetails verifier = sqlDeleteAll.getClassDetails( "verify" );
-			if ( !verifier.getName().equals( Expectation.class.getName() ) ) {
-				collection.setDeleteAllExpectation( verifier.toJavaClass() );
+			final Class<? extends Expectation> expectationClass = sqlDeleteAll.getClassDetails( "verify" ).toJavaClass();
+			if ( expectationClass != Expectation.class ) {
+				collection.setDeleteAllExpectation( getDefaultSupplier( expectationClass ) );
 			}
 		}
 

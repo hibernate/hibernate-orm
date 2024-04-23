@@ -7,7 +7,6 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.Supplier;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -122,9 +122,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
 
-	private Constructor<? extends Expectation> insertExpectation;
-	private Constructor<? extends Expectation> updateExpectation;
-	private Constructor<? extends Expectation> deleteExpectation;
+	private Supplier<? extends Expectation> insertExpectation;
+	private Supplier<? extends Expectation> updateExpectation;
+	private Supplier<? extends Expectation> deleteExpectation;
 
 	private boolean isCached;
 	private CacheLayout queryCacheLayout;
@@ -1263,27 +1263,27 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return null;
 	}
 
-	public Constructor<? extends Expectation> getInsertExpectation() {
+	public Supplier<? extends Expectation> getInsertExpectation() {
 		return insertExpectation;
 	}
 
-	public void setInsertExpectation(Constructor<? extends Expectation> insertExpectation) {
+	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
 		this.insertExpectation = insertExpectation;
 	}
 
-	public Constructor<? extends Expectation> getUpdateExpectation() {
+	public Supplier<? extends Expectation> getUpdateExpectation() {
 		return updateExpectation;
 	}
 
-	public void setUpdateExpectation(Constructor<? extends Expectation> updateExpectation) {
+	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
 		this.updateExpectation = updateExpectation;
 	}
 
-	public Constructor<? extends Expectation> getDeleteExpectation() {
+	public Supplier<? extends Expectation> getDeleteExpectation() {
 		return deleteExpectation;
 	}
 
-	public void setDeleteExpectation(Constructor<? extends Expectation> deleteExpectation) {
+	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
 		this.deleteExpectation = deleteExpectation;
 	}
 }

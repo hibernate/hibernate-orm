@@ -20,14 +20,9 @@ public @interface NoResultCheck {
 	class Binder implements TypeBinder<NoResultCheck> {
 		@Override
 		public void bind(NoResultCheck annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass) {
-			try {
-				persistentClass.setInsertExpectation(Expectation.None.class.getDeclaredConstructor());
-				persistentClass.setUpdateExpectation(Expectation.None.class.getDeclaredConstructor());
-				persistentClass.setDeleteExpectation(Expectation.None.class.getDeclaredConstructor());
-			}
-			catch (NoSuchMethodException e) {
-				throw new RuntimeException(e);
-			}
+			persistentClass.setInsertExpectation(Expectation.None::new);
+			persistentClass.setUpdateExpectation(Expectation.None::new);
+			persistentClass.setDeleteExpectation(Expectation.None::new);
 		}
 
 		@Override

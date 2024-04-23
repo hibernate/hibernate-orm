@@ -160,6 +160,7 @@ import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
+import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -1390,7 +1391,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlInsert.check() )
 			);
 			if ( sqlInsert.verify() != Expectation.class ) {
-				persistentClass.setInsertExpectation( sqlInsert.verify() );
+				persistentClass.setInsertExpectation( getDefaultConstructor(  sqlInsert.verify() ) );
 			}
 		}
 
@@ -1405,7 +1406,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
 			if ( sqlUpdate.verify() != Expectation.class ) {
-				persistentClass.setUpdateExpectation( sqlUpdate.verify() );
+				persistentClass.setUpdateExpectation( getDefaultConstructor(  sqlUpdate.verify() ) );
 			}
 		}
 
@@ -1420,7 +1421,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlDelete.check() )
 			);
 			if ( sqlDelete.verify() != Expectation.class ) {
-				persistentClass.setDeleteExpectation( sqlDelete.verify() );
+				persistentClass.setDeleteExpectation( getDefaultConstructor( sqlDelete.verify() ) );
 			}
 		}
 
@@ -2267,7 +2268,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlInsert.check() )
 			);
 			if ( sqlInsert.verify() != Expectation.class ) {
-				join.setInsertExpectation( sqlInsert.verify() );
+				join.setInsertExpectation( getDefaultConstructor( sqlInsert.verify() ) );
 			}
 		}
 		else if ( matchingTable != null ) {
@@ -2290,7 +2291,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
 			if ( sqlUpdate.verify() != Expectation.class ) {
-				join.setUpdateExpectation( sqlUpdate.verify() );
+				join.setUpdateExpectation( getDefaultConstructor( sqlUpdate.verify() ) );
 			}
 		}
 		else if ( matchingTable != null ) {
@@ -2313,7 +2314,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlDelete.check() )
 			);
 			if ( sqlDelete.verify() != Expectation.class ) {
-				join.setDeleteExpectation( sqlDelete.verify() );
+				join.setDeleteExpectation( getDefaultConstructor(  sqlDelete.verify() ) );
 			}
 		}
 		else if ( matchingTable != null ) {

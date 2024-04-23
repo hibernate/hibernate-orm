@@ -8,6 +8,8 @@ package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.annotations.Formula;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
@@ -40,16 +42,25 @@ public class BasicAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<Basic> basicAnn = XmlProcessingHelper.getOrMakeAnnotation( Basic.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<Basic> basicAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.BASIC,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 		CommonAttributeProcessing.applyAttributeBasics( jaxbBasic, memberDetails, basicAnn, accessType, xmlDocumentContext );
 
 		if ( StringHelper.isNotEmpty( jaxbBasic.getFormula() ) ) {
 			assert jaxbBasic.getColumn() == null;
-			final MutableAnnotationUsage<Formula> formulaAnn = XmlProcessingHelper.getOrMakeAnnotation( Formula.class, memberDetails, xmlDocumentContext );
+			final MutableAnnotationUsage<Formula> formulaAnn = memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.FORMULA,
+					xmlDocumentContext.getModelBuildingContext()
+			);
 			formulaAnn.setAttributeValue( "value", jaxbBasic.getFormula() );
 		}
 		else if ( jaxbBasic.getColumn() != null ) {
-			final MutableAnnotationUsage<Column> columnAnn = XmlProcessingHelper.getOrMakeAnnotation( Column.class, memberDetails, xmlDocumentContext );
+			final MutableAnnotationUsage<Column> columnAnn = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.COLUMN,
+					xmlDocumentContext.getModelBuildingContext()
+			);
 			ColumnProcessing.applyColumnDetails( jaxbBasic.getColumn(), memberDetails, columnAnn, xmlDocumentContext );
 		}
 

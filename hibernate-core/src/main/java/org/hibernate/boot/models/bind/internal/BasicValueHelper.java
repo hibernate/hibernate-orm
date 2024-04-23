@@ -287,7 +287,7 @@ public class BasicValueHelper {
 		final var columnAnn = member.getAnnotationUsage( annotationType );
 		final var column = ColumnHelper.bindColumn( columnAnn, defaultNameSupplier );
 
-		var tableName = columnAnn.getString( "table" );
+		var tableName = BindingHelper.getValue( columnAnn, "table", "" );
 		if ( StringHelper.isEmpty( tableName ) ) {
 			basicValue.setTable( primaryTable );
 		}

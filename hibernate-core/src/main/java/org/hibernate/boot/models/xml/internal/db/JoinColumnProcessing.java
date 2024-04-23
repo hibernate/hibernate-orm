@@ -23,7 +23,6 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
 
@@ -213,10 +212,9 @@ public class JoinColumnProcessing {
 			XmlAnnotationHelper.applyJoinColumn( jaxbJoinColumns.get( 0 ), memberDetails, xmlDocumentContext );
 		}
 		else {
-			final MutableAnnotationUsage<JoinColumns> columnsAnn = XmlProcessingHelper.makeAnnotation(
-					JoinColumns.class,
-					memberDetails,
-					xmlDocumentContext
+			final MutableAnnotationUsage<JoinColumns> columnsAnn = memberDetails.applyAnnotationUsage(
+					JpaAnnotations.JOIN_COLUMNS,
+					xmlDocumentContext.getModelBuildingContext()
 			);
 			columnsAnn.setAttributeValue( "value", createJoinColumns( jaxbJoinColumns, memberDetails, xmlDocumentContext ) );
 		}

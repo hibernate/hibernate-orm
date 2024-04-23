@@ -180,6 +180,7 @@ import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPrope
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.source.internal.hbm.ModelBinder.useEntityWhereClauseForCollections;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
+import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -1336,7 +1337,7 @@ public abstract class CollectionBinder {
 					fromResultCheckStyle( sqlInsert.check() )
 			);
 			if ( sqlInsert.verify() != Expectation.class ) {
-				collection.setInsertExpectation( sqlInsert.verify() );
+				collection.setInsertExpectation( getDefaultConstructor( sqlInsert.verify() ) );
 			}
 		}
 
@@ -1348,7 +1349,7 @@ public abstract class CollectionBinder {
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
 			if ( sqlUpdate.verify() != Expectation.class ) {
-				collection.setUpdateExpectation( sqlUpdate.verify() );
+				collection.setUpdateExpectation( getDefaultConstructor( sqlUpdate.verify() ) );
 			}
 		}
 
@@ -1360,7 +1361,7 @@ public abstract class CollectionBinder {
 					fromResultCheckStyle( sqlDelete.check() )
 			);
 			if ( sqlDelete.verify() != Expectation.class ) {
-				collection.setDeleteExpectation( sqlDelete.verify() );
+				collection.setDeleteExpectation( getDefaultConstructor( sqlDelete.verify() ) );
 			}
 		}
 
@@ -1372,7 +1373,7 @@ public abstract class CollectionBinder {
 					fromResultCheckStyle( sqlDeleteAll.check() )
 			);
 			if ( sqlDeleteAll.verify() != Expectation.class ) {
-				collection.setDeleteAllExpectation( sqlDeleteAll.verify() );
+				collection.setDeleteAllExpectation( getDefaultConstructor( sqlDeleteAll.verify() ) );
 			}
 		}
 

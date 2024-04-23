@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -43,7 +44,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationClass;
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 import static org.hibernate.sql.Template.collectColumnNames;
 
@@ -121,9 +122,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
 
-	private Class<? extends Expectation> insertExpectation;
-	private Class<? extends Expectation> updateExpectation;
-	private Class<? extends Expectation> deleteExpectation;
+	private Constructor<? extends Expectation> insertExpectation;
+	private Constructor<? extends Expectation> updateExpectation;
+	private Constructor<? extends Expectation> deleteExpectation;
 
 	private boolean isCached;
 	private CacheLayout queryCacheLayout;
@@ -802,7 +803,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
 		this.insertCheckStyle = checkStyle;
-		this.insertExpectation = expectationClass( checkStyle );
+		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -825,7 +826,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
 		this.updateCheckStyle = checkStyle;
-		this.updateExpectation = expectationClass( checkStyle );
+		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -848,7 +849,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
 		this.deleteCheckStyle = checkStyle;
-		this.deleteExpectation = expectationClass( checkStyle );
+		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {
@@ -1262,27 +1263,27 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return null;
 	}
 
-	public Class<? extends Expectation> getInsertExpectation() {
+	public Constructor<? extends Expectation> getInsertExpectation() {
 		return insertExpectation;
 	}
 
-	public void setInsertExpectation(Class<? extends Expectation> insertExpectation) {
+	public void setInsertExpectation(Constructor<? extends Expectation> insertExpectation) {
 		this.insertExpectation = insertExpectation;
 	}
 
-	public Class<? extends Expectation> getUpdateExpectation() {
+	public Constructor<? extends Expectation> getUpdateExpectation() {
 		return updateExpectation;
 	}
 
-	public void setUpdateExpectation(Class<? extends Expectation> updateExpectation) {
+	public void setUpdateExpectation(Constructor<? extends Expectation> updateExpectation) {
 		this.updateExpectation = updateExpectation;
 	}
 
-	public Class<? extends Expectation> getDeleteExpectation() {
+	public Constructor<? extends Expectation> getDeleteExpectation() {
 		return deleteExpectation;
 	}
 
-	public void setDeleteExpectation(Class<? extends Expectation> deleteExpectation) {
+	public void setDeleteExpectation(Constructor<? extends Expectation> deleteExpectation) {
 		this.deleteExpectation = deleteExpectation;
 	}
 }

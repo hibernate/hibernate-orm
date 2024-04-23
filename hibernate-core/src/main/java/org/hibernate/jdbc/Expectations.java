@@ -6,6 +6,7 @@
  */
 package org.hibernate.jdbc;
 
+import java.lang.reflect.Constructor;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 
@@ -41,19 +42,27 @@ public class Expectations {
 	 * @since 6.5
 	 */
 	@Internal
-	public static Expectation createExpectation(Class<? extends Expectation> expectation, boolean callable) {
-		if ( expectation == null ) {
-			expectation = callable ? Expectation.OutParameter.class : Expectation.RowCount.class;
-		}
-		final Expectation instance;
-		try {
-			instance = expectation.newInstance();
-		}
-		catch ( Exception e ) {
-			throw new InstantiationException( "Could not instantiate Expectation", expectation, e );
-		}
-		instance.validate(callable);
+	public static Expectation createExpectation(Constructor<? extends Expectation> expectation, boolean callable) {
+		final Expectation instance = instantiate( expectation, callable );
+		instance.validate( callable );
 		return instance;
+	}
+
+	private static Expectation instantiate(Constructor<? extends Expectation> constructor, boolean callable) {
+		if ( constructor == null ) {
+			return callable
+					? new Expectation.OutParameter()
+					: new Expectation.RowCount();
+		}
+		else {
+			try {
+				return constructor.newInstance();
+			}
+			catch ( Exception e ) {
+				throw new InstantiationException( "Could not instantiate Expectation",
+						constructor.getDeclaringClass(), e );
+			}
+		}
 	}
 
 	static CallableStatement toCallableStatement(PreparedStatement statement) {

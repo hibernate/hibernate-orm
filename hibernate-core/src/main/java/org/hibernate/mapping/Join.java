@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -15,7 +16,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.Alias;
 
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationClass;
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 
 /**
  * A mapping model object representing some sort of auxiliary table, for
@@ -50,9 +51,9 @@ public class Join implements AttributeContainer, Serializable {
 	private boolean customDeleteCallable;
 	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
 
-	private Class<? extends Expectation> insertExpectation;
-	private Class<? extends Expectation> updateExpectation;
-	private Class<? extends Expectation> deleteExpectation;
+	private Constructor<? extends Expectation> insertExpectation;
+	private Constructor<? extends Expectation> updateExpectation;
+	private Constructor<? extends Expectation> deleteExpectation;
 
 	@Override
 	public void addProperty(Property property) {
@@ -140,7 +141,7 @@ public class Join implements AttributeContainer, Serializable {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
 		this.insertCheckStyle = checkStyle;
-		this.insertExpectation = expectationClass( checkStyle );
+		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -163,7 +164,7 @@ public class Join implements AttributeContainer, Serializable {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
 		this.updateCheckStyle = checkStyle;
-		this.updateExpectation = expectationClass( checkStyle );
+		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -186,7 +187,7 @@ public class Join implements AttributeContainer, Serializable {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
 		this.deleteCheckStyle = checkStyle;
-		this.deleteExpectation = expectationClass( checkStyle );
+		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {
@@ -234,27 +235,27 @@ public class Join implements AttributeContainer, Serializable {
 		this.optional = nullable;
 	}
 
-	public Class<? extends Expectation> getInsertExpectation() {
+	public Constructor<? extends Expectation> getInsertExpectation() {
 		return insertExpectation;
 	}
 
-	public void setInsertExpectation(Class<? extends Expectation> insertExpectation) {
+	public void setInsertExpectation(Constructor<? extends Expectation> insertExpectation) {
 		this.insertExpectation = insertExpectation;
 	}
 
-	public Class<? extends Expectation> getUpdateExpectation() {
+	public Constructor<? extends Expectation> getUpdateExpectation() {
 		return updateExpectation;
 	}
 
-	public void setUpdateExpectation(Class<? extends Expectation> updateExpectation) {
+	public void setUpdateExpectation(Constructor<? extends Expectation> updateExpectation) {
 		this.updateExpectation = updateExpectation;
 	}
 
-	public Class<? extends Expectation> getDeleteExpectation() {
+	public Constructor<? extends Expectation> getDeleteExpectation() {
 		return deleteExpectation;
 	}
 
-	public void setDeleteExpectation(Class<? extends Expectation> deleteExpectation) {
+	public void setDeleteExpectation(Constructor<? extends Expectation> deleteExpectation) {
 		this.deleteExpectation = deleteExpectation;
 	}
 }

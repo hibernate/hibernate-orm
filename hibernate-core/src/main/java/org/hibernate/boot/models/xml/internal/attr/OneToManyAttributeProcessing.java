@@ -66,10 +66,8 @@ public class OneToManyAttributeProcessing {
 		TableProcessing.transformJoinTable( jaxbOneToMany.getJoinTable(), memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applySqlJoinTableRestriction( jaxbOneToMany.getSqlJoinTableRestriction(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyJoinTableFilters( jaxbOneToMany.getJoinTableFilters(), memberDetails, xmlDocumentContext );
 
-		jaxbOneToMany.getJoinTableFilters().forEach( (jaxbFilter) -> {
-			XmlAnnotationHelper.applyJoinTableFilter( jaxbFilter, memberDetails, xmlDocumentContext );
-		} );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// other properties

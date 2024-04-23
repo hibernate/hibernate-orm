@@ -16,10 +16,9 @@ import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
+import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationUsage;
-import org.hibernate.models.spi.MutableMemberDetails;
 
-import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.JoinTable;
 
 /**
@@ -28,17 +27,17 @@ import jakarta.persistence.JoinTable;
 public class TableProcessing {
 	public static MutableAnnotationUsage<JoinTable> transformJoinTable(
 			JaxbJoinTableImpl jaxbJoinTable,
-			MutableMemberDetails memberDetails,
+			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbJoinTable == null ) {
 			return null;
 		}
 
-		final MutableAnnotationUsage<JoinTable> joinTableUsage = memberDetails.applyAnnotationUsage(
+		final MutableAnnotationUsage<JoinTable> joinTableUsage = target.applyAnnotationUsage(
 				JpaAnnotations.JOIN_TABLE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		applyJoinTable( jaxbJoinTable, joinTableUsage, memberDetails, xmlDocumentContext );
+		applyJoinTable( jaxbJoinTable, joinTableUsage, target, xmlDocumentContext );
 		return joinTableUsage;
 	}
 

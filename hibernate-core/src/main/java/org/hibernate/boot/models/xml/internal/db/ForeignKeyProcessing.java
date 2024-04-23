@@ -11,7 +11,6 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
 
@@ -40,16 +39,29 @@ public class ForeignKeyProcessing {
 		if ( jaxbForeignKey == null ) {
 			return null;
 		}
-		return memberDetails.applyAnnotationUsage(
+		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = memberDetails.applyAnnotationUsage(
 				JpaAnnotations.FOREIGN_KEY,
-				(foreignKeyUsage) -> {
-					XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "name", jaxbForeignKey.getName() );
-					XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "value", jaxbForeignKey.getConstraintMode() );
-					XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "foreignKeyDefinition", jaxbForeignKey.getForeignKeyDefinition() );
-					XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "options", jaxbForeignKey.getOptions() );
-				},
 				xmlDocumentContext.getModelBuildingContext()
 		);
+
+		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "name", jaxbForeignKey.getName() );
+		XmlAnnotationHelper.applyOptionalAttribute(
+				foreignKeyUsage,
+				"value",
+				jaxbForeignKey.getConstraintMode()
+		);
+		XmlAnnotationHelper.applyOptionalAttribute(
+				foreignKeyUsage,
+				"foreignKeyDefinition",
+				jaxbForeignKey.getForeignKeyDefinition()
+		);
+		XmlAnnotationHelper.applyOptionalAttribute(
+				foreignKeyUsage,
+				"options",
+				jaxbForeignKey.getOptions()
+		);
+
+		return foreignKeyUsage;
 	}
 
 	public static MutableAnnotationUsage<ForeignKey> createNestedForeignKeyAnnotation(
@@ -59,7 +71,7 @@ public class ForeignKeyProcessing {
 		assert jaxbForeignKey != null;
 
 		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage(
-				annotationTarget,
+				null,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 

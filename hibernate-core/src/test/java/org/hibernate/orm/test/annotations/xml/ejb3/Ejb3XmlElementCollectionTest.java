@@ -214,8 +214,8 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	public void testSingleMapKeyAttributeOverride() {
 		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm10.xml" );
 		assertThat( memberDetails.hasAnnotationUsage( ElementCollection.class ) ).isTrue();
-		assertThat( memberDetails.hasAnnotationUsage( AttributeOverride.class ) ).isTrue();
-		assertThat( memberDetails.hasAnnotationUsage( AttributeOverrides.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( AttributeOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( AttributeOverrides.class ) ).isTrue();
 
 		final AnnotationUsage<AttributeOverride> attributeOverrideUsage = memberDetails.getAnnotationUsage( AttributeOverride.class );
 		assertThat( attributeOverrideUsage.getString( "name" ) ).isEqualTo( "key.field1" );
@@ -440,8 +440,8 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm21.xml" );
 		assertThat( memberDetails.hasAnnotationUsage( ElementCollection.class ) ).isTrue();
 
-		assertThat( memberDetails.hasAnnotationUsage( AttributeOverride.class ) ).isTrue();
-		assertThat( memberDetails.hasAnnotationUsage( AttributeOverrides.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( AttributeOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( AttributeOverrides.class ) ).isTrue();
 
 		final AnnotationUsage<AttributeOverride> overrideUsage = memberDetails.getAnnotationUsage( AttributeOverride.class );
 		assertThat( overrideUsage.getString( "name" ) ).isEqualTo( "value.field1" );
@@ -527,8 +527,8 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm24.xml" );
 		assertThat( memberDetails.hasAnnotationUsage( ElementCollection.class ) ).isTrue();
 
-		assertThat( memberDetails.hasAnnotationUsage( AssociationOverride.class ) ).isTrue();
-		assertThat( memberDetails.hasAnnotationUsage( AssociationOverrides.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( AssociationOverride.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( AssociationOverrides.class ) ).isTrue();
 
 		final AnnotationUsage<AssociationOverride> overrideUsage = memberDetails.getAnnotationUsage( AssociationOverride.class );
 		assertThat( overrideUsage.getString( "name" ) ).isEqualTo( "association1" );

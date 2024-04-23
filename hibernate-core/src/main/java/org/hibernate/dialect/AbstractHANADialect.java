@@ -807,6 +807,12 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// HANA does truncation
+		return false;
+	}
+
+	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
 	}

@@ -146,7 +146,6 @@ public class XmlProcessingHelper {
 				xmlDocumentContext.getModelBuildingContext()
 						.getAnnotationDescriptorRegistry()
 						.getDescriptor( annotationType ),
-				target,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 	}

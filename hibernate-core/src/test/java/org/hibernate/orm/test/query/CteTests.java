@@ -26,6 +26,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 
+import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -41,7 +42,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -238,6 +243,49 @@ public class CteTests {
 					);
 				}
 		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "The emulation of CTEs in subqueries results in correlation in nesting level 2, which is not possible with Sybase ASE")
+	public void testInSubquery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			final JpaCriteriaQuery<String> cq = cb.createQuery( String.class );
+			final JpaRoot<Contact> root = cq.from( Contact.class );
+			final JpaSubQuery<Tuple> cteQuery = cq.subquery( Tuple.class );
+			final JpaRoot<Contact> cteRoot = cteQuery.from( Contact.class );
+			cteQuery.multiselect(
+					cteRoot.get( "id" ).alias( "id" ),
+					cteRoot.get( "name" ).get( "first" ).alias( "firstName" )
+			).where(
+					cteRoot.get( "id" ).in( 1, 2 )
+			);
+			final JpaSubQuery<Integer> subquery = cq.subquery( Integer.class );
+			final JpaCteCriteria<Tuple> cte = subquery.with( cteQuery );
+			final JpaRoot<Tuple> sqRoot = subquery.from( cte );
+			subquery.select( sqRoot.get( "id" ) );
+			cq.select( root.get( "name" ).get( "first" ) ).where( root.get( "id" ).in( subquery ) );
+
+			final QueryImplementor<String> query = session.createQuery(
+					"select c.name.first from Contact c where c.id in (" +
+							"with contacts as (" +
+							"select c.id id, c.name.first firstName from Contact c " +
+							"where c.id in (1,2)" +
+							") " +
+							"select c.id from contacts c" +
+							")",
+					String.class
+			);
+
+			verifySame(
+					session.createQuery( cq ).getResultList(),
+					query.getResultList(),
+					list -> {
+						assertEquals( 2, list.size() );
+						assertThat( list ).containsOnly( "John", "Jane" );
+					}
+			);
+		} );
 	}
 
 	@Test

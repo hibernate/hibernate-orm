@@ -65,9 +65,7 @@ public class ManyToManyAttributeProcessing {
 
 		XmlAnnotationHelper.applySqlJoinTableRestriction( jaxbManyToMany.getSqlJoinTableRestriction(), memberDetails, xmlDocumentContext );
 
-		jaxbManyToMany.getJoinTableFilters().forEach( (jaxbFilter) -> {
-			XmlAnnotationHelper.applyJoinTableFilter( jaxbFilter, memberDetails, xmlDocumentContext );
-		} );
+		XmlAnnotationHelper.applyJoinTableFilters( jaxbManyToMany.getJoinTableFilters(), memberDetails, xmlDocumentContext );
 
 		return memberDetails;
 	}

@@ -10,13 +10,9 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.hibernate.annotations.AttributeAccessor;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.internal.Abstract;
 import org.hibernate.boot.internal.Extends;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
@@ -55,16 +51,15 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Cacheable;
-import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
@@ -473,7 +468,12 @@ public class ManagedTypeProcessor {
 			MutableMemberDetails memberDetails,
 			JaxbPersistentAttribute jaxbAttribute,
 			XmlDocumentContext xmlDocumentContext) {
-		XmlAnnotationHelper.applyAttributeAccessor( BuiltInPropertyAccessStrategies.MAP.getExternalName(), memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<AttributeAccessor> annotationUsage = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.ATTRIBUTE_ACCESSOR,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		// todo (7.0) : this is the old String-based, deprecated form
+		annotationUsage.setAttributeValue( "value", BuiltInPropertyAccessStrategies.MAP.getExternalName() );
 	}
 
 	private static void processEntityMetadata(
@@ -489,7 +489,7 @@ public class ManagedTypeProcessor {
 		applyCaching( jaxbEntity, classDetails, xmlDocumentContext );
 
 		if ( jaxbEntity.isAbstract() != null ) {
-			XmlProcessingHelper.makeAnnotation( Abstract.class, classDetails, xmlDocumentContext );
+			classDetails.applyAnnotationUsage( HibernateAnnotations.ABSTRACT, xmlDocumentContext.getModelBuildingContext() );
 		}
 
 		if ( isNotEmpty( jaxbEntity.getExtends() ) ) {
@@ -541,17 +541,13 @@ public class ManagedTypeProcessor {
 		QueryProcessing.applyNamedNativeQueries( jaxbEntity, classDetails, jaxbRoot, xmlDocumentContext );
 		QueryProcessing.applyNamedProcedureQueries( jaxbEntity, classDetails, xmlDocumentContext );
 
-		jaxbEntity.getFilters().forEach( jaxbFilter -> XmlAnnotationHelper.applyFilter(
-				jaxbFilter,
-				classDetails,
-				xmlDocumentContext
-		) );
+		XmlAnnotationHelper.applyFilters( jaxbEntity.getFilters(), classDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applySqlRestriction( jaxbEntity.getSqlRestriction(), classDetails, xmlDocumentContext );
 
-		XmlAnnotationHelper.applyCustomSql( jaxbEntity.getSqlInsert(), classDetails, SQLInsert.class, xmlDocumentContext );
-		XmlAnnotationHelper.applyCustomSql( jaxbEntity.getSqlUpdate(), classDetails, SQLUpdate.class, xmlDocumentContext );
-		XmlAnnotationHelper.applyCustomSql( jaxbEntity.getSqlDelete(), classDetails, SQLDelete.class, xmlDocumentContext );
+		XmlAnnotationHelper.applyCustomSql( jaxbEntity.getSqlInsert(), classDetails, HibernateAnnotations.SQL_INSERT, xmlDocumentContext );
+		XmlAnnotationHelper.applyCustomSql( jaxbEntity.getSqlUpdate(), classDetails, HibernateAnnotations.SQL_UPDATE, xmlDocumentContext );
+		XmlAnnotationHelper.applyCustomSql( jaxbEntity.getSqlDelete(), classDetails, HibernateAnnotations.SQL_DELETE, xmlDocumentContext );
 
 		processEntityOrMappedSuperclass( jaxbEntity, classDetails, xmlDocumentContext );
 
@@ -584,7 +580,7 @@ public class ManagedTypeProcessor {
 			AccessType accessType,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<Access> annotationUsage = XmlProcessingHelper.makeAnnotation( Access.class, target, xmlDocumentContext );
+		final MutableAnnotationUsage<Access> annotationUsage = target.applyAnnotationUsage( JpaAnnotations.ACCESS, xmlDocumentContext.getModelBuildingContext() );
 		annotationUsage.setAttributeValue( "value", accessType );
 		target.addAnnotationUsage( annotationUsage );
 	}
@@ -636,11 +632,7 @@ public class ManagedTypeProcessor {
 					coalesce( jaxbTenantId.getAccess(), classAccessType ),
 					classDetails
 			);
-			XmlProcessingHelper.getOrMakeAnnotation(
-					TenantId.class,
-					memberDetails,
-					xmlDocumentContext
-			);
+			memberDetails.applyAnnotationUsage( HibernateAnnotations.TENANT_ID, xmlDocumentContext.getModelBuildingContext() );
 			BasicAttributeProcessing.processBasicAttribute(
 					jaxbTenantId,
 					classDetails,
@@ -806,18 +798,20 @@ public class ManagedTypeProcessor {
 			JaxbMappedSuperclassImpl jaxbMappedSuperclass,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		XmlProcessingHelper.getOrMakeAnnotation( MappedSuperclass.class, classDetails, xmlDocumentContext );
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+
+		classDetails.applyAnnotationUsage( JpaAnnotations.MAPPED_SUPERCLASS, modelBuildingContext );
 
 		final AccessType classAccessType = coalesce(
 				jaxbMappedSuperclass.getAccess(),
 				xmlDocumentContext.getEffectiveDefaults().getDefaultPropertyAccessType()
 		);
 		if ( classAccessType != null ) {
-			classDetails.addAnnotationUsage( XmlAnnotationHelper.createAccessAnnotation(
-					classAccessType,
-					classDetails,
-					xmlDocumentContext
-			) );
+			final MutableAnnotationUsage<Access> accessUsage = classDetails.applyAnnotationUsage(
+					JpaAnnotations.ACCESS,
+					modelBuildingContext
+			);
+			accessUsage.setAttributeValue( "value", classAccessType );
 		}
 
 		final JaxbAttributesContainerImpl attributes = jaxbMappedSuperclass.getAttributes();
@@ -922,14 +916,16 @@ public class ManagedTypeProcessor {
 			AccessType classAccessType,
 			AttributeProcessor.MemberAdjuster memberAdjuster,
 			XmlDocumentContext xmlDocumentContext) {
-		XmlProcessingHelper.getOrMakeAnnotation( Embeddable.class, classDetails, xmlDocumentContext );
+		classDetails.applyAnnotationUsage( JpaAnnotations.EMBEDDABLE, xmlDocumentContext.getModelBuildingContext() );
+
 		if ( classAccessType != null ) {
-			classDetails.addAnnotationUsage( XmlAnnotationHelper.createAccessAnnotation(
-					classAccessType,
-					classDetails,
-					xmlDocumentContext
-			) );
+			final MutableAnnotationUsage<Access> accessUsage = classDetails.applyAnnotationUsage(
+					JpaAnnotations.ACCESS,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			accessUsage.setAttributeValue( "value", classAccessType );
 		}
+
 		if ( jaxbEmbeddable.getAttributes() != null ) {
 			AttributeProcessor.processAttributes(
 					jaxbEmbeddable.getAttributes(),
@@ -952,7 +948,7 @@ public class ManagedTypeProcessor {
 					.getClassDetailsRegistry()
 					.resolveClassDetails( className );
 
-			XmlProcessingHelper.getOrMakeAnnotation( Embeddable.class, classDetails, xmlDocumentContext );
+			classDetails.applyAnnotationUsage( JpaAnnotations.EMBEDDABLE, xmlDocumentContext.getModelBuildingContext() );
 
 			if ( jaxbEmbeddable.getAttributes() != null ) {
 				AttributeProcessor.processAttributes(

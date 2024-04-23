@@ -20,6 +20,7 @@ import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCascading;
@@ -67,11 +68,11 @@ public class OneToOneAttributeProcessing {
 		}
 
 		if ( StringHelper.isNotEmpty( jaxbOneToOne.getMapsId() ) ) {
-			memberDetails.applyAnnotationUsage(
+			final MutableAnnotationUsage<MapsId> mapsIdAnn = memberDetails.applyAnnotationUsage(
 					JpaAnnotations.MAPS_ID,
-					(usage) -> usage.setAttributeValue( "value", jaxbOneToOne.getMapsId() ),
 					xmlDocumentContext.getModelBuildingContext()
 			);
+			mapsIdAnn.setAttributeValue( "value", jaxbOneToOne.getMapsId() );
 		}
 
 		return memberDetails;
@@ -81,24 +82,20 @@ public class OneToOneAttributeProcessing {
 			MutableMemberDetails memberDetails,
 			JaxbOneToOneImpl jaxbOneToOne,
 			XmlDocumentContext xmlDocumentContext) {
-		return memberDetails.applyAnnotationUsage(
-				JpaAnnotations.ONE_TO_ONE,
-				(usage) -> {
-					if ( jaxbOneToOne.getFetch() != null ) {
-						usage.setAttributeValue( "fetch", jaxbOneToOne.getFetch() );
-					}
-					if ( jaxbOneToOne.isOptional() != null ) {
-						usage.setAttributeValue( "optional", jaxbOneToOne.isOptional() );
-					}
-					if ( StringHelper.isNotEmpty( jaxbOneToOne.getMappedBy() ) ) {
-						usage.setAttributeValue( "mappedBy", jaxbOneToOne.getMappedBy() );
-					}
-					if ( jaxbOneToOne.isOrphanRemoval() != null ) {
-						usage.setAttributeValue( "orphanRemoval", jaxbOneToOne.isOrphanRemoval() );
-					}
-				},
-				xmlDocumentContext.getModelBuildingContext()
-		);
+		final MutableAnnotationUsage<OneToOne> usage = memberDetails.applyAnnotationUsage( JpaAnnotations.ONE_TO_ONE, xmlDocumentContext.getModelBuildingContext() );
+		if ( jaxbOneToOne.getFetch() != null ) {
+			usage.setAttributeValue( "fetch", jaxbOneToOne.getFetch() );
+		}
+		if ( jaxbOneToOne.isOptional() != null ) {
+			usage.setAttributeValue( "optional", jaxbOneToOne.isOptional() );
+		}
+		if ( StringHelper.isNotEmpty( jaxbOneToOne.getMappedBy() ) ) {
+			usage.setAttributeValue( "mappedBy", jaxbOneToOne.getMappedBy() );
+		}
+		if ( jaxbOneToOne.isOrphanRemoval() != null ) {
+			usage.setAttributeValue( "orphanRemoval", jaxbOneToOne.isOrphanRemoval() );
+		}
+		return usage;
 	}
 
 	@SuppressWarnings("unused")

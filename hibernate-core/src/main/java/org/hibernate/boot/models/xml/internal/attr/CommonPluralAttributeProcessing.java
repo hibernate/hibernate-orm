@@ -8,10 +8,6 @@ package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLDeleteAll;
-import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.boot.internal.CollectionClassification;
@@ -19,6 +15,7 @@ import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
@@ -153,16 +150,12 @@ public class CommonPluralAttributeProcessing {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// filters and custom sql
 
-		jaxbPluralAttribute.getFilters().forEach( (jaxbFilter) -> {
-			XmlAnnotationHelper.applyFilter( jaxbFilter, memberDetails, xmlDocumentContext );
-		} );
-
+		XmlAnnotationHelper.applyFilters( jaxbPluralAttribute.getFilters(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applySqlRestriction( jaxbPluralAttribute.getSqlRestriction(), memberDetails, xmlDocumentContext );
-
-		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlInsert(), memberDetails, SQLInsert.class, xmlDocumentContext );
-		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlUpdate(), memberDetails, SQLUpdate.class, xmlDocumentContext );
-		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlDelete(), memberDetails, SQLDelete.class, xmlDocumentContext );
-		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlDeleteAll(), memberDetails, SQLDeleteAll.class, xmlDocumentContext );
+		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlInsert(), memberDetails, HibernateAnnotations.SQL_INSERT, xmlDocumentContext );
+		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlUpdate(), memberDetails, HibernateAnnotations.SQL_UPDATE, xmlDocumentContext );
+		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlDelete(), memberDetails, HibernateAnnotations.SQL_DELETE, xmlDocumentContext );
+		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlDeleteAll(), memberDetails, HibernateAnnotations.SQL_DELETE_ALL, xmlDocumentContext );
 	}
 
 	private static void applyOrderColumn(

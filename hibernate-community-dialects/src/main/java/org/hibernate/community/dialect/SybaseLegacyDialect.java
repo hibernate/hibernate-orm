@@ -167,6 +167,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 			int displaySize) {
 		// Sybase jconnect driver reports the "actual" precision in the display size
 		switch ( jdbcTypeCode ) {
+			case Types.CHAR:
 			case Types.VARCHAR:
 			case Types.REAL:
 			case Types.DOUBLE:

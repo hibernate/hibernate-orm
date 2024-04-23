@@ -24,6 +24,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PostLoad;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @ServiceRegistry( settings = @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ) )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17918" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17983" )
 public class CachingBatchLoadNoProxiesAndCircularRelationshipTest {
 	private static final int NUMBER_OF_CATEGORIES = 5;
 
@@ -47,12 +49,12 @@ public class CachingBatchLoadNoProxiesAndCircularRelationshipTest {
 
 		scope.inSession( session -> {
 			final CategoryHolder result = session.createQuery(
-					"from CategoryHolder",
+					"from CategoryHolder where id = 0",
 					CategoryHolder.class
 			).getSingleResult();
 			Category category = result.getLeftCategory();
 			for ( int i = 0; i < NUMBER_OF_CATEGORIES; i++ ) {
-				assertThat( category ).matches( Hibernate::isInitialized )
+				assertThat( category ).matches( Hibernate::isInitialized, "Category was not initialized" )
 						.extracting( Category::getId )
 						.isEqualTo( i );
 				if ( i == 3 ) {
@@ -66,27 +68,46 @@ public class CachingBatchLoadNoProxiesAndCircularRelationshipTest {
 		} );
 	}
 
+	@Test
+	public void recursiveBatchLoadingSameQueryTest(SessionFactoryScope scope) {
+		scope.getSessionFactory().getCache().evict( Category.class );
+		scope.inSession( session -> {
+			final CategoryHolder result = session.find( CategoryHolder.class, 1 );
+			Category category = result.getLeftCategory();
+			for ( int i = 0; i < NUMBER_OF_CATEGORIES; i++ ) {
+				assertThat( category ).matches( Hibernate::isInitialized, "Category was not initialized" )
+						.extracting( Category::getId )
+						.isEqualTo( i );
+				if ( i == NUMBER_OF_CATEGORIES - 1 ) {
+					assertThat( category ).isSameAs( result.getRightCategory() );
+					assertThat( category.getNextCategory() ).isSameAs( result.getLeftCategory() );
+				}
+				category = category.getNextCategory();
+			}
+		} );
+	}
+
 	@BeforeAll
 	public void setupEntities(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Category[] categories = new Category[NUMBER_OF_CATEGORIES];
 			for ( int i = 0; i < categories.length; i++ ) {
-				categories[i] = new Category( i );
+				categories[i] = new Category( i, "category_" + i );
 				session.persist( categories[i] );
 			}
-
-			// Chain-link the categories (#n points to #n+1)
+			// Chain-link the categories (#n points to #n+1, last one points to #0)
 			for ( int i = 0; i < categories.length - 1; i++ ) {
 				categories[i].setNextCategory( categories[i + 1] );
 			}
-			// And chain the last category back to the first one
 			categories[categories.length - 1].nextCategory = categories[0];
-
-			// Create a holder object so when loading it we trigger the load of two categories
-			final CategoryHolder holder = new CategoryHolder( 0 );
-			holder.leftCategory = categories[0];
-			holder.rightCategory = categories[3];
-			session.persist( holder );
+			final CategoryHolder holder1 = new CategoryHolder( 0 );
+			holder1.leftCategory = categories[0];
+			holder1.rightCategory = categories[3];
+			session.persist( holder1 );
+			final CategoryHolder holder2 = new CategoryHolder( 1 );
+			holder2.leftCategory = categories[0];
+			holder2.rightCategory = categories[4];
+			session.persist( holder2 );
 		} );
 	}
 
@@ -110,6 +131,8 @@ public class CachingBatchLoadNoProxiesAndCircularRelationshipTest {
 		@Id
 		private Integer id;
 
+		private String name;
+
 		@ManyToOne( fetch = FetchType.LAZY )
 		@Fetch( value = FetchMode.SELECT )
 		private Category nextCategory;
@@ -117,8 +140,9 @@ public class CachingBatchLoadNoProxiesAndCircularRelationshipTest {
 		public Category() {
 		}
 
-		public Category(Integer id) {
+		public Category(Integer id, String name) {
 			this.id = id;
+			this.name = name;
 		}
 
 		public Integer getId() {
@@ -131,6 +155,17 @@ public class CachingBatchLoadNoProxiesAndCircularRelationshipTest {
 
 		public void setNextCategory(Category nextCategory) {
 			this.nextCategory = nextCategory;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		@PostLoad
+		public void postLoad() {
+			assertThat( name ).isNotNull().isEqualTo( "category_" + id );
+			assertThat( nextCategory.getId() ).isNotNull();
+			// note : nextCategory.name will be null here since the instance will not have been initialized yet
 		}
 	}
 

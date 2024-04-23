@@ -384,4 +384,50 @@ The integration of static metamodel generation in a project has changed; the rec
 
 Check out the specific sections in the User Guide for a guideline on how to do this for {userGuideBase}#tooling-gradle-modelgen[Gradle] or {userGuideBase}#tooling-maven-modelgen[Maven].
 
+[[mative-query]]
+== Native query with joins
+
+A Native query that uses a result set mapping, explicit or implicitly by specifying an entity class as result type to `createNativeQuery`,
+requires unique select item aliases.
+If the native query contains a join to a table with same named columns, a query that e.g. does `select * from ..` will lead to an error.
+If the desire is to select only columns for the result type entity, prefix the * with a tables alias e.g.
+`select p.* from ...`
+
+
+E.g.
+
+```
+@Entity
+class Person {
+    @Id
+    private Long id;
+
+    @OneToMany(mappedBy = "person")
+    private Set<Dog> dogs = new HashSet<>( 0 );
+}
+
+@Entity
+class Dog {
+    @Id
+    private Long id;
+}
+```
+
+Queries like
+
+```
+session.createNativeQuery(
+"SELECT * FROM person p LEFT JOIN dog d on d.person_id = p.id", Person.class )
+.getResultList();
+```
+
+have to be changed to
+
+```
+session.createNativeQuery(
+"SELECT p.* FROM person p LEFT JOIN dog d on d.person_id = p.id", Person.class )
+.getResultList();
+```
+
+
 

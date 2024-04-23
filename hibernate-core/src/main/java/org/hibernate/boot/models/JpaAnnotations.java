@@ -19,6 +19,7 @@ import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Cacheable;
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
@@ -114,6 +115,7 @@ public interface JpaAnnotations {
 	AnnotationDescriptor<AttributeOverride> ATTRIBUTE_OVERRIDE = createOrmDescriptor( AttributeOverride.class, ATTRIBUTE_OVERRIDES );
 	AnnotationDescriptor<Basic> BASIC = createOrmDescriptor( Basic.class );
 	AnnotationDescriptor<Cacheable> CACHEABLE = createOrmDescriptor( Cacheable.class );
+	AnnotationDescriptor<CheckConstraint> CHECK_CONSTRAINT = createOrmDescriptor(CheckConstraint.class );
 	AnnotationDescriptor<CollectionTable> COLLECTION_TABLE = createOrmDescriptor( CollectionTable.class );
 	AnnotationDescriptor<Column> COLUMN = createOrmDescriptor( Column.class );
 	AnnotationDescriptor<ColumnResult> COLUMN_RESULT = createOrmDescriptor( ColumnResult.class );

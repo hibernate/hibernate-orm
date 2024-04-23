@@ -12,7 +12,7 @@ import org.hibernate.annotations.ResultCheckStyle;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jdbc.Expectation;
 
-import java.lang.reflect.Constructor;
+import java.util.function.Supplier;
 
 /**
  * For persistence operations (INSERT, UPDATE, DELETE) what style of
@@ -92,17 +92,21 @@ public enum ExecuteUpdateResultCheckStyle {
 		return customSql != null && callable ? PARAM : COUNT;
 	}
 
-	public static @Nullable Constructor<? extends Expectation> expectationConstructor(
+	public static @Nullable Supplier<? extends Expectation> expectationConstructor(
 			@Nullable ExecuteUpdateResultCheckStyle style) {
 		return style == null ? null : style.expectationConstructor();
 	}
 
-	public Constructor<? extends Expectation> expectationConstructor() {
-		try {
-			return expectationClass().getDeclaredConstructor();
-		}
-		catch ( NoSuchMethodException e ) {
-			throw new AssertionFailure("Could not instantiate Expectation", e);
+	public Supplier<? extends Expectation> expectationConstructor() {
+		switch (this) {
+			case NONE:
+				return Expectation.None::new;
+			case COUNT:
+				return Expectation.RowCount::new;
+			case PARAM:
+				return Expectation.OutParameter::new;
+			default:
+				throw new AssertionFailure( "Unrecognized ExecuteUpdateResultCheckStyle");
 		}
 	}
 

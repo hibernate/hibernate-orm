@@ -8,6 +8,8 @@ package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -39,10 +41,16 @@ public class EmbeddedAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<Embedded> embeddedAnn = XmlProcessingHelper.getOrMakeAnnotation( Embedded.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<Embedded> embeddedAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.EMBEDDED,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 
 		if ( StringHelper.isNotEmpty( jaxbEmbedded.getTarget() ) ) {
-			final MutableAnnotationUsage<Target> targetAnn = XmlProcessingHelper.getOrMakeAnnotation( Target.class, memberDetails, xmlDocumentContext );
+			final MutableAnnotationUsage<Target> targetAnn = memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.TARGET,
+					xmlDocumentContext.getModelBuildingContext()
+			);
 			targetAnn.setAttributeValue( "value", determineTargetName( jaxbEmbedded.getTarget(), xmlDocumentContext ) );
 		}
 

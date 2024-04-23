@@ -6,15 +6,13 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import java.util.EnumSet;
-import java.util.List;
-
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
@@ -22,7 +20,6 @@ import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
@@ -74,12 +71,12 @@ public class ManyToOneAttributeProcessing {
 			MutableMemberDetails memberDetails,
 			JaxbManyToOneImpl jaxbManyToOne,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<ManyToOne> manyToOneUsage = XmlProcessingHelper.getOrMakeAnnotation( ManyToOne.class, memberDetails, xmlDocumentContext );
-		XmlAnnotationHelper.applyOptionalAttribute(
-				manyToOneUsage,
-				"fetch",
-				jaxbManyToOne.getFetch()
+		final MutableAnnotationUsage<ManyToOne> manyToOneUsage = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.MANY_TO_ONE,
+				xmlDocumentContext.getModelBuildingContext()
 		);
+
+		XmlAnnotationHelper.applyOptionalAttribute( manyToOneUsage, "fetch", jaxbManyToOne.getFetch() );
 
 		if ( jaxbManyToOne.isId() == Boolean.TRUE ) {
 			memberDetails.applyAnnotationUsage( JpaAnnotations.ID, xmlDocumentContext.getModelBuildingContext() );
@@ -106,7 +103,10 @@ public class ManyToOneAttributeProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<NotFound> notFoundAnn = XmlProcessingHelper.makeAnnotation( NotFound.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<NotFound> notFoundAnn = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.NOT_FOUND,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 		notFoundAnn.setAttributeValue( "action", notFoundAction );
 	}
 
@@ -121,7 +121,10 @@ public class ManyToOneAttributeProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<OnDelete> notFoundAnn = XmlProcessingHelper.makeAnnotation( OnDelete.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<OnDelete> notFoundAnn = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.ON_DELETE,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 		notFoundAnn.setAttributeValue( "action", action );
 	}
 
@@ -136,13 +139,10 @@ public class ManyToOneAttributeProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<Target> targetAnn = XmlProcessingHelper.makeAnnotation( Target.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<Target> targetAnn = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.TARGET,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 		targetAnn.setAttributeValue( "value", determineTargetName( targetEntityName, xmlDocumentContext ) );
-	}
-
-	private static <E extends Enum<E>> List<E> asList(EnumSet<E> enums) {
-		final List<E> list = CollectionHelper.arrayList( enums.size() );
-		list.addAll( enums );
-		return list;
 	}
 }

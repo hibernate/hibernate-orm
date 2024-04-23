@@ -152,6 +152,16 @@ public class MySQLDialect extends Dialect {
 					//we set scale > 20
 					size.setScale( Math.min( size.getPrecision(), 20 ) );
 					return size;
+				case BLOB:
+				case NCLOB:
+				case CLOB:
+					return super.resolveSize(
+							jdbcType,
+							javaType,
+							precision,
+							scale,
+							length == null ? getDefaultLobLength() : length
+					);
 				default:
 					return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
@@ -524,8 +534,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public long getDefaultLobLength() {
-		//max length for mediumblob or mediumtext
-		return 16_777_215;
+		return Integer.MAX_VALUE;
 	}
 
 	@Override

@@ -911,6 +911,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitSubQueryExpression(SqmSubQuery<?> expression) {
+		visitCteContainer( expression );
 		expression.getQueryPart().accept( this );
 		return expression;
 	}

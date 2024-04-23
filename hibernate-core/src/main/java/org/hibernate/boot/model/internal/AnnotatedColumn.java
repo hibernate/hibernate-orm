@@ -882,7 +882,7 @@ public class AnnotatedColumn {
 				final List<AnnotationUsage<Check>> checkAnns = checksAnn.getList( "value" );
 				for ( AnnotationUsage<Check> checkAnn : checkAnns ) {
 					addCheckConstraint(
-							checkAnn.getString( "name", (String) null ),
+							checkAnn.getString( "name" ),
 							checkAnn.getString( "constraints" )
 					);
 				}

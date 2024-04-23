@@ -19,6 +19,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularAssociationAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularFetchModeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbStandardAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.ClassDetails;
@@ -29,9 +32,6 @@ import org.hibernate.models.spi.MutableMemberDetails;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Transient;
-
-import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
  * @author Steve Ebersole
@@ -61,7 +61,10 @@ public class CommonAttributeProcessing {
 			AccessType accessType,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<Access> accessAnn = XmlProcessingHelper.makeAnnotation( Access.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<Access> accessAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.ACCESS,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 		accessAnn.setAttributeValue( "value", accessType );
 	}
 
@@ -74,12 +77,16 @@ public class CommonAttributeProcessing {
 			return;
 		}
 
+		final MutableAnnotationUsage<AttributeAccessor> accessorAnn = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.ATTRIBUTE_ACCESSOR,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
 		final ClassDetails strategyClassDetails = xmlDocumentContext
 				.getModelBuildingContext()
 				.getClassDetailsRegistry()
 				.getClassDetails( attributeAccessor );
-		final MutableAnnotationUsage<AttributeAccessor> accessAnn = XmlProcessingHelper.makeAnnotation( AttributeAccessor.class, memberDetails, xmlDocumentContext );
-		XmlProcessingHelper.applyAttributeIfSpecified( "strategy", strategyClassDetails, accessAnn );
+		XmlAnnotationHelper.applyOptionalAttribute( accessorAnn, "strategy", strategyClassDetails );
 	}
 
 	public static <A extends Annotation> void applyOptionality(
@@ -100,7 +107,10 @@ public class CommonAttributeProcessing {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final boolean includeInOptimisticLock = jaxbAttribute.isOptimisticLock();
-		final MutableAnnotationUsage<OptimisticLock> optLockAnn = XmlProcessingHelper.makeAnnotation( OptimisticLock.class, memberDetails, xmlDocumentContext );
+		final MutableAnnotationUsage<OptimisticLock> optLockAnn = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.OPTIMISTIC_LOCK,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 		optLockAnn.setAttributeValue( "excluded", !includeInOptimisticLock );
 	}
 
@@ -128,7 +138,10 @@ public class CommonAttributeProcessing {
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbFetchMode != null ) {
 			final FetchMode fetchMode = FetchMode.valueOf( jaxbFetchMode.value() );
-			final MutableAnnotationUsage<Fetch> fetchAnn = XmlProcessingHelper.makeAnnotation( Fetch.class, memberDetails, xmlDocumentContext );
+			final MutableAnnotationUsage<Fetch> fetchAnn = memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.FETCH,
+					xmlDocumentContext.getModelBuildingContext()
+			);
 			fetchAnn.setAttributeValue( "value", fetchMode );
 		}
 	}
@@ -143,6 +156,6 @@ public class CommonAttributeProcessing {
 			classAccessType,
 			declarer
 		);
-		XmlProcessingHelper.makeAnnotation( Transient.class, memberDetails, xmlDocumentContext );
+		memberDetails.applyAnnotationUsage( JpaAnnotations.TRANSIENT, xmlDocumentContext.getModelBuildingContext() );
 	}
 }

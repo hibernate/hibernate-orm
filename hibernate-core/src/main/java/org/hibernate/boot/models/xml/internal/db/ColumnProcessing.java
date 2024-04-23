@@ -19,12 +19,12 @@ import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnSizable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnStandard;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnUniqueable;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCommentable;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
 
@@ -210,8 +210,10 @@ public class ColumnProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<MapKeyColumn> columnAnn = XmlProcessingHelper.getOrMakeAnnotation( MapKeyColumn.class, memberDetails, xmlDocumentContext );
-
+		final MutableAnnotationUsage<MapKeyColumn> columnAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.MAP_KEY_COLUMN,
+				xmlDocumentContext.getModelBuildingContext()
+		);
 		applyColumnDetails( jaxbMapKeyColumn, memberDetails, columnAnn, xmlDocumentContext );
 	}
 }

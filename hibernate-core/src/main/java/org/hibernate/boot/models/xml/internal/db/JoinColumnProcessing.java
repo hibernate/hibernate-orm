@@ -153,7 +153,7 @@ public class JoinColumnProcessing {
 		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
 		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
 			final MutableAnnotationUsage<JoinColumn> joinColumnAnn = JpaAnnotations.JOIN_COLUMN.createUsage(
-					annotationTarget,
+					null,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			transferJoinColumn( jaxbJoinColumn, joinColumnAnn, null, xmlDocumentContext );

@@ -127,7 +127,13 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				case BLOB:
 				case CLOB:
 				case NCLOB:
-					return Size.length( getDefaultLobLength() );
+					return super.resolveSize(
+							jdbcType,
+							javaType,
+							precision,
+							scale,
+							length == null ? getDefaultLobLength() : length
+					);
 				default:
 					return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}

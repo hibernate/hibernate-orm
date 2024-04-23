@@ -160,7 +160,7 @@ import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
-import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
+import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -1397,7 +1397,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlInsert.check() )
 			);
 			if ( sqlInsert.verify() != Expectation.class ) {
-				persistentClass.setInsertExpectation( getDefaultConstructor(  sqlInsert.verify() ) );
+				persistentClass.setInsertExpectation( getDefaultSupplier(  sqlInsert.verify() ) );
 			}
 		}
 
@@ -1412,7 +1412,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
 			if ( sqlUpdate.verify() != Expectation.class ) {
-				persistentClass.setUpdateExpectation( getDefaultConstructor(  sqlUpdate.verify() ) );
+				persistentClass.setUpdateExpectation( getDefaultSupplier(  sqlUpdate.verify() ) );
 			}
 		}
 
@@ -1427,7 +1427,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlDelete.check() )
 			);
 			if ( sqlDelete.verify() != Expectation.class ) {
-				persistentClass.setDeleteExpectation( getDefaultConstructor( sqlDelete.verify() ) );
+				persistentClass.setDeleteExpectation( getDefaultSupplier( sqlDelete.verify() ) );
 			}
 		}
 
@@ -2274,7 +2274,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlInsert.check() )
 			);
 			if ( sqlInsert.verify() != Expectation.class ) {
-				join.setInsertExpectation( getDefaultConstructor( sqlInsert.verify() ) );
+				join.setInsertExpectation( getDefaultSupplier( sqlInsert.verify() ) );
 			}
 		}
 		else if ( matchingTable != null ) {
@@ -2297,7 +2297,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
 			if ( sqlUpdate.verify() != Expectation.class ) {
-				join.setUpdateExpectation( getDefaultConstructor( sqlUpdate.verify() ) );
+				join.setUpdateExpectation( getDefaultSupplier( sqlUpdate.verify() ) );
 			}
 		}
 		else if ( matchingTable != null ) {
@@ -2320,7 +2320,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlDelete.check() )
 			);
 			if ( sqlDelete.verify() != Expectation.class ) {
-				join.setDeleteExpectation( getDefaultConstructor(  sqlDelete.verify() ) );
+				join.setDeleteExpectation( getDefaultSupplier(  sqlDelete.verify() ) );
 			}
 		}
 		else if ( matchingTable != null ) {

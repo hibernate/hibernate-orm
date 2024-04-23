@@ -134,6 +134,13 @@ public class EntityBatchLoaderArrayParam<T>
 					getLoadable().getEntityName(), id, Arrays.toString(idsToInitialize) );
 		}
 
+		for ( Object initializedId : idsToInitialize ) {
+			if ( initializedId != null ) {
+				// found or not, remove the key from the batch-fetch queue
+				removeBatchLoadableEntityKey( initializedId, getLoadable(), session );
+			}
+		}
+
 		LoaderHelper.loadByArrayParameter(
 				idsToInitialize,
 				sqlAst,
@@ -147,13 +154,6 @@ public class EntityBatchLoaderArrayParam<T>
 				readOnly,
 				session
 		);
-
-		for ( Object initializedId : idsToInitialize ) {
-			if ( initializedId != null ) {
-				// found or not, remove the key from the batch-fetch queue
-				removeBatchLoadableEntityKey( initializedId, getLoadable(), session );
-			}
-		}
 	}
 
 	@Override

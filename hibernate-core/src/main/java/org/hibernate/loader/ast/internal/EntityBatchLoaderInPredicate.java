@@ -141,7 +141,6 @@ public class EntityBatchLoaderInPredicate<T>
 		);
 
 		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
-		final List<EntityKey> entityKeys = arrayList( sqlBatchSize );
 
 		chunker.processChunks(
 				idsToInitialize,
@@ -166,7 +165,11 @@ public class EntityBatchLoaderInPredicate<T>
 				},
 				(key, relativePosition, absolutePosition) -> {
 					if ( key != null ) {
-						entityKeys.add( session.generateEntityKey( key, getLoadable().getEntityPersister() ) );
+						final EntityKey entityKey = session.generateEntityKey(
+								key,
+								getLoadable().getEntityPersister()
+						);
+						batchFetchQueue.removeBatchLoadableEntityKey( entityKey );
 					}
 				},
 				(startIndex) -> {
@@ -181,8 +184,6 @@ public class EntityBatchLoaderInPredicate<T>
 					}
 				},
 				(startIndex, nonNullElementCount) -> {
-					entityKeys.forEach( batchFetchQueue::removeBatchLoadableEntityKey );
-					entityKeys.clear();
 				},
 				session
 		);

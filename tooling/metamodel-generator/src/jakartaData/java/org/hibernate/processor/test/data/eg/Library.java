@@ -14,28 +14,34 @@ import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Transactional
 @Repository
 public interface Library {
 
 	@Find
-	Book book(String isbn);
+	Book book(@NotNull String isbn);
 
 	@Find
-	List<Book> books(@By("isbn") List<String> isbns);
+	List<Book> books(@By("isbn") @NotEmpty List<String> isbns);
 
 	@Find
-	Book book(String title, LocalDate publicationDate);
+	Book book(@NotBlank String title, @NotNull LocalDate publicationDate);
 
 	@Find
-	List<Book> publications(Type type, Sort<Book> sort);
+	List<Book> publications(@NotNull Type type, Sort<Book> sort);
 
 	@Find
 	@OrderBy("title")
-	List<Book> booksByPublisher(String publisher_name);
+	List<Book> booksByPublisher(@NotBlank String publisher_name);
 
 	@Query("where title like :titlePattern")
 	@OrderBy("title")
@@ -77,14 +83,17 @@ public interface Library {
 	void update(Author author);
 
 	@Save
-	void save(Publisher publisher);
+	void save(@Valid Publisher publisher);
 
 	@Delete
 	void delete(Publisher publisher);
 
+	@Update
+	void updateAll(Publisher... publishers);
+
 	@Find
 	@OrderBy("isbn")
-	CursoredPage<Book> allBooks(PageRequest<Book> pageRequest);
+	CursoredPage<Book> allBooks(PageRequest pageRequest);
 
 	@Find
 	@OrderBy("name")
@@ -92,8 +101,14 @@ public interface Library {
 	List<Author> allAuthors(Order<Author> order, Limit limit);
 
 	@Find
-	List<Author> authorsByCity(@By("address.city") String city);
+	List<Author> authorsByCity(@By("address.city") @NotBlank String city);
 
 	@Find
 	List<Author> authorsByCityAndPostcode(String address_city, String address_postcode);
+
+	@Query("where type = org.hibernate.processor.test.data.eg.Type.Magazine")
+	List<Book> magazines();
+
+	@Query("where type = Journal")
+	List<Book> journals();
 }

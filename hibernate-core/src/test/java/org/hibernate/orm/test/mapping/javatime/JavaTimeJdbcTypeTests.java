@@ -25,14 +25,10 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.jdbc.DateJdbcType;
-import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -58,7 +54,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.roundToDefaultPrecisio
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(
-		settings = @Setting(name = MappingSettings.PREFER_JAVA_TYPE_JDBC_TYPES, value = "false")
+		settings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
 )
 @DomainModel( annotatedClasses = JavaTimeJdbcTypeTests.EntityWithJavaTimeValues.class )
 @SessionFactory

@@ -1,5 +1,6 @@
 package org.hibernate.processor.test.dao;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.Session;
 import org.hibernate.annotations.processing.Find;
@@ -8,6 +9,7 @@ import org.hibernate.annotations.processing.SQL;
 import org.hibernate.query.SelectionQuery;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface StatefulDao {
 
@@ -16,11 +18,20 @@ public interface StatefulDao {
     @Find
     Book getBook(String isbn);
 
+    @Find @Nullable
+    Book getBookOrNull(String isbn);
+
+    @Find
+    Optional<Book> getBookMaybe(String isbn);
+
     @Find(enabledFetchProfiles="Goodbye")
     Book getBookFetching(String isbn);
 
     @Find
     Book getBook(String title, String author);
+
+    @Find
+    Optional<Book> getBookMaybe(String title, String author);
 
     @Find(enabledFetchProfiles="Hello")
     Book getBookFetching(String title, String author);

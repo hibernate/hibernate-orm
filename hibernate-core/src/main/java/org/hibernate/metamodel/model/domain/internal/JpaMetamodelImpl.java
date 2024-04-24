@@ -54,6 +54,7 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.EntityGraph;
@@ -91,7 +92,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private final Map<Class<?>, ManagedDomainType<?>> jpaManagedTypeMap = new HashMap<>();
 	private final Set<ManagedDomainType<?>> jpaManagedTypes = new HashSet<>();
 	private final Set<EmbeddableDomainType<?>> jpaEmbeddables = new HashSet<>();
-	private final Map<String, Map<Class<?>, Enum<?>>> allowedEnumLiteralTexts = new HashMap<>();
+	private final Map<String, Set<String>> allowedEnumLiteralTexts = new HashMap<>();
 
 	private final transient Map<String, RootGraphImplementor<?>> entityGraphMap = new ConcurrentHashMap<>();
 
@@ -239,8 +240,42 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public Map<String, Map<Class<?>, Enum<?>>> getAllowedEnumLiteralTexts() {
-		return allowedEnumLiteralTexts;
+	public Set<String> getAllowedEnumLiteralTexts(String enumValue) {
+		return allowedEnumLiteralTexts.get(enumValue);
+	}
+
+	@Override
+	public EnumJavaType<?> getEnumType(String prefix) {
+		final ClassLoaderService classLoaderService =
+				getServiceRegistry().requireService(ClassLoaderService.class);
+		final JavaTypeRegistry registry = getTypeConfiguration().getJavaTypeRegistry();
+		try {
+			final Class<?> namedClass = classLoaderService.classForName( prefix );
+			if ( namedClass != null && namedClass.isEnum() ) {
+				return (EnumJavaType) registry.resolveDescriptor(namedClass);
+			}
+		}
+		catch (ClassLoadingException classLoadingException) {
+			try {
+				final int lastDot = prefix.lastIndexOf('.');
+				if ( lastDot>0) {
+					final String replaced =
+							prefix.substring(0, lastDot) + '$' + prefix.substring(lastDot+1);
+					final Class<?> namedClass = classLoaderService.classForName( replaced );
+					if ( namedClass != null && namedClass.isEnum() ) {
+						return (EnumJavaType) registry.resolveDescriptor(namedClass);
+					}
+				}
+			}
+			catch (ClassLoadingException ignore) {
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
+		return Enum.valueOf( enumType.getJavaTypeClass(), terminal );
 	}
 
 	@Override
@@ -582,13 +617,13 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				final Enum<?>[] enumConstants = enumJavaClass.getEnumConstants();
 				for ( Enum<?> enumConstant : enumConstants ) {
 					allowedEnumLiteralTexts
-							.computeIfAbsent( enumConstant.name(), (s) -> new HashMap<>() )
-							.put( enumJavaClass, enumConstant );
+							.computeIfAbsent( enumConstant.name(), s -> new HashSet<>() )
+							.add( enumJavaClass.getName() );
 
 					final String simpleQualifiedName = enumJavaClass.getSimpleName() + "." + enumConstant.name();
 					allowedEnumLiteralTexts
-							.computeIfAbsent( simpleQualifiedName, (s) -> new HashMap<>() )
-							.put( enumJavaClass, enumConstant );
+							.computeIfAbsent( simpleQualifiedName, s -> new HashSet<>() )
+							.add( enumJavaClass.getName() );
 				}
 			}
 		} );

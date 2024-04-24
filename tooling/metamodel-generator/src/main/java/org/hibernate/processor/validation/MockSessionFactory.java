@@ -108,6 +108,7 @@ import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -283,6 +284,8 @@ public abstract class MockSessionFactory
 
 	abstract boolean isClassDefined(String qualifiedName);
 
+	abstract boolean isEnum(String className);
+
 	abstract boolean isFieldDefined(String qualifiedClassName, String fieldName);
 
 	abstract boolean isConstructorDefined(String qualifiedClassName, List<Type> argumentTypes);
@@ -400,6 +403,11 @@ public abstract class MockSessionFactory
 	@Override
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return MetadataBuildingContext.super.isPreferJavaTimeJdbcTypesEnabled();
+	}
+
+	@Override
+	public boolean isPreferNativeEnumTypesEnabled() {
+		return MetadataBuildingContext.super.isPreferNativeEnumTypesEnabled();
 	}
 
 	@Override
@@ -819,9 +827,38 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
+		public EnumJavaType<?> getEnumType(String className) {
+			if ( isEnum(className) ) {
+				return new EnumJavaType( Enum.class ) {
+					@Override
+					public String getTypeName() {
+						return className;
+					}
+				};
+			}
+			else {
+				return null;
+			}
+		}
+
+		@Override
+		public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
+			return null;
+		}
+
+		@Override
+		public Set<String> getAllowedEnumLiteralTexts(String enumValue) {
+			return MockSessionFactory.this.getAllowedEnumLiteralTexts().get(enumValue);
+		}
+
+		@Override
 		public JpaCompliance getJpaCompliance() {
 			return jpaCompliance;
 		}
+	}
+
+	Map<String, Set<String>> getAllowedEnumLiteralTexts() {
+		return emptyMap();
 	}
 
 	class MockMappedDomainType<X> extends MappedSuperclassTypeImpl<X>{

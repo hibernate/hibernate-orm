@@ -6,15 +6,14 @@
  */
 package org.hibernate.processor.annotation;
 
-import org.hibernate.processor.model.MetaAttribute;
-import org.hibernate.processor.model.Metamodel;
+import javax.lang.model.element.ExecutableElement;
 
-public class LifecycleMethod implements MetaAttribute {
-	private final AnnotationMetaEntity annotationMetaEntity;
+import static org.hibernate.processor.util.Constants.UNI;
+
+public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private final String entity;
 	private final String methodName;
 	private final String parameterName;
-	private final String sessionName;
 	private final String operationName;
 	private final boolean addNonnullAnnotation;
 	private final boolean iterateParameter;
@@ -22,19 +21,20 @@ public class LifecycleMethod implements MetaAttribute {
 
 	public LifecycleMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String entity,
 			String methodName,
 			String parameterName,
 			String sessionName,
+			String sessionType,
 			String operationName,
 			boolean addNonnullAnnotation,
 			boolean iterateParameter,
 			boolean returnArgument) {
-		this.annotationMetaEntity = annotationMetaEntity;
+		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.entity = entity;
 		this.methodName = methodName;
 		this.parameterName = parameterName;
-		this.sessionName = sessionName;
 		this.operationName = operationName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.iterateParameter = iterateParameter;
@@ -62,12 +62,12 @@ public class LifecycleMethod implements MetaAttribute {
 		declaration.append("\t}\n");
 		if ( operationName.equals("insert") ) {
 			convertException(declaration,
-					"jakarta.persistence.EntityExistsException",
+					"org.hibernate.exception.ConstraintViolationException",
 					"jakarta.data.exceptions.EntityExistsException");
 		}
 		else {
 			convertException(declaration,
-					"jakarta.persistence.OptimisticLockException",
+					"org.hibernate.StaleStateException",
 					"jakarta.data.exceptions.OptimisticLockingFailureException");
 		}
 		convertException(declaration,
@@ -79,39 +79,78 @@ public class LifecycleMethod implements MetaAttribute {
 
 	private void returnArgument(StringBuilder declaration) {
 		if ( returnArgument ) {
-			declaration
-					.append("\t\treturn ")
+			if ( isReactive() ) {
+				declaration
+					.append(".replaceWith(")
 					.append(parameterName)
+					.append(")");
+			}
+			else {
+				declaration
+						.append("\t\treturn ")
+						.append(parameterName);
+			}
+			declaration
 					.append(";\n");
+		}
+		else {
+			if ( isReactive() ) {
+				declaration
+						.append(";\n");
+			}
 		}
 	}
 
 	private void delegateCall(StringBuilder declaration) {
-		if ( iterateParameter ) {
+		if ( isReactive() ) {
 			declaration
-					.append("\t\tfor (var entity : ")
+					.append("\t\treturn ")
+					.append(sessionName);
+			if ( isReactiveSessionAccess() ) {
+				declaration
+						.append(".chain(")
+						.append(localSessionName())
+						.append(" -> ")
+						.append(localSessionName());
+			}
+			declaration
+					.append('.')
+					.append(operationName)
+					.append('(')
 					.append(parameterName)
-					.append(") {\n\t");
+					.append(')');
+			if ( isReactiveSessionAccess() ) {
+				declaration
+						.append(')');
+			}
 		}
-		declaration
-				.append("\t\t")
-				.append(sessionName)
-				.append('.')
-				.append(operationName)
-				.append('(')
-				.append(iterateParameter ? "entity" : parameterName)
-				.append(')')
-				.append(";\n");
-		if ( iterateParameter ) {
+		else {
+			if ( iterateParameter ) {
+				declaration
+						.append("\t\tfor (var _entity : ")
+						.append(parameterName)
+						.append(") {\n\t");
+			}
 			declaration
-					.append("\t\t}\n");
+					.append("\t\t")
+					.append(sessionName)
+					.append('.')
+					.append(operationName)
+					.append('(')
+					.append(iterateParameter ? "_entity" : parameterName)
+					.append(')')
+					.append(";\n");
+			if ( iterateParameter ) {
+				declaration
+						.append("\t\t}\n");
+			}
 		}
 	}
 
 	private void preamble(StringBuilder declaration) {
 		declaration
 				.append("\n@Override\npublic ")
-				.append(returnArgument ? annotationMetaEntity.importType(entity) : "void")
+				.append(returnType())
 				.append(' ')
 				.append(methodName)
 				.append('(');
@@ -122,6 +161,19 @@ public class LifecycleMethod implements MetaAttribute {
 				.append(parameterName)
 				.append(')')
 				.append(" {\n");
+	}
+
+	private String returnType() {
+		final String entityType = annotationMetaEntity.importType(entity);
+		if ( isReactive() ) {
+			return annotationMetaEntity.importType(UNI)
+					+ '<' + (returnArgument ? entityType : "Void") + '>';
+		}
+		else {
+			return returnArgument
+					? entityType
+					: "void";
+		}
 	}
 
 	private void nullCheck(StringBuilder declaration) {
@@ -140,7 +192,7 @@ public class LifecycleMethod implements MetaAttribute {
 				.append(" exception) {\n")
 				.append("\t\tthrow new ")
 				.append(annotationMetaEntity.importType(convertedException))
-				.append("(exception);\n")
+				.append("(exception.getMessage(), exception);\n")
 				.append("\t}\n");
 	}
 
@@ -171,10 +223,5 @@ public class LifecycleMethod implements MetaAttribute {
 	@Override
 	public String getTypeDeclaration() {
 		return entity;
-	}
-
-	@Override
-	public Metamodel getHostingEntity() {
-		return annotationMetaEntity;
 	}
 }

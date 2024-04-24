@@ -1,6 +1,10 @@
-package org.hibernate.processor.test.data;
+package org.hibernate.processor.test.data.namedquery;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.NaturalId;
 
 import java.math.BigDecimal;
@@ -10,6 +14,8 @@ import java.util.Set;
 @Entity
 @Table(name = "books")
 public class Book {
+    public enum Type { Book, Magazine, Journal }
+
     @Id
     String isbn;
 
@@ -29,6 +35,8 @@ public class Book {
     BigDecimal price;
 
     int pages;
+
+    Type type;
 
     public Book(String isbn, String title, String text) {
         this.isbn = isbn;

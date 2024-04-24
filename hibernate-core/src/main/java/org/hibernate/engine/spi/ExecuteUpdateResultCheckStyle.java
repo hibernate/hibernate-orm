@@ -12,6 +12,8 @@ import org.hibernate.annotations.ResultCheckStyle;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jdbc.Expectation;
 
+import java.util.function.Supplier;
+
 /**
  * For persistence operations (INSERT, UPDATE, DELETE) what style of
  * determining results (success/failure) is to be used.
@@ -90,12 +92,21 @@ public enum ExecuteUpdateResultCheckStyle {
 		return customSql != null && callable ? PARAM : COUNT;
 	}
 
-	public static @Nullable Class<? extends Expectation> expectationClass(@Nullable ExecuteUpdateResultCheckStyle style) {
-		if ( style == null ) {
-			return null;
-		}
-		else {
-			return style.expectationClass();
+	public static @Nullable Supplier<? extends Expectation> expectationConstructor(
+			@Nullable ExecuteUpdateResultCheckStyle style) {
+		return style == null ? null : style.expectationConstructor();
+	}
+
+	public Supplier<? extends Expectation> expectationConstructor() {
+		switch (this) {
+			case NONE:
+				return Expectation.None::new;
+			case COUNT:
+				return Expectation.RowCount::new;
+			case PARAM:
+				return Expectation.OutParameter::new;
+			default:
+				throw new AssertionFailure( "Unrecognized ExecuteUpdateResultCheckStyle");
 		}
 	}
 

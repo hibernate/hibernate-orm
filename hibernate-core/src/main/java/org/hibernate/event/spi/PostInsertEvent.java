@@ -6,6 +6,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -43,6 +44,12 @@ public class PostInsertEvent extends AbstractEvent {
 	public EntityPersister getPersister() {
 		return persister;
 	}
+
+	@Override
+	public SessionFactoryImplementor getFactory() {
+		return persister.getFactory();
+	}
+
 	public Object[] getState() {
 		return state;
 	}

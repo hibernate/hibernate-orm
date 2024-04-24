@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -16,11 +17,11 @@ import static java.util.Collections.emptyList;
 public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	private final List<Boolean> paramNullability;
-	private final String returnType;
 
 	CriteriaDeleteMethod(
 			AnnotationMetaEntity annotationMetaEntity,
-			String methodName, String entity, String returnType,
+			ExecutableElement method,
+			String methodName, String entity,
 			List<String> paramNames,
 			List<String> paramTypes,
 			List<Boolean> paramNullability,
@@ -30,11 +31,12 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 			String sessionType,
 			String sessionName,
 			boolean addNonnullAnnotation,
-			boolean dataRepository) {
-		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, emptyList(),
-				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, multivalued, paramPatterns );
+			boolean dataRepository,
+			String fullReturnType) {
+		super( annotationMetaEntity, method, methodName, entity, null, belongsToDao, sessionType,
+				sessionName, emptyList(), paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository,
+				multivalued, paramPatterns, fullReturnType, false );
 		this.paramNullability = paramNullability;
-		this.returnType = returnType;
 	}
 
 	@Override
@@ -47,10 +49,10 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 		return true;
 	}
 
-	@Override
-	String returnType() {
-		return returnType;
-	}
+//	@Override
+//	String returnType() {
+//		return returnType;
+//	}
 
 	@Override
 	void executeQuery(StringBuilder declaration, List<String> paramTypes) {
@@ -62,7 +64,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 	void tryReturn(StringBuilder declaration) {
 		declaration
 				.append("\n\ttry {\n\t\t");
-		if ( !"void".equals(returnType) ) {
+		if ( !"void".equals(fullReturnType) ) {
 			declaration
 					.append("return ");
 		}

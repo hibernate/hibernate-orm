@@ -248,12 +248,18 @@ class ColumnDefinitions {
 		else {
 			final String lowerCaseTypName = typeName.toLowerCase(Locale.ROOT);
 			switch (lowerCaseTypName) {
+				case "int":
+					return "integer";
 				case "character":
 					return "char";
 				case "character varying":
 					return "varchar";
 				case "binary varying":
 					return "varbinary";
+				case "character large object":
+					return "clob";
+				case "binary large object":
+					return "blob";
 				case "interval second":
 					return "interval";
 				default:

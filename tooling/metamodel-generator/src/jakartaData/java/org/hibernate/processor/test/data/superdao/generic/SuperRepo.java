@@ -1,5 +1,6 @@
 package org.hibernate.processor.test.data.superdao.generic;
 
+import jakarta.data.Order;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.By;
@@ -24,10 +25,13 @@ public interface SuperRepo<T,K> {
     Optional<T> findById(@By("#id") K id);
 
     @Find
+    Optional<T> findById2(@By("id(this)") K id);
+
+    @Find
     Stream<T> findAll();
 
     @Find
-    Page<T> findAll(PageRequest<T> pageRequest);
+    Page<T> findAll(PageRequest pageRequest, Order<T> order);
 
 //    @Delete
 //    void deleteById(@By("#id") K id);

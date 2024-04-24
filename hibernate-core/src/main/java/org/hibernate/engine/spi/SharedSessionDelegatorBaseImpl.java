@@ -26,7 +26,6 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;

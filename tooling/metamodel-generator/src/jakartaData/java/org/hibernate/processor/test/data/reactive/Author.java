@@ -1,5 +1,6 @@
-package org.hibernate.processor.test.data;
+package org.hibernate.processor.test.data.reactive;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
@@ -10,10 +11,11 @@ import java.util.Set;
 public class Author {
     @Id
     String ssn;
+
+    @Basic(optional = false)
     String name;
 
-//    @Embedded
-//    Address address;
+    Address address;
 
     @ManyToMany
     Set<Book> books;

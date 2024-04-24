@@ -11,8 +11,12 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
+import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingReactiveSession;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER_FACTORY;
 import static org.hibernate.processor.util.Constants.HIB_SESSION_FACTORY;
+import static org.hibernate.processor.util.Constants.MUTINY_SESSION;
+import static org.hibernate.processor.util.Constants.MUTINY_SESSION_FACTORY;
+import static org.hibernate.processor.util.Constants.MUTINY_STATELESS_SESSION;
 
 /**
  * Used by the container to instantiate a Jakarta Data repository.
@@ -43,6 +47,10 @@ public class DefaultConstructor implements MetaAttribute {
 		this.sessionVariableName = sessionVariableName;
 		this.dataStore = dataStore;
 		this.addInjectAnnotation = addInjectAnnotation;
+	}
+
+	private boolean isReactive() {
+		return usingReactiveSession(sessionTypeName);
 	}
 
 	@Override
@@ -84,16 +92,26 @@ public class DefaultConstructor implements MetaAttribute {
 					.append(" = ")
 					.append(sessionVariableName)
 					.append("Factory.unwrap(")
-					.append(annotationMetaEntity.importType(HIB_SESSION_FACTORY))
-					.append(".class).openStatelessSession();")
-					.append("\n}\n\n");
-			declaration.append('@')
-					.append(annotationMetaEntity.importType("jakarta.annotation.PreDestroy"))
-					.append("\nprivate void closeSession() {")
-					.append("\n\t")
-					.append(sessionVariableName)
-					.append(".close();")
-					.append("\n}\n\n");
+					.append(annotationMetaEntity.importType(isReactive() ? MUTINY_SESSION_FACTORY : HIB_SESSION_FACTORY))
+					.append(".class).openStatelessSession()");
+			if ( MUTINY_SESSION.equals(sessionTypeName)
+					|| MUTINY_STATELESS_SESSION.equals(sessionTypeName) ) {
+				// this is crap
+				declaration
+						.append(".await().indefinitely()");
+			}
+			declaration
+					.append(";\n}\n\n");
+			// TODO: is it a problem that we never close the session?
+			if ( !isReactive() ) {
+				declaration.append('@')
+						.append(annotationMetaEntity.importType("jakarta.annotation.PreDestroy"))
+						.append("\nprivate void closeSession() {")
+						.append("\n\t")
+						.append(sessionVariableName)
+						.append(".close();")
+						.append("\n}\n\n");
+			}
 		}
 		inject( declaration );
 		declaration

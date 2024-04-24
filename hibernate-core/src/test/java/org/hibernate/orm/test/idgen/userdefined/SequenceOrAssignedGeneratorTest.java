@@ -193,12 +193,11 @@ public class SequenceOrAssignedGeneratorTest {
 	}
 
 	@Entity( name = "MyEntity" )
-	@GenericGenerator( type = SequenceOrAssignedGenerator.class, name = MyEntity.SEQUENCE )
 	public static class MyEntity {
 		protected static final String SEQUENCE = "SEQ_MyEntity";
 
 		@Id
-		@GeneratedValue( generator = SEQUENCE )
+		@SequenceOrAssigned
 		private Long id;
 
 		private String name;
@@ -252,6 +251,12 @@ public class SequenceOrAssignedGeneratorTest {
 		public void setName(String name) {
 			this.name = name;
 		}
+	}
+
+	@IdGeneratorType( SequenceOrAssignedGenerator.class )
+	@Target( { METHOD, FIELD } )
+	@Retention( RUNTIME )
+	public @interface SequenceOrAssigned {
 	}
 
 	public static class SequenceOrAssignedGenerator extends SequenceStyleGenerator {

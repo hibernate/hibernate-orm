@@ -236,6 +236,8 @@ task generateEnversStaticMetamodel(
 
 tasks.withType( Test.class ).each { test ->
     test.systemProperty 'file.encoding', 'utf-8'
+    // Allow creating a function in HSQLDB for this Java method
+    test.systemProperty 'hsqldb.method_class_names', 'org.hibernate.orm.test.jpa.transaction.TransactionTimeoutTest.sleep'
 
     // See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
     test.jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )

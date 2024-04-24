@@ -103,7 +103,7 @@ stage('Build') {
 					stage('Checkout') {
 						checkout scm
 					}
-					try {
+					tryFinally({
 						stage('Start database') {
 							switch (buildEnv.dbName) {
 								case "hsqldb_2_6":
@@ -175,7 +175,7 @@ stage('Build') {
 						stage('Test') {
 							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
-								try {
+								tryFinally({
 									if (buildEnv.dbLockableResource == null) {
 										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
 											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
@@ -194,14 +194,12 @@ stage('Build') {
 											}
 										}
 									}
-								}
-								finally {
+								}, { // Finally
 									junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
-								}
+								})
 							}
 						}
-					}
-					finally {
+					}, { // Finally
 						if ( state[buildEnv.tag]['containerName'] != null ) {
 							sh "docker rm -f ${state[buildEnv.tag]['containerName']}"
 						}
@@ -209,7 +207,7 @@ stage('Build') {
 						if ( !env.CHANGE_ID && buildEnv.notificationRecipients != null ) {
 							handleNotifications(currentBuild, buildEnv)
 						}
-					}
+					})
 				}
 			}
 		})
@@ -239,16 +237,13 @@ class BuildEnvironment {
 void runBuildOnNode(String label, Closure body) {
 	node( label ) {
 		pruneDockerContainers()
-        try {
-			body()
-        }
-        finally {
-        	// If this is a PR, we clean the workspace at the end
-        	if ( env.CHANGE_BRANCH != null ) {
-        		cleanWs()
-        	}
-        	pruneDockerContainers()
-        }
+    tryFinally(body, {
+      // If this is a PR, we clean the workspace at the end
+      if ( env.CHANGE_BRANCH != null ) {
+        cleanWs()
+      }
+      pruneDockerContainers()
+    })
 	}
 }
 void pruneDockerContainers() {
@@ -323,4 +318,34 @@ String getParallelResult( RunWrapper build, String parallelBranchName ) {
     	return null;
     }
     return branch.status.result
+}
+
+// try-finally construct that properly suppresses exceptions thrown in the finally block.
+def tryFinally(Closure main, Closure ... finallies) {
+	def mainFailure = null
+	try {
+		main()
+	}
+	catch (Throwable t) {
+		mainFailure = t
+		throw t
+	}
+	finally {
+		finallies.each {it ->
+			try {
+				it()
+			}
+			catch (Throwable t) {
+				if ( mainFailure ) {
+					mainFailure.addSuppressed( t )
+				}
+				else {
+					mainFailure = t
+				}
+			}
+		}
+	}
+	if ( mainFailure ) { // We may reach here if only the "finally" failed
+		throw mainFailure
+	}
 }

@@ -22,7 +22,7 @@ public class PreDeleteEvent extends AbstractPreDatabaseOperationEvent {
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *  @param entity The entity to be deleted.
+	 * @param entity The entity to be deleted.
 	 * @param id The id to use in the deletion.
 	 * @param deletedState The entity's state at deletion time.
 	 * @param persister The entity's persister.

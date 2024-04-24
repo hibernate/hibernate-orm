@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -47,6 +48,7 @@ import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
@@ -214,16 +216,15 @@ public class DefaultMergeEventListener
 				entityIsPersistent( event, copiedAlready );
 				break;
 			default: //DELETED
-				if ( event.getSession().getPersistenceContext().getEntry( entity ) == null ) {
-					assert event.getSession().getPersistenceContext().containsDeletedUnloadedEntityKey(
-							event.getSession().generateEntityKey(
-									event.getSession()
-											.getEntityPersister( event.getEntityName(), entity )
+				if ( persistenceContext.getEntry( entity ) == null ) {
+					assert persistenceContext.containsDeletedUnloadedEntityKey(
+							source.generateEntityKey(
+									source.getEntityPersister( event.getEntityName(), entity )
 											.getIdentifier( entity, event.getSession() ),
-									event.getSession().getEntityPersister( event.getEntityName(), entity )
+									source.getEntityPersister( event.getEntityName(), entity )
 							)
 					);
-					event.getSession().getActionQueue().unScheduleUnloadedDeletion( entity );
+					source.getActionQueue().unScheduleUnloadedDeletion( entity );
 					entityIsDetached(event, copiedId, originalId, copiedAlready);
 					break;
 				}
@@ -393,7 +394,7 @@ public class DefaultMergeEventListener
 		}
 		final Object clonedIdentifier;
 		if ( copiedId == null ) {
-			clonedIdentifier = persister.getIdentifierType().deepCopy( originalId, source.getFactory() );
+			clonedIdentifier = persister.getIdentifierType().deepCopy( originalId, event.getFactory() );
 		}
 		else {
 			clonedIdentifier = copiedId;
@@ -514,10 +515,18 @@ public class DefaultMergeEventListener
 		// for enhanced entities, copy over the dirty attributes
 		if ( isSelfDirtinessTracker( entity ) && isSelfDirtinessTracker( target ) ) {
 			// clear, because setting the embedded attributes dirties them
+			final ManagedEntity managedEntity = asManagedEntity( target );
+			final boolean useTracker = asManagedEntity( entity ).$$_hibernate_useTracker();
 			final SelfDirtinessTracker selfDirtinessTrackerTarget = asSelfDirtinessTracker( target );
-			selfDirtinessTrackerTarget.$$_hibernate_clearDirtyAttributes();
-			for ( String fieldName : asSelfDirtinessTracker( entity ).$$_hibernate_getDirtyAttributes() ) {
-				selfDirtinessTrackerTarget.$$_hibernate_trackChange( fieldName );
+			if ( !selfDirtinessTrackerTarget.$$_hibernate_hasDirtyAttributes() &&  !useTracker ) {
+				managedEntity.$$_hibernate_setUseTracker( false );
+			}
+			else {
+				managedEntity.$$_hibernate_setUseTracker( true );
+				selfDirtinessTrackerTarget.$$_hibernate_clearDirtyAttributes();
+				for ( String fieldName : asSelfDirtinessTracker( entity ).$$_hibernate_getDirtyAttributes() ) {
+					selfDirtinessTrackerTarget.$$_hibernate_trackChange( fieldName );
+				}
 			}
 		}
 	}

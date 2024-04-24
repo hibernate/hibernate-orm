@@ -80,6 +80,8 @@ public final class Constants {
 	public static final String BASIC_REPOSITORY = "jakarta.data.repository.BasicRepository";
 	public static final String CRUD_REPOSITORY = "jakarta.data.repository.CrudRepository";
 	public static final String DATA_REPOSITORY = "jakarta.data.repository.DataRepository";
+	public static final String JD_ORDER_BY = "jakarta.data.repository.OrderBy";
+	public static final String JD_ORDER_BY_LIST = "jakarta.data.repository.OrderBy.List";
 
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
 	public static final String HIB_PAGE = "org.hibernate.query.Page";
@@ -98,13 +100,16 @@ public final class Constants {
 	public static final String HIB_SESSION = "org.hibernate.Session";
 	public static final String HIB_SESSION_FACTORY = "org.hibernate.SessionFactory";
 	public static final String HIB_STATELESS_SESSION = "org.hibernate.StatelessSession";
+	public static final String MUTINY_SESSION_FACTORY = "org.hibernate.reactive.mutiny.Mutiny.SessionFactory";
 	public static final String MUTINY_SESSION = "org.hibernate.reactive.mutiny.Mutiny.Session";
+	public static final String MUTINY_STATELESS_SESSION = "org.hibernate.reactive.mutiny.Mutiny.StatelessSession";
 	public static final String QUARKUS_SESSION_OPERATIONS = "io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations";
 
 	public static final String TUPLE = "jakarta.persistence.Tuple";
 
 	public static final String UNI = "io.smallrye.mutiny.Uni";
-	public static final String UNI_MUTINY_SESSION = UNI+"<org.hibernate.reactive.mutiny.Mutiny.Session>";
+	public static final String UNI_MUTINY_SESSION = UNI + "<" + MUTINY_SESSION + ">";
+	public static final String UNI_MUTINY_STATELESS_SESSION = UNI + "<" + MUTINY_STATELESS_SESSION + ">";
 	public static final String UNI_INTEGER = UNI+"<java.lang.Integer>";
 	public static final String UNI_VOID = UNI+"<java.lang.Void>";
 	public static final String UNI_BOOLEAN = UNI+"<java.lang.Boolean>";
@@ -124,6 +129,8 @@ public final class Constants {
 	public static final String SET = "java.util.Set";
 	public static final String OPTIONAL = "java.util.Optional";
 	public static final String STREAM = "java.util.stream.Stream";
+
+	public static final String NULLABLE = "jakarta.annotation.Nullable";
 
 	public static final String PANACHE_ORM_REPOSITORY_BASE = "io.quarkus.hibernate.orm.panache.PanacheRepositoryBase";
 	public static final String PANACHE_ORM_ENTITY_BASE = "io.quarkus.hibernate.orm.panache.PanacheEntityBase";

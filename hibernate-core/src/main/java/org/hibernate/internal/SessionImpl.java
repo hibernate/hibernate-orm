@@ -404,28 +404,31 @@ public class SessionImpl
 
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-		if ( sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ) {
-			// Original hibernate-entitymanager EM#close behavior
-			checkSessionFactoryOpen();
-			checkOpenOrWaitingForAutoClose();
-			if ( fastSessionServices.discardOnClose || !isTransactionInProgressAndNotMarkedForRollback() ) {
-				super.close();
+		try {
+			if ( sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ) {
+				// Original hibernate-entitymanager EM#close behavior
+				checkSessionFactoryOpen();
+				checkOpenOrWaitingForAutoClose();
+				if ( fastSessionServices.discardOnClose || !isTransactionInProgressAndNotMarkedForRollback() ) {
+					super.close();
+				}
+				else {
+					//Otherwise, session auto-close will be enabled by shouldAutoCloseSession().
+					prepareForAutoClose();
+				}
 			}
 			else {
-				//Otherwise, session auto-close will be enabled by shouldAutoCloseSession().
-				prepareForAutoClose();
+				super.close();
 			}
 		}
-		else {
-			super.close();
-		}
+		finally {
+			final StatisticsImplementor statistics = sessionFactory.getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.closeSession();
+			}
 
-		final StatisticsImplementor statistics = sessionFactory.getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.closeSession();
+			eventManager.completeSessionClosedEvent( sessionClosedEvent, this );
 		}
-
-		eventManager.completeSessionClosedEvent( sessionClosedEvent, this );
 	}
 
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {
@@ -1968,24 +1971,12 @@ public class SessionImpl
 
 	private transient LobHelperImpl lobHelper;
 
-	private Transaction getTransactionIfAccessible() {
-		// We do not want an exception to be thrown if the transaction
-		// is not accessible. If the transaction is not accessible,
-		// then return null.
-		return fastSessionServices.isJtaTransactionAccessible ? accessTransaction() : null;
-	}
-
 	@Override
 	public void beforeTransactionCompletion() {
 		log.trace( "SessionImpl#beforeTransactionCompletion()" );
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
-		try {
-			getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
-		}
-		catch (Throwable t) {
-			log.exceptionInBeforeTransactionCompletionInterceptor( t );
-		}
+		beforeTransactionCompletionEvents();
 		super.beforeTransactionCompletion();
 	}
 
@@ -2004,19 +1995,7 @@ public class SessionImpl
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
 
-		getEventListenerManager().transactionCompletion( successful );
-
-		final StatisticsImplementor statistics = getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.endTransaction( successful );
-		}
-
-		try {
-			getInterceptor().afterTransactionCompletion( getTransactionIfAccessible() );
-		}
-		catch (Throwable t) {
-			log.exceptionInAfterTransactionCompletionInterceptor( t );
-		}
+		afterTransactionCompletionEvents( successful );
 
 		if ( !delayed ) {
 			if ( shouldAutoClose() && (!isClosed() || waitingForAutoClose) ) {
@@ -2268,12 +2247,7 @@ public class SessionImpl
 					managedFlush();
 				}
 				actionQueue.beforeTransactionCompletion();
-				try {
-					getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
-				}
-				catch ( Throwable t ) {
-					log.exceptionInBeforeTransactionCompletionInterceptor( t );
-				}
+				beforeTransactionCompletionEvents();
 			}
 
 			@Override
@@ -2314,7 +2288,7 @@ public class SessionImpl
 	@Override
 	public void afterTransactionBegin() {
 		checkOpenOrWaitingForAutoClose();
-		getInterceptor().afterTransactionBegin( getTransactionIfAccessible() );
+		afterTransactionBeginEvents();
 	}
 
 	@Override

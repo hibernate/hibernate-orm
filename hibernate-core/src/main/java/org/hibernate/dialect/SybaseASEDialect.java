@@ -13,6 +13,7 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
@@ -69,6 +70,10 @@ public class SybaseASEDialect extends SybaseDialect {
 				Integer scale,
 				Long length) {
 			switch ( jdbcType.getDdlTypeCode() ) {
+				case Types.NCLOB:
+				case Types.CLOB:
+				case Types.BLOB:
+					return Size.length( getDefaultLobLength() );
 				case Types.FLOAT:
 					// Sybase ASE allows FLOAT with a precision up to 48
 					if ( precision != null ) {
@@ -163,6 +168,11 @@ public class SybaseASEDialect extends SybaseDialect {
 		return 16_384;
 	}
 
+	@Override
+	public long getDefaultLobLength() {
+		return Integer.MAX_VALUE;
+	}
+
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
@@ -240,22 +250,6 @@ public class SybaseASEDialect extends SybaseDialect {
 		if ( getDriverKind() == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 		}
-	}
-
-	@Override
-	public int resolveSqlTypeLength(
-			String columnTypeName,
-			int jdbcTypeCode,
-			int precision,
-			int scale,
-			int displaySize) {
-		// Sybase ASE reports the "actual" precision in the display size
-		switch ( jdbcTypeCode ) {
-			case Types.REAL:
-			case Types.DOUBLE:
-				return displaySize;
-		}
-		return super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
 	}
 
 	@Override
@@ -655,6 +649,8 @@ public class SybaseASEDialect extends SybaseDialect {
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
+					case "HY008":
+						return new QueryTimeoutException( message, sqlException, sql );
 					case "JZ0TO":
 					case "JZ006":
 						return new LockTimeoutException( message, sqlException, sql );

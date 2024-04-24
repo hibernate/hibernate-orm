@@ -6,6 +6,9 @@
  */
 package org.hibernate.processor.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -21,7 +24,9 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	public AbstractCriteriaMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName, String entity,
+			@Nullable String containerType,
 			boolean belongsToDao,
 			String sessionType, String sessionName,
 			List<String> fetchProfiles,
@@ -31,9 +36,12 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			boolean addNonnullAnnotation,
 			boolean convertToDataExceptions,
 			List<Boolean> multivalued,
-			List<Boolean> paramPatterns) {
-		super(annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, orderBys, addNonnullAnnotation, convertToDataExceptions);
+			List<Boolean> paramPatterns,
+			String fullReturnType,
+			boolean nullable) {
+		super(annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, convertToDataExceptions,
+				fullReturnType, nullable);
 		this.multivalued = multivalued;
 		this.paramPatterns = paramPatterns;
 	}
@@ -44,7 +52,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
-		preamble( declaration, returnType(), paramTypes );
+		preamble( declaration, paramTypes );
 		chainSession( declaration );
 		nullChecks( paramTypes, declaration );
 		createBuilder(declaration);
@@ -62,7 +70,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	abstract String createCriteriaMethod();
 
-	abstract String returnType();
+//	abstract String returnType();
 
 	abstract String createQueryMethod();
 

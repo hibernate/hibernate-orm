@@ -90,6 +90,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -194,6 +195,7 @@ import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
@@ -304,6 +306,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
@@ -450,6 +453,8 @@ public abstract class AbstractEntityPersister
 
 	private EntityMappingType superMappingType;
 	private SortedMap<String, EntityMappingType> subclassMappingTypes;
+	private final boolean concreteProxy;
+	private EntityConcreteTypeLoader concreteTypeLoader;
 
 	private EntityIdentifierMapping identifierMapping;
 	private NaturalIdMapping naturalIdMapping;
@@ -539,6 +544,10 @@ public abstract class AbstractEntityPersister
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
 		this.implementsLifecycle = Lifecycle.class.isAssignableFrom( javaType.getJavaTypeClass() );
+
+		concreteProxy = isPolymorphic()
+				&& ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() || hasProxy() )
+				&& persistentClass.isConcreteProxy();
 
 		final Dialect dialect = creationContext.getDialect();
 
@@ -2048,7 +2057,7 @@ public abstract class AbstractEntityPersister
 		return select.addRestriction( rootTableKeyColumnNames ).toStatementString();
 	}
 
-	private GeneratedValuesProcessor createGeneratedValuesProcessor(
+	protected GeneratedValuesProcessor createGeneratedValuesProcessor(
 			EventType timing,
 			List<AttributeMapping> generatedAttributes) {
 		return new GeneratedValuesProcessor( this, generatedAttributes, timing, getFactory() );
@@ -3433,16 +3442,12 @@ public abstract class AbstractEntityPersister
 		insertGeneratedProperties = initInsertGeneratedProperties( insertGeneratedAttributes );
 		updateGeneratedProperties = initUpdateGeneratedProperties( updateGeneratedAttributes );
 
+		insertDelegate = createInsertDelegate();
+		updateDelegate = createUpdateDelegate();
+
 		if ( isIdentifierAssignedByInsert() ) {
-			final OnExecutionGenerator generator = (OnExecutionGenerator) getGenerator();
-			insertDelegate = generator.getGeneratedIdentifierDelegate( this );
 			identitySelectString = getIdentitySelectString( factory.getJdbcServices().getDialect() );
 		}
-		else {
-			insertDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, INSERT );
-		}
-
-		updateDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, UPDATE );
 
 		if ( hasInsertGeneratedProperties() ) {
 			insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT, insertGeneratedAttributes );
@@ -3467,6 +3472,18 @@ public abstract class AbstractEntityPersister
 
 		//select SQL
 		sqlVersionSelectString = generateSelectVersionString();
+	}
+
+	protected GeneratedValuesMutationDelegate createInsertDelegate() {
+		if ( isIdentifierAssignedByInsert() ) {
+			final OnExecutionGenerator generator = (OnExecutionGenerator) getGenerator();
+			return generator.getGeneratedIdentifierDelegate( this );
+		}
+		return GeneratedValuesHelper.getGeneratedValuesDelegate( this, INSERT );
+	}
+
+	protected GeneratedValuesMutationDelegate createUpdateDelegate() {
+		return GeneratedValuesHelper.getGeneratedValuesDelegate( this, UPDATE );
 	}
 
 	private EntityTableMapping findTableMapping(String tableName) {
@@ -4279,6 +4296,24 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean isConcreteProxy() {
+		return concreteProxy;
+	}
+
+	@Override
+	public EntityMappingType resolveConcreteProxyTypeForId(Object id, SharedSessionContractImplementor session) {
+		if ( !concreteProxy ) {
+			return this;
+		}
+
+		EntityConcreteTypeLoader concreteTypeLoader = this.concreteTypeLoader;
+		if ( concreteTypeLoader == null ) {
+			this.concreteTypeLoader = concreteTypeLoader = new EntityConcreteTypeLoader( this, session.getFactory() );
+		}
+		return concreteTypeLoader.getConcreteType( id, session );
+	}
+
+	@Override
 	public String[] getKeyColumnNames() {
 		return getIdentifierColumnNames();
 	}
@@ -4395,10 +4430,15 @@ public abstract class AbstractEntityPersister
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
 		processIfSelfDirtinessTracker( entity, AbstractEntityPersister::clearDirtyAttributes );
+		processIfManagedEntity( entity, AbstractEntityPersister::useTracker );
 	}
 
 	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
 		entity.$$_hibernate_clearDirtyAttributes();
+	}
+
+	private static void useTracker(final ManagedEntity entity) {
+		entity.$$_hibernate_setUseTracker( true );
 	}
 
 	@Override
@@ -6238,9 +6278,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitAttributeMappings(
-			Consumer<? super AttributeMapping> action,
-			EntityMappingType targetType) {
+	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
 		attributeMappings.forEach( action );
 	}
 

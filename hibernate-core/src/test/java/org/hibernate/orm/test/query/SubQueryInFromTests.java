@@ -17,9 +17,11 @@ import org.hibernate.query.criteria.JpaDerivedRoot;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Address;
@@ -35,7 +37,9 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
+import org.assertj.core.api.Assertions;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -77,6 +81,51 @@ public class SubQueryInFromTests {
 								assertEquals( "John", list.get( 0 ).get( 0, String.class ) );
 							}
 					);
+				}
+		);
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17898")
+	public void testJoinSubqueryUsingInvalidAlias1(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					try {
+						session.createQuery(
+								"select c.name, a.name from Contact c " +
+										"join (" +
+										"select c2.name as name " +
+										"from Contact c2 " +
+										"where c2 = c" +
+										") a",
+								Tuple.class
+						).getResultList();
+					}
+					catch (InterpretationException ex) {
+						assertThat( ex.getMessage() ).contains( "lateral" );
+					}
+				}
+		);
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17898")
+	public void testJoinSubqueryUsingInvalidAlias2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					try {
+						session.createQuery(
+								"select c.name, a.address from Contact c " +
+										"join (" +
+										"select address.line1 as address " +
+										"from c.addresses address " +
+										") a",
+								Tuple.class
+						).getResultList();
+					}
+					catch (InterpretationException ex) {
+						assertThat( ex.getMessage() ).contains( "lateral" );
+					}
 				}
 		);
 	}

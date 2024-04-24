@@ -61,7 +61,8 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		}
 		else {
 			final SqmWhereClause whereClause = new SqmWhereClause( nodeBuilder() );
-			whereClause.setPredicate( getWhereClause().getPredicate().copy( context ) );
+			final SqmPredicate predicate = getWhereClause().getPredicate();
+			whereClause.setPredicate( predicate==null ? null : predicate.copy( context ) );
 			return whereClause;
 		}
 	}

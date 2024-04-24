@@ -29,6 +29,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
+import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -160,6 +161,7 @@ import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
+import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -1032,12 +1034,6 @@ public class EntityBinder {
 			if ( ignore ) {
 				LOG.debugf( "Ignoring explicit @DiscriminatorColumn annotation on: %s", annotatedClass.getName() );
 			}
-			else {
-				LOG.applyingExplicitDiscriminatorColumnForJoined(
-						annotatedClass.getName(),
-						AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
-				);
-			}
 			return !ignore;
 		}
 		else {
@@ -1308,6 +1304,7 @@ public class EntityBinder {
 		bindOptimisticLocking();
 		bindPolymorphism();
 		bindProxy();
+		bindConcreteProxy();
 		bindWhere();
 		bindCache();
 		bindNaturalIdCache();
@@ -1396,7 +1393,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlInsert.check() )
 			);
 			if ( sqlInsert.verify() != Expectation.class ) {
-				persistentClass.setInsertExpectation( sqlInsert.verify() );
+				persistentClass.setInsertExpectation( getDefaultSupplier(  sqlInsert.verify() ) );
 			}
 		}
 
@@ -1411,7 +1408,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
 			if ( sqlUpdate.verify() != Expectation.class ) {
-				persistentClass.setUpdateExpectation( sqlUpdate.verify() );
+				persistentClass.setUpdateExpectation( getDefaultSupplier(  sqlUpdate.verify() ) );
 			}
 		}
 
@@ -1426,7 +1423,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlDelete.check() )
 			);
 			if ( sqlDelete.verify() != Expectation.class ) {
-				persistentClass.setDeleteExpectation( sqlDelete.verify() );
+				persistentClass.setDeleteExpectation( getDefaultSupplier( sqlDelete.verify() ) );
 			}
 		}
 
@@ -1594,6 +1591,17 @@ public class EntityBinder {
 		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
 		final XClass proxyClass = reflectionManager.toXClass( proxy.proxyClass() );
 		return isDefault( proxyClass, context ) ? annotatedClass : proxyClass;
+	}
+
+	public void bindConcreteProxy() {
+		final ConcreteProxy concreteProxy = annotatedClass.getAnnotation( ConcreteProxy.class );
+		if ( concreteProxy != null ) {
+			if ( persistentClass.getSuperclass() != null ) {
+				throw new AnnotationException( "Entity class '" + persistentClass.getClassName()
+						+  "' is annotated '@ConcreteProxy' but it is not the root of the entity inheritance hierarchy" );
+			}
+			persistentClass.getRootClass().setConcreteProxy( true );
+		}
 	}
 
 	public void bindWhere() {
@@ -2273,7 +2281,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlInsert.check() )
 			);
 			if ( sqlInsert.verify() != Expectation.class ) {
-				join.setInsertExpectation( sqlInsert.verify() );
+				join.setInsertExpectation( getDefaultSupplier( sqlInsert.verify() ) );
 			}
 		}
 		else if ( matchingTable != null ) {
@@ -2296,7 +2304,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
 			if ( sqlUpdate.verify() != Expectation.class ) {
-				join.setUpdateExpectation( sqlUpdate.verify() );
+				join.setUpdateExpectation( getDefaultSupplier( sqlUpdate.verify() ) );
 			}
 		}
 		else if ( matchingTable != null ) {
@@ -2319,7 +2327,7 @@ public class EntityBinder {
 					fromResultCheckStyle( sqlDelete.check() )
 			);
 			if ( sqlDelete.verify() != Expectation.class ) {
-				join.setDeleteExpectation( sqlDelete.verify() );
+				join.setDeleteExpectation( getDefaultSupplier(  sqlDelete.verify() ) );
 			}
 		}
 		else if ( matchingTable != null ) {

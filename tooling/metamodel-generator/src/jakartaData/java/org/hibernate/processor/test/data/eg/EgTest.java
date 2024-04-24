@@ -18,13 +18,15 @@ import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsStr
  */
 public class EgTest extends CompilationTest {
 	@Test
-	@WithClasses({ Publisher.class, Author.class, Address.class, Book.class, Library.class })
+	@WithClasses({ Publisher.class, Author.class, Address.class, Book.class, Library.class, Bookshop.class, Publishers.class })
 	public void test() {
 		System.out.println( getMetaModelSourceAsString( Author.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
 		System.out.println( getMetaModelSourceAsString( Author.class, true ) );
 		System.out.println( getMetaModelSourceAsString( Book.class, true ) );
 		System.out.println( getMetaModelSourceAsString( Library.class ) );
+		System.out.println( getMetaModelSourceAsString( Bookshop.class ) );
+		System.out.println( getMetaModelSourceAsString( Publishers.class ) );
 		assertMetamodelClassGeneratedFor( Author.class, true );
 		assertMetamodelClassGeneratedFor( Book.class, true );
 		assertMetamodelClassGeneratedFor( Publisher.class, true );
@@ -32,5 +34,7 @@ public class EgTest extends CompilationTest {
 		assertMetamodelClassGeneratedFor( Book.class );
 		assertMetamodelClassGeneratedFor( Publisher.class );
 		assertMetamodelClassGeneratedFor( Library.class );
+		assertMetamodelClassGeneratedFor( Bookshop.class );
+		assertMetamodelClassGeneratedFor( Publishers.class );
 	}
 }

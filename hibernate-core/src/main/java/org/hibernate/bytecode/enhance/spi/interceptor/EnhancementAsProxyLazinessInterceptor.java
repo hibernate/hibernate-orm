@@ -11,17 +11,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.bytecode.BytecodeLogging;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTrackerType;
 
@@ -62,8 +60,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 				session.getFactory().getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		if ( entityPersister.hasCollections() ) {
-			Type[] propertyTypes = entityPersister.getPropertyTypes();
-			String[] propertyNames = entityPersister.getPropertyNames();
+			final Type[] propertyTypes = entityPersister.getPropertyTypes();
+			final String[] propertyNames = entityPersister.getPropertyNames();
 			collectionAttributeNames = new HashSet<>();
 			for ( int i = 0; i < propertyTypes.length; i++ ) {
 				Type propertyType = propertyTypes[i];
@@ -105,69 +103,67 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		// Use `performWork` to group together multiple Session accesses
 		return EnhancementHelper.performWork(
 				this,
-				(session, isTempSession) -> {
-					final Object[] writtenAttributeValues;
-					final AttributeMapping[] writtenAttributeMappings;
-
-					final EntityPersister entityPersister =
-							session.getFactory().getMappingMetamodel()
-									.getEntityDescriptor( getEntityName() );
-
-					if ( writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
-
-						// enhancement has dirty-tracking available and at least one attribute was explicitly set
-
-						if ( writtenFieldNames.contains( attributeName ) ) {
-							// the requested attribute was one of the attributes explicitly set,
-							// we can just return the explicitly-set value
-							return entityPersister.getPropertyValue( target, attributeName );
-						}
-
-						// otherwise we want to save all the explicitly-set values in anticipation of
-						// 		the force initialization below so that we can "replay" them after the
-						// 		initialization
-
-						writtenAttributeValues = new Object[writtenFieldNames.size()];
-						writtenAttributeMappings = new AttributeMapping[writtenFieldNames.size()];
-
-						int index = 0;
-						for ( String writtenFieldName : writtenFieldNames ) {
-							writtenAttributeMappings[index] = entityPersister.findAttributeMapping( writtenFieldName );
-							writtenAttributeValues[index] = writtenAttributeMappings[index].getValue( target );
-							index++;
-						}
-					}
-					else {
-						writtenAttributeValues = null;
-						writtenAttributeMappings = null;
-					}
-
-					final Object initializedValue = forceInitialize(
-							target,
-							attributeName,
-							session,
-							isTempSession
-					);
-
-					setInitialized();
-
-					if ( writtenAttributeValues != null ) {
-						// here is the replaying of the explicitly set values we prepared above
-						for ( int i = 0; i < writtenAttributeMappings.length; i++ ) {
-							final AttributeMapping attribute = writtenAttributeMappings[i];
-							attribute.setValue( target, writtenAttributeValues[i] );
-							if ( inLineDirtyChecking ) {
-								asSelfDirtinessTracker( target ).$$_hibernate_trackChange( attribute.getAttributeName() );
-							}
-						}
-						writtenFieldNames.clear();
-					}
-
-					return initializedValue;
-				},
+				(session, isTempSession) -> read( target, attributeName, session, isTempSession ),
 				getEntityName(),
 				attributeName
 		);
+	}
+
+	private Object read(
+			Object target, String attributeName, SharedSessionContractImplementor session, Boolean isTempSession) {
+		final Object[] writtenAttributeValues;
+		final AttributeMapping[] writtenAttributeMappings;
+
+		final EntityPersister entityPersister =
+				session.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( getEntityName() );
+
+		if ( writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
+
+			// enhancement has dirty-tracking available and at least one attribute was explicitly set
+
+			if ( writtenFieldNames.contains( attributeName ) ) {
+				// the requested attribute was one of the attributes explicitly set,
+				// we can just return the explicitly-set value
+				return entityPersister.getPropertyValue( target, attributeName );
+			}
+
+			// otherwise we want to save all the explicitly-set values in anticipation of
+			// 		the force initialization below so that we can "replay" them after the
+			// 		initialization
+
+			writtenAttributeValues = new Object[writtenFieldNames.size()];
+			writtenAttributeMappings = new AttributeMapping[writtenFieldNames.size()];
+
+			int index = 0;
+			for ( String writtenFieldName : writtenFieldNames ) {
+				writtenAttributeMappings[index] = entityPersister.findAttributeMapping( writtenFieldName );
+				writtenAttributeValues[index] = writtenAttributeMappings[index].getValue(target);
+				index++;
+			}
+		}
+		else {
+			writtenAttributeValues = null;
+			writtenAttributeMappings = null;
+		}
+
+		final Object initializedValue = forceInitialize( target, attributeName, session, isTempSession );
+
+		setInitialized();
+
+		if ( writtenAttributeValues != null ) {
+			// here is the replaying of the explicitly set values we prepared above
+			for ( int i = 0; i < writtenAttributeMappings.length; i++ ) {
+				final AttributeMapping attribute = writtenAttributeMappings[i];
+				attribute.setValue(target, writtenAttributeValues[i] );
+				if ( inLineDirtyChecking ) {
+					asSelfDirtinessTracker(target).$$_hibernate_trackChange( attribute.getAttributeName() );
+				}
+			}
+			writtenFieldNames.clear();
+		}
+
+		return initializedValue;
 	}
 
 	private Object extractIdValue(Object target, String attributeName) {
@@ -185,12 +181,14 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public Object forceInitialize(Object target, String attributeName) {
-		BytecodeLogging.LOGGER.tracef(
-				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
-				entityKey.getEntityName(),
-				entityKey.getIdentifier(),
-				attributeName
-		);
+		if ( BytecodeLogging.LOGGER.isTraceEnabled() ) {
+			BytecodeLogging.LOGGER.tracef(
+					"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
+					entityKey.getEntityName(),
+					entityKey.getIdentifier(),
+					attributeName
+			);
+		}
 
 		return EnhancementHelper.performWork(
 				this,
@@ -200,45 +198,31 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		);
 	}
 
-	public Object forceInitialize(Object target, String attributeName, SharedSessionContractImplementor session, boolean isTemporarySession) {
-		BytecodeLogging.LOGGER.tracef(
-				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
-				entityKey.getEntityName(),
-				entityKey.getIdentifier(),
-				attributeName
-		);
-
-		final EntityPersister persister = session.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( getEntityName() );
-
-		if ( isTemporarySession ) {
-			// Add an entry for this entity in the PC of the temp Session
-			session.getPersistenceContextInternal().addEntity(
-					target,
-					org.hibernate.engine.spi.Status.READ_ONLY,
-					// loaded state
-					ArrayHelper.filledArray(
-							LazyPropertyInitializer.UNFETCHED_PROPERTY,
-							Object.class,
-							persister.getPropertyTypes().length
-					),
-					entityKey,
-					persister.getVersion( target ),
-					LockMode.NONE,
-					// we assume an entry exists in the db
-					true,
-					persister,
-					true
+	public Object forceInitialize(
+			Object target,
+			String attributeName,
+			SharedSessionContractImplementor session,
+			boolean isTemporarySession) {
+		if ( BytecodeLogging.LOGGER.isTraceEnabled() ) {
+			BytecodeLogging.LOGGER.tracef(
+					"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
+					entityKey.getEntityName(),
+					entityKey.getIdentifier(),
+					attributeName
 			);
 		}
 
-		return persister.initializeEnhancedEntityUsedAsProxy(
-				target,
-				attributeName,
-				session
-		);
+		final EntityPersister persister =
+				session.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( getEntityName() );
+
+		if ( isTemporarySession ) {
+			// Add an entry for this entity in the PC of the temp Session
+			session.getPersistenceContext()
+					.addEnhancedProxy( entityKey, asPersistentAttributeInterceptable( target ) );
+		}
+
+		return persister.initializeEnhancedEntityUsedAsProxy( target, attributeName, session );
 	}
 
 	@Override
@@ -264,9 +248,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			}
 
 			if ( changed ) {
-				throw new HibernateException(
-						"identifier of an instance of " + entityKey.getEntityName() + " was altered from " + oldValue + " to " + newValue
-				);
+				throw new HibernateException( "identifier of an instance of " + entityKey.getEntityName()
+						+ " was altered from " + oldValue + " to " + newValue );
 			}
 
 			// otherwise, setId has been called but passing in the same value - just pass it through
@@ -274,7 +257,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		}
 
 		if ( initializeBeforeWrite
-				|| ( collectionAttributeNames != null && collectionAttributeNames.contains( attributeName ) ) ) {
+				|| collectionAttributeNames != null && collectionAttributeNames.contains( attributeName ) ) {
 			// we need to force-initialize the proxy - the fetch group to which the `attributeName` belongs
 			try {
 				forceInitialize( target, attributeName );
@@ -355,7 +338,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public boolean hasWrittenFieldNames() {
-		return writtenFieldNames != null && writtenFieldNames.size() != 0;
+		return writtenFieldNames != null && !writtenFieldNames.isEmpty();
 	}
 
 	private enum Status {

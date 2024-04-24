@@ -369,7 +369,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 						resolution.getRelationalJavaType(),
 						size,
 						getBuildingContext().getMetadataCollector().getDatabase(),
-						getTypeConfiguration()
+						this
 				);
 
 		return resolution;
@@ -670,6 +670,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				explicitJavaTypeAccess,
 				explicitJdbcTypeAccess,
 				explicitMutabilityPlanAccess,
+				resolvedJavaType,
 				this,
 				this,
 				getBuildingContext()
@@ -1108,6 +1109,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Override
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return getBuildingContext().isPreferJavaTimeJdbcTypesEnabled();
+	}
+
+	@Override
+	public boolean isPreferNativeEnumTypesEnabled() {
+		return getBuildingContext().isPreferNativeEnumTypesEnabled();
 	}
 
 	@Override

@@ -19,6 +19,7 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -64,9 +65,11 @@ import static org.hibernate.processor.util.TypeUtils.isClassOrRecordType;
 		// standard for JPA 2
 		ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE,
 		// standard for JPA 3.2
-		NAMED_QUERY, NAMED_NATIVE_QUERY, NAMED_ENTITY_GRAPH, SQL_RESULT_SET_MAPPING,
+		NAMED_QUERY, NAMED_QUERIES, NAMED_NATIVE_QUERY, NAMED_NATIVE_QUERIES,
+		NAMED_ENTITY_GRAPH, NAMED_ENTITY_GRAPHS, SQL_RESULT_SET_MAPPING, SQL_RESULT_SET_MAPPINGS,
 		// extra for Hibernate
-		HIB_FETCH_PROFILE, HIB_FILTER_DEF, HIB_NAMED_QUERY, HIB_NAMED_NATIVE_QUERY,
+		HIB_FETCH_PROFILE, HIB_FETCH_PROFILES, HIB_FILTER_DEF, HIB_FILTER_DEFS,
+		HIB_NAMED_QUERY, HIB_NAMED_QUERIES, HIB_NAMED_NATIVE_QUERY, HIB_NAMED_NATIVE_QUERIES,
 		// Hibernate query methods
 		HQL, SQL, FIND,
 		// Jakarta Data repositories
@@ -123,7 +126,9 @@ public class HibernateProcessor extends AbstractProcessor {
 	public static final String ADD_GENERATION_DATE = "addGenerationDate";
 
 	/**
-	 * Controls whether {@code @SuppressWarnings({"deprecation","rawtypes"})} should be added to the generated classes
+	 * A comma-separated list of warnings to suppress, or simply {@code true}
+	 * if {@code @SuppressWarnings({"deprecation","rawtypes"})} should be
+	 * added to the generated classes.
 	 */
 	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
 
@@ -212,7 +217,16 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		context.setAddGenerationDate( parseBoolean( options.get( ADD_GENERATION_DATE ) ) );
 
-		context.setAddSuppressWarningsAnnotation( parseBoolean( options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION ) ) );
+		String suppressedWarnings = options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION );
+		if ( suppressedWarnings != null ) {
+			if ( parseBoolean(suppressedWarnings) ) {
+				// legacy behavior from HHH-12068
+				context.setSuppressedWarnings(new String[] {"deprecation", "rawtypes"});
+			}
+			else {
+				context.setSuppressedWarnings( suppressedWarnings.replace(" ","").split(",") );
+			}
+		}
 
 		return parseBoolean( options.get( FULLY_ANNOTATION_CONFIGURED_OPTION ) );
 	}
@@ -295,13 +309,17 @@ public class HibernateProcessor extends AbstractProcessor {
 					final TypeElement typeElement = (TypeElement) element;
 					final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
 					if ( repository != null ) {
-						final String provider = (String) getAnnotationValue( repository, "provider" );
-						if ( provider == null || provider.isEmpty()
-								|| provider.equalsIgnoreCase("hibernate") ) {
+						final AnnotationValue provider = getAnnotationValue( repository, "provider" );
+						if ( provider == null
+								|| provider.getValue().toString().isEmpty()
+								|| provider.getValue().toString().equalsIgnoreCase("hibernate") ) {
 							context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
 							final AnnotationMetaEntity metaEntity =
 									AnnotationMetaEntity.create( typeElement, context );
-							context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+							if ( metaEntity.isInitialized() ) {
+								context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+							}
+							// otherwise discard it (assume it has query by magical method name stuff)
 						}
 					}
 					else {
@@ -485,9 +503,14 @@ public class HibernateProcessor extends AbstractProcessor {
 					if ( context.generateJakartaDataStaticMetamodel()
 							// no static metamodel for embeddable classes in Jakarta Data
 							&& hasAnnotation( element, ENTITY, MAPPED_SUPERCLASS )
-							// Don't generate a Jakarta Data metamodel
+							// don't generate a Jakarta Data metamodel
 							// if this entity was partially mapped in XML
-							&& alreadyExistingMetaEntity == null ) {
+							&& alreadyExistingMetaEntity == null
+							// let a handwritten metamodel "override" the generated one
+							// (this is used in the Jakarta Data TCK)
+							&& element.getEnclosingElement().getEnclosedElements()
+								.stream().noneMatch(e -> e.getSimpleName()
+									.contentEquals('_' + element.getSimpleName().toString()))) {
 						final AnnotationMetaEntity dataMetaEntity =
 								AnnotationMetaEntity.create( typeElement, context,
 										requiresLazyMemberInitialization,

@@ -1,5 +1,6 @@
-package org.hibernate.processor.test.data;
+package org.hibernate.processor.test.data.basic;
 
+import jakarta.annotation.Nullable;
 import jakarta.data.Limit;
 import jakarta.data.Order;
 import jakarta.data.Sort;
@@ -22,7 +23,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 @Repository(dataStore = "myds")
@@ -66,6 +66,9 @@ public interface BookAuthorRepository {
 	@Find
 	Optional<Book> bookIfAny(String isbn);
 
+	@Find @Nullable
+	Book bookOrNullIfNone(String isbn);
+
 	@Find
 	Author author(String ssn);
 
@@ -74,6 +77,9 @@ public interface BookAuthorRepository {
 
 	@Find
 	Book byTitleAndDate(String title, LocalDate publicationDate);
+
+	@Find
+	Optional<Book> maybeByTitleAndDate(String title, LocalDate publicationDate);
 
 	@Find
 	Book bookById(@By("isbn") String id);
@@ -114,6 +120,10 @@ public interface BookAuthorRepository {
 	@Query("from Book where title = :title")
 	Book bookWithTitle(String title);
 
+	@Nullable
+	@Query("from Book where title = :title")
+	Book bookWithTitleOrNullIfNone(String title);
+
 	@Query("from Book where title = :title")
 	Optional<Book> bookWithTitleMaybe(String title);
 
@@ -142,39 +152,39 @@ public interface BookAuthorRepository {
 	Stream<Book> everyBook0(Order<? super Book> order);
 
 	@Query("from Book")
-	List<Book> everyBook1(PageRequest<? super Book> pageRequest);
+	List<Book> everyBook1(PageRequest pageRequest);
 
 	@Find
-	List<Book> everyBook2(PageRequest<? super Book> pageRequest);
+	List<Book> everyBook2(PageRequest pageRequest, Order<Book> order);
 
 	@Query("from Book")
 	@OrderBy("isbn")
 	@OrderBy(value = "publicationDate", descending = true)
-	List<Book> everyBook3(PageRequest<? super Book> pageRequest);
+	List<Book> everyBook3(PageRequest pageRequest);
 
 	@Find
-	CursoredPage<Book> everyBook4(PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook4(PageRequest pageRequest, Order<Book> order);
 
 	@Find
-	CursoredPage<Book> everyBook5(String title, PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook5(String title, PageRequest pageRequest, Order<Book> order);
 
 	@Query("from Book")
-	CursoredPage<Book> everyBook6(PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook6(PageRequest pageRequest, Order<Book> order);
 
 	@Query("from Book where title like :titlePattern")
-	CursoredPage<Book> everyBook7(String titlePattern, PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook7(String titlePattern, PageRequest pageRequest, Order<Book> order);
 
 	@Find
-	CursoredPage<Book> everyBook8(String title, PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook8(String title, PageRequest pageRequest, Order<Book> order);
 
 	@Query("from Book where title like :titlePattern")
-	CursoredPage<Book> everyBook9(String titlePattern, PageRequest<Book> pageRequest);
+	CursoredPage<Book> everyBook9(String titlePattern, PageRequest pageRequest, Order<Book> order);
 
 	@Find
-	Page<Book> booksByTitle1(String title, PageRequest<Book> pageRequest);
+	Page<Book> booksByTitle1(String title, PageRequest pageRequest, Order<Book> order);
 
 	@Query("from Book where title like :titlePattern")
-	Page<Book> booksByTitle2(String titlePattern, PageRequest<Book> pageRequest);
+	Page<Book> booksByTitle2(String titlePattern, PageRequest pageRequest, Order<Book> order);
 
 	@Find
 	List<Book> allBooksWithLotsOfSorting(Sort<? super Book> s1, Order<? super Book> order, Sort<? super Book>... s3);
@@ -193,4 +203,10 @@ public interface BookAuthorRepository {
 
 	@Update
 	Book edit(Book book);
+
+	@Find
+	List<Author> withNoOrder1(PageRequest pageRequest);
+
+	@Query("")
+	List<Author> withNoOrder2(PageRequest pageRequest);
 }

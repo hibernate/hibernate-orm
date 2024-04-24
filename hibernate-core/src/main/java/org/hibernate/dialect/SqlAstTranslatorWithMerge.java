@@ -50,6 +50,11 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		);
 	}
 
+//	@Override
+//	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+//		renderMergeStatement(tableUpdate);
+//	}
+//
 	/**
 	 * Renders the OptionalTableUpdate as a MERGE query.
 	 *
@@ -207,8 +212,9 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 
 	protected void renderMergeDelete(OptionalTableUpdate optionalTableUpdate) {
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
 
-		appendSql( " when matched " );
+		renderWhenMatched( optimisticLockBindings );
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
 			final ColumnValueBinding binding = valueBindings.get( i );
 			appendSql( " and " );
@@ -220,8 +226,10 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 
 	protected void renderMergeUpdate(OptionalTableUpdate optionalTableUpdate) {
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
 
-		appendSql( " when matched then update set " );
+		renderWhenMatched( optimisticLockBindings );
+		appendSql( " then update set " );
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
 			final ColumnValueBinding binding = valueBindings.get( i );
 			if ( i > 0 ) {
@@ -230,6 +238,17 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 			binding.getColumnReference().appendColumnForWrite( this, null );
 			appendSql( "=" );
 			binding.getColumnReference().appendColumnForWrite( this, "s" );
+		}
+	}
+
+	private void renderWhenMatched(List<ColumnValueBinding> optimisticLockBindings) {
+		appendSql( " when matched" );
+		for (int i = 0; i < optimisticLockBindings.size(); i++) {
+			final ColumnValueBinding binding = optimisticLockBindings.get( i );
+			appendSql(" and ");
+			binding.getColumnReference().appendColumnForWrite( this, "t" );
+			appendSql("<=");
+			binding.getValueExpression().accept( this );
 		}
 	}
 }

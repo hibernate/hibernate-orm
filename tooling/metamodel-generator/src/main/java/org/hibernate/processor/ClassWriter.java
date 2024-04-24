@@ -92,8 +92,9 @@ public final class ClassWriter {
 				pw.println( writeGeneratedAnnotation( entity, context ) );
 			}
 			if ( context.addSuppressWarningsAnnotation() ) {
-				pw.println( writeSuppressWarnings() );
+				pw.println( writeSuppressWarnings(context) );
 			}
+			entity.inheritedAnnotations().forEach(pw::println);
 
 			printClassDeclaration( entity, pw );
 
@@ -101,15 +102,26 @@ public final class ClassWriter {
 
 			final List<MetaAttribute> members = entity.getMembers();
 			for ( MetaAttribute metaMember : members ) {
-				if ( metaMember.hasTypedAttribute() ) {
-					metaMember.getAttributeDeclarationString().lines()
-							.forEach(line -> pw.println('\t' + line));
-				}
-			}
-			pw.println();
-			for ( MetaAttribute metaMember : members ) {
 				if ( metaMember.hasStringAttribute() ) {
 					pw.println( '\t' + metaMember.getAttributeNameDeclarationString() );
+				}
+			}
+
+			pw.println();
+
+			for ( MetaAttribute metaMember : members ) {
+				if ( metaMember.hasTypedAttribute() ) {
+					metaMember.getAttributeDeclarationString().lines()
+							.forEach(line -> {
+								pw.println('\t' + line);
+								if ( line.trim().startsWith("@Override") ) {
+									metaMember.inheritedAnnotations()
+											.forEach(x -> {
+												pw.print('\t');
+												pw.println(x);
+											});
+								}
+							});
 				}
 			}
 
@@ -120,7 +132,11 @@ public final class ClassWriter {
 	}
 
 	private static void printClassDeclaration(Metamodel entity, PrintWriter pw) {
-		pw.print( entity.isImplementation() ? "public class " : "public abstract class " );
+		pw.print( "public " );
+		if ( !entity.isImplementation() && !entity.isJakartaDataStyle() ) {
+			pw.print( "abstract " );
+		}
+		pw.print( entity.isJakartaDataStyle() ? "interface " : "class " );
 		pw.print( getGeneratedClassName(entity) );
 
 		String superClassName = entity.getSupertypeName();
@@ -190,8 +206,16 @@ public final class ClassWriter {
 		return generatedAnnotation.toString();
 	}
 
-	private static String writeSuppressWarnings() {
-		return "@SuppressWarnings({\"deprecation\", \"rawtypes\"})";
+	private static String writeSuppressWarnings(Context context) {
+		final StringBuilder annotation = new StringBuilder("@SuppressWarnings({");
+		final String[] warnings = context.getSuppressedWarnings();
+		for (int i = 0; i < warnings.length; i++) {
+			if ( i>0 ) {
+				annotation.append(", ");
+			}
+			annotation.append('"').append(warnings[i]).append('"');
+		}
+		return annotation.append("})").toString();
 	}
 
 	private static String writeScopeAnnotation(Metamodel entity) {

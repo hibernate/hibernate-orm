@@ -113,7 +113,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private EntityKey entityKey;
 	private Object version;
 	private Object entityInstance;
-	private Object entityInstanceForNotify;
+	protected Object entityInstanceForNotify;
+	private EntityHolder holder;
 	protected State state = State.UNINITIALIZED;
 	private boolean isOwningInitializer;
 	private Object[] resolvedEntityState;
@@ -358,7 +359,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				);
 			}
 			else if ( concreteDescriptor != null
-					|| ( concreteDescriptor = determineConcreteEntityDescriptor( rowProcessingState ) ) != null ) {
+					|| ( concreteDescriptor = determineConcreteEntityDescriptor( rowProcessingState, discriminatorAssembler, entityDescriptor ) ) != null ) {
 				// 2) build the EntityKey
 				entityKey = new EntityKey( id, concreteDescriptor );
 				state = State.KEY_RESOLVED;
@@ -374,7 +375,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private EntityPersister determineConcreteEntityDescriptor(RowProcessingState rowProcessingState)
+	public static @Nullable EntityPersister determineConcreteEntityDescriptor(
+			RowProcessingState rowProcessingState,
+			BasicResultAssembler<?> discriminatorAssembler,
+			EntityPersister entityDescriptor)
 			throws WrongClassException {
 		if ( discriminatorAssembler == null
 				|| rowProcessingState.isQueryCacheHit() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
@@ -388,7 +392,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			final DiscriminatorValueDetails discriminatorDetails =
 					discriminatorMapping.resolveDiscriminatorValue( discriminator );
 			if ( discriminatorDetails == null ) {
-				return entityDescriptor;
+				assert discriminator == null : "Discriminator details should only be null for null values";
+				return null;
 			}
 			else {
 				final EntityMappingType indicatedEntity = discriminatorDetails.getIndicatedEntity();
@@ -406,6 +411,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 		}
 	}
+
 	private Object initializeIdentifier(RowProcessingState rowProcessingState) {
 		final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState =
 				rowProcessingState.getJdbcValuesSourceProcessingState();
@@ -431,7 +437,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				// The id can only be the entity instance if this is a non-aggregated id that has no containing class
 				&& entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping
 				&& !( (CompositeIdentifierMapping) entityDescriptor.getIdentifierMapping() ).hasContainingClass()
-				&& ( concreteDescriptor = determineConcreteEntityDescriptor( rowProcessingState ) ) != null
+				&& ( concreteDescriptor = determineConcreteEntityDescriptor( rowProcessingState, discriminatorAssembler, entityDescriptor ) ) != null
 				&& concreteDescriptor.isInstance( id );
 	}
 
@@ -444,7 +450,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			// even if the parent instance will not refer to this entity.
 
 			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
-			final EntityHolder holder = persistenceContext.claimEntityHolderIfPossible(
+			holder = persistenceContext.claimEntityHolderIfPossible(
 					entityKey,
 					null,
 					rowProcessingState.getJdbcValuesSourceProcessingState(),
@@ -543,9 +549,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					else if ( isResultInitializer() ) {
 						registerLoadingEntity( rowProcessingState, entityInstance );
 					}
-				}
-				else if ( !isOwningInitializer ) {
-					state = State.INITIALIZED;
 				}
 			}
 			else if ( ( entityFromExecutionContext = getEntityFromExecutionContext( rowProcessingState ) ) != null ) {
@@ -1050,8 +1053,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	protected boolean skipInitialization(Object toInitialize, RowProcessingState rowProcessingState) {
-		if ( !isOwningInitializer ) {
-			return true;
+		if ( holder.isInitialized() ) {
+			return rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
+					.getEffectiveOptionalObject() != toInitialize;
 		}
 		final EntityEntry entry =
 				rowProcessingState.getSession().getPersistenceContextInternal().getEntry( toInitialize );
@@ -1062,7 +1066,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		else if ( entry.getStatus().isDeletedOrGone() ) {
 			return true;
 		}
-		else {
+		else if ( isOwningInitializer ) {
 			if ( isPersistentAttributeInterceptable( toInitialize ) ) {
 				final PersistentAttributeInterceptor interceptor =
 						asPersistentAttributeInterceptable( toInitialize ).$$_hibernate_getInterceptor();
@@ -1084,6 +1088,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				return false;
 			}
+		}
+		else {
+			return true;
 		}
 	}
 

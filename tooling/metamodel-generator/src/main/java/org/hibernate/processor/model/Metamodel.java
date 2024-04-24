@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
 
 import java.util.List;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 
 /**
@@ -38,11 +39,25 @@ public interface Metamodel extends ImportContext {
 
 	Context getContext();
 
+	/**
+	 * Is this an implementation of a repository interface?
+	 */
 	boolean isImplementation();
 
+	/**
+	 * Can this be injected into things?
+	 */
 	boolean isInjectable();
 
+	/**
+	 * What is its CDI scope for injection?
+	 */
 	String scope();
 
+	/**
+	 * Is it a Jakarta Data style metamodel interface?
+	 */
 	boolean isJakartaDataStyle();
+
+	List<AnnotationMirror> inheritedAnnotations();
 }

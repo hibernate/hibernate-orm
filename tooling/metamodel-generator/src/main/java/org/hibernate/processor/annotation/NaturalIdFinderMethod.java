@@ -6,6 +6,9 @@
  */
 package org.hibernate.processor.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -19,7 +22,9 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 
 	public NaturalIdFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName, String entity,
+			@Nullable String containerType, //must be null or Optional
 			List<String> paramNames, List<String> paramTypes,
 			List<Boolean> paramNullability,
 			boolean belongsToDao,
@@ -27,9 +32,11 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			String sessionName,
 			List<String> fetchProfiles,
 			boolean addNonnullAnnotation,
-			boolean dataRepository) {
-		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository );
+			boolean dataRepository,
+			String fullReturnType) {
+		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+				fetchProfiles, paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType,
+				true );
 		this.paramNullability = paramNullability;
 	}
 
@@ -48,7 +55,8 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 	public String getAttributeDeclarationString() {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
-		preamble( declaration );
+		modifiers( declaration );
+		preamble( declaration, paramTypes );
 		tryReturn( declaration );
 		unwrapSession( declaration );
 		if ( isReactive() ) {
@@ -81,8 +89,15 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 						.append(")\n");
 			}
 		}
-		declaration
-				.append("\t\t\t.load();\n");
+		if ( containerType == null ) {
+			//TODO we should probably throw if this returns null
+			declaration
+					.append("\t\t\t.load();\n");
+		}
+		else {
+			declaration
+					.append("\t\t\t.loadOptional();\n");
+		}
 	}
 
 	private void findReactively(StringBuilder declaration) {

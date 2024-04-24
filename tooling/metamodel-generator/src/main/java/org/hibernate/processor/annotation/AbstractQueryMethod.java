@@ -8,35 +8,53 @@ package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
-import org.hibernate.processor.model.MetaAttribute;
-import org.hibernate.processor.model.Metamodel;
 
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.processor.util.Constants.*;
+import static org.hibernate.processor.util.Constants.BOXED_VOID;
+import static org.hibernate.processor.util.Constants.HIB_KEYED_PAGE;
+import static org.hibernate.processor.util.Constants.HIB_KEYED_RESULT_LIST;
+import static org.hibernate.processor.util.Constants.HIB_ORDER;
+import static org.hibernate.processor.util.Constants.HIB_PAGE;
+import static org.hibernate.processor.util.Constants.HIB_QUERY;
+import static org.hibernate.processor.util.Constants.HIB_SELECTION_QUERY;
+import static org.hibernate.processor.util.Constants.HIB_SORT_DIRECTION;
+import static org.hibernate.processor.util.Constants.JD_CURSORED_PAGE;
+import static org.hibernate.processor.util.Constants.JD_LIMIT;
+import static org.hibernate.processor.util.Constants.JD_ORDER;
+import static org.hibernate.processor.util.Constants.JD_PAGE;
+import static org.hibernate.processor.util.Constants.JD_PAGE_REQUEST;
+import static org.hibernate.processor.util.Constants.JD_SORT;
+import static org.hibernate.processor.util.Constants.LIST;
+import static org.hibernate.processor.util.Constants.OPTIONAL;
+import static org.hibernate.processor.util.Constants.QUERY;
+import static org.hibernate.processor.util.Constants.SESSION_TYPES;
+import static org.hibernate.processor.util.Constants.STREAM;
+import static org.hibernate.processor.util.Constants.TYPED_QUERY;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
  * @author Gavin King
  */
-public abstract class AbstractQueryMethod implements MetaAttribute {
-	final AnnotationMetaEntity annotationMetaEntity;
+public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	final String methodName;
 	final List<String> paramNames;
 	final List<String> paramTypes;
 	final @Nullable String returnTypeName;
-	final String sessionType;
-	final String sessionName;
 	final boolean belongsToDao;
 	final List<OrderBy> orderBys;
 	final boolean addNonnullAnnotation;
 	final boolean dataRepository;
+	final String fullReturnType;
+	final boolean nullable;
 
 	AbstractQueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
+			ExecutableElement method,
 			String methodName,
 			List<String> paramNames, List<String> paramTypes,
 			@Nullable String returnTypeName,
@@ -45,23 +63,20 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			boolean belongsToDao,
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
-			boolean dataRepository) {
-		this.annotationMetaEntity = annotationMetaEntity;
+			boolean dataRepository,
+			String fullReturnType,
+			boolean nullable) {
+		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.methodName = methodName;
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
 		this.returnTypeName = returnTypeName;
-		this.sessionType = sessionType;
-		this.sessionName = sessionName;
 		this.belongsToDao = belongsToDao;
 		this.orderBys = orderBys;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 		this.dataRepository = dataRepository;
-	}
-
-	@Override
-	public Metamodel getHostingEntity() {
-		return annotationMetaEntity;
+		this.fullReturnType = fullReturnType;
+		this.nullable = nullable;
 	}
 
 	@Override
@@ -98,9 +113,9 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return type.endsWith("...") ? stripped + "..." : stripped;
 	}
 
-	void preamble(StringBuilder declaration, String returnType, List<String> paramTypes) {
+	void preamble(StringBuilder declaration, List<String> paramTypes) {
 		declaration
-				.append(returnType)
+				.append(annotationMetaEntity.importType(fullReturnType))
 				.append(" ")
 				.append(methodName);
 		parameters( paramTypes, declaration );
@@ -123,7 +138,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				notNull( declaration );
 			}
 			declaration
-					.append(annotationMetaEntity.importType(importReturnTypeArgument(paramType)))
+					.append(annotationMetaEntity.importType(paramType))
 					.append(" ")
 					.append(paramNames.get(i).replace('.', '$'));
 		}
@@ -133,12 +148,6 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	static boolean isSessionParameter(String paramType) {
 		return SESSION_TYPES.contains(paramType);
-	}
-
-	private String importReturnTypeArgument(String type) {
-		return returnTypeName != null
-				? type.replace(returnTypeName, annotationMetaEntity.importType(returnTypeName))
-				: type;
 	}
 
 	void sessionParameter(StringBuilder declaration) {
@@ -175,41 +184,20 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 				.append(")");
 	}
 
-	boolean isUsingEntityManager() {
-		return ENTITY_MANAGER.equals(sessionType);
-	}
-
-	boolean isUsingStatelessSession() {
-		return HIB_STATELESS_SESSION.equals(sessionType);
-	}
-
-	boolean isReactive() {
-		return MUTINY_SESSION.equals(sessionType)
-			|| UNI_MUTINY_SESSION.equals(sessionType);
-	}
-
-	boolean isReactiveSession() {
-		return UNI_MUTINY_SESSION.equals(sessionType);
-	}
-
-	String localSessionName() {
-		return isReactiveSession() ? "resolvedSession" : sessionName;
-	}
-	
 	void chainSession(StringBuilder declaration) {
 		// Reactive calls always have a return type
-		if ( isReactiveSession() ) {
+		if ( isReactiveSessionAccess() ) {
 			declaration
 					.append("\treturn ")
 					.append(sessionName)
 					.append(".chain(")
 					.append(localSessionName())
-					.append(" -> {\n\t");
+					.append(" -> {\n");
 		}
 	}
 
 	void chainSessionEnd(boolean isUpdate, StringBuilder declaration) {
-		if ( isReactiveSession() ) {
+		if ( isReactiveSessionAccess() ) {
 			declaration.append("\t})");
 			// here we're checking for a boxed void and not Uni<Void> because the returnType has already
 			// been checked, and is ununi-ed
@@ -223,8 +211,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	void setPage(StringBuilder declaration, String paramName, String paramType) {
-		boolean jakartaLimit = JD_LIMIT.equals(paramType);
-		boolean jakartaPageRequest = paramType.startsWith(JD_PAGE_REQUEST);
+		final boolean jakartaLimit = JD_LIMIT.equals(paramType);
+		final boolean jakartaPageRequest = JD_PAGE_REQUEST.equals(paramType);
 		if ( jakartaLimit || jakartaPageRequest
 				|| isUsingEntityManager() ) {
 			final String firstResult;
@@ -294,14 +282,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						.append(" exception) {\n")
 						.append("\t\tthrow new ")
 						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
-						.append("(exception);\n")
+						.append("(exception.getMessage(), exception);\n")
 						.append("\t}\n")
 						.append("\tcatch (")
 						.append(annotationMetaEntity.importType("jakarta.persistence.NonUniqueResultException"))
 						.append(" exception) {\n")
 						.append("\t\tthrow new ")
 						.append(annotationMetaEntity.importType("jakarta.data.exceptions.NonUniqueResultException"))
-						.append("(exception);\n")
+						.append("(exception.getMessage(), exception);\n")
 						.append("\t}\n");
 			}
 			declaration
@@ -310,7 +298,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(" exception) {\n")
 					.append("\t\tthrow new ")
 					.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
-					.append("(exception);\n")
+					.append("(exception.getMessage(), exception);\n")
 					.append("\t}\n");
 		}
 	}
@@ -344,15 +332,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	static boolean isPageParam(String parameterType) {
 		return HIB_PAGE.equals(parameterType)
 			|| JD_LIMIT.equals(parameterType)
-			|| parameterType.startsWith(JD_PAGE_REQUEST);
+			|| JD_PAGE_REQUEST.equals(parameterType);
 	}
 
 	static boolean isOrderParam(String parameterType) {
 		return parameterType.startsWith(HIB_ORDER)
 			|| parameterType.startsWith(LIST + "<" + HIB_ORDER)
 			|| parameterType.startsWith(JD_SORT)
-			|| parameterType.startsWith(JD_ORDER)
-			|| parameterType.startsWith(JD_PAGE_REQUEST);
+			|| parameterType.startsWith(JD_ORDER);
 	}
 
 	static boolean isJakartaCursoredPage(@Nullable String containerType) {
@@ -388,14 +375,10 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			"\t\t\t\t\t\t.stream()\n" +
 			"\t\t\t\t\t\t.map(_key -> Cursor.forKey(_key.toArray()))\n" +
 			"\t\t\t\t\t\t.collect(toList());\n" +
-			"\t\tvar _page =\n" +
-			"\t\t\t\tPageRequest.of(Entity.class)\n" +
-			"\t\t\t\t\t\t.sortBy(pageRequest.sorts())\n" +
-			"\t\t\t\t\t\t.size(pageRequest.size())\n" +
-			"\t\t\t\t\t\t.page(pageRequest.page() + 1);\n" +
-			"\t\treturn new CursoredPageRecord<>(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
-			"\t\t\t\t_results.isLastPage() ? null : _page.afterKey(_results.getNextPage().getKey().toArray()),\n" +
-			"\t\t\t\t_results.isFirstPage() ? null : _page.beforeKey(_results.getPreviousPage().getKey().toArray()));";
+			//SHOULD BE new CursoredPageRecord<>
+			"\t\treturn new CursoredPageRecord(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
+			"\t\t\t\t_results.isLastPage() ? null : afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),\n" +
+			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()));";
 
 	static final String MAKE_KEYED_PAGE
 			= "\tvar _unkeyedPage =\n" +
@@ -440,7 +423,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		declaration
 				.append('\t');
 		if ( isJakartaCursoredPage(containerType)
-				|| isJakartaPage(containerType) ) {
+				|| isJakartaPage(containerType) && !isReactive() ) {
 			if ( returnTypeName != null && isUsingEntityManager() ) {
 				// this is necessary to avoid losing the type
 				// after unwrapping the Query object
@@ -458,7 +441,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(" _results = ");
 		}
 		else {
-			if ( !"void".equals(returnTypeName) || isReactiveSession() ) {
+			if ( !"void".equals(returnTypeName) || isReactiveSessionAccess() ) {
 				declaration
 						.append("return ");
 			}
@@ -467,18 +450,24 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	private void totalResults(StringBuilder declaration, List<String> paramTypes) {
 		declaration
-				.append("\tlong _totalResults = \n\t\t\t\t")
-				.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-				.append(".requestTotal()\n\t\t\t\t\t\t? ");
-		createQuery( declaration );
-		setParameters( declaration, paramTypes, "\t\t\t\t\t");
-		if ( isUsingEntityManager() ) {
-			declaration
-					.append("\t\t\t\t\t");
+				.append("\tlong _totalResults = \n\t\t\t\t");
+		if ( isReactive() ) {
+			declaration.append("-1;\n"); //TODO: add getResultCount() to HR
 		}
-		unwrapQuery( declaration, !isUsingEntityManager() );
-		declaration
-				.append("\t\t\t\t\t\t\t\t.getResultCount()\n\t\t\t\t\t\t: -1;\n");
+		else {
+			declaration
+					.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
+					.append(".requestTotal()\n\t\t\t\t\t\t? ");
+			createQuery( declaration );
+			setParameters( declaration, paramTypes, "\t\t\t\t\t");
+			if ( isUsingEntityManager() ) {
+				declaration
+						.append("\t\t\t\t\t");
+			}
+			unwrapQuery( declaration, !isUsingEntityManager() );
+			declaration
+					.append("\t\t\t\t\t\t\t\t.getResultCount()\n\t\t\t\t\t\t: -1;\n");
+		}
 	}
 
 	void collectOrdering(StringBuilder declaration, List<String> paramTypes) {
@@ -532,8 +521,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 								.append(name)
 								.append(");\n");
 					}
-					else if ( type.startsWith(JD_ORDER)
-							|| type.startsWith(JD_PAGE_REQUEST) ) {
+					else if ( type.startsWith(JD_ORDER) ) {
 						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 						declaration
 								.append("\tfor (var _sort : ")
@@ -595,14 +583,6 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			|| !orderBys.isEmpty();
 	}
 
-	boolean unwrapIfNecessary(StringBuilder declaration, @Nullable String containerType, boolean unwrapped) {
-		if ( OPTIONAL.equals(containerType) || isJakartaCursoredPage(containerType) ) {
-			unwrapQuery( declaration, unwrapped );
-			unwrapped = true;
-		}
-		return unwrapped;
-	}
-
 	protected void executeSelect(
 			StringBuilder declaration,
 			List<String> paramTypes,
@@ -610,8 +590,15 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			boolean unwrapped,
 			boolean mustUnwrap) {
 		if ( containerType == null ) {
-			declaration
-					.append("\t\t\t.getSingleResult();");
+			if ( nullable ) {
+				unwrapQuery(declaration, unwrapped);
+				declaration
+						.append("\t\t\t.getSingleResultOrNull();");
+			}
+			else {
+				declaration
+						.append("\t\t\t.getSingleResult();");
+			}
 		}
 		else {
 			switch (containerType) {
@@ -627,6 +614,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					}
 					break;
 				case OPTIONAL:
+					unwrapQuery(declaration, unwrapped);
 					declaration
 							.append("\t\t\t.uniqueResultOptional();");
 					break;
@@ -646,13 +634,33 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 							.append(");");
 					break;
 				case JD_PAGE:
+					if ( isReactive() ) {
+						if ( returnTypeName == null ) {
+							throw new AssertionFailure("entity class cannot be null");
+						}
+						declaration
+								.append("\t\t\t.getResultList()\n")
+								.append("\t\t\t.map(_results -> (Page<")
+								.append(annotationMetaEntity.importType(returnTypeName))
+								.append(">)");
+					}
+					else {
+						declaration
+								.append("\t\t\t.getResultList();\n")
+								.append("\t\treturn ");
+					}
 					declaration
-							.append("\t\t\t.getResultList();\n")
-							.append("\t\treturn new ")
+							.append("new ")
 							.append(annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord"))
 							.append('(')
 							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
-							.append(", _results, _totalResults);");
+							.append(", _results, _totalResults)");
+					if ( isReactive() ) {
+						declaration
+								.append(')');
+					}
+					declaration
+							.append(';');
 					break;
 				case JD_CURSORED_PAGE:
 					if ( returnTypeName == null ) {
@@ -662,9 +670,11 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						unwrapQuery(declaration, unwrapped);
 						declaration
 								.append("\t\t\t.getKeyedResultList(_keyedPage);\n");
-						annotationMetaEntity.importType("jakarta.data.page.PageRequest");
-						annotationMetaEntity.importType("jakarta.data.page.PageRequest.Cursor");
+						annotationMetaEntity.importType(JD_PAGE_REQUEST);
+						annotationMetaEntity.importType(JD_PAGE_REQUEST + ".Cursor");
 						annotationMetaEntity.importType("jakarta.data.page.impl.CursoredPageRecord");
+						annotationMetaEntity.staticImport(JD_PAGE_REQUEST, "beforeCursor");
+						annotationMetaEntity.staticImport(JD_PAGE_REQUEST, "afterCursor");
 						String fragment = MAKE_KEYED_SLICE
 								.replace("pageRequest",
 										parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
@@ -716,4 +726,10 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 			&& containerType.startsWith("org.hibernate");
 	}
 
+	boolean isUnifiableReturnType(@Nullable String containerType) {
+		return containerType == null
+			|| LIST.equals(containerType)
+			|| JD_PAGE.equals(containerType)
+			|| JD_CURSORED_PAGE.equals(containerType);
+	}
 }

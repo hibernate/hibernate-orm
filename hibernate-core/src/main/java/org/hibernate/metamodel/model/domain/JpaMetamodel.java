@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
@@ -19,6 +18,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -78,12 +78,11 @@ public interface JpaMetamodel extends Metamodel {
 
 	String qualifyImportableName(String queryName);
 
-	/**
-	 * Returns a map that gives access to the enum literal expressions that can be used in queries.
-	 * The key is the shorthand enum literal. The value is a map, from enum class to the actual enum value.
-	 * This is needed for parsing shorthand enum literals that don't use FQNs.
-	 */
-	Map<String, Map<Class<?>, Enum<?>>> getAllowedEnumLiteralTexts();
+	Set<String> getAllowedEnumLiteralTexts(String enumValue);
+
+	EnumJavaType<?> getEnumType(String prefix);
+
+	<E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns

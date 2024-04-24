@@ -1,0 +1,160 @@
+[[configuration-integration]]
+== Configuration and integration
+
+Getting started with Hibernate Data Repositories involves the following steps:
+
+1. set up a project with Hibernate ORM and `HibernateProcessor`,
+2. configure a persistence unit,
+3. make sure a `StatelessSession` for that persistence unit is available for injection, and then
+4. inject a repository using CDI or some other implementation of `jakarta.inject`.
+
+=== Project setup
+
+We definitely need the following dependencies in our project:
+
+.Required dependencies
+|===
+| Dependency | Explanation
+
+| `jakarta.data:jakarta.data-api` | The Jakarta Data API
+| `org.hibernate.orm:hibernate-core` | Hibernate ORM
+| `org.hibernate.orm:hibernate-jpamodelgen` | The annotation processor itself
+|===
+
+And we'll need to pick a JDBC driver:
+
+.JDBC driver dependencies
+[%breakable,cols="50,~"]
+|===
+| Database                  | Driver dependency
+
+| PostgreSQL or CockroachDB | `org.postgresql:postgresql`
+| MySQL or TiDB             | `com.mysql:mysql-connector-j`
+| MariaDB                   | `org.mariadb.jdbc:mariadb-java-client`
+| DB2                       | `com.ibm.db2:jcc`
+| SQL Server                | `com.microsoft.sqlserver:mssql-jdbc`
+| Oracle                    | `com.oracle.database.jdbc:ojdbc11`
+| H2                        | `com.h2database:h2`
+| HSQLDB                    | `org.hsqldb:hsqldb`
+|===
+
+In addition, we might add some of the following to the mix.
+
+.Optional dependencies
+|===
+| Optional dependency | Explanation
+
+| `org.hibernate.validator:hibernate-validator` +
+and `org.glassfish:jakarta.el` | Hibernate Validator
+| `org.apache.logging.log4j:log4j-core` | log4j
+| `org.jboss.weld:weld-core-impl` | Weld CDI
+|===
+
+You'll need to configure the annotation processor to run when your project is compiled.
+In Gradle, for example, you'll need to use `annotationProcessor`.
+
+[source,groovy]
+----
+annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.5.0'
+----
+
+=== Excluding classes from processing
+
+There's three ways to limit the annotation processor to certain classes:
+
+1. A given repository may be excluded from processing simply by specifying `@Repository(provider="acme")` where `"acme"` is any string other than the empty string or a string equal, ignoring case, to `"Hibernate"`. This is the preferred solution when there are multiple Jakarta Data Providers available.
+2. A package or type may be excluded by annotating it with the link:{doc-javadoc-url}org/hibernate/annotations/processing/Exclude.html[`@Exclude`] annotation from `org.hibernate.annotations.processing`.
+3. The annotation processor may be limited to consider only certain types or certain packages using the `include` configuration option, for example, `-Ainclude=\*.entity.*,*Repository`. Alternatively, types or packages may be excluded using the `exclude` option, for example, `-Aexclude=*Impl`.
+
+=== Configuring Hibernate ORM
+
+How you configure Hibernate depends on the environment you're running in, and on your preference:
+
+- in Java SE, we often just use `hibernate.properties`, but some people prefer to use `persistence.xml`, especially in case of multiple persistence units,
+- in Quarkus, we must use `application.properties`, and
+- in a Jakarta EE container, we usually use `persistence.xml`.
+
+Here's a simple `hibernate.properties` file for h2 database, just to get you started.
+
+[source,properties]
+----
+# Database connection settings
+jakarta.persistence.jdbc.url=jdbc:h2:~/h2temp;DB_CLOSE_DELAY=-1
+jakarta.persistence.jdbc.user=sa
+jakarta.persistence.jdbc.pass=
+
+# Echo all executed SQL to console
+hibernate.show_sql=true
+hibernate.format_sql=true
+hibernate.highlight_sql=true
+
+# Automatically export the schema
+hibernate.hbm2ddl.auto=create
+----
+
+Please see the link:{doc-introduction-url}#configuration[Introduction to Hibernate 6] for more information about configuring Hibernate.
+
+=== Obtaining a `StatelessSession`
+
+Each repository implementation must somehow obtain a link:{doc-javadoc-url}org/hibernate/StatelessSession.html[`StatelessSession`] for its persistence unit.
+This usually happens via dependency injection, so you'll need to make sure that a `StatelessSession` is available for injection:
+
+- in Quarkus, this problem is already taken care of for us--there's always an injectable `StatelessSession` bean for each persistence unit, and
+- in a Jakarta EE environment, `HibernateProcessor` generates special code which takes care of creating and destroying the `StatelessSession`, but
+- in other environments, this is something we need to take care of ourselves.
+
+[CAUTION]
+====
+Depending on the libraries in your build path, `HibernateProcessor` generates different code.
+For example, if Quarkus is on the build path, the repository implementation is generated to obtain the `StatelessSession` directly from CDI in a way which works in Quarkus but not in WildFly.
+====
+
+If you have multiple persistence units, you'll need to disambiguate the persistence unit for a repository interface using `@Repository(dataStore="my-persistence-unit-name")`.
+
+=== Injecting a repository
+
+In principle, any implementation of `jakarta.inject` may be used to inject a repository implementation.
+
+[source,java]
+----
+@Inject Library library;
+----
+
+However, this code will fail if the repository implementation is not able to obtain a `StatelessSession` from the bean container.
+
+It's always possible to instantiate a repository implementation directly.
+
+[source,java]
+----
+Library library = new Library_(statelessSession);
+----
+
+This is useful for testing, or for executing in an environment with no support for `jakarta.inject`.
+
+=== Integration with Jakarta EE
+
+Jakarta Data specifies that methods of a repository interface may be annotated with:
+
+- Jakarta Bean Validation constraint annotations, and
+- Jakarta Interceptors interceptor binding types, including,
+- in particular, the `@Transactional` interceptor binding defined by Jakarta Transactions.
+
+Note that these annotations are usually applied to a CDI bean implementation class, not to an interface,footnote:[`@Inherited` annotations are inherited from superclass to subclass, but not from interface to implementing class.] but a special exception is made for repository interfaces.
+
+Therefore, when running in a Jakarta EE environment, or in Quarkus, and when an instance of a repository interface is obtained via CDI, the semantics of such annotations is respected.
+
+[source,java]
+----
+@Transactional @Repository
+public interface Library {
+
+    @Find
+    Book book(@NotNull String isbn);
+
+    @Find
+    Book book(@NotBlank String title, @NotNull LocalDate publicationDate);
+
+}
+----
+
+As an aside, it's rather satisfying to see all these things working so nicely together, since we members of the Hibernate team played pivotal roles in the creation of the Persistence, Bean Validation, CDI, Interceptors, and Data specifications.

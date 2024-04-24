@@ -61,11 +61,13 @@ public final class EventType<T> {
 	public static final EventType<PreDeleteEventListener> PRE_DELETE = create( "pre-delete", PreDeleteEventListener.class );
 	public static final EventType<PreUpdateEventListener> PRE_UPDATE = create( "pre-update", PreUpdateEventListener.class );
 	public static final EventType<PreInsertEventListener> PRE_INSERT = create( "pre-insert", PreInsertEventListener.class );
+	public static final EventType<PreUpsertEventListener> PRE_UPSERT = create( "pre-upsert", PreUpsertEventListener.class );
 
 	public static final EventType<PostLoadEventListener> POST_LOAD = create( "post-load", PostLoadEventListener.class );
 	public static final EventType<PostDeleteEventListener> POST_DELETE = create( "post-delete", PostDeleteEventListener.class );
 	public static final EventType<PostUpdateEventListener> POST_UPDATE = create( "post-update", PostUpdateEventListener.class );
 	public static final EventType<PostInsertEventListener> POST_INSERT = create( "post-insert", PostInsertEventListener.class );
+	public static final EventType<PostUpsertEventListener> POST_UPSERT = create( "post-upsert", PostUpsertEventListener.class );
 
 	public static final EventType<PostDeleteEventListener> POST_COMMIT_DELETE = create( "post-commit-delete", PostDeleteEventListener.class );
 	public static final EventType<PostUpdateEventListener> POST_COMMIT_UPDATE = create( "post-commit-update", PostUpdateEventListener.class );

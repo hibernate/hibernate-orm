@@ -76,9 +76,9 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 				"t"
 		);
 
-		final int position = valuesArrayPosition == null ?
-				columnIndex( jdbcResultsMetadata, modelPart ) :
-				valuesArrayPosition;
+		final int position = valuesArrayPosition != null ?
+				valuesArrayPosition :
+				columnIndex( jdbcResultsMetadata, modelPart );
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				ResultsHelper.resolveSqlExpression(
 						creationStateImpl,
@@ -103,19 +103,16 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 	}
 
 	private static int columnIndex(JdbcValuesMetadata jdbcResultsMetadata, BasicValuedModelPart modelPart) {
-		try {
+		if ( jdbcResultsMetadata.getColumnCount() == 1 ) {
+			assert modelPart.isEntityIdentifierMapping() || jdbcResultsMetadata.resolveColumnPosition(
+					getActualGeneratedModelPart( modelPart ).getSelectionExpression()
+			) == 1;
+			return 0;
+		}
+		else {
 			return jdbcPositionToValuesArrayPosition( jdbcResultsMetadata.resolveColumnPosition(
 					getActualGeneratedModelPart( modelPart ).getSelectionExpression()
 			) );
-		}
-		catch (Exception e) {
-			if ( modelPart.isEntityIdentifierMapping() ) {
-				// Default to the first position for entity identifiers
-				return 0;
-			}
-			else {
-				throw e;
-			}
 		}
 	}
 }

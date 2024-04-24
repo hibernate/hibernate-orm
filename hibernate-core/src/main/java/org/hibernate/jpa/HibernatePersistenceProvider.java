@@ -19,6 +19,7 @@ import jakarta.persistence.spi.ProviderUtil;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
@@ -197,8 +198,12 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(PersistenceConfiguration configuration) {
-		// todo (jpa 3.2) : implement this
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilder(
+				new PersistenceConfigurationDescriptor( configuration ),
+				Collections.emptyMap(),
+				HibernatePersistenceProvider.class.getClassLoader()
+		);
+		return builder.build();
 	}
 
 	@Override

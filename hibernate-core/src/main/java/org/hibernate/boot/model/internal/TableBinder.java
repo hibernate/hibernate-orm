@@ -743,9 +743,10 @@ public class TableBinder {
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
-		final List<Column> idColumns = referencedEntity instanceof JoinedSubclass
-				? referencedEntity.getKey().getColumns()
-				: referencedEntity.getIdentifier().getColumns();
+		final KeyValue keyValue = referencedEntity instanceof JoinedSubclass
+				? referencedEntity.getKey()
+				: referencedEntity.getIdentifier();
+		final List<Column> idColumns = keyValue.getColumns();
 		for ( int i = 0; i < idColumns.size(); i++ ) {
 			final Column column = idColumns.get(i);
 			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
@@ -766,6 +767,11 @@ public class TableBinder {
 					}
 				}
 			}
+		}
+		if ( keyValue instanceof Component
+				&& ( (Component) keyValue ).isSorted()
+				&& value instanceof DependantValue ) {
+			( (DependantValue) value ).setSorted( true );
 		}
 	}
 

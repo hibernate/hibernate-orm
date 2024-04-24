@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -654,25 +655,50 @@ public class EnhancerImpl implements Enhancer {
 
 	private static class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
 		private final ConcurrentHashMap<String, Resolution> resolutions = new ConcurrentHashMap<>();
+		private final ConcurrentHashMap<String, LoadingLock> loadingLocks = new ConcurrentHashMap<>();
 
 		/**
 		 * Creates a new class file locator for the given class loader.
 		 *
 		 * @param classLoader The class loader to query which must not be the bootstrap class loader, i.e. {@code null}.
 		 */
-		protected EnhancerClassFileLocator(ClassLoader classLoader) {
-			super( classLoader );
+		protected EnhancerClassFileLocator(final ClassLoader classLoader) {
+			super( Objects.requireNonNull( classLoader ) );
 		}
 
 		@Override
-		public Resolution locate(String className) throws IOException {
-			assert className != null;
+		public Resolution locate(final String className) throws IOException {
 			final Resolution resolution = resolutions.get( className );
 			if ( resolution != null ) {
 				return resolution;
 			}
 			else {
-				return super.locate( className );
+				//N.B. ByteBuddy also implements caching, but has no protections against
+				//a cache stampede as it's not meant to process classes in parallel.
+				//Observations show that it's actually very likely to happen in our case.
+				final LoadingLock newLock = new LoadingLock();
+				final LoadingLock existingLock = loadingLocks.putIfAbsent( className, newLock );
+				final LoadingLock lock = existingLock == null ? newLock : existingLock;
+				synchronized ( lock ) {
+					final Resolution loaded = lock.loaded;
+					if ( loaded != null ) {
+						loadingLocks.remove( className );
+						return loaded;
+					}
+					final Resolution resolutionTryWhileLocked = resolutions.get( className );
+					if ( resolutionTryWhileLocked != null ) {
+						lock.loaded = resolutionTryWhileLocked;
+						loadingLocks.remove( className );
+						return resolutionTryWhileLocked;
+					}
+					else {
+						final Resolution superLocated = super.locate( className );
+						resolutions.put( className, superLocated );
+						lock.loaded = superLocated;
+						loadingLocks.remove( className );
+						return superLocated;
+					}
+				}
 			}
 		}
 
@@ -685,6 +711,10 @@ public class EnhancerImpl implements Enhancer {
 		void deregisterClassNameAndBytes(String className) {
 			resolutions.remove( className );
 		}
+	}
+
+	private static class LoadingLock {
+		private ClassFileLocator.Resolution loaded;
 	}
 
 }

@@ -40,16 +40,15 @@ public class ForeignKeyProcessing {
 		if ( jaxbForeignKey == null ) {
 			return null;
 		}
-		return memberDetails.applyAnnotationUsage(
+		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = memberDetails.applyAnnotationUsage(
 				JpaAnnotations.FOREIGN_KEY,
-				(foreignKeyUsage) -> {
-					XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "name", jaxbForeignKey.getName() );
-					XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "value", jaxbForeignKey.getConstraintMode() );
-					XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "foreignKeyDefinition", jaxbForeignKey.getForeignKeyDefinition() );
-					XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "options", jaxbForeignKey.getOptions() );
-				},
 				xmlDocumentContext.getModelBuildingContext()
 		);
+		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "name", jaxbForeignKey.getName() );
+		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "value", jaxbForeignKey.getConstraintMode() );
+		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "foreignKeyDefinition", jaxbForeignKey.getForeignKeyDefinition() );
+		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "options", jaxbForeignKey.getOptions() );
+		return foreignKeyUsage;
 	}
 
 	public static MutableAnnotationUsage<ForeignKey> createNestedForeignKeyAnnotation(

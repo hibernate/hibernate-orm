@@ -31,6 +31,7 @@ import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
@@ -485,37 +486,36 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			AnnotationUsage<Column> column,
 			MetadataBuildingContext context) {
 		final AnnotationUsage<TimeZoneColumn> timeZoneColumn = element.getAnnotationUsage( TimeZoneColumn.class );
-		return JpaAnnotations.COLUMN.createUsage(
+		final MutableAnnotationUsage<Column> created = JpaAnnotations.COLUMN.createUsage(
 				element,
-				(created) -> {
-					final String columnName = timeZoneColumn != null
-							? timeZoneColumn.getString( "name" )
-							: column.getString( "name" ) + "_tz";
-					AnnotationUsageHelper.applyStringAttributeIfSpecified( "name", columnName, created );
-					AnnotationUsageHelper.applyAttributeIfSpecified(
-							"nullable",
-							column.getBoolean( "nullable" ),
-							created
-					);
-
-					final AnnotationUsage<?> source = timeZoneColumn != null
-							? timeZoneColumn
-							: column;
-					AnnotationUsageHelper.applyStringAttributeIfSpecified( "table", source.getAttributeValue( "table" ), created );
-					AnnotationUsageHelper.applyAttributeIfSpecified( "insertable", source.getAttributeValue( "insertable" ), created );
-					AnnotationUsageHelper.applyAttributeIfSpecified( "updatable", source.getAttributeValue( "updatable" ), created );
-
-					if ( timeZoneColumn != null ) {
-						AnnotationUsageHelper
-								.applyStringAttributeIfSpecified(
-										"columnDefinition",
-										timeZoneColumn.getAttributeValue( "columnDefinition" ),
-										created
-								);
-					}
-				},
 				context.getMetadataCollector().getSourceModelBuildingContext()
 		);
+		final String columnName = timeZoneColumn != null
+				? timeZoneColumn.getString( "name" )
+				: column.getString( "name" ) + "_tz";
+		AnnotationUsageHelper.applyStringAttributeIfSpecified( "name", columnName, created );
+		AnnotationUsageHelper.applyAttributeIfSpecified(
+				"nullable",
+				column.getBoolean( "nullable" ),
+				created
+		);
+
+		final AnnotationUsage<?> source = timeZoneColumn != null
+				? timeZoneColumn
+				: column;
+		AnnotationUsageHelper.applyStringAttributeIfSpecified( "table", source.getAttributeValue( "table" ), created );
+		AnnotationUsageHelper.applyAttributeIfSpecified( "insertable", source.getAttributeValue( "insertable" ), created );
+		AnnotationUsageHelper.applyAttributeIfSpecified( "updatable", source.getAttributeValue( "updatable" ), created );
+
+		if ( timeZoneColumn != null ) {
+			AnnotationUsageHelper
+					.applyStringAttributeIfSpecified(
+							"columnDefinition",
+							timeZoneColumn.getAttributeValue( "columnDefinition" ),
+							created
+					);
+		}
+		return created;
 	}
 
 	private static AnnotationUsage<Column> createTemporalColumn(

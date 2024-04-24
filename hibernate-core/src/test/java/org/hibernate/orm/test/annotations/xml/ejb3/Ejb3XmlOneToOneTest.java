@@ -119,8 +119,8 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 	public void testSingleJoinColumn() {
 		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "one-to-one.orm4.xml" );
 		assertThat( memberDetails.hasAnnotationUsage( OneToOne.class ) ).isTrue();
-		assertThat( memberDetails.hasAnnotationUsage( JoinColumn.class ) ).isTrue();
-		assertThat( memberDetails.hasAnnotationUsage( JoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( JoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( JoinColumns.class ) ).isTrue();
 
 		assertThat( memberDetails.hasAnnotationUsage( MapsId.class ) ).isFalse();
 		assertThat( memberDetails.hasAnnotationUsage( Id.class ) ).isFalse();

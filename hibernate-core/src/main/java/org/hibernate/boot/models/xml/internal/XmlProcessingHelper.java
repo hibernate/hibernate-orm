@@ -15,6 +15,7 @@ import org.hibernate.boot.models.MemberResolutionException;
 import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
@@ -115,11 +116,11 @@ public class XmlProcessingHelper {
 	 * Used when applying XML in override mode.
 	 */
 	public static <A extends Annotation> MutableAnnotationUsage<A> getOrMakeNamedAnnotation(
-			Class<A> annotationType,
+			AnnotationDescriptor<A> annotationDescriptor,
 			String name,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		return getOrMakeNamedAnnotation( annotationType, name, "name", target, xmlDocumentContext );
+		return getOrMakeNamedAnnotation( annotationDescriptor, name, "name", target, xmlDocumentContext );
 	}
 
 	/**
@@ -127,43 +128,30 @@ public class XmlProcessingHelper {
 	 * Used when applying XML in override mode.
 	 */
 	public static <A extends Annotation> MutableAnnotationUsage<A> getOrMakeNamedAnnotation(
-			Class<A> annotationType,
+			AnnotationDescriptor<A> annotationDescriptor,
 			String name,
 			String attributeToMatch,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( name == null ) {
-			return xmlDocumentContext
-					.getModelBuildingContext()
-					.getAnnotationDescriptorRegistry()
-					.getDescriptor( annotationType )
-					.createUsage( null, xmlDocumentContext.getModelBuildingContext() );
+			return annotationDescriptor.createUsage( null, xmlDocumentContext.getModelBuildingContext() );
 		}
 
-		final AnnotationUsage<A> existing = target.getNamedAnnotationUsage( annotationType, name, attributeToMatch );
+		final AnnotationUsage<A> existing = target.getNamedAnnotationUsage( annotationDescriptor, name, attributeToMatch );
 		if ( existing != null ) {
 			return (MutableAnnotationUsage<A>) existing;
 		}
 
-		return makeNamedAnnotation( annotationType, name, attributeToMatch, target, xmlDocumentContext );
+		return makeNamedAnnotation( annotationDescriptor, name, attributeToMatch, target, xmlDocumentContext );
 	}
 
-	/**
-	 * Make a named AnnotationUsage.
-	 * Used when applying XML in complete mode or when {@linkplain #getOrMakeNamedAnnotation}
-	 * needs to make.
-	 */
-	public static <A extends Annotation> MutableAnnotationUsage<A> makeNamedAnnotation(
-			Class<A> annotationType,
+	private static <A extends Annotation> MutableAnnotationUsage<A> makeNamedAnnotation(
+			AnnotationDescriptor<A> annotationDescriptor,
 			String name,
 			String nameAttributeName,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> created = xmlDocumentContext
-				.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( annotationType )
-				.createUsage( null, xmlDocumentContext.getModelBuildingContext() );
+		final MutableAnnotationUsage<A> created = annotationDescriptor.createUsage( null, xmlDocumentContext.getModelBuildingContext() );
 		target.addAnnotationUsage( created );
 		created.setAttributeValue( nameAttributeName, name );
 		return created;

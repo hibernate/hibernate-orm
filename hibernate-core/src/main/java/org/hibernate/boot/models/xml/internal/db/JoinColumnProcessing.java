@@ -21,6 +21,7 @@ import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.MutableAnnotationUsage;
@@ -164,10 +165,10 @@ public class JoinColumnProcessing {
 	public static <A extends Annotation> MutableAnnotationUsage<A> createJoinColumnAnnotation(
 			JaxbColumnJoined jaxbJoinColumn,
 			MutableMemberDetails memberDetails,
-			Class<A> annotationType,
+			AnnotationDescriptor<A> annotationDescriptor,
 			XmlDocumentContext xmlDocumentContext) {
 		final MutableAnnotationUsage<A> joinColumnAnn = XmlProcessingHelper.getOrMakeNamedAnnotation(
-				annotationType,
+				annotationDescriptor,
 				jaxbJoinColumn.getName(),
 				memberDetails,
 				xmlDocumentContext
@@ -208,15 +209,10 @@ public class JoinColumnProcessing {
 			return;
 		}
 
-		if ( jaxbJoinColumns.size() == 1 ) {
-			XmlAnnotationHelper.applyJoinColumn( jaxbJoinColumns.get( 0 ), memberDetails, xmlDocumentContext );
-		}
-		else {
-			final MutableAnnotationUsage<JoinColumns> columnsAnn = memberDetails.applyAnnotationUsage(
-					JpaAnnotations.JOIN_COLUMNS,
-					xmlDocumentContext.getModelBuildingContext()
-			);
-			columnsAnn.setAttributeValue( "value", createJoinColumns( jaxbJoinColumns, memberDetails, xmlDocumentContext ) );
-		}
+		final MutableAnnotationUsage<JoinColumns> columnsAnn = memberDetails.applyAnnotationUsage(
+				JpaAnnotations.JOIN_COLUMNS,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		columnsAnn.setAttributeValue( "value", createJoinColumns( jaxbJoinColumns, memberDetails, xmlDocumentContext ) );
 	}
 }

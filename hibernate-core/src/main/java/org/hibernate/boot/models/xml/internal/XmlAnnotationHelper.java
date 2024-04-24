@@ -117,7 +117,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
@@ -147,40 +146,6 @@ public class XmlAnnotationHelper {
 		if ( StringHelper.isNotEmpty( value ) ) {
 			annotationUsage.setAttributeValue( attributeName, value );
 		}
-	}
-
-	public static <S> void applyOptionalAttribute(
-			MutableAnnotationUsage<? extends Annotation> annotationUsage,
-			String attributeName,
-			S valueSource,
-			Function<S,Object> valueExtractor) {
-		if ( valueSource == null ) {
-			return;
-		}
-
-		final Object value = valueExtractor.apply( valueSource );
-		if ( value == null ) {
-			return;
-		}
-
-		annotationUsage.setAttributeValue( attributeName, value );
-	}
-
-	public static <S> void applyOptionalStringAttribute(
-			MutableAnnotationUsage<? extends Annotation> annotationUsage,
-			String attributeName,
-			S valueSource,
-			Function<S,String> valueExtractor) {
-		if ( valueSource == null ) {
-			return;
-		}
-
-		final String value = valueExtractor.apply( valueSource );
-		if ( StringHelper.isEmpty( value ) ) {
-			return;
-		}
-
-		annotationUsage.setAttributeValue( attributeName, value );
 	}
 
 	/**
@@ -223,16 +188,6 @@ public class XmlAnnotationHelper {
 		return columnAnnotationUsage;
 	}
 
-	public static MutableAnnotationUsage<JoinColumn> applyJoinColumn(
-			JaxbJoinColumnImpl jaxbJoinColumn,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbJoinColumn == null ) {
-			return null;
-		}
-
-		return JoinColumnProcessing.createJoinColumnAnnotation( jaxbJoinColumn, memberDetails, JoinColumn.class, xmlDocumentContext );
-	}
 
 	public static <T,N> void applyOr(
 			N jaxbNode,
@@ -266,6 +221,12 @@ public class XmlAnnotationHelper {
 				() -> (T) annotationDescriptor.getAttribute( name ).getAttributeMethod().getDefaultValue()
 		);
 	}
+
+
+
+
+
+
 
 	public static void applyUserType(
 			JaxbUserTypeImpl jaxbType,

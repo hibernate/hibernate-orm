@@ -14,6 +14,7 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
+import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
@@ -73,9 +74,7 @@ public class OneToManyAttributeProcessing {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// other properties
 
-		jaxbOneToMany.getJoinColumn().forEach( jaxbJoinColumn -> {
-			XmlAnnotationHelper.applyJoinColumn( jaxbJoinColumn, memberDetails, xmlDocumentContext );
-		} );
+		JoinColumnProcessing.applyJoinColumns( jaxbOneToMany.getJoinColumn(), memberDetails, xmlDocumentContext );
 
 		if ( jaxbOneToMany.getOnDelete() != null ) {
 			final MutableAnnotationUsage<OnDelete> onDeleteAnn = memberDetails.applyAnnotationUsage(

@@ -495,7 +495,8 @@ public class QuerySqmImpl<R>
 		}
 		catch (IllegalQueryOperationException e) {
 			// per JPA
-			throw new IllegalStateException( "Expecting a SELECT query : `" + hql + "`", e );
+			throw new IllegalStateException( "Query executed via 'getResultList()' or 'getSingleResult()' must be a 'select' query ["
+					+ hql + "]", e );
 		}
 	}
 
@@ -656,7 +657,8 @@ public class QuerySqmImpl<R>
 		}
 		catch (IllegalQueryOperationException e) {
 			// per JPA
-			throw new IllegalStateException( "Expecting a non-SELECT query : `" + hql + "`", e );
+			throw new IllegalStateException( "Query executed via 'executeUpdate()' must be an 'insert', 'update', or 'delete' statement ["
+					+ hql + "]", e );
 		}
 	}
 

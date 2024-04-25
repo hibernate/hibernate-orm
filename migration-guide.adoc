@@ -101,6 +101,10 @@ explicit settings for this configuration.  At a minimum this includes:
 * `hibernate.dialect` or `jakarta.persistence.database-product-name` to indicate the type of database
 * `jakarta.persistence.database-product-version` to indicate the database version
 
+[[generic-generator]]
+== Deprecation of `@GenericGenerator`
+
+The `@GenericGenerator` annotation was deprecated, in favor of the much more typesafe approach provided by `@IdGeneratorType` which was first introduced in 6.0.
 
 [[query-result-validation]]
 == Validation of Query Result Type

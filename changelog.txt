@@ -3,6 +3,19 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.7.Final (April 25, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32285
+
+** Bug
+    * [HHH-17964] - Hibernate using wrong column order for ElementCollection query when composite ID is present
+    * [HHH-17883] - Wrong order of primary key join columns with @EmbeddedId and joined inheritance
+
+** Task
+    * [HHH-17981] - Automate maintenance releases for 6.4
+
+
 Changes in 6.4.6.Final (April 24, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

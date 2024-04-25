@@ -1,4 +1,4 @@
-= Hibernate 6.5.0.CR1
+= Hibernate 6.5.0.Final
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
@@ -12,7 +12,7 @@ Steve Ebersole
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 :ql-guide-url: {docs-url}/querylanguage/html_single/Hibernate_Query_Language.html
 
-6.5 brings many new features, in addition to many improvements and fixes.
+6.5 has gone final!
 
 
 [[java-time]]

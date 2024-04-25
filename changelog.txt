@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.25.Final (April 25, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32273
+
+** Bug
+    * [HHH-17964] - Hibernate using wrong column order for ElementCollection query when composite ID is present
+    * [HHH-17885] - Same named formula attribute of different Embedded uses same selection expression
+    * [HHH-17883] - Wrong order of primary key join columns with @EmbeddedId and joined inheritance
+    * [HHH-16994] - Native query with select * and join tables with same named columns throws NonUniqueDiscoveredSqlAliasException
+
+
 Changes in 6.2.24.Final (March 29, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -7,6 +7,7 @@
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -35,10 +36,16 @@ class ByteBuddyEnhancementContext {
 	private final ConcurrentHashMap<TypeDescription, Map<String, MethodDescription>> getterByTypeMap = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, Object> locksMap = new ConcurrentHashMap<>();
 
-	ByteBuddyEnhancementContext(EnhancementContext enhancementContext) {
-		this.enhancementContext = enhancementContext;
+	ByteBuddyEnhancementContext(final EnhancementContext enhancementContext) {
+		this.enhancementContext = Objects.requireNonNull( enhancementContext );
 	}
 
+	/**
+	 * @deprecated as it's currently unused and we're not always actually sourcing the classes to be transformed
+	 * from a classloader, so this getter can't always be honoured correctly.
+	 * @return the ClassLoader provided by the underlying EnhancementContext. Might be otherwise ignored.
+	 */
+	@Deprecated(forRemoval = true)
 	public ClassLoader getLoadingClassLoader() {
 		return enhancementContext.getLoadingClassLoader();
 	}

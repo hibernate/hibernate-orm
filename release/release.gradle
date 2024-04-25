@@ -59,15 +59,22 @@ def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy 
     into layout.buildDirectory.dir( "documentation/introduction" )
 }
 
-def stageQueryGuideTasks = tasks.register( "stageQueryGuide", Copy ) {
+def stageQueryGuideTask = tasks.register( "stageQueryGuide", Copy ) {
     group 'documentation'
-    description "Stages the Query Language Guide as part of preparing for release"
-    dependsOn ':documentation:renderQueryLanguageGuides'
     description "Stages the Query Language Guide as part of preparing for release"
     dependsOn ':documentation:renderQueryLanguageGuides'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/querylanguage" ) }
     into layout.buildDirectory.dir( "documentation/querylanguage" )
+}
+
+def stageRepositoriesGuideTask = tasks.register( "stageRepositoriesGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Repositories Guide as part of preparing for release"
+    dependsOn ':documentation:renderRepositories'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/repositories" ) }
+    into layout.buildDirectory.dir( "documentation/repositories" )
 }
 
 def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
@@ -179,7 +186,8 @@ def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
     dependsOn stageQuickstartTask
     dependsOn stageIntroductionGuideTask
     dependsOn stageUserGuideTask
-    dependsOn stageQueryGuideTasks
+    dependsOn stageQueryGuideTask
+    dependsOn stageRepositoriesGuideTask
     dependsOn stageIntegrationGuideTask
     dependsOn stageTopicalGuideTask
     dependsOn stageMigrationGuideTask

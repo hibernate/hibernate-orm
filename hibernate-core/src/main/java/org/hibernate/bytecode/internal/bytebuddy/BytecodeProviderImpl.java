@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerClassLocator;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -67,6 +68,7 @@ import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
+import net.bytebuddy.pool.TypePool;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class BytecodeProviderImpl implements BytecodeProvider {
@@ -1310,6 +1312,18 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	@Override
 	public @Nullable Enhancer getEnhancer(EnhancementContext enhancementContext) {
 		return new EnhancerImpl( enhancementContext, byteBuddyState );
+	}
+
+	/**
+	 * Similar to {@link #getEnhancer(EnhancementContext)} but intended for advanced users who wish
+	 * to customize how ByteBuddy is locating the class files and caching the types.
+	 * Possibly used in Quarkus in a future version.
+	 * @param enhancementContext
+	 * @param classLocator
+	 * @return
+	 */
+	public @Nullable Enhancer getEnhancer(EnhancementContext enhancementContext, EnhancerClassLocator classLocator) {
+		return new EnhancerImpl( enhancementContext, byteBuddyState, classLocator );
 	}
 
 	@Override

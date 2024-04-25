@@ -648,6 +648,21 @@ So unless you specifically need to use these JDBC LOB APIs, you _don't_ need the
 
 Instead, as we just saw in <<column-lengths>>, all you need is to specify a large enough column `length` to accommodate the data you plan to write to that column.
 
+You should usually write this:
+[source,java]
+----
+@Column(length=LONG32) // good, correct column type inferred
+String text;
+----
+instead of this:
+[source,java]
+----
+@Lob // almost always unnecessary
+String text;
+----
+
+This is particularly true for PostgreSQL.
+
 [%unbreakable]
 [WARNING]
 // .PostgreSQL `BYTEA` and `TEXT`

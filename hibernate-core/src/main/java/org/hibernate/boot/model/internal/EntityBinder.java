@@ -81,8 +81,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jdbc.Expectation;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.event.internal.CallbackDefinitionResolver;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
@@ -124,7 +124,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
-import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -148,8 +147,8 @@ import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclass
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverrideAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
-import static org.hibernate.boot.model.internal.BinderHelper.overrideMatchesDialect;
 import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
+import static org.hibernate.boot.model.internal.BinderHelper.overrideMatchesDialect;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
@@ -1789,16 +1788,9 @@ public class EntityBinder {
 	}
 
 	private static AnnotationUsage<Cache> buildCacheMock(ClassDetails classDetails, MetadataBuildingContext context) {
-		final MutableAnnotationUsage<Cache> cacheUsage = HibernateAnnotations.CACHE.createUsage(
-				classDetails,
-				context.getMetadataCollector().getSourceModelBuildingContext()
-		);
+		final MutableAnnotationUsage<Cache> cacheUsage = HibernateAnnotations.CACHE.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
 		applyAttributeIfSpecified( "region", classDetails.getName(), cacheUsage );
-		applyAttributeIfSpecified(
-				"usage",
-				determineCacheConcurrencyStrategy( context ),
-				cacheUsage
-		);
+		applyAttributeIfSpecified( "usage", determineCacheConcurrencyStrategy( context ), cacheUsage );
 		return cacheUsage;
 	}
 

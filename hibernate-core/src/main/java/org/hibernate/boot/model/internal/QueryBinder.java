@@ -276,17 +276,15 @@ public abstract class QueryBinder {
 
 		final SourceModelBuildingContext sourceModelBuildingContext = context.getMetadataCollector()
 				.getSourceModelBuildingContext();
-		final MutableAnnotationUsage<NamedStoredProcedureQuery> nameStoredProcedureQueryAnn = JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY.createUsage(
-				null,
-				sourceModelBuildingContext
-		);
+		final MutableAnnotationUsage<NamedStoredProcedureQuery> nameStoredProcedureQueryAnn =
+				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY.createUsage( sourceModelBuildingContext );
 		nameStoredProcedureQueryAnn.setAttributeValue( "name", builder.getName() );
 		nameStoredProcedureQueryAnn.setAttributeValue( "procedureName", jdbcCall.callableName );
 
 		final List<AnnotationUsage<StoredProcedureParameter>> storedProcedureParameters = new ArrayList<>();
 		for ( String parameterName : jdbcCall.parameters ) {
-			final MutableAnnotationUsage<StoredProcedureParameter> storedProcedureParameterAnn = JpaAnnotations.STORED_PROCEDURE_PARAMETER
-					.createUsage( null, sourceModelBuildingContext );
+			final MutableAnnotationUsage<StoredProcedureParameter> storedProcedureParameterAnn =
+					JpaAnnotations.STORED_PROCEDURE_PARAMETER.createUsage( sourceModelBuildingContext );
 			storedProcedureParameterAnn.setAttributeValue( "name", parameterName );
 			storedProcedureParameterAnn.setAttributeValue( "mode", ParameterMode.IN );
 			final String typeName = builder.getParameterTypes().get( parameterName );
@@ -323,10 +321,7 @@ public abstract class QueryBinder {
 
 		final List<AnnotationUsage<QueryHint>> queryHints = new ArrayList<>();
 		if ( builder.getQuerySpaces() != null ) {
-			final MutableAnnotationUsage<QueryHint> queryHintAnn = JpaAnnotations.QUERY_HINT.createUsage(
-					null,
-					sourceModelBuildingContext
-			);
+			final MutableAnnotationUsage<QueryHint> queryHintAnn = JpaAnnotations.QUERY_HINT.createUsage( sourceModelBuildingContext );
 			queryHintAnn.setAttributeValue( "name", HibernateHints.HINT_NATIVE_SPACES );
 			queryHintAnn.setAttributeValue( "value", String.join( " ", builder.getQuerySpaces() ) );
 			queryHints.add( queryHintAnn );
@@ -334,10 +329,7 @@ public abstract class QueryBinder {
 
 		if ( jdbcCall.resultParameter ) {
 			// Mark native queries that have a result parameter as callable functions
-			final MutableAnnotationUsage<QueryHint> queryHintAnn = JpaAnnotations.QUERY_HINT.createUsage(
-					null,
-					sourceModelBuildingContext
-			);
+			final MutableAnnotationUsage<QueryHint> queryHintAnn = JpaAnnotations.QUERY_HINT.createUsage( sourceModelBuildingContext );
 			queryHintAnn.setAttributeValue( "name", HibernateHints.HINT_CALLABLE_FUNCTION );
 			queryHintAnn.setAttributeValue( "value", "true" );
 			queryHints.add( queryHintAnn );

@@ -17,12 +17,12 @@ import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import jakarta.persistence.CheckConstraint;
@@ -315,39 +315,33 @@ class ColumnsBuilder {
 			AnnotationUsage<PrimaryKeyJoinColumn> pkJoinColumnAnn,
 			MemberDetails property) {
 		final SourceModelBuildingContext hibernateModelsContext = buildingContext.getMetadataCollector().getSourceModelBuildingContext();
-		final AnnotationDescriptorRegistry descriptorRegistry = hibernateModelsContext.getAnnotationDescriptorRegistry();
-		final AnnotationDescriptor<JoinColumn> joinColumnDescriptor = descriptorRegistry.getDescriptor( JoinColumn.class );
-		return joinColumnDescriptor.createUsage(
-				property,
-				(usage) -> {
-					applyAttributeIfSpecified(
-							"name",
-							pkJoinColumnAnn.getAttributeValue( "name" ),
-							usage
-					);
-					applyAttributeIfSpecified(
-							"referencedColumnName",
-							pkJoinColumnAnn.getAttributeValue( "referencedColumnName" ),
-							usage
-					);
-					applyAttributeIfSpecified(
-							"columnDefinition",
-							pkJoinColumnAnn.getAttributeValue( "columnDefinition" ),
-							usage
-					);
-					applyAttributeIfSpecified(
-							"options",
-							pkJoinColumnAnn.getAttributeValue( "options" ),
-							usage
-					);
-					applyAttributeIfSpecified(
-							"foreignKey",
-							pkJoinColumnAnn.getAttributeValue( "foreignKey" ),
-							usage
-					);
-				},
-				hibernateModelsContext
+		final MutableAnnotationUsage<JoinColumn> usage = JpaAnnotations.JOIN_COLUMN.createUsage( hibernateModelsContext );
+		applyAttributeIfSpecified(
+				"name",
+				pkJoinColumnAnn.getAttributeValue( "name" ),
+				usage
 		);
+		applyAttributeIfSpecified(
+				"referencedColumnName",
+				pkJoinColumnAnn.getAttributeValue( "referencedColumnName" ),
+				usage
+		);
+		applyAttributeIfSpecified(
+				"columnDefinition",
+				pkJoinColumnAnn.getAttributeValue( "columnDefinition" ),
+				usage
+		);
+		applyAttributeIfSpecified(
+				"options",
+				pkJoinColumnAnn.getAttributeValue( "options" ),
+				usage
+		);
+		applyAttributeIfSpecified(
+				"foreignKey",
+				pkJoinColumnAnn.getAttributeValue( "foreignKey" ),
+				usage
+		);
+		return usage;
 	}
 
 	/**

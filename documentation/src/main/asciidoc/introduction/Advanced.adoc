@@ -118,6 +118,21 @@ This is completely by design and is not in any way a bug.
 
 More than one filter may be enabled in a given session.
 
+Alternatively, since Hibernate 6.5, a filter may be declared as `autoEnabled` in every session.
+In this case, the argument to a filter parameter must be obtained from a `Supplier`.
+
+[source,java]
+----
+@FilterDef(name = "ByRegion",
+           autoEnabled = true,
+           parameters = @ParamDef(name = "region", type = String.class,
+                                  resolver = RegionSupplier.class),
+           defaultCondition = "region = :region")
+package org.hibernate.example;
+----
+
+It's not necessary to call `enableFilter()` for a filter declared `autoEnabled = true`.
+
 [TIP]
 ====
 When we only need to filter rows by a static condition with no parameters, we don't need a filter, since link:{doc-javadoc-url}org/hibernate/annotations/SQLRestriction.html[`@SQLRestriction`] provides a much simpler way to do that.

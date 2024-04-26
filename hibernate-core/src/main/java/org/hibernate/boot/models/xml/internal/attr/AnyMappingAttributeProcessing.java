@@ -102,7 +102,8 @@ public class AnyMappingAttributeProcessing {
 		final ClassDetailsRegistry classDetailsRegistry = xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry();
 		final List<JaxbAnyDiscriminatorValueMappingImpl> valueMappings = jaxbDiscriminator.getValueMappings();
 		if ( CollectionHelper.isNotEmpty( valueMappings ) ) {
-			final MutableAnnotationUsage<AnyDiscriminatorValues> discriminatorValuesUsage = memberDetails.applyAnnotationUsage(
+			final MutableAnnotationUsage<AnyDiscriminatorValues> discriminatorValuesUsage = memberDetails.replaceAnnotationUsage(
+					HibernateAnnotations.ANY_DISCRIMINATOR_VALUE,
 					HibernateAnnotations.ANY_DISCRIMINATOR_VALUES,
 					xmlDocumentContext.getModelBuildingContext()
 			);
@@ -110,10 +111,8 @@ public class AnyMappingAttributeProcessing {
 			discriminatorValuesUsage.setAttributeValue( "value", valueList );
 
 			valueMappings.forEach( (valueMapping) -> {
-				final MutableAnnotationUsage<AnyDiscriminatorValue> discriminatorValueUsage = HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(
-						null,
-						xmlDocumentContext.getModelBuildingContext()
-				);
+				final MutableAnnotationUsage<AnyDiscriminatorValue> discriminatorValueUsage =
+						HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage( xmlDocumentContext.getModelBuildingContext() );
 				valueList.add( discriminatorValueUsage );
 
 				discriminatorValueUsage.setAttributeValue( "discriminator", valueMapping.getDiscriminatorValue() );
@@ -153,10 +152,8 @@ public class AnyMappingAttributeProcessing {
 			final ArrayList<MutableAnnotationUsage<JoinColumn>> columnAnnList = CollectionHelper.arrayList( jaxbKey.getColumns().size() );
 			joinColumnsUsage.setAttributeValue( "value", columnAnnList );
 			jaxbKey.getColumns().forEach( (jaxbColumn) -> {
-				final MutableAnnotationUsage<JoinColumn> joinColumnUsage = JpaAnnotations.JOIN_COLUMN.createUsage(
-						null,
-						xmlDocumentContext.getModelBuildingContext()
-				);
+				final MutableAnnotationUsage<JoinColumn> joinColumnUsage =
+						JpaAnnotations.JOIN_COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
 				columnAnnList.add( joinColumnUsage );
 
 				ColumnProcessing.applyColumnDetails( jaxbColumn, memberDetails, joinColumnUsage, xmlDocumentContext );

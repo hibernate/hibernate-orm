@@ -48,11 +48,11 @@ public class EntityGraphProcessing {
 		}
 
 		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
-		final MutableAnnotationUsage<NamedEntityGraphs> entityGraphsUsage = JpaAnnotations.NAMED_ENTITY_GRAPHS.createUsage(
-				classDetails,
+		final MutableAnnotationUsage<NamedEntityGraphs> entityGraphsUsage = classDetails.replaceAnnotationUsage(
+				JpaAnnotations.NAMED_ENTITY_GRAPH,
+				JpaAnnotations.NAMED_ENTITY_GRAPHS,
 				modelBuildingContext
 		);
-		classDetails.addAnnotationUsage( entityGraphsUsage );
 
 		final ArrayList<Object> entityGraphList = arrayList( jaxbEntityGraphs.size() );
 		entityGraphsUsage.setAttributeValue( "value", entityGraphList );
@@ -68,10 +68,7 @@ public class EntityGraphProcessing {
 			ClassDetails classDetails,
 			SourceModelBuildingContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<NamedEntityGraph> graphUsage = JpaAnnotations.NAMED_ENTITY_GRAPH.createUsage(
-				classDetails,
-				modelBuildingContext
-		);
+		final MutableAnnotationUsage<NamedEntityGraph> graphUsage = JpaAnnotations.NAMED_ENTITY_GRAPH.createUsage( modelBuildingContext );
 
 		applyStringAttributeIfSpecified( "name", jaxbEntityGraph.getName(), graphUsage );
 		applyAttributeIfSpecified( "includeAllAttributes", jaxbEntityGraph.isIncludeAllAttributes(), graphUsage );
@@ -118,10 +115,7 @@ public class EntityGraphProcessing {
 
 		final ArrayList<MutableAnnotationUsage<NamedAttributeNode>> attributeNodeList = arrayList( jaxbAttributeNodes.size() );
 		for ( JaxbNamedAttributeNodeImpl jaxbAttributeNode : jaxbAttributeNodes ) {
-			final MutableAnnotationUsage<NamedAttributeNode> namedAttributeNodeAnn = NAMED_ATTRIBUTE_NODE.createUsage(
-					classDetails,
-					modelBuildingContext
-			);
+			final MutableAnnotationUsage<NamedAttributeNode> namedAttributeNodeAnn = NAMED_ATTRIBUTE_NODE.createUsage( modelBuildingContext );
 			attributeNodeList.add( namedAttributeNodeAnn );
 
 			namedAttributeNodeAnn.setAttributeValue( "value", jaxbAttributeNode.getName() );
@@ -141,10 +135,7 @@ public class EntityGraphProcessing {
 
 		final List<MutableAnnotationUsage<NamedSubgraph>> subgraphAnnotations = arrayList( jaxbSubgraphs.size() );
 		for ( JaxbNamedSubgraphImpl jaxbSubgraph : jaxbSubgraphs ) {
-			final MutableAnnotationUsage<NamedSubgraph> namedSubGraphUsage = JpaAnnotations.NAMED_SUB_GRAPH.createUsage(
-					classDetails,
-					modelBuildingContext
-			);
+			final MutableAnnotationUsage<NamedSubgraph> namedSubGraphUsage = JpaAnnotations.NAMED_SUB_GRAPH.createUsage( modelBuildingContext );
 			subgraphAnnotations.add( namedSubGraphUsage );
 
 			namedSubGraphUsage.setAttributeValue( "name", jaxbSubgraph.getName() );

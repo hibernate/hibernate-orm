@@ -18,10 +18,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
-import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.MutableAnnotationUsage;
@@ -55,29 +53,19 @@ public class JoinColumnProcessing {
 			return;
 		}
 
-		if ( jaxbJoinColumns.size() == 1 ) {
-			final MutableAnnotationUsage<MapKeyJoinColumn> joinColumnUsage = memberDetails.applyAnnotationUsage(
-					JpaAnnotations.MAP_KEY_JOIN_COLUMN,
-					xmlDocumentContext.getModelBuildingContext()
-			);
-			transferJoinColumn( jaxbJoinColumns.get( 0 ), joinColumnUsage, memberDetails, xmlDocumentContext );
-		}
-		else {
-			final MutableAnnotationUsage<MapKeyJoinColumns> joinColumnsUsage = memberDetails.applyAnnotationUsage(
-					JpaAnnotations.MAP_KEY_JOIN_COLUMNS,
-					xmlDocumentContext.getModelBuildingContext()
-			);
-			final ArrayList<MutableAnnotationUsage<MapKeyJoinColumn>> joinColumnUsages = CollectionHelper.arrayList( jaxbJoinColumns.size() );
-			joinColumnsUsage.setAttributeValue( "value", joinColumnUsages );
-			jaxbJoinColumns.forEach( (jaxbJoinColumn) -> {
-				final MutableAnnotationUsage<MapKeyJoinColumn> joinColumnUsage = JpaAnnotations.MAP_KEY_JOIN_COLUMN.createUsage(
-						memberDetails,
-						xmlDocumentContext.getModelBuildingContext()
-				);
-				joinColumnUsages.add( joinColumnUsage );
-				transferJoinColumn( jaxbJoinColumn, joinColumnUsage, memberDetails, xmlDocumentContext );
-			} );
-		}
+		final MutableAnnotationUsage<MapKeyJoinColumns> joinColumnsUsage = memberDetails.replaceAnnotationUsage(
+				JpaAnnotations.MAP_KEY_JOIN_COLUMN,
+				JpaAnnotations.MAP_KEY_JOIN_COLUMNS,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final ArrayList<MutableAnnotationUsage<MapKeyJoinColumn>> joinColumnUsages = CollectionHelper.arrayList( jaxbJoinColumns.size() );
+		joinColumnsUsage.setAttributeValue( "value", joinColumnUsages );
+		jaxbJoinColumns.forEach( (jaxbJoinColumn) -> {
+			final MutableAnnotationUsage<MapKeyJoinColumn> joinColumnUsage =
+					JpaAnnotations.MAP_KEY_JOIN_COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			joinColumnUsages.add( joinColumnUsage );
+			transferJoinColumn( jaxbJoinColumn, joinColumnUsage, memberDetails, xmlDocumentContext );
+		} );
 	}
 
 	/**
@@ -93,7 +81,8 @@ public class JoinColumnProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<PrimaryKeyJoinColumns> columnsUsage = memberDetails.applyAnnotationUsage(
+		final MutableAnnotationUsage<PrimaryKeyJoinColumns> columnsUsage = memberDetails.replaceAnnotationUsage(
+				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMNS,
 				xmlDocumentContext.getModelBuildingContext()
 		);
@@ -101,10 +90,8 @@ public class JoinColumnProcessing {
 		columnsUsage.setAttributeValue( "value", columnUsages );
 
 		jaxbJoinColumns.forEach( (jaxbJoinColumn) -> {
-			final MutableAnnotationUsage<PrimaryKeyJoinColumn> columnUsage = JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage(
-					memberDetails,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<PrimaryKeyJoinColumn> columnUsage =
+					JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			columnUsages.add( columnUsage );
 
 			transferJoinColumn(
@@ -152,29 +139,12 @@ public class JoinColumnProcessing {
 		}
 		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
 		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
-			final MutableAnnotationUsage<JoinColumn> joinColumnAnn = JpaAnnotations.JOIN_COLUMN.createUsage(
-					null,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<JoinColumn> joinColumnAnn =
+					JpaAnnotations.JOIN_COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			transferJoinColumn( jaxbJoinColumn, joinColumnAnn, null, xmlDocumentContext );
 			joinColumns.add( joinColumnAnn );
 		} );
 		return joinColumns;
-	}
-
-	public static <A extends Annotation> MutableAnnotationUsage<A> createJoinColumnAnnotation(
-			JaxbColumnJoined jaxbJoinColumn,
-			MutableMemberDetails memberDetails,
-			AnnotationDescriptor<A> annotationDescriptor,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> joinColumnAnn = XmlProcessingHelper.getOrMakeNamedAnnotation(
-				annotationDescriptor,
-				jaxbJoinColumn.getName(),
-				memberDetails,
-				xmlDocumentContext
-		);
-		transferJoinColumn( jaxbJoinColumn, joinColumnAnn, memberDetails, xmlDocumentContext );
-		return joinColumnAnn;
 	}
 
 	public static List<AnnotationUsage<JoinColumn>> createJoinColumns(
@@ -186,10 +156,7 @@ public class JoinColumnProcessing {
 		}
 		final List<AnnotationUsage<JoinColumn>> joinColumns = new ArrayList<>( jaxbJoinColumns.size() );
 		jaxbJoinColumns.forEach( jaxbJoinColumn -> {
-			final MutableAnnotationUsage<JoinColumn> joinColumnUsage = JpaAnnotations.JOIN_COLUMN.createUsage(
-					annotationTarget,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<JoinColumn> joinColumnUsage = JpaAnnotations.JOIN_COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			transferJoinColumn(
 					jaxbJoinColumn,
 					joinColumnUsage,
@@ -209,7 +176,8 @@ public class JoinColumnProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<JoinColumns> columnsAnn = memberDetails.applyAnnotationUsage(
+		final MutableAnnotationUsage<JoinColumns> columnsAnn = memberDetails.replaceAnnotationUsage(
+				JpaAnnotations.JOIN_COLUMN,
 				JpaAnnotations.JOIN_COLUMNS,
 				xmlDocumentContext.getModelBuildingContext()
 		);

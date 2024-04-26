@@ -64,6 +64,15 @@ public class ElementCollectionAttributeProcessing {
 			targetUsage.setAttributeValue( "value", xmlDocumentContext.resolveClassName( targetClass ) );
 		}
 
+		// NOTE: it is important that this happens before the `CommonPluralAttributeProcessing#applyPluralAttributeStructure`
+		// call below
+		XmlAnnotationHelper.applyConverts(
+				jaxbElementCollection.getConverts(),
+				null,
+				memberDetails,
+				xmlDocumentContext
+		);
+
 		CommonAttributeProcessing.applyAttributeBasics( jaxbElementCollection, memberDetails, elementCollectionUsage, accessType, xmlDocumentContext );
 
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbElementCollection, memberDetails, xmlDocumentContext );
@@ -81,11 +90,6 @@ public class ElementCollectionAttributeProcessing {
 		XmlAnnotationHelper.applyTemporal( jaxbElementCollection.getTemporal(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyBasicTypeComposition( jaxbElementCollection, memberDetails, xmlDocumentContext );
 
-		jaxbElementCollection.getConverts().forEach( (jaxbConvert) -> XmlAnnotationHelper.applyConvert(
-				jaxbConvert,
-				memberDetails,
-				xmlDocumentContext
-		) );
 
 		XmlAnnotationHelper.applyAttributeOverrides( jaxbElementCollection, memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyAssociationOverrides( jaxbElementCollection.getAssociationOverrides(), memberDetails, xmlDocumentContext );

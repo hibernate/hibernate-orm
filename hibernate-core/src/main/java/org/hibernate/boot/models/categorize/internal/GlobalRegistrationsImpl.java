@@ -693,7 +693,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	private <A extends Annotation> MutableAnnotationUsage<A> makeAnnotation(AnnotationDescriptor<A> annotationDescriptor) {
-		return annotationDescriptor.createUsage( null, sourceModelContext );
+		return annotationDescriptor.createUsage( sourceModelContext );
 	}
 
 	public void collectSequenceGenerator(AnnotationUsage<SequenceGenerator> usage) {
@@ -855,7 +855,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		jaxbSqlResultSetMappings.forEach( (jaxbMapping) -> {
-			final MutableAnnotationUsage<SqlResultSetMapping> mappingAnnotation = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage( null, null );
+			final MutableAnnotationUsage<SqlResultSetMapping> mappingAnnotation = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage( sourceModelContext );
 			applyStringAttributeIfSpecified( "name", jaxbMapping.getName(), mappingAnnotation );
 
 			sqlResultSetMappingRegistrations.put(
@@ -906,7 +906,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				entityResultAnnotation.setAttributeValue( "fields", fieldResults );
 
 				for ( JaxbFieldResultImpl jaxbFieldResult : jaxbEntityResult.getFieldResult() ) {
-					final MutableAnnotationUsage<FieldResult> fieldResultAnnotation = JpaAnnotations.FIELD_RESULT.createUsage( null, sourceModelContext );
+					final MutableAnnotationUsage<FieldResult> fieldResultAnnotation = JpaAnnotations.FIELD_RESULT.createUsage( sourceModelContext );
 					fieldResults.add( fieldResultAnnotation );
 					// both name and column are required
 					fieldResultAnnotation.setAttributeValue( "name", jaxbFieldResult.getName() );

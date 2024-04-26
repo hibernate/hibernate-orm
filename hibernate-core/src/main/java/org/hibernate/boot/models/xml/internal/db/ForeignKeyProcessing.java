@@ -70,10 +70,7 @@ public class ForeignKeyProcessing {
 			XmlDocumentContext xmlDocumentContext) {
 		assert jaxbForeignKey != null;
 
-		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage(
-				null,
-				xmlDocumentContext.getModelBuildingContext()
-		);
+		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage( xmlDocumentContext.getModelBuildingContext() );
 
 		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "name", jaxbForeignKey.getName() );
 		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "value", jaxbForeignKey.getConstraintMode() );

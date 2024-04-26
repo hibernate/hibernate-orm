@@ -355,11 +355,16 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setRestriction(Expression<Boolean> restriction) {
-		SqmWhereClause whereClause = getWhereClause();
-		if ( whereClause == null ) {
-			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+		if ( restriction == null ) {
+			setWhereClause( null );
 		}
-		whereClause.setPredicate( nodeBuilder().wrap( restriction ) );
+		else {
+			SqmWhereClause whereClause = getWhereClause();
+			if ( whereClause == null ) {
+				setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+			}
+			whereClause.setPredicate( nodeBuilder().wrap( restriction ) );
+		}
 		return this;
 	}
 

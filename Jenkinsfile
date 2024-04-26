@@ -244,7 +244,7 @@ void ciBuild(buildEnv, String args) {
 		def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
 
 		withCredentials([string(credentialsId: develocityCredentialsId,
-				variable: 'GRADLE_ENTERPRISE_ACCESS_KEY')]) {
+				variable: 'DEVELOCITY_ACCESS_KEY')]) {
 			withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
 				sh "./ci/build.sh $args"
 			}
@@ -257,7 +257,7 @@ void ciBuild(buildEnv, String args) {
 			sh "./ci/build.sh $args"
 		}, { // Finally
 			withCredentials([string(credentialsId: 'ge.hibernate.org-access-key-pr',
-					variable: 'GRADLE_ENTERPRISE_ACCESS_KEY')]) {
+					variable: 'DEVELOCITY_ACCESS_KEY')]) {
 				withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
 					sh './gradlew buildScanPublishPrevious'
 				}

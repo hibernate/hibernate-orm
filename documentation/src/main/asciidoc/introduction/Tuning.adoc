@@ -870,9 +870,11 @@ a `select`
 | `upsert(Object)`     | Immediately `insert` or `update` the state of the given detached object using a SQL `merge into` statement
 |===
 
+NOTE: The operations of a stateless session have no corresponding ``CascadeType``s, and so these operations never cascade to associated entity instances.
+
 NOTE: There's no `flush()` operation, and so `update()` is always explicit.
 
-In certain circumstances, this makes stateless sessions easier to work with, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
+In certain circumstances, this makes stateless sessions easier to work with and simpler to reason about, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
 
 [%unbreakable]
 [CAUTION]
@@ -892,11 +894,6 @@ Use of a `StatelessSession` alleviates the need to call:
 Stateless sessions can be useful, but for bulk operations on huge datasets, Hibernate can't possibly compete with stored procedures!
 ====
 
-When using a stateless session, you should be aware of the following additional limitations:
-
-- persistence operations never cascade to associated instances,
-- changes to `@ManyToMany` associations and ``@ElementCollection``s cannot be made persistent, and
-- operations performed via a stateless session bypass callbacks.
 
 [[optimistic-and-pessimistic-locking]]
 === Optimistic and pessimistic locking

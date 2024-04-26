@@ -13,13 +13,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.models.MemberResolutionException;
 import org.hibernate.boot.models.internal.AnnotationUsageHelper;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
-import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
@@ -110,52 +106,6 @@ public class XmlProcessingHelper {
 		return null;
 	}
 
-
-	/**
-	 * Find an existing annotation by name, or create one.
-	 * Used when applying XML in override mode.
-	 */
-	public static <A extends Annotation> MutableAnnotationUsage<A> getOrMakeNamedAnnotation(
-			AnnotationDescriptor<A> annotationDescriptor,
-			String name,
-			MutableAnnotationTarget target,
-			XmlDocumentContext xmlDocumentContext) {
-		return getOrMakeNamedAnnotation( annotationDescriptor, name, "name", target, xmlDocumentContext );
-	}
-
-	/**
-	 * Find an existing annotation by name, or create one.
-	 * Used when applying XML in override mode.
-	 */
-	public static <A extends Annotation> MutableAnnotationUsage<A> getOrMakeNamedAnnotation(
-			AnnotationDescriptor<A> annotationDescriptor,
-			String name,
-			String attributeToMatch,
-			MutableAnnotationTarget target,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( name == null ) {
-			return annotationDescriptor.createUsage( null, xmlDocumentContext.getModelBuildingContext() );
-		}
-
-		final AnnotationUsage<A> existing = target.getNamedAnnotationUsage( annotationDescriptor, name, attributeToMatch );
-		if ( existing != null ) {
-			return (MutableAnnotationUsage<A>) existing;
-		}
-
-		return makeNamedAnnotation( annotationDescriptor, name, attributeToMatch, target, xmlDocumentContext );
-	}
-
-	private static <A extends Annotation> MutableAnnotationUsage<A> makeNamedAnnotation(
-			AnnotationDescriptor<A> annotationDescriptor,
-			String name,
-			String nameAttributeName,
-			MutableAnnotationTarget target,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<A> created = annotationDescriptor.createUsage( null, xmlDocumentContext.getModelBuildingContext() );
-		target.addAnnotationUsage( created );
-		created.setAttributeValue( nameAttributeName, name );
-		return created;
-	}
 
 	public static <A extends Annotation> void applyAttributeIfSpecified(
 			String attributeName,

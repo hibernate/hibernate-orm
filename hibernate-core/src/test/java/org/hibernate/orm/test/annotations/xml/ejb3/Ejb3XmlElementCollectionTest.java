@@ -311,8 +311,8 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		final MemberDetails memberDetails = getAttributeMember( Entity3.class, "field1", "element-collection.orm14.xml" );
 		assertThat( memberDetails.hasAnnotationUsage( ElementCollection.class ) ).isTrue();
 
-		assertThat( memberDetails.hasAnnotationUsage( MapKeyJoinColumn.class ) ).isTrue();
-		assertThat( memberDetails.hasAnnotationUsage( MapKeyJoinColumns.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
+		assertThat( memberDetails.hasAnnotationUsage( MapKeyJoinColumns.class ) ).isTrue();
 
 		assertThat( memberDetails.hasAnnotationUsage( MapKey.class ) ).isFalse();
 		assertThat( memberDetails.hasAnnotationUsage( MapKeyClass.class ) ).isFalse();

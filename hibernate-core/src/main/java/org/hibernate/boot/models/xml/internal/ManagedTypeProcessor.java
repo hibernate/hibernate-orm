@@ -493,10 +493,7 @@ public class ManagedTypeProcessor {
 		}
 
 		if ( isNotEmpty( jaxbEntity.getExtends() ) ) {
-			final MutableAnnotationUsage<Extends> extendsAnn = HibernateAnnotations.EXTENDS.createUsage(
-					classDetails,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<Extends> extendsAnn = HibernateAnnotations.EXTENDS.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			extendsAnn.setAttributeValue( "superType", jaxbEntity.getExtends() );
 		}
 
@@ -590,8 +587,8 @@ public class ManagedTypeProcessor {
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbEntity.isCacheable() == Boolean.TRUE ) {
-			final MutableAnnotationUsage<Cacheable> cacheableUsage = JpaAnnotations.CACHEABLE.createUsage(
-					classDetails,
+			final MutableAnnotationUsage<Cacheable> cacheableUsage = classDetails.applyAnnotationUsage(
+					JpaAnnotations.CACHEABLE,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addAnnotationUsage( cacheableUsage );
@@ -599,8 +596,8 @@ public class ManagedTypeProcessor {
 
 		final JaxbCachingImpl jaxbCaching = jaxbEntity.getCaching();
 		if ( jaxbCaching != null ) {
-			final MutableAnnotationUsage<Cache> cacheableUsage = HibernateAnnotations.CACHE.createUsage(
-					classDetails,
+			final MutableAnnotationUsage<Cache> cacheableUsage = classDetails.applyAnnotationUsage(
+					HibernateAnnotations.CACHE,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			classDetails.addAnnotationUsage( cacheableUsage );

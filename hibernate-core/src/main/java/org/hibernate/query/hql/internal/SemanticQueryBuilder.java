@@ -276,38 +276,36 @@ import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
 public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implements SqmCreationState {
 
 	private static final Logger log = Logger.getLogger( SemanticQueryBuilder.class );
-	private static final Set<String> JPA_STANDARD_FUNCTIONS;
+	private static final Set<String> JPA_STANDARD_FUNCTIONS = Set.of(
+			"avg",
+			"max",
+			"min",
+			"sum",
+			"count",
+			"length",
+			"locate",
+			"abs",
+			"sqrt",
+			"mod",
+			"size",
+			"index",
+			"current_date",
+			"current_time",
+			"current_timestamp",
+			"concat",
+			"substring",
+			"trim",
+			"lower",
+			"upper",
+			"coalesce",
+			"nullif",
+			"left",
+			"right",
+			"replace"
+	);
 
 	private static final BasicTypeImpl<Object> OBJECT_BASIC_TYPE =
 			new BasicTypeImpl<>( new UnknownBasicJavaType<>(Object.class), ObjectJdbcType.INSTANCE );
-
-	static {
-		final Set<String> jpaStandardFunctions = new HashSet<>();
-		// Extracted from the BNF in JPA spec 4.14.
-		jpaStandardFunctions.add( "avg" );
-		jpaStandardFunctions.add( "max" );
-		jpaStandardFunctions.add( "min" );
-		jpaStandardFunctions.add( "sum" );
-		jpaStandardFunctions.add( "count" );
-		jpaStandardFunctions.add( "length" );
-		jpaStandardFunctions.add( "locate" );
-		jpaStandardFunctions.add( "abs" );
-		jpaStandardFunctions.add( "sqrt" );
-		jpaStandardFunctions.add( "mod" );
-		jpaStandardFunctions.add( "size" );
-		jpaStandardFunctions.add( "index" );
-		jpaStandardFunctions.add( "current_date" );
-		jpaStandardFunctions.add( "current_time" );
-		jpaStandardFunctions.add( "current_timestamp" );
-		jpaStandardFunctions.add( "concat" );
-		jpaStandardFunctions.add( "substring" );
-		jpaStandardFunctions.add( "trim" );
-		jpaStandardFunctions.add( "lower" );
-		jpaStandardFunctions.add( "upper" );
-		jpaStandardFunctions.add( "coalesce" );
-		jpaStandardFunctions.add( "nullif" );
-		JPA_STANDARD_FUNCTIONS = jpaStandardFunctions;
-	}
 
 	/**
 	 * Main entry point into analysis of HQL/JPQL parse tree - producing
@@ -1072,11 +1070,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			firstIndex = 0;
-		}
-		if ( creationOptions.useStrictJpaCompliance() ) {
-			throw new StrictJpaComplianceViolation(
-					StrictJpaComplianceViolation.Type.SET_OPERATIONS
-			);
 		}
 		final SqmQueryPart<?> firstQueryPart = (SqmQueryPart<?>) children.get( firstIndex ).accept( this );
 		SqmQueryGroup<?> queryGroup;

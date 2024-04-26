@@ -40,3 +40,17 @@ jira:
 develocity:
   buildScan:
     addCheck: true
+    tags:
+      - column: "OS"
+        pattern: "Linux"
+      - column: "OS"
+        pattern: "Windows.*"
+        replacement: "Windows"
+      - column: "Java"
+        pattern: "jdk-(.*)"
+        replacement: "$1"
+      - column: "DB"
+        pattern: "(h2|postgres(ql)?|pgsql|mysql|mariadb|mssql|derby|tidb|cockroach(db)?|oracle.*|db2|hsqldb|edb|sybase)(_ci)?"
+        replacement: "$1"
+      - pattern: "main|HEAD|\\d+.\\d+|PR-\\d+"
+        replacement: "" # Just remove these tags

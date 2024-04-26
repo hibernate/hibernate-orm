@@ -151,17 +151,15 @@ public class IdentifierGeneratorDefinition implements Serializable {
 
 	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		final MutableAnnotationUsage<TableGenerator> tableGeneratorUsage = TABLE_GENERATOR.createUsage( null, null );
+		final MutableAnnotationUsage<TableGenerator> tableGeneratorUsage = TABLE_GENERATOR.createUsage( null );
+		tableGeneratorUsage.setAttributeValue( "name", name );
 		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretTableGenerator( tableGeneratorUsage, builder );
 		return builder.build();
 	}
 
 	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		final MutableAnnotationUsage<SequenceGenerator> sequenceGeneratorUsage = JpaAnnotations.SEQUENCE_GENERATOR.createUsage(
-				null,
-				null
-		);
+		final MutableAnnotationUsage<SequenceGenerator> sequenceGeneratorUsage = JpaAnnotations.SEQUENCE_GENERATOR.createUsage( null );
 		applyStringAttributeIfSpecified( "name", name, sequenceGeneratorUsage );
 		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretSequenceGenerator( sequenceGeneratorUsage, builder );
 		return builder.build();

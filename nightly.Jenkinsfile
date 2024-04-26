@@ -173,14 +173,14 @@ stage('Build') {
 							}
 						}
 						stage('Test') {
-							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+              String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
 								tryFinally({
 									if (buildEnv.dbLockableResource == null) {
 										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
 											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
 											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												sh cmd
+												ciBuild buildEnv, args
 											}
 										}
 									}
@@ -190,7 +190,7 @@ stage('Build') {
 												cmd += " -DdbHost=${LOCKED_RESOURCE}"
 											}
 											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												sh cmd
+												ciBuild buildEnv, args
 											}
 										}
 									}
@@ -246,6 +246,20 @@ void runBuildOnNode(String label, Closure body) {
     })
 	}
 }
+
+void ciBuild(buildEnv, String args) {
+  // On untrusted nodes, we use the same access key as for PRs:
+  // it has limited access, essentially it can only push build scans.
+  def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
+
+  withCredentials([string(credentialsId: develocityCredentialsId,
+      variable: 'DEVELOCITY_ACCESS_KEY')]) {
+    withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
+      sh "./ci/build.sh $args"
+    }
+  }
+}
+
 void pruneDockerContainers() {
 	if ( !sh( script: 'command -v docker || true', returnStdout: true ).trim().isEmpty() ) {
 		sh 'docker container prune -f || true'

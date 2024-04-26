@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.Query;

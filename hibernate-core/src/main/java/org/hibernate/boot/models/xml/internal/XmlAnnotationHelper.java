@@ -107,6 +107,7 @@ import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
+import jakarta.persistence.Converts;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -256,10 +257,8 @@ public class XmlAnnotationHelper {
 
 		List<AnnotationUsage<Parameter>> parameterAnnList = new ArrayList<>( jaxbParameters.size() );
 		jaxbParameters.forEach( (jaxbParam) -> {
-			final MutableAnnotationUsage<Parameter> parameterUsage = HibernateAnnotations.PARAMETER.createUsage(
-					null,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<Parameter> parameterUsage =
+					HibernateAnnotations.PARAMETER.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			parameterAnnList.add( parameterUsage );
 			parameterUsage.setAttributeValue( "name", jaxbParam.getName() );
 			parameterUsage.setAttributeValue( "value", jaxbParam.getValue() );
@@ -371,10 +370,8 @@ public class XmlAnnotationHelper {
 		annotationUsage.setAttributeValue( "uniqueConstraints", uniqueConstraintUsages );
 
 		jaxbUniqueConstraints.forEach( (jaxbUniqueConstraint) -> {
-			final MutableAnnotationUsage<UniqueConstraint> ucUsage = JpaAnnotations.UNIQUE_CONSTRAINT.createUsage(
-					null,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<UniqueConstraint> ucUsage =
+					JpaAnnotations.UNIQUE_CONSTRAINT.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "name", jaxbUniqueConstraint.getName() );
 			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "options", jaxbUniqueConstraint.getOptions() );
 			ucUsage.setAttributeValue( "columnNames", jaxbUniqueConstraint.getColumnName() );
@@ -393,10 +390,8 @@ public class XmlAnnotationHelper {
 
 		final List<AnnotationUsage<Index>> indexes = new ArrayList<>( jaxbIndexes.size() );
 		jaxbIndexes.forEach( jaxbIndex -> {
-			final MutableAnnotationUsage<Index> indexAnn = JpaAnnotations.INDEX.createUsage(
-					null,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<Index> indexAnn =
+					JpaAnnotations.INDEX.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			applyOr( jaxbIndex, JaxbIndexImpl::getName, "name", indexAnn, JpaAnnotations.INDEX );
 			applyOr( jaxbIndex, JaxbIndexImpl::getColumnList, "columnList", indexAnn, JpaAnnotations.INDEX );
 			applyOr( jaxbIndex, JaxbIndexImpl::isUnique, "unique", indexAnn, JpaAnnotations.INDEX );
@@ -414,7 +409,7 @@ public class XmlAnnotationHelper {
 		if ( jaxbCheckable!= null && CollectionHelper.isNotEmpty( jaxbCheckable.getCheckConstraints() ) ) {
 			final List<AnnotationUsage<CheckConstraint>> checks = new ArrayList<>( jaxbCheckable.getCheckConstraints().size() );
 			for ( JaxbCheckConstraintImpl jaxbCheck : jaxbCheckable.getCheckConstraints() ) {
-				final MutableAnnotationUsage<CheckConstraint> checkAnn = JpaAnnotations.CHECK_CONSTRAINT.createUsage( null, xmlDocumentContext.getModelBuildingContext() );
+				final MutableAnnotationUsage<CheckConstraint> checkAnn = JpaAnnotations.CHECK_CONSTRAINT.createUsage( xmlDocumentContext.getModelBuildingContext() );
 				checkAnn.setAttributeValue( "constraint", jaxbCheck.getConstraint() );
 				applyOptionalAttribute( checkAnn, "name", jaxbCheck.getName() );
 				applyOptionalAttribute( checkAnn, "options", jaxbCheck.getOptions() );
@@ -622,18 +617,12 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 
-		final MutableAnnotationUsage<AttributeOverride> overrideUsage = JpaAnnotations.ATTRIBUTE_OVERRIDE.createUsage(
-				target,
-				modelBuildingContext
-		);
+		final MutableAnnotationUsage<AttributeOverride> overrideUsage = JpaAnnotations.ATTRIBUTE_OVERRIDE.createUsage( modelBuildingContext );
 
 		final String name = StringHelper.qualifyConditionally( namePrefix, jaxbOverride.getName() );
 		overrideUsage.setAttributeValue( "name", name );
 
-		final MutableAnnotationUsage<Column> columnAnn = JpaAnnotations.COLUMN.createUsage(
-				target,
-				modelBuildingContext
-		);
+		final MutableAnnotationUsage<Column> columnAnn = JpaAnnotations.COLUMN.createUsage( modelBuildingContext );
 		overrideUsage.setAttributeValue( "column", columnAnn );
 		ColumnProcessing.applyColumnDetails( jaxbOverride.getColumn(), target, columnAnn, xmlDocumentContext );
 
@@ -656,11 +645,11 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<AttributeOverrides> overridesUsage = target.applyAnnotationUsage(
+		final MutableAnnotationUsage<AttributeOverrides> overridesUsage = target.replaceAnnotationUsage(
+				JpaAnnotations.ATTRIBUTE_OVERRIDE,
 				JpaAnnotations.ATTRIBUTE_OVERRIDES,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-
 		final ArrayList<MutableAnnotationUsage<AttributeOverride>> overrideUsages = arrayList( jaxbOverrides.size() );
 		overridesUsage.setAttributeValue( "value", overrideUsages );
 
@@ -682,7 +671,8 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<AssociationOverrides> overridesUsage = target.applyAnnotationUsage(
+		final MutableAnnotationUsage<AssociationOverrides> overridesUsage = target.replaceAnnotationUsage(
+				JpaAnnotations.ASSOCIATION_OVERRIDE,
 				JpaAnnotations.ASSOCIATION_OVERRIDES,
 				xmlDocumentContext.getModelBuildingContext()
 		);
@@ -690,10 +680,8 @@ public class XmlAnnotationHelper {
 		overridesUsage.setAttributeValue( "value", overrideUsages );
 
 		jaxbOverrides.forEach( (jaxbOverride) -> {
-			final MutableAnnotationUsage<AssociationOverride> overrideUsage = JpaAnnotations.ASSOCIATION_OVERRIDE.createUsage(
-					target,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<AssociationOverride> overrideUsage =
+					JpaAnnotations.ASSOCIATION_OVERRIDE.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			transferAssociationOverride( jaxbOverride, overrideUsage, target, xmlDocumentContext );
 			overrideUsages.add( overrideUsage );
 		} );
@@ -728,6 +716,42 @@ public class XmlAnnotationHelper {
 		
 	}
 
+	public static void applyConverts(
+			List<JaxbConvertImpl> jaxbConverts,
+			String namePrefix,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( jaxbConverts ) ) {
+			return;
+		}
+
+		final MutableAnnotationUsage<Converts> convertsUsage = memberDetails.replaceAnnotationUsage(
+				JpaAnnotations.CONVERT,
+				JpaAnnotations.CONVERTS,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final ArrayList<MutableAnnotationUsage<Convert>> convertUsages = arrayList( jaxbConverts.size() );
+		convertsUsage.setAttributeValue( "value", convertUsages );
+
+		for ( JaxbConvertImpl jaxbConvert : jaxbConverts ) {
+			final MutableAnnotationUsage<Convert> convertUsage = JpaAnnotations.CONVERT.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			convertUsages.add( convertUsage );
+
+			final ClassDetailsRegistry classDetailsRegistry = xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry();
+			final ClassDetails converter;
+			if ( StringHelper.isNotEmpty( jaxbConvert.getConverter() ) ) {
+				converter = classDetailsRegistry.resolveClassDetails( jaxbConvert.getConverter() );
+				convertUsage.setAttributeValue( "converter", converter );
+			}
+
+			XmlProcessingHelper.applyAttributeIfSpecified(
+					"attributeName",
+					prefixIfNotAlready( jaxbConvert.getAttributeName(), namePrefix ),
+					convertUsage
+			);
+			XmlProcessingHelper.applyAttributeIfSpecified( "disableConversion", jaxbConvert.isDisableConversion(), convertUsage );
+		}
+	}
 
 	public static void applyConvert(
 			JaxbConvertImpl jaxbConvert,
@@ -1025,20 +1049,17 @@ public class XmlAnnotationHelper {
 		}
 
 		// replaces existing
-		final MutableAnnotationUsage<?> containerUsage = filterAnnotationDescriptor.getRepeatableContainer().createUsage(
-				target,
+		final MutableAnnotationUsage<?> containerUsage = target.replaceAnnotationUsage(
+				filterAnnotationDescriptor,
+				filterAnnotationDescriptor.getRepeatableContainer(),
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		target.addAnnotationUsage( containerUsage );
 
 		final ArrayList<Object> filterUsages = arrayList( filters.size() );
 		containerUsage.setAttributeValue( "value", filterUsages );
 
 		filters.forEach( (jaxbFilter) -> {
-			final MutableAnnotationUsage<F> filterUsage = filterAnnotationDescriptor.createUsage(
-					null,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<F> filterUsage = filterAnnotationDescriptor.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			filterUsages.add( filterUsage );
 
 			filterUsage.setAttributeValue( "name", jaxbFilter.getName() );
@@ -1058,10 +1079,8 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final List<AnnotationUsage<SqlFragmentAlias>> sqlFragmentAliases = new ArrayList<>( aliases.size() );
 		for ( JaxbHbmFilterImpl.JaxbAliasesImpl alias : aliases ) {
-			final MutableAnnotationUsage<SqlFragmentAlias> aliasAnn = HibernateAnnotations.SQL_FRAGMENT_ALIAS.createUsage(
-					null,
-					xmlDocumentContext.getModelBuildingContext()
-			);
+			final MutableAnnotationUsage<SqlFragmentAlias> aliasAnn =
+					HibernateAnnotations.SQL_FRAGMENT_ALIAS.createUsage( xmlDocumentContext.getModelBuildingContext() );
 
 			aliasAnn.setAttributeValue( "alias", alias.getAlias() );
 			XmlProcessingHelper.applyAttributeIfSpecified( "table", alias.getTable(), aliasAnn );

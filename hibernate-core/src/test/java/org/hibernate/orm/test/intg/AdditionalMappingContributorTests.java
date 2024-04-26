@@ -19,6 +19,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
@@ -374,22 +375,24 @@ public class AdditionalMappingContributorTests {
 								modelBuildingContext
 						);
 						entityUsage.setAttributeValue( "name", "Entity6" );
-						classDetails.applyAttribute(
+
+						final DynamicFieldDetails idMember = classDetails.applyAttribute(
 								"id",
 								classDetailsRegistry.resolveClassDetails( Integer.class.getName() ),
 								false,
 								false,
-								(fieldDetails) -> fieldDetails.applyAnnotationUsage( JpaAnnotations.ID, modelBuildingContext ),
 								modelBuildingContext
 						);
-						classDetails.applyAttribute(
+						idMember.applyAnnotationUsage( JpaAnnotations.ID, modelBuildingContext );
+
+						final DynamicFieldDetails nameMember = classDetails.applyAttribute(
 								"name",
 								classDetailsRegistry.resolveClassDetails( String.class.getName() ),
 								false,
 								false,
-								(fieldDetails) -> fieldDetails.applyAnnotationUsage( HibernateAnnotations.NATIONALIZED, modelBuildingContext ),
 								modelBuildingContext
 						);
+						nameMember.applyAnnotationUsage( HibernateAnnotations.NATIONALIZED, modelBuildingContext );
 
 						return classDetails;
 					}

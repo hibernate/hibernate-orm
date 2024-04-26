@@ -314,7 +314,10 @@ Adding the keyword `versioned`—writing `update versioned`—specifies that Hib
 update versioned Book set title = :newTitle where ssn = :ssn
 ----
 
-Unfortunately, an `update` statement may not directly join other entities, not even using an <<implicit-join,implicit join>>, but it may have subqueries in its `set` clause, or in the `where` clause, which may contain joins.
+An `update` statement may not directly `join` other entities, but it may:
+
+- have an <<implicit-join,implicit join>>, or
+- have subqueries in its `set` clause, or in its `where` clause, and the subqueries may contain joins.
 
 [[delete]]
 ==== Delete statements
@@ -343,7 +346,10 @@ A `delete` statement is executed by calling `Query.executeUpdate()`.
 
 The integer value returned by `executeUpdate()` indicates the number of entity instances affected by the operation.
 
-A `delete` statement may not directly join other entities, but it may have subqueries in the `where` clause, which may contain joins.
+A `delete` statement may not directly `join` other entities, but it may:
+
+- have an <<implicit-join,implicit join>>, or
+- have subqueries in its `where` clause, and the subqueries may contain joins.
 
 [[insert]]
 ==== Insert statements

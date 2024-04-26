@@ -43,10 +43,7 @@ public class MapKeyJoinColumnDelegator implements JoinColumn {
 			AnnotationUsage<MapKeyJoinColumn> mapKeyJoinColumn,
 			MemberDetails attributeMember,
 			MetadataBuildingContext context) {
-		final MutableAnnotationUsage<JoinColumn> joinColumn = JpaAnnotations.JOIN_COLUMN.createUsage(
-				attributeMember,
-				context.getMetadataCollector().getSourceModelBuildingContext()
-		);
+		final MutableAnnotationUsage<JoinColumn> joinColumn = JpaAnnotations.JOIN_COLUMN.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
 
 		applyStringAttributeIfSpecified(
 				"name",

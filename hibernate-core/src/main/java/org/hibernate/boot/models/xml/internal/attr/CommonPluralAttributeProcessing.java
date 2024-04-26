@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
+import java.util.List;
+
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
@@ -30,6 +32,8 @@ import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converts;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyClass;
 import jakarta.persistence.MapKeyEnumerated;

@@ -364,42 +364,15 @@ class Book {
 But this approach comes with a problem: what object can we use to identify a `Book` and pass to methods like `find()` which accept an identifier?
 
 The solution is to write a separate class with fields that match the identifier attributes of the entity.
-The `@IdClass` annotation of the `Book` entity identifies the id class to use for that entity:
+Every such id class must override `equals()` and `hashCode()`.
+Of course, the easiest way to satisfy these requirements is to declare the id class as a `record`.
 
 [source,java]
 ----
-class BookId {
-    
-    String isbn;
-    int printing;
-
-    BookId() {}
-
-    BookId(String isbn, int printing) {
-        this.isbn = isbn;
-        this.printing = printing;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other instanceof BookId) {
-            BookId bookId = (BookId) other;
-            return bookId.isbn.equals(isbn)
-                && bookId.printing == printing;
-        }
-        else {
-            return false;
-        }
-    }
-    
-    @Override
-    public int hashCode() {
-        return isbn.hashCode();
-    }
-}
+record BookId(String isbn, int printing) {}
 ----
 
-Every id class should override `equals()` and `hashCode()`.
+The `@IdClass` annotation of the `Book` entity identifies `BookId` as the id class to use for that entity.
 
 This is not our preferred approach.
 Instead, we recommend that the `BookId` class be declared as an `@Embeddable` type:
@@ -407,21 +380,7 @@ Instead, we recommend that the `BookId` class be declared as an `@Embeddable` ty
 [source,java]
 ----
 @Embeddable
-class BookId {
-    
-    String isbn;
-
-    int printing;
-
-    BookId() {}
-
-    BookId(String isbn, int printing) {
-        this.isbn = isbn;
-        this.printing = printing;
-    }
-
-    ...
-}
+record BookId(String isbn, int printing) {}
 ----
 
 We'll learn more about <<embeddable-objects>> below.
@@ -880,11 +839,6 @@ record Name(String firstName, String middleName, String lastName) {}
 ----
 
 In this case, the requirement for a constructor with no parameters is relaxed.
-
-[NOTE]
-====
-Unfortunately, as of May 2023, Java `record` types still cannot be used as ``@EmbeddedId``s.
-====
 
 We may now use our `Name` class (or record) as the type of an entity attribute:
 

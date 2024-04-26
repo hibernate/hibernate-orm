@@ -407,7 +407,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
-		return null;
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.UNION_ALL, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.UNION_ALL, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
 	}
 
 	@Override
@@ -417,12 +423,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right) {
-		return null;
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.EXCEPT, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.EXCEPT, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
 	}
 
 	@Override
 	public <T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right) {
-		return null;
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.EXCEPT_ALL, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.EXCEPT_ALL, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
 	}
 
 	@Override
@@ -568,12 +586,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
-		return null;
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.INTERSECT, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.INTERSECT, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
 	}
 
 	@Override
 	public <T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
-		return null;
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.INTERSECT_ALL, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.INTERSECT_ALL, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -1595,6 +1625,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public SqmExpression<String> concat(List<Expression<String>> expressions) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "concat" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) expressions,
+				null,
+				getQueryEngine()
+		);
+	}
+
+	@Override
 	public SqmExpression<String> concat(Expression<String> x, Expression<String> y) {
 		final SqmExpression<String> xSqmExpression = (SqmExpression<String>) x;
 		final SqmExpression<String> ySqmExpression = (SqmExpression<String>) y;
@@ -1896,11 +1936,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 						null,
 						queryEngine
 				);
-	}
-
-	@Override
-	public <N, T extends Temporal> SqmExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
-		return null;
 	}
 
 	@Override
@@ -2224,7 +2259,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate and(List<Predicate> restrictions) {
-		return null;
+		if ( restrictions == null || restrictions.isEmpty() ) {
+			return conjunction();
+		}
+
+		final List<SqmPredicate> predicates = new ArrayList<>( restrictions.size() );
+		for ( Predicate expression : restrictions ) {
+			predicates.add( (SqmPredicate) expression );
+		}
+		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
 	}
 
 	@Override
@@ -2786,11 +2829,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public SqmExpression<String> concat(List<Expression<String>> expressions) {
-		return null;
-	}
-
-	@Override
 	public SqmPredicate notIlike(Expression<String> x, Expression<String> pattern) {
 		return not( ilike( x, pattern ) );
 	}
@@ -2935,6 +2973,51 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				null,
 				getQueryEngine()
 		);
+	}
+
+	@Override
+	public <N, T extends Temporal> SqmExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+		Class<?> resultType = Integer.class;
+		final TemporalUnit temporalUnit;
+		switch ( field.toString() ) {
+			case "year":
+				temporalUnit = TemporalUnit.YEAR;
+				break;
+			case "quarter":
+				temporalUnit = TemporalUnit.QUARTER;
+				break;
+			case "month":
+				temporalUnit = TemporalUnit.MONTH;
+				break;
+			case "week":
+				temporalUnit = TemporalUnit.WEEK;
+				break;
+			case "day":
+				temporalUnit = TemporalUnit.DAY;
+				break;
+			case "hour":
+				temporalUnit = TemporalUnit.HOUR;
+				break;
+			case "minute":
+				temporalUnit = TemporalUnit.MINUTE;
+				break;
+			case "second":
+				temporalUnit = TemporalUnit.SECOND;
+				resultType = Double.class;
+				break;
+			case "date":
+				temporalUnit = TemporalUnit.DATE;
+				resultType = LocalDate.class;
+				break;
+			case "time":
+				temporalUnit = TemporalUnit.TIME;
+				resultType = LocalTime.class;
+				break;
+			default:
+				throw new IllegalArgumentException( "Invalid temporal field [" + field + "]" );
+		}
+		//noinspection unchecked
+		return extract( temporal, temporalUnit, (Class<N>) resultType );
 	}
 
 	private <T> SqmFunction<T> extract(

@@ -22,9 +22,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.EntityFilterException;
+import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -39,6 +42,7 @@ import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.ObjectNotFoundException;
+import org.hibernate.ReadOnlyMode;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
@@ -106,6 +110,7 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jpa.internal.LegacySpecHelper;
@@ -2557,16 +2562,58 @@ public class SessionImpl
 		}
 	}
 
+	private <T> IdentifierLoadAccessImpl<T> loadAccessWithOptions(Class<T> entityClass, FindOption[] options) {
+		final IdentifierLoadAccessImpl<T> loadAccess = byId(entityClass);
+		CacheStoreMode storeMode = null;
+		CacheRetrieveMode retrieveMode = null;
+		LockOptions lockOptions = new LockOptions();
+		for ( FindOption option : options) {
+			if ( option instanceof CacheStoreMode ) {
+				storeMode = (CacheStoreMode) option;
+			}
+			else if ( option instanceof CacheRetrieveMode ) {
+				retrieveMode = (CacheRetrieveMode) option;
+			}
+			else if ( option instanceof LockModeType ) {
+				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( (LockModeType) option ) );
+			}
+			else if ( option instanceof LockMode ) {
+				lockOptions.setLockMode( (LockMode) option );
+			}
+			else if ( option instanceof LockOptions ) {
+				lockOptions = (LockOptions) option;
+			}
+			else if ( option instanceof PessimisticLockScope ) {
+				lockOptions.setLockScope( (PessimisticLockScope) option );
+			}
+			else if ( option instanceof Timeout ) {
+				final Timeout timeout = (Timeout) option;
+				lockOptions.setTimeOut( timeout.milliseconds() );
+			}
+			else if ( option instanceof EnabledFetchProfile ) {
+				EnabledFetchProfile enabledFetchProfile = (EnabledFetchProfile) option;
+				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
+			}
+			else if ( option instanceof ReadOnlyMode ) {
+				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
+			}
+		}
+		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
+		return loadAccess;
+	}
+
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return loadAccessWithOptions( entityClass, options ).load( primaryKey );
 	}
 
 	@Override
 	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		final RootGraph<T> graph = (RootGraph<T>) entityGraph;
+		final Class<T> entityClass = graph.getGraphedType().getJavaType();
+		return loadAccessWithOptions( entityClass, options )
+				.withLoadGraph( graph )
+				.load( primaryKey );
 	}
 
 	private void checkTransactionNeededForLock(LockModeType lockModeType) {

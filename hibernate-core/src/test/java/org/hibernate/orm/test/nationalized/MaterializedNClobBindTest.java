@@ -164,6 +164,9 @@ public class MaterializedNClobBindTest {
 					throw new IllegalStateException( "PreparedStatement#setNClob unexpectedly called" );
 				}
 			}
+			else if ( "setNString".equals( methodName ) ) {
+				return null;
+			}
 			else {
 				throw new UnsupportedOperationException( methodName + " is not supported." );
 

@@ -126,6 +126,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.dialect.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -1763,7 +1764,7 @@ public abstract class AbstractHANADialect extends Dialect {
 					if ( nclob == null ) {
 						return null;
 					}
-					if ( nclob.length() < HANANClobJdbcType.this.maxLobPrefetchSize ) {
+					if ( nclob.length() < maxLobPrefetchSize ) {
 						X retVal = javaType.wrap(nclob, options);
 						nclob.free();
 						return retVal;
@@ -1790,14 +1791,14 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		public int getMaxLobPrefetchSize() {
-			return this.maxLobPrefetchSize;
+			return maxLobPrefetchSize;
 		}
 	}
 
 	public static class HANABlobType implements JdbcType {
 
 		private static final long serialVersionUID = 5874441715643764323L;
-		public static final JdbcType INSTANCE = new HANABlobType( HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
+		public static final JdbcType INSTANCE = new HANABlobType( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 		final int maxLobPrefetchSize;
 
@@ -1815,7 +1816,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public String getFriendlyName() {
-			return "BLOB (hana)";
+			return "BLOB (HANA)";
 		}
 
 		@Override
@@ -1830,7 +1831,7 @@ public abstract class AbstractHANADialect extends Dialect {
 					if ( blob == null ) {
 						return null;
 					}
-					if (blob.length() < HANABlobType.this.maxLobPrefetchSize ) {
+					if ( blob.length() < maxLobPrefetchSize ) {
 						X retVal = javaType.wrap(blob, options);
 						blob.free();
 						return retVal;
@@ -1868,7 +1869,7 @@ public abstract class AbstractHANADialect extends Dialect {
 						descriptor = BlobJdbcType.PRIMITIVE_ARRAY_BINDING;
 					}
 					else if ( options.useStreamForLobBinding() ) {
-						descriptor = HANABlobType.this.hanaStreamBlobTypeDescriptor;
+						descriptor = hanaStreamBlobTypeDescriptor;
 					}
 					descriptor.getBinder( javaType ).bind( st, value, index, options );
 				}
@@ -1881,7 +1882,7 @@ public abstract class AbstractHANADialect extends Dialect {
 						descriptor = BlobJdbcType.PRIMITIVE_ARRAY_BINDING;
 					}
 					else if ( options.useStreamForLobBinding() ) {
-						descriptor = HANABlobType.this.hanaStreamBlobTypeDescriptor;
+						descriptor = hanaStreamBlobTypeDescriptor;
 					}
 					descriptor.getBinder( javaType ).bind( st, value, name, options );
 				}
@@ -1889,7 +1890,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		public int getMaxLobPrefetchSize() {
-			return this.maxLobPrefetchSize;
+			return maxLobPrefetchSize;
 		}
 	}
 

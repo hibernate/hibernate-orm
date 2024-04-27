@@ -1002,7 +1002,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	private static TimeZoneStorageType resolveTimeZoneStorageStrategy(
 			ConfigurationService configService) {
-		return  configService.getSetting(
+		return configService.getSetting(
 				AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
 				value -> TimeZoneStorageType.valueOf( value.toString() ),
 				TimeZoneStorageType.DEFAULT
@@ -1017,7 +1017,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 						WRAPPER_ARRAY_HANDLING,
 						WrapperArrayHandling::interpretExternalSettingLeniently
 				),
-				() -> resolveFallbackWrapperArrayHandling( configService, serviceRegistry )
+				() -> resolveFallbackWrapperArrayHandling( configService )
 		);
 
 		if ( setting == WrapperArrayHandling.PICK ) {
@@ -1035,9 +1035,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	};
 
 	private static WrapperArrayHandling resolveFallbackWrapperArrayHandling(
-			ConfigurationService configService,
-			StandardServiceRegistry serviceRegistry) {
-		if ( configService.getSetting( JPA_COMPLIANCE, BOOLEAN ) == Boolean.TRUE ) {
+			ConfigurationService configService) {
+		if ( configService.getSetting( JPA_COMPLIANCE, BOOLEAN, false ) ) {
 			// JPA compliance was enabled.  Use PICK
 			return WrapperArrayHandling.PICK;
 		}

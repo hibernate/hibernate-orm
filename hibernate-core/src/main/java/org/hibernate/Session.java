@@ -407,8 +407,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * changes are not persisted.
 	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
-	 * read-only/modifiable setting as the uninitialized
-	 * proxy has, regardless of the session's current setting.
+	 * read-only/modifiable setting as the uninitialized proxy has,
+	 * regardless of the session's current setting.
 	 * <p>
 	 * To change the read-only/modifiable setting for a particular entity
 	 * or proxy that already belongs to this session use

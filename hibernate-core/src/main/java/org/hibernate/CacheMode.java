@@ -9,6 +9,7 @@ package org.hibernate;
 import java.util.Locale;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.FindOption;
 
 /**
  * Controls how the session interacts with the {@linkplain Cache second-level cache}
@@ -30,7 +31,7 @@ import jakarta.persistence.CacheStoreMode;
  * @see CacheStoreMode
  * @see CacheRetrieveMode
  */
-public enum CacheMode {
+public enum CacheMode implements FindOption {
 
 	/**
 	 * The session may read items from the cache, and add items to the cache

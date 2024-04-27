@@ -895,17 +895,9 @@ public class OracleDialect extends Dialect {
 
 		// account for Oracle's deprecated support for LONGVARBINARY
 		// prefer BLOB, unless the user explicitly opts out
-		boolean preferLong = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
-				PREFER_LONG_RAW,
-				StandardConverters.BOOLEAN,
-				false
-		);
-
-		BlobJdbcType descriptor = preferLong ?
-				BlobJdbcType.PRIMITIVE_ARRAY_BINDING :
-				BlobJdbcType.DEFAULT;
-
-		typeContributions.contributeJdbcType( descriptor );
+		final boolean preferLong = serviceRegistry.requireService( ConfigurationService.class )
+				.getSetting( PREFER_LONG_RAW, StandardConverters.BOOLEAN, false );
+		typeContributions.contributeJdbcType( preferLong ? BlobJdbcType.PRIMITIVE_ARRAY_BINDING : BlobJdbcType.DEFAULT );
 
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );

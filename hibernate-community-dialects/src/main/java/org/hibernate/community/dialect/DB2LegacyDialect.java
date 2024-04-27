@@ -876,12 +876,7 @@ public class DB2LegacyDialect extends Dialect {
 		// Therefore here we overwrite the sql type descriptors to
 		// use the non-N variants which are supported.
 		jdbcTypeRegistry.addDescriptor( Types.NCHAR, CharJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor(
-				Types.NCLOB,
-				useInputStreamToInsertBlob()
-						? ClobJdbcType.STREAM_BINDING
-						: ClobJdbcType.CLOB_BINDING
-		);
+		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.STREAM_BINDING );
 		jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 

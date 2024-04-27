@@ -79,9 +79,20 @@ public abstract class NClobJdbcType implements JdbcType {
 
 		@Override
 		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
-			return options.useStreamForLobBinding() ?
-					STREAM_BINDING.getPreferredJavaTypeClass( options ) :
-					NCLOB_BINDING.getPreferredJavaTypeClass( options );
+			return String.class;
+		}
+
+		private NClobJdbcType getDescriptor(Object value, WrapperOptions options) {
+			if ( value instanceof String ) {
+				// performance shortcut for binding CLOB data in String format
+				return STRING_BINDING;
+			}
+			else if ( options.useStreamForLobBinding() ) {
+				return STREAM_BINDING;
+			}
+			else {
+				return NCLOB_BINDING;
+			}
 		}
 
 		@Override
@@ -90,23 +101,63 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					if ( options.useStreamForLobBinding() ) {
-						STREAM_BINDING.getNClobBinder( javaType ).doBind( st, value, index, options );
-					}
-					else {
-						NCLOB_BINDING.getNClobBinder( javaType ).doBind( st, value, index, options );
-					}
+					getDescriptor( value, options ).getNClobBinder( javaType ).doBind( st, value, index, options );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					if ( options.useStreamForLobBinding() ) {
-						STREAM_BINDING.getNClobBinder( javaType ).doBind( st, value, name, options );
-					}
-					else {
-						NCLOB_BINDING.getNClobBinder( javaType ).doBind( st, value, name, options );
-					}
+					getDescriptor( value, options ).getNClobBinder( javaType ).doBind( st, value, name, options );
+				}
+			};
+		}
+	};
+
+	public static final NClobJdbcType STRING_BINDING = new NClobJdbcType() {
+		@Override
+		public String toString() {
+			return "NClobTypeDescriptor(STRING_BINDING)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return String.class;
+		}
+
+		@Override
+		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<>( javaType, this ) {
+				@Override
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					st.setNString( index, javaType.unwrap( value, String.class, options ) );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setNString( name, javaType.unwrap( value, String.class, options ) );
+				}
+			};
+		}
+		@Override
+		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+			return new BasicExtractor<>( javaType, this ) {
+				@Override
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					return javaType.wrap( rs.getNString( paramIndex ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getNString( index ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getNString( name ), options );
 				}
 			};
 		}
@@ -158,22 +209,14 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaType.unwrap(
-							value,
-							CharacterStream.class,
-							options
-					);
+					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					st.setNCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaType.unwrap(
-							value,
-							CharacterStream.class,
-							options
-					);
+					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					st.setNCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
 				}
 			};

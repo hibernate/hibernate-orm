@@ -1688,13 +1688,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			jdbcTypeRegistry.addDescriptor( NClobJdbcType.DEFAULT );
 		}
 
-		if ( useInputStreamToInsertBlob() ) {
-			jdbcTypeRegistry.addDescriptor(
-					Types.CLOB,
-					ClobJdbcType.STREAM_BINDING
-			);
-		}
-
 		if ( getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
 			jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );

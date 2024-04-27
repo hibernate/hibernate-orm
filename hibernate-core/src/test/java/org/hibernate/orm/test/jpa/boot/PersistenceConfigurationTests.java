@@ -23,13 +23,13 @@ public class PersistenceConfigurationTests {
 	@Test
 	void test1() {
 		final PersistenceConfiguration configuration = new PersistenceConfiguration( "tst1" )
-				.property( SchemaToolingSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE );
-		for ( Class<?> annotatedClass : StandardDomainModel.RETAIL.getDescriptor().getAnnotatedClasses() ) {
+				.property( SchemaToolingSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
+		for ( Class<?> annotatedClass : StandardDomainModel.CONTACTS.getDescriptor().getAnnotatedClasses() ) {
 			configuration.managedClass( annotatedClass );
 		}
 		try (EntityManagerFactory entityManagerFactory = new HibernatePersistenceProvider().createEntityManagerFactory( configuration )) {
 			entityManagerFactory.runInTransaction( entityManager -> {
-				entityManager.createQuery( "from Order" ).getResultList();
+				entityManager.createQuery( "from Contact" ).getResultList();
 			} );
 		}
 	}

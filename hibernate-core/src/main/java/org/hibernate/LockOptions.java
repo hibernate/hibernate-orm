@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryOptions;
@@ -51,7 +52,7 @@ import static java.util.Collections.unmodifiableSet;
  *
  * @author Scott Marlow
  */
-public class LockOptions implements Serializable {
+public class LockOptions implements FindOption, Serializable {
 	/**
 	 * Represents {@link LockMode#NONE}, to which timeout and scope are
 	 * not applicable.

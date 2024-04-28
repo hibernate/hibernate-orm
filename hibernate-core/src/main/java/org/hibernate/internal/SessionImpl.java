@@ -560,7 +560,7 @@ public class SessionImpl
 			throw new TransientObjectException( "Given object not associated with the session" );
 		}
 
-		if ( e.getStatus() != Status.MANAGED ) {
+		if ( e.getStatus().isDeletedOrGone() ) {
 			throw new ObjectDeletedException(
 					"The given object was deleted",
 					e.getId(),

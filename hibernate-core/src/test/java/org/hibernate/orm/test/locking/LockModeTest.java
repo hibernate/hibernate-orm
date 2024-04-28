@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.locking;
 
 import java.util.Collections;
-import java.util.concurrent.CountDownLatch;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -17,7 +16,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -55,8 +53,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	private Long id;
-
-	private CountDownLatch endLatch = new CountDownLatch( 1 );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -240,19 +236,30 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12257")
 	@SkipForDialect( dialectClass = CockroachDialect.class )
-	public void testRefreshWithExplicitHigherLevelLockMode() {
+	public void testRefreshWithExplicitHigherLevelLockMode1() {
 		doInHibernate( this::sessionFactory, session -> {
 						   A a = session.get( A.class, id );
 						   checkLockMode( a, LockMode.READ, session );
 						   session.refresh( a, LockMode.UPGRADE_NOWAIT );
 						   checkLockMode( a, LockMode.UPGRADE_NOWAIT, session );
-						   session.refresh( a, LockModeType.PESSIMISTIC_READ );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 						   session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
 						   checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
 					   } );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-12257")
+	@SkipForDialect( dialectClass = CockroachDialect.class )
+	public void testRefreshWithExplicitHigherLevelLockMode2() {
+		doInHibernate( this::sessionFactory, session -> {
+			A a = session.get( A.class, id );
+			checkLockMode( a, LockMode.READ, session );
+			session.refresh( a, LockModeType.PESSIMISTIC_READ );
+			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+			session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
+			checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
+		} );
+	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12257")

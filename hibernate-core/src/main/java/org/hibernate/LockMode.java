@@ -10,12 +10,26 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 
 import jakarta.persistence.LockModeType;
 
+import java.util.Locale;
+
 /**
  * Instances represent a lock mode for a row of a relational
  * database table. It is not intended that users spend much time
  * worrying about locking since Hibernate usually obtains exactly
  * the right lock level automatically. Some "advanced" users may
  * wish to explicitly specify lock levels.
+ * <p>
+ * A partial order of lock modes is defined such that every
+ * optimistic lock mode is considered a weaker sort of lock than
+ * evey pessimistic lock mode. If a session already holds a
+ * stronger lock level on a given entity when a weaker lock level
+ * is requested, then the request for the weaker lock level has
+ * no effect.
+ * <p>
+ * Note that, in particular, a request for the optimistic lock
+ * level {@link #OPTIMISTIC_FORCE_INCREMENT} on an entity for
+ * which any pessimistic lock is already held has no effect,
+ * and does not force a version increment.
  * <p>
  * This enumeration of lock modes competes with the JPA-defined
  * {@link LockModeType}, but offers additional options, including
@@ -42,19 +56,17 @@ public enum LockMode {
 	 *
 	 * @see LockModeType#NONE
 	 */
-	NONE( 0, "none" ),
+	NONE,
 
 	/**
 	 * A shared lock. Objects in this lock mode were read from the
 	 * database in the current transaction, rather than being pulled
 	 * from a cache.
 	 * <p>
-	 * Note that this lock mode is the same as the JPA-defined modes
-	 * {@link LockModeType#READ} and {@link LockModeType#OPTIMISTIC}.
-	 *
-	 * @see LockModeType#OPTIMISTIC
+	 * Note that, despite the similar names this lock mode is not the
+	 * same as the JPA-defined mode {@link LockModeType#READ}.
 	 */
-	READ( 5, "read" ),
+	READ,
 
 	/**
 	 * A shared optimistic lock. Assumes that the current transaction
@@ -62,10 +74,14 @@ public enum LockMode {
 	 * version will be checked near the end of the transaction, to
 	 * verify that this was indeed the case.
 	 * <p>
-	 * Note that, despite the similar names this lock mode is not the
-	 * same as the JPA-defined mode {@link LockModeType#OPTIMISTIC}.
+	 * Only legal for versioned entity types.
+	 * <p>
+	 * Note that this lock mode is the same as the JPA-defined modes
+	 * {@link LockModeType#READ} and {@link LockModeType#OPTIMISTIC}.
+	 *
+	 * @see LockModeType#OPTIMISTIC
 	 */
-	OPTIMISTIC( 6, "optimistic" ),
+	OPTIMISTIC,
 
 	/**
 	 * A kind of exclusive optimistic lock. Assumes that the current
@@ -74,10 +90,12 @@ public enum LockMode {
 	 * end of the transaction, to verify that this was indeed the
 	 * case, and to signal to concurrent optimistic readers that their
 	 * optimistic locks have failed.
+	 * <p>
+	 * Only legal for versioned entity types.
 	 *
 	 * @see LockModeType#OPTIMISTIC_FORCE_INCREMENT
 	 */
-	OPTIMISTIC_FORCE_INCREMENT( 7, "optimistic_force_increment" ),
+	OPTIMISTIC_FORCE_INCREMENT,
 
 	/**
 	 * An exclusive write lock. Objects in this lock mode were updated
@@ -93,7 +111,7 @@ public enum LockMode {
 	 * the same as the JPA-defined mode {@link LockModeType#WRITE}.
 	 */
 	@Internal
-	WRITE( 10, "write" ),
+	WRITE,
 
 	/**
 	 * A pessimistic upgrade lock, obtained using an Oracle-style
@@ -102,7 +120,7 @@ public enum LockMode {
 	 * as {@link #PESSIMISTIC_WRITE}. If the lock is not immediately
 	 * available, an exception occurs.
 	 */
-	UPGRADE_NOWAIT( 10, "upgrade-nowait" ),
+	UPGRADE_NOWAIT,
 
 	/**
 	 * A pessimistic upgrade lock, obtained using an Oracle-style
@@ -112,7 +130,7 @@ public enum LockMode {
 	 * immediately available, no exception occurs, but the locked
 	 * row is not returned from the database.
 	 */
-	UPGRADE_SKIPLOCKED( 10, "upgrade-skiplocked" ),
+	UPGRADE_SKIPLOCKED,
 
 	/**
 	 * A pessimistic shared lock, which prevents concurrent
@@ -126,7 +144,7 @@ public enum LockMode {
 	 *
 	 * @see LockModeType#PESSIMISTIC_READ
 	 */
-	PESSIMISTIC_READ( 12, "pessimistic_read" ),
+	PESSIMISTIC_READ,
 
 	/**
 	 * A pessimistic upgrade lock, which prevents concurrent
@@ -135,33 +153,39 @@ public enum LockMode {
 	 *
 	 * @see LockModeType#PESSIMISTIC_WRITE
 	 */
-	PESSIMISTIC_WRITE( 13, "pessimistic_write" ),
+	PESSIMISTIC_WRITE,
 
 	/**
 	 * A pessimistic write lock which immediately increments
 	 * the version of the locked object. Obtained by immediate
 	 * execution of an {@code update} statement.
+	 * <p>
+	 * Only legal for versioned entity types.
 	 *
 	 * @see LockModeType#PESSIMISTIC_FORCE_INCREMENT
 	 */
-	PESSIMISTIC_FORCE_INCREMENT( 17, "pessimistic_force_increment" );
+	PESSIMISTIC_FORCE_INCREMENT;
 
-	private final int level;
-	private final String externalForm;
-
-	LockMode(int level, String externalForm) {
-		this.level = level;
-		this.externalForm = externalForm;
-	}
-
+	/**
+	 * @return an instance with the same semantics as the given JPA
+	 *         {@link LockModeType}.
+	 */
 	public static LockMode fromJpaLockMode(LockModeType lockMode) {
 		return LockModeTypeHelper.getLockMode( lockMode );
 	}
 
+	/**
+	 * @return an instance of the JPA-defined {@link LockModeType}
+	 *         with similar semantics to the given {@code LockMode}.
+	 */
 	public static LockModeType toJpaLockMode(LockMode lockMode) {
 		return LockModeTypeHelper.getLockModeType( lockMode );
 	}
 
+	/**
+	 * @return an instance of the JPA-defined {@link LockModeType}
+	 *         with similar semantics to this {@code LockMode}.
+	 */
 	public LockModeType toJpaLockMode() {
 		return LockModeTypeHelper.getLockModeType( this );
 	}
@@ -174,7 +198,7 @@ public enum LockMode {
 	 * @return true if this lock mode is more restrictive than given lock mode
 	 */
 	public boolean greaterThan(LockMode mode) {
-		return level > mode.level;
+		return level() > mode.level();
 	}
 
 	/**
@@ -185,11 +209,61 @@ public enum LockMode {
 	 * @return true if this lock mode is less restrictive than given lock mode
 	 */
 	public boolean lessThan(LockMode mode) {
-		return level < mode.level;
+		return level() < mode.level();
+	}
+
+	/**
+	 * Does this lock mode require a {@linkplain jakarta.persistence.Version version}?
+	 *
+	 * @return {@code true} if this lock mode only applies to versioned entities
+	 */
+	public boolean requiresVersion() {
+		return this == OPTIMISTIC
+			|| this == OPTIMISTIC_FORCE_INCREMENT
+			|| this == PESSIMISTIC_FORCE_INCREMENT;
 	}
 
 	public String toExternalForm() {
-		return externalForm;
+		final String externalForm = toString().toLowerCase(Locale.ROOT);
+		return this == UPGRADE_NOWAIT || this == UPGRADE_SKIPLOCKED
+				? externalForm.replace('_', '-')
+				: externalForm;
+	}
+
+	/**
+	 * Determines a partial order on the lock modes,
+	 * based on how "exclusive" the lock is.
+	 * <p>
+	 * Note that {@link #PESSIMISTIC_READ} is, quite
+	 * arbitrarily, treated as more exclusive than
+	 * {@link #OPTIMISTIC_FORCE_INCREMENT}. Thus, if
+	 * the program holds any pessimistic lock on an
+	 * instance, and requests
+	 * {@code OPTIMISTIC_FORCE_INCREMENT}, then no
+	 * forced version increment will occur.
+	 */
+	private int level() {
+		switch (this) {
+			case NONE:
+				return 0;
+			case READ:
+				return 1;
+			case OPTIMISTIC:
+				return 2;
+			case OPTIMISTIC_FORCE_INCREMENT:
+				return 3;
+			case PESSIMISTIC_READ:
+				return 4;
+			case UPGRADE_NOWAIT:
+			case UPGRADE_SKIPLOCKED:
+			case PESSIMISTIC_WRITE:
+				return 5;
+			case PESSIMISTIC_FORCE_INCREMENT:
+			case WRITE:
+				return 6;
+			default:
+				throw new AssertionFailure( "Unrecognized LockMode: " + this );
+		}
 	}
 
 	public static LockMode fromExternalForm(String externalForm) {
@@ -197,8 +271,8 @@ public enum LockMode {
 			return NONE;
 		}
 
-		for ( LockMode lockMode : LockMode.values() ) {
-			if ( lockMode.externalForm.equals( externalForm ) ) {
+		for ( LockMode lockMode : values() ) {
+			if ( lockMode.toExternalForm().equalsIgnoreCase( externalForm ) ) {
 				return lockMode;
 			}
 		}
@@ -207,7 +281,7 @@ public enum LockMode {
 			return PESSIMISTIC_WRITE;
 		}
 
-		throw new IllegalArgumentException( "Unable to interpret LockMode reference from incoming external form : " + externalForm );
+		throw new IllegalArgumentException( "Unable to interpret LockMode reference from incoming external form: " + externalForm );
 	}
 
 	/**
@@ -215,8 +289,6 @@ public enum LockMode {
 	 *         all other settings defaulted.
 	 */
 	public LockOptions toLockOptions() {
-		// we have to do this in a big switch to
-		// avoid circularities in the constructor
 		switch (this) {
 			case NONE:
 				return LockOptions.NONE;
@@ -239,7 +311,7 @@ public enum LockMode {
 			case WRITE:
 				throw new UnsupportedOperationException("WRITE is not a valid LockMode as an argument");
 			default:
-				throw new IllegalStateException( "Unexpected value: " + this );
+				throw new AssertionFailure( "Unrecognized LockMode: " + this );
 		}
 	}
 }

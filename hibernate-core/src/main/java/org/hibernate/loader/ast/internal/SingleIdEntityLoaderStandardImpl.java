@@ -103,7 +103,8 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			return loadPlanCreator.apply( lockOptions, loadQueryInfluencers );
 		}
 		else if ( loadQueryInfluencers.hasEnabledCascadingFetchProfile()
-				&& LockMode.WRITE.greaterThan( lockOptions.getLockMode() ) ) {
+				// and if it's a non-exclusive (optimistic) lock
+				&& LockMode.PESSIMISTIC_READ.greaterThan( lockOptions.getLockMode() ) ) {
 			return getInternalCascadeLoadPlan(
 					lockOptions,
 					loadQueryInfluencers,

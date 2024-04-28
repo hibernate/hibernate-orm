@@ -2564,10 +2564,10 @@ public class SessionImpl
 
 	private <T> IdentifierLoadAccessImpl<T> loadAccessWithOptions(Class<T> entityClass, FindOption[] options) {
 		final IdentifierLoadAccessImpl<T> loadAccess = byId(entityClass);
-		CacheStoreMode storeMode = null;
-		CacheRetrieveMode retrieveMode = null;
+		CacheStoreMode storeMode = getCacheStoreMode();
+		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = new LockOptions();
-		for ( FindOption option : options) {
+		for ( FindOption option : options ) {
 			if ( option instanceof CacheStoreMode ) {
 				storeMode = (CacheStoreMode) option;
 			}
@@ -2591,7 +2591,7 @@ public class SessionImpl
 				lockOptions.setTimeOut( timeout.milliseconds() );
 			}
 			else if ( option instanceof EnabledFetchProfile ) {
-				EnabledFetchProfile enabledFetchProfile = (EnabledFetchProfile) option;
+				final EnabledFetchProfile enabledFetchProfile = (EnabledFetchProfile) option;
 				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
 			}
 			else if ( option instanceof ReadOnlyMode ) {
@@ -2717,8 +2717,17 @@ public class SessionImpl
 
 	@Override
 	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		LockOptions lockOptions = new LockOptions( LockModeTypeHelper.getLockMode(lockMode) );
+		for ( LockOption option : options ) {
+			if ( option instanceof PessimisticLockScope ) {
+				lockOptions.setLockScope( (PessimisticLockScope) option );
+			}
+			else if ( option instanceof Timeout ) {
+				final Timeout timeout = (Timeout) option;
+				lockOptions.setTimeOut( timeout.milliseconds() );
+			}
+		}
+		lock( entity, lockOptions );
 	}
 
 	@Override
@@ -2768,8 +2777,40 @@ public class SessionImpl
 
 	@Override
 	public void refresh(Object entity, RefreshOption... options) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		CacheStoreMode storeMode = getCacheStoreMode();
+		LockOptions lockOptions = new LockOptions();
+		for ( RefreshOption option : options ) {
+			if ( option instanceof CacheStoreMode ) {
+				storeMode = (CacheStoreMode) option;
+			}
+			else if ( option instanceof LockModeType ) {
+				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( (LockModeType) option ) );
+			}
+			else if ( option instanceof LockMode ) {
+				lockOptions.setLockMode( (LockMode) option );
+			}
+			else if ( option instanceof LockOptions ) {
+				lockOptions = (LockOptions) option;
+			}
+			else if ( option instanceof PessimisticLockScope ) {
+				lockOptions.setLockScope( (PessimisticLockScope) option );
+			}
+			else if ( option instanceof Timeout ) {
+				final Timeout timeout = (Timeout) option;
+				lockOptions.setTimeOut( timeout.milliseconds() );
+			}
+		}
+
+		final CacheMode previousCacheMode = getCacheMode();
+		if ( storeMode != null ) {
+			setCacheStoreMode( storeMode );
+		}
+		try {
+			refresh( entity, lockOptions );
+		}
+		finally {
+			setCacheMode( previousCacheMode );
+		}
 	}
 
 	private LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {

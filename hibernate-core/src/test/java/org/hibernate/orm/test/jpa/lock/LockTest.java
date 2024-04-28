@@ -15,6 +15,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
@@ -485,9 +486,9 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 				// To get the same functionality as prior release, change the  LockModeType.READ lock to:
 				// em.lock(lock,LockModeType.PESSIMISTIC_READ);
 				em.lock( _lock, LockModeType.READ );
-				fail( "expected OptimisticLockException exception" );
+				fail( "expected HibernateException exception" );
 			}
-			catch ( OptimisticLockException expected ) {
+			catch ( HibernateException expected ) {
 			}
 		} );
 

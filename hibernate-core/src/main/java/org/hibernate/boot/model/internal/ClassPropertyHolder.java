@@ -126,7 +126,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			return;
 		}
 
-		final String propertyName = property.getName();
+		final String propertyName = property.resolveAttributeName();
 		if ( attributeConversionInfoMap.containsKey( propertyName ) ) {
 			return;
 		}
@@ -144,7 +144,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(MemberDetails attributeMember) {
-		return locateAttributeConversionInfo( attributeMember.getName() );
+		return locateAttributeConversionInfo( attributeMember.resolveAttributeName() );
 	}
 
 	@Override

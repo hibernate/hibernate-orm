@@ -1312,6 +1312,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public int getDefaultTimestampPrecision() {
+		return 9;
+	}
+
+	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		// Oracle supports returning cursors
 		return OracleCallableStatementSupport.REF_CURSOR_INSTANCE;

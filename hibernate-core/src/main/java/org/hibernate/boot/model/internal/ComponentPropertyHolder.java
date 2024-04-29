@@ -192,21 +192,22 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 		// technically we should only do this for properties of "basic type"
 
-		final String path = embeddedAttributeName + '.' + propertyMemberDetails.getName();
+		final String attributeName = propertyMemberDetails.resolveAttributeName();
+		final String path = embeddedAttributeName + '.' + attributeName;
 		if ( attributeConversionInfoMap.containsKey( path ) ) {
 			return;
 		}
 
 		propertyMemberDetails.forEachAnnotationUsage( Convert.class, (usage) -> {
 			final AttributeConversionInfo info = new AttributeConversionInfo( usage, propertyMemberDetails );
-			attributeConversionInfoMap.put( propertyMemberDetails.getName(), info );
+			attributeConversionInfoMap.put( attributeName, info );
 		} );
 	}
 
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(MemberDetails attributeMember) {
 		// conversions on parent would have precedence
-		return locateAttributeConversionInfo( attributeMember.getName() );
+		return locateAttributeConversionInfo( attributeMember.resolveAttributeName() );
 	}
 
 	@Override

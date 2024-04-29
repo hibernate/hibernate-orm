@@ -145,7 +145,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return new java.sql.Timestamp( value.getTime() );
+			return new java.sql.Timestamp( unwrapDateEpoch( value ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
@@ -158,18 +158,31 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	private LocalDate unwrapLocalDate(Date value) {
 		return value instanceof java.sql.Date
 				? ( (java.sql.Date) value ).toLocalDate()
-				: new java.sql.Date( value.getTime() ).toLocalDate();
+				: new java.sql.Date( unwrapDateEpoch( value ) ).toLocalDate();
 	}
 
 	private java.sql.Date unwrapSqlDate(Date value) {
-		return value instanceof java.sql.Date
-				? (java.sql.Date) value
-				: new java.sql.Date( value.getTime() );
+		if ( value instanceof java.sql.Date ) {
+			final java.sql.Date sqlDate = (java.sql.Date) value;
+			final long dateEpoch = toDateEpoch( sqlDate.getTime() );
+			return dateEpoch == sqlDate.getTime() ? sqlDate : new java.sql.Date( dateEpoch );
+		}
+		return new java.sql.Date( unwrapDateEpoch( value ) );
 
 	}
 
 	private static long unwrapDateEpoch(Date value) {
-		return value.getTime();
+		return toDateEpoch( value.getTime() );
+	}
+
+	private static long toDateEpoch(long value) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis( value );
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.clear(Calendar.MINUTE);
+		calendar.clear(Calendar.SECOND);
+		calendar.clear(Calendar.MILLISECOND);
+		return calendar.getTimeInMillis();
 	}
 
 	@Override
@@ -183,15 +196,15 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( value instanceof Long ) {
-			return new java.sql.Date( (Long) value );
+			return new java.sql.Date( toDateEpoch( (Long) value ) );
 		}
 
 		if ( value instanceof Calendar ) {
-			return new java.sql.Date( ( (Calendar) value ).getTimeInMillis() );
+			return new java.sql.Date( toDateEpoch( ( (Calendar) value ).getTimeInMillis() ) );
 		}
 
 		if ( value instanceof Date ) {
-			return new java.sql.Date( ( (Date) value ).getTime() );
+			return unwrapSqlDate( (Date) value );
 		}
 
 		if ( value instanceof LocalDate ) {

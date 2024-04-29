@@ -46,7 +46,7 @@ import static org.hibernate.type.SqlTypes.isCharacterType;
  */
 public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private final Dialect dialect;
-	private SqlAstNodeRenderingMode argumentRenderingMode;
+	private final SqlAstNodeRenderingMode argumentRenderingMode;
 
 	public TrimFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		this( dialect, typeConfiguration, SqlAstNodeRenderingMode.DEFAULT );

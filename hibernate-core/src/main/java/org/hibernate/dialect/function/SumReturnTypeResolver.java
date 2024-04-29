@@ -27,7 +27,7 @@ import static org.hibernate.type.SqlTypes.*;
 
 /**
  * Resolve according to JPA spec 4.8.5
- *
+ * <p>
  * {@code SUM} returns:
  * <ul>
  * <li>{@code Long} when applied to state fields of integral types (other than {@code BigInteger});

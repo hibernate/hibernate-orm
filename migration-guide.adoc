@@ -131,6 +131,11 @@ String isDefault();
 * Removed `hibernate.mapping.precedence` and friends
 
 
+[[ddl-implicit-datatype-timestamp]]
+== Default precision for Oracle timestamp
+
+The default precision for Oracle timestamps was changed to 9 i.e. nanosecond precision.
+
 [[todo]]
 == Todos (dev)
 

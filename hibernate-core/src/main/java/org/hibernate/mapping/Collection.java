@@ -70,6 +70,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	private String manyToManyOrderBy;
 	private String referencedPropertyName;
 	private String mappedByProperty;
+	private BasicValue mappedByAnyDiscriminatorDescriptor;
 	private boolean sorted;
 	private Comparator<?> comparator;
 	private String comparatorClassName;
@@ -906,5 +907,13 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	public void setDeleteAllExpectation(Class<? extends Expectation> deleteAllExpectation) {
 		this.deleteAllExpectation = deleteAllExpectation;
+	}
+
+	public void setMappedByAnyDiscriminatorDescriptor(BasicValue mappedByAnyDiscriminatorDescriptor) {
+		this.mappedByAnyDiscriminatorDescriptor = mappedByAnyDiscriminatorDescriptor;
+	}
+
+	public BasicValue getMappedByAnyDiscriminatorDescriptor() {
+		return mappedByAnyDiscriminatorDescriptor;
 	}
 }

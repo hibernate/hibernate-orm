@@ -10,15 +10,14 @@ import java.util.Set;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.JdbcSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -30,6 +29,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Allows testing a @ManyToOne mappedBy relationship with a @Any as the return variable.
@@ -65,7 +67,7 @@ class ManyToOneWithAnyTest {
 							.byId( firstBook.getClass() )
 							.load( firstBook.getId() );
 
-					Assertions.assertNotNull( firstBook );
+					assertNotNull( firstBook );
 
 					entityManager.clear();
 
@@ -73,8 +75,8 @@ class ManyToOneWithAnyTest {
 							.byId( library.getClass() )
 							.load( library.getId() );
 
-					Assertions.assertNotNull( library );
-					Assertions.assertEquals( 2, library.getBooks().size() );
+					assertNotNull( library );
+					assertEquals( 2, library.getBooks().size() );
 				}
 		);
 	}
@@ -99,9 +101,12 @@ class ManyToOneWithAnyTest {
 					session.clear();
 
 					library = session.byId( library.getClass() ).load( library.getId() );
+					assertNotNull( library );
+					assertEquals( 2, library.getBooks().size() );
 
-					Assertions.assertNotNull( library );
-					Assertions.assertEquals( 2, library.getBooks().size() );
+					shop = session.byId( shop.getClass() ).load( shop.getId() );
+					assertNotNull( shop );
+					assertEquals( 3, shop.getBooks().size() );
 				}
 		);
 	}
@@ -116,6 +121,8 @@ class ManyToOneWithAnyTest {
 
 		@Any
 		@AnyKeyJavaClass(Long.class)
+		@AnyDiscriminatorValue(entity = Shop.class, discriminator = "S")
+		@AnyDiscriminatorValue(entity = Library.class, discriminator = "L")
 		@Column(name = "STORE_ROLE")
 		@JoinColumn(name = "STORE_ID")
 		private Store store;
@@ -146,7 +153,6 @@ class ManyToOneWithAnyTest {
 		private Long id;
 
 		@OneToMany(mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-		@SQLRestriction( "STORE_ROLE = 'org.hibernate.orm.test.mapping.manytoone.ManyToOneWithAnyTest$Library'" )
 		private Set<Book> books;
 
 		public void setId(final Long id) {

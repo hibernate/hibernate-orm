@@ -64,6 +64,7 @@ import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionLoader;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -134,6 +135,7 @@ import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -150,6 +152,17 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 public abstract class AbstractCollectionPersister
 		implements CollectionPersister, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, FetchProfileAffectee, DeprecatedCollectionStuff {
 
+	/**
+	 * The variable allows assigning the discrimination value, which is determined later in the construction of the metamodel, in the SQL query.
+	 * @See : {@link org.hibernate.metamodel.mapping.internal.AnyDiscriminatorPart#valueConverter}
+	 **/
+	private static final String VAR_ANY_DISCRIMINATOR_VALUE = "$AnyDiscriminatorValue$";
+
+	/**
+	 * Store the discrimination value of the owning entity of the collection, which is defined by the return variable of type Any referenced by mappedBy.
+	 */
+	private Object anyDiscrimatorValueforForeignKey;
+
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
 	private final EntityPersister ownerPersister;
@@ -163,7 +176,7 @@ public abstract class AbstractCollectionPersister
 	private final String sqlDetectRowByElementString;
 
 	protected final boolean hasWhere;
-	protected final String sqlWhereString;
+	private final String sqlWhereString;
 	private final String sqlWhereStringTemplate;
 
 	private final boolean hasOrder;
@@ -298,6 +311,19 @@ public abstract class AbstractCollectionPersister
 		Iterator<String> tables = collectionBootDescriptor.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = tables.next();
+		}
+
+		/**
+		 * Add the predicate on the role in the WHERE clause before creating the SQL queries.
+		 */
+		BasicValue discriminatorDescriptor = collectionBootDescriptor.getMappedByAnyDiscriminatorDescriptor();
+		if ( discriminatorDescriptor.getColumn() instanceof Column ) {
+			collectionBootDescriptor.setWhere(
+					getNonEmptyOrConjunctionIfBothNonEmpty(
+							collectionBootDescriptor.getWhere(),
+							discriminatorDescriptor.getColumn()
+									.getText() + String.format( "='%s'", VAR_ANY_DISCRIMINATOR_VALUE )
+					) );
 		}
 
 		if ( StringHelper.isNotEmpty( collectionBootDescriptor.getWhere() ) ) {
@@ -1025,7 +1051,7 @@ public abstract class AbstractCollectionPersister
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addRestriction( getKeyColumnNames() )
-				.addWhereToken( sqlWhereString )
+				.addWhereToken( getSqlWhereString() )
 				.addColumn( selectValue )
 				.toStatementString();
 	}
@@ -1039,7 +1065,7 @@ public abstract class AbstractCollectionPersister
 				.addRestriction( getKeyColumnNames() )
 				.addRestriction( getIndexColumnNames() )
 				.addRestriction( indexFormulas )
-				.addWhereToken( sqlWhereString )
+				.addWhereToken( getSqlWhereString() )
 				.addColumn( "1" )
 				.toStatementString();
 	}
@@ -1051,7 +1077,7 @@ public abstract class AbstractCollectionPersister
 				.addRestriction( getKeyColumnNames() )
 				.addRestriction( getElementColumnNames() )
 				.addRestriction( elementFormulas )
-				.addWhereToken( sqlWhereString )
+				.addWhereToken( getSqlWhereString() )
 				.addColumn( "1" )
 				.toStatementString();
 	}
@@ -1218,7 +1244,7 @@ public abstract class AbstractCollectionPersister
 			String alias,
 			TableGroup tableGroup,
 			SqlAstCreationState astCreationState) {
-		applyWhereFragments( predicateConsumer, alias, sqlWhereStringTemplate );
+		applyWhereFragments( predicateConsumer, alias, getSqlWhereStringTemplate() );
 	}
 
 	/**
@@ -1474,10 +1500,10 @@ public abstract class AbstractCollectionPersister
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			PreparedStatement st = jdbcCoordinator
 					.getStatementPreparer()
-					.prepareStatement( sqlSelectSizeString );
+					.prepareStatement( getSqlSelectSizeString() );
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
-				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sqlSelectSizeString );
+				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, getSqlSelectSizeString() );
 				try {
 					final int baseIndex = Math.max( attributeMapping.getIndexMetadata().getListIndexBase(), 0 );
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
@@ -1496,19 +1522,19 @@ public abstract class AbstractCollectionPersister
 					sqle,
 					"could not retrieve collection size: " +
 							MessageHelper.collectionInfoString( this, key, getFactory() ),
-					sqlSelectSizeString
+					getSqlSelectSizeString()
 			);
 		}
 	}
 
 	@Override
 	public boolean indexExists(Object key, Object index, SharedSessionContractImplementor session) {
-		return exists( key, incrementIndexByBase( index ), getIndexType(), sqlDetectRowByIndexString, session );
+		return exists( key, incrementIndexByBase( index ), getIndexType(), getSqlDetectRowByIndexString(), session );
 	}
 
 	@Override
 	public boolean elementExists(Object key, Object element, SharedSessionContractImplementor session) {
-		return exists( key, element, getElementType(), sqlDetectRowByElementString, session );
+		return exists( key, element, getElementType(), getSqlDetectRowByElementString(), session );
 	}
 
 	private boolean exists(Object key, Object indexOrElement, Type indexOrElementType, String sql, SharedSessionContractImplementor session) {
@@ -1541,7 +1567,7 @@ public abstract class AbstractCollectionPersister
 					sqle,
 					"could not check row existence: " +
 							MessageHelper.collectionInfoString( this, key, getFactory() ),
-					sqlSelectSizeString
+					getSqlSelectSizeString()
 			);
 		}
 	}
@@ -1783,7 +1809,7 @@ public abstract class AbstractCollectionPersister
 				restrictionBindings,
 				Collections.emptyList(),
 				parameterBinders,
-				sqlWhereString
+				getSqlWhereString()
 		);
 	}
 
@@ -1894,5 +1920,39 @@ public abstract class AbstractCollectionPersister
 		else {
 			return null;
 		}
+	}
+
+	public void setAnyDiscrimatorValueforForeignKey(Object anyDiscrimatorValueforForeignKey) {
+		this.anyDiscrimatorValueforForeignKey = anyDiscrimatorValueforForeignKey;
+	}
+
+	private String getSqlDetectRowByIndexString() {
+		return replaceAnyDiscriminatorValue( sqlDetectRowByIndexString );
+	}
+
+	private String getSqlDetectRowByElementString() {
+		return replaceAnyDiscriminatorValue( sqlDetectRowByElementString );
+	}
+
+	private String getSqlSelectSizeString() {
+		return replaceAnyDiscriminatorValue( sqlSelectSizeString );
+	}
+
+	private String getSqlWhereStringTemplate() {
+		return replaceAnyDiscriminatorValue( sqlWhereStringTemplate );
+	}
+
+	protected String getSqlWhereString() {
+		return replaceAnyDiscriminatorValue( sqlWhereString );
+	}
+
+	/**
+	 * Replace the discrimination value with the ROLE of the owning entity of the collection, defined in the ANY referenced by the mappedBy.
+	 */
+	private String replaceAnyDiscriminatorValue(String str) {
+		if ( str != null && anyDiscrimatorValueforForeignKey != null ) {
+			return str.replace( VAR_ANY_DISCRIMINATOR_VALUE, anyDiscrimatorValueforForeignKey.toString() );
+		}
+		return str;
 	}
 }

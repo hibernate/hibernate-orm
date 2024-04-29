@@ -374,7 +374,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				keyRestrictionBindings,
 				null,
 				parameterBinders,
-				sqlWhereString,
+				getSqlWhereString(),
 				Expectations.NONE
 		);
 	}
@@ -530,7 +530,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				this,
 				tableReference,
 				getFactory(),
-				sqlWhereString
+				getSqlWhereString()
 		);
 
 		// for each key column -
@@ -627,7 +627,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				this,
 				tableReference,
 				getFactory(),
-				sqlWhereString
+				getSqlWhereString()
 		);
 
 		final PluralAttributeMapping attributeMapping = getAttributeMapping();
@@ -701,7 +701,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				this,
 				tableReference,
 				getFactory(),
-				sqlWhereString
+				getSqlWhereString()
 		);
 
 		final OneToManyCollectionPart elementDescriptor = (OneToManyCollectionPart) getAttributeMapping().getElementDescriptor();

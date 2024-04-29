@@ -485,7 +485,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				this,
 				tableReference,
 				getFactory(),
-				sqlWhereString
+				getSqlWhereString()
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -634,7 +634,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				this,
 				tableReference,
 				getFactory(),
-				sqlWhereString
+				getSqlWhereString()
 		);
 
 		if ( pluralAttribute.getIdentifierDescriptor() != null ) {
@@ -667,7 +667,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				this,
 				tableReference,
 				getFactory(),
-				sqlWhereString
+				getSqlWhereString()
 		);
 
 		if ( getAttributeMapping().getIdentifierDescriptor() != null ) {

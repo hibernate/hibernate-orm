@@ -56,6 +56,7 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -75,6 +76,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
@@ -740,6 +742,15 @@ public class MappingModelCreationHelper {
 					creationProcess
 			);
 			return;
+		}
+		else if ( attributeMappingSubPart instanceof DiscriminatedAssociationAttributeMapping && collectionDescriptor instanceof OneToManyPersister ) {
+			DiscriminatorConverter<?, ?> valueConverter = ( (DiscriminatedAssociationAttributeMapping) attributeMappingSubPart ).getDiscriminatorMapping()
+					.getValueConverter();
+			String rolePathOwnerEntity = collectionDescriptor.getOwnerEntityPersister().getRolePath();
+			Object anyDiscrimatorValueforForeignKey = valueConverter.getDetailsForEntityName( rolePathOwnerEntity )
+					.getValue();
+			( (OneToManyPersister) collectionDescriptor ).setAnyDiscrimatorValueforForeignKey(
+					anyDiscrimatorValueforForeignKey );
 		}
 
 		final KeyValue bootValueMappingKey = bootValueMapping.getKey();

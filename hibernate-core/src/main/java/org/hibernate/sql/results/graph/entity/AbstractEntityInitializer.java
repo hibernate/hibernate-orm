@@ -378,7 +378,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private EntityPersister determineConcreteEntityDescriptor(RowProcessingState rowProcessingState)
 			throws WrongClassException {
 		if ( discriminatorAssembler == null
-				|| rowProcessingState.isQueryCacheHit() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
+				|| rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
 			return entityDescriptor;
 		}
 		else {

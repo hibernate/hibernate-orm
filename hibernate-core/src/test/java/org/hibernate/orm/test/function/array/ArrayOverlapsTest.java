@@ -9,6 +9,7 @@ package org.hibernate.orm.test.function.array;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -102,6 +103,29 @@ public class ArrayOverlapsTest {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_overlaps_nullable(e.theArray, array('xyz',null))", EntityWithArrays.class )
 					.getResultList();
 			//end::hql-array-overlaps-nullable-example[]
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testOverlapsFullyWithOneOrdinalParam(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			Query<EntityWithArrays> q = em.createQuery( "from EntityWithArrays e where array_overlaps(e.theCollection, array(cast(?1 as String), 'def'))", EntityWithArrays.class );
+			q.setParameter( 1, "abc" );
+			List<EntityWithArrays> results = q.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testOverlapsFullyWithAllOrdinalParams(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			Query<EntityWithArrays> q = em.createQuery( "from EntityWithArrays e where array_overlaps(e.theCollection, array(cast(?1 as String), cast(?2 as String)))", EntityWithArrays.class );
+			q.setParameter( 1, "abc" );
+			q.setParameter( 2, "def" );
+			List<EntityWithArrays> results = q.getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
 		} );

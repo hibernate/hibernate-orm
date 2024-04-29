@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -58,8 +59,9 @@ public class ArrayViaElementArgumentReturnTypeResolver implements FunctionReturn
 		}
 		if ( elementIndex == -1 ) {
 			for ( SqmTypedNode<?> argument : arguments ) {
-				final DomainType<?> sqmType = argument.getExpressible().getSqmType();
-				if ( sqmType instanceof ReturnableType<?> ) {
+				final SqmExpressible<?> expressible;
+				final DomainType<?> sqmType;
+				if ( (expressible = argument.getExpressible()) != null && ( sqmType =  expressible.getSqmType() ) instanceof ReturnableType<?> ) {
 					return list
 							? DdlTypeHelper.resolveListType( sqmType, typeConfiguration )
 							: DdlTypeHelper.resolveArrayType( sqmType, typeConfiguration );
@@ -67,8 +69,9 @@ public class ArrayViaElementArgumentReturnTypeResolver implements FunctionReturn
 			}
 		}
 		else {
-			final DomainType<?> sqmType = arguments.get( elementIndex ).getExpressible().getSqmType();
-			if ( sqmType instanceof ReturnableType<?> ) {
+			final SqmExpressible<?> expressible;
+			final DomainType<?> sqmType;
+			if ( (expressible = arguments.get( elementIndex ).getExpressible()) != null && ( sqmType =  expressible.getSqmType() ) instanceof ReturnableType<?> ) {
 				return list
 						? DdlTypeHelper.resolveListType( sqmType, typeConfiguration )
 						: DdlTypeHelper.resolveArrayType( sqmType, typeConfiguration );

@@ -1,4 +1,4 @@
-= Hibernate 6.6.0.CR1
+= Hibernate 6.6.0.Alpha1
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
@@ -12,7 +12,10 @@ Steve Ebersole
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 :ql-guide-url: {docs-url}/querylanguage/html_single/Hibernate_Query_Language.html
 
-Hibernate 6.6 includes a complete implementation of the current Jakarta Data 1.0 Release Candidate. As [discussed here](https://in.relation.to/2024/04/18/jakarta-data-1/), our implementation:
+[[jakarta-data]]
+== Jakarta Data
+
+Hibernate 6.6 includes a complete implementation of the current Jakarta Data 1.0 Release Candidate. As https://in.relation.to/2024/04/18/jakarta-data-1/[discussed here], our implementation:
 
 - is based on compile-time code generation via an annotation processor, enabling unprecedented compile-time type safety, and
 - is backed by Hibernate's `StatelessSession`, which has been enhanced especially to meet the needs of Jakarta Data.
@@ -34,5 +37,44 @@ implementation 'org.hibernate.orm:hibernate-core:6.6.0.Alpha1'
 annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.6.0.Alpha1'
 ----
 
-For more information, please see the brand-new documentation for [Hibernate Data Repositories](https://docs.jboss.org/hibernate/orm/6.6/repositories/html_single/Hibernate_Data_Repositories.html).
+For more information, please see the brand-new _Hibernate Data Repositories_ link:{docs-url}/repositories/html_single/Hibernate_Data_Repositories.html[documentation].
 
+
+[[concrete-proxy]]
+== @ConcreteProxy
+
+6.6 also provides a new `@ConcreteProxy` annotation intended as an improved replacement for the deprecated `@Proxy` and `@LazyToOne` annotations.  Indicates that lazy references should be instantiated as the concrete type rather than the referenced type.
+
+Consider the following model and data
+
+[source,java]
+----
+@ConcreteProxy
+@Entity
+@Inheritance
+class Payment { ... }
+
+@Entity
+class CardPayment extends Payment { ... }
+
+session1.persist( new CardPayment( 1, ... ) );
+----
+
+
+As a simple example -
+
+[source,java]
+----
+Payment loaded = session2.getReference( Payment.class, 1 );
+----
+
+Historically, Hibernate would create a lazy proxy for `loaded` of type `Payment`.  Attempts to cast that reference to `CardPayment` would result in a casting error.  `@ConcreteProxy` forces Hibernate to resolve the actual, concrete type and create a proxy of that type instead -
+
+[source,java]
+----
+CardPayment loaded = (CardPayment) session2.getReference( Payment.class, 1 );
+----
+
+IMPORTANT: Hibernate will try a number of different ways to determine the concrete type, but may ultimately have to fall back to hitting the database which might have an effect on performance.
+
+This feature works with both Hibernate's legacy proxy-based laziness and the newer bytecode enhancement laziness.

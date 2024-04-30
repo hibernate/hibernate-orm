@@ -144,7 +144,7 @@ pipeline {
 					failures = sh (
 						script: """ \
 							while read line; do
-							  if [[ "\$line" = *"-error\" style=\"display:none;\">" ]]; then
+							  if [[ "\$line" = *'-error" style="display:none;">' ]]; then
 								prefix1='<tr class="a" id="'
 								prefix2='<tr class="b" id="'
 								suffix='-error" style="display:none;">'

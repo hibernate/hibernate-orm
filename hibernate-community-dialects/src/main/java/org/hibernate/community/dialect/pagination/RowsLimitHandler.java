@@ -47,7 +47,7 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	private static final Pattern FOR_UPDATE_PATTERN =
-			compile("\\s+for\\s+update\\b|\\s+with\\s+lock\\b|\\s*(;|$)", CASE_INSENSITIVE);
+			compile("\\s+for\\s+update\\b|\\s+with\\s+lock\\b|\\s*;?\\s*$", CASE_INSENSITIVE);
 
 	@Override
 	protected Pattern getForUpdatePattern() {

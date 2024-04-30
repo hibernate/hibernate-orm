@@ -28,8 +28,11 @@ import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.Distributor;
@@ -40,6 +43,7 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 
@@ -55,6 +59,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  * @author Chris Cranford
+ * @author Yanming Zhou
  */
 public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
@@ -537,6 +542,74 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			q.setParameter( p, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
+		}
+		finally {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+		}
+	}
+
+	@Test
+	@JiraKey("HHH-18033")
+	public void testQueryContainsQuotedSemicolonWithLimit() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+
+			Query q = em.createQuery( "from Item where name like '%;%'" ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+
+			q = em.createQuery( "from Item where name like '%;%' " ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+		}
+		finally {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+		}
+	}
+
+	@Test
+	@JiraKey("HHH-18033")
+	public void testNativeQueryContainsQuotedSemicolonWithLimit() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+
+			Query q = em.createNativeQuery( "select * from Item where name like '%;%'" ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+
+			q = em.createNativeQuery( "select * from Item where name like '%;%' " ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+		}
+		finally {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+		}
+	}
+
+	@Test
+	@SkipForDialect(value = OracleDialect.class, jiraKey = "HHH-18033", comment = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(value = SybaseDialect.class, jiraKey = "HHH-18033", comment = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(value = DerbyDialect.class, jiraKey = "HHH-18033", comment = "Doesn't support semicolon as ending of statement")
+	public void testNativeQueryContainsQuotedSemicolonAndEndsWithSemicolonWithLimit() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
+
+			Query q = em.createNativeQuery( "select * from Item where name like '%;%';" ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
+
+			q = em.createNativeQuery( "select * from Item where name like '%;%' ; " ).setMaxResults(10);
+			assertEquals( 1, q.getResultList().size() );
 		}
 		finally {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {

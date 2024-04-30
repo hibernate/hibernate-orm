@@ -29,7 +29,7 @@ public class DerbyLimitHandler extends OffsetFetchLimitHandler {
 	}
 
 	private static final Pattern FOR_UPDATE_WITH_LOCK_PATTERN =
-			Pattern.compile("\\s+for\\s+(update|read|fetch)\\b|\\s+with\\s+(rr|rs|cs|ur)\\b|\\s*(;|$)");
+			Pattern.compile("\\s+for\\s+(update|read|fetch)\\b|\\s+with\\s+(rr|rs|cs|ur)\\b|\\s*;?\\s*$");
 
 	/**
 	 * The offset/fetch clauses must come before the

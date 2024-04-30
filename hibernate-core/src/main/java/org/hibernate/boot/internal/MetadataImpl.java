@@ -81,7 +81,7 @@ import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
  * @author Gail Badner
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
-	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( " ," );
+	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
 	private final UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;

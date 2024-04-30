@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -28,6 +29,14 @@ public class ResultMementoInstantiationStandard implements ResultMementoInstanti
 			List<ArgumentMemento> argumentMementos) {
 		this.instantiatedJtd = instantiatedJtd;
 		this.argumentMementos = argumentMementos;
+	}
+
+	public JavaType<?> getInstantiatedJavaType() {
+		return instantiatedJtd;
+	}
+
+	public List<ArgumentMemento> getArgumentMementos() {
+		return Collections.unmodifiableList( argumentMementos );
 	}
 
 	@Override

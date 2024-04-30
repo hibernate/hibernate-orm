@@ -28,6 +28,7 @@ pipeline {
         choice(name: 'IMAGE_JDK', choices: ['jdk11'], description: 'The JDK base image version to use for the TCK image.')
         string(name: 'TCK_VERSION', defaultValue: '3.1.2', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')
         string(name: 'TCK_SHA', defaultValue: '618a9fcdb0f897cda71227ed57d035ae1dc40fc392318809a734ffc6968e43ff', description: 'The SHA256 of the Jakarta JPA TCK that is distributed under https://download.eclipse.org/jakartaee/persistence/3.1/jakarta-persistence-tck-${TCK_VERSION}.zip.sha256')
+		string(name: 'TCK_URL', defaultValue: '', description: 'The URL from which to download the TCK ZIP file. Only needed for testing staged builds. Ensure the TCK_VERSION variable matches the ZIP file name suffix.')
         booleanParam(name: 'NO_SLEEP', defaultValue: true, description: 'Whether the NO_SLEEP patch should be applied to speed up the TCK execution')
 	}
     stages {
@@ -50,9 +51,14 @@ pipeline {
 				}
 				dir('tck') {
 					checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/hibernate/jakarta-tck-runner.git']]]
-					sh """ \
-						cd jpa-3.1; docker build -f Dockerfile.${params.IMAGE_JDK} -t jakarta-tck-runner --build-arg TCK_VERSION=${params.TCK_VERSION} --build-arg TCK_SHA=${params.TCK_SHA} .
-					"""
+					script {
+						if ( params.TCK_URL == null || params.TCK_URL.isEmpty() ) {
+							sh "cd jpa-3.1; docker build -f Dockerfile.${params.IMAGE_JDK} -t jakarta-tck-runner --build-arg TCK_VERSION=${params.TCK_VERSION} --build-arg TCK_SHA=${params.TCK_SHA} ."
+						}
+						else {
+							sh "cd jpa-3.1; docker build -f Dockerfile.${params.IMAGE_JDK} -t jakarta-tck-runner --build-arg TCK_VERSION=${params.TCK_VERSION} --build-arg TCK_SHA=${params.TCK_SHA} --build-arg TCK_URL=${params.TCK_URL} ."
+						}
+					}
 				}
 			}
 		}

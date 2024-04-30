@@ -3017,7 +3017,7 @@ public abstract class AbstractEntityPersister
 				rootTableReference,
 				true,
 				sqlAliasBase,
-				(tableExpression) -> getRootEntityDescriptor().containsTableReference( tableExpression ),
+				getRootEntityDescriptor()::containsTableReference,
 				(tableExpression, tg) -> {
 					final String[] subclassTableNames = getSubclassTableNames();
 					for ( int i = 0; i < subclassTableNames.length; i++ ) {

@@ -108,26 +108,28 @@ pipeline {
 		}
 		stage('Run TCK') {
 			steps {
-				def containerName;
-				if ( params.RDBMS == 'postgresql' ) {
-					containerName = 'postgres'
+				script {
+					def containerName
+					if ( params.RDBMS == 'postgresql' ) {
+						containerName = 'postgres'
+					}
+					else {
+						containerName = params.RDBMS
+					}
+					sh """ \
+						rm -Rf ./results
+						docker rm -f tck || true
+						while IFS= read -r container; do
+							docker network disconnect tck-net \$container || true
+						done <<< \$(docker network inspect tck-net --format '{{range \$k, \$v := .Containers}}{{print \$k}}{{end}}')
+						docker network rm -f tck-net
+						docker network create tck-net
+						docker network connect tck-net ${containerName}
+						docker run -v ~/.m2/repository/org/hibernate:/root/.m2/repository/org/hibernate:z --network=tck-net -e DB_HOST=${containerName} -e RDBMS=${params.RDBMS} -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner
+						docker cp tck:/tck/persistence-tck/bin/target/failsafe-reports ./results
+						docker cp tck:/tck/persistence-tck/bin/target/test-reports ./results
+					"""
 				}
-				else {
-					containerName = params.RDBMS
-				}
-				sh """ \
-					rm -Rf ./results
-					docker rm -f tck || true
-					while IFS= read -r container; do
-						docker network disconnect tck-net \$container || true
-					done <<< $(docker network inspect tck-net --format '{{range $k, $v := .Containers}}{{print $k}}{{end}}')
-					docker network rm -f tck-net
-					docker network create tck-net
-					docker network connect tck-net $containerName
-					docker run -v ~/.m2/repository/org/hibernate:/root/.m2/repository/org/hibernate:z --network=tck-net -e DB_HOST=${containerName} -e RDBMS=${params.RDBMS} -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner
-					docker cp tck:/tck/persistence-tck/bin/target/failsafe-reports ./results
-					docker cp tck:/tck/persistence-tck/bin/target/test-reports ./results
-				"""
 				archiveArtifacts artifacts: 'results/**'
 				script {
 					failures = sh (
@@ -158,7 +160,7 @@ pipeline {
     post {
         always {
         	script {
-				def containerName;
+				def containerName
 				if ( params.RDBMS == 'postgresql' ) {
 					containerName = 'postgres'
 				}

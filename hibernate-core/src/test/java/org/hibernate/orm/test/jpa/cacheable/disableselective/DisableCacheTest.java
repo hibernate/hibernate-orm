@@ -12,9 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(
-		xmlMappings = {
-				"org/hibernate/orm/test/jpa/cacheable/disableselective/orm.xml",
-		},
+		xmlMappings = "mappings/caching/orm.xml",
 		sharedCacheMode = SharedCacheMode.DISABLE_SELECTIVE
 )
 @JiraKey( "HHH-18041" )

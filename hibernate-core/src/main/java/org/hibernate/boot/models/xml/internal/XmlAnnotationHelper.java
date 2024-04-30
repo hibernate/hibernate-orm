@@ -50,6 +50,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorFormulaImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
@@ -1178,31 +1179,34 @@ public class XmlAnnotationHelper {
 		idClassAnn.setAttributeValue( "value", idClassImpl );
 	}
 
-	static void applyEntityListener(
-			JaxbEntityListenerImpl jaxbEntityListener,
+	public static void applyEntityListeners(
+			JaxbEntityListenerContainerImpl entityListenerContainer,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<EntityListeners> listenersUsage = classDetails.applyAnnotationUsage(
+		if ( entityListenerContainer == null || entityListenerContainer.getEntityListeners().isEmpty() ) {
+			return;
+		}
+
+		final MutableAnnotationUsage<EntityListeners> listenersUsage = classDetails.replaceAnnotationUsage(
 				JpaAnnotations.ENTITY_LISTENERS,
 				xmlDocumentContext.getModelBuildingContext()
 		);
+		final List<ClassDetails> values = arrayList( entityListenerContainer.getEntityListeners().size() );
+		listenersUsage.setAttributeValue( "value", values );
 
-		final MutableClassDetails entityListenerClass = xmlDocumentContext.resolveJavaType( jaxbEntityListener.getClazz() );
-		applyLifecycleCallbacks(
-				jaxbEntityListener,
-				JpaEventListenerStyle.LISTENER,
-				entityListenerClass,
-				xmlDocumentContext
-		);
-		final List<ClassDetails> values = listenersUsage.getAttributeValue( "value" );
-		if ( values != null ) {
+		entityListenerContainer.getEntityListeners().forEach( (jaxbEntityListener) -> {
+			final MutableClassDetails entityListenerClass = xmlDocumentContext.resolveJavaType( jaxbEntityListener.getClazz() );
+			applyLifecycleCallbacks(
+					jaxbEntityListener,
+					JpaEventListenerStyle.LISTENER,
+					entityListenerClass,
+					xmlDocumentContext
+			);
 			values.add( entityListenerClass );
-		}
-		else {
-			listenersUsage.setAttributeValue( "value", new ArrayList<>( List.of( entityListenerClass ) ) );
-		}
+		} );
+
 	}
-	
+
 	static void applyLifecycleCallbacks(
 			JaxbLifecycleCallbackContainer lifecycleCallbackContainer,
 			JpaEventListenerStyle callbackType,

@@ -854,11 +854,7 @@ public class ManagedTypeProcessor {
 				xmlDocumentContext
 		);
 
-		if ( jaxbEntity.getEntityListenerContainer() != null ) {
-			jaxbEntity.getEntityListenerContainer().getEntityListeners().forEach( ( jaxbEntityListener -> {
-				XmlAnnotationHelper.applyEntityListener( jaxbEntityListener, classDetails, xmlDocumentContext );
-			} ) );
-		}
+		XmlAnnotationHelper.applyEntityListeners( jaxbEntity.getEntityListenerContainer(), classDetails, xmlDocumentContext );
 	}
 
 	public static void processCompleteEmbeddable(

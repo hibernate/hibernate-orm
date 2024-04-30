@@ -22,8 +22,6 @@ import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
-import org.jboss.logging.Logger;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -37,7 +35,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class NamedHqlQueryMementoImpl<R> extends AbstractNamedQueryMemento<R>
 		implements NamedSqmQueryMemento<R>, Serializable {
-	private static final Logger log = Logger.getLogger( NamedHqlQueryMementoImpl.class );
 
 	private final String hqlString;
 

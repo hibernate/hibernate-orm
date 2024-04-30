@@ -430,7 +430,7 @@ public class AnonymousTupleEntityValuedModelPart
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				entityMappingType::containsTableReference,
+				entityMappingType.getRootEntityDescriptor()::containsTableReference,
 				(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,

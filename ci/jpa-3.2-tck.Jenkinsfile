@@ -110,18 +110,16 @@ pipeline {
 			steps {
 				script {
 					def containerName
-					def dbHost
 					if ( params.RDBMS == 'postgresql' ) {
 						containerName = 'postgres'
 					}
 					else {
 						containerName = params.RDBMS
 					}
+					def dockerRunOptions
 					if ( params.RDBMS != 'derby' ) {
-						dbHost = containerName
+						dockerRunOptions = "--network=tck-net -e DB_HOST=${containerName}"
 						sh """ \
-							rm -Rf ./results
-							docker rm -f tck || true
 							while IFS= read -r container; do
 								docker network disconnect tck-net \$container || true
 							done <<< \$(docker network inspect tck-net --format '{{range \$k, \$v := .Containers}}{{print \$k}}{{end}}' 2>/dev/null || true)
@@ -131,10 +129,12 @@ pipeline {
 						"""
 					}
 					else {
-						dbHost = 'localhost'
+						dockerRunOptions = ""
 					}
 					sh """ \
-						docker run -v ~/.m2/repository/org/hibernate:/root/.m2/repository/org/hibernate:z --network=tck-net -e DB_HOST=${dbHost} -e RDBMS=${params.RDBMS} -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner
+						rm -Rf ./results
+						docker rm -f tck || true
+						docker run -v ~/.m2/repository/org/hibernate:/root/.m2/repository/org/hibernate:z ${dockerRunOptions} -e RDBMS=${params.RDBMS} -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner
 						docker cp tck:/tck/persistence-tck/bin/target/failsafe-reports ./results
 						docker cp tck:/tck/persistence-tck/bin/target/test-reports ./results
 					"""

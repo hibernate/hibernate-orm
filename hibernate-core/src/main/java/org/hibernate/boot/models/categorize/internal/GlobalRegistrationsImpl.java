@@ -914,6 +914,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				}
 			}
 		}
+
 		annotationListConsumer.accept( entityResults );
 	}
 
@@ -941,6 +942,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				);
 			}
 		}
+
+		annotationListConsumer.accept( results );
 	}
 
 	private void applyColumnResults(
@@ -958,6 +961,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			columnResultAnnotation.setAttributeValue( "name", jaxbColumn.getName() );
 			applyAttributeIfSpecified( "type", sourceModelContext.getClassDetailsRegistry().resolveClassDetails( jaxbColumn.getClazz() ), columnResultAnnotation );
 		}
+
 		annotationListConsumer.accept( columnResults );
 	}
 

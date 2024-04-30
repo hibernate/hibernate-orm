@@ -812,18 +812,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		};
 	}
 
-	/**
-	 * SQL server supports up to 7 decimal digits of
-	 * fractional second precision in a datetime2,
-	 * but since its duration arithmetic functions
-	 * try to fit durations into an int,
-	 * which is impossible with such high precision,
-	 * so default to generating {@code datetime2(3)}
-	 * columns.
-	 */
 	@Override
 	public int getDefaultTimestampPrecision() {
-		return 6; //microseconds!
+		return 7;
 	}
 
 	@Override

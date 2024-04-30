@@ -99,7 +99,7 @@ pipeline {
 								sh "cd jpa-3.2; docker build -f Dockerfile.${params.IMAGE_JDK} -t jakarta-tck-runner --build-arg TCK_VERSION=${params.TCK_VERSION} --build-arg TCK_SHA=${params.TCK_SHA} ."
 							}
 							else {
-								sh "cd jpa-3.2; docker build -f Dockerfile.${params.IMAGE_JDK} -t jakarta-tck-runner --build-arg TCK_VERSION=${params.TCK_VERSION} --build-arg 'TCK_URL=${params.TCK_URL}'' ."
+								sh "cd jpa-3.2; docker build -f Dockerfile.${params.IMAGE_JDK} -t jakarta-tck-runner --build-arg TCK_VERSION=${params.TCK_VERSION} --build-arg 'TCK_URL=${params.TCK_URL}' ."
 							}
 						}
 					}

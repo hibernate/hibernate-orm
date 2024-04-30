@@ -33,10 +33,10 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 			compile( "^\\s*select(\\s+(distinct|all))?\\b", CASE_INSENSITIVE );
 
 	private static final Pattern END_PATTERN =
-			compile("\\s*(;|$)", CASE_INSENSITIVE);
+			compile("\\s*;?\\s*$", CASE_INSENSITIVE);
 
 	private static final Pattern FOR_UPDATE_PATTERN =
-			compile("\\s+for\\s+update\\b|\\s*(;|$)", CASE_INSENSITIVE);
+			compile("\\s+for\\s+update\\b|\\s*;?\\s*$", CASE_INSENSITIVE);
 
 
 	@Override

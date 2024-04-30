@@ -99,7 +99,7 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 			offsetFetchString = " fetch first ? rows only";
 		}
 
-		return sql + offsetFetchString;
+		return insertAtEnd(offsetFetchString, sql);
 	}
 
 	/**

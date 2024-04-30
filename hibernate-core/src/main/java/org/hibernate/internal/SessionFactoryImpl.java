@@ -52,6 +52,7 @@ import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.context.internal.JTASessionContext;
 import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
@@ -59,6 +60,7 @@ import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
@@ -75,6 +77,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
@@ -141,6 +144,7 @@ import static org.hibernate.cfg.AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLE
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
+import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
@@ -548,13 +552,27 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	private static String getSessionFactoryName(SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
 		final String sessionFactoryName = options.getSessionFactoryName();
-		if ( sessionFactoryName == null ) {
-			final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.requireService( CfgXmlAccessService.class );
-			if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-				return cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
+		if ( sessionFactoryName != null ) {
+			return sessionFactoryName;
+		}
+
+		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.requireService( CfgXmlAccessService.class );
+		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
+			final String nameFromAggregation = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
+			if ( nameFromAggregation != null ) {
+				return nameFromAggregation;
 			}
 		}
-		return sessionFactoryName;
+
+
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		assert configurationService != null;
+		final String puName = configurationService.getSetting( PersistenceSettings.PERSISTENCE_UNIT_NAME, STRING );
+		if ( puName != null ) {
+			return puName;
+		}
+
+		return null;
 	}
 
 	private SessionBuilderImpl createDefaultSessionOpenOptionsIfPossible() {

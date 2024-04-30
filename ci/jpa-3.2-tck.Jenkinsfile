@@ -121,7 +121,7 @@ pipeline {
 						docker rm -f tck || true
 						while IFS= read -r container; do
 							docker network disconnect tck-net \$container || true
-						done <<< \$(docker network inspect tck-net --format '{{range \$k, \$v := .Containers}}{{print \$k}}{{end}}')
+						done <<< \$(docker network inspect tck-net --format '{{range \$k, \$v := .Containers}}{{print \$k}}{{end}}' 2>/dev/null || true)
 						docker network rm -f tck-net
 						docker network create tck-net
 						docker network connect tck-net ${containerName}

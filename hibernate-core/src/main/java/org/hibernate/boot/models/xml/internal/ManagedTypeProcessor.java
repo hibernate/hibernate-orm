@@ -586,26 +586,28 @@ public class ManagedTypeProcessor {
 			JaxbEntityImpl jaxbEntity,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbEntity.isCacheable() == Boolean.TRUE ) {
+		if ( jaxbEntity.isCacheable() != null ) {
 			final MutableAnnotationUsage<Cacheable> cacheableUsage = classDetails.applyAnnotationUsage(
 					JpaAnnotations.CACHEABLE,
 					xmlDocumentContext.getModelBuildingContext()
 			);
+
+			cacheableUsage.setAttributeValue( "value", jaxbEntity.isCacheable() );
 			classDetails.addAnnotationUsage( cacheableUsage );
 		}
 
 		final JaxbCachingImpl jaxbCaching = jaxbEntity.getCaching();
 		if ( jaxbCaching != null ) {
-			final MutableAnnotationUsage<Cache> cacheableUsage = classDetails.applyAnnotationUsage(
+			final MutableAnnotationUsage<Cache> cacheUsage = classDetails.applyAnnotationUsage(
 					HibernateAnnotations.CACHE,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			classDetails.addAnnotationUsage( cacheableUsage );
-			XmlProcessingHelper.applyAttributeIfSpecified( "region", jaxbCaching.getRegion(), cacheableUsage );
+			classDetails.addAnnotationUsage( cacheUsage );
+			XmlProcessingHelper.applyAttributeIfSpecified( "region", jaxbCaching.getRegion(), cacheUsage );
 			XmlProcessingHelper.applyAttributeIfSpecified(
 					"usage",
 					convertCacheAccessType( jaxbCaching.getAccess() ),
-					cacheableUsage
+					cacheUsage
 			);
 		}
 	}

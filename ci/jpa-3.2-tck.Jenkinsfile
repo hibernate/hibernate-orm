@@ -138,7 +138,6 @@ pipeline {
 						docker cp tck:/tck/persistence-tck/bin/target/failsafe-reports ./results
 						docker cp tck:/tck/persistence-tck/bin/target/test-reports ./results
 					"""
-					}
 				}
 				archiveArtifacts artifacts: 'results/**'
 				script {

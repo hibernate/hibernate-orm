@@ -844,19 +844,12 @@ public class ManagedTypeProcessor {
 	}
 
 	private static void processEntityOrMappedSuperclass(
-			JaxbEntityOrMappedSuperclass jaxbEntity,
+			JaxbEntityOrMappedSuperclass jaxbClass,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		XmlAnnotationHelper.applyIdClass( jaxbEntity.getIdClass(), classDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyIdClass( jaxbClass.getIdClass(), classDetails, xmlDocumentContext );
 
-		XmlAnnotationHelper.applyLifecycleCallbacks(
-				jaxbEntity,
-				JpaEventListenerStyle.CALLBACK,
-				classDetails,
-				xmlDocumentContext
-		);
-
-		XmlAnnotationHelper.applyEntityListeners( jaxbEntity.getEntityListenerContainer(), classDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyLifecycleCallbacks( jaxbClass, classDetails, xmlDocumentContext );
 	}
 
 	public static void processCompleteEmbeddable(

@@ -13,18 +13,18 @@
     <persistence-unit-metadata>
         <persistence-unit-defaults>
             <entity-listeners>
-                <entity-listener class="org.hibernate.orm.test.jpa.compliance.callback.listeneroverrides.ListenerA">
+                <entity-listener class="org.hibernate.orm.test.jpa.callbacks.xml.replace.ListenerA">
                 </entity-listener>
             </entity-listeners>
         </persistence-unit-defaults>
     </persistence-unit-metadata>
 
-    <package>org.hibernate.orm.test.jpa.compliance.callback.listeneroverrides</package>
+    <package>org.hibernate.orm.test.jpa.callbacks.xml.replace</package>
 
     <entity class="Product">
         <entity-listeners>
             <entity-listener class="ListenerB"/>
-            <entity-listener class="org.hibernate.orm.test.jpa.compliance.callback.listeneroverrides.ListenerC"/>
+            <entity-listener class="ListenerC"/>
         </entity-listeners>
     </entity>
 

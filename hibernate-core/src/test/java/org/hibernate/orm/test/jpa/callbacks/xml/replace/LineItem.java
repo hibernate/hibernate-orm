@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.orm.test.jpa.compliance.callback.listeneroverrides;
+package org.hibernate.orm.test.jpa.callbacks.xml.replace;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -18,7 +18,7 @@ import jakarta.persistence.ManyToOne;
  * @author Steve Ebersole
  */
 @Entity
-@EntityListeners({ListenerC.class, ListenerB.class})
+@EntityListeners({ ListenerC.class, ListenerB.class})
 @ExcludeDefaultListeners()
 @ExcludeSuperclassListeners
 public class LineItem extends LineItemSuper {

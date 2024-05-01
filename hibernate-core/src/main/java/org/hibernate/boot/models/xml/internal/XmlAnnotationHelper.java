@@ -52,6 +52,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
@@ -83,6 +84,7 @@ import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.KeyedConsumer;
 import org.hibernate.internal.util.StringHelper;
@@ -1177,6 +1179,25 @@ public class XmlAnnotationHelper {
 				.getClassDetailsRegistry()
 				.resolveClassDetails( jaxbIdClass.getClazz() );
 		idClassAnn.setAttributeValue( "value", idClassImpl );
+	}
+
+	public static void applyLifecycleCallbacks(
+			JaxbEntityOrMappedSuperclass jaxbClass,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+
+		if ( jaxbClass.getExcludeDefaultListeners() != null ) {
+			classDetails.applyAnnotationUsage( JpaAnnotations.EXCLUDE_DEFAULT_LISTENERS, modelBuildingContext );
+		}
+
+		if ( jaxbClass.getExcludeSuperclassListeners() != null ) {
+			classDetails.applyAnnotationUsage( JpaAnnotations.EXCLUDE_SUPERCLASS_LISTENERS, modelBuildingContext );
+		}
+
+		applyLifecycleCallbacks( jaxbClass, JpaEventListenerStyle.CALLBACK, classDetails, xmlDocumentContext );
+
+		applyEntityListeners( jaxbClass.getEntityListenerContainer(), classDetails, xmlDocumentContext );
 	}
 
 	public static void applyEntityListeners(

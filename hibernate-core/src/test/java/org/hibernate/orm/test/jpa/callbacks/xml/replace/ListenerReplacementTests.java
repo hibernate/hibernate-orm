@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.orm.test.jpa.compliance.callback.listeneroverrides;
+package org.hibernate.orm.test.jpa.callbacks.xml.replace;
 
 import java.util.List;
 
@@ -17,15 +17,17 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
+ * Tests overriding entity-listeners via XML
+ *
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {Product.class,Order.class, LineItemSuper.class, LineItem.class},
-		xmlMappings = "mappings/callbacks/listener_overrides.xml"
+		xmlMappings = "mappings/callbacks/replace.xml"
 )
 @SessionFactory
-public class OverridesTests {
+public class ListenerReplacementTests {
 	public static final String[] LISTENER_ABC = {"ListenerA", "ListenerB", "ListenerC"};
 	public static final String[] LISTENER_BC = {"ListenerB", "ListenerC"};
 

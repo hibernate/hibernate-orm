@@ -380,8 +380,8 @@ public class DerbyLegacyDialect extends Dialect {
 		functionFactory.power_expLn();
 		functionFactory.round_floor();
 		functionFactory.trunc_floor();
-		functionFactory.octetLength_pattern( "length(?1)" );
-		functionFactory.bitLength_pattern( "length(?1)*8" );
+		functionFactory.octetLength_pattern( "length(?1)", SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		functionFactory.bitLength_pattern( "length(?1)*8", SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 
 		functionContributions.getFunctionRegistry().register(
 				"concat",

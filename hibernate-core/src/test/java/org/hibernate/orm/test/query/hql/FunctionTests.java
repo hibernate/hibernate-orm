@@ -691,6 +691,8 @@ public class FunctionTests {
 							.list();
 					assertThat( session.createQuery("select left('hello world', 5)", String.class).getSingleResult(), is("hello") );
 					assertThat( session.createQuery("select right('hello world', 5)", String.class).getSingleResult(), is("world") );
+
+					assertThat( session.createQuery("select right(:data, 5)", String.class).setParameter( "data", "hello world" ).getSingleResult(), is("world") );
 				}
 		);
 	}

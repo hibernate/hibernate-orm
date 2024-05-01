@@ -4,7 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.orm.test.jpa.compliance.callback.listeneroverrides;
+package org.hibernate.orm.test.jpa.callbacks.xml.replace;
+
+import org.hibernate.orm.test.jpa.callbacks.xml.common.CallbackTarget;
 
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
@@ -17,41 +19,40 @@ import jakarta.persistence.PreUpdate;
 /**
  * @author Steve Ebersole
  */
-public abstract class ListenerBase {
-	protected abstract String getListenerName();
-
+public class ListenerA {
 	@PrePersist
 	protected void prePersist(CallbackTarget target) {
-		target.prePersistCalled( getListenerName() );
+		target.prePersistCalled( "ListenerA" );
 	}
 
 	@PostPersist
 	protected void postPersist(CallbackTarget target) {
-		target.postPersistCalled( getListenerName() );
+		target.postPersistCalled( "ListenerA" );
 	}
 
 	@PreRemove
 	protected void preRemove(CallbackTarget target) {
-		target.preRemoveCalled( getListenerName() );
+		target.preRemoveCalled( "ListenerA" );
 	}
 
 	@PostRemove
 	protected void postRemove(CallbackTarget target) {
-		target.postRemoveCalled( getListenerName() );
+		target.postRemoveCalled( "ListenerA" );
 	}
 
 	@PreUpdate
 	protected void preUpdate(CallbackTarget target) {
-		target.preUpdateCalled( getListenerName() );
+		target.preUpdateCalled( "ListenerA" );
 	}
 
 	@PostUpdate
 	protected void postUpdate(CallbackTarget target) {
-		target.postUpdateCalled( getListenerName() );
+		target.postUpdateCalled( "ListenerA" );
 	}
 
 	@PostLoad
 	protected void postLoad(CallbackTarget target) {
-		target.postLoadCalled( getListenerName() );
+		target.postLoadCalled( "ListenerA" );
 	}
+
 }

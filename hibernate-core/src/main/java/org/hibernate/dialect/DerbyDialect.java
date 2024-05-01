@@ -77,6 +77,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
@@ -369,8 +371,8 @@ public class DerbyDialect extends Dialect {
 		functionFactory.power_expLn();
 		functionFactory.round_floor();
 		functionFactory.trunc_floor();
-		functionFactory.octetLength_pattern( "length(?1)" );
-		functionFactory.bitLength_pattern( "length(?1)*8" );
+		functionFactory.octetLength_pattern( "length(?1)", SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		functionFactory.bitLength_pattern( "length(?1)*8", SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 
 		functionContributions.getFunctionRegistry().register(
 				"concat",

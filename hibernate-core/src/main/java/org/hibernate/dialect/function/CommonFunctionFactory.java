@@ -814,6 +814,11 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Emulate left via substr and right via substr and length.
+	 * This function is for Apache Derby and uses {@link SqlAstNodeRenderingMode#NO_PLAIN_PARAMETER}
+	 * for the right function emulation, because length in Apache Derby can't handle plain parameters.
+	 */
 	public void leftRight_substrLength() {
 		functionRegistry.patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
 				.setInvariantType(stringType)
@@ -826,6 +831,7 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
 				.register();
 	}
 
@@ -1638,10 +1644,15 @@ public class CommonFunctionFactory {
 	}
 
 	public void octetLength_pattern(String pattern) {
+		octetLength_pattern( pattern, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void octetLength_pattern(String pattern, SqlAstNodeRenderingMode renderingMode) {
 		functionRegistry.patternDescriptorBuilder( "octet_length", pattern )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
+				.setArgumentRenderingMode( renderingMode )
 				.register();
 	}
 
@@ -1661,10 +1672,15 @@ public class CommonFunctionFactory {
 	}
 
 	public void bitLength_pattern(String pattern) {
+		bitLength_pattern( pattern, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void bitLength_pattern(String pattern, SqlAstNodeRenderingMode renderingMode) {
 		functionRegistry.patternDescriptorBuilder( "bit_length", pattern )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
+				.setArgumentRenderingMode( renderingMode )
 				.register();
 	}
 

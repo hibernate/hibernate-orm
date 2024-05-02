@@ -169,7 +169,7 @@ dependencyResolutionManagement {
             library( "el", "org.glassfish.expressly", "expressly" ).versionRef( elVersion )
         }
         testLibs {
-            def junit5Version = version "junit5", "5.9.2"
+            def junit5Version = version "junit5", "5.10.2"
             def junit4Version = version "junit4", "4.13.2"
             def junit5LauncherVersion = version "junit5Launcher", "1.10.2"
 

@@ -237,8 +237,8 @@ HQL defines two additional aggregate functions which accept a logical predicate 
 |===
 | Aggregate function | Argument type | Result type | JPA standard
 
-| `any()` | Logical predicate | `Boolean` | ✖
-| `every()` | Logical predicate | `Boolean` | ✖
+| `any()` or `some()` | Logical predicate | `Boolean` | ✖
+| `every()` or `all()` | Logical predicate | `Boolean` | ✖
 |===
 
 We may write, for example, `every(p.amount < 1000.0)`.

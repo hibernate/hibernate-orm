@@ -687,7 +687,34 @@ The special function `extract()` obtains a single field of a date, time, or date
 - Its first argument is an expression that evaluates to a date, time, or datetime.
 - Its second argument is a date/time _field type_.
 
-Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time`, `epoch` and more.
+Field types include:
+
+[cols="~,^15,^10,~"]
+|===
+| Field | Type | Range | Notes
+
+| `day` | `Integer` | 1-31 | Calendar day of month
+| `month` | `Integer` | 1-12 |
+| `year` | `Integer` | |
+| `week` | `Integer` | 1-53 |  ISO-8601 week number (different to `week of year`)
+| `quarter` | `Integer` | 1-4 | Quarter defined as 3 months
+| `hour` | `Integer` | 0-23 | Standard 24-hour time
+| `minute` | `Integer` | 0-59 |
+| `second` | `Float` | 0-59 | Includes fractional seconds
+| `nanosecond` | `Long` | | Granularity varies by database
+| `day of week` | `Integer` | 1-7 |
+| `day of month` | `Integer` | 1-31 | Synonym for `day`
+| `day of year` | `Integer` | 1-365 |
+| `week of month` | `Integer` | 1-5 |
+| `week of year` | `Integer` | 1-53 |
+| `epoch` | `Long` | | Elapsed seconds since January 1, 1970
+| `date` | `LocalDate` | | Date part of a datetime
+| `time` | `LocalTime` | | Time part of a datetime
+| `offset` | `ZoneOffset` | | Timezone offset
+| `offset hour` | `Integer` | | Hours of offset
+| `offset minute` | `Integer` | 0-59 | Minutes of offset
+|===
+
 For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
 
 [source, hql]

@@ -443,7 +443,11 @@ public class H2Dialect extends Dialect {
 		if ( intervalType != null ) {
 			return "(?2+?3)";
 		}
-		return "dateadd(?1,?2,?3)";
+		return unit == SECOND
+				//TODO: if we have an integral number of seconds
+				//      (the common case) this is unnecessary
+				? "dateadd(nanosecond,?2*1e9,?3)"
+				: "dateadd(?1,?2,?3)";
 	}
 
 	@Override

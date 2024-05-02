@@ -122,7 +122,7 @@ public class SqmBasicValuedSimplePath<T>
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		return getJavaTypeDescriptor();
+		return super.getExpressible().getExpressibleJavaType();
 	}
 
 	@Override

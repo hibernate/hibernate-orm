@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hamcrest.Matchers;
 import org.hibernate.QueryException;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -17,11 +18,11 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -36,14 +37,11 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.ZoneOffset;
-import java.util.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -52,7 +50,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -1238,9 +1238,8 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select any(e.theInt > 0), every(e.theInt > 0) from EntityOfBasics e", Object[].class)
 							.list();
-					//not supported by grammar:
-//					session.createQuery("select any(e.theBoolean), every(e.theBoolean) from EntityOfBasics e")
-//							.list();
+					session.createQuery("select any(e.theBoolean), every(e.theBoolean) from EntityOfBasics e")
+							.list();
 					session.createQuery("select some(e.theInt > 0), all(e.theInt > 0) from EntityOfBasics e", Object[].class)
 							.list();
 				}
@@ -1301,7 +1300,6 @@ public class FunctionTests {
 	@Test
 	// really this could and should be made work on these dialects
 	@SkipForDialect(dialectClass = DerbyDialect.class)
-	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	public void testAddSecondsWithFractionalPart(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -1504,14 +1502,18 @@ public class FunctionTests {
 					session.createQuery("select e.theTimestamp + 3.5 * (4 day - 1 week) from EntityOfBasics e", Date.class)
 							.list();
 
-					session.createQuery("select 4 day by second from EntityOfBasics e", Long.class)
-							.list();
-					session.createQuery("select (4 day + 2 hour) by second from EntityOfBasics e", Long.class)
-							.list();
-					session.createQuery("select (2 * 4 day) by second from EntityOfBasics e", Long.class)
-							.list();
-//					session.createQuery("select (1 year - 1 month) by day from EntityOfBasics e")
-//							.list();
+					assertEquals(345_600,
+							session.createQuery("select 4 day by second", Long.class)
+									.getSingleResult());
+					assertEquals(345_600 + 7_200,
+							session.createQuery("select (4 day + 2 hour) by second", Long.class)
+									.getSingleResult());
+					assertEquals(2*345_600,
+							session.createQuery("select (2 * 4 day) by second", Long.class)
+									.getSingleResult());
+					assertEquals(11L,
+							session.createQuery("select (1 year - 1 month) by month", Long.class)
+									.getSingleResult());
 
 					session.createQuery("select (2 * (e.theTimestamp - e.theTimestamp) + 3 * (4 day + 2 hour)) by second from EntityOfBasics e", Long.class)
 							.list();
@@ -1690,9 +1692,27 @@ public class FunctionTests {
 							.getSingleResult();
 					session.createQuery("select e.theTimestamp - 21 second + 2 day from EntityOfBasics e", java.util.Date.class)
 							.getSingleResult();
-					//TODO: FIX!!
-//					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
-//							.list();
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SQLServerDialect.class,
+			reason = "numeric overflow")
+	@SkipForDialect(dialectClass = DerbyDialect.class,
+			reason = "numeric overflow")
+	@SkipForDialect(dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "numeric overflow")
+	@SkipForDialect(dialectClass = OracleDialect.class,
+			reason = "numeric overflow")
+	@SkipForDialect( dialectClass = TiDBDialect.class,
+			reason = "Bug in the TiDB timestampadd function (https://github.com/pingcap/tidb/issues/41052)")
+	public void testDurationArithmeticOverflowing(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
+							.list();
 				}
 		);
 	}
@@ -1800,16 +1820,30 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select (e.theTimestamp - (e.theTimestamp + (4 day + 2 hour))) by second from EntityOfBasics e", Long.class)
 							.list();
-
-
-					//these cause numerical overflow on Sybase
-//					session.createQuery("select current_timestamp - e.theTimestamp from EntityOfBasics e")
-//							.list();
-//					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
-//							.list();
 				}
 		);
 	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "result in numeric overflow")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
+			reason = "trivial rounding error")
+	public void testMoreIntervalDiffExpressions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select current_timestamp - e.theTimestamp from EntityOfBasics e")
+							.list();
+					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
+							.list();
+					assertEquals(LocalDateTime.of(1990, 1, 1, 12, 30, 0),
+							session.createQuery("select local datetime - (local datetime - local datetime 1990-1-1 12:30:00)")
+									.getSingleResult());
+				}
+		);
+	}
+
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")

@@ -66,7 +66,6 @@ import static org.hamcrest.Matchers.isOneOf;
 import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -1321,6 +1320,22 @@ public class FunctionTests {
 				session -> {
 					assertEquals(LocalDateTime.of(1974, 3, 23, 0, 0, 28, 123_000_000),
 							session.createQuery("select datetime 1974-03-23 00:00:15 + 13_123_000_000 nanosecond", LocalDateTime.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	public void testDiffMillisecondsAndNanoseconds(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat(
+							session.createQuery("select (datetime 1974-03-23 00:00:15 - datetime 1974-03-23 00:00:12.123) by second", Long.class)
+									.getSingleResult(),
+							anyOf(is(3L),is(2L)));
+					assertEquals(2_877_000_000L,
+							session.createQuery("select (datetime 1974-03-23 00:00:15 - datetime 1974-03-23 00:00:12.123) by nanosecond", Long.class)
 									.getSingleResult());
 				}
 		);

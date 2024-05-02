@@ -22,10 +22,11 @@ import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 
 /**
+ * @author Sanne Grinovero
  * @author Steve Ebersole
  */
 public class DialectOverridesAnnotationHelper {
-	private static Map<Class<? extends Annotation>, Class<? extends Annotation>> OVERRIDE_MAP = buildOverrideMap();
+	private static final Map<Class<? extends Annotation>, Class<? extends Annotation>> OVERRIDE_MAP = buildOverrideMap();
 
 	private static Map<Class<? extends Annotation>, Class<? extends Annotation>> buildOverrideMap() {
 		// not accessed concurrently

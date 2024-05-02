@@ -1303,7 +1303,7 @@ public class FunctionTests {
 	// really this could and should be made work on these dialects
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
-	@SkipForDialect(dialectClass = SybaseDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	public void testAddSecondsWithFractionalPart(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1315,7 +1315,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	public void testAddNanoseconds(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

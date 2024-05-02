@@ -137,6 +137,33 @@ String isDefault();
 The default precision for Oracle timestamps was changed to 9 i.e. nanosecond precision.
 The default precision for SQL Server timestamps was changed to 7 i.e. 100 nanosecond precision.
 
+
+[[sf-name]]
+== SessionFactory Name (and JNDI)
+
+Hibernate defines `SessionFactory#getName` (specified via `cfg.xml` or  `hibernate.session_factory_name`) which is used to
+help with (de)serializing a `SessionFactory`.  It is also, unless `hibernate.session_factory_name_is_jndi` is set to `false`,
+used in biding the `SessionFactory` into JNDI.
+
+This `SessionFactory#getName` method pre-dates Jakarta Persistence (and JPA).  It now implements `EntityManagerFactory#getName`
+inherited from Jakarta Persistence, which states that this name should come from the persistence-unit name.
+To align with Jakarta Persistence (the 3.2 TCK tests this), Hibernate now considers the persistence-unit name if no
+`hibernate.session_factory_name` is specified.
+
+However, because `hibernate.session_factory_name` is also a trigger to attempt to bind the SessionFactory into JNDI,
+this change to consider persistence-unit name, means that each `SessionFactory` created through Jakarta Persistence now
+have a name and Hibernate attempted to bind these to JNDI.
+
+To work around this we have introduced a new `hibernate.session_factory_jndi_name` setting that can be used to explicitly
+specify a name for JNDI binding.  The new behavior is as follows (assuming `hibernate.session_factory_name_is_jndi` is not explicitly configured):
+
+* If `hibernate.session_factory_jndi_name` is specified, the name is used to bind into JNDI
+* If `hibernate.session_factory_name` is specified, the name is used to bind into JNDI
+
+Hibernate can use the persistence-unit name for binding into JNDI as well, but `hibernate.session_factory_name_is_jndi`
+must be explicitly set to true.
+
+
 [[todo]]
 == Todos (dev)
 

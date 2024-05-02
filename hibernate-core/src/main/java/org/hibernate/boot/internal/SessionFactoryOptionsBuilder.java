@@ -171,7 +171,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// SessionFactory behavior
 	private final boolean jpaBootstrap;
 	private String sessionFactoryName;
-	private boolean sessionFactoryNameAlsoJndiName;
+	private Boolean sessionFactoryNameAlsoJndiName;
 
 	// Session behavior
 	private boolean flushBeforeCompletionEnabled;
@@ -931,7 +931,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean isSessionFactoryNameAlsoJndiName() {
+	public Boolean isSessionFactoryNameAlsoJndiName() {
 		return sessionFactoryNameAlsoJndiName;
 	}
 

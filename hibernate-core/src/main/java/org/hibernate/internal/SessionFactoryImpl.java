@@ -60,7 +60,6 @@ import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
@@ -144,6 +143,8 @@ import static org.hibernate.cfg.AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLE
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
+import static org.hibernate.cfg.PersistenceSettings.PERSISTENCE_UNIT_NAME;
+import static org.hibernate.cfg.PersistenceSettings.SESSION_FACTORY_JNDI_NAME;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -176,6 +177,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
 	private final String name;
+	private final String jndiName;
 	private final String uuid;
 
 	private transient volatile Status status = Status.OPEN;
@@ -238,6 +240,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		bootMetamodel.initSessionFactory( this );
 
 		name = getSessionFactoryName( options, serviceRegistry );
+		jndiName = determineJndiName( name, options, serviceRegistry );
 		uuid = options.getUuid();
 
 		jdbcServices = serviceRegistry.requireService( JdbcServices.class );
@@ -346,7 +349,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		LOG.debug( "Instantiated SessionFactory" );
 	}
 
-	private void deprecationCheck(Map<String, Object> settings) {
+	private static void deprecationCheck(Map<String, Object> settings) {
 		for ( String s:settings.keySet() ) {
 			switch (s) {
 				case "hibernate.hql.bulk_id_strategy.global_temporary.create_tables":
@@ -575,6 +578,23 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return null;
 	}
 
+	private String determineJndiName(
+			String name,
+			SessionFactoryOptions options,
+			SessionFactoryServiceRegistry serviceRegistry) {
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		assert cfgService != null;
+		final String explicitJndiName = cfgService.getSetting( SESSION_FACTORY_JNDI_NAME, STRING );
+		if ( StringHelper.isNotEmpty( explicitJndiName ) ) {
+			return explicitJndiName;
+		}
+
+		final String puName = cfgService.getSetting( PERSISTENCE_UNIT_NAME, STRING );
+		// do not use name for JNDI if explicitly asked not to or if name comes from JPA persistence-unit name
+		final boolean nameIsNotJndiName = options.isSessionFactoryNameAlsoJndiName() == Boolean.FALSE || StringHelper.isNotEmpty( puName );
+		return !nameIsNotJndiName ? name : null;
+	}
+
 	private SessionBuilderImpl createDefaultSessionOpenOptionsIfPossible() {
 		final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
 		if ( currentTenantIdentifierResolver == null ) {
@@ -723,6 +743,11 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public String getJndiName() {
+		return jndiName;
 	}
 
 	@Override
@@ -1766,7 +1791,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return (SessionFactoryImpl) locateSessionFactoryOnDeserialization( uuid, name );
 	}
 
-	private void maskOutSensitiveInformation(Map<String, Object> props) {
+	private static void maskOutSensitiveInformation(Map<String, Object> props) {
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_USER );
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_PASSWORD );
 		maskOutIfSet( props, AvailableSettings.JAKARTA_JDBC_USER );
@@ -1775,13 +1800,13 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		maskOutIfSet( props, AvailableSettings.PASS );
 	}
 
-	private void maskOutIfSet(Map<String, Object> props, String setting) {
+	private static void maskOutIfSet(Map<String, Object> props, String setting) {
 		if ( props.containsKey( setting ) ) {
 			props.put( setting, "****" );
 		}
 	}
 
-	private void logIfEmptyCompositesEnabled(Map<String, Object> props ) {
+	private static void logIfEmptyCompositesEnabled(Map<String, Object> props ) {
 		final boolean isEmptyCompositesEnabled = getBoolean( CREATE_EMPTY_COMPOSITES_ENABLED, props );
 		if ( isEmptyCompositesEnabled ) {
 			LOG.emptyCompositesEnabled();

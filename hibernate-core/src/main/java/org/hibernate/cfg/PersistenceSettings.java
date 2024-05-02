@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
+import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
@@ -61,15 +62,26 @@ public interface PersistenceSettings {
 	 * Naming the SessionFactory allows for it to be properly serialized across JVMs as
 	 * long as the same name is used on each JVM.
 	 * <p>
-	 * If {@link #SESSION_FACTORY_NAME_IS_JNDI} is set to {@code true}, this is also the
-	 * name under which the SessionFactory is bound into JNDI on startup and from which
-	 * it can be obtained from JNDI.
+	 * If {@link #SESSION_FACTORY_NAME_IS_JNDI} is set to {@code true}, this name will
+	 * also be used as {@link #SESSION_FACTORY_JNDI_NAME}.
+	 *
+	 * @see #SESSION_FACTORY_JNDI_NAME
+	 * @see org.hibernate.internal.SessionFactoryRegistry
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
+	 */
+	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
+
+	/**
+	 * An optional name used to bind the SessionFactory into JNDI.
+	 * <p>
+	 * If {@link #SESSION_FACTORY_NAME_IS_JNDI} is set to {@code true},
+	 * {@link #SESSION_FACTORY_NAME} will be used as the JNDI name
 	 *
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 * @see org.hibernate.internal.SessionFactoryRegistry
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
 	 */
-	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
+	String SESSION_FACTORY_JNDI_NAME = "hibernate.session_factory_jndi_name";
 
 	/**
 	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a JNDI namespace
@@ -83,6 +95,10 @@ public interface PersistenceSettings {
 	 *
 	 * @see #SESSION_FACTORY_NAME
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNameAsJndiName(boolean)
+	 *
+	 * @settingDefault {@code true} if {@link SessionFactory#getName()} comes from
+	 * {@value #SESSION_FACTORY_NAME}; {@code false} if there is no {@link SessionFactory#getName()}
+	 * or if it comes from {@value #PERSISTENCE_UNIT_NAME}
 	 */
 	String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
 

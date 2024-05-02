@@ -45,12 +45,12 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			// different VM
 			String uuid = ( (SessionFactoryImplementor) factory ).getUuid();
 			// deregister under this uuid...
-			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, NAME, false, null );
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, NAME, null, null );
 			// and then register under a different uuid...
 			SessionFactoryRegistry.INSTANCE.addSessionFactory(
 					"some-other-uuid",
 					NAME,
-					false,
+					null,
 					(SessionFactoryImplementor) factory,
 					null
 			);
@@ -58,7 +58,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			SessionFactory factory2 = (SessionFactory) SerializationHelper.clone( factory );
 			assertSame( factory, factory2 );
 
-			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", NAME, false, null );
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", NAME, null, null );
 		}
 
 		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
@@ -77,12 +77,12 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			// different VM
 			String uuid = ( (SessionFactoryImplementor) factory ).getUuid();
 			// deregister under this uuid...
-			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, null, false, null );
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, null, null, null );
 			// and then register under a different uuid...
 			SessionFactoryRegistry.INSTANCE.addSessionFactory(
 					"some-other-uuid",
 					null,
-					false,
+					null,
 					(SessionFactoryImplementor) factory,
 					null
 			);
@@ -94,7 +94,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			catch (SerializationException expected) {
 			}
 
-			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", null, false, null );
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", null, null, null );
 		}
 
 		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );

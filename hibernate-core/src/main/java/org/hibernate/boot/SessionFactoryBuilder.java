@@ -84,7 +84,9 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
+	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_NAME
 	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_NAME_IS_JNDI
+	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_JNDI_NAME
 	 */
 	SessionFactoryBuilder applyNameAsJndiName(boolean isJndiName);
 

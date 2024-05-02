@@ -1934,6 +1934,21 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
+	public void testExtractOffsetHourMinute(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(3,
+							session.createQuery("select extract(offset hour from offset datetime 2024-2-5 12:30:12+03:12)", Integer.class)
+									.getSingleResult());
+					assertEquals(12,
+							session.createQuery("select extract(offset minute from offset datetime 2024-2-5 12:30:12+03:12)", Integer.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class, comment = "We extract the offset with a format function")
 	public void testExtractFunctionTimeZoneOffset(SessionFactoryScope scope) {
 		scope.inTransaction(

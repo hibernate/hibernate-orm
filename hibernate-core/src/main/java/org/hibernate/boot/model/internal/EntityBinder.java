@@ -144,13 +144,13 @@ import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.bui
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
-import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
-import static org.hibernate.boot.model.internal.BinderHelper.getOverrideAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
-import static org.hibernate.boot.model.internal.BinderHelper.overrideMatchesDialect;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
+import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverrideAnnotation;
+import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.overrideMatchesDialect;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
@@ -1367,7 +1367,7 @@ public class EntityBinder {
 		persistentClass.setCached( isCached );
 		persistentClass.setLazy( lazy );
 		persistentClass.setQueryCacheLayout( queryCacheLayout );
-		if ( proxyClass != null ) {
+		if ( proxyClass != null && proxyClass != ClassDetails.VOID_CLASS_DETAILS ) {
 			persistentClass.setProxyInterfaceName( proxyClass.getName() );
 		}
 
@@ -1640,13 +1640,21 @@ public class EntityBinder {
 		final AnnotationUsage<Proxy> proxy = annotatedClass.getAnnotationUsage( Proxy.class );
 		if ( proxy != null ) {
 			lazy = proxy.getBoolean( "lazy" );
-			proxyClass = lazy ? proxy.getClassDetails( "proxyClass" ) : null;
+			proxyClass = lazy ? resolveProxyClass( proxy, annotatedClass ) : null;
 		}
 		else {
 			//needed to allow association lazy loading.
 			lazy = true;
 			proxyClass = annotatedClass;
 		}
+	}
+
+	private static ClassDetails resolveProxyClass(AnnotationUsage<Proxy> proxy, ClassDetails annotatedClass) {
+		final ClassDetails proxyClass = proxy.getClassDetails( "proxyClass" );
+		if ( proxyClass == ClassDetails.VOID_CLASS_DETAILS ) {
+			return annotatedClass;
+		}
+		return proxyClass;
 	}
 
 	public void bindConcreteProxy() {

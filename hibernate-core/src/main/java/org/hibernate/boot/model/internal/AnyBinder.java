@@ -28,7 +28,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
-import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 
 public class AnyBinder {

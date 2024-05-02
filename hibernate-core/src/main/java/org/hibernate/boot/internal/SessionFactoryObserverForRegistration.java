@@ -23,19 +23,16 @@ import org.hibernate.internal.SessionFactoryRegistry;
  * @author Gavin King
  */
 class SessionFactoryObserverForRegistration implements SessionFactoryObserver {
-
 	private JndiService jndiService;
-	private boolean registeredInJndi;
 
 	@Override
 	public void sessionFactoryCreated(SessionFactory factory) {
 		final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) factory;
 		jndiService = sessionFactory.getServiceRegistry().getService( JndiService.class );
-		registeredInJndi = sessionFactory.getSessionFactoryOptions().isSessionFactoryNameAlsoJndiName();
 		SessionFactoryRegistry.INSTANCE.addSessionFactory(
 				sessionFactory.getUuid(),
 				sessionFactory.getName(),
-				registeredInJndi,
+				sessionFactory.getJndiName(),
 				sessionFactory,
 				jndiService
 		);
@@ -47,7 +44,7 @@ class SessionFactoryObserverForRegistration implements SessionFactoryObserver {
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory(
 				sessionFactory.getUuid(),
 				sessionFactory.getName(),
-				registeredInJndi,
+				sessionFactory.getJndiName(),
 				jndiService
 		);
 	}

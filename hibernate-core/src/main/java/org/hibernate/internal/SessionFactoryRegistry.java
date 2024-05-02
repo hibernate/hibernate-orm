@@ -57,14 +57,14 @@ public class SessionFactoryRegistry {
 	 *
 	 * @param uuid The uuid under which to register the SessionFactory
 	 * @param name The optional name under which to register the SessionFactory
-	 * @param isNameAlsoJndiName Is name, if provided, also a JNDI name?
+	 * @param jndiName An optional name to use for binding the SessionFactory into JNDI
 	 * @param instance The SessionFactory instance
 	 * @param jndiService The JNDI service, so we can register a listener if name is a JNDI name
 	 */
 	public void addSessionFactory(
 			String uuid,
 			String name,
-			boolean isNameAlsoJndiName,
+			String jndiName,
 			SessionFactoryImplementor instance,
 			JndiService jndiService) {
 		if ( uuid == null ) {
@@ -77,25 +77,28 @@ public class SessionFactoryRegistry {
 			nameUuidXref.put( name, uuid );
 		}
 
-		if ( name == null || !isNameAlsoJndiName ) {
+		if ( jndiName == null ) {
 			LOG.debug( "Not binding SessionFactory to JNDI, no JNDI name configured" );
 			return;
 		}
 
-		LOG.debugf( "Attempting to bind SessionFactory [%s] to JNDI", name );
+		bindToJndi( jndiName, instance, jndiService );
+	}
 
+	private void bindToJndi(String jndiName, SessionFactoryImplementor instance, JndiService jndiService) {
 		try {
-			jndiService.bind( name, instance );
-			LOG.factoryBoundToJndiName( name );
+			LOG.debugf( "Attempting to bind SessionFactory [%s] to JNDI", jndiName );
+			jndiService.bind( jndiName, instance );
+			LOG.factoryBoundToJndiName( jndiName );
 			try {
-				jndiService.addListener( name, listener );
+				jndiService.addListener( jndiName, listener );
 			}
 			catch (Exception e) {
 				LOG.couldNotBindJndiListener();
 			}
 		}
 		catch (JndiNameException e) {
-			LOG.invalidJndiName( name, e );
+			LOG.invalidJndiName( jndiName, e );
 		}
 		catch (JndiException e) {
 			LOG.unableToBindFactoryToJndi( e );
@@ -107,29 +110,29 @@ public class SessionFactoryRegistry {
 	 *
 	 * @param uuid The uuid
 	 * @param name The optional name
-	 * @param isNameAlsoJndiName Is name, if provided, also a JNDI name?
+	 * @param jndiName An optional name to use for binding the SessionFactory nto JNDI
 	 * @param jndiService The JNDI service
 	 */
 	public void removeSessionFactory(
 			String uuid,
 			String name,
-			boolean isNameAlsoJndiName,
+			String jndiName,
 			JndiService jndiService) {
 		if ( name != null ) {
 			nameUuidXref.remove( name );
+		}
 
-			if ( isNameAlsoJndiName ) {
-				try {
-					LOG.tracef( "Unbinding SessionFactory from JNDI : %s", name );
-					jndiService.unbind( name );
-					LOG.factoryUnboundFromJndiName( name );
-				}
-				catch (JndiNameException e) {
-					LOG.invalidJndiName( name, e );
-				}
-				catch (JndiException e) {
-					LOG.unableToUnbindFactoryFromJndi( e );
-				}
+		if ( jndiName != null ) {
+			try {
+				LOG.tracef( "Unbinding SessionFactory from JNDI : %s", jndiName );
+				jndiService.unbind( jndiName );
+				LOG.factoryUnboundFromJndiName( jndiName );
+			}
+			catch (JndiNameException e) {
+				LOG.invalidJndiName( jndiName, e );
+			}
+			catch (JndiException e) {
+				LOG.unableToUnbindFactoryFromJndi( e );
 			}
 		}
 

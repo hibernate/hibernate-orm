@@ -6,42 +6,32 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import java.util.List;
-
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.SortComparator;
-import org.hibernate.annotations.SortNatural;
 import org.hibernate.boot.internal.CollectionClassification;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
-import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import jakarta.persistence.Convert;
-import jakarta.persistence.Converts;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyClass;
 import jakarta.persistence.MapKeyEnumerated;
 import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
-
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyOr;
 
 /**
  * @author Marco Belladelli

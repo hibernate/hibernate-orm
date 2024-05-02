@@ -6,17 +6,6 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
-import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
-import static net.bytebuddy.matcher.ElementMatchers.isFinalizer;
-import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
-import static net.bytebuddy.matcher.ElementMatchers.isVirtual;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
-import static org.hibernate.internal.CoreLogging.messageLogger;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -47,6 +36,17 @@ import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.pool.TypePool;
+
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
+import static net.bytebuddy.matcher.ElementMatchers.isFinalizer;
+import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
+import static net.bytebuddy.matcher.ElementMatchers.isVirtual;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * A utility to hold all ByteBuddy related state, as in the current version of
@@ -86,6 +86,7 @@ public final class ByteBuddyState {
 		this.byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
 		this.proxyCache = new TypeCache( TypeCache.Sort.WEAK );
 		this.basicProxyCache = new TypeCache( TypeCache.Sort.WEAK );
+		this.classRewriter = new StandardClassRewriter();
 	}
 
 	/**
@@ -232,30 +233,6 @@ public final class ByteBuddyState {
 		return this.enhancerConstants;
 	}
 
-	private static class GetDeclaredMethodAction implements PrivilegedAction<Method> {
-		private final Class<?> clazz;
-		private final String methodName;
-		private final Class<?>[] parameterTypes;
-
-		private GetDeclaredMethodAction(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
-			this.clazz = clazz;
-			this.methodName = methodName;
-			this.parameterTypes = parameterTypes;
-		}
-
-		@Override
-		public Method run() {
-			try {
-				Method method = clazz.getDeclaredMethod( methodName, parameterTypes );
-
-				return method;
-			}
-			catch (NoSuchMethodException e) {
-				throw new HibernateException( "Unable to prepare getDeclaredMethod()/getMethod() substitution", e );
-			}
-		}
-	}
-
 	/**
 	 * Shared proxy definition helpers. They are immutable so we can safely share them.
 	 */
@@ -317,6 +294,25 @@ public final class ByteBuddyState {
 				builder = builder.ignoreAlso( m );
 			}
 			return builder;
+		}
+	}
+
+	private interface ClassRewriter {
+		DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder);
+
+		void registerAuthorizedClass(Unloaded<?> unloadedClass);
+	}
+
+	private static class StandardClassRewriter implements ClassRewriter {
+		@Override
+		public DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
+			// do nothing
+			return builder;
+		}
+
+		@Override
+		public void registerAuthorizedClass(Unloaded<?> unloadedClass) {
+			// do nothing
 		}
 	}
 

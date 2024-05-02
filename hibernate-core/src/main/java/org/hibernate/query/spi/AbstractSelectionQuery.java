@@ -315,7 +315,7 @@ public abstract class AbstractSelectionQuery<R>
 				}
 
 				if ( !sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
-					verifyResultType( expectedResultClass, sqmSelection.getNodeType() );
+					verifyResultType( expectedResultClass, sqmSelection.getExpressible() );
 				}
 			}
 			// else, let's assume we can instantiate it!

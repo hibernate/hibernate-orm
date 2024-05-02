@@ -17,6 +17,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
@@ -1294,6 +1295,33 @@ public class FunctionTests {
 					assertThat( session.createQuery("select lower(function('current_user'))", String.class).getSingleResult(),
 							isOneOf("hibernate_orm_test", "hibernateormtest", "sa", "hibernateormtest@%", "hibernate_orm_test@%", "root@%") );
 					session.createQuery("select 1 where function('current_user') = 'hibernate_orm_test'", Integer.class).getSingleResultOrNull();
+				}
+		);
+	}
+
+	@Test
+	// really this could and should be made work on these dialects
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class)
+	public void testAddSecondsWithFractionalPart(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(LocalDateTime.of(1974, 3, 23, 0, 0, 28, 123_000_000),
+							session.createQuery("select datetime 1974-03-23 00:00:15 + 13.123 second", LocalDateTime.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class)
+	public void testAddNanoseconds(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(LocalDateTime.of(1974, 3, 23, 0, 0, 28, 123_000_000),
+							session.createQuery("select datetime 1974-03-23 00:00:15 + 13_123_000_000 nanosecond", LocalDateTime.class)
+									.getSingleResult());
 				}
 		);
 	}

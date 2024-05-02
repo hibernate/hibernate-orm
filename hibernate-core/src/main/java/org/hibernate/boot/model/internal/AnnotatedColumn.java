@@ -43,7 +43,7 @@ import org.hibernate.models.spi.MemberDetails;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.internal.util.StringHelper.isEmpty;

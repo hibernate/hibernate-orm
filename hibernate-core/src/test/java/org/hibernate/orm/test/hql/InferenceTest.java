@@ -8,12 +8,13 @@ package org.hibernate.orm.test.hql;
 
 import java.util.List;
 
-import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,6 +25,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.TypedQuery;
 
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertThat;
 
@@ -41,15 +43,22 @@ public class InferenceTest extends BaseCoreFunctionalTestCase {
         };
     }
 
-    @Before
-    public void setUp() {
-        doInHibernate( this::sessionFactory, session -> {
-            person = new Person();
-            person.setName("Johannes");
-            person.setSurname("Buehler");
-            session.persist(person);
-        } );
-    }
+	@Before
+	public void setUp() {
+		doInHibernate( this::sessionFactory, session -> {
+			person = new Person();
+			person.setName( "Johannes" );
+			person.setSurname( "Buehler" );
+			session.persist( person );
+		} );
+	}
+
+	@After
+	public void cleanUp() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createMutationQuery( "delete from Person" ).executeUpdate();
+		} );
+	}
 
     @Test
     public void testBinaryArithmeticInference() {
@@ -71,6 +80,19 @@ public class InferenceTest extends BaseCoreFunctionalTestCase {
         } );
 
     }
+
+	@Test
+	@JiraKey("HHH-18046")
+	public void testBinaryArithmeticParameterInference() {
+		doInHibernate( this::sessionFactory, session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			JpaCriteriaQuery<Double> cq = cb.createQuery( Double.class );
+			JpaRoot<Person> root = cq.from( Person.class );
+			cq.select( cb.toDouble( cb.prod( root.get( "id" ), 0.5f ) ) );
+			Double result = session.createQuery( cq ).getSingleResult();
+			assertThat( result, is( person.getId() * 0.5d ) );
+		} );
+	}
 
     @Entity(name = "Person")
     public static class Person {

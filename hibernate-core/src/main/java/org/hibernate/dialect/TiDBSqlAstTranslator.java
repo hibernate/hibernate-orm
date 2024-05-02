@@ -59,9 +59,9 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
 			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( " div " );
-			arithmeticExpression.getRightHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {

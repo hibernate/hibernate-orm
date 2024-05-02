@@ -7190,18 +7190,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
 			append( "mod" );
 			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( ',' );
-			arithmeticExpression.getRightHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
 			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-			arithmeticExpression.getRightHandOperand().accept( this );
+			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	protected void visitArithmeticOperand(Expression expression) {
+		expression.accept( this );
 	}
 
 	@Override

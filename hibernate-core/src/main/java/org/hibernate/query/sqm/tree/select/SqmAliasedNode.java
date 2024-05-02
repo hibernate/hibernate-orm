@@ -30,4 +30,9 @@ public interface SqmAliasedNode<T> extends SqmTypedNode<T> {
 	default SqmExpressible<T> getNodeType() {
 		return getSelectableNode().getNodeType();
 	}
+
+	@Override
+	default SqmExpressible<T> getExpressible() {
+		return getSelectableNode().getExpressible();
+	}
 }

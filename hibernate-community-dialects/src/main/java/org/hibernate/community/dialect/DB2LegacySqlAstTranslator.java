@@ -140,6 +140,11 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
+	protected void visitArithmeticOperand(Expression expression) {
+		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+	}
+
+	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
 		if ( getDB2Version().isSameOrAfter( 11 ) ) {
 			final boolean isNegated = booleanExpressionPredicate.isNegated();

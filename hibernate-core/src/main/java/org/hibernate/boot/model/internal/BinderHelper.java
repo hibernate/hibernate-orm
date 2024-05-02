@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;

@@ -341,6 +341,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public String getJndiName() {
+		return delegate.getJndiName();
+	}
+
+	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return delegate.getTypeConfiguration();
 	}

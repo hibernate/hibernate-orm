@@ -85,10 +85,10 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	/**
-	 * The name to be used for the SessionFactory.  This is used both in:<ul>
-	 *     <li>in-VM serialization</li>
-	 *     <li>JNDI binding, depending on {@link #isSessionFactoryNameAlsoJndiName}</li>
-	 * </ul>
+	 * The name to be used for the SessionFactory.  This is used during in-VM serialization; see
+	 * {@link org.hibernate.internal.SessionFactoryRegistry}.
+	 * May also be used as a JNDI name depending on {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_JNDI_NAME}
+	 * and {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI}.
 	 *
 	 * @return The SessionFactory name
 	 */
@@ -100,7 +100,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @return {@code true} if the SessionFactory name is also a JNDI name; {@code false} otherwise.
 	 */
-	boolean isSessionFactoryNameAlsoJndiName();
+	Boolean isSessionFactoryNameAlsoJndiName();
 
 	boolean isFlushBeforeCompletionEnabled();
 

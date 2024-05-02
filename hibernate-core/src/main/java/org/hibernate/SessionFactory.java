@@ -138,6 +138,11 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  */
 public interface SessionFactory extends EntityManagerFactory, Referenceable, Serializable, java.io.Closeable {
 	/**
+	 * The JNDI name, used to bind the SessionFactory to JNDI
+	 */
+	String getJndiName();
+
+	/**
 	 * Obtain a {@linkplain SessionBuilder session builder} for creating
 	 * new {@link Session}s with certain customized options.
 	 *

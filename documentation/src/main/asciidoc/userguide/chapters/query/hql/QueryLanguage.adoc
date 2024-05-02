@@ -2524,8 +2524,8 @@ HQL defines the two additional aggregate functions which accept a logical predic
 |===
 | Aggregate function | Argument type | Result type | JPA standard
 
-| `any()` | Logical predicate | `Boolean` | &cross;
-| `every()` | Logical predicate | `Boolean` | &cross;
+| `any()` or `some()` | Logical predicate | `Boolean` | &cross;
+| `every()` or `all()` | Logical predicate | `Boolean` | &cross;
 |===
 
 NOTE: Aggregate functions usually appear in the `select` clause, but control over aggregation is the responsibility of the `group by` clause, as described <<hql-group-by,below>>.

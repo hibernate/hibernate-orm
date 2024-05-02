@@ -476,7 +476,11 @@ public class DB2Dialect extends Dialect {
 		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:
-				pattern.append( "(seconds_between(" );
+				pattern.append( "(seconds_between(date_trunc('second'," );
+				pattern.append( toExpression );
+				pattern.append( "),date_trunc('second'," );
+				pattern.append( fromExpression );
+				pattern.append( "))" );
 				break;
 			//note: DB2 does have weeks_between()
 			case MONTH:
@@ -484,14 +488,18 @@ public class DB2Dialect extends Dialect {
 				// the months_between() function results
 				// in a non-integral value, so trunc() it
 				pattern.append( "trunc(months_between(" );
+				pattern.append( toExpression );
+				pattern.append( ',' );
+				pattern.append( fromExpression );
+				pattern.append( ')' );
 				break;
 			default:
 				pattern.append( "?1s_between(" );
+				pattern.append( toExpression );
+				pattern.append( ',' );
+				pattern.append( fromExpression );
+				pattern.append( ')' );
 		}
-		pattern.append( toExpression );
-		pattern.append( ',' );
-		pattern.append( fromExpression );
-		pattern.append( ')' );
 		switch ( unit ) {
 			case NATIVE:
 				pattern.append( "+(microsecond(");

@@ -11,7 +11,10 @@ import org.hibernate.engine.spi.ManagedComposite;
 import org.hibernate.engine.spi.ManagedEntity;
 
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +23,6 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

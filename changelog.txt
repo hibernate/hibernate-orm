@@ -3,6 +3,38 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.0.Alpha2 (May 03, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32280
+
+** Bug
+    * [HHH-18053] - duration arithmetic with fractional seconds
+    * [HHH-18049] - Handle <exclude-default-listeners/> and <exclude-superclass-listeners/>
+    * [HHH-18042] - ConstructorResults defined in XML are not applied
+    * [HHH-18041] - With SharedCacheMode.DISABLE_SELECTIVE entities with cacheable false should not be cached
+    * [HHH-18039] - EntityListeners defined in XML should replace those from annotations, not add to
+    * [HHH-18038] - Fall back to persistence-unit name as SessionFactory name
+    * [HHH-18036] - Retrieving java.sql.Date from Oracle contains unwanted milliseconds
+    * [HHH-18028] - TCK test failure with attribute converter and Embeddable
+    * [HHH-18018] - Derby implementation for 'right' function wrongly passes parameter to 'length'
+
+** Improvement
+    * [HHH-18048] - Split notions of SessionFactory name and SessionFactory JNDI name
+    * [HHH-18005] - Remove AnnotationDescriptor#createUsage method calls that rely on lambdas for configuration
+    * [HHH-18003] - Create a PersistenceUnitDescriptor wrapper around JPA 3.2 PersistenceConfiguration
+    * [HHH-18000] - Remove XmlProcessingHelper methods for creating AnnotationUsage instances
+
+** New Feature
+    * [HHH-18025] - RefreshOptions & LockOptions for Hibernate 7
+    * [HHH-18001] - FindOptions for Hibernate 7
+
+** Task
+    * [HHH-18043] - Change SQL Server default timestamp precision to 7
+    * [HHH-18035] - Change Oracle default timestamp precision to 9
+    * [HHH-17982] - Setup JPA 3.2 TCK testing automation for ORM 7
+
+
 Changes in 7.0.0.Alpha1 (April 16, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

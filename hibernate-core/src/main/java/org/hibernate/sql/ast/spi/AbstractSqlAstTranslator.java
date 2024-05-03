@@ -4443,18 +4443,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( ignoreCase ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
-
-		if ( sortOrder == SortDirection.DESCENDING ) {
-			appendSql( " desc" );
-		}
-		else if ( sortOrder == SortDirection.ASCENDING && renderNullPrecedence && supportsNullPrecedence ) {
-			appendSql( " asc" );
-		}
-
-		if ( renderNullPrecedence && supportsNullPrecedence ) {
-			appendSql( " nulls " );
-			appendSql( nullPrecedence == Nulls.LAST ? "last" : "first" );
-		}
 	}
 
 	protected boolean supportsNullPrecedence() {

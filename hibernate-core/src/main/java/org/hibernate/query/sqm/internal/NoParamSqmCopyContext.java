@@ -8,12 +8,14 @@ package org.hibernate.query.sqm.internal;
 
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Marco Belladelli
  */
 public class NoParamSqmCopyContext extends SimpleSqmCopyContext {
 	@Override
-	public <T> T getCopy(T original) {
+	public <T> @Nullable T getCopy(T original) {
 		if ( original instanceof SqmParameter<?> ) {
 			return original;
 		}

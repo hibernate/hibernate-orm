@@ -192,7 +192,7 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( SqlTypes.ARRAY, Array.class );
 		workMap.put( SqlTypes.STRUCT, Struct.class );
 		workMap.put( SqlTypes.REF, Ref.class );
-		workMap.put( SqlTypes.JAVA_OBJECT, Class.class );
+		workMap.put( SqlTypes.JAVA_OBJECT, Object.class );
 		workMap.put( SqlTypes.ROWID, RowId.class );
 		workMap.put( SqlTypes.SQLXML, SQLXML.class );
 		workMap.put( SqlTypes.UUID, UUID.class );

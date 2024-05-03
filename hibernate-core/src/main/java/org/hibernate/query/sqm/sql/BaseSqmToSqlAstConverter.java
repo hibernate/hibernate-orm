@@ -5365,6 +5365,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	public boolean isInTypeInference() {
+		return inImpliedResultTypeInference || inTypeInference;
+	}
+
+	@Override
 	public MappingModelExpressible<?> resolveFunctionImpliedReturnType() {
 		if ( inImpliedResultTypeInference || functionImpliedResultTypeAccess == null ) {
 			return null;

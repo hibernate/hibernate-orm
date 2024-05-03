@@ -10,6 +10,8 @@ import java.util.IdentityHashMap;
 
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Marco Belladelli
  */
@@ -18,7 +20,7 @@ public class SimpleSqmCopyContext implements SqmCopyContext {
 
 	@Override
 	@SuppressWarnings( "unchecked" )
-	public <T> T getCopy(T original) {
+	public <T> @Nullable T getCopy(T original) {
 		return (T) map.get( original );
 	}
 

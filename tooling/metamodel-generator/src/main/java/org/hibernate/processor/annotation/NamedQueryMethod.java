@@ -104,8 +104,9 @@ class NamedQueryMethod implements MetaAttribute {
 		else {
 			final List<SqmSelectableNode<?>> items =
 					select.getQuerySpec().getSelectClause().getSelectionItems();
-			if ( items.size() == 1 ) {
-				final String typeName = items.get(0).getExpressible().getTypeName();
+			final SqmExpressible<?> expressible;
+			if ( items.size() == 1 && ( expressible = items.get( 0 ).getExpressible() ) != null ) {
+				final String typeName = expressible.getTypeName();
 				final TypeElement entityType = entityType( typeName );
 				return entityType == null ? typeName : entityType.getQualifiedName().toString();
 

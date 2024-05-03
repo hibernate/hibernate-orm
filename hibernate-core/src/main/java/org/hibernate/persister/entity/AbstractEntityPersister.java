@@ -5702,6 +5702,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( attrType instanceof BasicType ) {
+			final NavigableRole role = getNavigableRole().append( bootProperty.getName() );
 			final String attrColumnExpression;
 			final boolean isAttrColumnExpressionFormula;
 			final String customReadExpr;
@@ -5774,12 +5775,12 @@ public abstract class AbstractEntityPersister
 
 			return MappingModelCreationHelper.buildBasicAttributeMapping(
 					attrName,
-					getNavigableRole().append( bootProperty.getName() ),
+					role,
 					stateArrayPosition,
 					fetchableIndex,
 					bootProperty,
 					this,
-					(BasicType<?>) attrType,
+					(BasicType<?>) value.getType(),
 					tableExpression,
 					attrColumnExpression,
 					null,

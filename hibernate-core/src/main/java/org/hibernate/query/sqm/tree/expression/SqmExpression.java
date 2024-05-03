@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.function.Consumer;
 import jakarta.persistence.criteria.Expression;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.Internal;
 import org.hibernate.query.ReturnableType;
@@ -40,7 +41,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 * Can change as a result of calls to {@link #applyInferableType}
 	 */
 	@Override
-	SqmExpressible<T> getNodeType();
+	@Nullable SqmExpressible<T> getNodeType();
 
 	/**
 	 * Used to apply type information based on the expression's usage
@@ -51,7 +52,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 * an implicit cast)
 	 */
 	@Internal
-	void applyInferableType(SqmExpressible<?> type);
+	void applyInferableType(@Nullable SqmExpressible<?> type);
 
 	@Override
 	default void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {

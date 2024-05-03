@@ -9,6 +9,8 @@ package org.hibernate.query.sqm.tree;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Optional contract for SqmNode implementations which are
  * typed
@@ -19,17 +21,17 @@ public interface SqmTypedNode<T> extends SqmNode, SqmExpressibleAccessor<T>, Sqm
 	/**
 	 * The Java type descriptor for this node.
 	 */
-	default JavaType<T> getNodeJavaType() {
+	default @Nullable JavaType<T> getNodeJavaType() {
 		final SqmExpressible<T> nodeType = getNodeType();
 		return nodeType != null ? nodeType.getExpressibleJavaType() : null;
 	}
 
 	@Override
-	default SqmExpressible<T> getExpressible() {
+	default @Nullable SqmExpressible<T> getExpressible() {
 		return getNodeType();
 	}
 
-	SqmExpressible<T> getNodeType();
+	@Nullable SqmExpressible<T> getNodeType();
 
 	@Override
 	SqmTypedNode<T> copy(SqmCopyContext context);

@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -35,6 +36,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
@@ -129,15 +131,7 @@ public class TimestampdiffFunction
 		@Override
 		public ReturnableType<?> resolveFunctionReturnType(
 				ReturnableType<?> impliedType,
-				List<? extends SqmTypedNode<?>> arguments,
-				TypeConfiguration typeConfiguration) {
-			return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
-		}
-
-		@Override
-		public ReturnableType<?> resolveFunctionReturnType(
-				ReturnableType<?> impliedType,
-				Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+				@Nullable SqmToSqlAstConverter converter,
 				List<? extends SqmTypedNode<?>> arguments,
 				TypeConfiguration typeConfiguration) {
 			final BasicType<?> invariantType;

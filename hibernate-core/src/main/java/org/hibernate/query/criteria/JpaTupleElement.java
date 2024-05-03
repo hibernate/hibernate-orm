@@ -7,6 +7,7 @@
 package org.hibernate.query.criteria;
 
 import jakarta.persistence.TupleElement;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -17,10 +18,10 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface JpaTupleElement<T> extends TupleElement<T>, JpaCriteriaNode {
-	JavaType<T> getJavaTypeDescriptor();
+	@Nullable JavaType<T> getJavaTypeDescriptor();
 
 	@Override
-	default Class<? extends T> getJavaType() {
+	default @Nullable Class<? extends T> getJavaType() {
 		// todo (6.0) : can this signature just return `Class<T>`?
 		return getJavaTypeDescriptor() == null ? null : getJavaTypeDescriptor().getJavaTypeClass();
 	}

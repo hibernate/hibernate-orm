@@ -32,6 +32,7 @@ import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
@@ -47,6 +48,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Supplier;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -137,15 +140,7 @@ public class DynamicParameterizedTypeTest {
 						@Override
 						public ReturnableType<?> resolveFunctionReturnType(
 								ReturnableType<?> impliedType,
-								List<? extends SqmTypedNode<?>> arguments,
-								TypeConfiguration typeConfiguration) {
-							return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
-						}
-
-						@Override
-						public ReturnableType<?> resolveFunctionReturnType(
-								ReturnableType<?> impliedType,
-								Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+								@Nullable SqmToSqlAstConverter converter,
 								List<? extends SqmTypedNode<?>> arguments,
 								TypeConfiguration typeConfiguration) {
 							SqmTypedNode<?> sqmTypedNode = arguments.get(0);

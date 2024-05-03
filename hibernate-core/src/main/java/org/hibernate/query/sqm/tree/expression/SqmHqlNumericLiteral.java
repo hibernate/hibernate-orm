@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -67,7 +68,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 
 	@Override
 	public BasicDomainType<N> getNodeType() {
-		return (BasicDomainType<N>) super.getNodeType();
+		return (BasicDomainType<N>) NullnessUtil.castNonNull( super.getNodeType() );
 	}
 
 	@Override

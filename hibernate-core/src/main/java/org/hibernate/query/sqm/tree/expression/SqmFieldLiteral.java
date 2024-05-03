@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -111,7 +112,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 	}
 
 	@Override

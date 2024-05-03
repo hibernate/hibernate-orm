@@ -11,6 +11,8 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Common support for SqmParameter impls
  *
@@ -28,7 +30,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 		if ( type != null ) {
 			if ( type instanceof PluralPersistentAttribute ) {
 				final PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute =

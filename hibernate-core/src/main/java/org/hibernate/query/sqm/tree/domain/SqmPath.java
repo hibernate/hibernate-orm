@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SemanticException;
@@ -104,7 +105,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	SqmPathSource<T> getNodeType();
 
 	@Override
-	default void applyInferableType(SqmExpressible<?> type) {
+	default void applyInferableType(@Nullable SqmExpressible<?> type) {
 		// do nothing
 	}
 

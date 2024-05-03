@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 
@@ -28,7 +29,7 @@ import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
  */
 public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> implements SqmExpression<T> {
 
-	public AbstractSqmExpression(SqmExpressible<? super T> type, NodeBuilder criteriaBuilder) {
+	public AbstractSqmExpression(@Nullable SqmExpressible<? super T> type, NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 	}
 
@@ -38,10 +39,10 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 	}
 
-	protected void internalApplyInferableType(SqmExpressible<?> newType) {
+	protected void internalApplyInferableType(@Nullable SqmExpressible<?> newType) {
 		SqmTreeCreationLogger.LOGGER.debugf(
 				"Applying inferable type to SqmExpression [%s] : %s -> %s",
 				this,
@@ -138,13 +139,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public JpaSelection<T> alias(String name) {
-		setAlias( name );
-		return this;
-	}
-
-	@Override
-	public JavaType<T> getJavaTypeDescriptor() {
+	public @Nullable JavaType<T> getJavaTypeDescriptor() {
 		return getNodeType() == null ? null : getNodeType().getExpressibleJavaType();
 	}
 }

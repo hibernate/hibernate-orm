@@ -2558,9 +2558,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				// TODO: anything more we can do here? e.g. check constructor
 				try {
 					final Class<?> javaResultType = selection.getJavaType();
-					final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
-					final Types types = context.getTypeUtils();
-					returnTypeCorrect = types.isAssignable( returnType,  types.erasure( typeElement.asType() ) );
+					if ( javaResultType == null ) {
+						returnTypeCorrect = true;
+					}
+					else {
+						final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
+						final Types types = context.getTypeUtils();
+						returnTypeCorrect = context.getTypeUtils().isAssignable( returnType, types.erasure( typeElement.asType() ) );
+					}
 				}
 				catch (Exception e) {
 					//ignore
@@ -2670,7 +2675,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean parameterMatches(VariableElement parameter, JpaSelection<?> item) {
-		return parameterMatches( parameter.asType(), item.getJavaType() );
+		final Class<?> javaType = item.getJavaType();
+		return javaType != null && parameterMatches( parameter.asType(), javaType );
 	}
 
 	private static boolean parameterMatches(TypeMirror parameterType, Class<?> itemType) {

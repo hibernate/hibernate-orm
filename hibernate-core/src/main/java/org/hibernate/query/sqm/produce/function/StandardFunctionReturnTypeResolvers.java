@@ -19,12 +19,15 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -51,15 +54,7 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public ReturnableType<?> resolveFunctionReturnType(
 					ReturnableType<?> impliedType,
-					List<? extends SqmTypedNode<?>> arguments,
-					TypeConfiguration typeConfiguration) {
-				return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
-			}
-
-			@Override
-			public ReturnableType<?> resolveFunctionReturnType(
-					ReturnableType<?> impliedType,
-					Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+					@Nullable SqmToSqlAstConverter converter,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
 				return isAssignableTo( invariantType, impliedType ) ? impliedType : invariantType;
@@ -84,15 +79,7 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public ReturnableType<?> resolveFunctionReturnType(
 					ReturnableType<?> impliedType,
-					List<? extends SqmTypedNode<?>> arguments,
-					TypeConfiguration typeConfiguration) {
-				return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
-			}
-
-			@Override
-			public ReturnableType<?> resolveFunctionReturnType(
-					ReturnableType<?> impliedType,
-					Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+					@Nullable SqmToSqlAstConverter converter,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
 				ReturnableType<?> argType = extractArgumentType( arguments, argPosition );
@@ -133,15 +120,7 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public ReturnableType<?> resolveFunctionReturnType(
 					ReturnableType<?> impliedType,
-					List<? extends SqmTypedNode<?>> arguments,
-					TypeConfiguration typeConfiguration) {
-				return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
-			}
-
-			@Override
-			public ReturnableType<?> resolveFunctionReturnType(
-					ReturnableType<?> impliedType,
-					Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+					@Nullable SqmToSqlAstConverter converter,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
 				for ( int i = 0; i < arguments.size(); i++ ) {

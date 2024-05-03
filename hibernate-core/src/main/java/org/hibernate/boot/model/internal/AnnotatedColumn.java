@@ -30,6 +30,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -211,6 +212,10 @@ public class AnnotatedColumn {
 
 	public void addCheckConstraint(String name, String constraint) {
 		checkConstraints.add( new CheckConstraint( name, constraint ) );
+	}
+
+	public void addCheckConstraint(String name, String constraint, String options) {
+		checkConstraints.add( new CheckConstraint( name, constraint, options ) );
 	}
 
 //	public String getComment() {
@@ -800,6 +805,7 @@ public class AnnotatedColumn {
 		annotatedColumn.setParent( parent );
 		annotatedColumn.applyColumnDefault( inferredData, numberOfColumns );
 		annotatedColumn.applyGeneratedAs( inferredData, numberOfColumns );
+		annotatedColumn.applyColumnCheckConstraint( column );
 		annotatedColumn.applyCheckConstraint( inferredData, numberOfColumns );
 		annotatedColumn.extractDataFromPropertyData( propertyHolder, inferredData );
 		annotatedColumn.bind();
@@ -873,7 +879,23 @@ public class AnnotatedColumn {
 		}
 	}
 
-	private void applyCheckConstraint(PropertyData inferredData, int length) {
+	private void applyColumnCheckConstraint(AnnotationUsage<jakarta.persistence.Column> column) {
+		applyCheckConstraints( column.findAttributeValue( "check" ) );
+	}
+
+	void applyCheckConstraints(List<AnnotationUsage<jakarta.persistence.CheckConstraint>> checkConstraintAnnotationUsages) {
+		if ( CollectionHelper.isNotEmpty( checkConstraintAnnotationUsages ) ) {
+			for ( AnnotationUsage<jakarta.persistence.CheckConstraint> checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
+				addCheckConstraint(
+						checkConstraintAnnotationUsage.getString( "name" ),
+						checkConstraintAnnotationUsage.getString( "constraint" ),
+						checkConstraintAnnotationUsage.getString( "options" )
+				);
+			}
+		}
+	}
+
+	void applyCheckConstraint(PropertyData inferredData, int length) {
 		final MemberDetails attributeMember = inferredData.getAttributeMember();
 		if ( attributeMember != null ) {
 			// if there are multiple annotations, they're not overrideable

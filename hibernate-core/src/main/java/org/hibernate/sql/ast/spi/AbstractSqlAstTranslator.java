@@ -4407,21 +4407,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
 
-		if ( ignoreCase ) {
-			appendSql( dialect.getLowercaseFunction() );
-			appendSql( OPEN_PARENTHESIS );
-		}
-
-		if ( inOverOrWithinGroupClause() ) {
-			resolveAliasedExpression( sortExpression ).accept( this );
-		}
-		else {
-			sortExpression.accept( this );
-		}
-
-		if ( ignoreCase ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
+		renderSortExpression( sortExpression, ignoreCase );
 
 		if ( sortOrder == SortDirection.DESCENDING ) {
 			appendSql( " desc" );
@@ -4433,6 +4419,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( renderNullPrecedence && supportsNullPrecedence ) {
 			appendSql( " nulls " );
 			appendSql( nullPrecedence == NullPrecedence.LAST ? "last" : "first" );
+		}
+	}
+
+	protected void renderSortExpression(Expression sortExpression, boolean ignoreCase) {
+		if ( ignoreCase ) {
+			appendSql( dialect.getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
+		}
+
+		if ( inOverOrWithinGroupClause() || ignoreCase ) {
+			resolveAliasedExpression( sortExpression ).accept( this );
+		}
+		else {
+			sortExpression.accept( this );
+		}
+
+		if ( ignoreCase ) {
+			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 

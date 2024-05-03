@@ -109,6 +109,7 @@ import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
@@ -5626,5 +5627,31 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.NONE;
 	}
+
+	/**
+	 * Render a SQL check condition for {@link CheckConstraint}
+	 *
+	 * @return a SQL expression representing the {@link CheckConstraint}
+	 */
+	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		final String constraintName = checkConstraint.getName();
+		String constraint = constraintName == null
+				? " check (" + checkConstraint.getConstraint() + ")"
+				: " constraint " + constraintName + " check (" + checkConstraint.getConstraint() + ")";
+		return appendCheckConstraintOptions( checkConstraint, constraint );
+	}
+
+	/**
+	 * Append the {@link CheckConstraint} options to SQL check sqlCheckConstraint
+	 *
+	 * @param checkConstraint an instance of {@link CheckConstraint}
+	 * @param sqlCheckConstraint the SQL to append the {@link CheckConstraint} options
+	 *
+	 * @return a SQL expression
+	 */
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		return sqlCheckConstraint;
+	}
+
 
 }

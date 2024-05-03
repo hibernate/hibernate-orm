@@ -1760,10 +1760,18 @@ public class FunctionTests {
 					assertEquals( 10L*60,
 							session.createQuery("select (datetime 1974-03-23 5:30:25 - datetime 1974-03-23 5:20:25) by second", Long.class)
 									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	public void testTimeDurationArithmeticWithLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					// timestampadd() might not work for time on at least some dbs:
-//					assertEquals( LocalTime.of(5,30,25),
-//							session.createQuery("select time 5:30:46 - 21 second")
-//									.getSingleResult() );
+					assertEquals( LocalTime.of(5,30,25),
+							session.createQuery("select time 5:30:46 - 21 second")
+									.getSingleResult() );
 				}
 		);
 	}

@@ -92,6 +92,17 @@ Note that the restriction specified by the `condition` or `defaultCondition` is 
 | `@Filter` | Specifies how a filter applies to a given entity or collection (many per filter)
 |===
 
+[TIP]
+====
+A filter `condition` may not specify joins to other tables, but it may contain a subquery.
+[source,java]
+----
+@Filter(name="notDeleted"
+        condition="(select r.deletionTimestamp from Record r where r.id = record_id) is not null")
+----
+Only unqualified column names like `record_id` in this example are interpreted as belonging to the table of the filtered entity.
+====
+
 By default, a new session comes with every filter disabled.
 A filter may be explicitly enabled in a given session by calling link:{doc-javadoc-url}org/hibernate/Session.html#enableFilter(java.lang.String)[`enableFilter()`] and assigning arguments to the parameters of the filter using the returned instance of link:{doc-javadoc-url}org/hibernate/Filter.html[`Filter`].
 You should do this right at the _start_ of the session.

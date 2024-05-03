@@ -131,7 +131,7 @@ class ColumnDefinitions {
 			long anonConstraints = checkConstraints.stream().filter(CheckConstraint::isAnonymous).count();
 			if ( anonConstraints == 1 ) {
 				for ( CheckConstraint constraint : checkConstraints ) {
-					definition.append( constraint.constraintString() );
+					definition.append( constraint.constraintString( dialect ) );
 				}
 			}
 			else {
@@ -153,7 +153,7 @@ class ColumnDefinitions {
 				}
 				for ( CheckConstraint constraint : checkConstraints ) {
 					if ( constraint.isNamed() ) {
-						definition.append( constraint.constraintString() );
+						definition.append( constraint.constraintString( dialect ) );
 					}
 				}
 			}

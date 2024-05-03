@@ -788,10 +788,15 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return 6; //microseconds!
 	}
 
+	/**
+	 * Even though SQL Server only supports 1/10th microsecond precision,
+	 * we use nanosecond as the "native" precision for datetime arithmetic
+	 * since it simplifies calculations.
+	 */
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
 //		return 100; // 1/10th microsecond
-		return 1; // Even though SQL Server only supports 1/10th microsecond precision, use nanosecond scale for easier computation
+		return 1;
 	}
 
 	@Override
@@ -823,12 +828,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		// there's no dateadd_big()) so here we need to use two
 		// calls to dateadd() to add a whole duration
 		switch (unit) {
-			case NANOSECOND:
+			case NANOSECOND: //use nanosecond as the "native" precision
 			case NATIVE:
 				return "dateadd(nanosecond,?2%1000000000,dateadd(second,?2/1000000000,?3))";
 //			case NATIVE:
-//				// 1/10th microsecond is the "native" precision
+//				// we could in principle use 1/10th microsecond as the "native" precision
 //				return "dateadd(nanosecond,?2%10000000,dateadd(second,?2/10000000,?3))";
+			case SECOND:
+				return "dateadd(nanosecond,cast(?2*1e9 as bigint)%1000000000,dateadd(second,?2,?3))";
 			default:
 				return "dateadd(?1,?2,?3)";
 		}

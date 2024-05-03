@@ -2583,6 +2583,11 @@ public abstract class CollectionBinder {
 		property.forEachAnnotationUsage( Check.class, (usage) -> {
 			addCheckToCollection( collectionTable, usage );
 		} );
+		property.forEachAnnotationUsage(
+				jakarta.persistence.JoinTable.class,
+				(usage) ->
+						TableBinder.addTableCheck( collectionTable, usage.findAttributeValue( "check" ) )
+		);
 	}
 
 	private static void addCheckToCollection(Table collectionTable, AnnotationUsage<Check> check) {

@@ -173,7 +173,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
 			for ( CheckConstraint constraint : table.getChecks() ) {
-				buf.append( "," ).append( constraint.constraintString() );
+				buf.append( "," ).append( constraint.constraintString( dialect ) );
 			}
 			final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
 			if ( aggregateSupport != null && aggregateSupport.supportsComponentCheckConstraints() ) {

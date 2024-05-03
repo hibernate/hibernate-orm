@@ -447,7 +447,9 @@ public class EntityBinder {
 
 		final AnnotationUsage<jakarta.persistence.Table> jpaTableUsage = annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class );
 		if ( jpaTableUsage != null ) {
-			TableBinder.addJpaIndexes( persistentClass.getTable(), jpaTableUsage.getList( "indexes" ), context );
+			final Table table = persistentClass.getTable();
+			TableBinder.addJpaIndexes( table, jpaTableUsage.getList( "indexes" ), context );
+			TableBinder.addTableCheck(  table, jpaTableUsage.findAttributeValue( "check" ) );
 		}
 
 		final InFlightMetadataCollector.EntityTableXref entityTableXref = context
@@ -2166,7 +2168,7 @@ public class EntityBinder {
 
 	//Used for @*ToMany @JoinTable
 	public Join addJoinTable(AnnotationUsage<JoinTable> joinTable, PropertyHolder holder, boolean noDelayInPkColumnCreation) {
-		return addJoin(
+		final Join join = addJoin(
 				holder,
 				noDelayInPkColumnCreation,
 				false,
@@ -2176,6 +2178,8 @@ public class EntityBinder {
 				joinTable.getList( "joinColumns" ),
 				joinTable.getList( "uniqueConstraints" )
 		);
+		TableBinder.addTableCheck( join.getTable(), joinTable.findAttributeValue( "check" ));
+		return join;
 	}
 
 	public Join addSecondaryTable(AnnotationUsage<SecondaryTable> secondaryTable, PropertyHolder holder, boolean noDelayInPkColumnCreation) {
@@ -2191,6 +2195,7 @@ public class EntityBinder {
 		);
 		final Table table = join.getTable();
 		new IndexBinder( context ).bindIndexes( table, secondaryTable.getList( "indexes" ) );
+		TableBinder.addTableCheck( table, secondaryTable.findAttributeValue( "check" ));
 		return join;
 	}
 

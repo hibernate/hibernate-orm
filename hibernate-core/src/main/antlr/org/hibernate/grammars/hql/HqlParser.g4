@@ -430,12 +430,17 @@ pathContinuation
  *		* VALUE( path )
  * 		* KEY( path )
  * 		* path[ selector ]
+ * 		* ARRAY_GET( embeddableArrayPath, index ).path
+ * 		* COALESCE( array1, array2 )[ selector ].path
  */
 syntacticDomainPath
 	: treatedNavigablePath
 	| collectionValueNavigablePath
 	| mapKeyNavigablePath
 	| simplePath indexedPathAccessFragment
+	| toOneFkReference
+	| function pathContinuation
+	| function indexedPathAccessFragment pathContinuation?
 	;
 
 /**
@@ -732,7 +737,6 @@ primaryExpression
 	| entityIdReference									# EntityIdExpression
 	| entityVersionReference							# EntityVersionExpression
 	| entityNaturalIdReference							# EntityNaturalIdExpression
-	| toOneFkReference									# ToOneFkExpression
 	| syntacticDomainPath pathContinuation?				# SyntacticPathExpression
 	| function											# FunctionExpression
 	| generalPathFragment								# GeneralPathExpression

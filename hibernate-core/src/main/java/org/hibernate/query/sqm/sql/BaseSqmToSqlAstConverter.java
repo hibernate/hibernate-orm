@@ -121,6 +121,7 @@ import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
@@ -164,6 +165,7 @@ import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
@@ -326,11 +328,14 @@ import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
+import org.hibernate.sql.ast.tree.from.EmbeddableFunctionTableGroup;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -391,6 +396,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -3687,6 +3693,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			parentPath = sqmPath.getLhs();
 		}
 		if ( parentPath == null ) {
+			if ( sqmPath instanceof SqmFunctionPath<?> ) {
+				return visitFunctionPath( (SqmFunctionPath<?>) sqmPath );
+			}
 			return null;
 		}
 		final TableGroup parentTableGroup = getActualTableGroup(
@@ -4525,6 +4534,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Expression visitIndexAggregateFunction(SqmIndexAggregateFunction<?> path) {
 		return createMinOrMaxIndexOrElement( path, true, path.getFunctionName() );
+	}
+
+	@Override
+	public TableGroup visitFunctionPath(SqmFunctionPath<?> functionPath) {
+		final NavigablePath navigablePath = functionPath.getNavigablePath();
+		TableGroup tableGroup = getFromClauseAccess().findTableGroup( navigablePath );
+		if ( tableGroup == null ) {
+			final Expression functionExpression = (Expression) functionPath.getFunction().accept( this );
+			final EmbeddableMappingType embeddableMappingType = ( (AggregateJdbcType) functionExpression.getExpressionType()
+					.getSingleJdbcMapping()
+					.getJdbcType() ).getEmbeddableMappingType();
+			tableGroup = new EmbeddableFunctionTableGroup(
+					navigablePath,
+					embeddableMappingType,
+					functionExpression
+			);
+			getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+		}
+		return tableGroup;
 	}
 
 	@Override
@@ -5371,7 +5399,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public MappingModelExpressible<?> resolveFunctionImpliedReturnType() {
-		if ( inImpliedResultTypeInference || functionImpliedResultTypeAccess == null ) {
+		if ( inImpliedResultTypeInference || inTypeInference || functionImpliedResultTypeAccess == null ) {
 			return null;
 		}
 		inImpliedResultTypeInference = true;

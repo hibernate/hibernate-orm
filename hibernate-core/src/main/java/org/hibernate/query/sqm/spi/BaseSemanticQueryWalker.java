@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
@@ -486,6 +487,12 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	@Override
 	public Object visitIndexAggregateFunction(SqmIndexAggregateFunction<?> path) {
 		return path;
+	}
+
+	@Override
+	public Object visitFunctionPath(SqmFunctionPath<?> functionPath) {
+		visitFunction( functionPath.getFunction() );
+		return functionPath;
 	}
 
 	@Override

@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
@@ -245,6 +246,8 @@ public interface SemanticQueryWalker<T> {
 
 	T visitIndexAggregateFunction(SqmIndexAggregateFunction<?> path);
 
+	T visitFunctionPath(SqmFunctionPath<?> functionPath);
+
 	T visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath);
 
 	T visitCorrelation(SqmCorrelation<?, ?> correlation);
@@ -411,5 +414,4 @@ public interface SemanticQueryWalker<T> {
 	T visitMapEntryFunction(SqmMapEntryReference<?, ?> function);
 
 	T visitFullyQualifiedClass(Class<?> namedClass);
-
 }

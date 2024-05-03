@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.query.SyntaxException;
+import org.hibernate.query.sqm.UnknownPathException;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -22,10 +23,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,13 +39,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = { FkRefTests.Coin.class, FkRefTests.Currency.class } )
+@DomainModel( annotatedClasses = { FkRefTests.Coin.class, FkRefTests.Currency.class, FkRefTests.Exchange.class } )
 @SessionFactory( useCollectingStatementInspector = true )
+@JiraKey( "HHH-15099" )
+@JiraKey( "HHH-15106" )
 public class FkRefTests {
 
 	@Test
-	@JiraKey( "HHH-15099" )
-	@JiraKey( "HHH-15106" )
 	public void testSimplePredicateUse(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -88,8 +92,6 @@ public class FkRefTests {
 	 * a join to the association table and use the fk-target column
 	 */
 	@Test
-	@JiraKey( "HHH-15099" )
-	@JiraKey( "HHH-15106" )
 	public void testNullnessPredicateUseBaseline(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -109,8 +111,6 @@ public class FkRefTests {
 	}
 
 	@Test
-	@JiraKey( "HHH-15099" )
-	@JiraKey( "HHH-15106" )
 	public void testNullnessPredicateUse1(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -151,8 +151,6 @@ public class FkRefTests {
 	 * the currency does not need to be fetched.  So it works there
 	 */
 	@Test
-	@JiraKey( "HHH-15099" )
-	@JiraKey( "HHH-15106" )
 	public void testNullnessPredicateUse2(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -185,30 +183,49 @@ public class FkRefTests {
 	}
 
 	@Test
-	@JiraKey( "HHH-15099" )
-	@JiraKey( "HHH-15106" )
-	public void testFkRefDereferenceNotAllowed(SessionFactoryScope scope) {
+	public void testFkRefDereferenceInvalid(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
 			try {
-				final String hql = "select c from Coin c where fk(c.currency).something";
-				final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+				final String hql = "select c from Coin c where fk(c.currency).something is not null";
+				session.createQuery( hql, Coin.class ).getResultList();
 			}
 			catch (IllegalArgumentException expected) {
-				assertThat( expected.getCause() ).isInstanceOf( SyntaxException.class );
+				assertThat( expected.getCause() ).isInstanceOf( UnknownPathException.class );
 			}
 		} );
 
 		scope.inTransaction( (session) -> {
 			try {
-				final String hql = "select c from Coin c where fk(currency).something";
-				final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
+				final String hql = "select c from Coin c where fk(currency).something is not null";
+				session.createQuery( hql, Coin.class ).getResultList();
 			}
 			catch (IllegalArgumentException expected) {
-				assertThat( expected.getCause() ).isInstanceOf( SyntaxException.class );
+				assertThat( expected.getCause() ).isInstanceOf( UnknownPathException.class );
 			}
+		} );
+	}
+
+	@Test
+	public void testFkRefDereference(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			final String hql = "select c from Coin c where fk(c.exchange).name is not null";
+			session.createQuery( hql, Coin.class ).getResultList();
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
+		} );
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			final String hql = "select c from Coin c where fk(exchange).name is not null";
+			session.createQuery( hql, Coin.class ).getResultList();
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
 		} );
 	}
 
@@ -247,6 +264,7 @@ public class FkRefTests {
 		private Integer id;
 		private String name;
 		private Currency currency;
+		private Exchange exchange;
 
 		public Coin() {
 		}
@@ -284,6 +302,18 @@ public class FkRefTests {
 		public void setCurrency(Currency currency) {
 			this.currency = currency;
 		}
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		@NotFound(action = NotFoundAction.IGNORE)
+		@JoinColumn(name = "exchange_country", referencedColumnName = "country_iso")
+		@JoinColumn(name = "exchange_name", referencedColumnName = "name")
+		public Exchange getExchange() {
+			return exchange;
+		}
+
+		public void setExchange(Exchange exchange) {
+			this.exchange = exchange;
+		}
 	}
 
 	@Entity(name = "Currency")
@@ -314,6 +344,25 @@ public class FkRefTests {
 
 		public void setName(String name) {
 			this.name = name;
+		}
+	}
+
+	@Entity(name = "Exchange")
+	public static class Exchange implements Serializable {
+		@EmbeddedId
+		private ExchangeId id;
+		private String description;
+
+		public Exchange() {
+		}
+	}
+
+	public static class ExchangeId implements Serializable {
+		private String name;
+		@Column(name = "country_iso")
+		private String countryIso;
+
+		public ExchangeId() {
 		}
 	}
 }

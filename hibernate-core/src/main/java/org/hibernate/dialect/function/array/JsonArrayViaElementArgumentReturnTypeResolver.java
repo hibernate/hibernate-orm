@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicType;
@@ -24,6 +25,8 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.jdbc.DelegatingJdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A {@link FunctionReturnTypeResolver} that resolves a JSON encoded array type based on the arguments,
@@ -39,16 +42,24 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 	@Override
 	public ReturnableType<?> resolveFunctionReturnType(
 			ReturnableType<?> impliedType,
-			Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+			@Nullable SqmToSqlAstConverter converter,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {
-		final MappingModelExpressible<?> inferredType = inferredTypeSupplier.get();
-		if ( inferredType != null ) {
-			if ( inferredType instanceof ReturnableType<?> ) {
-				return (ReturnableType<?>) inferredType;
+		if ( converter != null ) {
+			if ( converter.isInTypeInference() ) {
+				// Don't default to a Json array when in type inference mode.
+				// Comparing e.g. `array() = (select array_agg() ...)` will trigger this resolver
+				// while inferring the type for `array()`, which we want to avoid.
+				return null;
 			}
-			else if ( inferredType instanceof BasicValuedMapping ) {
-				return (ReturnableType<?>) ( (BasicValuedMapping) inferredType ).getJdbcMapping();
+			final MappingModelExpressible<?> inferredType = converter.resolveFunctionImpliedReturnType();
+			if ( inferredType != null ) {
+				if ( inferredType instanceof ReturnableType<?> ) {
+					return (ReturnableType<?>) inferredType;
+				}
+				else if ( inferredType instanceof BasicValuedMapping ) {
+					return (ReturnableType<?>) ( (BasicValuedMapping) inferredType ).getJdbcMapping();
+				}
 			}
 		}
 		if ( impliedType != null ) {

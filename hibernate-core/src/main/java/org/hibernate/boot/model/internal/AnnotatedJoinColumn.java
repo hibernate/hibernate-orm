@@ -195,6 +195,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			setInsertable( joinColumn.getBoolean( "insertable" ) );
 			setUpdatable( joinColumn.getBoolean( "updatable" ) );
 			setReferencedColumn( joinColumn.getString( "referencedColumnName" ) );
+			applyColumnCheckConstraint( joinColumn );
 
 			final String table = joinColumn.getString( "table" );
 			if ( table.isEmpty() ) {
@@ -515,5 +516,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	public void setParent(AnnotatedJoinColumns parent) {
 		super.setParent( parent );
+	}
+
+	private void applyColumnCheckConstraint(AnnotationUsage<jakarta.persistence.JoinColumn> column) {
+		applyCheckConstraints( column.findAttributeValue( "check" ) );
 	}
 }

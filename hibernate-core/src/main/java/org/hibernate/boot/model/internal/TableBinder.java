@@ -22,6 +22,8 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -864,6 +866,22 @@ public class TableBinder {
 			List<AnnotationUsage<jakarta.persistence.Index>> indexes,
 			MetadataBuildingContext context) {
 		new IndexBinder( context ).bindIndexes( table, indexes );
+	}
+
+	static void addTableCheck(
+			Table table,
+			List<AnnotationUsage<jakarta.persistence.CheckConstraint>> checkConstraintAnnotationUsages) {
+		if ( CollectionHelper.isNotEmpty( checkConstraintAnnotationUsages ) ) {
+			for ( AnnotationUsage<jakarta.persistence.CheckConstraint> checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
+				table.addCheck(
+						new CheckConstraint(
+								checkConstraintAnnotationUsage.getString( "name" ),
+								checkConstraintAnnotationUsage.getString( "constraint" ),
+								checkConstraintAnnotationUsage.getString( "options" )
+						)
+				);
+			}
+		}
 	}
 
 	public void setDefaultName(

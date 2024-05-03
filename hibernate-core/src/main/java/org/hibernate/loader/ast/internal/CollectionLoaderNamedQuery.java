@@ -53,9 +53,12 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 		else {
 			// using annotations we have no way to specify a @CollectionResult
 			final CollectionKey collectionKey = new CollectionKey( persister, key );
-			final PersistentCollection<?> collection = session.getPersistenceContextInternal().getCollection( collectionKey );
+			final PersistentCollection<?> collection =
+					session.getPersistenceContextInternal()
+							.getCollection( collectionKey );
 			for ( Object element : resultList ) {
-				if ( element != null && !persister.getElementType().getReturnedClass().isInstance( element ) ) {
+				if ( element != null
+						&& !persister.getElementType().getReturnedClass().isInstance( element ) ) {
 					throw new QueryTypeMismatchException( "Collection loader for '" + persister.getRole()
 							+ "' returned an instance of '" + element.getClass().getName() + "'" );
 				}
@@ -63,7 +66,9 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 			collection.beforeInitialize( persister, resultList.size() );
 			collection.injectLoadedState( getLoadable(), resultList );
 			collection.afterInitialize();
-			session.getPersistenceContextInternal().getCollectionEntry( collection ).postInitialize( collection );
+			session.getPersistenceContextInternal()
+					.getCollectionEntry( collection )
+					.postInitialize( collection, session );
 			return collection;
 		}
 	}

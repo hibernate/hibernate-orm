@@ -1107,7 +1107,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public CollectionEntry addInitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id)
 			throws HibernateException {
 		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
-		ce.postInitialize( collection );
+		ce.postInitialize( collection, session );
 		addCollection( collection, ce, id );
 		return ce;
 	}

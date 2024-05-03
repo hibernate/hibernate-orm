@@ -14,7 +14,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -23,6 +22,8 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * We need an entry to tell us all about the current state
@@ -156,12 +157,13 @@ public final class CollectionEntry implements Serializable {
 	private void dirty(PersistentCollection<?> collection) throws HibernateException {
 
 		final CollectionPersister loadedPersister = getLoadedPersister();
-		boolean forceDirty = collection.wasInitialized() &&
-				!collection.isDirty() && //optimization
-				loadedPersister != null &&
-				loadedPersister.isMutable() && //optimization
-				( collection.isDirectlyAccessible() || loadedPersister.getElementType().isMutable() ) && //optimization
-				!collection.equalsSnapshot( loadedPersister );
+		final boolean forceDirty =
+				collection.wasInitialized()
+			&& !collection.isDirty() //optimization
+			&& loadedPersister != null
+			&& loadedPersister.isMutable() //optimization
+			&& ( collection.isDirectlyAccessible() || loadedPersister.getElementType().isMutable() ) //optimization
+			&& !collection.equalsSnapshot( loadedPersister );
 
 		if ( forceDirty ) {
 			collection.dirty();
@@ -181,7 +183,7 @@ public final class CollectionEntry implements Serializable {
 		if ( nonMutableChange ) {
 			throw new HibernateException(
 					"changed an immutable collection instance: " +
-					MessageHelper.collectionInfoString( NullnessUtil.castNonNull( loadedPersister ).getRole(), getLoadedKey() )
+					collectionInfoString( NullnessUtil.castNonNull( loadedPersister ).getRole(), getLoadedKey() )
 			);
 		}
 
@@ -190,7 +192,7 @@ public final class CollectionEntry implements Serializable {
 		if ( LOG.isDebugEnabled() && collection.isDirty() && loadedPersister != null ) {
 			LOG.debugf(
 					"Collection dirty: %s",
-					MessageHelper.collectionInfoString( loadedPersister.getRole(), getLoadedKey() )
+					collectionInfoString( loadedPersister.getRole(), getLoadedKey() )
 			);
 		}
 
@@ -202,13 +204,13 @@ public final class CollectionEntry implements Serializable {
 		setDorecreate( false );
 	}
 
-	public void postInitialize(PersistentCollection<?> collection) throws HibernateException {
+	public void postInitialize(PersistentCollection<?> collection, SharedSessionContractImplementor session)
+			throws HibernateException {
 		final CollectionPersister loadedPersister = getLoadedPersister();
 		snapshot = loadedPersister != null && loadedPersister.isMutable()
 				? collection.getSnapshot( loadedPersister )
 				: null;
 		collection.setSnapshot( loadedKey, role, snapshot );
-		final SharedSessionContractImplementor session = ((AbstractPersistentCollection<?>) collection).getSession();
 		if ( loadedPersister != null && session.getLoadQueryInfluencers().effectivelyBatchLoadable( loadedPersister ) ) {
 			session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
@@ -380,10 +382,10 @@ public final class CollectionEntry implements Serializable {
 	@Override
 	public String toString() {
 		String result = "CollectionEntry" +
-				MessageHelper.collectionInfoString( role, loadedKey );
+				collectionInfoString( role, loadedKey );
 		if ( currentPersister != null ) {
 			result += "->" +
-					MessageHelper.collectionInfoString( currentPersister.getRole(), currentKey );
+					collectionInfoString( currentPersister.getRole(), currentKey );
 		}
 		return result;
 	}

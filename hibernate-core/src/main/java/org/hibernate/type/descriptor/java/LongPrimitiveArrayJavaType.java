@@ -11,6 +11,7 @@ import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -171,6 +172,15 @@ public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Lo
 		else if ( value instanceof Long ) {
 			// Support binding a single element as parameter value
 			return new long[]{ (long) value };
+		}
+		else if ( value instanceof Collection<?> ) {
+			final Collection<?> collection = (Collection<?>) value;
+			final long[] wrapped = new long[collection.size()];
+			int i = 0;
+			for ( Object e : collection ) {
+				wrapped[i++] = getElementJavaType().wrap( e, options );
+			}
+			return wrapped;
 		}
 
 		throw unknownWrap( value.getClass() );

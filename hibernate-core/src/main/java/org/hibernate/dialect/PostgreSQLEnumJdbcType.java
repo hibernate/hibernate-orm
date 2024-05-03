@@ -143,6 +143,7 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 			boolean sortEnumValues) {
 		final Dialect dialect = database.getDialect();
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
+		final String enumTypeName = enumClass.getSimpleName();
 		final String[] enumeratedValues = EnumHelper.getEnumeratedValues( enumClass );
 		if ( sortEnumValues ) {
 			Arrays.sort( enumeratedValues );
@@ -155,7 +156,7 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 		if ( create != null && create.length > 0 ) {
 			database.addAuxiliaryDatabaseObject(
 					new NamedAuxiliaryDatabaseObject(
-							enumClass.getSimpleName(),
+							enumTypeName,
 							database.getDefaultNamespace(),
 							create,
 							drop,

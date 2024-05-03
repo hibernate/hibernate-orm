@@ -84,6 +84,7 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
@@ -359,12 +360,23 @@ public class PostgreSQLDialect extends Dialect {
 								ColumnTypeInformation.EMPTY
 						);
 					}
+					final SqlTypedJdbcType elementDescriptor = jdbcTypeRegistry.findSqlTypedDescriptor( componentTypeName );
+					if ( elementDescriptor != null ) {
+						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+								jdbcTypeCode,
+								elementDescriptor,
+								ColumnTypeInformation.EMPTY
+						);
+					}
 				}
 				break;
 			case STRUCT:
-				final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor( columnTypeName );
-				if ( aggregateDescriptor != null ) {
-					return aggregateDescriptor;
+				final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+						// Skip the schema
+						columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+				);
+				if ( descriptor != null ) {
+					return descriptor;
 				}
 				break;
 		}

@@ -150,6 +150,10 @@ public class ColumnReference implements Expression, Assignable {
 		return columnExpression;
 	}
 
+	protected String getReadExpression() {
+		return readExpression;
+	}
+
 	public String getSelectableName() {
 		return selectablePath.getSelectableName();
 	}

@@ -25,11 +25,12 @@ public class OracleArrayJdbcTypeConstructor implements JdbcTypeConstructor {
 	@Override
 	public JdbcType resolveType(
 			TypeConfiguration typeConfiguration,
-			Dialect dialect, BasicType<?> elementType,
+			Dialect dialect,
+			BasicType<?> elementType,
 			ColumnTypeInformation columnTypeInformation) {
 		String typeName = columnTypeInformation == null ? null : columnTypeInformation.getTypeName();
 		if ( typeName == null || typeName.isBlank() ) {
-			typeName = OracleArrayJdbcType.getTypeName( elementType.getJavaTypeDescriptor(), dialect );
+			typeName = OracleArrayJdbcType.getTypeName( elementType, dialect );
 		}
 //		if ( typeName == null ) {
 //			// Fallback to XML type for the representation of arrays as the native JSON type was only introduced in 21
@@ -58,7 +59,7 @@ public class OracleArrayJdbcTypeConstructor implements JdbcTypeConstructor {
 					precision,
 					scale,
 					typeConfiguration
-			), dialect );
+			), elementType, dialect );
 		}
 		return new OracleArrayJdbcType( elementType, typeName );
 	}

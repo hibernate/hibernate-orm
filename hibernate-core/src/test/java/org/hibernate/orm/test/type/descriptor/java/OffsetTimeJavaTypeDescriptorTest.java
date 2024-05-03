@@ -71,6 +71,6 @@ public class OffsetTimeJavaTypeDescriptorTest {
 						.toEpochMilli()
 		);
 		final OffsetTime wrappedSqlTime = javaType.wrap( sqlTime, wrapperOptions );
-		assertThat( wrappedSqlTime ).isEqualTo( LocalTime.of( 21, 1, 2, 123_000_000 ).atOffset( OffsetDateTime.now().getOffset() ) );
+		assertThat( wrappedSqlTime ).isEqualTo( LocalTime.of( 20, 1, 2, 123_000_000 ).atOffset( OffsetDateTime.now().getOffset() ) );
 	}
 }

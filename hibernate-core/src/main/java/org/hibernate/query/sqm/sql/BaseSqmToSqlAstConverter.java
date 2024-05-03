@@ -5894,6 +5894,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
+		if ( sqmExpression instanceof SelfRenderingSqmFunction<?> ) {
+			return domainModel.resolveMappingExpressible(
+					( (SelfRenderingSqmFunction<?>) sqmExpression ).resolveResultType( this ),
+					this::findTableGroupByPath
+			);
+		}
+
 		log.debugf( "Determining mapping-model type for generalized SqmExpression : %s", sqmExpression );
 		final SqmExpressible<?> nodeType = sqmExpression.getNodeType();
 		if ( nodeType == null ) {

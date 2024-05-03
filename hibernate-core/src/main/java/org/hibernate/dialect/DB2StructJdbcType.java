@@ -23,6 +23,7 @@ import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.StructJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -38,7 +39,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Christian Beikov
  */
-public class DB2StructJdbcType implements AggregateJdbcType {
+public class DB2StructJdbcType implements StructJdbcType {
 
 	public static final DB2StructJdbcType INSTANCE = new DB2StructJdbcType();
 
@@ -82,6 +83,7 @@ public class DB2StructJdbcType implements AggregateJdbcType {
 		return embeddableMappingType;
 	}
 
+	@Override
 	public String getStructTypeName() {
 		return structTypeName;
 	}

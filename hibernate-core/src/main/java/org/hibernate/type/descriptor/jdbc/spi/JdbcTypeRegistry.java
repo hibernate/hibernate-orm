@@ -20,10 +20,10 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeFamilyInformation;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcTypeBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -55,6 +55,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	 * map.
  	 */
 	private final ConcurrentHashMap<TypeConstructedJdbcTypeKey, JdbcType> typeConstructorDescriptorMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, SqlTypedJdbcType> sqlTypedDescriptorMap = new ConcurrentHashMap<>();
 
 	public JdbcTypeRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
@@ -182,12 +183,20 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		);
 		if ( registrationKey != null ) {
 			aggregateDescriptorMap.put( registrationKey, resolvedJdbcType );
+			if ( resolvedJdbcType instanceof SqlTypedJdbcType ) {
+				final SqlTypedJdbcType sqlTypedJdbcType = (SqlTypedJdbcType) resolvedJdbcType;
+				sqlTypedDescriptorMap.put( sqlTypedJdbcType.getSqlTypeName().toLowerCase( Locale.ROOT ), sqlTypedJdbcType );
+			}
 		}
 		return resolvedJdbcType;
 	}
 
 	public AggregateJdbcType findAggregateDescriptor(String typeName) {
 		return aggregateDescriptorMap.get( typeName.toLowerCase( Locale.ROOT ) );
+	}
+
+	public SqlTypedJdbcType findSqlTypedDescriptor(String sqlTypeName) {
+		return sqlTypedDescriptorMap.get( sqlTypeName.toLowerCase( Locale.ROOT ) );
 	}
 
 	/**
@@ -245,7 +254,14 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 				);
 			}
 			final JdbcType existingType = typeConstructorDescriptorMap.putIfAbsent( key, jdbcType );
-			return existingType != null ? existingType : jdbcType;
+			if ( existingType != null ) {
+				return existingType;
+			}
+			if ( jdbcType instanceof SqlTypedJdbcType ) {
+				final SqlTypedJdbcType sqlTypedJdbcType = (SqlTypedJdbcType) jdbcType;
+				sqlTypedDescriptorMap.put( sqlTypedJdbcType.getSqlTypeName().toLowerCase( Locale.ROOT ), sqlTypedJdbcType );
+			}
+			return jdbcType;
 		}
 		else {
 			return getDescriptor( jdbcTypeConstructorCode );

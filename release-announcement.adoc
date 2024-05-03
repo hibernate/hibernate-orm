@@ -78,3 +78,23 @@ CardPayment loaded = (CardPayment) session2.getReference( Payment.class, 1 );
 IMPORTANT: Hibernate will try a number of different ways to determine the concrete type, but may ultimately have to fall back to hitting the database which might have an effect on performance.
 
 This feature works with both Hibernate's legacy proxy-based laziness and the newer bytecode enhancement laziness.
+
+
+[[extended-array]]
+== Extended Array support
+
+ORM 6.6 adds support for mapping arrays of embeddable aggregate types e.g.
+
+[source,java]
+----
+@Entity
+class MyEntity {
+	List<MyEmbeddable> embeddableAggregateList;
+}
+
+@Struct
+@Embeddable
+class MyEmbeddable { ... }
+
+----
+

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.embeddable;
 
-import java.sql.Clob;
+import java.net.URL;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -22,28 +22,34 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.annotations.Struct;
-import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.AdditionalMappingContributions;
+import org.hibernate.boot.spi.AdditionalMappingContributor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
-import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,31 +64,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@BootstrapServiceRegistry(
+		javaServices = @BootstrapServiceRegistry.JavaService(
+				role = AdditionalMappingContributor.class,
+				impl = StructEmbeddableTest.class
+		),
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+// Don't reorder columns in the types here to avoid the need to rewrite the test
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.COLUMN_ORDERING_STRATEGY, value = "legacy"))
+@DomainModel(annotatedClasses = StructEmbeddableTest.StructHolder.class)
+@SessionFactory
 @RequiresDialect( PostgreSQLDialect.class )
 @RequiresDialect( OracleDialect.class )
 @RequiresDialect( DB2Dialect.class )
-public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
+public class StructEmbeddableTest implements AdditionalMappingContributor {
 
 	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			StructHolder.class
-		};
-	}
-
-	@Override
-	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder ssrBuilder) {
-		// Make sure this stuff runs on a dedicated connection pool,
-		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-		// because the JDBC connection or database session caches something that should have been invalidated
-		ssrBuilder.applySetting( AvailableSettings.CONNECTION_PROVIDER, DriverManagerConnectionProviderImpl.class.getName() );
-		// Don't reorder columns in the types here to avoid the need to rewrite the test
-		ssrBuilder.applySetting( AvailableSettings.COLUMN_ORDERING_STRATEGY, "legacy" );
-		return super.produceServiceRegistry( ssrBuilder );
-	}
-
-	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+	public void contribute(
+			AdditionalMappingContributions contributions,
+			InFlightMetadataCollector metadata,
+			ResourceStreamLocator resourceStreamLocator,
+			MetadataBuildingContext buildingContext) {
 		final Namespace namespace = new Namespace(
 				PhysicalNamingStrategyStandardImpl.INSTANCE,
 				null,
@@ -93,7 +97,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		// PostgreSQL
 		//---------------------------------------------------------
 
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+		contributions.contributeAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						"PostgreSQL structFunction",
 						namespace,
@@ -102,7 +106,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 						Set.of( PostgreSQLDialect.class.getName() )
 				)
 		);
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+		contributions.contributeAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						"PostgreSQL structProcedure",
 						namespace,
@@ -116,7 +120,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		// PostgrePlus
 		//---------------------------------------------------------
 
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+		contributions.contributeAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						"PostgrePlus structFunction",
 						namespace,
@@ -125,7 +129,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 						Set.of( PostgresPlusDialect.class.getName() )
 				)
 		);
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+		contributions.contributeAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						"PostgrePlus structProcedure",
 						namespace,
@@ -140,7 +144,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		//---------------------------------------------------------
 		final String binaryType;
 		final String binaryLiteralPrefix;
-		if ( getDialect().getVersion().isBefore( 11 ) ) {
+		if ( metadata.getDatabase().getDialect().getVersion().isBefore( 11 ) ) {
 			binaryType = "char(16) for bit data";
 			binaryLiteralPrefix = "x";
 		}
@@ -149,7 +153,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 			binaryLiteralPrefix = "bx";
 		}
 
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+		contributions.contributeAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						"DB2 structFunction",
 						namespace,
@@ -166,7 +170,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		// Oracle
 		//---------------------------------------------------------
 
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+		contributions.contributeAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						"Oracle structFunction",
 						namespace,
@@ -202,7 +206,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 						Set.of( OracleDialect.class.getName() )
 				)
 		);
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+		contributions.contributeAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						"Oracle structProcedure",
 						namespace,
@@ -241,8 +245,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@BeforeEach
-	public void setUp() {
-		inTransaction(
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.persist( new StructHolder( 1L, EmbeddableAggregate.createAggregate1() ) );
 					session.persist( new StructHolder( 2L, EmbeddableAggregate.createAggregate2() ) );
@@ -251,8 +255,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@AfterEach
-	protected void cleanupTest() {
-		inTransaction(
+	protected void cleanupTest(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createMutationQuery( "delete from StructHolder h" ).executeUpdate();
 				}
@@ -260,8 +264,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testUpdate() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					StructHolder structHolder = entityManager.find( StructHolder.class, 1L );
 					structHolder.setAggregate( EmbeddableAggregate.createAggregate2() );
@@ -273,8 +277,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testFetch() {
-		sessionFactoryScope().inSession(
+	public void testFetch(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<StructHolder> structHolders = entityManager.createQuery( "from StructHolder b where b.id = 1", StructHolder.class ).getResultList();
 					assertEquals( 1, structHolders.size() );
@@ -285,8 +289,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testFetchNull() {
-		sessionFactoryScope().inSession(
+	public void testFetchNull(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<StructHolder> structHolders = entityManager.createQuery( "from StructHolder b where b.id = 2", StructHolder.class ).getResultList();
 					assertEquals( 1, structHolders.size() );
@@ -297,8 +301,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testDomainResult() {
-		sessionFactoryScope().inSession(
+	public void testDomainResult(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<EmbeddableAggregate> structs = entityManager.createQuery( "select b.aggregate from StructHolder b where b.id = 1", EmbeddableAggregate.class ).getResultList();
 					assertEquals( 1, structs.size() );
@@ -308,8 +312,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testSelectionItems() {
-		sessionFactoryScope().inSession(
+	public void testSelectionItems(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<Tuple> tuples = entityManager.createQuery(
 							"select " +
@@ -320,6 +324,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 									"b.aggregate.theStringBoolean," +
 									"b.aggregate.theString," +
 									"b.aggregate.theInteger," +
+									"b.aggregate.theUrl," +
 									"b.aggregate.theClob," +
 									"b.aggregate.theBinary," +
 									"b.aggregate.theDate," +
@@ -350,31 +355,32 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 					struct.setTheStringBoolean( tuple.get( 4, Boolean.class ) );
 					struct.setTheString( tuple.get( 5, String.class ) );
 					struct.setTheInteger( tuple.get( 6, Integer.class ) );
-					struct.setTheClob( tuple.get( 7, Clob.class ) );
-					struct.setTheBinary( tuple.get( 8, byte[].class ) );
-					struct.setTheDate( tuple.get( 9, Date.class ) );
-					struct.setTheTime( tuple.get( 10, Time.class ) );
-					struct.setTheTimestamp( tuple.get( 11, Timestamp.class ) );
-					struct.setTheInstant( tuple.get( 12, Instant.class ) );
-					struct.setTheUuid( tuple.get( 13, UUID.class ) );
-					struct.setGender( tuple.get( 14, EntityOfBasics.Gender.class ) );
-					struct.setConvertedGender( tuple.get( 15, EntityOfBasics.Gender.class ) );
-					struct.setOrdinalGender( tuple.get( 16, EntityOfBasics.Gender.class ) );
-					struct.setTheDuration( tuple.get( 17, Duration.class ) );
-					struct.setTheLocalDateTime( tuple.get( 18, LocalDateTime.class ) );
-					struct.setTheLocalDate( tuple.get( 19, LocalDate.class ) );
-					struct.setTheLocalTime( tuple.get( 20, LocalTime.class ) );
-					struct.setTheZonedDateTime( tuple.get( 21, ZonedDateTime.class ) );
-					struct.setTheOffsetDateTime( tuple.get( 22, OffsetDateTime.class ) );
-					struct.setMutableValue( tuple.get( 23, MutableValue.class ) );
+					struct.setTheUrl( tuple.get( 7, URL.class ) );
+					struct.setTheClob( tuple.get( 8, String.class ) );
+					struct.setTheBinary( tuple.get( 9, byte[].class ) );
+					struct.setTheDate( tuple.get( 10, Date.class ) );
+					struct.setTheTime( tuple.get( 11, Time.class ) );
+					struct.setTheTimestamp( tuple.get( 12, Timestamp.class ) );
+					struct.setTheInstant( tuple.get( 13, Instant.class ) );
+					struct.setTheUuid( tuple.get( 14, UUID.class ) );
+					struct.setGender( tuple.get( 15, EntityOfBasics.Gender.class ) );
+					struct.setConvertedGender( tuple.get( 16, EntityOfBasics.Gender.class ) );
+					struct.setOrdinalGender( tuple.get( 17, EntityOfBasics.Gender.class ) );
+					struct.setTheDuration( tuple.get( 18, Duration.class ) );
+					struct.setTheLocalDateTime( tuple.get( 19, LocalDateTime.class ) );
+					struct.setTheLocalDate( tuple.get( 20, LocalDate.class ) );
+					struct.setTheLocalTime( tuple.get( 21, LocalTime.class ) );
+					struct.setTheZonedDateTime( tuple.get( 22, ZonedDateTime.class ) );
+					struct.setTheOffsetDateTime( tuple.get( 23, OffsetDateTime.class ) );
+					struct.setMutableValue( tuple.get( 24, MutableValue.class ) );
 					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate1(), struct );
 				}
 		);
 	}
 
 	@Test
-	public void testDeleteWhere() {
-		sessionFactoryScope().inTransaction(
+	public void testDeleteWhere(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "delete StructHolder b where b.aggregate is not null" ).executeUpdate();
 					assertNull( entityManager.find( StructHolder.class, 1L ) );
@@ -384,8 +390,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testUpdateAggregate() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAggregate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update StructHolder b set b.aggregate = null" ).executeUpdate();
 					assertNull( entityManager.find( StructHolder.class, 1L ).getAggregate() );
@@ -394,8 +400,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testUpdateAggregateMember() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAggregateMember(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update StructHolder b set b.aggregate.theString = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
@@ -406,8 +412,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testUpdateMultipleAggregateMembers() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update StructHolder b set b.aggregate.theString = null, b.aggregate.theUuid = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
@@ -419,8 +425,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testUpdateAllAggregateMembers() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					entityManager.createMutationQuery(
@@ -432,6 +438,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 									"b.aggregate.theStringBoolean = :theStringBoolean," +
 									"b.aggregate.theString = :theString," +
 									"b.aggregate.theInteger = :theInteger," +
+									"b.aggregate.theUrl = :theUrl," +
 									"b.aggregate.theClob = :theClob," +
 									"b.aggregate.theBinary = :theBinary," +
 									"b.aggregate.theDate = :theDate," +
@@ -458,6 +465,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 							.setParameter( "theStringBoolean", struct.isTheStringBoolean() )
 							.setParameter( "theString", struct.getTheString() )
 							.setParameter( "theInteger", struct.getTheInteger() )
+							.setParameter( "theUrl", struct.getTheUrl() )
 							.setParameter( "theClob", struct.getTheClob() )
 							.setParameter( "theBinary", struct.getTheBinary() )
 							.setParameter( "theDate", struct.getTheDate() )
@@ -482,15 +490,15 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testNativeQuery() {
-		sessionFactoryScope().inTransaction(
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					//noinspection unchecked
 					List<Object> resultList = entityManager.createNativeQuery(
 									"select b.aggregate from StructHolder b where b.id = 1",
 									// DB2 does not support structs on the driver level, and we instead do a XML serialization/deserialization
 									// So in order to receive the correct value, we have to specify the actual type that we expect
-									getDialect() instanceof DB2Dialect
+									scope.getSessionFactory().getJdbcServices().getDialect() instanceof DB2Dialect
 											? (Class<Object>) (Class<?>) EmbeddableAggregate.class
 											// Using Object.class on purpose to verify Dialect#resolveSqlTypeDescriptor works
 											: Object.class
@@ -505,8 +513,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testFunction() {
-		sessionFactoryScope().inTransaction(
+	public void testFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structFunction" )
 							.markAsFunctionCall( EmbeddableAggregate.class );
@@ -525,8 +533,8 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 does not support struct types in procedures")
-	public void testProcedure() {
-		sessionFactoryScope().inTransaction(
+	public void testProcedure(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					final Dialect dialect = entityManager.getJdbcServices().getDialect();
 					final ParameterMode parameterMode;

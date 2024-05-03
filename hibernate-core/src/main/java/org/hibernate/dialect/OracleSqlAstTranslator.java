@@ -510,7 +510,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				appendSql( ')' );
 				break;
 			case SqlTypes.ARRAY:
-				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getTypeName();
+				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getSqlTypeName();
 				switch ( operator ) {
 					case DISTINCT_FROM:
 					case NOT_DISTINCT_FROM:

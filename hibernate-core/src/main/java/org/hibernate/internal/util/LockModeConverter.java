@@ -34,7 +34,6 @@ public final class LockModeConverter {
 				return LockModeType.NONE;
 			case OPTIMISTIC:
 				return LockModeType.OPTIMISTIC;
-			case WRITE: // no exact equivalent in JPA
 			case OPTIMISTIC_FORCE_INCREMENT:
 				return LockModeType.OPTIMISTIC_FORCE_INCREMENT;
 			case PESSIMISTIC_READ:
@@ -43,6 +42,7 @@ public final class LockModeConverter {
 			case UPGRADE_NOWAIT:
 			case UPGRADE_SKIPLOCKED:
 				return LockModeType.PESSIMISTIC_WRITE;
+			case WRITE: // no exact equivalent in JPA
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return LockModeType.PESSIMISTIC_FORCE_INCREMENT;
 			default:

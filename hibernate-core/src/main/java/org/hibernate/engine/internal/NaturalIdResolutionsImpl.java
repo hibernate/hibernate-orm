@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Incubating;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
@@ -691,6 +692,17 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		}
 		else {
 			return java.util.Collections.unmodifiableCollection( pks );
+		}
+	}
+
+	@Incubating
+	public void clearCachedPkResolutions(EntityMappingType entityDescriptor) {
+		final EntityPersister persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
+		final EntityResolutions removed = resolutionsByEntity.remove( persister );
+		if ( removed != null ) {
+			removed.invalidNaturalIdList.clear();
+			removed.naturalIdToPkMap.clear();
+			removed.pkToNaturalIdMap.clear();
 		}
 	}
 

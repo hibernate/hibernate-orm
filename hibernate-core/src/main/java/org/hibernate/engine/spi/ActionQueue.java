@@ -24,12 +24,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.PropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.internal.EntityAction;
 import org.hibernate.action.internal.EntityActionVetoException;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
@@ -237,7 +239,7 @@ public class ActionQueue {
 		isTransactionCoordinatorShared = false;
 	}
 
-	public void clear() {
+	public void clearEntityActions() {
 		for ( OrderedActions value : ORDERED_OPERATIONS ) {
 			final ExecutableList<?> list = value.getActions( this );
 			if ( list != null ) {
@@ -247,6 +249,22 @@ public class ActionQueue {
 		if ( unresolvedInsertions != null ) {
 			unresolvedInsertions.clear();
 		}
+	}
+
+	@Incubating
+	public void clearEntityActions(String entityName) {
+		clearEntityActions( insertions, entityName );
+		clearEntityActions( deletions, entityName );
+		clearEntityActions( updates, entityName );
+		clearEntityActions( orphanRemovals, entityName );
+	}
+
+	private void clearEntityActions(ExecutableList<? extends EntityAction> list, String entityName) {
+		if ( list == null ) {
+			return;
+		}
+
+		list.clearEntityActions( entityName );
 	}
 
 	/**

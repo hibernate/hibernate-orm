@@ -1044,6 +1044,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void clear(String entityName) {
+		delegate.clear( entityName );
+	}
+
+	@Override
 	public void detach(Object entity) {
 		delegate.detach( entity );
 	}

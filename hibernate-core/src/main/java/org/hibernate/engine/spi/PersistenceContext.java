@@ -101,6 +101,12 @@ public interface PersistenceContext {
 	 */
 	void clear();
 
+	/**
+	 * Clear the state of the persistence context
+	 */
+	@Incubating
+	void clearEntityReferences(String entityName);
+
 //	/**
 //	 * @return false if we know for certain that all the entities are read-only
 //	 */

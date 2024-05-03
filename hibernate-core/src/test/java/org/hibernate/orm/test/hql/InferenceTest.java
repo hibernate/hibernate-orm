@@ -8,12 +8,14 @@ package org.hibernate.orm.test.hql;
 
 import java.util.List;
 
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -83,6 +85,7 @@ public class InferenceTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey("HHH-18046")
+	@SkipForDialect( dialectClass = CockroachDialect.class, reason = "CockroachDB doesn't support multiplication between int and float columns" )
 	public void testBinaryArithmeticParameterInference() {
 		doInHibernate( this::sessionFactory, session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

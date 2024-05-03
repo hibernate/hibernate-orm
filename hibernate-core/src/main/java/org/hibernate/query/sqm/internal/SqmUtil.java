@@ -659,7 +659,9 @@ public class SqmUtil {
 			// ordering by an element of the select list
 			return new SqmSortSpecification(
 					new SqmAliasedNodeRef( element, builder.getIntegerType(), builder ),
-					order.getDirection()
+					order.getDirection(),
+					order.getNullPrecedence(),
+					order.isCaseInsensitive()
 			);
 		}
 		else {

@@ -22,7 +22,7 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
 import org.hibernate.orm.env.HibernateVersion;
-import org.hibernate.orm.properties.jdk11.SettingsCollector;
+import org.hibernate.orm.properties.jdk17.SettingsCollector;
 
 import static org.hibernate.orm.properties.SettingsDocumentationPlugin.TASK_GROUP_NAME;
 

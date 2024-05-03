@@ -158,7 +158,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
 			return value instanceof java.sql.Time
 					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() );
+					: new java.sql.Time( value.getTime() % 86_400_000 );
 		}
 
 		throw unknownUnwrap( type );

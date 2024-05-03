@@ -1,4 +1,4 @@
-= Hibernate 7.0.0.Alpha1
+= Hibernate 7.0.0.Alpha2
 Steve Ebersole
 :toc:
 :toclevels: 2
@@ -14,7 +14,10 @@ Steve Ebersole
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 :ql-guide-url: {docs-url}/querylanguage/html_single/Hibernate_Query_Language.html
 
-7.0.0.Alpha1 is the first development release of the Hibernate 7.0 family which includes many new features, in addition to many improvements and fixes.
+With 7.0.0.Alpha2, Hibernate ORM is now passing the Jakarta Persistence 3.2 TCK!!
+
+- https://ci.hibernate.org/view/ORM/job/hibernate-orm-tck-3.2/job/wip%252F7.0/24/[Results] with Java 17
+- https://ci.hibernate.org/view/ORM/job/hibernate-orm-tck-3.2/job/wip%252F7.0/25/[Results] with Java 21
 
 
 [[jpa-32]]
@@ -22,6 +25,7 @@ Steve Ebersole
 
 7.0 migrates to Jakarta Persistence 3.2 which can be fairly disruptive.  See the link:{migration-guide-url}#jpa-32[Migration Guide] for details.
 
+See https://in.relation.to/2024/04/01/jakarta-persistence-3/[this blog post] for a summary of the changes in 3.2
 
 [[java-17]]
 == Java 17

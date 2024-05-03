@@ -91,7 +91,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		}
 		else {
 			this.embeddedAttributeName = "";
-			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElement() );
+			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrPluralElement() );
 		}
 	}
 

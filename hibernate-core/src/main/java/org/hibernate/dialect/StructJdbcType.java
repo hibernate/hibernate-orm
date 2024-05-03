@@ -11,13 +11,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Struct;
+import java.util.ArrayList;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -25,14 +29,16 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Christian Beikov
  */
-public class StructJdbcType implements AggregateJdbcType {
+public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.StructJdbcType {
 
 	public static final AggregateJdbcType INSTANCE = new StructJdbcType();
 
@@ -69,6 +75,11 @@ public class StructJdbcType implements AggregateJdbcType {
 	@Override
 	public int getJdbcTypeCode() {
 		return SqlTypes.STRUCT;
+	}
+
+	@Override
+	public String getStructTypeName() {
+		return typeName;
 	}
 
 	@Override
@@ -319,6 +330,57 @@ public class StructJdbcType implements AggregateJdbcType {
 						jdbcValue = jdbcMapping.getJdbcJavaType()
 								.wrap( transformRawJdbcValue( rawJdbcValue, options ), options );
 						break;
+					case SqlTypes.ARRAY:
+						final BasicType<?> elementType = ( (BasicPluralType<?, ?>) jdbcMapping ).getElementType();
+						final JdbcType elementJdbcType = elementType.getJdbcType();
+						final Object[] array;
+						final Object[] newArray;
+						switch ( elementJdbcType.getDefaultSqlTypeCode() ) {
+							case SqlTypes.TIME_WITH_TIMEZONE:
+							case SqlTypes.TIME_UTC:
+							case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+							case SqlTypes.TIMESTAMP_UTC:
+								// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
+								array = (Object[]) ((java.sql.Array) rawJdbcValue).getArray();
+								newArray = new Object[array.length];
+								for ( int j = 0; j < array.length; j++ ) {
+									newArray[j] = elementType.getJdbcJavaType().wrap(
+											transformRawJdbcValue( array[j], options ),
+											options
+									);
+								}
+								jdbcValue = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
+								break;
+							case SqlTypes.STRUCT:
+							case SqlTypes.JSON:
+							case SqlTypes.SQLXML:
+								array = (Object[]) ( (java.sql.Array) rawJdbcValue ).getArray();
+								newArray = new Object[array.length];
+								final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) elementJdbcType;
+								final EmbeddableMappingType subEmbeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+								final EmbeddableInstantiator instantiator = subEmbeddableMappingType.getRepresentationStrategy()
+										.getInstantiator();
+								for ( int j = 0; j < array.length; j++ ) {
+									final Object[] subValues = StructHelper.getAttributeValues(
+											subEmbeddableMappingType,
+											aggregateJdbcType.extractJdbcValues(
+													array[j],
+													options
+											),
+											options
+									);
+									newArray[j] = instantiator.instantiate(
+											() -> subValues,
+											options.getSessionFactory()
+									);
+								}
+								jdbcValue = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
+								break;
+							default:
+								jdbcValue = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
+								break;
+						}
+						break;
 					default:
 						jdbcValue = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
 						break;
@@ -381,6 +443,57 @@ public class StructJdbcType implements AggregateJdbcType {
 							// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
 							targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType()
 									.wrap( transformRawJdbcValue( rawJdbcValue, options ), options );
+							break;
+						case SqlTypes.ARRAY:
+							final BasicType<?> elementType = ( (BasicPluralType<?, ?>) jdbcMapping ).getElementType();
+							final JdbcType elementJdbcType = elementType.getJdbcType();
+							final Object[] array;
+							final Object[] newArray;
+							switch ( elementJdbcType.getDefaultSqlTypeCode() ) {
+								case SqlTypes.TIME_WITH_TIMEZONE:
+								case SqlTypes.TIME_UTC:
+								case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+								case SqlTypes.TIMESTAMP_UTC:
+									// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
+									array = (Object[]) ((java.sql.Array) rawJdbcValue).getArray();
+									newArray = new Object[array.length];
+									for ( int j = 0; j < array.length; j++ ) {
+										newArray[j] = elementType.getJdbcJavaType().wrap(
+												transformRawJdbcValue( array[j], options ),
+												options
+										);
+									}
+									targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
+									break;
+								case SqlTypes.STRUCT:
+								case SqlTypes.JSON:
+								case SqlTypes.SQLXML:
+									array = (Object[]) ( (java.sql.Array) rawJdbcValue ).getArray();
+									newArray = new Object[array.length];
+									final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) elementJdbcType;
+									final EmbeddableMappingType subEmbeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+									final EmbeddableInstantiator instantiator = subEmbeddableMappingType.getRepresentationStrategy()
+											.getInstantiator();
+									for ( int j = 0; j < array.length; j++ ) {
+										final Object[] subValues = StructHelper.getAttributeValues(
+												subEmbeddableMappingType,
+												aggregateJdbcType.extractJdbcValues(
+														array[j],
+														options
+												),
+												options
+										);
+										newArray[j] = instantiator.instantiate(
+												() -> subValues,
+												options.getSessionFactory()
+										);
+									}
+									targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
+									break;
+								default:
+									targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
+									break;
+							}
 							break;
 						default:
 							targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );

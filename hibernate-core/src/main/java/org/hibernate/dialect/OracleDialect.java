@@ -49,6 +49,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -78,16 +79,20 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -171,6 +176,7 @@ public class OracleDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 19 );
 
+	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	// Is it an Autonomous Database Cloud Service?
@@ -800,12 +806,12 @@ public class OracleDialect extends Dialect {
 					jdbcTypeCode = GEOMETRY;
 				}
 				else {
-					final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor(
+					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 							// Skip the schema
 							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
 					);
-					if ( aggregateDescriptor != null ) {
-						return aggregateDescriptor;
+					if ( descriptor != null ) {
+						return descriptor;
 					}
 				}
 				break;
@@ -816,6 +822,15 @@ public class OracleDialect extends Dialect {
 							jdbcTypeRegistry.getDescriptor( NUMERIC ),
 							ColumnTypeInformation.EMPTY
 					);
+				}
+				else {
+					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+							// Skip the schema
+							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+					);
+					if ( descriptor != null ) {
+						return descriptor;
+					}
 				}
 				break;
 			case NUMERIC:
@@ -871,13 +886,18 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
-		return javaElementTypeName + "Array";
+		return ( javaElementTypeName == null ? elementTypeName : javaElementTypeName ) + "Array";
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForArray() {
 		// Prefer to resolve to the OracleArrayJdbcType, since that will fall back to XML later if needed
 		return ARRAY;
+	}
+
+	@Override
+	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
+		return userDefinedTypeExporter;
 	}
 
 	@Override
@@ -907,6 +927,8 @@ public class OracleDialect extends Dialect {
 		}
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
+			// Register a JdbcType to allow reading from native queries
+			typeContributions.contributeJdbcType( new ArrayJdbcType( ObjectJdbcType.INSTANCE ) );
 			typeContributions.contributeJdbcTypeConstructor( getArrayJdbcTypeConstructor( serviceRegistry ) );
 			typeContributions.contributeJdbcTypeConstructor( getNestedTableJdbcTypeConstructor( serviceRegistry ) );
 		}

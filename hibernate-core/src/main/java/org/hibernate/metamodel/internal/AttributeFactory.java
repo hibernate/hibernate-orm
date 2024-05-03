@@ -16,6 +16,7 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -56,8 +57,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.AnyType;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import jakarta.persistence.ManyToMany;
@@ -330,7 +333,16 @@ public class AttributeFactory {
 			return context.resolveBasicType( type );
 		}
 		else {
-			return (DomainType<Y>) hibernateValue.getType();
+			final org.hibernate.type.Type type = hibernateValue.getType();
+			if ( type instanceof BasicPluralType<?, ?> ) {
+				final JavaType<?> javaTypeDescriptor = ( (BasicPluralType<?, ?>) type ).getElementType()
+						.getJavaTypeDescriptor();
+				if ( javaTypeDescriptor instanceof EmbeddableAggregateJavaType<?> ) {
+					final AggregateColumn aggregateColumn = (AggregateColumn) hibernateValue.getColumns().get( 0 );
+					classEmbeddableType( context, aggregateColumn.getComponent() );
+				}
+			}
+			return (DomainType<Y>) type;
 		}
 	}
 

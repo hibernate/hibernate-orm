@@ -151,7 +151,7 @@ public class EmbeddableBinder {
 			|| returnedClass.isAnnotationPresent( Embeddable.class ) && !property.isAnnotationPresent( Convert.class );
 	}
 
-	private static Component bindEmbeddable(
+	public static Component bindEmbeddable(
 			PropertyData inferredData,
 			PropertyHolder propertyHolder,
 			AccessType propertyAccessor,
@@ -350,7 +350,7 @@ public class EmbeddableBinder {
 		final XClass returnedClassOrElement;
 		if ( compositeUserTypeClass == null ) {
 			compositeUserType = null;
-			returnedClassOrElement = inferredData.getClassOrElement();
+			returnedClassOrElement = inferredData.getClassOrPluralElement();
 		}
 		else {
 			compositeUserType = compositeUserType( compositeUserTypeClass, context );
@@ -440,7 +440,7 @@ public class EmbeddableBinder {
 				new PropertyContainer( returnedClassOrElement, annotatedClass, propertyAccessor );
 		addElementsOfClass( classElements, container, context);
 		//add elements of the embeddable's mapped superclasses
-		XClass superClass = annotatedClass.getSuperclass();
+		XClass superClass = returnedClassOrElement.getSuperclass();
 		while ( isValidSuperclass( superClass, isIdClass ) ) {
 			//FIXME: proper support of type variables incl var resolved at upper levels
 			final PropertyContainer superContainer =
@@ -610,16 +610,19 @@ public class EmbeddableBinder {
 		component.setEmbedded( isComponentEmbedded );
 		//yuk
 		component.setTable( propertyHolder.getTable() );
+		final XClass embeddableClass;
 		//FIXME shouldn't identifier mapper use getClassOrElementName? Need to be checked.
 		if ( isIdentifierMapper
 				|| isComponentEmbedded && inferredData.getPropertyName() == null ) {
 			component.setComponentClassName( component.getOwner().getClassName() );
+			embeddableClass = inferredData.getClassOrElement();
 		}
 		else {
-			component.setComponentClassName( inferredData.getClassOrElementName() );
+			embeddableClass = inferredData.getClassOrPluralElement();
+			component.setComponentClassName( embeddableClass.getName() );
 		}
 		component.setCustomInstantiator( customInstantiatorImpl );
-		final Constructor<?> constructor = resolveInstantiator( inferredData.getClassOrElement(), context );
+		final Constructor<?> constructor = resolveInstantiator( embeddableClass, context );
 		if ( constructor != null ) {
 			component.setInstantiator( constructor, constructor.getAnnotation( Instantiator.class ).value() );
 		}
@@ -646,7 +649,7 @@ public class EmbeddableBinder {
 		return null;
 	}
 
-	private static Class<? extends EmbeddableInstantiator> determineCustomInstantiator(
+	public static Class<? extends EmbeddableInstantiator> determineCustomInstantiator(
 			XProperty property,
 			XClass returnedClass,
 			MetadataBuildingContext context) {

@@ -32,6 +32,7 @@ import org.hibernate.dialect.OracleJdbcHelper;
 import org.hibernate.dialect.OracleJsonJdbcType;
 import org.hibernate.dialect.OracleReflectionStructJdbcType;
 import org.hibernate.dialect.OracleTypes;
+import org.hibernate.dialect.OracleUserDefinedTypeExporter;
 import org.hibernate.dialect.OracleXmlJdbcType;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.RowLockStrategy;
@@ -67,6 +68,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
@@ -93,6 +95,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
@@ -104,6 +107,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -177,6 +181,7 @@ public class OracleLegacyDialect extends Dialect {
 	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
 			? Oracle12LimitHandler.INSTANCE
 			: new LegacyOracleLimitHandler( getVersion() );
+	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	public OracleLegacyDialect() {
@@ -760,12 +765,12 @@ public class OracleLegacyDialect extends Dialect {
 					jdbcTypeCode = SqlTypes.GEOMETRY;
 				}
 				else {
-					final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor(
+					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 							// Skip the schema
 							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
 					);
-					if ( aggregateDescriptor != null ) {
-						return aggregateDescriptor;
+					if ( descriptor != null ) {
+						return descriptor;
 					}
 				}
 				break;
@@ -776,6 +781,15 @@ public class OracleLegacyDialect extends Dialect {
 							jdbcTypeRegistry.getDescriptor( NUMERIC ),
 							ColumnTypeInformation.EMPTY
 					);
+				}
+				else {
+					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+							// Skip the schema
+							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+					);
+					if ( descriptor != null ) {
+						return descriptor;
+					}
 				}
 				break;
 			case Types.NUMERIC:
@@ -828,13 +842,18 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
-		return javaElementTypeName + "Array";
+		return ( javaElementTypeName == null ? elementTypeName : javaElementTypeName ) + "Array";
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForArray() {
 		// Prefer to resolve to the OracleArrayJdbcType, since that will fall back to XML later if needed
 		return ARRAY;
+	}
+
+	@Override
+	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
+		return userDefinedTypeExporter;
 	}
 
 	@Override

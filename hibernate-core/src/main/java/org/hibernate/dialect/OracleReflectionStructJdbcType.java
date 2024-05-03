@@ -8,10 +8,10 @@ package org.hibernate.dialect;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
-import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 /**
  * @author Christian Beikov
  */
-public class OracleReflectionStructJdbcType extends StructJdbcType {
+public class OracleReflectionStructJdbcType extends OracleBaseStructJdbcType {
 	public static final AggregateJdbcType INSTANCE = new OracleReflectionStructJdbcType();
 
 	private static final ClassValue<Method> RAW_JDBC_TRANSFORMER = new ClassValue<>() {
@@ -44,12 +44,8 @@ public class OracleReflectionStructJdbcType extends StructJdbcType {
 		this( null, null, null );
 	}
 
-	public OracleReflectionStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
-		super(
-				embeddableMappingType,
-				typeName == null ? null : typeName.toUpperCase( Locale.ROOT ),
-				orderMapping
-		);
+	private OracleReflectionStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
+		super( embeddableMappingType, typeName, orderMapping );
 	}
 
 	@Override

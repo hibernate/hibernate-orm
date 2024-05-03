@@ -297,6 +297,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
+					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {
 					columnDefinition = null;

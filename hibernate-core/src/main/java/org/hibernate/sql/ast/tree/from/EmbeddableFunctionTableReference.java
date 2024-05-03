@@ -41,6 +41,16 @@ public class EmbeddableFunctionTableReference extends AbstractTableReference {
 	}
 
 	@Override
+	public boolean isEmbeddableFunctionTableReference() {
+		return true;
+	}
+
+	@Override
+	public EmbeddableFunctionTableReference asEmbeddableFunctionTableReference() {
+		return this;
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		expression.accept( sqlTreeWalker );
 	}

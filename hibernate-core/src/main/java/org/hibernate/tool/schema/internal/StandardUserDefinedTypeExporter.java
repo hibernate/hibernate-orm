@@ -18,6 +18,8 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.UserDefinedArrayType;
+import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -34,6 +36,21 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 	@Override
 	public String[] getSqlCreateStrings(
 			UserDefinedType userDefinedType,
+			Metadata metadata,
+			SqlStringGenerationContext context) {
+		if ( userDefinedType instanceof UserDefinedObjectType ) {
+			return getSqlCreateStrings( (UserDefinedObjectType) userDefinedType, metadata, context );
+		}
+		else if ( userDefinedType instanceof UserDefinedArrayType ) {
+			return getSqlCreateStrings( (UserDefinedArrayType) userDefinedType, metadata, context );
+		}
+		else {
+			throw new IllegalArgumentException( "Unsupported user-defined type: " + userDefinedType );
+		}
+	}
+
+	public String[] getSqlCreateStrings(
+			UserDefinedObjectType userDefinedType,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
 		final QualifiedName typeName = new QualifiedNameParser.NameParts(
@@ -82,12 +99,19 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 		}
 	}
 
+	public String[] getSqlCreateStrings(
+			UserDefinedArrayType userDefinedType,
+			Metadata metadata,
+			SqlStringGenerationContext context) {
+		throw new IllegalArgumentException( "Exporter does not support name array types. Can't generate create strings for: " + userDefinedType );
+	}
+
 	/**
 	 * @param udt The UDT.
 	 * @param formattedTypeName The formatted UDT name.
 	 * @param sqlStrings The list of SQL strings to add comments to.
 	 */
-	protected void applyComments(UserDefinedType udt, String formattedTypeName, List<String> sqlStrings) {
+	protected void applyComments(UserDefinedObjectType udt, String formattedTypeName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
 			if ( udt.getComment() != null ) {
 				sqlStrings.add( "comment on type " + formattedTypeName + " is '" + udt.getComment() + "'" );
@@ -106,16 +130,28 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 	}
 
 	@Override
-	public String[] getSqlDropStrings(UserDefinedType table, Metadata metadata, SqlStringGenerationContext context) {
+	public String[] getSqlDropStrings(UserDefinedType userDefinedType, Metadata metadata, SqlStringGenerationContext context) {
+		if ( userDefinedType instanceof UserDefinedObjectType ) {
+			return getSqlDropStrings( (UserDefinedObjectType) userDefinedType, metadata, context );
+		}
+		else if ( userDefinedType instanceof UserDefinedArrayType ) {
+			return getSqlDropStrings( (UserDefinedArrayType) userDefinedType, metadata, context );
+		}
+		else {
+			throw new IllegalArgumentException( "Unsupported user-defined type: " + userDefinedType );
+		}
+	}
+
+	public String[] getSqlDropStrings(UserDefinedObjectType userDefinedType, Metadata metadata, SqlStringGenerationContext context) {
 		StringBuilder buf = new StringBuilder( "drop type " );
 		if ( dialect.supportsIfExistsBeforeTypeName() ) {
 			buf.append( "if exists " );
 		}
 
 		final QualifiedName typeName = new QualifiedNameParser.NameParts(
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				table.getNameIdentifier()
+				Identifier.toIdentifier( userDefinedType.getCatalog(), userDefinedType.isCatalogQuoted() ),
+				Identifier.toIdentifier( userDefinedType.getSchema(), userDefinedType.isSchemaQuoted() ),
+				userDefinedType.getNameIdentifier()
 		);
 		buf.append( context.format( typeName ) );
 
@@ -124,5 +160,9 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 		}
 
 		return new String[] { buf.toString() };
+	}
+
+	public String[] getSqlDropStrings(UserDefinedArrayType userDefinedType, Metadata metadata, SqlStringGenerationContext context) {
+		throw new IllegalArgumentException( "Exporter does not support name array types. Can't generate drop strings for: " + userDefinedType );
 	}
 }

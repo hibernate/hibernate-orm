@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,8 +15,12 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.StructHelper;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -26,6 +31,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterArray;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -61,8 +67,17 @@ public class ArrayJdbcType implements JdbcType {
 				scale,
 				typeConfiguration
 		);
-		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
+		final JavaType<Object> javaType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
 				Array.newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass()
+		);
+		if ( javaType instanceof BasicPluralType<?, ?> ) {
+			//noinspection unchecked
+			return (JavaType<T>) javaType;
+		}
+		//noinspection unchecked
+		return (JavaType<T>) javaType.createJavaType(
+				new ParameterizedTypeImpl( javaType.getJavaTypeClass(), new Type[0], null ),
+				typeConfiguration
 		);
 	}
 
@@ -92,6 +107,70 @@ public class ArrayJdbcType implements JdbcType {
 		return java.sql.Array.class;
 	}
 
+	protected Object[] getArray(BasicBinder<?> binder, Object value, WrapperOptions options) throws SQLException {
+		final JdbcType elementJdbcType = ( (ArrayJdbcType) binder.getJdbcType() ).getElementJdbcType();
+		//noinspection unchecked
+		final JavaType<Object> javaType = (JavaType<Object>) binder.getJavaType();
+		if ( elementJdbcType instanceof AggregateJdbcType ) {
+			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) elementJdbcType;
+			final Object[] domainObjects = ( javaType ).unwrap(
+					value,
+					Object[].class,
+					options
+			);
+			final Object[] objects = new Object[domainObjects.length];
+			for ( int i = 0; i < domainObjects.length; i++ ) {
+				objects[i] = aggregateJdbcType.createJdbcValue( domainObjects[i], options );
+			}
+			return objects;
+		}
+		else {
+			final TypeConfiguration typeConfiguration = options.getSessionFactory().getTypeConfiguration();
+			final JdbcType underlyingJdbcType = typeConfiguration.getJdbcTypeRegistry()
+					.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
+			final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
+			final Class<?> elementJdbcJavaTypeClass;
+			if ( preferredJavaTypeClass == null ) {
+				elementJdbcJavaTypeClass = underlyingJdbcType.getJdbcRecommendedJavaTypeMapping(
+						null,
+						null,
+						typeConfiguration
+				).getJavaTypeClass();
+			}
+			else {
+				elementJdbcJavaTypeClass = preferredJavaTypeClass;
+			}
+			//noinspection unchecked
+			final Class<Object[]> arrayClass = (Class<Object[]>)
+					Array.newInstance( elementJdbcJavaTypeClass, 0 ).getClass();
+			return javaType.unwrap( value, arrayClass, options );
+		}
+	}
+
+	protected <X> X getArray(BasicExtractor<X> extractor, java.sql.Array array, WrapperOptions options) throws SQLException {
+		if ( array != null && getElementJdbcType() instanceof AggregateJdbcType ) {
+			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) getElementJdbcType();
+			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final EmbeddableInstantiator instantiator = embeddableMappingType.getRepresentationStrategy()
+					.getInstantiator();
+			final Object rawArray = array.getArray();
+			final Object[] domainObjects = new Object[Array.getLength( rawArray )];
+			for ( int i = 0; i < domainObjects.length; i++ ) {
+				final Object[] aggregateRawValues = aggregateJdbcType.extractJdbcValues( Array.get( rawArray, i ), options );
+				final Object[] attributeValues = StructHelper.getAttributeValues(
+						embeddableMappingType,
+						aggregateRawValues,
+						options
+				);
+				domainObjects[i] = instantiator.instantiate( () -> attributeValues, options.getSessionFactory() );
+			}
+			return extractor.getJavaType().wrap( domainObjects, options );
+		}
+		else {
+			return extractor.getJavaType().wrap( array, options );
+		}
+	}
+
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
 		return new BasicBinder<>( javaTypeDescriptor, this ) {
@@ -114,26 +193,8 @@ public class ArrayJdbcType implements JdbcType {
 			}
 
 			private java.sql.Array getArray(X value, WrapperOptions options) throws SQLException {
-				final TypeConfiguration typeConfiguration = options.getSessionFactory().getTypeConfiguration();
 				final JdbcType elementJdbcType = ( (ArrayJdbcType) getJdbcType() ).getElementJdbcType();
-				final JdbcType underlyingJdbcType = typeConfiguration.getJdbcTypeRegistry()
-						.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
-				final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
-				final Class<?> elementJdbcJavaTypeClass;
-				if ( preferredJavaTypeClass == null ) {
-					elementJdbcJavaTypeClass = underlyingJdbcType.getJdbcRecommendedJavaTypeMapping(
-							null,
-							null,
-							typeConfiguration
-					).getJavaTypeClass();
-				}
-				else {
-					elementJdbcJavaTypeClass = preferredJavaTypeClass;
-				}
-				//noinspection unchecked
-				final Class<Object[]> arrayClass = (Class<Object[]>)
-						Array.newInstance( elementJdbcJavaTypeClass, 0 ).getClass();
-				final Object[] objects = getJavaType().unwrap( value, arrayClass, options );
+				final Object[] objects = ArrayJdbcType.this.getArray( this, value, options );
 
 				final SharedSessionContractImplementor session = options.getSession();
 				final String typeName = getElementTypeName( elementJdbcType, session );
@@ -144,6 +205,9 @@ public class ArrayJdbcType implements JdbcType {
 			private String getElementTypeName(JdbcType elementJdbcType, SharedSessionContractImplementor session) {
 				// TODO: ideally, we would have the actual size or the actual type/column accessible
 				//       this is something that we would need for supporting composite types anyway
+				if ( elementJdbcType instanceof StructJdbcType ) {
+					return ( (StructJdbcType) elementJdbcType ).getStructTypeName();
+				}
 				final JavaType<X> elementJavaType;
 				if ( getJavaType() instanceof ByteArrayJavaType ) {
 					// Special handling needed for Byte[], because that would conflict with the VARBINARY mapping
@@ -179,17 +243,17 @@ public class ArrayJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getArray( paramIndex ), options );
+				return getArray( this, rs.getArray( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getArray( index ), options );
+				return getArray( this, statement.getArray( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getArray( name ), options );
+				return getArray( this, statement.getArray( name ), options );
 			}
 		};
 	}

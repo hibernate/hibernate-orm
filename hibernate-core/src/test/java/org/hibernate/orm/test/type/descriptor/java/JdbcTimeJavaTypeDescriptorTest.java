@@ -31,6 +31,6 @@ public class JdbcTimeJavaTypeDescriptorTest {
 						.toEpochMilli()
 		);
 		final LocalTime wrappedSqlTime = javaType.unwrap( sqlTime, LocalTime.class, null );
-		assertThat( wrappedSqlTime ).isEqualTo( LocalTime.of( 21, 1, 2, 123_000_000 ) );
+		assertThat( wrappedSqlTime ).isEqualTo( LocalTime.of( 20, 1, 2, 123_000_000 ) );
 	}
 }

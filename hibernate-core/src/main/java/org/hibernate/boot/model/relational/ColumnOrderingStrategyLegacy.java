@@ -13,7 +13,7 @@ import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UserDefinedType;
+import org.hibernate.mapping.UserDefinedObjectType;
 
 /**
  * A no-op implementation.
@@ -32,7 +32,7 @@ public class ColumnOrderingStrategyLegacy implements ColumnOrderingStrategy {
 	}
 
 	@Override
-	public List<Column> orderUserDefinedTypeColumns(UserDefinedType userDefinedType, Metadata metadata) {
+	public List<Column> orderUserDefinedTypeColumns(UserDefinedObjectType userDefinedType, Metadata metadata) {
 		return null;
 	}
 

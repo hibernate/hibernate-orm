@@ -58,6 +58,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
@@ -448,13 +449,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				}
 			}
 			for ( UserDefinedType userDefinedType : namespace.getUserDefinedTypes() ) {
-				if ( userDefinedType.getColumns().size() > 1 ) {
-					final List<Column> userDefinedTypeColumns = columnOrderingStrategy.orderUserDefinedTypeColumns(
-							userDefinedType,
-							this
-					);
-					if ( userDefinedTypeColumns != null ) {
-						userDefinedType.reorderColumns( userDefinedTypeColumns );
+				if ( userDefinedType instanceof UserDefinedObjectType ) {
+					final UserDefinedObjectType objectType = (UserDefinedObjectType) userDefinedType;
+					if ( objectType.getColumns().size() > 1 ) {
+						final List<Column> objectTypeColumns = columnOrderingStrategy.orderUserDefinedTypeColumns(
+								objectType,
+								this
+						);
+						if ( objectTypeColumns != null ) {
+							objectType.reorderColumns( objectTypeColumns );
+						}
 					}
 				}
 			}

@@ -16,3 +16,35 @@ earlier versions, see any other pertinent migration guides as well.
 * link:{docsBase}/6.1/migration-guide/migration-guide.html[6.1 Migration guide]
 * link:{docsBase}/6.0/migration-guide/migration-guide.html[6.0 Migration guide]
 
+[[oracle-implicit-array-types]]
+== Oracle implicit array types
+
+The names for implicitly created array types on Oracle have slightly changed to account for converted types.
+Previously, the naming of implicit array types was only using the Java type simple name which could conflict
+when the same Java type is used with different JDBC type codes or converters.
+To avoid name clashes, the naming of implicitly created array types now also includes
+the preferred Java type simple name of the JDBC type in case the preferred Java type differs from the field type.
+In case of converted types, the converter Java class simple name is used instead.
+
+The array type for a persistent property of type `BigInteger[]` was previously `BigIntegerArray`
+and would now be `BigIntegerBigDecimalArray`, because the preferred Java type for the `NUMERIC`/`DECIMAL` JDBC type is `BigDecimal`.
+To specify a custom array type name, annotate the persistent property with `@Column(columnDefinition = "BigIntegerArray")`.
+
+[[user-defined-type]]
+
+`UserDefinedType` was renamed to `UserDefinedObjectType` and everything except access to column information
+was abstracted in a new interface named `UserDefinedType`. This was done to allow modelling dependencies between
+named arrays, modeled as `UserDefinedArrayType` extending the new `UserDefinedType` interface,
+and `UserDefinedObjectType` i.e. arrays of structs.
+
+`UserDefinedType` was not explicitly annotated with `@Incubating` before,
+but it was introduced for the incubating `@Struct` feature in ORM 6.2,
+which made it effectively incubating as well. To make this more clear,
+the types were now also explicitly marked as `@Incubating`.
+
+The changes affect users which previously queried or created `UserDefinedType` in a `Namespace`.
+Methods that return or operate on `UserDefinedType` have been marked as `@Incubating`
+to make it clear that these contracts might still evolve.
+
+Another change is to the already incubating `ColumnOrderingStrategy`,
+where the argument type of `orderUserDefinedTypeColumns` was changed from `UserDefinedType` to `UserDefinedObjectType`.

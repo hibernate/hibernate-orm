@@ -35,7 +35,7 @@ tasks.named( "javadoc", Javadoc ) {
         use = true
         encoding = 'UTF-8'
 
-        stylesheetFile = rootProject.file( "shared/javadoc/stylesheet.css" )
+//        stylesheetFile = rootProject.file( "shared/javadoc/stylesheet.css" )
         bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 
         // The javadoc folder contains cached versions of the respective element-list files to avoid release issues when servers are down

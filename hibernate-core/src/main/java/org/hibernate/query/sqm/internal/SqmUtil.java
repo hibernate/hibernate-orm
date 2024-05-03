@@ -687,7 +687,7 @@ public class SqmUtil {
 			return new SqmSortSpecification(
 					new SqmAliasedNodeRef( element, builder.getIntegerType(), builder ),
 					order.getDirection(),
-					order.getNullPrecedence(),
+					order.getNullPrecedence().getJpaValue(),
 					order.isCaseInsensitive()
 			);
 		}

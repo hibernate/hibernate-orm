@@ -24,11 +24,12 @@ public class OracleNestedTableJdbcTypeConstructor implements JdbcTypeConstructor
 	@Override
 	public JdbcType resolveType(
 			TypeConfiguration typeConfiguration,
-			Dialect dialect, BasicType<?> elementType,
+			Dialect dialect,
+			BasicType<?> elementType,
 			ColumnTypeInformation columnTypeInformation) {
 		String typeName = columnTypeInformation == null ? null : columnTypeInformation.getTypeName();
 		if ( typeName == null || typeName.isBlank() ) {
-			typeName = OracleArrayJdbcType.getTypeName( elementType.getJavaTypeDescriptor(), dialect );
+			typeName = OracleArrayJdbcType.getTypeName( elementType, dialect );
 		}
 		return new OracleNestedTableJdbcType( elementType.getJdbcType(), typeName );
 	}
@@ -52,7 +53,7 @@ public class OracleNestedTableJdbcTypeConstructor implements JdbcTypeConstructor
 					precision,
 					scale,
 					typeConfiguration
-			), dialect );
+			), elementType, dialect );
 		}
 		return new OracleNestedTableJdbcType( elementType, typeName );
 	}

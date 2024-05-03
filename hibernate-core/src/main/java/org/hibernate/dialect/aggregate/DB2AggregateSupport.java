@@ -47,40 +47,40 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			String template,
 			String placeholder,
 			String aggregateParentReadExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType) {
-		switch ( aggregateColumnType.getTypeCode() ) {
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column) {
+		switch ( aggregateColumn.getTypeCode() ) {
 			case STRUCT:
-				return template.replace( placeholder, aggregateParentReadExpression + ".." + column );
+				return template.replace( placeholder, aggregateParentReadExpression + ".." + columnExpression );
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnType.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
 	}
 
 	@Override
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType) {
-		switch ( aggregateColumnType.getTypeCode() ) {
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column) {
+		switch ( aggregateColumn.getTypeCode() ) {
 			case STRUCT:
-				return aggregateParentAssignmentExpression + ".." + column;
+				return aggregateParentAssignmentExpression + ".." + columnExpression;
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnType.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
 	}
 
 	@Override
 	public String aggregateCustomWriteExpression(
-			ColumnTypeInformation aggregateColumnType,
+			AggregateColumn aggregateColumn,
 			List<Column> aggregatedColumns) {
-		switch ( aggregateColumnType.getTypeCode() ) {
+		switch ( aggregateColumn.getTypeCode() ) {
 			case STRUCT:
 				final StringBuilder sb = new StringBuilder();
-				appendStructCustomWriteExpression( aggregateColumnType, aggregatedColumns, sb );
+				appendStructCustomWriteExpression( aggregateColumn, aggregatedColumns, sb );
 				return sb.toString();
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnType.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
 	}
 
 	private static void appendStructCustomWriteExpression(
@@ -322,12 +322,12 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 	public List<AuxiliaryDatabaseObject> aggregateAuxiliaryDatabaseObjects(
 			Namespace namespace,
 			String aggregatePath,
-			ColumnTypeInformation aggregateColumnType,
+			AggregateColumn aggregateColumn,
 			List<Column> aggregatedColumns) {
-		if ( aggregateColumnType.getTypeCode() != STRUCT ) {
+		if ( aggregateColumn.getTypeCode() != STRUCT ) {
 			return Collections.emptyList();
 		}
-		final String columnType = aggregateColumnType.getTypeName();
+		final String columnType = aggregateColumn.getTypeName();
 		// The serialize and deserialize functions, as well as the transform are for supporting struct types in native queries and functions
 		var list = new ArrayList<AuxiliaryDatabaseObject>( 3 );
 		var serializerSb = new StringBuilder();

@@ -37,4 +37,8 @@ public interface ValueBinder<X> {
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
 	void bind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException;
+
+	default Object getBindValue(X value, WrapperOptions options) throws SQLException {
+		return value;
+	}
 }

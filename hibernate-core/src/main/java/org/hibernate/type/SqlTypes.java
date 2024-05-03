@@ -579,6 +579,28 @@ public class SqlTypes {
 	 */
 	public static final int DURATION = 3015;
 
+	/**
+	 * A type code for an array of struct objects.
+	 */
+	public static final int STRUCT_ARRAY = 3016;
+
+	/**
+	 * A type code representing an Oracle-style nested table for a struct.
+	 *
+	 * @see org.hibernate.dialect.OracleNestedTableJdbcType
+	 */
+	public final static int STRUCT_TABLE = 3017;
+
+	/**
+	 * A type code for an array of json objects.
+	 */
+	public static final int JSON_ARRAY = 3018;
+
+	/**
+	 * A type code for an array of xml objects.
+	 */
+	public static final int XML_ARRAY = 3019;
+
 	// Interval types
 
 	/**

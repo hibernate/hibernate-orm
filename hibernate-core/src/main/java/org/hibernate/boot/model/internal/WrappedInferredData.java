@@ -31,6 +31,11 @@ public class WrappedInferredData implements PropertyData {
 	}
 
 	@Override
+	public XClass getClassOrPluralElement() throws MappingException {
+		return wrappedInferredData.getClassOrPluralElement();
+	}
+
+	@Override
 	public String getClassOrElementName() throws MappingException {
 		return wrappedInferredData.getClassOrElementName();
 	}

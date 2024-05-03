@@ -87,6 +87,19 @@ public class PropertyInferredData implements PropertyData {
 	}
 
 	@Override
+	public XClass getClassOrPluralElement() throws MappingException {
+		if ( property.isAnnotationPresent( Target.class ) ) {
+			return reflectionManager.toXClass( property.getAnnotation( Target.class ).value() );
+		}
+		else if ( property.isCollection() ) {
+			return property.getElementClass();
+		}
+		else {
+			return property.getClassOrElementClass();
+		}
+	}
+
+	@Override
 	public String getClassOrElementName() throws MappingException {
 		return getClassOrElement().getName();
 	}

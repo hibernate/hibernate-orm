@@ -7,6 +7,9 @@
 package org.hibernate.dialect;
 
 
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.SQLException;
 
 import org.hibernate.Internal;
@@ -14,6 +17,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
@@ -166,28 +170,45 @@ public class StructHelper {
 			assert attributeMapping.getJdbcTypeCount() == 1;
 			jdbcValueCount = 1;
 			final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
-			final JavaType<Object> relationalJavaType;
-			if ( jdbcMapping.getValueConverter() == null ) {
-				//noinspection unchecked
-				relationalJavaType = (JavaType<Object>) jdbcMapping.getJdbcJavaType();
-			}
-			else {
-				//noinspection unchecked
-				relationalJavaType = jdbcMapping.getValueConverter().getRelationalJavaType();
-			}
-			final Class<?> preferredJavaTypeClass = jdbcMapping.getJdbcType().getPreferredJavaTypeClass( options );
-			if ( preferredJavaTypeClass == null ) {
-				jdbcValues[jdbcIndex] = relationalJavaType.wrap(
-						jdbcMapping.convertToRelationalValue( attributeValues[attributeIndex] ),
-						options
-				);
-			}
-			else {
-				jdbcValues[jdbcIndex] = relationalJavaType.unwrap(
-						jdbcMapping.convertToRelationalValue( attributeValues[attributeIndex] ),
-						preferredJavaTypeClass,
-						options
-				);
+			final Object relationalValue = jdbcMapping.convertToRelationalValue( attributeValues[attributeIndex] );
+			if ( relationalValue != null ) {
+				// Regardless how LOBs are bound by default, through structs we must use the native types
+				switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+					case SqlTypes.BLOB:
+					case SqlTypes.MATERIALIZED_BLOB:
+						//noinspection unchecked,rawtypes
+						jdbcValues[jdbcIndex] = ( (JavaType) jdbcMapping.getJdbcJavaType() ).unwrap(
+								relationalValue,
+								Blob.class,
+								options
+						);
+						break;
+					case SqlTypes.CLOB:
+					case SqlTypes.MATERIALIZED_CLOB:
+						//noinspection unchecked,rawtypes
+						jdbcValues[jdbcIndex] = ( (JavaType) jdbcMapping.getJdbcJavaType() ).unwrap(
+								relationalValue,
+								Clob.class,
+								options
+						);
+						break;
+					case SqlTypes.NCLOB:
+					case SqlTypes.MATERIALIZED_NCLOB:
+						//noinspection unchecked,rawtypes
+						jdbcValues[jdbcIndex] = ( (JavaType) jdbcMapping.getJdbcJavaType() ).unwrap(
+								relationalValue,
+								NClob.class,
+								options
+						);
+						break;
+					default:
+						//noinspection unchecked
+						jdbcValues[jdbcIndex] = jdbcMapping.getJdbcValueBinder().getBindValue(
+								relationalValue,
+								options
+						);
+						break;
+				}
 			}
 		}
 		return jdbcValueCount;

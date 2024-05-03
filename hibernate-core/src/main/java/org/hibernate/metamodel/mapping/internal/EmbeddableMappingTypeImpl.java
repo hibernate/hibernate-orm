@@ -60,11 +60,23 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
+import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.STRUCT;
+import static org.hibernate.type.SqlTypes.STRUCT_ARRAY;
+import static org.hibernate.type.SqlTypes.STRUCT_TABLE;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
 /**
  * Describes a "normal" embeddable.
@@ -225,23 +237,73 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final Column aggregateColumn = bootDescriptor.getAggregateColumn();
+		Integer aggregateSqlTypeCode = aggregateColumn.getSqlTypeCode();
+		boolean isArray = false;
+		String structTypeName = null;
+		switch ( aggregateSqlTypeCode ) {
+			case STRUCT:
+				structTypeName = aggregateColumn.getSqlType( creationContext.getMetadata() );
+				break;
+			case STRUCT_ARRAY:
+			case STRUCT_TABLE:
+				isArray = true;
+				aggregateSqlTypeCode = STRUCT;
+				structTypeName = bootDescriptor.getStructName();
+				if ( structTypeName == null ) {
+					final String arrayTypeName = aggregateColumn.getSqlType( creationContext.getMetadata() );
+					if ( arrayTypeName.endsWith( " array" ) ) {
+						structTypeName = arrayTypeName.substring( 0, arrayTypeName.length() - " array".length() );
+					}
+				}
+				break;
+			case JSON_ARRAY:
+				isArray = true;
+				aggregateSqlTypeCode = JSON;
+				break;
+			case XML_ARRAY:
+				isArray = true;
+				aggregateSqlTypeCode = SQLXML;
+				break;
+		}
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+		final AggregateJdbcType aggregateJdbcType = jdbcTypeRegistry.resolveAggregateDescriptor(
+				aggregateSqlTypeCode,
+				structTypeName,
+				this,
+				creationContext
+		);
 		final BasicType<?> basicType = basicTypeRegistry.resolve(
 				getMappedJavaType(),
-				typeConfiguration.getJdbcTypeRegistry().resolveAggregateDescriptor(
-						aggregateColumn.getSqlTypeCode(),
-						aggregateColumn.getSqlTypeCode() == SqlTypes.STRUCT
-								? aggregateColumn.getSqlType( creationContext.getMetadata() )
-								: null,
-						this,
-						creationContext
-				)
+				aggregateJdbcType
 		);
 		// Register the resolved type under its struct name and java class name
 		if ( bootDescriptor.getStructName() != null ) {
 			basicTypeRegistry.register( basicType, bootDescriptor.getStructName() );
 			basicTypeRegistry.register( basicType, getMappedJavaType().getJavaTypeClass().getName() );
 		}
-		return basicType;
+		final BasicValue basicValue = (BasicValue) aggregateColumn.getValue();
+		final BasicType<?> resolvedJdbcMapping;
+		if ( isArray ) {
+			final JdbcTypeConstructor arrayConstructor = jdbcTypeRegistry.getConstructor( SqlTypes.ARRAY );
+			if ( arrayConstructor == null ) {
+				throw new IllegalArgumentException( "No JdbcTypeConstructor registered for SqlTypes.ARRAY" );
+			}
+			//noinspection rawtypes,unchecked
+			final BasicType<?> arrayType = ( (BasicPluralJavaType) basicValue.getResolution().getDomainJavaType() ).resolveType(
+					typeConfiguration,
+					creationContext.getDialect(),
+					basicType,
+					aggregateColumn,
+					typeConfiguration.getCurrentBaseSqlTypeIndicators()
+			);
+			basicTypeRegistry.register( arrayType );
+			resolvedJdbcMapping = arrayType;
+		}
+		else {
+			resolvedJdbcMapping = basicType;
+		}
+		basicValue.getResolution().updateResolution( resolvedJdbcMapping );
+		return resolvedJdbcMapping;
 	}
 
 	public EmbeddableMappingTypeImpl(
@@ -376,6 +438,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					containingTableExpression = rootTableExpression;
 					columnExpression = rootTableKeyColumnNames[columnPosition];
 				}
+				final NavigableRole role = valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() );
 				final SelectablePath selectablePath;
 				final String columnDefinition;
 				final Long length;
@@ -394,6 +457,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 					nullable = bootPropertyDescriptor.isOptional() && column.isNullable() ;
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
+					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {
 					columnDefinition = null;
@@ -407,18 +471,18 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				}
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),
-						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
+						role,
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
 						this,
-						(BasicType<?>) subtype,
+						basicValue.getResolution().getLegacyResolvedBasicType(),
 						containingTableExpression,
 						columnExpression,
 						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
-						selectable.getWriteExpr( ( (BasicType<?>) subtype ).getJdbcMapping(), dialect ),
+						selectable.getWriteExpr( basicValue.getResolution().getJdbcMapping(), dialect ),
 						columnDefinition,
 						length,
 						precision,

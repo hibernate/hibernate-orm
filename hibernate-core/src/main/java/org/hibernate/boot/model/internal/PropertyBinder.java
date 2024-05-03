@@ -119,6 +119,7 @@ public class PropertyBinder {
 	private AnnotatedColumns columns;
 	private PropertyHolder holder;
 	private Value value;
+	private Component componentElement;
 	private boolean insertable = true;
 	private boolean updatable = true;
 	private String cascade;
@@ -188,6 +189,10 @@ public class PropertyBinder {
 
 	public void setValue(Value value) {
 		this.value = value;
+	}
+
+	public void setComponentElement(Component componentElement) {
+		this.componentElement = componentElement;
 	}
 
 	public void setCascade(String cascadeStrategy) {
@@ -1058,30 +1063,73 @@ public class PropertyBinder {
 				resolveCompositeUserType( inferredData, context );
 
 		if ( isComposite || compositeUserType != null ) {
-			propertyBinder = createCompositeBinder(
-					propertyHolder,
-					inferredData,
-					entityBinder,
-					isIdentifierMapper,
-					isComponentEmbedded,
-					context,
-					inheritanceStatePerClass,
-					property,
-					actualColumns,
-					returnedClass,
-					propertyBinder,
-					isOverridden,
-					compositeUserType
-			);
+			if ( property.isArray() && property.getElementClass() != null
+					&& isEmbedded( property, property.getElementClass() ) ) {
+				// This is a special kind of basic aggregate component array type
+				propertyBinder.setComponentElement(
+						EmbeddableBinder.bindEmbeddable(
+								inferredData,
+								propertyHolder,
+								entityBinder.getPropertyAccessor( property ),
+								entityBinder,
+								isIdentifierMapper,
+								context,
+								isComponentEmbedded,
+								propertyBinder.isId(),
+								inheritanceStatePerClass,
+								null,
+								null,
+								EmbeddableBinder.determineCustomInstantiator( property, returnedClass, context ),
+								compositeUserType,
+								null,
+								columns
+						)
+				);
+				propertyBinder.setColumns( actualColumns );
+				propertyBinder.makePropertyValueAndBind();
+			}
+			else {
+				propertyBinder = createCompositeBinder(
+						propertyHolder,
+						inferredData,
+						entityBinder,
+						isIdentifierMapper,
+						isComponentEmbedded,
+						context,
+						inheritanceStatePerClass,
+						property,
+						actualColumns,
+						returnedClass,
+						propertyBinder,
+						isOverridden,
+						compositeUserType
+				);
+			}
 		}
 		else if ( property.isCollection() && property.getElementClass() != null
 				&& isEmbedded( property, property.getElementClass() ) ) {
 			// This is a special kind of basic aggregate component array type
-			// todo: see HHH-15830
-			throw new AnnotationException(
-					"Property '" + BinderHelper.getPath( propertyHolder, inferredData )
-							+ "' is mapped as basic aggregate component array, but this is not yet supported."
+			propertyBinder.setComponentElement(
+					EmbeddableBinder.bindEmbeddable(
+							inferredData,
+							propertyHolder,
+							entityBinder.getPropertyAccessor( property ),
+							entityBinder,
+							isIdentifierMapper,
+							context,
+							isComponentEmbedded,
+							propertyBinder.isId(),
+							inheritanceStatePerClass,
+							null,
+							null,
+							EmbeddableBinder.determineCustomInstantiator( property, property.getElementClass(), context ),
+							compositeUserType,
+							null,
+							columns
+					)
 			);
+			propertyBinder.setColumns( actualColumns );
+			propertyBinder.makePropertyValueAndBind();
 		}
 		else {
 			createBasicBinder(

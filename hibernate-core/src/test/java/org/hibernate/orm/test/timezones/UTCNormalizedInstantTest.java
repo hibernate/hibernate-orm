@@ -9,6 +9,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.descriptor.DateTimeUtils;
 
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -56,34 +57,42 @@ public class UTCNormalizedInstantTest {
 	}
 
 	@Test void testWithSystemTimeZone(SessionFactoryScope scope) {
-		TimeZone.setDefault( TimeZone.getTimeZone("CET") );
-		final Instant instant;
-		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect ) {
-			// Sybase has 1/300th sec precision
-			instant = Instant.now().with( ChronoField.NANO_OF_SECOND, 0L );
+		final TimeZone timeZoneBefore = TimeZone.getDefault();
+		TimeZone.setDefault( TimeZone.getTimeZone( "CET" ) );
+		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
+		try {
+			final Instant instant;
+			if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect ) {
+				// Sybase has 1/300th sec precision
+				instant = Instant.now().with( ChronoField.NANO_OF_SECOND, 0L );
+			}
+			else {
+				instant = Instant.now();
+			}
+			long id = scope.fromTransaction( s-> {
+				final Zoned z = new Zoned();
+				z.utcInstant = instant;
+				z.localInstant = instant;
+				s.persist(z);
+				return z.id;
+			});
+			scope.inSession( s-> {
+				final Zoned z = s.find(Zoned.class, id);
+				final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+				assertEquals(
+						DateTimeUtils.roundToDefaultPrecision( z.utcInstant, dialect ),
+						DateTimeUtils.roundToDefaultPrecision( instant, dialect )
+				);
+				assertEquals(
+						DateTimeUtils.roundToDefaultPrecision( z.localInstant, dialect ),
+						DateTimeUtils.roundToDefaultPrecision( instant, dialect )
+				);
+			});
 		}
-		else {
-			instant = Instant.now();
+		finally {
+			TimeZone.setDefault( timeZoneBefore );
+			SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 		}
-		long id = scope.fromTransaction( s-> {
-			final Zoned z = new Zoned();
-			z.utcInstant = instant;
-			z.localInstant = instant;
-			s.persist(z);
-			return z.id;
-		});
-		scope.inSession( s-> {
-			final Zoned z = s.find(Zoned.class, id);
-			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( z.utcInstant, dialect ),
-					DateTimeUtils.roundToDefaultPrecision( instant, dialect )
-			);
-			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( z.localInstant, dialect ),
-					DateTimeUtils.roundToDefaultPrecision( instant, dialect )
-			);
-		});
 	}
 
 	@Entity(name = "Zoned")

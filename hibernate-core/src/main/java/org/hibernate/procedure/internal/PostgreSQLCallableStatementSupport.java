@@ -158,7 +158,7 @@ public class PostgreSQLCallableStatementSupport extends AbstractStandardCallable
 				final String castType;
 				if ( type != null && type.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
 					// We have to cast struct type parameters so that PostgreSQL understands nulls
-					castType = ( (AbstractPostgreSQLStructJdbcType) type.getJdbcType() ).getTypeName();
+					castType = ( (AbstractPostgreSQLStructJdbcType) type.getJdbcType() ).getStructTypeName();
 					buffer.append( "cast(" );
 				}
 				else {

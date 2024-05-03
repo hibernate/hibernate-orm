@@ -29,6 +29,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -127,6 +128,8 @@ public interface SqlAstWalker {
 	void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin);
 
 	void visitColumnReference(ColumnReference columnReference);
+
+	void visitNestedColumnReference(NestedColumnReference nestedColumnReference);
 
 	void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression);
 

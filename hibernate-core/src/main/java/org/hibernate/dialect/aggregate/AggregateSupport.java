@@ -12,12 +12,12 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -37,41 +37,41 @@ public interface AggregateSupport {
 	 * @param template The custom read expression template of the column
 	 * @param placeholder The placeholder to replace with the actual read expression
 	 * @param aggregateParentReadExpression The expression to the aggregate column, which contains the column
+	 * @param columnExpression The column within the aggregate type, for which to return the read expression
+	 * @param aggregateColumn The type information for the aggregate column
 	 * @param column The column within the aggregate type, for which to return the read expression
-	 * @param aggregateColumnType The type information for the aggregate column
-	 * @param columnType The type information for the column within the aggregate type
 	 */
 	String aggregateComponentCustomReadExpression(
 			String template,
 			String placeholder,
 			String aggregateParentReadExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType);
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column);
 
 	/**
 	 * Returns the assignment expression to use for {@code column},
 	 * which is part of the aggregate type of {@code aggregatePath}.
 	 *
 	 * @param aggregateParentAssignmentExpression The expression to the aggregate column, which contains the column
+	 * @param columnExpression The column within the aggregate type, for which to return the assignment expression
+	 * @param aggregateColumn The type information for the aggregate column
 	 * @param column The column within the aggregate type, for which to return the assignment expression
-	 * @param aggregateColumnType The type information for the aggregate column
-	 * @param columnType The type information for the column within the aggregate type
 	 */
 	String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType);
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column);
 
 	/**
 	 * Returns the custom write expression to use for an aggregate column
 	 * of the given column type, containing the given aggregated columns.
 	 *
-	 * @param aggregateColumnType The type information for the aggregate column
+	 * @param aggregateColumn The type information for the aggregate column
 	 * @param aggregatedColumns The columns of the aggregate type
 	 */
-	String aggregateCustomWriteExpression(ColumnTypeInformation aggregateColumnType, List<Column> aggregatedColumns);
+	String aggregateCustomWriteExpression(AggregateColumn aggregateColumn, List<Column> aggregatedColumns);
 
 	/**
 	 * Whether {@link #aggregateCustomWriteExpressionRenderer(SelectableMapping, SelectableMapping[], TypeConfiguration)} is needed
@@ -132,7 +132,7 @@ public interface AggregateSupport {
 	List<AuxiliaryDatabaseObject> aggregateAuxiliaryDatabaseObjects(
 			Namespace namespace,
 			String aggregatePath,
-			ColumnTypeInformation aggregateColumnType,
+			AggregateColumn aggregateColumn,
 			List<Column> aggregatedColumns);
 
 	/**

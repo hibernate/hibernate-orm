@@ -18,8 +18,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
@@ -156,7 +158,29 @@ public class BasicTypeRegistry implements Serializable {
 		return resolve(
 				javaType,
 				jdbcType,
-				() -> new BasicTypeImpl<>( javaType, jdbcType )
+				() -> {
+					if ( javaType instanceof BasicPluralJavaType<?> && jdbcType instanceof ArrayJdbcType ) {
+						//noinspection unchecked
+						final BasicPluralJavaType<Object> pluralJavaType = (BasicPluralJavaType<Object>) javaType;
+						final BasicType<Object> elementType = resolve(
+								pluralJavaType.getElementJavaType(),
+								( (ArrayJdbcType) jdbcType ).getElementJdbcType()
+						);
+						final BasicType<?> resolvedType = pluralJavaType.resolveType(
+								typeConfiguration,
+								typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
+								elementType,
+								null,
+								typeConfiguration.getCurrentBaseSqlTypeIndicators()
+						);
+						if ( resolvedType instanceof BasicPluralType<?, ?> ) {
+							register( resolvedType );
+						}
+						//noinspection unchecked
+						return (BasicType<J>) resolvedType;
+					}
+					return new BasicTypeImpl<>( javaType, jdbcType );
+				}
 		);
 	}
 

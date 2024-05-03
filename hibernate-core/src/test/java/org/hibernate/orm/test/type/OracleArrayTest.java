@@ -6,36 +6,34 @@
  */
 package org.hibernate.orm.test.type;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-
-@RequiresDialect( OracleDialect.class )
-@TestForIssue( jiraKey = "HHH-10999")
-public class OracleArrayTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void configure(Configuration configuration) {
-		// Make sure this stuff runs on a dedicated connection pool,
-		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-		// because the JDBC connection or database session caches something that should have been invalidated
-		configuration.setProperty( AvailableSettings.CONNECTION_PROVIDER, "" );
-	}
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+@DomainModel(annotatedClasses = OracleArrayTest.ArrayHolder.class)
+@SessionFactory
+@RequiresDialect(OracleDialect.class)
+@JiraKey("HHH-10999")
+public class OracleArrayTest {
 
 	@Test
-	public void test() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			ArrayHolder expected = new ArrayHolder( 1, new Integer[] { 1, 2, 3 }, new String[] { "abc", "def" } );
 			session.persist( expected );
 			session.flush();
@@ -45,13 +43,6 @@ public class OracleArrayTest extends BaseCoreFunctionalTestCase {
 			Assert.assertEquals( expected.getIntArray(), arrayHolder.getIntArray() );
 			Assert.assertEquals( expected.getTextArray(), arrayHolder.getTextArray() );
 		} );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				ArrayHolder.class
-		};
 	}
 
 	@Entity(name = "ArrayHolder")

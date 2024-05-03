@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
 import org.hibernate.sql.ast.tree.expression.OrderedSetAggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
@@ -462,6 +463,10 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
+	}
+
+	@Override
+	public void visitNestedColumnReference(NestedColumnReference nestedColumnReference) {
 	}
 
 	@Override

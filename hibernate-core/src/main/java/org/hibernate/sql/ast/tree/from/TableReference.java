@@ -15,6 +15,8 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -72,4 +74,12 @@ public interface TableReference extends SqlAstNode, ColumnReferenceQualifier {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean resolve);
+
+	default boolean isEmbeddableFunctionTableReference() {
+		return false;
+	}
+
+	default @Nullable EmbeddableFunctionTableReference asEmbeddableFunctionTableReference() {
+		return null;
+	}
 }

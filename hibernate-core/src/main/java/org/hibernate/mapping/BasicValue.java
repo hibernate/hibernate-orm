@@ -1192,5 +1192,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		 * The resolved MutabilityPlan
 		 */
 		MutabilityPlan<J> getMutabilityPlan();
+
+		default void updateResolution(BasicType<?> type) {
+			throw new UnsupportedOperationException();
+		}
 	}
 }

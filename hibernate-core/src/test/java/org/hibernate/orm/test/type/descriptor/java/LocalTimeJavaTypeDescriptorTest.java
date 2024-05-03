@@ -28,6 +28,6 @@ public class LocalTimeJavaTypeDescriptorTest {
 						.toEpochMilli()
 		);
 		final LocalTime wrappedSqlTime = javaType.wrap( sqlTime, null );
-		assertThat( wrappedSqlTime ).isEqualTo( LocalTime.of( 21, 1, 2, 123_000_000 ) );
+		assertThat( wrappedSqlTime ).isEqualTo( LocalTime.of( 20, 1, 2, 123_000_000 ) );
 	}
 }

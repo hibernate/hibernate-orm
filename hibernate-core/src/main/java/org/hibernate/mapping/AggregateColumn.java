@@ -10,6 +10,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.Template;
 
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
+import static org.hibernate.type.SqlTypes.STRUCT_ARRAY;
+import static org.hibernate.type.SqlTypes.STRUCT_TABLE;
+
 /**
  * An aggregate column is a column of type {@link org.hibernate.type.SqlTypes#STRUCT},
  * {@link org.hibernate.type.SqlTypes#JSON} or {@link org.hibernate.type.SqlTypes#SQLXML}
@@ -76,7 +80,7 @@ public class AggregateColumn extends Column {
 		final String simpleAggregateName = aggregateColumn.getQuotedName( dialect );
 		final String aggregateSelectableExpression;
 		if ( parentAggregateColumn == null ) {
-			aggregateSelectableExpression = Template.TEMPLATE + "." + simpleAggregateName;
+			aggregateSelectableExpression = getRootAggregateSelectableExpression( aggregateColumn, simpleAggregateName );
 		}
 		else {
 			aggregateSelectableExpression = dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
@@ -87,10 +91,22 @@ public class AggregateColumn extends Column {
 							parentAggregateColumn.getComponent()
 					),
 					simpleAggregateName,
-					parentAggregateColumn, aggregateColumn
+					parentAggregateColumn,
+					aggregateColumn
 			);
 		}
 		return aggregateSelectableExpression;
+	}
+
+	private static String getRootAggregateSelectableExpression(AggregateColumn aggregateColumn, String simpleAggregateName) {
+		switch ( aggregateColumn.getTypeCode() ) {
+			case JSON_ARRAY:
+			case STRUCT_ARRAY:
+			case STRUCT_TABLE:
+				return Template.TEMPLATE;
+			default:
+				return Template.TEMPLATE + "." + simpleAggregateName;
+		}
 	}
 
 	public String getAggregateAssignmentExpressionTemplate(Dialect dialect) {

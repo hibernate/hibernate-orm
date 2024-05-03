@@ -61,7 +61,7 @@ public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdb
 		appender.append( "cast(" );
 		appender.append( writeExpression );
 		appender.append( " as " );
-		appender.append( getTypeName() );
+		appender.append( getStructTypeName() );
 		appender.append( ')' );
 	}
 

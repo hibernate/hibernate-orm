@@ -6,10 +6,9 @@
  */
 package org.hibernate.dialect;
 
-import java.util.Locale;
-
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -20,7 +19,7 @@ import oracle.sql.TIMESTAMPTZ;
 /**
  * @author Christian Beikov
  */
-public class OracleStructJdbcType extends StructJdbcType {
+public class OracleStructJdbcType extends OracleBaseStructJdbcType {
 
 	public OracleStructJdbcType() {
 		// The default instance is for reading only and will return an Object[]
@@ -28,11 +27,7 @@ public class OracleStructJdbcType extends StructJdbcType {
 	}
 
 	private OracleStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
-		super(
-				embeddableMappingType,
-				typeName == null ? null : typeName.toUpperCase( Locale.ROOT ),
-				orderMapping
-		);
+		super( embeddableMappingType, typeName, orderMapping );
 	}
 
 	@Override

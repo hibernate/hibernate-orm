@@ -8,7 +8,6 @@ package org.hibernate.boot.model.relational;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -21,7 +20,7 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.mapping.UserDefinedType;
+import org.hibernate.mapping.UserDefinedObjectType;
 
 import static java.lang.Math.log;
 import static org.hibernate.type.SqlTypes.*;
@@ -42,7 +41,7 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 	}
 
 	@Override
-	public List<Column> orderUserDefinedTypeColumns(UserDefinedType userDefinedType, Metadata metadata) {
+	public List<Column> orderUserDefinedTypeColumns(UserDefinedObjectType userDefinedType, Metadata metadata) {
 		return orderColumns( userDefinedType.getColumns(), metadata );
 	}
 

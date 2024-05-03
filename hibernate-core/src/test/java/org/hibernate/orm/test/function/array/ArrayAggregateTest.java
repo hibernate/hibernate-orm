@@ -14,6 +14,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -67,18 +68,20 @@ public class ArrayAggregateTest {
 				InFlightMetadataCollector metadata,
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
-			final TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
-			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-			final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-			new OracleArrayJdbcType(
-					jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR ),
-					"StringArray"
-			).addAuxiliaryDatabaseObjects(
-					new ArrayJavaType<>( javaTypeRegistry.getDescriptor( String.class ) ),
-					Size.nil(),
-					metadata.getDatabase(),
-					typeConfiguration.getCurrentBaseSqlTypeIndicators()
-			);
+			if ( metadata.getDatabase().getDialect() instanceof OracleDialect ) {
+				final TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
+				final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+				final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+				new OracleArrayJdbcType(
+						jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR ),
+						"StringArray"
+				).addAuxiliaryDatabaseObjects(
+						new ArrayJavaType<>( javaTypeRegistry.getDescriptor( String.class ) ),
+						Size.nil(),
+						metadata.getDatabase(),
+						typeConfiguration.getCurrentBaseSqlTypeIndicators()
+				);
+			}
 		}
 	}
 

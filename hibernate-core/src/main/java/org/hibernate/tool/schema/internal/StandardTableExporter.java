@@ -20,6 +20,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -28,6 +29,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.SqlTypes;
 
 import static java.util.Collections.addAll;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
@@ -178,11 +180,26 @@ public class StandardTableExporter implements Exporter<Table> {
 				for ( Column column : table.getColumns() ) {
 					if ( column instanceof AggregateColumn ) {
 						final AggregateColumn aggregateColumn = (AggregateColumn) column;
-						applyAggregateColumnCheck( buf, aggregateColumn );
+						if ( !isArray( aggregateColumn ) ) {
+							applyAggregateColumnCheck( buf, aggregateColumn );
+						}
 					}
 				}
 			}
 		}
+	}
+
+	private boolean isArray(AggregateColumn aggregateColumn) {
+		final BasicValue value = (BasicValue) aggregateColumn.getValue();
+		switch ( value.getResolution().getJdbcType().getDefaultSqlTypeCode() ) {
+			case SqlTypes.STRUCT_ARRAY:
+			case SqlTypes.STRUCT_TABLE:
+			case SqlTypes.JSON_ARRAY:
+			case SqlTypes.XML_ARRAY:
+			case SqlTypes.ARRAY:
+				return true;
+		}
+		return false;
 	}
 
 	private void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
@@ -219,7 +236,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		if ( value instanceof Component ) {
 			final Component component = (Component) value;
 			final AggregateColumn subAggregateColumn = component.getAggregateColumn();
-			if ( subAggregateColumn != null ) {
+			if ( subAggregateColumn != null && !isArray( subAggregateColumn )  ) {
 				final String subAggregatePath = subAggregateColumn.getAggregateReadExpressionTemplate( dialect )
 						.replace( Template.TEMPLATE + ".", "" );
 				final int checkStart = buf.length();

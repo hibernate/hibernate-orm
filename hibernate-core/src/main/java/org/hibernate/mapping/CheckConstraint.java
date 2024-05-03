@@ -8,6 +8,8 @@ package org.hibernate.mapping;
 
 import java.util.Objects;
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * Represents a table or column level {@code check} constraint.
  *
@@ -16,10 +18,17 @@ import java.util.Objects;
 public class CheckConstraint {
 	private String name;
 	private String constraint;
+	private String options;
 
 	public CheckConstraint(String name, String constraint) {
 		this.name = name;
 		this.constraint = constraint;
+	}
+
+	public CheckConstraint(String name, String constraint, String options) {
+		this.name = name;
+		this.constraint = constraint;
+		this.options = options;
 	}
 
 	public CheckConstraint(String constraint) {
@@ -54,10 +63,26 @@ public class CheckConstraint {
 		this.constraint = constraint;
 	}
 
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
+	}
+
+	/**
+	 * @deprecated use {@link #constraintString(Dialect)} instead.
+	 */
+	@Deprecated(since = "7.0")
 	public String constraintString() {
 		return name == null
 				? " check (" + constraint + ")"
 				: " constraint " + name + " check (" + constraint + ")";
+	}
+
+	public String constraintString(Dialect dialect) {
+		return dialect.getCheckConstraintString( this );
 	}
 
 	@Override

@@ -1660,6 +1660,9 @@ public class FunctionTests {
 					assertEquals( LocalDate.now().minus(2, ChronoUnit.DAYS),
 							session.createQuery("select local date - 2 day", LocalDate.class)
 									.getSingleResult() );
+					assertEquals( LocalDate.now().plus(1, ChronoUnit.WEEKS),
+							session.createQuery("select local date + 1 week", LocalDate.class)
+									.getSingleResult() );
 					assertEquals( LocalDate.now().plus(1, ChronoUnit.MONTHS),
 								  session.createQuery("select local date + 1 month", LocalDate.class)
 										  .getSingleResult() );
@@ -1772,6 +1775,113 @@ public class FunctionTests {
 					assertEquals( LocalTime.of(5,30,25),
 							session.createQuery("select time 5:30:46 - 21 second")
 									.getSingleResult() );
+					assertEquals( LocalTime.of(5,31,7),
+							session.createQuery("select time 5:30:46 + 21 second")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(5,15,30),
+							session.createQuery("select time 5:30:30 - 15 minute")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(4,45,30),
+							session.createQuery("select time 5:30:30 - 45 minute")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(6,00,30),
+							session.createQuery("select time 5:15:30 + 45 minute")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(3,30,30),
+							session.createQuery("select time 5:30:30 - 2 hour")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(11,30,30),
+							session.createQuery("select time 5:30:30 + 6 hour")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class,
+			reason = "invalid extract field for extract source")
+	public void testDurationSubtractionWithTimeLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( Duration.ofSeconds(21),
+							session.createQuery("select time 5:30:46 - time 5:30:25")
+									.getSingleResult() );
+					assertEquals( Duration.ofMinutes(10),
+							session.createQuery("select time 5:30:30 - time 5:20:30")
+									.getSingleResult() );
+					assertEquals( Duration.ofHours(2),
+							session.createQuery("select time 5:30:30 - time 3:30:30")
+									.getSingleResult() );
+					assertEquals( Duration.ofHours(1).plus(Duration.ofMinutes(10).plus(Duration.ofSeconds(20))),
+							session.createQuery("select time 5:30:30 - time 4:20:10")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "numeric overflow")
+	public void testDurationSubtractionWithDatetimeLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( Duration.ofDays(35),
+							session.createQuery("select local date 1990-2-5 - local date 1990-1-1")
+									.getSingleResult() );
+					assertEquals( Duration.ofDays(35).plus(Duration.ofHours(1).plus(Duration.ofMinutes(10).plus(Duration.ofSeconds(20)))),
+							session.createQuery("select local datetime 1990-2-5 5:30:30 - local datetime 1990-1-1 4:20:10")
+									.getSingleResult() );
+					assertEquals( Duration.ofDays(28).plus(Duration.ofHours(2).plus(Duration.ofMinutes(20).plus(Duration.ofSeconds(10)))),
+							session.createQuery("select (local datetime 1990-2-5 5:30:30 - local datetime 1990-1-1 4:20:10) - 7 day + 10 minute - 10 second + 1 hour")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test @SkipForDialect(dialectClass = MySQLDialect.class,
+			reason = "MySQL has a really weird TIME type")
+	public void testTimeDurationArithmeticWrapAroundWithLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( LocalTime.of(23,30,30),
+							session.createQuery("select time 5:30:30 - 6 hour")
+									.getSingleResult() );
+					assertEquals( LocalTime.of(5,30,30),
+							session.createQuery("select time 5:30:30 + 24 hour")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	public void testDateDurationArithmeticWithLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( LocalDate.of(1991,7,25),
+							session.createQuery("select local date 1991-7-20 + 5 day")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1991,7,5),
+							session.createQuery("select local date 1991-7-20 - 15 day")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1991,7,27),
+							session.createQuery("select local date 1991-7-20 + 1 week")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1991,4,5),
+							session.createQuery("select local date 1991-7-5 - 3 month")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(2001,7,5),
+							session.createQuery("select local date 1991-7-5 + 10 year")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1990,4,5),
+							session.createQuery("select local date 1991-7-5 - 15 month")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1990,8,5),
+							session.createQuery("select local date 1990-2-5 + 2 quarter")
+									.getSingleResult() );
+					assertEquals( LocalDate.of(1990,12,31),
+							session.createQuery("select local date 1991-1-1 - 1 day")
+									.getSingleResult() );
 				}
 		);
 	}
@@ -1837,6 +1947,8 @@ public class FunctionTests {
 			matchSubTypes = true,
 			reason = "result in numeric overflow")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
+			reason = "trivial rounding error")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
 			reason = "trivial rounding error")
 	public void testMoreIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(

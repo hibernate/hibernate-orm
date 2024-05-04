@@ -3513,44 +3513,44 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitDateLiteral(HqlParser.DateLiteralContext ctx) {
-		return ctx.getChild( 1 ).accept( this );
+		return ctx.date().accept( this );
 	}
 
 	@Override
 	public Object visitTimeLiteral(HqlParser.TimeLiteralContext ctx) {
-		return ctx.getChild( 1 ).accept( this );
+		return ctx.time().accept( this );
 	}
 
 	@Override
 	public Object visitJdbcTimestampLiteral(HqlParser.JdbcTimestampLiteralContext ctx) {
-		final ParseTree parseTree = ctx.getChild( 1 );
-		if ( parseTree instanceof HqlParser.DateTimeContext ) {
-			return parseTree.accept( this );
+		final HqlParser.DateTimeContext dateTime = ctx.dateTime();
+		if ( dateTime != null ) {
+			return dateTime.accept( this );
 		}
 		else {
-			return sqlTimestampLiteralFrom( parseTree.getText() );
+			return sqlTimestampLiteralFrom( ctx.genericTemporalLiteralText().getText() );
 		}
 	}
 
 	@Override
 	public Object visitJdbcDateLiteral(HqlParser.JdbcDateLiteralContext ctx) {
-		final ParseTree parseTree = ctx.getChild( 1 );
-		if ( parseTree instanceof HqlParser.DateContext ) {
-			return parseTree.accept( this );
+		final HqlParser.DateContext date = ctx.date();
+		if ( date != null ) {
+			return date.accept( this );
 		}
 		else {
-			return sqlDateLiteralFrom( parseTree.getText() );
+			return sqlDateLiteralFrom( ctx.genericTemporalLiteralText().getText() );
 		}
 	}
 
 	@Override
 	public Object visitJdbcTimeLiteral(HqlParser.JdbcTimeLiteralContext ctx) {
-		final ParseTree parseTree = ctx.getChild( 1 );
-		if ( parseTree instanceof HqlParser.TimeContext ) {
-			return parseTree.accept( this );
+		final HqlParser.TimeContext time = ctx.time();
+		if ( time != null ) {
+			return time.accept( this );
 		}
 		else {
-			return sqlTimeLiteralFrom( parseTree.getText() );
+			return sqlTimeLiteralFrom( ctx.genericTemporalLiteralText().getText() );
 		}
 	}
 

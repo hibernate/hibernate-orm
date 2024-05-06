@@ -533,7 +533,10 @@ public class PostgreSQLDialect extends Dialect {
 		}
 	}
 
-	@Deprecated
+	/**
+	 * @deprecated No longer used, and should be removed
+	 */
+	@Deprecated(forRemoval = true)
 	protected void extractField(
 			StringBuilder pattern,
 			TemporalUnit unit,

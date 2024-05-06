@@ -7,12 +7,14 @@
 package org.hibernate.boot.jaxb.hbm.transform;
 
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.boot.MappingException;
@@ -155,10 +157,14 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
+import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 
 import static org.hibernate.boot.jaxb.hbm.transform.HbmTransformationLogging.TRANSFORMATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -234,7 +240,24 @@ public class HbmXmlTransformer {
 		transferFetchProfiles();
 		transferDatabaseObjects();
 
+		if ( TRANSFORMATION_LOGGER.isDebugEnabled() ) {
+			dumpTransformed( origin, ormRoot );
+		}
 		return ormRoot;
+	}
+
+	private static void dumpTransformed(Origin origin, JaxbEntityMappingsImpl ormRoot) {
+		try {
+			JAXBContext ctx = JAXBContext.newInstance( JaxbEntityMappingsImpl.class );
+			Marshaller marshaller = ctx.createMarshaller();
+			marshaller.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, true );
+			final StringWriter stringWriter = new StringWriter();
+			marshaller.marshal( ormRoot, stringWriter );
+			TRANSFORMATION_LOGGER.debugf( "Transformed hbm.xml (%s):\n%s", origin, stringWriter.toString() );
+		}
+		catch (JAXBException e) {
+			throw new RuntimeException( e );
+		}
 	}
 
 	private <T> void transfer(Supplier<T> source, Consumer<T> target) {
@@ -1479,15 +1502,18 @@ public class HbmXmlTransformer {
 	}
 
 	private JaxbManyToOneImpl transformManyToOne(final JaxbHbmManyToOneType hbmNode) {
-		if ( hbmNode.getNotFound() != null ) {
-			handleUnsupported( "`not-found` not supported for transformation" );
-		}
-
 		final JaxbManyToOneImpl m2o = new JaxbManyToOneImpl();
 		m2o.setAttributeAccessor( hbmNode.getAccess() );
 		m2o.setCascade( convertCascadeType( hbmNode.getCascade() ) );
-		m2o.setForeignKeys( new JaxbForeignKeyImpl() );
-		m2o.getForeignKeys().setName( hbmNode.getForeignKey() );
+		if ( hbmNode.getForeignKey() != null ) {
+			m2o.setForeignKeys( new JaxbForeignKeyImpl() );
+			if ( "none".equalsIgnoreCase( hbmNode.getForeignKey() ) ) {
+				m2o.getForeignKeys().setConstraintMode( ConstraintMode.NO_CONSTRAINT );
+			}
+			else {
+				m2o.getForeignKeys().setName( hbmNode.getForeignKey() );
+			}
+		}
 
 		transferColumnsAndFormulas(
 				new ColumnAndFormulaSource() {
@@ -1543,7 +1569,19 @@ public class HbmXmlTransformer {
 			m2o.setTargetEntity( hbmNode.getClazz() );
 		}
 		transferFetchable( hbmNode.getLazy(), hbmNode.getFetch(), hbmNode.getOuterJoin(), null, m2o );
+
+		if ( hbmNode.getNotFound() != null ) {
+			m2o.setNotFound( interpretNotFoundAction( hbmNode.getNotFound() ) );
+		}
+
 		return m2o;
+	}
+
+	private NotFoundAction interpretNotFoundAction(JaxbHbmNotFoundEnum hbmNotFound) {
+		return switch ( hbmNotFound ) {
+			case EXCEPTION -> NotFoundAction.EXCEPTION;
+			case IGNORE -> NotFoundAction.IGNORE;
+		};
 	}
 
 

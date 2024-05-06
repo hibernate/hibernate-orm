@@ -147,7 +147,12 @@ For conceptual reasons, the two kinds of duration cannot be cleanly composed.
 
 Literal duration expressions are of form `n unit`, for example `1 day` or `10 year` or `100 nanosecond`.
 
-The unit may be: `day`, `month`, `quarter`, `year`, `second`, `minute`, `hour`, or `nanosecond`.
+[source, hql]
+----
+select start, end, start - 30 minute from Event
+----
+
+The unit may be: `day`, `week`, `month`, `quarter`, `year`, `second`, `minute`, `hour`, or `nanosecond`.
 
 [NOTE]
 ====

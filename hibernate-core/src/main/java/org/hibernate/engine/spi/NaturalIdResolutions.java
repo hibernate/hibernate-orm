@@ -69,6 +69,10 @@ public interface NaturalIdResolutions {
 	 * Removes any cross-reference from the L2 cache
 	 */
 	void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean delayToAfterTransactionCompletion);
+	
+	default void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean delayToAfterTransactionCompletion) {
+		removeSharedResolution( id, naturalId, entityDescriptor );
+	}
 
 	/**
 	 * Find the cached natural-id for the given identifier

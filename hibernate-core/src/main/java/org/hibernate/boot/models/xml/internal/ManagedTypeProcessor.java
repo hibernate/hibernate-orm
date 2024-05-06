@@ -41,6 +41,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.ModelsClassLogging;
+import org.hibernate.models.internal.RenderingCollectorImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.spi.AnnotationUsage;
@@ -61,6 +62,7 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 
+import static org.hibernate.boot.models.xml.XmlProcessLogging.XML_PROCESS_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -571,6 +573,18 @@ public class ManagedTypeProcessor {
 				classDetails,
 				xmlDocumentContext
 		);
+
+		renderClass( classDetails, xmlDocumentContext );
+	}
+
+	private static void renderClass(MutableClassDetails classDetails, XmlDocumentContext xmlDocumentContext) {
+		if ( !XML_PROCESS_LOGGER.isDebugEnabled() ) {
+			return;
+		}
+
+		final RenderingCollectorImpl renderingCollector = new RenderingCollectorImpl();
+		classDetails.render( renderingCollector );
+		XML_PROCESS_LOGGER.debugf( "Class annotations from XML for %s:\n%s", classDetails.getName(), renderingCollector.toString() );
 	}
 
 	private static void applyAccessAnnotation(
@@ -826,6 +840,8 @@ public class ManagedTypeProcessor {
 		}
 
 		processEntityOrMappedSuperclass( jaxbMappedSuperclass, classDetails, xmlDocumentContext );
+
+		renderClass( classDetails, xmlDocumentContext );
 	}
 
 	public static void processOverrideMappedSuperclass(List<XmlProcessingResult.OverrideTuple<JaxbMappedSuperclassImpl>> mappedSuperclassesOverrides) {

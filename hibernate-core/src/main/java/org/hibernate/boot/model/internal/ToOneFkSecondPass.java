@@ -97,10 +97,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 
 	@Override
 	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses) throws MappingException {
-		if ( value instanceof ManyToOne ) {
+		if ( value instanceof ManyToOne manyToOne ) {
 			//TODO: move this validation logic to a separate ManyToOneSecondPass
 			//      for consistency with how this is handled for OneToOnes
-			final ManyToOne manyToOne = (ManyToOne) value;
 			final String targetEntityName = manyToOne.getReferencedEntityName();
 			final PersistentClass targetEntity = persistentClasses.get( targetEntityName );
 			if ( targetEntity == null ) {
@@ -111,15 +110,29 @@ public class ToOneFkSecondPass extends FkSecondPass {
 						+ "' targets the type '" + targetEntityName + "'" + problem );
 			}
 			manyToOne.setPropertyName( path );
-			createSyntheticPropertyReference(
-					columns,
-					targetEntity,
-					persistentClass,
-					manyToOne,
-					path,
-					false,
-					buildingContext
-			);
+			final String propertyRef = columns.getReferencedProperty();
+			if ( propertyRef != null ) {
+				handlePropertyRef(
+						columns,
+						targetEntity,
+						persistentClass,
+						manyToOne,
+						path,
+						propertyRef,
+						buildingContext
+				);
+			}
+			else {
+				createSyntheticPropertyReference(
+						columns,
+						targetEntity,
+						persistentClass,
+						manyToOne,
+						path,
+						false,
+						buildingContext
+				);
+			}
 			TableBinder.bindForeignKey( targetEntity, persistentClass, columns, manyToOne, unique, buildingContext );
 			// HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			if ( !manyToOne.isIgnoreNotFound() ) {
@@ -132,5 +145,26 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		else {
 			throw new AssertionFailure( "FkSecondPass for a wrong value type: " + value.getClass().getName() );
 		}
+	}
+
+	private void handlePropertyRef(
+			AnnotatedJoinColumns columns,
+			PersistentClass targetEntity,
+			PersistentClass persistentClass,
+			ManyToOne manyToOne,
+			String path,
+			String referencedPropertyName,
+			MetadataBuildingContext buildingContext) {
+		( (ToOne) value ).setReferencedPropertyName( referencedPropertyName );
+		( (ToOne) value ).setReferenceToPrimaryKey( false );
+		buildingContext.getMetadataCollector().addUniquePropertyReference(
+				targetEntity.getEntityName(),
+				referencedPropertyName
+		);
+		buildingContext.getMetadataCollector().addPropertyReferencedAssociation(
+				targetEntity.getEntityName(),
+				path,
+				referencedPropertyName
+		);
 	}
 }

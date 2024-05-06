@@ -142,6 +142,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPropertyRefImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryParamTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularAssociationAttribute;
@@ -1515,50 +1516,57 @@ public class HbmXmlTransformer {
 			}
 		}
 
-		transferColumnsAndFormulas(
-				new ColumnAndFormulaSource() {
-					@Override
-					public String getColumnAttribute() {
-						return hbmNode.getColumnAttribute();
-					}
+		if ( StringHelper.isNotEmpty( hbmNode.getPropertyRef() ) ) {
+			m2o.setPropertyRef( new JaxbPropertyRefImpl() );
+			m2o.getPropertyRef().setName( hbmNode.getPropertyRef() );
+		}
+		else {
+			transferColumnsAndFormulas(
+					new ColumnAndFormulaSource() {
+						@Override
+						public String getColumnAttribute() {
+							return hbmNode.getColumnAttribute();
+						}
 
-					@Override
-					public String getFormulaAttribute() {
-						return hbmNode.getFormulaAttribute();
-					}
+						@Override
+						public String getFormulaAttribute() {
+							return hbmNode.getFormulaAttribute();
+						}
 
-					@Override
-					public List<Serializable> getColumnOrFormula() {
-						return hbmNode.getColumnOrFormula();
-					}
+						@Override
+						public List<Serializable> getColumnOrFormula() {
+							return hbmNode.getColumnOrFormula();
+						}
 
-					@Override
-					public SourceColumnAdapter wrap(Serializable column) {
-						return new SourceColumnAdapterJaxbHbmColumnType( (JaxbHbmColumnType) column );
-					}
-				},
-				new ColumnAndFormulaTarget() {
-					@Override
-					public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
-						return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
-					}
+						@Override
+						public SourceColumnAdapter wrap(Serializable column) {
+							return new SourceColumnAdapterJaxbHbmColumnType( (JaxbHbmColumnType) column );
+						}
+					},
+					new ColumnAndFormulaTarget() {
+						@Override
+						public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
+							return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
+						}
 
-					@Override
-					public void addColumn(TargetColumnAdapter column) {
-						m2o.getJoinColumns().add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
-					}
+						@Override
+						public void addColumn(TargetColumnAdapter column) {
+							m2o.getJoinColumns()
+									.add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
+						}
 
-					@Override
-					public void addFormula(String formula) {
-						handleUnsupportedContent(
-								"<many-to-one/> [name=" + hbmNode.getName() + "] specified formula [" + formula +
-										"] which is not supported for transformation; skipping"
-						);
-					}
-				},
-				ColumnDefaultsBasicImpl.INSTANCE,
-				null
-		);
+						@Override
+						public void addFormula(String formula) {
+							handleUnsupportedContent(
+									"<many-to-one/> [name=" + hbmNode.getName() + "] specified formula [" + formula +
+											"] which is not supported for transformation; skipping"
+							);
+						}
+					},
+					ColumnDefaultsBasicImpl.INSTANCE,
+					null
+			);
+		}
 
 		m2o.setName( hbmNode.getName() );
 		m2o.setOptional( hbmNode.isNotNull() == null || !hbmNode.isNotNull() );

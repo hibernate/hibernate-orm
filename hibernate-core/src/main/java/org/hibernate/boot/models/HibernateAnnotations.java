@@ -141,6 +141,7 @@ public interface HibernateAnnotations {
 	AnnotationDescriptor<Parent> PARENT = createOrmDescriptor( Parent.class );
 	AnnotationDescriptor<PartitionKey> PARTITION_KEY = createOrmDescriptor( PartitionKey.class );
 	AnnotationDescriptor<Polymorphism> POLYMORPHISM = createOrmDescriptor( Polymorphism.class );
+	AnnotationDescriptor<PropertyRef> PROPERTY_REF = createOrmDescriptor( PropertyRef.class );
 	AnnotationDescriptor<Proxy> PROXY = createOrmDescriptor( Proxy.class );
 	AnnotationDescriptor<RowId> ROW_ID = createOrmDescriptor( RowId.class );
 	AnnotationDescriptor<SecondaryRows> SECONDARY_ROWS = createOrmDescriptor( SecondaryRows.class );

@@ -10,6 +10,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.PropertyRef;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -28,6 +29,7 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 
+import static org.hibernate.boot.models.HibernateAnnotations.PROPERTY_REF;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyNotFound;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
@@ -58,7 +60,17 @@ public class ManyToOneAttributeProcessing {
 		CommonAttributeProcessing.applyAttributeBasics( jaxbManyToOne, memberDetails, manyToOneAnn, accessType, xmlDocumentContext );
 
 		TableProcessing.transformJoinTable( jaxbManyToOne.getJoinTable(), memberDetails, xmlDocumentContext );
-		JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
+
+		if ( jaxbManyToOne.getPropertyRef() != null ) {
+			final MutableAnnotationUsage<PropertyRef> propertyRefUsage = memberDetails.applyAnnotationUsage(
+					PROPERTY_REF,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			propertyRefUsage.setAttributeValue( "value", jaxbManyToOne.getPropertyRef().getName() );
+		}
+		else {
+			JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
+		}
 
 		applyNotFound( jaxbManyToOne, memberDetails, xmlDocumentContext );
 		applyOnDelete( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );

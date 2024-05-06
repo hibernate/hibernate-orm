@@ -448,7 +448,8 @@ public class EntityBinder {
 		if ( jpaTableUsage != null ) {
 			final Table table = persistentClass.getTable();
 			TableBinder.addJpaIndexes( table, jpaTableUsage.getList( "indexes" ), context );
-			TableBinder.addTableCheck(  table, jpaTableUsage.findAttributeValue( "check" ) );
+			TableBinder.addTableCheck( table, jpaTableUsage.findAttributeValue( "check" ) );
+			TableBinder.addTableComment( table, jpaTableUsage.getString( "comment" ) );
 		}
 
 		final InFlightMetadataCollector.EntityTableXref entityTableXref = context
@@ -2171,7 +2172,9 @@ public class EntityBinder {
 				joinTable.getList( "joinColumns" ),
 				joinTable.getList( "uniqueConstraints" )
 		);
-		TableBinder.addTableCheck( join.getTable(), joinTable.findAttributeValue( "check" ));
+		final Table table = join.getTable();
+		TableBinder.addTableCheck( table, joinTable.findAttributeValue( "check" ) );
+		TableBinder.addTableComment( table, joinTable.getString( "comment" ) );
 		return join;
 	}
 
@@ -2188,7 +2191,8 @@ public class EntityBinder {
 		);
 		final Table table = join.getTable();
 		new IndexBinder( context ).bindIndexes( table, secondaryTable.getList( "indexes" ) );
-		TableBinder.addTableCheck( table, secondaryTable.findAttributeValue( "check" ));
+		TableBinder.addTableCheck( table, secondaryTable.findAttributeValue( "check" ) );
+		TableBinder.addTableComment( table, secondaryTable.getString( "comment" ) );
 		return join;
 	}
 

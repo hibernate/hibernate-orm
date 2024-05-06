@@ -22,6 +22,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
@@ -881,6 +882,12 @@ public class TableBinder {
 						)
 				);
 			}
+		}
+	}
+
+	static void addTableComment(Table table, String comment) {
+		if ( StringHelper.isNotEmpty( comment ) ) {
+			table.setComment( comment );
 		}
 	}
 

@@ -803,10 +803,10 @@ public class CockroachDialect extends Dialect {
 
 	private static String intervalPattern(TemporalUnit unit) {
 		switch (unit) {
+			case NATIVE:
+				return "(?2)*interval '1 microsecond'";
 			case NANOSECOND:
 				return "(?2)/1e3*interval '1 microsecond'";
-			case NATIVE:
-				return "(?2)*interval '1 second'";
 			case QUARTER: //quarter is not supported in interval literals
 				return "(?2)*interval '3 month'";
 			case WEEK: //week is not supported in interval literals

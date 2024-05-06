@@ -11,6 +11,8 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sequence.TiDBSequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -18,6 +20,8 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTiDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * A {@linkplain Dialect SQL dialect} for TiDB.
@@ -176,5 +180,23 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		if ( unit == TemporalUnit.SECOND ) {
+			// TiDB doesn't natively support adding fractional seconds
+			return "timestampadd(microsecond,?2*1e6,?3)";
+		}
+		return super.timestampaddPattern( unit, temporalType, intervalType );
+	}
+
+	@Override
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		if ( unit == TemporalUnit.SECOND ) {
+			// TiDB doesn't natively support adding fractional seconds
+			return "timestampadd(microsecond,?2*1e6,?3)";
+		}
+		return super.timestampdiffPattern( unit, fromTemporalType, toTemporalType );
 	}
 }

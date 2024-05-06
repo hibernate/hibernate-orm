@@ -84,15 +84,7 @@ public class OneToManyAttributeProcessing {
 			onDeleteAnn.setAttributeValue( "action", jaxbOneToMany.getOnDelete() );
 		}
 
-		if ( jaxbOneToMany.getNotFound() != null ) {
-			if ( jaxbOneToMany.getNotFound() != NotFoundAction.EXCEPTION ) {
-				final MutableAnnotationUsage<NotFound> notFoundAnn = memberDetails.applyAnnotationUsage(
-						HibernateAnnotations.NOT_FOUND,
-						xmlDocumentContext.getModelBuildingContext()
-				);
-				notFoundAnn.setAttributeValue( "action", jaxbOneToMany.getNotFound() );
-			}
-		}
+		XmlAnnotationHelper.applyNotFound( jaxbOneToMany, memberDetails, xmlDocumentContext );
 
 		return memberDetails;
 	}

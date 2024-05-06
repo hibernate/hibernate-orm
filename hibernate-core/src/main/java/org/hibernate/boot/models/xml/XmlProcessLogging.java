@@ -15,7 +15,7 @@ import org.jboss.logging.Logger;
  */
 @Internal
 public interface XmlProcessLogging {
-	String NAME = "org.hibernate.models.xml";
+	String NAME = "org.hibernate.orm.models.xml";
 
 	Logger XML_PROCESS_LOGGER = Logger.getLogger( NAME );
 }

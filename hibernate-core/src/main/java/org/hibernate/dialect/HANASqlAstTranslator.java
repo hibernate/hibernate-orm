@@ -63,6 +63,11 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		}
 	}
 
+	@Override
+	protected void visitArithmeticOperand(Expression expression) {
+		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+	}
+
 	@SuppressWarnings("removal")
 	private boolean isHanaCloud() {
 		return ( (AbstractHANADialect) getDialect() ).isCloud();

@@ -19,6 +19,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 @RequiresDialect(value = OracleDialect.class, majorVersion = 12)
@@ -42,11 +43,12 @@ public class Oracle12LimitTest {
 					final Root<Person> personRoot = criteriaquery.from( Person.class );
 					final Join<Person, Travel> travels = personRoot.join( "travels", JoinType.LEFT );
 
-					criteriaquery.select( personRoot ).
+					final Path<String> destination = travels.get( "destination" );
+					criteriaquery.multiselect( personRoot, destination ).
 							where( criteriabuilder.or( criteriabuilder.equal( personRoot.get( "name" ), "A" ) ) )
 							.distinct( true );
 
-					criteriaquery.orderBy( criteriabuilder.desc( criteriabuilder.upper( travels.get( "destination" ) ) ) );
+					criteriaquery.orderBy( criteriabuilder.desc( criteriabuilder.upper( destination ) ) );
 
 					final TypedQuery<Person> createQuery = session.createQuery( criteriaquery );
 

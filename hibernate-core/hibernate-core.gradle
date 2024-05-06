@@ -251,61 +251,6 @@ tasks.withType( Test.class ).each { test ->
     }
 }
 
-// Tests with records
-if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
-
-    // Add a new source set, which contains tests that can run on JDK17+
-    sourceSets {
-        testJava17 {
-            java {
-                srcDirs = ['src/test/java17']
-            }
-            // Refer to the main test resources to avoid processing variables twice
-            resources {
-                srcDirs tasks.processTestResources
-            }
-        }
-    }
-
-    // For the new source set, we need to configure the source and target version to 17
-    compileTestJava17Java {
-        javaCompiler = javaToolchains.compilerFor {
-            languageVersion = jdkVersions.test.compiler
-        }
-        sourceCompatibility = 17
-        targetCompatibility = 17
-        // We also depend on the main test resources
-        dependsOn( tasks.processTestResources )
-    }
-
-    // The source set gets a custom configuration which extends the normal test implementation config
-    configurations {
-        testJava17Implementation.extendsFrom(testImplementation, testRuntimeOnly)
-        testJava17CompileOnly.extendsFrom(testCompileOnly)
-    }
-
-    // Add the output from src/main/java as dependency
-    dependencies {
-        testJava17Implementation files(sourceSets.main.output.classesDirs) {
-            builtBy compileJava
-        }
-    }
-
-    // We execute the Java 17 tests in a custom test task
-    task testJava17(type: Test) {
-        javaLauncher = javaToolchains.launcherFor {
-            languageVersion = jdkVersions.test.launcher
-        }
-        useJUnitPlatform()
-        testClassesDirs = sourceSets.testJava17.output.classesDirs
-        classpath = sourceSets.testJava17.runtimeClasspath
-    }
-
-    testClasses.dependsOn compileTestJava17Java
-    // And run this as part of the check task by default
-    check.dependsOn testJava17
-}
-
 tasks.named( "javadoc", Javadoc ) {
     configure(options) {
         overview = rootProject.file( "shared/javadoc/overview.html" )

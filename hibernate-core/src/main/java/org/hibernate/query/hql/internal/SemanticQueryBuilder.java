@@ -3442,6 +3442,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public Object visitArrayLiteral(HqlParser.ArrayLiteralContext ctx) {
+		final List<HqlParser.ExpressionContext> expressionContexts = ctx.expression();
+		int count = expressionContexts.size();
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>( count );
+		for ( HqlParser.ExpressionContext expressionContext : expressionContexts ) {
+			arguments.add( (SqmTypedNode<?>) expressionContext.accept( this ) );
+		}
+		return getFunctionDescriptor( "array" ).generateSqmExpression(
+				arguments,
+				null,
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
 	public Object visitGeneralizedLiteral(HqlParser.GeneralizedLiteralContext ctx) {
 		throw new UnsupportedOperationException();
 	}

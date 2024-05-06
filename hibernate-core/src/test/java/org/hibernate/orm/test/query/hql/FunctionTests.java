@@ -1948,8 +1948,6 @@ public class FunctionTests {
 			reason = "result in numeric overflow")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
 			reason = "trivial rounding error")
-	@SkipForDialect(dialectClass = CockroachDialect.class,
-			reason = "trivial rounding error")
 	public void testMoreIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

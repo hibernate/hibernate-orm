@@ -184,19 +184,10 @@ public class TiDBDialect extends MySQLDialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( unit == TemporalUnit.SECOND ) {
+		if ( unit == TemporalUnit.SECOND && intervalType == null ) {
 			// TiDB doesn't natively support adding fractional seconds
 			return "timestampadd(microsecond,?2*1e6,?3)";
 		}
 		return super.timestampaddPattern( unit, temporalType, intervalType );
-	}
-
-	@Override
-	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		if ( unit == TemporalUnit.SECOND ) {
-			// TiDB doesn't natively support adding fractional seconds
-			return "timestampadd(microsecond,?2*1e6,?3)";
-		}
-		return super.timestampdiffPattern( unit, fromTemporalType, toTemporalType );
 	}
 }

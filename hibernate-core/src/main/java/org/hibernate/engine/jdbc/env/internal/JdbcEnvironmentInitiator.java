@@ -128,12 +128,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion);
 		}
-		else if ( explicitDialectConfiguration(
-				configurationValues,
-				explicitDatabaseName,
-				explicitDatabaseMajorVersion,
-				explicitDatabaseMinorVersion,
-				explicitDatabaseVersion) ) {
+		else if ( explicitDialectConfiguration( explicitDatabaseName, configurationValues ) ) {
 			return getJdbcEnvironmentWithExplicitConfiguration(
 					configurationValues,
 					registry,
@@ -394,14 +389,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 	}
 
-	private static boolean explicitDialectConfiguration(
-			Map<String, Object> configurationValues,
-			String explicitDatabaseName,
-			Integer explicitDatabaseMajorVersion,
-			Integer explicitDatabaseMinorVersion,
-			String explicitDatabaseVersion) {
-		return ( isNotEmpty(explicitDatabaseVersion) || explicitDatabaseMajorVersion != null || explicitDatabaseMinorVersion != null )
-			&& ( isNotEmpty(explicitDatabaseName) || isNotNullAndNotEmpty( configurationValues.get(DIALECT) ) );
+	private static boolean explicitDialectConfiguration(String explicitDatabaseName,
+			Map<String, Object> configurationValues) {
+		return isNotEmpty( explicitDatabaseName ) || isNotNullAndNotEmpty( configurationValues.get( DIALECT ) );
 	}
 
 	private static boolean isNotNullAndNotEmpty(Object o) {
@@ -502,7 +492,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				String databaseName,
 				String databaseVersion,
 				int databaseMajorVersion,
-				int databaseMinorVersion, 
+				int databaseMinorVersion,
 				int databaseMicroVersion,
 				String driverName,
 				int driverMajorVersion,

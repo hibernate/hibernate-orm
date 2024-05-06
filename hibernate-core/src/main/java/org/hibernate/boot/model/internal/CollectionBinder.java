@@ -2586,8 +2586,10 @@ public abstract class CollectionBinder {
 		} );
 		property.forEachAnnotationUsage(
 				jakarta.persistence.JoinTable.class,
-				(usage) ->
-						TableBinder.addTableCheck( collectionTable, usage.findAttributeValue( "check" ) )
+				(usage) -> {
+					TableBinder.addTableCheck( collectionTable, usage.findAttributeValue( "check" ) );
+					TableBinder.addTableComment( collectionTable, usage.getString( "comment" ) );
+				}
 		);
 	}
 

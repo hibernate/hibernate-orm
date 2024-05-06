@@ -175,9 +175,9 @@ The following table illustrates a list of commands for various databases that ca
 |`./docker_db.sh edb`
 |`./gradlew test -Pdb=edb_ci`
 
-|Oracle XE
+|Oracle
 |`./docker_db.sh oracle`
-|`./gradlew test -Pdb=oracle_free_ci`
+|`./gradlew test -Pdb=oracle_ci`
 
 |DB2
 |`./docker_db.sh db2`

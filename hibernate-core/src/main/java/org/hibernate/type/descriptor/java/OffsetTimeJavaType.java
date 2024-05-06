@@ -186,9 +186,14 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 			final OffsetTime offsetTime = time.toLocalTime()
 					.atOffset( getCurrentJdbcOffset( options) )
 					.withOffsetSameInstant( getCurrentSystemOffset() );
-			final long millis = time.getTime() % 1000;
+			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
 				return offsetTime;
+			}
+			if ( millis < 0 ) {
+				// The milliseconds for a Time could be negative,
+				// which usually means the time is in a different time zone
+				millis += 1_000L;
 			}
 			return offsetTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
 		}

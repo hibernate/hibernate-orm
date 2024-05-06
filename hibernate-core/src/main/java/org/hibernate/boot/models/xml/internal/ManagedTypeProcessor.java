@@ -55,6 +55,7 @@ import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -121,6 +122,7 @@ public class ManagedTypeProcessor {
 					jaxbEntity.getAccess(),
 					jaxbRoot.getAccess(),
 					xmlDocumentContext.getEffectiveDefaults().getDefaultPropertyAccessType(),
+					defaultAccessTypeFromDefaultAccessor( xmlDocumentContext ),
 					AccessType.PROPERTY
 			);
 		}
@@ -138,6 +140,21 @@ public class ManagedTypeProcessor {
 				jaxbRoot,
 				xmlDocumentContext
 		);
+	}
+
+	private static AccessType defaultAccessTypeFromDefaultAccessor(XmlDocumentContext xmlDocumentContext) {
+		final String defaultAccessStrategyName = xmlDocumentContext.getEffectiveDefaults().getDefaultAccessStrategyName();
+		if ( BuiltInPropertyAccessStrategies.BASIC.getExternalName().equalsIgnoreCase( defaultAccessStrategyName )
+				|| BuiltInPropertyAccessStrategies.BASIC.getStrategy().getClass().getName().equals( defaultAccessStrategyName ) ) {
+			return AccessType.PROPERTY;
+		}
+
+		if ( BuiltInPropertyAccessStrategies.FIELD.getExternalName().equalsIgnoreCase( defaultAccessStrategyName )
+				|| BuiltInPropertyAccessStrategies.FIELD.getStrategy().getClass().getName().equals( defaultAccessStrategyName ) ) {
+			return AccessType.FIELD;
+		}
+
+		return null;
 	}
 
 	/**

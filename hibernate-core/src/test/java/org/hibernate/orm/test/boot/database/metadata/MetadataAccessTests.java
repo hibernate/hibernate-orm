@@ -45,7 +45,8 @@ public class MetadataAccessTests {
 		registryBuilder.applySetting( AvailableSettings.JAKARTA_JDBC_PASSWORD, TestingDatabaseInfo.PASS );
 
 		// make certain there is no explicit dialect configured
-		assertThat( registryBuilder.getSettings() ).doesNotContainKey( JdbcSettings.DIALECT );
+		assertThat( registryBuilder.getSettings() )
+				.doesNotContainKeys( JdbcSettings.DIALECT, JdbcSettings.JAKARTA_HBM2DDL_DB_NAME );
 
 		try (StandardServiceRegistry registry = registryBuilder.build()) {
 			final JdbcEnvironment jdbcEnvironment = registry.getService( JdbcEnvironment.class );
@@ -62,6 +63,8 @@ public class MetadataAccessTests {
 
 		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
 		registryBuilder.applySetting( JdbcSettings.DIALECT, "org.hibernate.dialect.OracleDialect" );
+		assertThat( registryBuilder.getSettings() )
+				.doesNotContainKeys( JdbcSettings.JAKARTA_HBM2DDL_DB_NAME );
 
 		try (StandardServiceRegistry registry = registryBuilder.build()) {
 			final JdbcEnvironment jdbcEnvironment = registry.getService( JdbcEnvironment.class );
@@ -71,10 +74,29 @@ public class MetadataAccessTests {
 	}
 
 	@Test
-	void testAccessDisabledNoDialect() {
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18079")
+	void testAccessDisabledExplicitProductName() {
 		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
 		registryBuilder.clearSettings();
-		assertThat( registryBuilder.getSettings() ).doesNotContainKey( JdbcSettings.DIALECT );
+
+		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
+		registryBuilder.applySetting( JdbcSettings.JAKARTA_HBM2DDL_DB_NAME, "Oracle" );
+		assertThat( registryBuilder.getSettings() )
+				.doesNotContainKeys( JdbcSettings.DIALECT );
+
+		try (StandardServiceRegistry registry = registryBuilder.build()) {
+			final JdbcEnvironment jdbcEnvironment = registry.getService( JdbcEnvironment.class );
+			final Dialect dialect = jdbcEnvironment.getDialect();
+			assertThat( dialect ).isInstanceOf( OracleDialect.class );
+		}
+	}
+
+	@Test
+	void testAccessDisabledNoDialectNorProductName() {
+		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
+		registryBuilder.clearSettings();
+		assertThat( registryBuilder.getSettings() )
+				.doesNotContainKeys( JdbcSettings.DIALECT, JdbcSettings.JAKARTA_HBM2DDL_DB_NAME );
 
 		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
 		try (StandardServiceRegistry registry = registryBuilder.build()) {

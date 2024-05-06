@@ -133,9 +133,14 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 					? ( (java.sql.Time) value )
 					: new java.sql.Time( value.getTime() % 86_400_000 );
 			final LocalTime localTime = time.toLocalTime();
-			final long millis = time.getTime() % 1000;
+			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
 				return localTime;
+			}
+			if ( millis < 0 ) {
+				// The milliseconds for a Time could be negative,
+				// which usually means the time is in a different time zone
+				millis += 1_000L;
 			}
 			return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
 		}

@@ -253,7 +253,7 @@ public class BasicValuedCollectionPart
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		if ( ResultsLogger.DEBUG_ENABLED ) {
+		if ( ResultsLogger.RESULTS_LOGGER.isDebugEnabled() ) {
 			ResultsLogger.RESULTS_LOGGER.debugf(
 					"Generating Fetch for collection-part : `%s` -> `%s`",
 					collectionDescriptor.getRole(),
@@ -281,6 +281,7 @@ public class BasicValuedCollectionPart
 		);
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( getJdbcMapping() );

@@ -23,6 +23,8 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.orm.test.tool.schema.ExecutionOptionsTestImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
@@ -56,7 +58,7 @@ public class EnumCheckTests {
 	public void testFallbackToolIsPickedUp() {
 		ServiceRegistryScope.using(
 				() -> {
-					return new StandardServiceRegistryBuilder()
+					return ServiceRegistryUtil.serviceRegistryBuilder()
 							.applySetting( AvailableSettings.DIALECT, CustomDialect.class.getName() )
 							.build();
 				},

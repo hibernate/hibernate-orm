@@ -132,8 +132,7 @@ public class OraclePaginationWithLocksTest {
 							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setFollowOnLocking( false ) )
 							.getResultList();
 					assertEquals( 10, people.size() );
-					assertFalse( mostRecentStatementInspector.sqlContains( "fetch" ) );
-					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 
@@ -146,7 +145,7 @@ public class OraclePaginationWithLocksTest {
 							.setMaxResults( 10 )
 							.getResultList();
 					assertEquals( 10, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 
@@ -176,8 +175,7 @@ public class OraclePaginationWithLocksTest {
 							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setFollowOnLocking( false ) )
 							.getResultList();
 					assertEquals( 10, people.size() );
-					assertFalse( mostRecentStatementInspector.sqlContains( "fetch" ) );
-					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 
@@ -188,7 +186,7 @@ public class OraclePaginationWithLocksTest {
 							.setMaxResults( 10 )
 							.getResultList();
 					assertEquals( 10, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 
@@ -213,8 +211,7 @@ public class OraclePaginationWithLocksTest {
 							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setFollowOnLocking( false ) )
 							.getResultList();
 					assertEquals( 1, people.size() );
-					assertFalse( mostRecentStatementInspector.sqlContains( "fetch" ) );
-					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 
@@ -225,7 +222,7 @@ public class OraclePaginationWithLocksTest {
 							.setMaxResults( 10 )
 							.getResultList();
 					assertEquals( 1, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 

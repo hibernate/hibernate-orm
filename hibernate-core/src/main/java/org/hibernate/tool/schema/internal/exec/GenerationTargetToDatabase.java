@@ -66,7 +66,9 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 
 	@Override
 	public void beforeScript(ScriptSourceInput scriptSource) {
-		log.executingScript( scriptSource.getScriptDescription() );
+		if ( scriptSource.exists() ) {
+			log.executingScript( scriptSource.getScriptDescription() );
+		}
 	}
 
 	@Override

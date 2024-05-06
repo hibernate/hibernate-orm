@@ -55,6 +55,7 @@ public class EntityTypeLiteral
 		return discriminatorType.getJdbcTypeCount();
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return discriminatorType.getJdbcMappings();

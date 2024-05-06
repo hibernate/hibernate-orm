@@ -20,6 +20,9 @@ import jakarta.persistence.RollbackException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
+
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.orm.test.jpa.SettingsGenerator;
 
@@ -115,7 +118,11 @@ public class TransactionCommitFailureTest {
 		);
 	}
 
-	public static class ProxyConnectionProvider extends DriverManagerConnectionProviderImpl {
+	public static class ProxyConnectionProvider extends ConnectionProviderDelegate {
+
+		public ProxyConnectionProvider() {
+			setConnectionProvider( SharedDriverManagerConnectionProviderImpl.getInstance() );
+		}
 
 		@Override
 		public Connection getConnection() throws SQLException {
@@ -130,7 +137,8 @@ public class TransactionCommitFailureTest {
 
 		@Override
 		public void closeConnection(Connection conn) throws SQLException {
-			super.closeConnection( conn );
+			final ConnectionInvocationHandler handler = (ConnectionInvocationHandler) Proxy.getInvocationHandler( conn );
+			super.closeConnection( handler.delegate );
 			connectionIsOpen.set( false );
 		}
 	}

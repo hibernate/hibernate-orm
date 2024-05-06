@@ -36,7 +36,6 @@ public class BeanValidationIntegrator implements Integrator {
 
 	public static final String APPLY_CONSTRAINTS = "hibernate.validator.apply_to_ddl";
 
-	public static final String BV_CHECK_CLASS = "jakarta.validation.ConstraintViolation";
 	public static final String JAKARTA_BV_CHECK_CLASS = "jakarta.validation.ConstraintViolation";
 
 	public static final String MODE_PROPERTY = "javax.persistence.validation.mode";
@@ -165,12 +164,7 @@ public class BeanValidationIntegrator implements Integrator {
 			classLoaderService.classForName( JAKARTA_BV_CHECK_CLASS );
 		}
 		catch (Exception e) {
-			try {
-				classLoaderService.classForName( BV_CHECK_CLASS );
-			}
-			catch (Exception e2) {
-				return false;
-			}
+			return false;
 		}
 		return true;
 	}

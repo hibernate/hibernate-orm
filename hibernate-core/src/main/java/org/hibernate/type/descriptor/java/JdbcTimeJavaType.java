@@ -188,7 +188,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 				return time;
 			}
 			// Preserve milliseconds, which java.sql.Time supports
-			return new Time( time.getTime() + DateTimeUtils.roundToPrecision( localTime.getNano(), 3 ) );
+			return new Time( time.getTime() + DateTimeUtils.roundToPrecision( localTime.getNano(), 3 ) / 1000000 );
 		}
 
 		if ( value instanceof Date ) {

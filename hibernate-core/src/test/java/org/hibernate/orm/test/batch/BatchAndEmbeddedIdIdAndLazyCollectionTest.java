@@ -103,13 +103,13 @@ public class BatchAndEmbeddedIdIdAndLazyCollectionTest {
 					}
 					statementInspector.assertExecutedCount( 2 );
 
-					if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsStandardArrays() ) {
+					if ( scope.getSessionFactory().getJdbcServices().getDialect().useArrayForMultiValuedParameters() ) {
 						Assertions.assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "?" );
 						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "?" );
 					}
 					else {
-						Assertions.assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
-						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
 					}
 				}
 		);

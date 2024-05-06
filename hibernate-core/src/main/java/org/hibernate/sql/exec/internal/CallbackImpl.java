@@ -37,4 +37,9 @@ public class CallbackImpl implements Callback {
 			afterLoadActions.get( i ).afterLoad( entity, entityMappingType, session );
 		}
 	}
+
+	@Override
+	public boolean hasAfterLoadActions() {
+		return !afterLoadActions.isEmpty();
+	}
 }

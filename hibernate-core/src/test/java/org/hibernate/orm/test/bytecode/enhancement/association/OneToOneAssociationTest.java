@@ -15,7 +15,8 @@ import org.junit.runner.RunWith;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-import java.util.UUID;
+
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 /**
  * @author Luis Barreiro
@@ -26,7 +27,7 @@ public class OneToOneAssociationTest {
     @Test
     public void test() {
         User user = new User();
-        user.setLogin( UUID.randomUUID().toString() );
+        user.setLogin( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 
         Customer customer = new Customer();
         customer.setUser( user );
@@ -37,7 +38,7 @@ public class OneToOneAssociationTest {
         EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
 
         User anotherUser = new User();
-        anotherUser.setLogin( UUID.randomUUID().toString() );
+        anotherUser.setLogin( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 
         customer.setUser( anotherUser );
 
@@ -52,7 +53,7 @@ public class OneToOneAssociationTest {
     @Test
     public void testSetNull() {
         User user = new User();
-        user.setLogin( UUID.randomUUID().toString() );
+        user.setLogin( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 
         Customer customer = new Customer();
         customer.setUser( user );

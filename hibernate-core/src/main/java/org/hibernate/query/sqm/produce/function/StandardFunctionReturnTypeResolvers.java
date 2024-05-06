@@ -16,8 +16,10 @@ import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -37,7 +39,7 @@ public class StandardFunctionReturnTypeResolvers {
 	/**
 	 * A resolver that defines an invariant result type.  E.g. `substring` always
 	 * returns a String.  Note however that to account for attribute converters and
-	 * such, this resolver allows the context-impled expression type to be the
+	 * such, this resolver allows the context-implied expression type to be the
 	 * return type so long as the Java types are compatible.
 	 */
 	public static FunctionReturnTypeResolver invariant(BasicType<?> invariantType) {
@@ -103,10 +105,13 @@ public class StandardFunctionReturnTypeResolvers {
 			}
 
 			@Override
-			public ReturnableType<?> resolveFunctionReturnType(ReturnableType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
-				for (SqmTypedNode<?> arg: arguments) {
-					if (arg!=null && arg.getNodeType() instanceof ReturnableType ) {
-						ReturnableType<?> argType = (ReturnableType<?>) arg.getNodeType();
+			public ReturnableType<?> resolveFunctionReturnType(
+					ReturnableType<?> impliedType,
+					List<? extends SqmTypedNode<?>> arguments,
+					TypeConfiguration typeConfiguration) {
+				for ( int i = 0; i < arguments.size(); i++ ) {
+					if ( arguments.get( i ) != null ) {
+						final ReturnableType<?> argType = extractArgumentType( arguments, i + 1 );
 						return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 					}
 				}
@@ -208,8 +213,8 @@ public class StandardFunctionReturnTypeResolvers {
 			List<? extends SqmTypedNode<?>> arguments,
 			int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
-		final SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
-		if ( !(specifiedArgType instanceof ReturnableType ) ) {
+		final SqmExpressible<?> specifiedArgType = getArgumentExpressible( specifiedArgument );
+		if ( specifiedArgType != null && !(specifiedArgType instanceof ReturnableType ) ) {
 			throw new QueryException(
 					String.format(
 							Locale.ROOT,
@@ -222,6 +227,13 @@ public class StandardFunctionReturnTypeResolvers {
 		}
 
 		return (ReturnableType<?>) specifiedArgType;
+	}
+
+	private static SqmExpressible<?> getArgumentExpressible(SqmTypedNode<?> specifiedArgument) {
+		final SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
+		return specifiedArgType instanceof SqmPathSource ?
+				( (SqmPathSource<?>) specifiedArgType ).getSqmPathType() :
+				specifiedArgType;
 	}
 
 	public static JdbcMapping extractArgumentJdbcMapping(

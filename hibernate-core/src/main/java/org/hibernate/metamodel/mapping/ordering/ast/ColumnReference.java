@@ -21,6 +21,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.type.NullType;
+
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * Represents a column-reference used in an order-by fragment
@@ -53,13 +56,10 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			TableGroup tableGroup,
 			String modelPartName,
 			SqlAstCreationState creationState) {
-		TableReference tableReference;
-
-		tableReference = getTableReference( tableGroup );
-
+		final TableReference tableReference = getTableReference( tableGroup );
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 		return sqlExpressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
+				createColumnReferenceKey( tableReference, columnExpression, NullType.INSTANCE ),
 				sqlAstProcessingState -> new org.hibernate.sql.ast.tree.expression.ColumnReference(
 						tableReference,
 						columnExpression,

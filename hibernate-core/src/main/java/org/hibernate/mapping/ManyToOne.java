@@ -143,4 +143,9 @@ public class ManyToOne extends ToOne {
 	public boolean isLogicalOneToOne() {
 		return isLogicalOneToOne;
 	}
+
+	@Override
+	public boolean isNullable() {
+		return getReferencedPropertyName() != null || super.isNullable();
+	}
 }

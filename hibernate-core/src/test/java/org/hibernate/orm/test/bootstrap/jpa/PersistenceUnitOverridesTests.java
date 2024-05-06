@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
@@ -25,10 +26,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.jdbc.DataSourceStub;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.util.jpa.DelegatingPersistenceUnitInfo;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
 import org.junit.Test;
@@ -50,6 +53,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialect( H2Dialect.class )
 public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 	@Test
@@ -368,12 +372,12 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			}
 		};
 
-		final Map<String,Object> integrationSettings = new HashMap<>();
+		final Map<String,Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 		integrationSettings.put( AvailableSettings.JPA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_USER, ConnectionProviderBuilder.USER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
-		integrationSettings.put( "hibernate.connection.init_sql", "" );
+		integrationSettings.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
@@ -407,12 +411,12 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			}
 		};
 
-		final Map<String,Object> integrationSettings = new HashMap<>();
+		final Map<String,Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER );
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_USER, ConnectionProviderBuilder.USER );
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
-		integrationSettings.put( "hibernate.connection.init_sql", "" );
+		integrationSettings.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
@@ -448,7 +452,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
-		final Map integrationSettings = Collections.emptyMap();
+		final Map integrationSettings = ServiceRegistryUtil.createBaseSettings();
 
 		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				info,
@@ -489,10 +493,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
-		final Map integrationSettings = Collections.singletonMap(
-				AvailableSettings.DIALECT,
-				IntegrationDialect.class.getName()
-		);
+		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
+		integrationSettings.put( AvailableSettings.DIALECT, IntegrationDialect.class.getName() );
 
 		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				info,

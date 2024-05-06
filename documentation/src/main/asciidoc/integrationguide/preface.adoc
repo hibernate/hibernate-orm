@@ -1,0 +1,8 @@
+[[preface]]
+== Preface
+
+Hibernate provides many integration points that allow integration new capabilities or supplying custom behavior for standard capabilities.  This guide covers these integration points and is intended for software developers and architects who will be
+
+- integrating Hibernate with Java EE application servers, Spring framework, caching solutions (e.g. Infinispan, Ehcache, Hazelcast).
+- supplying custom integrations
+- want to override standard capabilities

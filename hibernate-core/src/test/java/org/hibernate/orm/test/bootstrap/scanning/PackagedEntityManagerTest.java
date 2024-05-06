@@ -9,6 +9,7 @@ package org.hibernate.orm.test.bootstrap.scanning;
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.SessionFactory;
@@ -40,6 +41,7 @@ import org.hibernate.orm.test.jpa.pack.various.Seat;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -64,7 +66,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gavin King
  * @author Hardy Ferentschik
  */
-@SuppressWarnings("unchecked")
 public class PackagedEntityManagerTest extends PackagingTestCase {
 	private EntityManagerFactory emf;
 	@AfterEach
@@ -80,7 +81,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage );
 
 		// run the test
-		emf = Persistence.createEntityManagerFactory( "defaultpar", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "defaultpar", ServiceRegistryUtil.createBaseSettings() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			ApplicationServer as = new ApplicationServer();
 			as.setName( "JBoss AS" );
@@ -111,7 +112,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildDefaultPar_1_0();
 		addPackageToClasspath( testPackage );
 
-		emf = Persistence.createEntityManagerFactory( "defaultpar_1_0", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "defaultpar_1_0", ServiceRegistryUtil.createBaseSettings() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			ApplicationServer1 as = new ApplicationServer1();
 			as.setName( "JBoss AS" );
@@ -144,7 +145,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 
 		IncrementListener.reset();
 		OtherIncrementListener.reset();
-		emf = Persistence.createEntityManagerFactory( "defaultpar", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "defaultpar", ServiceRegistryUtil.createBaseSettings() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			ApplicationServer as = new ApplicationServer();
 			as.setName( "JBoss AS" );
@@ -179,7 +180,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildExplodedPar();
 		addPackageToClasspath( testPackage );
 
-		emf = Persistence.createEntityManagerFactory( "explodedpar", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "explodedpar", ServiceRegistryUtil.createBaseSettings() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			Carpet carpet = new Carpet();
 			Elephant el = new Elephant();
@@ -199,7 +200,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage );
 
 		try {
-			emf = Persistence.createEntityManagerFactory( "excludehbmpar", new HashMap() );
+			emf = Persistence.createEntityManagerFactory( "excludehbmpar", ServiceRegistryUtil.createBaseSettings() );
 		}
 		catch ( PersistenceException e ) {
 			if ( emf != null ) {
@@ -235,7 +236,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildCfgXmlPar();
 		addPackageToClasspath( testPackage );
 
-		emf = Persistence.createEntityManagerFactory( "cfgxmlpar", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "cfgxmlpar", ServiceRegistryUtil.createBaseSettings() );
 
 		assertTrue( emf.getProperties().containsKey( "hibernate.test-assertable-setting" ) );
 
@@ -261,7 +262,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildSpacePar();
 		addPackageToClasspath( testPackage );
 
-		emf = Persistence.createEntityManagerFactory( "space par", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "space par", ServiceRegistryUtil.createBaseSettings() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			org.hibernate.orm.test.jpa.pack.spacepar.Bug bug = new org.hibernate.orm.test.jpa.pack.spacepar.Bug();
 			bug.setSubject( "Spaces in directory name don't play well on Windows" );
@@ -278,11 +279,12 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildOverridenPar();
 		addPackageToClasspath( testPackage );
 
-		HashMap properties = new HashMap();
+		Map<String, Object> properties = ServiceRegistryUtil.createBaseSettings();
 		properties.put( AvailableSettings.JPA_JTA_DATASOURCE, null );
 		Properties p = new Properties();
 		p.load( ConfigHelper.getResourceAsStream( "/overridenpar.properties" ) );
-		properties.putAll( p );
+		//noinspection rawtypes
+		properties.putAll( (Map) p );
 		emf = Persistence.createEntityManagerFactory( "overridenpar", properties );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			org.hibernate.orm.test.jpa.pack.overridenpar.Bug bug = new org.hibernate.orm.test.jpa.pack.overridenpar.Bug();
@@ -300,7 +302,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", ServiceRegistryUtil.createBaseSettings() );
 		EntityManager em = emf.createEntityManager();
 		try {
 			EventListenerRegistry listenerRegistry = em.unwrap( SharedSessionContractImplementor.class ).getFactory()
@@ -322,7 +324,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", ServiceRegistryUtil.createBaseSettings() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
 			em.persist( item );
@@ -368,7 +370,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", ServiceRegistryUtil.createBaseSettings() );
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		Distributor res = new Distributor();
 		res.setName( "Bruce" );
@@ -413,7 +415,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage, externalJar );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", ServiceRegistryUtil.createBaseSettings() );
 		Scooter scooter = TransactionUtil.doInJPA( () -> emf, em -> {
 			Scooter s = new Scooter();
 			s.setModel( "Abadah" );
@@ -435,7 +437,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage, externalJar );
 
 		// if the jar cannot be resolved, this call should fail
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", ServiceRegistryUtil.createBaseSettings() );
 
 		// but to make sure, also verify that the entity defined in the external jar was found
 		emf.getMetamodel().entity( Airplane.class );
@@ -461,7 +463,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", ServiceRegistryUtil.createBaseSettings() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			Seat seat = new Seat();
 			seat.setNumber( "3B" );

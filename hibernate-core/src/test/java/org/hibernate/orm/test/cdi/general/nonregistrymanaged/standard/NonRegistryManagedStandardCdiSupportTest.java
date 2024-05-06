@@ -21,6 +21,8 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.cdi.general.nonregistrymanaged.Monitor;
 import org.hibernate.orm.test.cdi.general.nonregistrymanaged.NonRegistryManagedBeanConsumingIntegrator;
 import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheAlternativeNamedApplicationScopedBeanImpl;
@@ -171,7 +173,7 @@ public class NonRegistryManagedStandardCdiSupportTest extends BaseUnitTestCase {
 				.applyIntegrator( beanConsumingIntegrator )
 				.build();
 
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 				.build();

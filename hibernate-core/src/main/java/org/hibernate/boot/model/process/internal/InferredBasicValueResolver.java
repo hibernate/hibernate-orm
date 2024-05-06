@@ -334,7 +334,7 @@ public class InferredBasicValueResolver {
 
 		if ( enumStyle == EnumType.STRING ) {
 			//noinspection unchecked
-			return (EnumeratedValueResolution<E, R>) stringEnumValueResolution(
+			return (EnumeratedValueResolution<E, R>) namedEnumValueResolution(
 					enumJavaType,
 					explicitJavaType,
 					explicitJdbcType,
@@ -418,7 +418,7 @@ public class InferredBasicValueResolver {
 		}
 	}
 
-	private static <E extends Enum<E>> EnumeratedValueResolution<E,String> stringEnumValueResolution(
+	private static <E extends Enum<E>> EnumeratedValueResolution<E, Object> namedEnumValueResolution(
 			EnumJavaType<E> enumJavaType,
 			BasicJavaType<?> explicitJavaType,
 			JdbcType explicitJdbcType,
@@ -427,7 +427,7 @@ public class InferredBasicValueResolver {
 		final JdbcType jdbcType = explicitJdbcType == null
 				? enumJavaType.getRecommendedJdbcType( stdIndicators )
 				: explicitJdbcType;
-		final JavaType<String> relationalJtd = stringJavaType( explicitJavaType, stdIndicators, context );
+		final JavaType<Object> relationalJtd = namedJavaType( explicitJavaType, stdIndicators, context );
 
 		return new EnumeratedValueResolution<>(
 				jdbcType,
@@ -442,7 +442,7 @@ public class InferredBasicValueResolver {
 				: relationalJtd.getRecommendedJdbcType( stdIndicators );
 	}
 
-	private static JavaType<String> stringJavaType(
+	private static JavaType<Object> namedJavaType(
 			BasicJavaType<?> explicitJavaType,
 			JdbcTypeIndicators stdIndicators,
 			MetadataBuildingContext context) {
@@ -454,7 +454,7 @@ public class InferredBasicValueResolver {
 								" should handle `java.lang.String` as its relational type descriptor"
 				);
 			}
-			return (JavaType<String>) explicitJavaType;
+			return (JavaType<Object>) explicitJavaType;
 		}
 		else {
 			return context.getMetadataCollector().getTypeConfiguration().getJavaTypeRegistry()
@@ -527,7 +527,8 @@ public class InferredBasicValueResolver {
 				);
 			}
 			else {
-				jtd = reflectedJtd;
+				// Avoid using the DateJavaType and prefer the JdbcTimestampJavaType
+				jtd = reflectedJtd.resolveTypeForPrecision( reflectedJtd.getPrecision(), typeConfiguration );
 			}
 
 			final BasicType<T> jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( jtd, explicitJdbcType );
@@ -556,7 +557,8 @@ public class InferredBasicValueResolver {
 		}
 		else {
 			basicType = typeConfiguration.getBasicTypeRegistry().resolve(
-					reflectedJtd,
+					// Avoid using the DateJavaType and prefer the JdbcTimestampJavaType
+					reflectedJtd.resolveTypeForPrecision( reflectedJtd.getPrecision(), typeConfiguration ),
 					reflectedJtd.getRecommendedJdbcType( stdIndicators )
 			);
 		}

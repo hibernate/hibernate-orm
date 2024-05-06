@@ -309,7 +309,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "select db_name()";
+		return "select user_name()";
 	}
 
 	@Override
@@ -477,9 +477,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
-		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
-		return NameQualifierSupport.CATALOG;
+		return NameQualifierSupport.BOTH;
 	}
 
 	@Override

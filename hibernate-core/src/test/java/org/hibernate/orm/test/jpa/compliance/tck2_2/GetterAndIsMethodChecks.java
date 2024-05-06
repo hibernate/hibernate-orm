@@ -14,6 +14,7 @@ import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -24,7 +25,10 @@ public class GetterAndIsMethodChecks extends BaseUnitTestCase {
 
 	@Test
 	public void testIt() {
-		new MetadataSources().addAnnotatedClass( A.class ).buildMetadata().buildSessionFactory().close();
+		new MetadataSources( ServiceRegistryUtil.serviceRegistry() ).addAnnotatedClass( A.class )
+				.buildMetadata()
+				.buildSessionFactory()
+				.close();
 	}
 
 	@Entity( name= "A" )

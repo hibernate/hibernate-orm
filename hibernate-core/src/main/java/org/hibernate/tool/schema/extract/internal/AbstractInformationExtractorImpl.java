@@ -104,7 +104,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		final List<String> tableTypesList = new ArrayList<>();
 		tableTypesList.add( "TABLE" );
 		tableTypesList.add( "VIEW" );
-		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
+		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings() ) ) {
 			if ( dialect instanceof DB2Dialect ) {
 				tableTypesList.add( "ALIAS" );
 			}
@@ -435,6 +435,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			catch (SQLException ignore) {
 				LOG.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
 			}
+			catch (AbstractMethodError ignore) {
+				// jConnect and jTDS report that they "support" schemas, but they don't really
+			}
 		}
 		return currentSchema;
 	}
@@ -498,6 +501,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			catch (SQLException ignore) {
 				LOG.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
 			}
+			catch (AbstractMethodError ignore) {
+				// jConnect and jTDS report that they "support" schemas, but they don't really
+			}
 		}
 		return currentSchemaFilter;
 	}
@@ -523,7 +529,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						catalogFilter = toMetaDataObjectName( extractionContext.getDefaultCatalog() );
 					}
 					else {
-						catalogFilter = "";
+						catalogFilter = null;
 					}
 				}
 			}
@@ -548,7 +554,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						schemaFilter = toMetaDataObjectName( extractionContext.getDefaultSchema() );
 					}
 					else {
-						schemaFilter = "";
+						schemaFilter = null;
 					}
 				}
 			}

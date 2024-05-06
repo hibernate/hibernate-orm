@@ -52,6 +52,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -69,7 +70,7 @@ public class CollectionJoinTableNamingTest {
 	@TestForIssue( jiraKey = "HHH-9908" )
 	public void testCollectionJoinTableNamingBase() {
 		// really the same as the JPA compliant tests; here we just pick up the default ImplicitNamingStrategy
-		final MetadataSources metadataSources = new MetadataSources();
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
 		try {
 			metadataSources.addAnnotatedClass( Input.class );
 			metadataSources.addAnnotatedClass( Ptx.class );
@@ -90,7 +91,7 @@ public class CollectionJoinTableNamingTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9908" )
 	public void testCollectionJoinTableNamingLegacyJpaStrategy() {
-		final MetadataSources metadataSources = new MetadataSources();
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
 		try {
 			metadataSources.addAnnotatedClass( Input.class );
 			metadataSources.addAnnotatedClass( Ptx.class );
@@ -112,7 +113,7 @@ public class CollectionJoinTableNamingTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9908" )
 	public void testCollectionJoinTableNamingLegacyHbmStrategy() {
-		final MetadataSources metadataSources = new MetadataSources();
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
 		try {
 			metadataSources.addAnnotatedClass( Input.class );
 			metadataSources.addAnnotatedClass( Ptx.class );
@@ -140,7 +141,7 @@ public class CollectionJoinTableNamingTest {
 	public void testCollectionJoinTableNamingJpaCompliantStrategy() {
 		// Even in 4.3, with JPA compliant naming, Hibernate creates an unusable table...
 
-		final MetadataSources metadataSources = new MetadataSources();
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
 		try {
 			metadataSources.addAnnotatedClass( Input.class );
 			metadataSources.addAnnotatedClass( Ptx.class );

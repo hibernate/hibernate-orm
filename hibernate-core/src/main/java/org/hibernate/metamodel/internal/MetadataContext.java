@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -27,6 +28,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -251,6 +253,33 @@ public class MetadataContext {
 		return Collections.unmodifiableMap( identifiableTypesByName );
 	}
 
+	private <X> PersistentAttribute<X, ?> buildAttribute(
+			Property property,
+			IdentifiableDomainType<X> entityType,
+			BiFunction<IdentifiableDomainType<X>, Property, PersistentAttribute<X, ?>> factoryFunction) {
+		final PersistentAttribute<X, ?> attribute;
+		final Component component = property.getValue() instanceof Component ? (Component) property.getValue() : null;
+		if ( component != null && component.isGeneric() ) {
+			// This is an embeddable property that uses generics, we have to retrieve the generic
+			// component previously registered and create the concrete attribute
+			final Component genericComponent = runtimeModelCreationContext.getMetadata()
+					.getGenericComponent( component.getComponentClass() );
+			final Property genericProperty = property.copy();
+			genericProperty.setValue( genericComponent );
+			genericProperty.setGeneric( true );
+			attribute = factoryFunction.apply( entityType, genericProperty );
+			if ( !property.isGeneric() ) {
+				final PersistentAttribute<X, ?> concreteAttribute = factoryFunction.apply( entityType, property );
+				//noinspection unchecked
+				( (AttributeContainer<X>) entityType ).getInFlightAccess().addConcreteGenericAttribute( concreteAttribute );
+			}
+		}
+		else {
+			attribute = factoryFunction.apply( entityType, property );
+		}
+		return attribute;
+	}
+
 	@SuppressWarnings("unchecked")
 	public void wrapUp() {
 		if ( LOG.isTraceEnabled() ) {
@@ -286,9 +315,10 @@ public class MetadataContext {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
-						final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute(
+						final PersistentAttribute<Object, ?> attribute = buildAttribute(
+								property,
 								jpaMapping,
-								property
+								attributeFactory::buildAttribute
 						);
 						if ( attribute != null ) {
 							addAttribute( jpaMapping, attribute );
@@ -329,7 +359,11 @@ public class MetadataContext {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
-						final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute( jpaType, property );
+						final PersistentAttribute<Object, ?> attribute = buildAttribute(
+								property,
+								jpaType,
+								attributeFactory::buildAttribute
+						);
 						if ( attribute != null ) {
 							addAttribute( jpaType, attribute );
 							if ( property.isNaturalIdentifier() ) {
@@ -376,8 +410,9 @@ public class MetadataContext {
 				}
 
 				( ( AttributeContainer<?>) embeddable ).getInFlightAccess().finishUp();
-				// Do not process embeddables for entity types i.e. id-classes
-				if ( !( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) ) {
+				// Do not process embeddables for entity types i.e. id-classes or
+				// generic component embeddables used just for concrete type resolution
+				if ( !component.isGeneric() && !( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) ) {
 					embeddables.put( embeddable.getJavaType(), embeddable );
 
 					if ( staticMetamodelScanEnabled ) {
@@ -423,22 +458,26 @@ public class MetadataContext {
 			//noinspection rawtypes
 			final AttributeContainer attributeContainer = (AttributeContainer) identifiableType;
 			if ( declaredIdentifierProperty != null ) {
-				final SingularPersistentAttribute<?, Object> idAttribute = attributeFactory.buildIdAttribute(
+				//noinspection unchecked
+				final SingularPersistentAttribute<?, Object> idAttribute = (SingularPersistentAttribute<?, Object>) buildAttribute(
+						declaredIdentifierProperty,
 						identifiableType,
-						declaredIdentifierProperty
+						attributeFactory::buildIdAttribute
 				);
 				//noinspection unchecked
 				attributeContainer.getInFlightAccess().applyIdAttribute( idAttribute );
 			}
-			final Property superclassIdentifier = getMappedSuperclassIdentifier( persistentClass );
-			if ( superclassIdentifier != null && superclassIdentifier.isGeneric() ) {
-				// If the superclass identifier is generic we have to build the attribute to register the concrete type
-				final SingularPersistentAttribute<?, Object> concreteIdentifier = attributeFactory.buildIdAttribute(
-						identifiableType,
-						persistentClass.getIdentifierProperty()
-				);
-				//noinspection unchecked
-				attributeContainer.getInFlightAccess().addConcreteGenericAttribute( concreteIdentifier );
+			else {
+				final Property superclassIdentifier = getMappedSuperclassIdentifier( persistentClass );
+				if ( superclassIdentifier != null && superclassIdentifier.isGeneric() ) {
+					// If the superclass identifier is generic we have to build the attribute to register the concrete type
+					final SingularPersistentAttribute<?, Object> concreteIdentifier = attributeFactory.buildIdAttribute(
+							identifiableType,
+							persistentClass.getIdentifierProperty()
+					);
+					//noinspection unchecked
+					attributeContainer.getInFlightAccess().addConcreteGenericAttribute( concreteIdentifier );
+				}
 			}
 		}
 		else {
@@ -519,10 +558,14 @@ public class MetadataContext {
 		if ( mappingType.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
-				final SingularPersistentAttribute<X, Object> attribute =
-						attributeFactory.buildIdAttribute( jpaMappingType, declaredIdentifierProperty );
 				//noinspection unchecked
-				( ( AttributeContainer) jpaMappingType ).getInFlightAccess().applyIdAttribute( attribute );
+				final SingularPersistentAttribute<X, Object> attribute = (SingularPersistentAttribute<X, Object>) buildAttribute(
+						declaredIdentifierProperty,
+						jpaMappingType,
+						attributeFactory::buildIdAttribute
+				);
+				//noinspection unchecked
+				( (AttributeContainer<X>) jpaMappingType ).getInFlightAccess().applyIdAttribute( attribute );
 			}
 		}
 		//a MappedSuperclass can have no identifier if the id is set below in the hierarchy

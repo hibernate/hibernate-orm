@@ -173,7 +173,14 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 
 		final JpaCompliance jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
 		if ( ! jpaCompliance.isLoadByIdComplianceEnabled() ) {
-			id = entityPersister.getIdentifierMapping().getJavaType().coerce( id, this );
+			try {
+				id = entityPersister.getIdentifierMapping().getJavaType().coerce( id, this );
+			}
+			catch ( Exception e ) {
+				throw new IllegalArgumentException( "Argument '" + id
+						+ "' could not be converted to the identifier type of entity '" + entityPersister.getEntityName() + "'"
+						+ " [" + e.getMessage() + "]", e );
+			}
 		}
 
 		String entityName = entityPersister.getEntityName();

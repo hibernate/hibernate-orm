@@ -24,8 +24,6 @@ import jakarta.persistence.UniqueConstraint;
 @Table(name = "social_network_profile", uniqueConstraints = {@UniqueConstraint(columnNames = {"social_network", "network_id"})})
 public class SocialNetworkProfile {
 	@jakarta.persistence.Id
-	@jakarta.persistence.GeneratedValue(generator = "system-uuid")
-	@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid2")
 	@jakarta.persistence.Column(name = "id", unique = true)
 	private String id;
 
@@ -44,6 +42,7 @@ public class SocialNetworkProfile {
 	}
 
 	protected SocialNetworkProfile(User user, SocialNetwork socialNetworkType, String networkId) {
+		this.id = "snp_" + networkId + "_" + user.getId();
 		this.user = user;
 		this.socialNetworkType = socialNetworkType;
 		this.networkId = networkId;

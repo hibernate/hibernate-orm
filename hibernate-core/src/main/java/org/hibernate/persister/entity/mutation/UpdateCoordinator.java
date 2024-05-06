@@ -37,4 +37,13 @@ public interface UpdateCoordinator {
 			Object currentVersion,
 			Object nextVersion,
 			SharedSessionContractImplementor session);
+
+	default void forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			Object nextVersion,
+			boolean batching,
+			SharedSessionContractImplementor session){
+		forceVersionIncrement( id, currentVersion, nextVersion, session );
+	}
 }

@@ -12,6 +12,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ public class StructComponentCollectionError2Test {
 	@Test
 	@JiraKey( "HHH-15831" )
 	public void testError() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" ).build();
 		try {
 			new MetadataSources( ssr )

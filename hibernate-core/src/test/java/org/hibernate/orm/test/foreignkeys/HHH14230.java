@@ -23,6 +23,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Table;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -36,7 +37,7 @@ public class HHH14230 {
 
 	@Test
 	public void test() {
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( TestEntity.class ).buildMetadata();
 			Table table = StreamSupport.stream( metadata.getDatabase().getNamespaces().spliterator(), false )

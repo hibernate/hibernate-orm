@@ -27,6 +27,7 @@ import org.hibernate.mapping.RootClass;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -51,7 +52,7 @@ import static org.junit.Assert.assertTrue;
 public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void baseline() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitGeneratorEntity.class )
 					.buildMetadata();
@@ -79,7 +80,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testImplicitSequenceGenerator() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
 					.buildMetadata();
@@ -110,7 +111,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testImplicitSequenceGeneratorGeneratorName() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
 					.buildMetadata();
@@ -142,7 +143,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void testExplicitSequenceGeneratorImplicitNamePreferGeneratorName() {
 		// this should be the default behavior
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitSequenceGeneratorImplicitNameEntity.class )
 					.buildMetadata();
@@ -189,7 +190,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testImplicitTableGenerator() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ImplicitTableGeneratorEntity.class )
 					.buildMetadata();
@@ -215,7 +216,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitTableGeneratorImplicitName() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitTableGeneratorImplicitNameEntity.class )
 					.buildMetadata();
@@ -241,7 +242,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitTableGenerator() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitTableGeneratorEntity.class )
 					.buildMetadata();
@@ -269,7 +270,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitIncrementGenerator() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitIncrementGeneratorEntity.class )
 					.buildMetadata();
@@ -289,7 +290,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testImplicitIncrementGenerator() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ImplicitIncrementGeneratorEntity.class )
 					.buildMetadata();

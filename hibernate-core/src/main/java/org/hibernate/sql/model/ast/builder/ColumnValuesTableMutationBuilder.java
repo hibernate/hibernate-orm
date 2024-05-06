@@ -19,7 +19,13 @@ public interface ColumnValuesTableMutationBuilder {
 	/**
 	 * Add a column as part of the values list
 	 */
-	void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping);
+	void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping, boolean isLob);
+	/**
+	 * Add a column as part of the values list
+	 */
+	default void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+		addValueColumn( columnName, columnWriteFragment, jdbcMapping, jdbcMapping.getJdbcType().isLob() );
+	}
 
 	/**
 	 * Add a column as part of the values list
@@ -28,7 +34,8 @@ public interface ColumnValuesTableMutationBuilder {
 		addValueColumn(
 				selectableMapping.getSelectionExpression(),
 				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
+				selectableMapping.getJdbcMapping(),
+				selectableMapping.isLob()
 		);
 	}
 

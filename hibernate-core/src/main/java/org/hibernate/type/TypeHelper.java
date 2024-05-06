@@ -213,7 +213,7 @@ public class TypeHelper {
 					);
 					if ( target[i] != null && compositeType instanceof ComponentType ) {
 						final ComponentType componentType = (ComponentType) compositeType;
-						if ( componentType.isCompositeUserType() ) {
+						if ( !componentType.isMutable() || componentType.isCompositeUserType() ) {
 							final EmbeddableInstantiator instantiator = ( (ComponentType) compositeType ).getMappingModelPart()
 									.getEmbeddableTypeDescriptor()
 									.getRepresentationStrategy()

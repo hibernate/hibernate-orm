@@ -14,6 +14,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -29,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DiscriminatorOptionsTest {
 	@Test
 	public void testNonDefaultOptions() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			Metadata metadata = new MetadataSources( ssr )
@@ -52,7 +53,7 @@ public class DiscriminatorOptionsTest {
 
 	@Test
 	public void testBaseline() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			Metadata metadata = new MetadataSources( ssr )
@@ -74,7 +75,7 @@ public class DiscriminatorOptionsTest {
 
 	@Test
 	public void testPropertyBasedDiscriminatorForcing() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			Metadata metadata = new MetadataSources( ssr )

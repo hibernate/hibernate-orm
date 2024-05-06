@@ -64,9 +64,17 @@ gradlePlugin {
 			id = 'org.hibernate.orm.build.env-project'
 			implementationClass = 'org.hibernate.orm.env.EnvironmentProjectPlugin'
 		}
-		configPropertiesCollectorPlugin {
-			id = 'org.hibernate.orm.build.properties'
-			implementationClass = 'org.hibernate.orm.properties.ConfigPropertyCollectorPlugin'
+		settingsDocumentationPlugin {
+			id = 'org.hibernate.orm.build.settings-doc'
+			implementationClass = 'org.hibernate.orm.properties.SettingsDocumentationPlugin'
+		}
+		jdkVersionsPlugin {
+			id = 'org.hibernate.orm.build.jdks'
+			implementationClass = 'org.hibernate.orm.toolchains.JdkVersionPlugin'
+		}
+		javaModulePlugin {
+			id = 'org.hibernate.orm.build.java-module'
+			implementationClass = 'org.hibernate.orm.toolchains.JavaModulePlugin'
 		}
 	}
 }

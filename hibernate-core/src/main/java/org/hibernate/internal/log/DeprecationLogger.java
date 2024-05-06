@@ -220,6 +220,11 @@ public interface DeprecationLogger extends BasicLogger {
 //					"This is deprecated and will be removed in a future version. Every property mapping combination should have its own java class"
 //	)
 //	void deprecatedComponentMapping(String name);
+	@LogMessage(level = WARN)
+	@Message(value = "%s does not need to be specified explicitly using 'hibernate.dialect' "
+			+ "(remove the property setting and it will be selected by default)",
+			id = 90000025)
+	void automaticDialect(String dialect);
 
 	@LogMessage(level = WARN)
 	@Message(value = "%s has been deprecated",

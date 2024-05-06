@@ -112,6 +112,7 @@ public class OneToOneSecondPass implements SecondPass {
 		binder.setValue( value );
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
+		binder.setBuildingContext( buildingContext );
 
 		final LazyGroup lazyGroupAnnotation = property.getAnnotation( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {
@@ -186,6 +187,7 @@ public class OneToOneSecondPass implements SecondPass {
 			manyToOne.setFetchMode( oneToOne.getFetchMode() );
 			manyToOne.setLazy( oneToOne.isLazy() );
 			manyToOne.setReferencedEntityName( oneToOne.getReferencedEntityName() );
+			manyToOne.setReferencedPropertyName( mappedBy );
 			manyToOne.setUnwrapProxy( oneToOne.isUnwrapProxy() );
 			manyToOne.markAsLogicalOneToOne();
 			property.setValue( manyToOne );
@@ -208,7 +210,7 @@ public class OneToOneSecondPass implements SecondPass {
 		final KeyValue targetEntityIdentifier = targetEntity.getIdentifier();
 		boolean referenceToPrimaryKey = mappedBy == null
 				|| targetEntityIdentifier instanceof Component
-						&& !( (Component) targetEntityIdentifier ).hasProperty( mappedBy );
+						&& ( (Component) targetEntityIdentifier ).hasProperty( mappedBy );
 		oneToOne.setReferenceToPrimaryKey( referenceToPrimaryKey );
 
 		final String propertyRef = oneToOne.getReferencedPropertyName();

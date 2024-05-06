@@ -10,6 +10,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Embeddable;
@@ -273,6 +274,7 @@ public class EmbeddableWithGenericAndMappedSuperClassTest {
 
 
 	@Entity(name = "PopularBook")
+	@AttributeOverride( name = "edition.code", column = @Column(name = "code_str"))
 	public static class PopularBook extends Book<String> {
 
 
@@ -285,6 +287,7 @@ public class EmbeddableWithGenericAndMappedSuperClassTest {
 	}
 
 	@Entity(name = "RareBook")
+	@AttributeOverride( name = "edition.code", column = @Column(name = "code_nr"))
 	public static class RareBook extends Book<Integer> {
 
 		public RareBook() {

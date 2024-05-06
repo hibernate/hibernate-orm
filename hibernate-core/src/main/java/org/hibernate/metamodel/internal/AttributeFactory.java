@@ -236,7 +236,7 @@ public class AttributeFactory {
 		switch ( typeContext.getValueClassification() ) {
 			case BASIC: {
 				Class returnedClass = typeContext.getJpaBindableType();
-				if ( returnedClass.isAssignableFrom( Object.class ) ) {
+				if ( returnedClass.isInterface() || returnedClass.isAssignableFrom( Object.class ) ) {
 					final SimpleValue simpleValue = (SimpleValue) typeContext.getHibernateValue();
 					if ( simpleValue.getTypeParameters() != null && typeContext.getAttributeMetadata()
 							.getOwnerType() instanceof EntityDomainType ) {
@@ -300,9 +300,11 @@ public class AttributeFactory {
 					@SuppressWarnings("unchecked")
 					final Class<Y> embeddableClass = (Class<Y>) component.getComponentClass();
 
-					final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
-					if ( cached != null ) {
-						return cached;
+					if ( !component.isGeneric() ) {
+						final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
+						if ( cached != null ) {
+							return cached;
+						}
 					}
 
 					final JavaTypeRegistry registry = context.getTypeConfiguration()

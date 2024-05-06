@@ -190,16 +190,15 @@ public class CustomType<J>
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
-		return (Serializable) disassemble( value, session );
+		return disassembleForCache( value );
 	}
 
 	@Override
 	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
-		return (Serializable) disassemble( value, (SharedSessionContractImplementor) null );
+		return disassembleForCache( value );
 	}
 
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+	private Serializable disassembleForCache(Object value) {
 		final Serializable disassembled = getUserType().disassemble( (J) value );
 		// Since UserType#disassemble is an optional operation,
 		// we have to handle the fact that it could produce a null value,
@@ -208,13 +207,28 @@ public class CustomType<J>
 		if ( disassembled == null && value != null ) {
 			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
 			if ( valueConverter == null ) {
+				return disassembled;
+			}
+			else {
+				return (Serializable) valueConverter.toRelationalValue( (J) value );
+			}
+		}
+		return disassembled;
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		// Use the value converter if available for conversion to the jdbc representation
+		if ( value != null ) {
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
 				return value;
 			}
 			else {
 				return valueConverter.toRelationalValue( (J) value );
 			}
 		}
-		return disassembled;
+		return value;
 	}
 
 	@Override

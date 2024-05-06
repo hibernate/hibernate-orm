@@ -11,6 +11,8 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * An operation which may be scheduled for later execution. Usually, the
  * operation is a database insert/update/delete, together with required
@@ -47,7 +49,7 @@ public interface Executable {
 	 * @return The after-transaction-completion process, or null if we have no
 	 * after-transaction-completion process
 	 */
-	AfterTransactionCompletionProcess getAfterTransactionCompletionProcess();
+	@Nullable AfterTransactionCompletionProcess getAfterTransactionCompletionProcess();
 
 	/**
 	 * Get the before-transaction-completion process, if any, for this action.
@@ -55,7 +57,7 @@ public interface Executable {
 	 * @return The before-transaction-completion process, or null if we have no
 	 * before-transaction-completion process
 	 */
-	BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess();
+	@Nullable BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess();
 	
 	/**
 	 * Reconnect to session after deserialization

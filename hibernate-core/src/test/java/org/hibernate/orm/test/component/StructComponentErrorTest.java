@@ -8,6 +8,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,7 @@ public class StructComponentErrorTest {
 
 	@Test
 	public void testError() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			new MetadataSources( ssr )
 					.addAnnotatedClass( Book.class )

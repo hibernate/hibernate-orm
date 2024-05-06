@@ -38,6 +38,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
@@ -65,7 +66,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	@Override
 	protected <K> List<E> performOrderedMultiLoad(K[] ids, MultiIdLoadOptions loadOptions, EventSource session) {
-		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_TRACE_ENABLED ) {
+		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef(
 					"MultiIdEntityLoaderArrayParam#performOrderedMultiLoad - %s",
 					getLoadable().getEntityName()
@@ -180,7 +181,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 				batchFetchQueue,
 				sqlAst,
-				Collections.singletonList( jdbcParameter ),
+				JdbcParametersList.singleton( jdbcParameter ),
 				jdbcParameterBindings
 		);
 
@@ -221,7 +222,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			K[] ids,
 			MultiIdLoadOptions loadOptions,
 			EventSource session) {
-		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_TRACE_ENABLED ) {
+		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef(
 					"MultiIdEntityLoaderArrayParam#performUnorderedMultiLoad - %s",
 					getLoadable().getEntityName()
@@ -267,6 +268,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				jdbcSelectOperation,
 				jdbcParameter,
 				arrayJdbcMapping,
+				null,
 				null,
 				null,
 				lockOptions,

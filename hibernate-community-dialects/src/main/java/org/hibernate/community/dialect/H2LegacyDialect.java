@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
@@ -204,6 +205,12 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	public boolean supportsStandardArrays() {
 		return getVersion().isSameOrAfter( 2 );
+	}
+
+	@Override
+	public boolean useArrayForMultiValuedParameters() {
+		// Performance is worse than the in-predicate version
+		return false;
 	}
 
 	@Override
@@ -759,6 +766,8 @@ public class H2LegacyDialect extends Dialect {
 					// NULL not allowed for column [90006-145]
 					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
 					return new ConstraintViolationException(message, sqlException, sql, constraintName);
+				case 57014:
+					return new QueryTimeoutException( message, sqlException, sql );
 			}
 
 			return null;

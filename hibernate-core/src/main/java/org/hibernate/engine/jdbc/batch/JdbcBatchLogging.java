@@ -35,9 +35,6 @@ public interface JdbcBatchLogging extends BasicLogger {
 	Logger BATCH_LOGGER = Logger.getLogger( NAME );
 	JdbcBatchLogging BATCH_MESSAGE_LOGGER = Logger.getMessageLogger( JdbcBatchLogging.class, NAME );
 
-	boolean BATCH_TRACE_ENABLED = BATCH_LOGGER.isTraceEnabled();
-	boolean BATCH_DEBUG_ENABLED = BATCH_LOGGER.isDebugEnabled();
-
 	@LogMessage(level = ERROR)
 	@Message(id = 100501, value = "Exception executing batch [%s], SQL: %s")
 	void unableToExecuteBatch(Exception e, String sql );

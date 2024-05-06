@@ -26,6 +26,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
@@ -40,6 +41,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 
 import org.jboss.logging.Logger;
@@ -578,7 +580,9 @@ public class TransactionUtil {
 	/**
 	 * Set Session or Statement timeout
 	 * @param session Hibernate Session
+	 * @deprecated Use {@link #withJdbcTimeout(Session, Runnable)} instead
 	 */
+	@Deprecated
 	public static void setJdbcTimeout(Session session) {
 		setJdbcTimeout( session, TimeUnit.SECONDS.toMillis( 1 ) );
 	}
@@ -586,53 +590,101 @@ public class TransactionUtil {
 	/**
 	 * Set Session or Statement timeout
 	 * @param session Hibernate Session
+	 * @deprecated Use {@link #withJdbcTimeout(Session, long, Runnable)} instead
 	 */
+	@Deprecated
 	public static void setJdbcTimeout(Session session, long millis) {
 		final Dialect dialect = session.getSessionFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
 		session.doWork( connection -> {
-			Dialect extractedDialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			if ( extractedDialect instanceof PostgreSQLDialect || extractedDialect instanceof CockroachDialect ) {
-				try (Statement st = connection.createStatement()) {
-					//Prepared Statements fail for SET commands
-					st.execute(String.format( "SET statement_timeout TO %d", millis / 10));
+			setJdbcTimeout( dialect, connection, millis );
+		} );
+	}
+
+	private static void setJdbcTimeout(Dialect dialect, Connection connection, long millis) throws SQLException {
+		Dialect extractedDialect = DialectDelegateWrapper.extractRealDialect( dialect );
+		if ( extractedDialect instanceof PostgreSQLDialect || extractedDialect instanceof CockroachDialect ) {
+			try (Statement st = connection.createStatement()) {
+				//Prepared Statements fail for SET commands
+				st.execute( String.format( "SET statement_timeout TO %d", millis ) );
+			}
+			catch (SQLException ex) {
+				// Ignore if resetting the statement timeout to 0 fails
+				// Since PostgreSQL is transactional anyway,
+				// the prior change of statement timeout will be undone on rollback
+				if ( millis != 0 ) {
+					throw ex;
 				}
 			}
-			else if( extractedDialect instanceof MySQLDialect ) {
-				try (PreparedStatement st = connection.prepareStatement("SET SESSION innodb_lock_wait_timeout = ?")) {
-					st.setLong( 1, TimeUnit.MILLISECONDS.toSeconds( millis ) );
-					st.execute();
+		}
+		else if ( extractedDialect instanceof MySQLDialect ) {
+			try (PreparedStatement st = connection.prepareStatement( "SET SESSION innodb_lock_wait_timeout = ?" )) {
+				// 50 seconds is the default
+				st.setLong( 1, millis == 0L ? 50 : Math.max( 1, Math.round( millis / 1e3f ) ) );
+				st.execute();
+			}
+		}
+		else if ( extractedDialect instanceof H2Dialect ) {
+			try (PreparedStatement st = connection.prepareStatement( "SET LOCK_TIMEOUT ?" )) {
+				// 10 seconds is the default we set
+				st.setLong( 1, millis == 0L ? 10_000 : millis );
+				st.execute();
+			}
+		}
+		else if ( extractedDialect instanceof SQLServerDialect ) {
+			try (Statement st = connection.createStatement()) {
+				//Prepared Statements fail for SET commands
+				st.execute( String.format( "SET LOCK_TIMEOUT %d", millis == 0L ? -1L : millis ) );
+			}
+		}
+		else if ( extractedDialect instanceof AbstractHANADialect ) {
+			try (Statement st = connection.createStatement()) {
+				//Prepared Statements fail for SET commands
+				st.execute( String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ) );
+			}
+		}
+		else if ( extractedDialect instanceof SybaseASEDialect ) {
+			try (Statement st = connection.createStatement()) {
+				//Prepared Statements fail for SET commands
+				if ( millis == 0L ) {
+					st.execute( "SET LOCK WAIT" );
+				}
+				else {
+					st.execute( String.format( "SET LOCK WAIT %d", Math.max( 1, Math.round( millis / 1e3f ) ) ) );
 				}
 			}
-			else if( extractedDialect instanceof H2Dialect ) {
-				try (PreparedStatement st = connection.prepareStatement("SET LOCK_TIMEOUT ?")) {
-					st.setLong( 1, millis / 10 );
-					st.execute();
-				}
+		}
+		else {
+			try {
+				connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), (int) millis );
 			}
-			else if( extractedDialect instanceof SQLServerDialect ) {
-				try (Statement st = connection.createStatement()) {
-					//Prepared Statements fail for SET commands
-					st.execute(String.format( "SET LOCK_TIMEOUT %d", millis / 10));
-				}
+			catch (Throwable ignore) {
 			}
-			else if( extractedDialect instanceof AbstractHANADialect ) {
-				try (Statement st = connection.createStatement()) {
-					//Prepared Statements fail for SET commands
-					st.execute(String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ));
-				}
+		}
+	}
+
+	/**
+	 * Run the runnable with a session or statement timeout
+	 *
+	 * @param session Hibernate Session
+	 */
+	public static void withJdbcTimeout(Session session, Runnable r) {
+		withJdbcTimeout( session, TimeUnit.SECONDS.toMillis( 1 ), r );
+	}
+
+	/**
+	 * Run the runnable with a session or statement timeout
+	 *
+	 * @param session Hibernate Session
+	 */
+	public static void withJdbcTimeout(Session session, long millis, Runnable r) {
+		final Dialect dialect = session.getSessionFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
+		session.doWork( connection -> {
+			try {
+				setJdbcTimeout( dialect, connection, millis );
+				r.run();
 			}
-			else if( extractedDialect instanceof SybaseASEDialect ) {
-				try (Statement st = connection.createStatement()) {
-					//Prepared Statements fail for SET commands
-					st.execute(String.format( "SET LOCK WAIT %d", millis/1000 ));
-				}
-			}
-			else {
-				try {
-					connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), (int) millis );
-				}
-				catch (Throwable ignore) {
-				}
+			finally {
+				setJdbcTimeout( dialect, connection, 0 );
 			}
 		} );
 	}
@@ -647,8 +699,10 @@ public class TransactionUtil {
 	 * @param settings Settings to build a new {@link ServiceRegistry}
 	 */
 	public static void doInAutoCommit(Consumer<Statement> consumer, Map<String,Object> settings) {
-		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		if ( settings != null ) {
+			// Reset the connection provider to avoid rebuilding the shared connection pool for a single test
+			ssrb.applySetting( AvailableSettings.CONNECTION_PROVIDER, "" );
 			ssrb.applySettings( settings );
 		}
 		StandardServiceRegistry ssr = ssrb.build();

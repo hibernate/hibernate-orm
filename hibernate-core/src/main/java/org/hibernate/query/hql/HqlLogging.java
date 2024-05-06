@@ -34,9 +34,6 @@ public interface HqlLogging extends BasicLogger {
 
 	HqlLogging QUERY_LOGGER = Logger.getMessageLogger( HqlLogging.class, LOGGER_NAME );
 
-	boolean TRACE_ENABLED = QUERY_LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = QUERY_LOGGER.isDebugEnabled();
-
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + '.' + subName;
 	}

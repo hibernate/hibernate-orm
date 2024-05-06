@@ -154,4 +154,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		);
 	}
 
+	public Object getAffectedOwner() {
+		return affectedOwner;
+	}
 }

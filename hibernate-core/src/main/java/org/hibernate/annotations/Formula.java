@@ -23,15 +23,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * A formula may involve multiple columns and SQL operators:
  * <pre>
  * // perform calculations using SQL operators
- * &#64;Formula("sub_total + (sub_total * tax)")
- * long getTotalCost() { ... }
+ * &#64;Formula("sub_total * (1.0 + tax)")
+ * BigDecimal totalWithTax;
  * </pre>
  * <p>
  * It may even call SQL functions:
  * <pre>
  * // call native SQL functions
  * &#64;Formula("upper(substring(middle_name from 0 for 1))")
- * Character getMiddleInitial() { ... }
+ * Character middleInitial;
  * </pre>
  * <p>
  * For an entity with {@linkplain jakarta.persistence.SecondaryTable secondary tables},

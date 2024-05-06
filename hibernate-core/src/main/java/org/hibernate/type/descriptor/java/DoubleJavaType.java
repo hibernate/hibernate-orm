@@ -201,7 +201,7 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce value `%s` [%s] as Double",
+						"Cannot coerce value '%s' [%s] to Double",
 						value,
 						value.getClass().getName()
 				)

@@ -22,11 +22,11 @@ import org.hibernate.loader.ast.internal.NoCallbackExecutionContext;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.FILTER;
 
@@ -45,8 +45,9 @@ import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.F
 @Incubating
 public class GeneratedValuesProcessor {
 	private final SelectStatement selectStatement;
+	private final JdbcOperationQuerySelect jdbcSelect;
 	private final List<AttributeMapping> generatedValuesToSelect;
-	private final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+	private final JdbcParametersList jdbcParameters;
 
 	private final EntityMappingType entityDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
@@ -61,8 +62,12 @@ public class GeneratedValuesProcessor {
 		generatedValuesToSelect = getGeneratedAttributes( entityDescriptor, timing );
 		if ( generatedValuesToSelect.isEmpty() ) {
 			selectStatement = null;
+			jdbcSelect = null;
+			this.jdbcParameters = JdbcParametersList.empty();
 		}
 		else {
+			JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
+
 			selectStatement = LoaderSelectBuilder.createSelect(
 					entityDescriptor,
 					generatedValuesToSelect,
@@ -71,9 +76,13 @@ public class GeneratedValuesProcessor {
 					1,
 					LoadQueryInfluencers.NONE,
 					LockOptions.READ,
-					jdbcParameters::add,
+					builder::add,
 					sessionFactory
 			);
+			jdbcSelect = sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+							.buildSelectTranslator( sessionFactory, selectStatement )
+							.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+			this.jdbcParameters = builder.build();
 		}
 	}
 
@@ -111,10 +120,6 @@ public class GeneratedValuesProcessor {
 
 	private List<Object[]> executeSelect(Object id, SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParamBindings = getJdbcParameterBindings( id, session );
-		final JdbcOperationQuerySelect jdbcSelect =
-				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( sessionFactory, selectStatement )
-						.translate( jdbcParamBindings, QueryOptions.NONE );
 		return session.getFactory().getJdbcServices().getJdbcSelectExecutor()
 				.list( jdbcSelect, jdbcParamBindings, new NoCallbackExecutionContext(session), (row) -> row, FILTER );
 	}
@@ -148,7 +153,7 @@ public class GeneratedValuesProcessor {
 		return generatedValuesToSelect;
 	}
 
-	public List<JdbcParameter> getJdbcParameters() {
+	public JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
 

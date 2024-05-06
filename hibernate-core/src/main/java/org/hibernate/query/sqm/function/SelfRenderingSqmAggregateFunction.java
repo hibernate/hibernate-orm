@@ -89,7 +89,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 				arguments,
 				filter == null ? null : walker.visitNestedTopLevelPredicate( filter ),
 				resultType,
-				getMappingModelExpressible( walker, resultType )
+				getMappingModelExpressible( walker, resultType, arguments )
 		);
 	}
 

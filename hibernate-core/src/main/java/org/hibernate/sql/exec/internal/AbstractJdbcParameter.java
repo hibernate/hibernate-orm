@@ -71,7 +71,8 @@ public abstract class AbstractJdbcParameter
 				jdbcPosition,
 				valuesArrayPosition,
 				javaType,
-				this
+				this,
+				false
 		);
 	}
 

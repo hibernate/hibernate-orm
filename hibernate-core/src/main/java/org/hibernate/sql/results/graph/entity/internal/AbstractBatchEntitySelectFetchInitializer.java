@@ -8,7 +8,11 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -19,12 +23,15 @@ import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptableOrNull;
 
 public abstract class AbstractBatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 		implements EntityInitializer {
 
-	protected FetchParentAccess parentAccess;
+	protected final FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
 
 	protected final EntityPersister concreteDescriptor;
@@ -32,8 +39,10 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	protected final ToOneAttributeMapping referencedModelPart;
 	protected final EntityInitializer firstEntityInitializer;
 
-	protected Object entityInstance;
+	protected Object initializedEntityInstance;
 	protected EntityKey entityKey;
+
+	protected State state = State.UNINITIALIZED;
 
 	public AbstractBatchEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
@@ -47,6 +56,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
 		this.firstEntityInitializer = parentAccess.findFirstEntityInitializer();
+		assert firstEntityInitializer != null : "This initializer requires parentAccess.findFirstEntityInitializer() to not be null";
 	}
 
 	public ModelPart getInitializedPart() {
@@ -60,20 +70,6 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
-		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
-		if ( entityIdentifier == null ) {
-			return;
-		}
-		entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
-
-		rowProcessingState.getSession().getPersistenceContext()
-				.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
-
-		registerResolutionListener();
-	}
-
-	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
 	}
 
 	@Override
@@ -82,10 +78,85 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 
 	protected abstract void registerResolutionListener();
 
+	protected void resolveKey(
+			RowProcessingState rowProcessingState,
+			ToOneAttributeMapping referencedModelPart,
+			FetchParentAccess parentAccess) {
+
+		if ( state != State.UNINITIALIZED ) {
+			return;
+		}
+		if ( !isAttributeAssignableToConcreteDescriptor( parentAccess, referencedModelPart ) ) {
+			state = State.MISSING;
+			return;
+		}
+
+		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
+		if ( entityIdentifier == null ) {
+			state = State.MISSING;
+		}
+		else {
+			entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
+			state = State.KEY_RESOLVED;
+		}
+	}
+
+	protected Object getExistingInitializedInstance(RowProcessingState rowProcessingState) {
+		assert entityKey != null;
+		final SharedSessionContractImplementor session = rowProcessingState.getSession();
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final Object instance = persistenceContext.getEntity( entityKey );
+		if ( instance == null ) {
+			final LoadingEntityEntry loadingEntityEntry = persistenceContext
+					.getLoadContexts().findLoadingEntityEntry( entityKey );
+			if ( loadingEntityEntry != null ) {
+				return loadingEntityEntry.getEntityInstance();
+			}
+		}
+		else if ( isInitialized( instance ) ) {
+			return instance;
+		}
+		else {
+			// the instance is not initialized but there is another initialzier that is loading it
+			final LoadingEntityEntry loadingEntityEntry = persistenceContext
+					.getLoadContexts().findLoadingEntityEntry( entityKey );
+			if ( loadingEntityEntry != null ) {
+				return loadingEntityEntry.getEntityInstance();
+			}
+		}
+		// we need to register a resolution listener only if there is not an already initialized instance
+		// or an instance that another initialzier is loading
+		registerResolutionListener();
+		return null;
+	}
+
+	private boolean isInitialized(Object entity) {
+		final PersistentAttributeInterceptable attributeInterceptable = asPersistentAttributeInterceptableOrNull(
+				entity );
+		if ( attributeInterceptable == null ) {
+			return true;
+		}
+		final PersistentAttributeInterceptor interceptor =
+				attributeInterceptable.$$_hibernate_getInterceptor();
+		if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+			return ( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized();
+		}
+		else {
+			return true;
+		}
+	}
+
+	protected void registerToBatchFetchQueue(RowProcessingState rowProcessingState) {
+		assert entityKey != null;
+		rowProcessingState.getSession().getPersistenceContext()
+				.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+	}
+
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
-		entityInstance = null;
+		initializedEntityInstance = null;
 		entityKey = null;
+		state = State.UNINITIALIZED;
 		clearResolutionListeners();
 	}
 
@@ -96,7 +167,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 
 	@Override
 	public Object getEntityInstance() {
-		return entityInstance;
+		return initializedEntityInstance;
 	}
 
 	@Override
@@ -111,8 +182,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 
 	@Override
 	public void registerResolutionListener(Consumer<Object> listener) {
-		if ( entityInstance != null ) {
-			listener.accept( entityInstance );
+		if ( initializedEntityInstance != null ) {
+			listener.accept( initializedEntityInstance );
 		}
 		else {
 			super.registerResolutionListener( listener );
@@ -151,6 +222,13 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	@Override
 	public EntityPersister getConcreteDescriptor() {
 		return concreteDescriptor;
+	}
+
+	enum State {
+		UNINITIALIZED,
+		MISSING,
+		KEY_RESOLVED,
+		INITIALIZED
 	}
 
 }

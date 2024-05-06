@@ -960,20 +960,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 					.collect(Collectors.toList());
 			}
 			//end::jpql-api-stream-example[]
-
-			// tag::jpql-api-stream-terminal-operation[]
-			List<Person> persons = entityManager.createQuery(
-					"select p " +
-					"from Person p " +
-					"where p.name like :name",
-					Person.class)
-			.setParameter("name", "J%")
-			.getResultStream()
-			.skip(5)
-			.limit(5)
-			.collect(Collectors.toList());
-
-			//end::jpql-api-stream-terminal-operation[]
 		});
 	}
 

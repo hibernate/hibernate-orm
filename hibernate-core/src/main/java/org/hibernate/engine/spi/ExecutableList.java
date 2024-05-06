@@ -29,24 +29,20 @@ import org.hibernate.internal.util.collections.CollectionHelper;
  *
  * @author Steve Ebersole
  * @author Anton Marsden
- *
- * @param <E> Intersection type describing {@link Executable} implementations
  */
-public class ExecutableList<E extends Executable & Comparable<? super E> & Serializable>
+public class ExecutableList<E extends ComparableExecutable>
 		implements Serializable, Iterable<E>, Externalizable {
 
 	public static final int INIT_QUEUE_LIST_SIZE = 5;
 
 	/**
 	 * Provides a sorting interface for {@link ExecutableList}.
-	 * 
-	 * @param <E>
 	 */
-	public interface Sorter<E extends Executable> {
+	public interface Sorter<ComparableExecutable> {
 		/**
 		 * Sorts the list.
 		 */
-		void sort(List<E> l);
+		void sort(List<ComparableExecutable> l);
 	}
 
 	private final ArrayList<E> executables;
@@ -123,7 +119,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 	 */
 	public Set<Serializable> getQuerySpaces() {
 		if ( querySpaces == null ) {
-			for ( E e : executables ) {
+			for ( ComparableExecutable e : executables ) {
 				Serializable[] propertySpaces = e.getPropertySpaces();
 				if ( propertySpaces != null && propertySpaces.length > 0 ) {
 					if( querySpaces == null ) {
@@ -132,7 +128,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 					Collections.addAll( querySpaces, propertySpaces );
 				}
 			}
-			if( querySpaces == null ) {
+			if ( querySpaces == null ) {
 				return Collections.emptySet();
 			}
 		}
@@ -153,10 +149,10 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 	 *
 	 * @return the entry that was removed
 	 */
-	public E remove(int index) {
+	public ComparableExecutable remove(int index) {
 		// removals are generally safe with regard to sorting...
 
-		final E e = executables.remove( index );
+		final ComparableExecutable e = executables.remove( index );
 
 		// If the executable being removed defined query spaces we need to recalculate the overall query spaces for
 		// this list.  The problem is that we don't know how many other executable instances in the list also
@@ -187,7 +183,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 	public void removeLastN(int n) {
 		if ( n > 0 ) {
 			int size = executables.size();
-			for ( Executable e : executables.subList( size - n, size ) ) {
+			for ( ComparableExecutable e : executables.subList( size - n, size ) ) {
 				if ( e.getPropertySpaces() != null && e.getPropertySpaces().length > 0 ) {
 					// querySpaces could now be incorrect
 					querySpaces = null;
@@ -206,7 +202,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 	 * @return true if the object was added to the list
 	 */
 	public boolean add(E executable) {
-		final E previousLast = sorter != null || executables.isEmpty() ? null : executables.get( executables.size() - 1 );
+		final ComparableExecutable previousLast = sorter != null || executables.isEmpty() ? null : executables.get( executables.size() - 1 );
 		boolean added = executables.add( executable );
 
 		if ( !added ) {
@@ -291,7 +287,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 		oos.writeBoolean( sorted );
 
 		oos.writeInt( executables.size() );
-		for ( E e : executables ) {
+		for ( ComparableExecutable e : executables ) {
 			oos.writeObject( e );
 		}
 
@@ -347,7 +343,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 	 * @param session The session with which to associate the {@code Executable}s
 	 */
 	public void afterDeserialize(EventSource session) {
-		for ( E e : executables ) {
+		for ( ComparableExecutable e : executables ) {
 			e.afterDeserialize( session );
 		}
 	}

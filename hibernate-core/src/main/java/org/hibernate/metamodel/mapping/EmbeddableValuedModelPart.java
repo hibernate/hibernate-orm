@@ -63,6 +63,7 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 		return getEmbeddableTypeDescriptor().getJdbcTypeCount();
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	default List<JdbcMapping> getJdbcMappings() {
 		return getEmbeddableTypeDescriptor().getJdbcMappings();

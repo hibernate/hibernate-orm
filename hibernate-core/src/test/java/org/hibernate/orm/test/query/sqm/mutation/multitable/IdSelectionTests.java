@@ -200,7 +200,7 @@ public class IdSelectionTests {
 
 		@Override
 		public Callback getCallback() {
-			throw new UnsupportedOperationException();
+			return null;
 		}
 	}
 }

@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.UUID;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
@@ -19,6 +18,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Immutable;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -172,7 +172,7 @@ public class FinalFieldEnhancementTest extends BaseCoreFunctionalTestCase {
 		private String name;
 
 		public EntityWithEmbeddedIdWithFinalField() {
-			this.id = EmbeddableId.of( UUID.randomUUID().toString() );
+			this.id = EmbeddableId.of( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 		}
 
 		public EmbeddableId getId() {

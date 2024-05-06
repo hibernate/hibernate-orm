@@ -27,6 +27,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMu
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 
 import org.jboss.logging.Logger;
@@ -143,12 +144,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		if ( !config.containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			config.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
+		ServiceRegistryUtil.applySettings( config );
 		addConfigOptions( config );
 		return config;
 	}

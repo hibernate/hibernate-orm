@@ -1051,7 +1051,8 @@ jpaNonstandardFunctionName
  * The function name, followed by a parenthesized list of comma-separated expressions
  */
 genericFunction
-	: genericFunctionName LEFT_PAREN (genericFunctionArguments | ASTERISK)? RIGHT_PAREN nthSideClause? nullsClause? withinGroupClause? filterClause? overClause?
+	: genericFunctionName LEFT_PAREN (genericFunctionArguments | ASTERISK)? RIGHT_PAREN
+	  nthSideClause? nullsClause? withinGroupClause? filterClause? overClause?
 	;
 
 /**
@@ -1145,7 +1146,8 @@ anyFunction
  * The 'listagg()' ordered set-aggregate function
  */
 listaggFunction
-	: LISTAGG LEFT_PAREN DISTINCT? expressionOrPredicate COMMA expressionOrPredicate onOverflowClause? RIGHT_PAREN withinGroupClause? filterClause? overClause?
+	: LISTAGG LEFT_PAREN DISTINCT? expressionOrPredicate COMMA expressionOrPredicate onOverflowClause? RIGHT_PAREN
+	  withinGroupClause? filterClause? overClause?
 	;
 
 /**
@@ -1211,9 +1213,9 @@ frameClause
  * The start of the window content
  */
 frameStart
-	: UNBOUNDED PRECEDING
+	: CURRENT ROW
+	| UNBOUNDED PRECEDING
 	| expression PRECEDING
-	| CURRENT ROW
 	| expression FOLLOWING
 	;
 
@@ -1221,10 +1223,10 @@ frameStart
  * The end of the window content
  */
 frameEnd
-	: expression PRECEDING
-	| CURRENT ROW
-	| expression FOLLOWING
+	: CURRENT ROW
 	| UNBOUNDED FOLLOWING
+	| expression PRECEDING
+	| expression FOLLOWING
 	;
 
 /**

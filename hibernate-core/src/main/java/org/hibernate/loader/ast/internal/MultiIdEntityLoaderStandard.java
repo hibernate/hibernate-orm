@@ -37,6 +37,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -212,7 +213,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 			log.tracef( "#loadEntitiesById(`%s`, `%s`, ..)", getLoadable().getEntityName(), numberOfIdsInBatch );
 		}
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>( numberOfIdsInBatch * idJdbcTypeCount);
+		JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder( numberOfIdsInBatch * idJdbcTypeCount );
 
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
 				getLoadable(),
@@ -223,9 +224,10 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				numberOfIdsInBatch,
 				session.getLoadQueryInfluencers(),
 				lockOptions,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				getSessionFactory()
 		);
+		JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
 
 		final JdbcServices jdbcServices = getSessionFactory().getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();

@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -37,7 +36,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JoinedSubclassDuplicateFieldsWithTreatTest {
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-11686" )
 	public void queryConstrainedSubclass(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			Deposit deposit1 = new Deposit();

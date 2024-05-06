@@ -74,6 +74,7 @@ public class PropertyAccessStrategyIndexBackRefImpl implements PropertyAccessStr
 			return PropertyAccessStrategyBackRefImpl.UNKNOWN;
 		}
 
+		@SuppressWarnings("rawtypes")
 		@Override
 		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 			if ( session == null ) {

@@ -42,12 +42,7 @@ public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJ
 	}
 
 	@Override
-	public PluralPersistentAttribute<O, C, E> getReferencedPathSource() {
-		return (PluralPersistentAttribute<O, C, E>) super.getReferencedPathSource();
-	}
-
-	@Override
 	public PluralPersistentAttribute<O, C, E> getModel() {
-		return getReferencedPathSource();
+		return (PluralPersistentAttribute<O, C, E>) super.getNodeType();
 	}
 }

@@ -19,6 +19,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.type.SerializationException;
 
 import static org.junit.Assert.assertFalse;
@@ -36,6 +38,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 		Configuration cfg = new Configuration()
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME, NAME )
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try (SessionFactory factory = cfg.buildSessionFactory()) {
 
 			// we need to do some tricking here so that Hibernate thinks the deserialization happens in a
@@ -67,6 +70,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 		// 		here, the test should fail based just on attempted uuid resolution
 		Configuration cfg = new Configuration()
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try (SessionFactory factory = cfg.buildSessionFactory()) {
 
 			// we need to do some tricking here so that Hibernate thinks the deserialization happens in a

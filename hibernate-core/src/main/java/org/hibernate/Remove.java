@@ -6,6 +6,7 @@
  */
 package org.hibernate;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -33,5 +34,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({METHOD, FIELD, TYPE, PACKAGE, CONSTRUCTOR, TYPE_PARAMETER, TYPE_USE})
 @Retention(RUNTIME)
+@Documented
 public @interface Remove {
 }

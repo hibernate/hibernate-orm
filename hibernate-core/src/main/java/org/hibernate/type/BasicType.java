@@ -68,6 +68,7 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 		return 1;
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	default List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( this );

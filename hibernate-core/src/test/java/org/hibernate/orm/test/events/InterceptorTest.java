@@ -21,6 +21,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.type.Type;
 
 import org.junit.Before;
@@ -78,9 +80,7 @@ public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 	public void testSessionFactoryInterceptor() {
 
 		Serializable customerId = 1L;
-		SessionFactory sessionFactory = new MetadataSources(new StandardServiceRegistryBuilder()
-				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
-				.build())
+		SessionFactory sessionFactory = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 		/*
 		//tag::events-interceptors-session-factory-scope-example[]
 		SessionFactory sessionFactory = new MetadataSources(new StandardServiceRegistryBuilder().build())

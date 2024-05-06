@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -166,7 +167,9 @@ public class CteTable {
 		}
 		else {
 			final EmbeddableValuedModelPart embeddablePart = ( EmbeddableValuedModelPart ) modelPart;
-			for ( AttributeMapping mapping : embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings() ) {
+			final AttributeMappingsList attributeMappings = embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				AttributeMapping mapping = attributeMappings.get( i );
 				if ( !( mapping instanceof PluralAttributeMapping ) ) {
 					forEachCteColumn( prefix + "_" + mapping.getAttributeName(), mapping, consumer );
 				}
@@ -188,7 +191,9 @@ public class CteTable {
 			}
 			offset += discriminatorMapping.getJdbcTypeCount();
 		}
-		for ( AttributeMapping attribute : entityDescriptor.getAttributeMappings() ) {
+		final AttributeMappingsList attributeMappings = entityDescriptor.getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			AttributeMapping attribute = attributeMappings.get( i );
 			if ( !( attribute instanceof PluralAttributeMapping ) ) {
 				final int result = determineModelPartStartIndex( offset, attribute, modelPart );
 				if ( result < 0 ) {
@@ -216,7 +221,9 @@ public class CteTable {
 		}
 		else if ( modelPart instanceof EmbeddableValuedModelPart ) {
 			final EmbeddableValuedModelPart embeddablePart = ( EmbeddableValuedModelPart ) modelPart;
-			for ( AttributeMapping mapping : embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings() ) {
+			final AttributeMappingsList attributeMappings = embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping mapping = attributeMappings.get( i );
 				final int result = determineModelPartStartIndex( offset, mapping, modelPartToFind );
 				if ( result < 0 ) {
 					return result;

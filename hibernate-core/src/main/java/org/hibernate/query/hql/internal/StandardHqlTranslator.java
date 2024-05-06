@@ -72,7 +72,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	@Override
 	public <R> SqmStatement<R> translate(String query, Class<R> expectedResultType) {
-		HqlLogging.QUERY_LOGGER.debugf( "HQL : " + query );
+		HqlLogging.QUERY_LOGGER.debugf( "HQL : %s", query );
 
 		final HqlParser.StatementContext hqlParseTree = parseHql( query );
 

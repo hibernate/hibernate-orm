@@ -56,12 +56,13 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final SqmPluralValuedSimplePath<E> path = context.registerCopy(
 				this,
 				new SqmPluralValuedSimplePath<>(
-						getNavigablePath(),
-						getReferencedPathSource(),
-						getLhs().copy( context ),
+						getNavigablePathCopy( lhsCopy ),
+						getModel(),
+						lhsCopy,
 						getExplicitAlias(),
 						nodeBuilder()
 				)
@@ -73,6 +74,11 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	@Override
 	public PluralPersistentAttribute<?, ?, E> getReferencedPathSource() {
 		return (PluralPersistentAttribute<?, ?, E>) super.getReferencedPathSource();
+	}
+
+	@Override
+	public PluralPersistentAttribute<?, ?, E> getModel() {
+		return (PluralPersistentAttribute<?, ?, E>) super.getModel();
 	}
 
 	@Override

@@ -19,7 +19,6 @@ import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ValuesAnalysis;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_TRACE_ENABLED;
 
 /**
  * Base support for MutationExecutor implementations
@@ -89,7 +88,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 
 		final TableMapping tableDetails = statementDetails.getMutatingTableDetails();
 		if ( inclusionChecker != null && !inclusionChecker.include( tableDetails ) ) {
-			if ( MODEL_MUTATION_LOGGER_TRACE_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 				MODEL_MUTATION_LOGGER.tracef(
 						"Skipping execution of secondary insert : %s",
 						tableDetails.getTableName()

@@ -27,18 +27,22 @@ import java.util.Date;
 import java.util.List;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 
 import junit.framework.TestCase;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 
+import static java.time.LocalDateTime.now;
+
+import static jakarta.persistence.Persistence.createEntityManagerFactory;
+
 /**
- * Illustrates the set up and use of Envers.
+ * Illustrates the setup and use of Envers.
  * <p>
- * This example is different from the others in that we really need to save multiple revisions to the entity in
- * order to get a good look at Envers in action.
+ * This example is different from the others because we need to have
+ * multiple revisions to the entity in order to get a good look at
+ * Envers in action.
  *
  * @author Steve Ebersole
  */
@@ -46,14 +50,12 @@ public class EnversIllustrationTest extends TestCase {
 	private EntityManagerFactory entityManagerFactory;
 
 	@Override
-	protected void setUp() throws Exception {
-		// like discussed with regards to SessionFactory, an EntityManagerFactory is set up once for an application
-		// 		IMPORTANT: notice how the name here matches the name we gave the persistence-unit in persistence.xml!
-		entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.envers" );
+	protected void setUp() {
+		entityManagerFactory = createEntityManagerFactory( "org.hibernate.tutorial.envers" );
 	}
 
 	@Override
-	protected void tearDown() throws Exception {
+	protected void tearDown() {
 		entityManagerFactory.close();
 	}
 
@@ -61,8 +63,8 @@ public class EnversIllustrationTest extends TestCase {
 		// create a couple of events
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
 		entityManager.getTransaction().begin();
-		entityManager.persist( new Event( "Our very first event!", new Date() ) );
-		entityManager.persist( new Event( "A follow up event", new Date() ) );
+		entityManager.persist( new Event( "Our very first event!", now() ) );
+		entityManager.persist( new Event( "A follow up event", now() ) );
 		entityManager.getTransaction().commit();
 		entityManager.close();
 
@@ -82,7 +84,7 @@ public class EnversIllustrationTest extends TestCase {
 		entityManager = entityManagerFactory.createEntityManager();
 		entityManager.getTransaction().begin();
 		Event myEvent = entityManager.find( Event.class, 2L ); // we are using the increment generator, so we know 2 is a valid id
-		myEvent.setDate( new Date() );
+		myEvent.setDate( now() );
 		myEvent.setTitle( myEvent.getTitle() + " (rescheduled)" );
         entityManager.getTransaction().commit();
         entityManager.close();

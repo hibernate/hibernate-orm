@@ -1,0 +1,36 @@
+selectStatement
+	: queryExpression
+
+queryExpression
+	: withClause? orderedQuery (setOperator orderedQuery)*
+
+orderedQuery
+	: (query | "(" queryExpression ")") queryOrder?
+
+query
+	: selectClause fromClause? whereClause? (groupByClause havingClause?)?
+	| fromClause whereClause? (groupByClause havingClause?)? selectClause?
+
+queryOrder
+	: orderByClause limitClause? offsetClause? fetchClause?
+
+fromClause
+	: "FROM" entityWithJoins ("," entityWithJoins)*
+
+entityWithJoins
+	: fromRoot (join | crossJoin | jpaCollectionJoin)*
+
+fromRoot
+	: entityName variable?
+	| "LATERAL"? "(" subquery ")" variable?
+
+join
+	: joinType "JOIN" "FETCH"? joinTarget joinRestriction?
+
+joinTarget
+	: path variable?
+	| "LATERAL"? "(" subquery ")" variable?
+
+withClause
+	: "WITH" cte ("," cte)*
+	;

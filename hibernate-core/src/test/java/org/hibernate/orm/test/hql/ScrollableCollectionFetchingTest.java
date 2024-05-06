@@ -46,8 +46,8 @@ public class ScrollableCollectionFetchingTest {
 	public void testTupleReturnFails(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try {
-						session.createQuery( "select a, a.weight from Animal a inner join fetch a.offspring" ).scroll();
+					try (ScrollableResults<?> sr = session.createQuery(
+							"select a, a.weight from Animal a inner join fetch a.offspring" ).scroll()) {
 						fail( "scroll allowed with collection fetch and reurning tuples" );
 					}
 					catch (IllegalArgumentException e) {
@@ -74,55 +74,56 @@ public class ScrollableCollectionFetchingTest {
 					assertEquals( 0, size );
 
 					// now get the scrollable results
-					ScrollableResults results = s.createQuery( query ).setParameter( "desc", "root%" ).scroll();
+					try (ScrollableResults results = s.createQuery( query ).setParameter( "desc", "root%" ).scroll()) {
 
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					assertFalse( results.next() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					assertFalse( results.previous() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					results.beforeFirst();
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					assertFalse( results.first() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					results.afterLast();
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					assertFalse( results.last() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					for ( int i = 1; i < 3; i++ ) {
-						assertFalse( results.scroll( i ) );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						assertFalse( results.scroll( -i ) );
+						assertFalse( results.next() );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						assertFalse( results.setRowNumber( i ) );
+						assertFalse( results.previous() );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						assertFalse( results.setRowNumber( -i ) );
+						results.beforeFirst();
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						assertFalse( results.first() );
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						results.afterLast();
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						assertFalse( results.last() );
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						for ( int i = 1; i < 3; i++ ) {
+							assertFalse( results.scroll( i ) );
+							assertFalse( results.isFirst() );
+							assertFalse( results.isLast() );
+
+							assertFalse( results.scroll( -i ) );
+							assertFalse( results.isFirst() );
+							assertFalse( results.isLast() );
+
+							assertFalse( results.setRowNumber( i ) );
+							assertFalse( results.isFirst() );
+							assertFalse( results.isLast() );
+
+							assertFalse( results.setRowNumber( -i ) );
+							assertFalse( results.isFirst() );
+							assertFalse( results.isLast() );
+						}
 					}
 				}
 		);
@@ -158,84 +159,85 @@ public class ScrollableCollectionFetchingTest {
 									.setParameter( "desc", "root%" )
 									.uniqueResult() );
 
-					ScrollableResults results = session
+					try (ScrollableResults results = session
 							.createQuery(
 									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
-							.setParameter( "desc", "root%" ).scroll();
+							.setParameter( "desc", "root%" ).scroll()) {
 
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.previous() );
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.previous() );
 
-					assertTrue( results.next() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-
-					assertFalse( results.next() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					assertTrue( results.previous() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-
-					assertFalse( results.previous() );
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-
-					assertTrue( results.next() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-
-					results.beforeFirst();
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.previous() );
-
-					assertTrue( results.first() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-					assertFalse( results.next() );
-
-					results.afterLast();
-					assertFalse( results.isFirst() );
-					assertFalse( results.isLast() );
-					assertFalse( results.next() );
-
-					assertTrue( results.last() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-					assertFalse( results.next() );
-
-					assertTrue( results.first() );
-					assertTrue( results.isFirst() );
-					assertTrue( results.isLast() );
-
-					for ( int i = 1; i < 3; i++ ) {
-						assertTrue( results.setRowNumber( 1 ) );
+						assertTrue( results.next() );
 						assertTrue( results.isFirst() );
 						assertTrue( results.isLast() );
 
-						assertFalse( results.scroll( i ) );
+						assertFalse( results.next() );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						assertTrue( results.setRowNumber( 1 ) );
+						assertTrue( results.previous() );
 						assertTrue( results.isFirst() );
 						assertTrue( results.isLast() );
 
-						assertFalse( results.scroll( -i ) );
+						assertFalse( results.previous() );
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
 
-						if ( i != 1 ) {
-							assertFalse( results.setRowNumber( i ) );
+						assertTrue( results.next() );
+						assertTrue( results.isFirst() );
+						assertTrue( results.isLast() );
+
+						results.beforeFirst();
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.previous() );
+
+						assertTrue( results.first() );
+						assertTrue( results.isFirst() );
+						assertTrue( results.isLast() );
+						assertFalse( results.next() );
+
+						results.afterLast();
+						assertFalse( results.isFirst() );
+						assertFalse( results.isLast() );
+						assertFalse( results.next() );
+
+						assertTrue( results.last() );
+						assertTrue( results.isFirst() );
+						assertTrue( results.isLast() );
+						assertFalse( results.next() );
+
+						assertTrue( results.first() );
+						assertTrue( results.isFirst() );
+						assertTrue( results.isLast() );
+
+						for ( int i = 1; i < 3; i++ ) {
+							assertTrue( results.setRowNumber( 1 ) );
+							assertTrue( results.isFirst() );
+							assertTrue( results.isLast() );
+
+							assertFalse( results.scroll( i ) );
 							assertFalse( results.isFirst() );
 							assertFalse( results.isLast() );
 
-							assertFalse( results.setRowNumber( -i ) );
+							assertTrue( results.setRowNumber( 1 ) );
+							assertTrue( results.isFirst() );
+							assertTrue( results.isLast() );
+
+							assertFalse( results.scroll( -i ) );
 							assertFalse( results.isFirst() );
 							assertFalse( results.isLast() );
+
+							if ( i != 1 ) {
+								assertFalse( results.setRowNumber( i ) );
+								assertFalse( results.isFirst() );
+								assertFalse( results.isLast() );
+
+								assertFalse( results.setRowNumber( -i ) );
+								assertFalse( results.isFirst() );
+								assertFalse( results.isLast() );
+							}
 						}
 					}
 				}
@@ -260,20 +262,20 @@ public class ScrollableCollectionFetchingTest {
 
 		scope.inTransaction(
 				s -> {
-					ScrollableResults results = s
+					try (ScrollableResults results = s
 							.createQuery(
 									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
 							.setParameter( "desc", "root%" )
-							.scroll( ScrollMode.FORWARD_ONLY );
+							.scroll( ScrollMode.FORWARD_ONLY )) {
 
-					int counter = 0;
-					while ( results.next() ) {
-						counter++;
-						Animal animal = (Animal) results.get();
-						checkResult( animal );
+						int counter = 0;
+						while ( results.next() ) {
+							counter++;
+							Animal animal = (Animal) results.get();
+							checkResult( animal );
+						}
+						assertEquals( 2, counter, "unexpected result count" );
 					}
-					assertEquals( 2, counter, "unexpected result count" );
-
 				}
 		);
 	}
@@ -287,21 +289,21 @@ public class ScrollableCollectionFetchingTest {
 
 		scope.inTransaction(
 				s -> {
-					ScrollableResults results = s
+					try (ScrollableResults results = s
 							.createQuery(
 									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
-							.setParameter( "desc", "root%" ).scroll();
+							.setParameter( "desc", "root%" ).scroll()) {
 
-					results.afterLast();
+						results.afterLast();
 
-					int counter = 0;
-					while ( results.previous() ) {
-						counter++;
-						Animal animal = (Animal) results.get();
-						checkResult( animal );
+						int counter = 0;
+						while ( results.previous() ) {
+							counter++;
+							Animal animal = (Animal) results.get();
+							checkResult( animal );
+						}
+						assertEquals( 2, counter, "unexpected result count" );
 					}
-					assertEquals( 2, counter, "unexpected result count" );
-
 				}
 		);
 	}
@@ -315,31 +317,32 @@ public class ScrollableCollectionFetchingTest {
 
 		scope.inTransaction(
 				session -> {
-					ScrollableResults results = session
+					try (ScrollableResults results = session
 							.createQuery(
 									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
 							.setParameter( "desc", "root%" )
-							.scroll();
+							.scroll()) {
 
-					results.first();
-					Animal animal = (Animal) results.get();
-					assertEquals( data.root1Id, animal.getId(), "first() did not return expected row" );
+						results.first();
+						Animal animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "first() did not return expected row" );
 
-					results.scroll( 1 );
-					animal = (Animal) results.get();
-					assertEquals( data.root2Id, animal.getId(), "scroll(1) did not return expected row" );
+						results.scroll( 1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "scroll(1) did not return expected row" );
 
-					results.scroll( -1 );
-					animal = (Animal) results.get();
-					assertEquals( data.root1Id, animal.getId(), "scroll(-1) did not return expected row" );
+						results.scroll( -1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "scroll(-1) did not return expected row" );
 
-					results.setRowNumber( 1 );
-					animal = (Animal) results.get();
-					assertEquals( data.root1Id, animal.getId(), "setRowNumber(1) did not return expected row" );
+						results.setRowNumber( 1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "setRowNumber(1) did not return expected row" );
 
-					results.setRowNumber( 2 );
-					animal = (Animal) results.get();
-					assertEquals( data.root2Id, animal.getId(), "setRowNumber(2) did not return expected row" );
+						results.setRowNumber( 2 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "setRowNumber(2) did not return expected row" );
+					}
 				}
 		);
 	}

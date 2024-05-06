@@ -22,7 +22,4 @@ import org.jboss.logging.Logger;
 public interface NaturalIdLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".mapping.natural_id";
 	Logger NATURAL_ID_LOGGER = Logger.getLogger( LOGGER_NAME );
-
-	boolean DEBUG_ENABLED = NATURAL_ID_LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = NATURAL_ID_LOGGER.isTraceEnabled();
 }

@@ -21,7 +21,4 @@ import org.jboss.logging.Logger;
 public interface BootLogging {
 	String NAME = SubSystemLogging.BASE + ".boot";
 	Logger BOOT_LOGGER = Logger.getLogger( NAME );
-
-	boolean DEBUG_ENABLED = BOOT_LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = BOOT_LOGGER.isTraceEnabled();
 }

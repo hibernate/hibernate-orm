@@ -9,6 +9,7 @@ package org.hibernate.orm.test.insertordering;
 import java.util.Iterator;
 import java.util.function.Supplier;
 
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchImpl;
@@ -35,9 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 @SessionFactory
 @ServiceRegistry(
-		settings = {@Setting( name = Environment.ORDER_INSERTS, value = "true"),
-				@Setting( name = Environment.STATEMENT_BATCH_SIZE, value = "10"),
-				@Setting( name = BatchBuilderInitiator.BUILDER, value = "org.hibernate.orm.test.insertordering.InsertOrderingTest$StatsBatchBuilder" )
+		settings = {@Setting( name = BatchSettings.ORDER_INSERTS, value = "true"),
+				@Setting( name = BatchSettings.STATEMENT_BATCH_SIZE, value = "10"),
+				@Setting( name = BatchSettings.BUILDER, value = "org.hibernate.orm.test.insertordering.InsertOrderingTest$StatsBatchBuilder" )
 		}
 )
 public class InsertOrderingTest {

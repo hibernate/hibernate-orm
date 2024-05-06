@@ -120,8 +120,7 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
-		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
-				.getService( JdbcServices.class )
+		final SqlStatementLogger statementLogger = session.getFactory().getJdbcServices()
 				.getSqlStatementLogger();
 		if ( selectQuery == null || updateQuery == null ) {
 			throw new AssertionFailure( "SequenceStyleGenerator's TableStructure was not properly initialized" );

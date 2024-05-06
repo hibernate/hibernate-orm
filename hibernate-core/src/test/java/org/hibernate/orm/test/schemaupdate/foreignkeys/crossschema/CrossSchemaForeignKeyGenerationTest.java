@@ -49,6 +49,8 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.tool.schema.TargetDatabaseImpl;
 
 import org.junit.After;
@@ -70,7 +72,8 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	public void setUp() throws IOException {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder().applySetting( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, "true" )
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, "true" )
 				.build();
 	}
 

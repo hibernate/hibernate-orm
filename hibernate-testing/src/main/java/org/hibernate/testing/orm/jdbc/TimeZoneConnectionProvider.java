@@ -30,7 +30,7 @@ public class TimeZoneConnectionProvider
 		this.defaultTimeZone =  System.setProperty( "user.timezone", customTimeZone);
 		TimeZone.setDefault(TimeZone.getTimeZone( customTimeZone ));
 		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 	}
 
 	@Override
@@ -39,6 +39,6 @@ public class TimeZoneConnectionProvider
 		System.setProperty( "user.timezone", defaultTimeZone);
 		TimeZone.setDefault(TimeZone.getTimeZone( defaultTimeZone ));
 		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 	}
 }

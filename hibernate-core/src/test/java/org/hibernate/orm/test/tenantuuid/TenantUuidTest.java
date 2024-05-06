@@ -18,6 +18,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,8 +40,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 )
 public class TenantUuidTest implements SessionFactoryProducer {
 
-    private static final UUID mine = UUID.randomUUID();
-    private static final UUID yours = UUID.randomUUID();
+    private static final UUID mine = SafeRandomUUIDGenerator.safeRandomUUID();
+    private static final UUID yours = SafeRandomUUIDGenerator.safeRandomUUID();
 
     UUID currentTenant;
 

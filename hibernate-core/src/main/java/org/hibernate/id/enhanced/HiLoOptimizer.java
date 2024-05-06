@@ -9,6 +9,8 @@ package org.hibernate.id.enhanced;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -80,29 +82,39 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public synchronized Serializable generate(AccessCallback callback) {
-		final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+	public Serializable generate(AccessCallback callback) {
+		lock.lock();
+		try {
+			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
 
-		if ( generationState.lastSourceValue == null ) {
-			// first call, so initialize ourselves.  we need to read the database
-			// value and set up the 'bucket' boundaries
-			generationState.lastSourceValue = callback.getNextValue();
-			while ( generationState.lastSourceValue.lt( 1 ) ) {
+			if ( generationState.lastSourceValue == null ) {
+				// first call, so initialize ourselves.  we need to read the database
+				// value and set up the 'bucket' boundaries
 				generationState.lastSourceValue = callback.getNextValue();
+				while ( generationState.lastSourceValue.lt( 1 ) ) {
+					generationState.lastSourceValue = callback.getNextValue();
+				}
+				// upperLimit defines the upper end of the bucket values
+				generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
+				// initialize value to the lower end of the bucket
+				generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
 			}
-			// upperLimit defines the upper end of the bucket values
-			generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
-			// initialize value to the lower end of the bucket
-			generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
+			else if ( ! generationState.upperLimit.gt( generationState.value ) ) {
+				generationState.lastSourceValue = callback.getNextValue();
+				generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
+				generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
+			}
+			return generationState.value.makeValueThenIncrement();
 		}
-		else if ( ! generationState.upperLimit.gt( generationState.value ) ) {
-			generationState.lastSourceValue = callback.getNextValue();
-			generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
-			generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
+		finally {
+			lock.unlock();
 		}
-		return generationState.value.makeValueThenIncrement();
 	}
 
+	/**
+	 * Use a lock instead of the monitor lock to avoid pinning when using virtual threads.
+	 */
+	private final Lock lock = new ReentrantLock();
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 
@@ -139,8 +151,14 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public synchronized IntegralDataTypeHolder getLastSourceValue() {
-		return noTenantGenerationState().lastSourceValue;
+	public IntegralDataTypeHolder getLastSourceValue() {
+		lock.lock();
+		try {
+			return noTenantGenerationState().lastSourceValue;
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
@@ -155,8 +173,14 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	 *
 	 * @return Value for property 'lastValue'.
 	 */
-	public synchronized IntegralDataTypeHolder getLastValue() {
-		return noTenantGenerationState().value.copy().decrement();
+	public IntegralDataTypeHolder getLastValue() {
+		lock.lock();
+		try {
+			return noTenantGenerationState().value.copy().decrement();
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -166,7 +190,13 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	 *
 	 * @return Value for property 'upperLimit'.
 	 */
-	public synchronized IntegralDataTypeHolder getHiValue() {
-		return noTenantGenerationState().upperLimit;
+	public IntegralDataTypeHolder getHiValue() {
+		lock.lock();
+		try {
+			return noTenantGenerationState().upperLimit;
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 }

@@ -7,11 +7,11 @@
 package org.hibernate.orm.docs;
 
 import java.io.File;
-import javax.inject.Inject;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Provider;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -21,46 +21,50 @@ import org.hibernate.orm.ReleaseFamilyIdentifier;
  * @author Steve Ebersole
  */
 public abstract class GenerateDescriptorTask extends DefaultTask {
-	private final Provider<RegularFile> jsonFile;
-	private final ReleaseFamilyIdentifier currentlyBuildingFamily;
+	public static final String GEN_DESC_TASK_NAME = "generateDocumentationDescriptor";
+	private final RegularFileProperty jsonFile;
+	private final Property<ReleaseFamilyIdentifier> currentlyBuildingFamily;
 
-	@Inject
-	public GenerateDescriptorTask(DocumentationPublishing config) {
-		setGroup( "Release" );
+	public GenerateDescriptorTask() {
+		setGroup( "documentation" );
 		setDescription( "Generates the documentation publication descriptor (JSON)" );
 
-		jsonFile = config.getUpdatedJsonFile();
-		currentlyBuildingFamily = config.getReleaseFamilyIdentifier();
+		jsonFile = getProject().getObjects().fileProperty();
+		currentlyBuildingFamily = getProject().getObjects().property( ReleaseFamilyIdentifier.class );
+	}
 
-		getInputs().property( "hibernate-version", currentlyBuildingFamily );
+	@Input
+	public Property<ReleaseFamilyIdentifier> getCurrentlyBuildingFamily() {
+		return currentlyBuildingFamily;
 	}
 
 	@OutputFile
-	public Provider<RegularFile> getJsonFile() {
+	public RegularFileProperty getJsonFile() {
 		return jsonFile;
 	}
 
 	@TaskAction
 	public void generateDescriptor() {
-		final ProjectDocumentation projectDoc = DescriptorAccess.loadProject();
+		final ProjectDocumentationDescriptor descriptor = DescriptorAccess.loadProject();
 
 		ReleaseFamilyIdentifier newest = null;
 		boolean foundCurrentRelease = false;
 
-		for ( ReleaseFamilyDocumentation releaseFamily : projectDoc.getReleaseFamilies() ) {
+		for ( ReleaseFamilyDocumentation releaseFamily : descriptor.getReleaseFamilies() ) {
 			if ( newest == null
 					|| releaseFamily.getName().newerThan( newest ) ) {
 				newest = releaseFamily.getName();
 			}
 
-			if ( releaseFamily.getName().equals( currentlyBuildingFamily ) ) {
+			if ( releaseFamily.getName().equals( currentlyBuildingFamily.get() ) ) {
 				foundCurrentRelease = true;
 			}
 		}
 
 		if ( ! foundCurrentRelease ) {
 			final ReleaseFamilyDocumentation newEntry = new ReleaseFamilyDocumentation();
-			newEntry.setName( currentlyBuildingFamily );
+			newEntry.setName( currentlyBuildingFamily.get() );
+			descriptor.addReleaseFamily( newEntry );
 			setDidWork( true );
 		}
 
@@ -68,17 +72,17 @@ public abstract class GenerateDescriptorTask extends DefaultTask {
 		// 		1. we are currently building a Final
 		//		2. currentlyBuildingFamily is the newest
 
-		if ( currentlyBuildingFamily.newerThan( newest ) ) {
-			projectDoc.setStableFamily( currentlyBuildingFamily );
+		if ( currentlyBuildingFamily.get().newerThan( newest ) ) {
+			descriptor.setStableFamily( currentlyBuildingFamily.get() );
 			setDidWork( true );
 		}
 
-		DescriptorAccess.storeProject( projectDoc, jsonFile.get().getAsFile() );
+		DescriptorAccess.storeProject( descriptor, jsonFile.get().getAsFile() );
 	}
 
 	public static void main(String... args) {
 		final File jsonFile = new File( "/home/sebersole/projects/hibernate-orm/6.0/hibernate-orm-build/target/doc-pub/orm.json" );
-		final ProjectDocumentation projectDoc = DescriptorAccess.loadProject();
+		final ProjectDocumentationDescriptor projectDoc = DescriptorAccess.loadProject();
 		DescriptorAccess.storeProject( projectDoc, jsonFile );
 	}
 }

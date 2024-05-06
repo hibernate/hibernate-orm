@@ -38,7 +38,7 @@ The semantics of a collection describes how to handle the collection, including
 
 * the collection subtype to use - `java.util.List`, `java.util.Set`, `java.util.SortedSet`, etc.
 * how to access elements of the collection
-* how to create instances of the collection - both "raw" and "wrapper" forms.  See <<collection-wrapper>>
+* how to create instances of the collection - both "raw" and "<<collection-wrapper,wrapper>>" forms.
 
 
 Hibernate supports the following semantics:

@@ -13,19 +13,19 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.PropertyAccessSerializationException;
 
 /**
- * Abstract serialization replacement for field based Getter and Setter impls.
+ * Base Serializable form for field (used as Getter or Setter)
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractFieldSerialForm implements Serializable {
-	private final Class declaringClass;
+	private final Class<?> declaringClass;
 	private final String fieldName;
 
 	protected AbstractFieldSerialForm(Field field) {
 		this( field.getDeclaringClass(), field.getName() );
 	}
 
-	protected AbstractFieldSerialForm(Class declaringClass, String fieldName) {
+	protected AbstractFieldSerialForm(Class<?> declaringClass, String fieldName) {
 		this.declaringClass = declaringClass;
 		this.fieldName = fieldName;
 	}

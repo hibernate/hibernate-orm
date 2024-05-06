@@ -18,6 +18,8 @@ import org.hibernate.orm.test.jpa.mapping.ColumnWithExplicitReferenceToPrimaryTa
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.jboss.logging.Logger;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,6 +44,7 @@ public class Hbm2ddlCreateOnlyTest {
 
 		final Map settings = new HashMap();
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-only" );
+		ServiceRegistryUtil.applySettings( settings );
 
 		EntityManagerFactory emf = null;
 		try {

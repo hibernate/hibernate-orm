@@ -21,6 +21,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AccessType;
@@ -168,6 +169,7 @@ public class XmlAccessTest {
 		for ( Class<?> clazz : classesUnderTest ) {
 			cfg.addAnnotatedClass( clazz );
 		}
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		for ( String configFile : configFiles ) {
 			try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile )) {
 				cfg.addInputStream( is );
@@ -186,7 +188,7 @@ public class XmlAccessTest {
 				.getMappingMetamodel()
 				.findEntityDescriptor( classUnderTest.getName() );
 		final AttributeMappingsList attributeMappings = entityDescriptor.getAttributeMappings();
-		final AttributeMapping attributeMapping = attributeMappings.iterator().next();
+		final AttributeMapping attributeMapping = attributeMappings.get( 0 );
 
 		final Getter accessGetter = attributeMapping.getPropertyAccess().getGetter();
 

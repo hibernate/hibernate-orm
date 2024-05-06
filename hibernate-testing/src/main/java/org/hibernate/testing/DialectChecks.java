@@ -198,12 +198,6 @@ abstract public class DialectChecks {
 		}
 	}
 
-	public static class SupportSkipLocked implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsSkipLocked();
-		}
-	}
-
 	public static class SupportNoWait implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsNoWait();

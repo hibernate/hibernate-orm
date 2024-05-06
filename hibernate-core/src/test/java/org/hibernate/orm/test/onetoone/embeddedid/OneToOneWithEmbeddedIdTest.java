@@ -1,9 +1,9 @@
 package org.hibernate.orm.test.onetoone.embeddedid;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -96,12 +96,12 @@ class OneToOneWithEmbeddedIdTest {
 
 	@Embeddable
 	static class ID1 implements Serializable {
-		String id = UUID.randomUUID().toString();
+		String id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 	}
 
 	@Embeddable
 	static class ID2 implements Serializable {
-		String id = UUID.randomUUID().toString();
+		String id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 	}
 
 }

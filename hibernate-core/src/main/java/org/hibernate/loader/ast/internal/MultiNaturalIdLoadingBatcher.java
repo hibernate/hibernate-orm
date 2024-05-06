@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -50,7 +51,7 @@ public class MultiNaturalIdLoadingBatcher {
 	private final EntityMappingType entityDescriptor;
 
 	private final SelectStatement sqlSelect;
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 
 	private final KeyValueResolver keyValueResolver;
 
@@ -65,8 +66,8 @@ public class MultiNaturalIdLoadingBatcher {
 			LockOptions lockOptions,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 
-		jdbcParameters = new ArrayList<>( batchSize );
 		sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor,
 				// return the full entity rather than parts
@@ -77,9 +78,10 @@ public class MultiNaturalIdLoadingBatcher {
 				batchSize,
 				loadQueryInfluencers,
 				lockOptions,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+		this.jdbcParameters = jdbcParametersBuilder.build();
 
 		this.keyValueResolver = keyValueResolver;
 

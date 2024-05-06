@@ -22,6 +22,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
@@ -34,7 +35,7 @@ public class NestedEmbeddableMetadataTest {
 
 	@Test
 	public void testEnumTypeInterpretation() {
-		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.enableAutoClose()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();

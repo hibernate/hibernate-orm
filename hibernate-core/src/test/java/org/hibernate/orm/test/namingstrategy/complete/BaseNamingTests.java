@@ -19,6 +19,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -32,7 +33,7 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 
 	@Test
 	public void doTest() {
-		final MetadataSources metadataSources = new MetadataSources();
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
 		try {
 			applySources( metadataSources );
 

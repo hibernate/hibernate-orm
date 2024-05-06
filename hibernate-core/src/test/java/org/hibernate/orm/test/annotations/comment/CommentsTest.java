@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -46,7 +47,7 @@ public class CommentsTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-4369")
 	public void testComments() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		Metadata metadata = new MetadataSources(ssr).addAnnotatedClass(TestEntity.class).buildMetadata();
 		org.hibernate.mapping.Table table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
 				.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(TABLE_NAME))

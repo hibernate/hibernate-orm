@@ -60,7 +60,7 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 		}
 		else {
 			// discriminated
-			assert discriminatorFetchBuilder != null;
+			assert !entityDescriptor.hasSubclasses() || discriminatorFetchBuilder != null;
 		}
 	}
 

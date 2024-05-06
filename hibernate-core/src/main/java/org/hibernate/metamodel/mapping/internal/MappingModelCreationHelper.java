@@ -59,6 +59,7 @@ import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -100,7 +101,6 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_DEBUG_ENABLED;
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -194,6 +194,7 @@ public class MappingModelCreationHelper {
 			Long length,
 			Integer precision,
 			Integer scale,
+			boolean isLob,
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
@@ -240,6 +241,7 @@ public class MappingModelCreationHelper {
 				length,
 				precision,
 				scale,
+				isLob,
 				nullable,
 				insertable,
 				updateable,
@@ -509,7 +511,8 @@ public class MappingModelCreationHelper {
 						index.isColumnUpdateable( 0 ),
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
 						collectionDescriptor,
@@ -562,7 +565,8 @@ public class MappingModelCreationHelper {
 						index.isColumnUpdateable( 0 ),
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
 						collectionDescriptor,
@@ -773,7 +777,8 @@ public class MappingModelCreationHelper {
 					bootValueMappingKey.isColumnUpdateable( 0 ),
 					false,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 
 			final SimpleForeignKeyDescriptor keyDescriptor = new SimpleForeignKeyDescriptor(
@@ -949,7 +954,8 @@ public class MappingModelCreationHelper {
 						value.isColumnUpdateable( i ),
 						((SimpleValue) value).isPartitionKey(),
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				i++;
 			}
@@ -964,7 +970,8 @@ public class MappingModelCreationHelper {
 						value.isColumnUpdateable( 0 ),
 						((SimpleValue) value).isPartitionKey(),
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 			}
 
@@ -1111,7 +1118,8 @@ public class MappingModelCreationHelper {
 					insertable,
 					updateable,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 		}
 		else {
@@ -1135,7 +1143,8 @@ public class MappingModelCreationHelper {
 					insertable,
 					updateable,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 		}
 		if ( inverse ) {
@@ -1244,7 +1253,19 @@ public class MappingModelCreationHelper {
 					dialect,
 					creationProcess
 			);
-			attributeMapping.setForeignKeyDescriptor( referencedAttributeMapping.getForeignKeyDescriptor() );
+			foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
+		}
+
+		final EntityMappingType declaringEntityMapping = attributeMapping.findContainingEntityMapping();
+		if ( foreignKeyDescriptor.getTargetPart() instanceof EntityIdentifierMapping
+				&& foreignKeyDescriptor.getTargetPart() != declaringEntityMapping.getIdentifierMapping() ) {
+			// If the many-to-one refers to the super type, but the one-to-many is defined in a subtype,
+			// it would be wasteful to reuse the FK descriptor of the many-to-one,
+			// because that refers to the PK column in the root table.
+			// Joining such an association then requires that we join the root table
+			attributeMapping.setForeignKeyDescriptor(
+					foreignKeyDescriptor.withTargetPart( declaringEntityMapping.getIdentifierMapping() )
+			);
 		}
 		else {
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
@@ -1303,7 +1324,8 @@ public class MappingModelCreationHelper {
 					updatable,
 					false,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
@@ -1400,7 +1422,8 @@ public class MappingModelCreationHelper {
 					basicElement.isPartitionKey(),
 					true, // element collection does not support null elements
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
@@ -1694,7 +1717,7 @@ public class MappingModelCreationHelper {
 					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
 				if ( lazy ) {
-					if ( MAPPING_MODEL_CREATION_DEBUG_ENABLED ) {
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isDebugEnabled() ) {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 								"Forcing FetchTiming.IMMEDIATE for to-one association : %s.%s",
 								declaringType.getNavigableRole(),

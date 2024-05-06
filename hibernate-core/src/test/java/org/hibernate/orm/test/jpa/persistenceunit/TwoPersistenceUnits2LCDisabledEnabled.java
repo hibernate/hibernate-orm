@@ -22,6 +22,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -39,6 +40,7 @@ public class TwoPersistenceUnits2LCDisabledEnabled {
 		config.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( AnEntity.class ) );
 		config.put( "javax.persistence.sharedCache.mode", SharedCacheMode.ENABLE_SELECTIVE );
 		config.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
+		ServiceRegistryUtil.applySettings( config );
 
 		testIt( config );
 

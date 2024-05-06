@@ -36,14 +36,14 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
  */
 public class SqlTreePrinter {
 	public static void logSqlAst(Statement sqlAstStatement) {
-		if ( ! SqlAstTreeLogger.DEBUG_ENABLED ) {
+		if ( ! SqlAstTreeLogger.INSTANCE.isDebugEnabled() ) {
 			return;
 		}
 
 		final SqlTreePrinter printer = new SqlTreePrinter();
 		printer.visitStatement( sqlAstStatement );
 
-		SqlAstTreeLogger.INSTANCE.debugf( "SQL AST Tree:%n" + printer.buffer.toString() );
+		SqlAstTreeLogger.INSTANCE.debugf( "SQL AST Tree:%n%s", printer.buffer );
 	}
 
 	private final StringBuffer buffer = new StringBuffer();

@@ -236,7 +236,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, dialect );
+		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, getSessionFactory() );
 		if ( sqlType != null ) {
 			appendSql( sqlType );
 		}

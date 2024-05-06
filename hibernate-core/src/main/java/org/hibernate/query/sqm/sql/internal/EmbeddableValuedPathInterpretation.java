@@ -16,13 +16,11 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.sql.ast.Clause;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -30,6 +28,8 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignable;
+
+import static org.hibernate.query.sqm.internal.SqmUtil.needsTargetTableMapping;
 
 /**
  * @author Steve Ebersole
@@ -41,45 +41,42 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 	 */
 	public static <T> Expression from(
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
-			SqmToSqlAstConverter converter,
-			SemanticQueryWalker<?> sqmWalker,
-			boolean jpaQueryComplianceEnabled,
-			Clause currentClause) {
-		TableGroup tableGroup = converter.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
-
+			SqmToSqlAstConverter sqlAstCreationState,
+			boolean jpaQueryComplianceEnabled) {
+		final SqmPath<?> lhs = sqmPath.getLhs();
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() );
 		EntityMappingType treatTarget = null;
 		if ( jpaQueryComplianceEnabled ) {
-			final MappingMetamodel mappingMetamodel = converter.getCreationContext()
+			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
 					.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel();
-			if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
+			if ( lhs instanceof SqmTreatedPath ) {
 				//noinspection rawtypes
-				final EntityDomainType<?> treatTargetDomainType = ( (SqmTreatedPath) sqmPath.getLhs() ).getTreatTarget();
+				final EntityDomainType<?> treatTargetDomainType = ( (SqmTreatedPath) lhs ).getTreatTarget();
 				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
 			}
-			else if ( sqmPath.getLhs().getNodeType() instanceof EntityDomainType ) {
+			else if ( lhs.getNodeType() instanceof EntityDomainType ) {
 				//noinspection rawtypes
-				final EntityDomainType<?> entityDomainType = (EntityDomainType) sqmPath.getLhs().getNodeType();
+				final EntityDomainType<?> entityDomainType = (EntityDomainType) lhs.getNodeType();
 				treatTarget = mappingMetamodel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 
 			}
 		}
 
-		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		final ModelPartContainer modelPartContainer = tableGroup.getModelPart();
 		final EmbeddableValuedModelPart mapping;
-		// In the select, group by, order by and having clause we have to make sure we render the column of the target table,
-		// never the FK column, if the lhs is a SqmFrom i.e. something explicitly queried/joined.
-		if ( ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
-				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
-				&& modelPart.getPartMappingType() instanceof ManagedMappingType ) {
-			mapping = (EmbeddableValuedModelPart) ( (ManagedMappingType) modelPart.getPartMappingType() ).findSubPart(
+		if ( needsTargetTableMapping( sqmPath, modelPartContainer, sqlAstCreationState ) ) {
+			// In the select, group by, order by and having clause we have to make sure we render
+			// the column of the target table, never the FK column, if the lhs is a join type that
+			// requires it (right, full) or if this path is contained in group by clause
+			mapping = (EmbeddableValuedModelPart) ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
 					sqmPath.getReferencedPathSource().getPathName(),
 					treatTarget
 			);
 		}
 		else {
-			mapping = (EmbeddableValuedModelPart) modelPart.findSubPart(
+			mapping = (EmbeddableValuedModelPart) modelPartContainer.findSubPart(
 					sqmPath.getReferencedPathSource().getPathName(),
 					treatTarget
 			);
@@ -88,9 +85,9 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		return new EmbeddableValuedPathInterpretation<>(
 				mapping.toSqlExpression(
 						tableGroup,
-						converter.getCurrentClauseStack().getCurrent(),
-						converter,
-						converter
+						sqlAstCreationState.getCurrentClauseStack().getCurrent(),
+						sqlAstCreationState,
+						sqlAstCreationState
 				),
 				sqmPath.getNavigablePath(),
 				mapping,

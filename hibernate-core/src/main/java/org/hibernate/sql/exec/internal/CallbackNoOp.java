@@ -29,4 +29,9 @@ public class CallbackNoOp implements Callback {
 	public void invokeAfterLoadActions(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session) {
 		// don't do anything
 	}
+
+	@Override
+	public boolean hasAfterLoadActions() {
+		return false;
+	}
 }

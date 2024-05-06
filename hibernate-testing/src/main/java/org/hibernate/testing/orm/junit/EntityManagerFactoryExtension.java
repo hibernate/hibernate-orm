@@ -32,10 +32,10 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -168,12 +168,7 @@ public class EntityManagerFactoryExtension
 		integrationSettings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		integrationSettings.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		integrationSettings.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		if ( !integrationSettings.containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			integrationSettings.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
+		ServiceRegistryUtil.applySettings( integrationSettings );
 		for ( int i = 0; i < emfAnn.integrationSettings().length; i++ ) {
 			final Setting setting = emfAnn.integrationSettings()[i];
 			integrationSettings.put( setting.name(), setting.value() );

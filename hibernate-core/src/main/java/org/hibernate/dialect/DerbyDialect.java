@@ -182,23 +182,55 @@ public class DerbyDialect extends Dialect {
 		int varcharDdlTypeCapacity = 32_672;
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARBINARY, columnType( LONG32VARBINARY ), columnType( VARBINARY ), this )
+				CapacityDependentDdlType.builder(
+								VARBINARY,
+								isLob( LONG32VARBINARY )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARBINARY ),
+								columnType( VARBINARY ),
+								this
+						)
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARBINARY ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), columnType( VARCHAR ), this )
+				CapacityDependentDdlType.builder(
+								VARCHAR,
+								isLob( LONG32VARCHAR )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARCHAR ),
+								columnType( VARCHAR ),
+								this
+						)
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32VARCHAR ), columnType( NVARCHAR ), this )
+				CapacityDependentDdlType.builder(
+								NVARCHAR,
+								isLob( LONG32NVARCHAR )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARCHAR ),
+								columnType( NVARCHAR ),
+								this
+						)
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( NVARCHAR ) )
 						.build()
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, columnType( LONG32VARBINARY ), columnType( VARBINARY ), this )
+				CapacityDependentDdlType.builder(
+								BINARY,
+								isLob( LONG32VARBINARY )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARBINARY ),
+								columnType( VARBINARY ),
+								this
+						)
 						.withTypeCapacity( 254, "char($l) for bit data" )
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARBINARY ) )
 						.build()
@@ -206,13 +238,29 @@ public class DerbyDialect extends Dialect {
 
 		// This is the maximum size for the CHAR datatype on Derby
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( CHAR, columnType( LONG32VARCHAR ), columnType( CHAR ), this )
+				CapacityDependentDdlType.builder(
+								CHAR,
+								isLob( LONG32VARCHAR )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARCHAR ),
+								columnType( CHAR ),
+								this
+						)
 						.withTypeCapacity( 254, columnType( CHAR ) )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NCHAR, columnType( LONG32NVARCHAR ), columnType( NCHAR ), this )
+				CapacityDependentDdlType.builder(
+								NCHAR,
+								isLob( LONG32NVARCHAR )
+										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+										: CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32NVARCHAR ),
+								columnType( NCHAR ),
+								this
+						)
 						.withTypeCapacity( 254, columnType( NCHAR ) )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
 						.build()

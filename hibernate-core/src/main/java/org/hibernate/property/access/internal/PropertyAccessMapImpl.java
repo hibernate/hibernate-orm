@@ -58,6 +58,7 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 		}
 
 		@Override
+		@SuppressWarnings("rawtypes")
 		public Object get(Object owner) {
 			return ( (Map) owner ).get( propertyName );
 		}

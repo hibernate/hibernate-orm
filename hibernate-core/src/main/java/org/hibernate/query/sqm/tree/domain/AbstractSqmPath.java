@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -25,11 +26,15 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.spi.TreatedNavigablePath;
 
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -56,6 +61,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
+		assert navigablePathsMatch( target );
 		super.copyTo( target, context );
 		if ( reusablePaths != null ) {
 			target.reusablePaths = new HashMap<>( reusablePaths.size() );
@@ -63,6 +69,17 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 				target.reusablePaths.put( entry.getKey(), entry.getValue().copy( context ) );
 			}
 		}
+	}
+
+	// meant for assertions only
+	private boolean navigablePathsMatch(AbstractSqmPath<T> target) {
+		final SqmPath<?> targetLhs = target.getLhs() != null ? target.getLhs() : target.findRoot();
+		return lhs == null || lhs.getNavigablePath() == targetLhs.getNavigablePath()
+				|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
+	}
+
+	private SqmPath<?> getRoot(SqmPath<?> lhs) {
+		return lhs.getLhs() == null ? lhs : getRoot( lhs.getLhs() );
 	}
 
 	@Override
@@ -144,8 +161,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	public SqmPathSource<?> getResolvedModel() {
 		final DomainType<?> lhsType;
 		final SqmPathSource<T> pathSource = getReferencedPathSource();
-		if ( pathSource.isGeneric() && ( lhsType = getLhs().getReferencedPathSource()
-				.getSqmPathType() ) instanceof ManagedDomainType ) {
+		if ( pathSource.isGeneric() && ( lhsType = getLhs().getResolvedModel().getSqmPathType() ) instanceof ManagedDomainType ) {
 			final PersistentAttribute<?, ?> concreteAttribute = ( (ManagedDomainType<?>) lhsType ).findConcreteGenericAttribute(
 					pathSource.getPathName()
 			);
@@ -188,7 +204,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	protected <X> SqmPath<X> resolvePath(String attributeName, SqmPathSource<X> pathSource) {
 		if ( reusablePaths == null ) {
 			reusablePaths = new HashMap<>();
-			final SqmPath<X> path = pathSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( pathSource ) );
+			final SqmPath<X> path = pathSource.createSqmPath( this, getResolvedModel().getIntermediatePathSource( pathSource ) );
 			reusablePaths.put( attributeName, path );
 			return path;
 		}
@@ -196,7 +212,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			//noinspection unchecked
 			return (SqmPath<X>) reusablePaths.computeIfAbsent(
 					attributeName,
-					name -> pathSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( pathSource ) )
+					name -> pathSource.createSqmPath( this, getResolvedModel().getIntermediatePathSource( pathSource ) )
 			);
 		}
 	}
@@ -210,6 +226,52 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			getLhs().registerReusablePath( path );
 		}
 		return path;
+	}
+
+	/**
+	 * Utility that checks if this path's parent navigable path is compatible with the specified SQM parent,
+	 * and if not creates a copy of the navigable path with the correct parent.
+	 */
+	protected NavigablePath getNavigablePathCopy(SqmPath<?> parent) {
+		final NavigablePath realParentPath = getRealParentPath(
+				castNonNull( navigablePath.getRealParent() ),
+				parent.getNavigablePath()
+		);
+		if ( realParentPath != null ) {
+			return realParentPath.append( navigablePath.getLocalName(), navigablePath.getAlias() );
+		}
+		return navigablePath;
+	}
+
+	private NavigablePath getRealParentPath(NavigablePath realParent, NavigablePath parent) {
+		if ( parent == realParent ) {
+			return null;
+		}
+		else if ( realParent instanceof EntityIdentifierNavigablePath ) {
+			parent = getRealParentPath( castNonNull( realParent.getRealParent() ), parent );
+			if ( parent != null ) {
+				parent = new EntityIdentifierNavigablePath(
+						parent,
+						( (EntityIdentifierNavigablePath) realParent ).getIdentifierAttributeName()
+				);
+			}
+		}
+		else if ( realParent.getAlias() == null && realParent instanceof TreatedNavigablePath ) {
+			// This might be an implicitly treated parent path, check with the non-treated parent
+			parent = getRealParentPath( castNonNull( realParent.getRealParent() ), parent );
+			if ( parent != null ) {
+				parent = parent.treatAs( realParent.getLocalName().substring( 1 ) );
+			}
+		}
+		else if ( CollectionPart.Nature.fromNameExact( realParent.getLocalName() ) != null ) {
+			if ( parent == realParent.getRealParent() ) {
+				return null;
+			}
+			else {
+				parent = parent.append( realParent.getLocalName() );
+			}
+		}
+		return parent;
 	}
 
 	@Override

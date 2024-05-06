@@ -9,6 +9,8 @@ package org.hibernate.orm.test.query.hql;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +31,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -128,7 +129,7 @@ public class SameTableAliasInSubqueryWithEmbeddedTest {
 		private String value;
 
 		public PrimaryKey() {
-			value = randomUUID().toString();
+			value = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 		}
 
 		public String getValue() {

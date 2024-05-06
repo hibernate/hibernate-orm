@@ -455,6 +455,13 @@ most of the time, a DTO projection or a `JOIN FETCH` is a much better alternativ
 it allows you to fetch all the required data with a single query.
 ====
 
+[NOTE]
+====
+When `LockModeType` is different from `NONE` Hibernate will not execute a batch fetching so uninitialized entity proxies will not be initialized.
+
+This because the lock mode is different from the one of the proxies in the batch fetch queue.
+====
+
 [[fetching-fetch-annotation]]
 === The `@Fetch` annotation mapping
 

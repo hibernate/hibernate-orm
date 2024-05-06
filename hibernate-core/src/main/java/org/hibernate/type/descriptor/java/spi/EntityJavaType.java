@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
+import org.hibernate.type.descriptor.java.IncomparableComparator;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -20,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 
 	public EntityJavaType(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
-		super( type, mutabilityPlan );
+		super( type, mutabilityPlan , IncomparableComparator.INSTANCE );
 	}
 
 	@Override

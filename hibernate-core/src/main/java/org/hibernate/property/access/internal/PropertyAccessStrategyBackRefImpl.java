@@ -92,6 +92,7 @@ public class PropertyAccessStrategyBackRefImpl implements PropertyAccessStrategy
 		}
 
 		@Override
+		@SuppressWarnings("rawtypes")
 		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 			if ( session == null ) {
 				return UNKNOWN;

@@ -21,7 +21,4 @@ public interface GraphParserLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".graph.parsing";
 
 	Logger PARSING_LOGGER = Logger.getLogger( LOGGER_NAME );
-
-	boolean DEBUG_ENABLED = PARSING_LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = PARSING_LOGGER.isTraceEnabled();
 }

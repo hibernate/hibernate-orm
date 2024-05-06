@@ -16,12 +16,12 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.internal.EntityPersisterConcurrentMap;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_TRACE_ENABLED;
 
 /**
  * @author Steve Ebersole
@@ -33,7 +33,7 @@ public class MappingModelCreationProcess {
 	 * Triggers creation of the mapping model
 	 */
 	public static void process(
-			Map<String,EntityPersister> entityPersisterMap,
+			EntityPersisterConcurrentMap entityPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		final MappingModelCreationProcess process = new MappingModelCreationProcess(
 				entityPersisterMap,
@@ -42,14 +42,14 @@ public class MappingModelCreationProcess {
 		process.execute();
 	}
 
-	private final Map<String,EntityPersister> entityPersisterMap;
+	private final EntityPersisterConcurrentMap entityPersisterMap;
 	private final RuntimeModelCreationContext creationContext;
 
 	private String currentlyProcessingRole;
 	private List<PostInitCallbackEntry> postInitCallbacks;
 
 	private MappingModelCreationProcess(
-			Map<String, EntityPersister> entityPersisterMap,
+			EntityPersisterConcurrentMap entityPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		this.entityPersisterMap = entityPersisterMap;
 		this.creationContext = creationContext;
@@ -121,7 +121,7 @@ public class MappingModelCreationProcess {
 					exceptions.put( callbackEntry, e );
 
 					final String format = "Mapping-model creation encountered (possibly) transient error : %s";
-					if ( MAPPING_MODEL_CREATION_TRACE_ENABLED ) {
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef( e, format, e );
 					}
 					else {

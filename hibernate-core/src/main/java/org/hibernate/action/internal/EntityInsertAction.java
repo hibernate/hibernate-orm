@@ -138,7 +138,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 	}
 
-	private void putCacheIfNecessary() {
+	protected void putCacheIfNecessary() {
 		final EntityPersister persister = getPersister();
 		final SharedSessionContractImplementor session = getSession();
 		if ( isCachePutEnabled( persister, session ) ) {

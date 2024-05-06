@@ -26,6 +26,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,12 +41,9 @@ public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseUnitTestC
 
 	@Before
 	public void setUp() {
-		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
-		standardServiceRegistryBuilder.applySetting(
-				org.hibernate.cfg.AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED,
-				"true"
-		);
-		ssr = standardServiceRegistryBuilder.build();
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( org.hibernate.cfg.AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
+				.build();
 
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( Match.class );

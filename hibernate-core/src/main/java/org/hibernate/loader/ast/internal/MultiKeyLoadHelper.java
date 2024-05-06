@@ -6,11 +6,12 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.util.Arrays;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -24,8 +25,7 @@ public class MultiKeyLoadHelper {
 	}
 
 	public static boolean supportsSqlArrayType(Dialect dialect) {
-		return dialect.supportsStandardArrays()
-				&& dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
+		return dialect.useArrayForMultiValuedParameters();
 	}
 
 	public static JdbcMapping resolveArrayJdbcMapping(
@@ -56,4 +56,21 @@ public class MultiKeyLoadHelper {
 				typeConfiguration.getCurrentBaseSqlTypeIndicators()
 		);
 	}
+
+	static boolean hasSingleId(Object[] ids) {
+		for ( int i=1; i<ids.length; i++ ) {
+			if ( ids[i] != null ) {
+				return false;
+			}
+		}
+		return true;
+	}
+	static Object[] trimIdBatch(int length, Object[] keysToInitialize) {
+		int newLength = length;
+		while ( newLength>1 && keysToInitialize[newLength-1] == null ) {
+			newLength--;
+		}
+		return newLength < length ? Arrays.copyOf( keysToInitialize, newLength) : keysToInitialize;
+	}
+
 }

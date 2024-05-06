@@ -204,7 +204,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 		// Create before-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation()
+			if ( auxiliaryDatabaseObject.beforeTablesOnCreation()
 					&& auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
 						true,
@@ -275,7 +275,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 		// Create after-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
 						true,
 						auxiliaryExporter.getSqlCreateStrings( auxiliaryDatabaseObject, metadata, sqlGenerationContext ),

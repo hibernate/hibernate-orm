@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -37,6 +36,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
@@ -345,7 +345,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
-		String authorName = UUID.randomUUID().toString();
+		String authorName = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 		Set<Integer> authorIds = IntStream.range(0, 3)
 				.mapToObj(v -> {
 					Author author = new Author(authorName);
@@ -391,7 +391,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
-		String authorName = UUID.randomUUID().toString();
+		String authorName = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 		Set<Integer> authorIds = IntStream.range(0, 3)
 				.mapToObj(v -> {
 					Author author = new Author(authorName);

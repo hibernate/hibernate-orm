@@ -7,7 +7,6 @@
 package org.hibernate.persister.entity.mutation;
 
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.sql.model.TableMapping;
@@ -29,17 +28,17 @@ public interface UpdateValuesAnalysis extends ValuesAnalysis {
 	 *
 	 * @apiNote {@linkplain TableMapping#isInverse() Inverse tables} are not included in the result
 	 */
-	Set<EntityTableMapping> getTablesNeedingUpdate();
+	TableSet getTablesNeedingUpdate();
 
 	/**
 	 * Descriptor of the tables which had any non-null value bindings
 	 */
-	Set<EntityTableMapping> getTablesWithNonNullValues();
+	TableSet getTablesWithNonNullValues();
 
 	/**
 	 * Descriptor of the tables which had any non-null value bindings
 	 */
-	Set<EntityTableMapping> getTablesWithPreviousNonNullValues();
+	TableSet getTablesWithPreviousNonNullValues();
 
 	/**
 	 * Descriptors for the analysis of each attribute

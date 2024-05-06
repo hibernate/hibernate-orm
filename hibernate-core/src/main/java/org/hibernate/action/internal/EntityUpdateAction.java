@@ -180,7 +180,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private void handleNaturalIdResolutions(EntityPersister persister, SharedSessionContractImplementor session, Object id) {
+	protected void handleNaturalIdResolutions(EntityPersister persister, SharedSessionContractImplementor session, Object id) {
 		if ( naturalIdMapping != null ) {
 			session.getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
 					id,
@@ -192,7 +192,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private void updateCacheItem(Object previousVersion, Object ck, EntityEntry entry) {
+	protected void updateCacheItem(Object previousVersion, Object ck, EntityEntry entry) {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final SharedSessionContractImplementor session = getSession();
@@ -279,7 +279,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private Object lockCacheItem(Object previousVersion) {
+	protected Object lockCacheItem(Object previousVersion) {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final SharedSessionContractImplementor session = getSession();

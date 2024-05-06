@@ -19,6 +19,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 import org.junit.jupiter.api.Test;
@@ -36,7 +38,7 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 	@Test
 	public void tryIt() {
 		// pass ExtendedBeanManager but never initialize it
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, new ExtendedBeanManagerImpl() )
 				.build();
 

@@ -49,4 +49,9 @@ public class ScriptSourceInputNonExistentImpl extends AbstractScriptSourceInput 
 	public List<String> extract(Function<Reader, List<String>> extractor) {
 		return Collections.emptyList();
 	}
+
+	@Override
+	public boolean exists() {
+		return false;
+	}
 }

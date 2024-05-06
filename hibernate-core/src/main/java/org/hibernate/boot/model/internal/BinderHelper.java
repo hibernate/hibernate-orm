@@ -66,6 +66,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
+import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -814,13 +815,13 @@ public class BinderHelper {
 	private static void processAnyDiscriminatorValues(
 			XProperty property,
 			Consumer<AnyDiscriminatorValue> consumer) {
-		final AnyDiscriminatorValue valueAnn = property.getAnnotation( AnyDiscriminatorValue.class );
+		final AnyDiscriminatorValue valueAnn = findAnnotation( property, AnyDiscriminatorValue.class );
 		if ( valueAnn != null ) {
 			consumer.accept( valueAnn );
 			return;
 		}
 
-		final AnyDiscriminatorValues valuesAnn = property.getAnnotation( AnyDiscriminatorValues.class );
+		final AnyDiscriminatorValues valuesAnn = findAnnotation( property, AnyDiscriminatorValues.class );
 		if ( valuesAnn != null ) {
 			for ( AnyDiscriminatorValue discriminatorValue : valuesAnn.value() ) {
 				consumer.accept( discriminatorValue );
@@ -1082,8 +1083,12 @@ public class BinderHelper {
 		if ( targetValue instanceof Collection ) {
 			toOne = (ToOne) ( (Collection) targetValue ).getElement();
 		}
-		else {
+		else if ( targetValue instanceof ToOne ) {
 			toOne = (ToOne) targetValue;
+		}
+		else {
+			// Nothing to check, EARLY EXIT
+			return;
 		}
 		final String referencedEntityName = toOne.getReferencedEntityName();
 		final PersistentClass referencedClass = persistentClasses.get( referencedEntityName );
@@ -1093,7 +1098,7 @@ public class BinderHelper {
 				return;
 			}
 			else {
-				ownerClass = getSuperPersistentClass( ownerClass );
+				ownerClass = ownerClass.getSuperPersistentClass();
 			}
 		}
 		throw new AnnotationException(
@@ -1110,24 +1115,9 @@ public class BinderHelper {
 			if ( ownerClass.getTable() == referencedClass.getTable() ) {
 				return true;
 			}
-			referencedClass = getSuperPersistentClass( referencedClass );
+			referencedClass = referencedClass.getSuperPersistentClass();
 		}
 		return false;
 	}
 
-	private static PersistentClass getSuperPersistentClass(PersistentClass persistentClass) {
-		return persistentClass.getSuperclass() != null ? persistentClass.getSuperclass()
-				: getSuperPersistentClass( persistentClass.getSuperMappedSuperclass() );
-	}
-
-	private static PersistentClass getSuperPersistentClass(MappedSuperclass mappedSuperclass) {
-		if ( mappedSuperclass != null ) {
-			final PersistentClass superClass = mappedSuperclass.getSuperPersistentClass();
-			if ( superClass != null ) {
-				return superClass;
-			}
-			return getSuperPersistentClass( mappedSuperclass.getSuperMappedSuperclass() );
-		}
-		return null;
-	}
 }

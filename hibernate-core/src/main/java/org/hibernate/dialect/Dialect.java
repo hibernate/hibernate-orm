@@ -440,10 +440,34 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARCHAR ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32NVARCHAR ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARBINARY ) );
+
+		if ( rowId( null ) != null ) {
+			ddlTypeRegistry.addDescriptor( simpleSqlType( ROWID ) );
+		}
+	}
+
+	protected boolean isLob(int sqlTypeCode) {
+		switch ( sqlTypeCode ) {
+			case LONG32VARBINARY:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+			case BLOB:
+			case CLOB:
+			case NCLOB:
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	private DdlTypeImpl simpleSqlType(int sqlTypeCode) {
-		return new DdlTypeImpl( sqlTypeCode, columnType( sqlTypeCode ), castType( sqlTypeCode ), this );
+		return new DdlTypeImpl(
+				sqlTypeCode,
+				isLob( sqlTypeCode ),
+				columnType( sqlTypeCode ),
+				castType( sqlTypeCode ),
+				this
+		);
 	}
 
 	/**
@@ -457,6 +481,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	private CapacityDependentDdlType.Builder sqlTypeBuilder(int sqlTypeCode, int biggestSqlTypeCode, int castTypeCode) {
 		return CapacityDependentDdlType.builder(
 				sqlTypeCode,
+				isLob( sqlTypeCode )
+						? CapacityDependentDdlType.LobKind.ALL_LOB
+						: isLob( biggestSqlTypeCode )
+								? CapacityDependentDdlType.LobKind.BIGGEST_LOB
+								: CapacityDependentDdlType.LobKind.NONE,
 				columnType( biggestSqlTypeCode ),
 				castType( castTypeCode ),
 				this
@@ -504,6 +533,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
+			case ROWID:
+				return "rowid";
+
 			case BOOLEAN:
 				return "boolean";
 
@@ -2178,6 +2210,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
+	}
+
+	protected int getTimeoutInSeconds(int millis) {
+		return millis == 0 ? 0 : Math.max( 1, Math.round( millis / 1e3f ) );
 	}
 
 
@@ -4149,6 +4185,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsStandardArrays() {
 		return false;
+	}
+
+	/**
+	 * Does this database prefer to use array types for multi-valued parameters.
+	 *
+	 * @return boolean
+	 *
+	 * @since 6.2.8
+	 */
+	public boolean useArrayForMultiValuedParameters() {
+		return supportsStandardArrays() && getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
 	}
 
 	/**

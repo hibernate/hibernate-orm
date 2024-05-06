@@ -15,6 +15,7 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -37,7 +38,7 @@ public class IdentityGenerationValidationTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testSynonymUsingIndividuallySchemaValidator() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataSources metadataSources = new MetadataSources( ssr );
 			metadataSources.addAnnotatedClass( TestEntity.class );

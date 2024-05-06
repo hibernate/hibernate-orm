@@ -51,18 +51,21 @@ public class ScrollTest {
 
 		scope.inTransaction(
 				s -> {
-					ScrollableResults sr = s.getNamedQuery( "Item.nameDesc" ).scroll();
-					assertTrue( sr.next() );
-					Item i1 = (Item) sr.get();
-					assertTrue( sr.next() );
-					Item i2 = (Item) sr.get();
-					assertTrue( Hibernate.isInitialized( i1 ) );
-					assertTrue( Hibernate.isInitialized( i2 ) );
-					assertThat( i1.getName(), is( "foo" ) );
-					assertThat( i2.getName(), is( "bar" ) );
-					assertFalse( sr.next() );
-					s.delete( i1 );
-					s.delete( i2 );
+					try (ScrollableResults sr = s.getNamedQuery( "Item.nameDesc" ).scroll()) {
+						assertTrue( sr.next() );
+						Item i1 = (Item) sr.get();
+						assertTrue( sr.next() );
+						Item i2 = (Item) sr.get();
+						assertTrue( Hibernate.isInitialized( i1 ) );
+						assertTrue( Hibernate.isInitialized( i2 ) );
+						assertThat( i1.getName(), is( "foo" ) );
+						assertThat( i2.getName(), is( "bar" ) );
+						assertFalse( sr.next() );
+						s.delete( i1 );
+						s.delete( i2 );
+					}
+
+					assertTrue( s.getPersistenceContext().getLoadContexts().isLoadingFinished() );
 				}
 		);
 

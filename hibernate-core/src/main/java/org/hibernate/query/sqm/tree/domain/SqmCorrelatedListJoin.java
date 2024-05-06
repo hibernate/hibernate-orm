@@ -47,7 +47,7 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 			NodeBuilder nodeBuilder,
 			SqmCorrelatedRootJoin<O> correlatedRootJoin,
 			SqmListJoin<O, T> correlationParent) {
-		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
+		super( lhs, correlationParent.getNavigablePath(), attribute, alias, sqmJoinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
@@ -62,7 +62,7 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 				this,
 				new SqmCorrelatedListJoin<>(
 						getLhs().copy( context ),
-						getReferencedPathSource(),
+						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -100,7 +100,7 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCorrelatedListJoin<>(
 				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
+				getAttribute(),
 				getExplicitAlias(),
 				getSqmJoinType(),
 				isFetched(),

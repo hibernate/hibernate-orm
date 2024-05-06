@@ -15,6 +15,7 @@ import java.lang.reflect.Type;
 import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
@@ -24,6 +25,7 @@ import org.hibernate.property.access.internal.AbstractFieldSerialForm;
  *
  * @author Steve Ebersole
  */
+@Internal
 public class GetterFieldImpl implements Getter {
 	private final Class<?> containerClass;
 	private final String propertyName;
@@ -58,6 +60,7 @@ public class GetterFieldImpl implements Getter {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );

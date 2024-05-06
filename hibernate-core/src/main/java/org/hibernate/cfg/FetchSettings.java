@@ -1,0 +1,46 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ */
+package org.hibernate.cfg;
+
+import org.hibernate.annotations.BatchSize;
+
+/**
+ * @author Steve Ebersole
+ */
+public interface FetchSettings {
+	/**
+	 * Specifies the maximum depth of nested outer join fetching.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMaximumFetchDepth
+	 *
+	 * @settingDefault 0 (none)
+	 */
+	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
+
+	/**
+	 * Specifies the default value for {@linkplain BatchSize#size() batch fetching}.
+	 * <p/>
+	 * By default, Hibernate only uses batch fetching for entities and collections explicitly
+	 * annotated {@code @BatchSize}.
+	 *
+	 * @see org.hibernate.annotations.BatchSize
+	 * @see org.hibernate.Session#setFetchBatchSize(int)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultBatchFetchSize(int)
+	 */
+	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
+
+	/**
+	 * Specifies the {@link org.hibernate.loader.BatchFetchStyle} to use,
+	 * either the name of a {code BatchFetchStyle} instance, or an instance
+	 * of {@code BatchFetchStyle}.
+	 *
+	 * @deprecated An appropriate batch-fetch style is selected automatically
+	 */
+	@Deprecated(since = "6.0")
+	@SuppressWarnings("DeprecatedIsStillUsed")
+	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
+}

@@ -23,6 +23,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
 import static org.junit.Assert.assertNull;
@@ -93,7 +95,7 @@ public class ServiceRegistryTest {
 	}
 
 	private ServiceRegistry buildRegistry() {
-		return new StandardServiceRegistryBuilder().addInitiator( new SlowServiceInitiator() )
+		return ServiceRegistryUtil.serviceRegistryBuilder().addInitiator( new SlowServiceInitiator() )
 				.addInitiator( new NullServiceInitiator() )
 				.build();
 	}

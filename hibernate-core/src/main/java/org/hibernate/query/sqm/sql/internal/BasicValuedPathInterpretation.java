@@ -11,29 +11,25 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.*;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.sql.ast.Clause;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
+
+import static org.hibernate.query.sqm.internal.SqmUtil.needsTargetTableMapping;
 
 /**
  * @author Steve Ebersole
@@ -44,26 +40,34 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 	 */
 	public static <T> BasicValuedPathInterpretation<T> from(
 			SqmBasicValuedSimplePath<T> sqmPath,
-			SqlAstCreationState sqlAstCreationState,
-			SemanticQueryWalker sqmWalker,
-			boolean jpaQueryComplianceEnabled,
-			Clause currentClause) {
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( sqmPath.getNavigablePath().getParent() );
-
+			SqmToSqlAstConverter sqlAstCreationState,
+			boolean jpaQueryComplianceEnabled) {
+		final SqmPath<?> lhs = sqmPath.getLhs();
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() );
 		EntityMappingType treatTarget = null;
-		if ( jpaQueryComplianceEnabled ) {
-			if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
-				final EntityDomainType treatTargetDomainType = ( (SqmTreatedPath) sqmPath.getLhs() ).getTreatTarget();
+		final ModelPartContainer modelPartContainer;
+		if ( lhs instanceof SqmTreatedPath<?, ?> ) {
+			final EntityDomainType<?> treatTargetDomainType = ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget();
 
-				final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
-						.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel();
-				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
+			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
+					.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel();
+			final EntityPersister treatEntityDescriptor = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
+			final MappingType tableGroupMappingType = tableGroup.getModelPart().getPartMappingType();
+			if ( tableGroupMappingType instanceof EntityMappingType
+					&& treatEntityDescriptor.isTypeOrSuperType( (EntityMappingType) tableGroupMappingType ) ) {
+				modelPartContainer = tableGroup.getModelPart();
+				treatTarget = treatEntityDescriptor;
 			}
-			else if ( sqmPath.getLhs().getNodeType() instanceof EntityDomainType ) {
-				final EntityDomainType entityDomainType = (EntityDomainType) sqmPath.getLhs().getNodeType();
+			else {
+				modelPartContainer = treatEntityDescriptor;
+			}
+		}
+		else {
+			modelPartContainer = tableGroup.getModelPart();
+			if ( jpaQueryComplianceEnabled && lhs.getNodeType() instanceof EntityDomainType<?> ) {
+				final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) lhs.getNodeType();
 				final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
 						.getSessionFactory()
 						.getRuntimeMetamodels()
@@ -72,20 +76,18 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			}
 		}
 
-		final ModelPartContainer modelPart = tableGroup.getModelPart();
 		final BasicValuedModelPart mapping;
-		// In the select, group by, order by and having clause we have to make sure we render the column of the target table,
-		// never the FK column, if the lhs is a SqmFrom i.e. something explicitly queried/joined.
-		if ( ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
-				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
-				&& modelPart.getPartMappingType() instanceof ManagedMappingType ) {
-			mapping = (BasicValuedModelPart) ( (ManagedMappingType) modelPart.getPartMappingType() ).findSubPart(
+		if ( needsTargetTableMapping( sqmPath, modelPartContainer, sqlAstCreationState ) ) {
+			// In the select, group by, order by and having clause we have to make sure we render
+			// the column of the target table, never the FK column, if the lhs is a join type that
+			// requires it (right, full) or if this path is contained in group by clause
+			mapping = (BasicValuedModelPart) ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
 					sqmPath.getReferencedPathSource().getPathName(),
 					treatTarget
 			);
 		}
 		else {
-			mapping = (BasicValuedModelPart) modelPart.findSubPart(
+			mapping = (BasicValuedModelPart) modelPartContainer.findSubPart(
 					sqmPath.getReferencedPathSource().getPathName(),
 					treatTarget
 			);
@@ -150,6 +152,11 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 
 	@Override
 	public Expression getSqlExpression() {
+		return columnReference;
+	}
+
+	@Override
+	public ColumnReference getColumnReference() {
 		return columnReference;
 	}
 

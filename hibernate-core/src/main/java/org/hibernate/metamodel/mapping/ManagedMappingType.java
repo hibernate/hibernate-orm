@@ -103,7 +103,9 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 
 	@Override
 	default boolean hasPartitionedSelectionMapping() {
-		for ( AttributeMapping attributeMapping : getAttributeMappings() ) {
+		final AttributeMappingsList attributeMappings = getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping.hasPartitionedSelectionMapping() ) {
 				return true;
 			}

@@ -549,6 +549,27 @@ public class SqlTypes {
 	}
 
 	/**
+	 * Is this a type with a length, that is, is it
+	 * some kind of character string or binary string?
+	 * @param typeCode a JDBC type code from {@link Types}
+	 */
+	public static boolean isStringType(int typeCode) {
+		switch (typeCode) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.NCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGNVARCHAR:
+			case Types.BINARY:
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+			default:
+				return false;
+		}
+	}
+
+	/**
 	 * Does the given JDBC type code represent some sort of
 	 * character string type?
 	 * @param typeCode a JDBC type code from {@link Types}

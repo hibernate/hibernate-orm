@@ -32,6 +32,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
@@ -40,6 +41,8 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
 	private final ModelPart uniqueKeyAttribute;
+	private final JdbcParametersList jdbcParameters;
+	private final JdbcOperationQuerySelect jdbcSelect;
 
 	public SingleUniqueKeyEntityLoaderStandard(
 			EntityMappingType entityDescriptor,
@@ -51,6 +54,26 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		else {
 			this.uniqueKeyAttribute = uniqueKeyAttribute;
 		}
+
+		final SessionFactoryImplementor sessionFactory = entityDescriptor.getEntityPersister().getFactory();
+		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
+		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
+				entityDescriptor,
+				Collections.emptyList(),
+				uniqueKeyAttribute,
+				null,
+				LoadQueryInfluencers.NONE,
+				LockOptions.NONE,
+				builder::add,
+				sessionFactory
+		);
+
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		this.jdbcParameters = builder.build();
+		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
+				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override
@@ -66,23 +89,6 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 			SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
-		// todo (6.0) : cache the SQL AST and JdbcParameters
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
-		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
-				entityDescriptor,
-				Collections.emptyList(),
-				uniqueKeyAttribute,
-				null,
-				LoadQueryInfluencers.NONE,
-				LockOptions.NONE,
-				jdbcParameters::add,
-				sessionFactory
-		);
-
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				ukValue,
@@ -91,9 +97,6 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				session
 		);
 		assert offset == jdbcParameters.size();
-		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( jdbcParameterBindings, QueryOptions.NONE );
-
 		final List<Object> list = sessionFactory.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
@@ -122,7 +125,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
 		// todo (6.0) : cache the SQL AST and JdbcParameters
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
 				Collections.singletonList( entityDescriptor.getIdentifierMapping() ),
@@ -130,14 +133,14 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				null,
 				LoadQueryInfluencers.NONE,
 				LockOptions.NONE,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
+		final JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				ukValue,

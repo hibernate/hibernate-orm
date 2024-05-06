@@ -7,11 +7,11 @@
 package org.hibernate.orm.test.id.uuid.sqlrep.sqlbinary;
 
 import java.sql.Types;
-import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -30,7 +30,6 @@ import jakarta.persistence.ManyToOne;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
 
 /**
  * @author Steve Ebersole
@@ -38,6 +37,8 @@ import static org.hamcrest.Matchers.hasSize;
 @DomainModel(annotatedClasses = { UUIDBinaryTest.Node.class })
 @SessionFactory
 @SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "Postgres has its own UUID type")
+@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true,
+		reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte")
 public class UUIDBinaryTest {
 
 	private static class UUIDPair {
@@ -54,9 +55,7 @@ public class UUIDBinaryTest {
 	public void testUsage(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Node.class );
-		final List<JdbcMapping> identifierJdbcMappings = entityDescriptor.getIdentifierMapping().getJdbcMappings();
-		assertThat( identifierJdbcMappings, hasSize( 1 ) );
-		final JdbcMapping jdbcMapping = identifierJdbcMappings.get( 0 );
+		final JdbcMapping jdbcMapping = entityDescriptor.getIdentifierMapping().getSingleJdbcMapping();
 		assertThat( jdbcMapping.getJdbcType().isBinary(), is( true ) );
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {

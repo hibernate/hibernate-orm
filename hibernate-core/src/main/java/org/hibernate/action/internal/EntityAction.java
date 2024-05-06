@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.action.spi.Executable;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.FastSessionServices;
@@ -26,7 +26,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public abstract class EntityAction
-		implements ComparableEntityAction, Executable, Serializable, AfterTransactionCompletionProcess {
+		implements ComparableExecutable, AfterTransactionCompletionProcess {
 
 	private final String entityName;
 	private final Object id;
@@ -151,13 +151,23 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public int compareTo(ComparableEntityAction action) {
+	public int compareTo(ComparableExecutable o) {
 		//sort first by entity name
-		final int roleComparison = entityName.compareTo( action.getEntityName() );
+		final int roleComparison = entityName.compareTo( o.getPrimarySortClassifier() );
 		return roleComparison != 0
 				? roleComparison
 				//then by id
-				: persister.getIdentifierType().compare( id, action.getId(), session.getSessionFactory() );
+				: persister.getIdentifierType().compare( id, o.getSecondarySortIndex(), session.getSessionFactory() );
+	}
+
+	@Override
+	public String getPrimarySortClassifier() {
+		return entityName;
+	}
+
+	@Override
+	public Object getSecondarySortIndex() {
+		return id;
 	}
 
 	/**

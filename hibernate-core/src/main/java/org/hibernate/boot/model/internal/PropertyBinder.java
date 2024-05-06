@@ -8,7 +8,6 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +28,6 @@ import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.CompositeType;
@@ -50,13 +48,16 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -71,6 +72,8 @@ import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.AnyBinder.bindAny;
 import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.prepareActualProperty;
 import static org.hibernate.boot.model.internal.CollectionBinder.bindCollection;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createForeignGenerator;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGenerator;
@@ -339,18 +342,13 @@ public class PropertyBinder {
 	}
 
 	private void setDeclaredIdentifier(RootClass rootClass, MappedSuperclass superclass, Property prop) {
+		handleGenericComponentProperty( prop, buildingContext );
 		if ( superclass == null ) {
 			rootClass.setDeclaredIdentifierProperty( prop );
 			return;
 		}
 		final Class<?> type = buildingContext.getBootstrapContext().getReflectionManager().toClass( declaringClass );
-		ClassPropertyHolder.prepareActualPropertyForSuperclass(
-				prop,
-				type,
-				false,
-				buildingContext,
-				superclass::setDeclaredIdentifierProperty
-		);
+		prepareActualProperty( prop, type, false, buildingContext, superclass::setDeclaredIdentifierProperty );
 	}
 
 	private Component getOrCreateCompositeId(RootClass rootClass) {
@@ -453,13 +451,32 @@ public class PropertyBinder {
 
 	private void handleOptional(Property property) {
 		if ( this.property != null ) {
-			property.setOptional( !isId && isOptional( this.property ) && isNullable( property ) );
-		}
-	}
+			property.setOptional( !isId && isOptional( this.property, this.holder ) );
+			if ( property.isOptional() ) {
+				final OptionalDeterminationSecondPass secondPass = persistentClasses -> {
+					// Defer determining whether a property and its columns are nullable,
+					// as handleOptional might be called when the value is not yet fully initialized
+					if ( property.getPersistentClass() != null ) {
+						for ( Join join : property.getPersistentClass().getJoins() ) {
+							if ( join.getProperties().contains( property ) ) {
+								// If this property is part of a join it is inherently optional
+								return;
+							}
+						}
+					}
 
-	private static boolean isNullable(Property property) {
-		final Value value = property.getValue();
-		return value instanceof org.hibernate.mapping.OneToMany || value.isNullable();
+					if ( !property.getValue().isNullable() ) {
+						property.setOptional( false );
+					}
+				};
+				// Always register this as second pass and never execute it directly,
+				// even if we are in a second pass already.
+				// If we are in a second pass, then we are currently processing the generalSecondPassList
+				// to which the following call will add the second pass to,
+				// so it will be executed within that second pass, just a bit later
+				buildingContext.getMetadataCollector().addSecondPass( secondPass );
+			}
+		}
 	}
 
 	private void handleNaturalId(Property property) {
@@ -1183,10 +1200,12 @@ public class PropertyBinder {
 	 * Should this property be considered optional, taking into
 	 * account whether it is primitive?
 	 */
-	private static boolean isOptional(XProperty property) {
+	public static boolean isOptional(XProperty property, PropertyHolder propertyHolder) {
 		return property.isAnnotationPresent( Basic.class )
 				? property.getAnnotation( Basic.class ).optional()
-				: property.isArray() || !property.getClassOrElementClass().isPrimitive();
+				: property.isArray()
+				|| propertyHolder != null && propertyHolder.isComponent()
+				|| !property.getClassOrElementClass().isPrimitive();
 	}
 
 	private static boolean isLazy(XProperty property) {

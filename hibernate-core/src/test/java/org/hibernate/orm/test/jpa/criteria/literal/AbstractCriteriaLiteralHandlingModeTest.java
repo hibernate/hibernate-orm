@@ -26,10 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.hibernate.testing.transaction.TransactionUtil.setJdbcTimeout;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea

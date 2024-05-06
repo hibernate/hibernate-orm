@@ -27,6 +27,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,6 +78,20 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 					entityManager.flush();
 					entityManager.clear();
 					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate2(), entityManager.find( JsonHolder.class, 1L ).getAggregate() );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( "HHH-16682" )
+	public void testDirtyChecking() {
+		sessionFactoryScope().inTransaction(
+				entityManager -> {
+					JsonHolder jsonHolder = entityManager.find( JsonHolder.class, 1L );
+					jsonHolder.getAggregate().setTheString( "MyString" );
+					entityManager.flush();
+					entityManager.clear();
+					assertEquals( "MyString", entityManager.find( JsonHolder.class, 1L ).getAggregate().getTheString() );
 				}
 		);
 	}

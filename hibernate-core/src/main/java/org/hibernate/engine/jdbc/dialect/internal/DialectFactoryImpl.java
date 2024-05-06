@@ -82,9 +82,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	@Override
 	public Dialect buildDialect(Map<String,Object> configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
 		final Object dialectReference = configValues.get( AvailableSettings.DIALECT );
-		Dialect dialect = !isEmpty( dialectReference ) ?
-				constructDialect( dialectReference, resolutionInfoSource ) :
-				determineDialect( resolutionInfoSource );
+		Dialect dialect = isEmpty( dialectReference )
+				? determineDialect( resolutionInfoSource )
+				: constructDialect( dialectReference, resolutionInfoSource );
 		logSelectedDialect( dialect );
 		return dialect;
 	}
@@ -105,17 +105,16 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 		}
 	}
 
-	@SuppressWarnings("SimplifiableIfStatement")
 	private boolean isEmpty(Object dialectReference) {
-		if ( dialectReference != null ) {
-			// the referenced value is not null
-			if ( dialectReference instanceof String ) {
-				// if it is a String, it might still be empty though...
-				return StringHelper.isEmpty( (String) dialectReference );
-			}
-			return false;
+		if ( dialectReference == null ) {
+			return true;
 		}
-		return true;
+		else {
+			// the referenced value is not null
+			return dialectReference instanceof String
+				// if it is a String, it might still be empty though...
+				&& StringHelper.isEmpty((String) dialectReference);
+		}
 	}
 
 	private Dialect constructDialect(Object dialectReference, DialectResolutionInfoSource resolutionInfoSource) {
@@ -148,6 +147,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 			);
 			if ( dialect == null ) {
 				throw new HibernateException( "Unable to construct requested dialect [" + dialectReference + "]" );
+			}
+			else if ( Dialect.class.getPackage() == dialect.getClass().getPackage() ) {
+				DEPRECATION_LOGGER.automaticDialect( dialect.getClass().getSimpleName() );
 			}
 			return dialect;
 		}

@@ -17,6 +17,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -29,9 +30,11 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	private Fetch identifierFetch;
 	private BasicFetch<?> discriminatorFetch;
 	private DomainResult<Object> rowIdResult;
+	private final EntityValuedModelPart fetchContainer;
 
 	public AbstractEntityResultGraphNode(EntityValuedModelPart referencedModelPart, NavigablePath navigablePath) {
-		super( referencedModelPart, navigablePath );
+		super( navigablePath );
+		this.fetchContainer = referencedModelPart;
 	}
 
 	@Override
@@ -72,7 +75,12 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	@Override
 	public EntityValuedModelPart getEntityValuedModelPart() {
-		return (EntityValuedModelPart) getFetchContainer();
+		return this.fetchContainer;
+	}
+
+	@Override
+	public FetchableContainer getFetchContainer() {
+		return this.fetchContainer;
 	}
 
 	@Override

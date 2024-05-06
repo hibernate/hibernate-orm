@@ -15,9 +15,9 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -102,36 +102,40 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		return EnhancementHelper.performWork(
 				this,
 				(session, isTempSession) -> {
-					final Object[] writtenValues;
+					final Object[] writtenAttributeValues;
+					final AttributeMapping[] writtenAttributeMappings;
 
-					final EntityPersister entityPersister = session.getFactory()
-							.getRuntimeMetamodels()
-							.getMappingMetamodel()
-							.getEntityDescriptor( getEntityName() );
+					final EntityPersister entityPersister =
+							session.getFactory().getMappingMetamodel()
+									.getEntityDescriptor( getEntityName() );
 
 					if ( writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
 
 						// enhancement has dirty-tracking available and at least one attribute was explicitly set
 
 						if ( writtenFieldNames.contains( attributeName ) ) {
-							// the requested attribute was one of the attributes explicitly set, we can just return the explicitly set value
+							// the requested attribute was one of the attributes explicitly set,
+							// we can just return the explicitly-set value
 							return entityPersister.getPropertyValue( target, attributeName );
 						}
 
-						// otherwise we want to save all of the explicitly set values in anticipation of
+						// otherwise we want to save all the explicitly-set values in anticipation of
 						// 		the force initialization below so that we can "replay" them after the
 						// 		initialization
 
-						writtenValues = new Object[writtenFieldNames.size()];
+						writtenAttributeValues = new Object[writtenFieldNames.size()];
+						writtenAttributeMappings = new AttributeMapping[writtenFieldNames.size()];
 
 						int index = 0;
 						for ( String writtenFieldName : writtenFieldNames ) {
-							writtenValues[index] = entityPersister.getPropertyValue( target, writtenFieldName );
+							writtenAttributeMappings[index] = entityPersister.findAttributeMapping( writtenFieldName );
+							writtenAttributeValues[index] = writtenAttributeMappings[index].getValue( target );
 							index++;
 						}
 					}
 					else {
-						writtenValues = null;
+						writtenAttributeValues = null;
+						writtenAttributeMappings = null;
 					}
 
 					final Object initializedValue = forceInitialize(
@@ -143,18 +147,13 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 					setInitialized();
 
-					if ( writtenValues != null ) {
+					if ( writtenAttributeValues != null ) {
 						// here is the replaying of the explicitly set values we prepared above
-						for ( String writtenFieldName : writtenFieldNames ) {
-							final int size = entityPersister.getNumberOfAttributeMappings();
-							for ( int index = 0; index < size; index++ ) {
-								if ( writtenFieldName.contains( entityPersister.getAttributeMapping( index ).getAttributeName() ) ) {
-									entityPersister.setValue(
-											target,
-											index,
-											writtenValues[index]
-									);
-								}
+						for ( int i = 0; i < writtenAttributeMappings.length; i++ ) {
+							final AttributeMapping attribute = writtenAttributeMappings[i];
+							attribute.setValue( target, writtenAttributeValues[i] );
+							if ( inLineDirtyChecking ) {
+								asSelfDirtinessTracker( target ).$$_hibernate_trackChange( attribute.getAttributeName() );
 							}
 						}
 						writtenFieldNames.clear();
@@ -246,7 +245,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 		if ( identifierAttributeNames.contains( attributeName ) ) {
 			// it is illegal for the identifier value to be changed.  Normally Hibernate
-			// validates this during flush.  However, here it is dangerous to just allow the
+			// validates this during flush.  However, here it's dangerous to just allow the
 			// new value to be set and continue on waiting for the flush for validation
 			// because this interceptor manages the entity's entry in the PC itself.  So
 			// just do the check here up-front

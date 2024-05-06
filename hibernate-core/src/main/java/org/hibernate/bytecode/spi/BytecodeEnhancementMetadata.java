@@ -14,6 +14,8 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Encapsulates bytecode enhancement information about a particular entity.
  *
@@ -80,9 +82,9 @@ public interface BytecodeEnhancementMetadata {
 	 *
 	 * @throws NotInstrumentedException Thrown if {@link #isEnhancedForLazyLoading()} returns {@code false}
 	 */
-	LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException;
+	@Nullable LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException;
 
-	BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException;
+	@Nullable BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException;
 
 	boolean hasUnFetchedAttributes(Object entity);
 

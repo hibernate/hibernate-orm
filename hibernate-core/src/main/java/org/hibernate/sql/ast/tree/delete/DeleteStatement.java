@@ -6,16 +6,16 @@
  */
 package org.hibernate.sql.ast.tree.delete;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstHelper;
-import org.hibernate.sql.ast.tree.AbstractMutationStatement;
+import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -23,32 +23,43 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 /**
  * @author Steve Ebersole
  */
-public class DeleteStatement extends AbstractMutationStatement {
+public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 
 	public static final String DEFAULT_ALIAS = "to_delete_";
-	private final Predicate restriction;
 
 	public DeleteStatement(NamedTableReference targetTable, Predicate restriction) {
-		super( targetTable );
-		this.restriction = restriction;
+		this( targetTable, new FromClause(), restriction );
 	}
 
 	public DeleteStatement(
 			NamedTableReference targetTable,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		super( new LinkedHashMap<>(), targetTable, returningColumns );
-		this.restriction = restriction;
+		this( targetTable, new FromClause(), restriction, returningColumns );
+	}
+
+	public DeleteStatement(NamedTableReference targetTable, FromClause fromClause, Predicate restriction) {
+		super( targetTable, fromClause, restriction );
+	}
+
+	public DeleteStatement(
+			NamedTableReference targetTable,
+			FromClause fromClause,
+			Predicate restriction,
+			List<ColumnReference> returningColumns) {
+		super( targetTable, fromClause, restriction, returningColumns );
 	}
 
 	public DeleteStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
+			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
 		this(
 				cteContainer.getCteStatements(),
 				targetTable,
+				fromClause,
 				restriction,
 				returningColumns
 		);
@@ -57,14 +68,10 @@ public class DeleteStatement extends AbstractMutationStatement {
 	public DeleteStatement(
 			Map<String, CteStatement> cteStatements,
 			NamedTableReference targetTable,
+			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		super( cteStatements, targetTable, returningColumns );
-		this.restriction = restriction;
-	}
-
-	public Predicate getRestriction() {
-		return restriction;
+		super( cteStatements, targetTable, fromClause, restriction, returningColumns );
 	}
 
 	public static class DeleteStatementBuilder {
@@ -88,6 +95,7 @@ public class DeleteStatement extends AbstractMutationStatement {
 		public DeleteStatement createDeleteStatement() {
 			return new DeleteStatement(
 					targetTable,
+					new FromClause(),
 					restriction != null ? restriction : new Junction( Junction.Nature.CONJUNCTION )
 			);
 		}

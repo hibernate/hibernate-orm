@@ -11,6 +11,8 @@ import java.util.Map;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 /**
  * @author Steve Ebersole
  */
@@ -31,7 +33,7 @@ public final class TestingJtaBootstrap {
 	}
 
 	public static StandardServiceRegistryBuilder prepare() {
-		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
+		final StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 		prepare( registryBuilder );
 		return registryBuilder;
 	}

@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
@@ -590,34 +591,17 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return getVersion().isSameOrAfter( 15, 7 ) ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
-	}
-
-	@Override
-	public String getForUpdateString() {
-		return getVersion().isBefore( 15, 7 ) ? "" : " for update";
-	}
-
-	@Override
-	public String getForUpdateString(String aliases) {
-		return getVersion().isBefore( 15, 7 )
-				? ""
-				: getForUpdateString() + " of " + aliases;
+	public boolean supportsSkipLocked() {
+		// It does support skipping locked rows only for READ locking
+		return false;
 	}
 
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
-		//TODO: is this really necessary??!
-		return getVersion().isBefore( 15, 7 ) ? super.appendLockHint( mode, tableName ) : tableName;
-	}
-
-	@Override
-	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
-		//TODO: is this really correct?
-		return getVersion().isBefore( 15, 7 )
-				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
-				: sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
+		final String lockHint = super.appendLockHint( mode, tableName );
+		return !mode.getLockMode().greaterThan( LockMode.READ ) && mode.getTimeOut() == LockOptions.SKIP_LOCKED
+				? lockHint + " readpast"
+				: lockHint;
 	}
 
 	@Override

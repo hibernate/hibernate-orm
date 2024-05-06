@@ -412,7 +412,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsInverseDistributionFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 )
+			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 1, 4, 200 )
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
 					|| dialect instanceof CockroachDialect
@@ -426,7 +426,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsHypotheticalSetFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 )
+			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 1, 4, 200 )
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
 					|| dialect instanceof CockroachDialect

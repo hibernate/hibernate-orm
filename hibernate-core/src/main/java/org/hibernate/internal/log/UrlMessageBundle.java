@@ -37,9 +37,6 @@ public interface UrlMessageBundle {
 	Logger URL_LOGGER = Logger.getLogger( LOGGER_NAME );
 	UrlMessageBundle URL_MESSAGE_LOGGER = Logger.getMessageLogger( UrlMessageBundle.class, LOGGER_NAME );
 
-	boolean DEBUG_ENABLED = URL_LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = URL_LOGGER.isTraceEnabled();
-
 	/**
 	 * Logs a warning about a malformed URL, caused by a {@link URISyntaxException}
 	 *

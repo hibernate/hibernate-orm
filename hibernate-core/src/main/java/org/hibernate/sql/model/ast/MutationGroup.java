@@ -25,9 +25,13 @@ public interface MutationGroup {
 
 	int getNumberOfTableMutations();
 
-	<O extends MutationOperation, M extends TableMutation<O>> M getSingleTableMutation();
+	TableMutation getSingleTableMutation();
 
+	@Deprecated(forRemoval = true)
 	<O extends MutationOperation, M extends TableMutation<O>> M getTableMutation(String tableName);
 
+	@Deprecated(forRemoval = true)
 	<O extends MutationOperation, M extends TableMutation<O>> void forEachTableMutation(BiConsumer<Integer, M> action);
+
+	TableMutation getTableMutation(int i);
 }

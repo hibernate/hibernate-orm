@@ -43,6 +43,8 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.annotations.Customer;
 import org.hibernate.orm.test.annotations.Discount;
 import org.hibernate.orm.test.annotations.Passport;
@@ -386,8 +388,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testOnDeleteWithoutJoinColumn() throws Exception {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.build();
+		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			new MetadataSources( serviceRegistry )

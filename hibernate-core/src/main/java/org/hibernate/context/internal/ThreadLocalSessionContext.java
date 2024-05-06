@@ -133,7 +133,6 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	 *
 	 * @return the built or (re)obtained session.
 	 */
-	@SuppressWarnings("deprecation")
 	protected Session buildOrObtainSession() {
 		return baseSessionBuilder()
 				.autoClose( isAutoCloseEnabled() )
@@ -191,8 +190,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	 * @param session The session to bind.
 	 */
 	public static void bind(Session session) {
-		final SessionFactory factory = session.getSessionFactory();
-		doBind( session, factory );
+		doBind( session, session.getSessionFactory() );
 	}
 
 	private static void terminateOrphanedSession(Session orphan) {

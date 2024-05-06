@@ -25,9 +25,5 @@ import org.jboss.logging.annotations.ValidIdRange;
 )
 public interface JaxbLogger extends BasicLogger {
 	String LOGGER_NAME = BootLogging.NAME + ".jaxb";
-
 	JaxbLogger JAXB_LOGGER = Logger.getMessageLogger( JaxbLogger.class, LOGGER_NAME );
-
-	boolean TRACE_ENABLED = JAXB_LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = JAXB_LOGGER.isDebugEnabled();
 }

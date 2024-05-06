@@ -10,11 +10,11 @@ import java.io.Serializable;
 
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.FastSessionServices;
@@ -27,7 +27,7 @@ import org.hibernate.pretty.MessageHelper;
  *
  * @author Gavin King
  */
-public abstract class CollectionAction implements Executable, Serializable, Comparable<CollectionAction> {
+public abstract class CollectionAction implements ComparableExecutable {
 
 	private transient CollectionPersister persister;
 	private transient EventSource session;
@@ -122,6 +122,16 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		return finalKey;
 	}
 
+	@Override
+	public String getPrimarySortClassifier() {
+		return collectionRole;
+	}
+
+	@Override
+	public Object getSecondarySortIndex() {
+		return key;
+	}
+
 	protected final EventSource getSession() {
 		return session;
 	}
@@ -145,15 +155,15 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	@Override
-	public int compareTo(CollectionAction action) {
+	public int compareTo(ComparableExecutable o) {
 		// sort first by role name
-		final int roleComparison = collectionRole.compareTo( action.collectionRole );
+		final int roleComparison = collectionRole.compareTo( o.getPrimarySortClassifier() );
 		if ( roleComparison != 0 ) {
 			return roleComparison;
 		}
 		else {
 			//then by fk
-			return persister.getAttributeMapping().getKeyDescriptor().compare( key, action.key );
+			return persister.getAttributeMapping().getKeyDescriptor().compare( key, o.getSecondarySortIndex() );
 //			//noinspection unchecked
 //			final JavaType<Object> javaType = (JavaType<Object>) persister.getAttributeMapping().getKeyDescriptor().getJavaType();
 //			return javaType.getComparator().compare( key, action.key );

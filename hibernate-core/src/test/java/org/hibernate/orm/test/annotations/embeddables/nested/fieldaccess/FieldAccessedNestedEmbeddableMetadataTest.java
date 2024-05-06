@@ -21,6 +21,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
@@ -33,7 +34,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 
 	@Test
 	public void testEnumTypeInterpretation() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			final Metadata metadata = new MetadataSources( ssr )

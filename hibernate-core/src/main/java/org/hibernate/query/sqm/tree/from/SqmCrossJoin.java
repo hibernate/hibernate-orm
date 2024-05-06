@@ -67,7 +67,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 						getNavigablePath(),
 						getReferencedPathSource(),
 						getExplicitAlias(),
-						sqmRoot.copy( context )
+						getRoot().copy( context )
 				)
 		);
 		copyTo( path, context );

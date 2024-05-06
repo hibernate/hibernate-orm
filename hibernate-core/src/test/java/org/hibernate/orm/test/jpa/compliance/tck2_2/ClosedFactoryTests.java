@@ -17,6 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -29,7 +30,7 @@ import static org.junit.Assert.fail;
 public class ClosedFactoryTests extends BaseUnitTestCase {
 	@Test
 	public void testClosedChecks() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.JPA_CLOSED_COMPLIANCE, "true" )
 				.build();
 

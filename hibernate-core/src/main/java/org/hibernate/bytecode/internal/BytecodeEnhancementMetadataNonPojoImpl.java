@@ -16,6 +16,8 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * BytecodeEnhancementMetadata implementation for non-POJO models, mainly
  * {@link org.hibernate.metamodel.RepresentationMode#MAP}
@@ -78,12 +80,12 @@ public class BytecodeEnhancementMetadataNonPojoImpl implements BytecodeEnhanceme
 	}
 
 	@Override
-	public LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException {
+	public @Nullable LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException {
 		throw new NotInstrumentedException( errorMsg );
 	}
 
 	@Override
-	public BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException {
+	public @Nullable BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException {
 		throw new NotInstrumentedException( errorMsg );
 	}
 

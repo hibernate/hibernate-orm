@@ -18,6 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -27,7 +28,7 @@ public class ExtendedBeanManagerNotAvailableDuringTypeResolutionTest {
 
 	@Test
 	public void tryIt() throws IOException {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(
 						AvailableSettings.JAKARTA_CDI_BEAN_MANAGER,
 						new ExtendedBeanManagerNotAvailableDuringTypeResolutionTest.ExtendedBeanManagerImpl()

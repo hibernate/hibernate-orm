@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -185,4 +187,13 @@ public interface PluralAttributeMapping
 	default boolean isPluralAttributeMapping() {
 		return true;
 	}
+
+	@Override
+	@Deprecated(forRemoval = true)
+	default List<JdbcMapping> getJdbcMappings() {
+		final List<JdbcMapping> results = new ArrayList<>();
+		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
+		return results;
+	}
+
 }

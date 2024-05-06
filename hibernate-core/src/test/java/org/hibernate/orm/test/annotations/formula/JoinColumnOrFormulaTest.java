@@ -26,6 +26,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class JoinColumnOrFormulaTest extends BaseUnitTestCase {
 
 	@Before
 	public void before() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@After
@@ -52,17 +53,15 @@ public class JoinColumnOrFormulaTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-9897" )
 	@FailureExpected( jiraKey = "HHH-9897" )
 	public void testUseOfJoinColumnOrFormula() {
-		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build()) {
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( A.class )
-					.addAnnotatedClass( D.class )
-					.buildMetadata();
+		Metadata metadata = new MetadataSources( ssr )
+				.addAnnotatedClass( A.class )
+				.addAnnotatedClass( D.class )
+				.buildMetadata();
 
-			// Binding to the mapping model works after the simple change for HHH-9897
-			// But building the SessionFactory fails in the collection persister trying to
-			// use the formula (it expects Columns too)
-			metadata.buildSessionFactory().close();
-		}
+		// Binding to the mapping model works after the simple change for HHH-9897
+		// But building the SessionFactory fails in the collection persister trying to
+		// use the formula (it expects Columns too)
+		metadata.buildSessionFactory().close();
 	}
 
 	@Entity( name = "A" )

@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -110,5 +111,10 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			return parentAccess.findFirstEntityInitializer();
 		}
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		return "EntitySelectFetchByUniqueKeyInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
 	}
 }

@@ -27,6 +27,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.GenerationType.TABLE;
@@ -119,7 +120,7 @@ public class TableNamingStrategyTest {
 	}
 
 	private static void withMetadata(Class<?> entityClass, String namingStrategy, Consumer<MetadataImplementor> consumer) {
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 
 		if ( namingStrategy != null ) {

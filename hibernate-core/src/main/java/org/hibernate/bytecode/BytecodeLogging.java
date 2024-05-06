@@ -19,9 +19,5 @@ import org.jboss.logging.Logger;
 )
 public interface BytecodeLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + "bytecode";
-
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
-
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 }

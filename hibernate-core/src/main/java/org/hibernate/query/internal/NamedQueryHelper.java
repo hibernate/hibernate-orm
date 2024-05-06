@@ -61,7 +61,7 @@ public class NamedQueryHelper {
 			cacheMode = cacheable ? determineCacheMode( hints, sessionFactory ) : null;
 
 			flushMode = determineFlushMode( hints, sessionFactory );
-			readOnly = ConfigurationHelper.getBoolean( HINT_READ_ONLY, hints, false );
+			readOnly = ConfigurationHelper.getBoolean( HINT_READ_ONLY, hints );
 
 			lockOptions = determineLockOptions( hints, sessionFactory );
 
@@ -152,7 +152,7 @@ public class NamedQueryHelper {
 
 	private static boolean isCacheable(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
 		return sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled()
-				&& ConfigurationHelper.getBoolean( HINT_CACHEABLE, hints, false );
+				&& ConfigurationHelper.getBoolean( HINT_CACHEABLE, hints );
 	}
 
 	private static String determineCacheRegion(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {

@@ -846,7 +846,7 @@ public abstract class CollectionBinder {
 			Map<String,String> parameters,
 			MetadataBuildingContext buildingContext) {
 		final boolean hasParameters = CollectionHelper.isNotEmpty( parameters );
-		if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !buildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			// if deferred container access is enabled, we locally create the user-type
 			return MappingHelper.createLocalUserCollectionTypeBean( role, implementation, hasParameters, parameters );
 		}
@@ -1276,6 +1276,7 @@ public abstract class CollectionBinder {
 		binder.setProperty( property );
 		binder.setInsertable( insertable );
 		binder.setUpdatable( updatable );
+		binder.setBuildingContext( buildingContext );
 		Property prop = binder.makeProperty();
 		//we don't care about the join stuffs because the column is on the association table.
 		if ( !declaringClassSet ) {

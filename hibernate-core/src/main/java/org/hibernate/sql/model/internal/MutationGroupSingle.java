@@ -51,22 +51,25 @@ public class MutationGroupSingle implements MutationGroup {
 	}
 
 	@Override
-	public <O extends MutationOperation, M extends TableMutation<O>> M getSingleTableMutation() {
-		//noinspection unchecked
-		return (M) tableMutation;
+	public TableMutation getSingleTableMutation() {
+		return tableMutation;
 	}
 
 	@Override
-	public <O extends MutationOperation, M extends TableMutation<O>> M getTableMutation(String tableName) {
+	public TableMutation getTableMutation(String tableName) {
 		assert tableMutation.getMutatingTable().getTableName().equals( tableName );
-		//noinspection unchecked
-		return (M) tableMutation;
+		return tableMutation;
 	}
 
 	@Override
 	public <O extends MutationOperation, M extends TableMutation<O>> void forEachTableMutation(BiConsumer<Integer, M> action) {
 		//noinspection unchecked
 		action.accept( 0, (M) tableMutation );
+	}
+
+	@Override
+	public TableMutation getTableMutation(int i) {
+		return tableMutation;
 	}
 
 	@Override

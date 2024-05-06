@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -98,7 +99,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	@Override
 	public Object visitFunction(SqmFunction<?> sqmFunction) {
-		SqmExpressibleAccessor<?> current = inferenceBasis;
+		final SqmExpressibleAccessor<?> current = inferenceBasis;
 		inferenceBasis = null;
 		super.visitFunction( sqmFunction );
 		inferenceBasis = current;
@@ -140,11 +141,11 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	private SqmExpressibleAccessor<?> inferenceBasis;
 
-	private void withTypeInference(SqmExpressibleAccessor<?> inferenceBasis, Runnable action) {
+	private void withTypeInference(SqmExpressibleAccessor<?> inferenceBasis, SqmVisitableNode sqmVisitableNode) {
 		SqmExpressibleAccessor<?> original = this.inferenceBasis;
 		this.inferenceBasis = inferenceBasis;
 		try {
-			action.run();
+			sqmVisitableNode.accept( this );
 		}
 		finally {
 			this.inferenceBasis = original;
@@ -164,17 +165,17 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 					}
 					return null;
 				},
-				() -> expression.getFixture().accept( this )
+				expression.getFixture()
 		);
 		SqmExpressibleAccessor<?> resolved = determineCurrentExpressible( expression );
 		for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
 					expression.getFixture(),
-					() -> whenFragment.getCheckValue().accept( this )
+					whenFragment.getCheckValue()
 			);
 			withTypeInference(
 					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
-					() -> whenFragment.getResult().accept( this )
+					whenFragment.getResult()
 			);
 			resolved = highestPrecedence( resolved, whenFragment.getResult() );
 		}
@@ -182,7 +183,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		if ( expression.getOtherwise() != null ) {
 			withTypeInference(
 					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
-					() -> expression.getOtherwise().accept( this )
+					expression.getOtherwise()
 			);
 		}
 
@@ -197,11 +198,11 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
 					null,
-					() -> whenFragment.getPredicate().accept( this )
+					whenFragment.getPredicate()
 			);
 			withTypeInference(
 					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
-					() -> whenFragment.getResult().accept( this )
+					whenFragment.getResult()
 			);
 			resolved = highestPrecedence( resolved, whenFragment.getResult() );
 		}
@@ -209,7 +210,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		if ( expression.getOtherwise() != null ) {
 			withTypeInference(
 					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
-					() -> expression.getOtherwise().accept( this )
+					expression.getOtherwise()
 			);
 		}
 
@@ -245,60 +246,56 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	@Override
 	public Object visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path) {
 		path.getLhs().accept( this );
-		withTypeInference( path.getPluralAttribute().getIndexPathSource(), () -> path.getSelectorExpression().accept( this ) );
+		withTypeInference( path.getPluralAttribute().getIndexPathSource(), path.getSelectorExpression() );
 		return path;
 	}
 
 	@Override
 	public Object visitIsEmptyPredicate(SqmEmptinessPredicate predicate) {
-		withTypeInference( null, () -> super.visitIsEmptyPredicate( predicate ) );
+		final SqmExpressibleAccessor<?> original = this.inferenceBasis;
+		this.inferenceBasis = null;
+		super.visitIsEmptyPredicate( predicate );
+		this.inferenceBasis = original;
 		return predicate;
 	}
 
 	@Override
 	public Object visitIsNullPredicate(SqmNullnessPredicate predicate) {
-		withTypeInference( null, () -> super.visitIsNullPredicate( predicate ) );
+		final SqmExpressibleAccessor<?> original = this.inferenceBasis;
+		this.inferenceBasis = null;
+		super.visitIsNullPredicate( predicate );
+		this.inferenceBasis = original;
 		return predicate;
 	}
 
 	@Override
 	public Object visitComparisonPredicate(SqmComparisonPredicate predicate) {
-		withTypeInference( predicate.getRightHandExpression(), () -> predicate.getLeftHandExpression().accept( this ) );
-		withTypeInference( predicate.getLeftHandExpression(), () -> predicate.getRightHandExpression().accept( this ) );
+		withTypeInference( predicate.getRightHandExpression(), predicate.getLeftHandExpression() );
+		withTypeInference( predicate.getLeftHandExpression(), predicate.getRightHandExpression() );
 		return predicate;
 	}
 
 	@Override
 	public Object visitBetweenPredicate(SqmBetweenPredicate predicate) {
-		withTypeInference( predicate.getLowerBound(), () -> predicate.getExpression().accept( this ) );
-		withTypeInference(
-				predicate.getExpression(),
-				() -> {
-					predicate.getLowerBound().accept( this );
-					predicate.getUpperBound().accept( this );
-				}
-		);
+		withTypeInference( predicate.getLowerBound(), predicate.getExpression() );
+		withTypeInference( predicate.getExpression(), predicate.getLowerBound() );
+		withTypeInference( predicate.getExpression(), predicate.getUpperBound() );
 		return predicate;
 	}
 
 	@Override
 	public Object visitLikePredicate(SqmLikePredicate predicate) {
-		withTypeInference( predicate.getPattern(), () -> predicate.getMatchExpression().accept( this ) );
-		withTypeInference(
-				predicate.getMatchExpression(),
-				() -> {
-					predicate.getPattern().accept( this );
-					if ( predicate.getEscapeCharacter() != null ) {
-						predicate.getEscapeCharacter().accept( this );
-					}
-				}
-		);
+		withTypeInference( predicate.getPattern(), predicate.getMatchExpression() );
+		withTypeInference( predicate.getMatchExpression(), predicate.getPattern() );
+		if ( predicate.getEscapeCharacter() != null ) {
+			withTypeInference( predicate.getMatchExpression(), predicate.getEscapeCharacter() );
+		}
 		return predicate;
 	}
 
 	@Override
 	public Object visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
-		withTypeInference( predicate.getPluralPath(), () -> predicate.getLeftHandExpression().accept( this ) );
+		withTypeInference( predicate.getPluralPath(), predicate.getLeftHandExpression() );
 		predicate.getPluralPath().accept( this );
 		return predicate;
 	}
@@ -308,22 +305,17 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		final SqmExpression<?> firstListElement = predicate.getListExpressions().isEmpty()
 				? null
 				: predicate.getListExpressions().get( 0 );
-		withTypeInference( firstListElement, () -> predicate.getTestExpression().accept( this ) );
-		withTypeInference(
-				predicate.getTestExpression(),
-				() -> {
-					for ( SqmExpression<?> expression : predicate.getListExpressions() ) {
-						expression.accept( this );
-					}
-				}
-		);
+		withTypeInference( firstListElement, predicate.getTestExpression() );
+		for ( SqmExpression<?> expression : predicate.getListExpressions() ) {
+			withTypeInference( predicate.getTestExpression(), expression );
+		}
 		return predicate;
 	}
 
 	@Override
 	public Object visitInSubQueryPredicate(SqmInSubQueryPredicate<?> predicate) {
-		withTypeInference( predicate.getSubQueryExpression(), () -> predicate.getTestExpression().accept( this ) );
-		withTypeInference( predicate.getTestExpression(), () -> predicate.getSubQueryExpression().accept( this ) );
+		withTypeInference( predicate.getSubQueryExpression(), predicate.getTestExpression() );
+		withTypeInference( predicate.getTestExpression(), predicate.getSubQueryExpression() );
 		return predicate;
 	}
 }

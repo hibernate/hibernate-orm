@@ -59,7 +59,7 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 			ResultSetMappingResolutionContext context) {
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 		final BasicValuedFetchBuilder discriminatorFetchBuilder;
-		if ( discriminatorMapping == null ) {
+		if ( discriminatorMapping == null || !entityDescriptor.hasSubclasses() ) {
 			assert discriminatorMemento == null;
 			discriminatorFetchBuilder = null;
 		}

@@ -59,6 +59,22 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	}
 
 	@Override
+	public SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaType javaType,
+			boolean virtual,
+			TypeConfiguration typeConfiguration) {
+		return getTableGroup().createSqlSelection(
+				jdbcPosition,
+				valuesArrayPosition,
+				javaType,
+				virtual,
+				typeConfiguration
+		);
+	}
+
+	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,

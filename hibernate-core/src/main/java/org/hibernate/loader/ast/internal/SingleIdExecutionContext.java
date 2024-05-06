@@ -10,6 +10,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
@@ -21,6 +22,7 @@ import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 class SingleIdExecutionContext extends BaseExecutionContext {
 	private final Object entityInstance;
 	private final Object entityId;
+	private final EntityMappingType rootEntityDescriptor;
 	private final Boolean readOnly;
 	private final LockOptions lockOptions;
 	private final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
@@ -28,6 +30,7 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 	public SingleIdExecutionContext(
 			Object entityId,
 			Object entityInstance,
+			EntityMappingType rootEntityDescriptor,
 			Boolean readOnly,
 			LockOptions lockOptions,
 			SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler,
@@ -35,6 +38,7 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 		super( session );
 		this.entityInstance = entityInstance;
 		this.entityId = entityId;
+		this.rootEntityDescriptor = rootEntityDescriptor;
 		this.readOnly = readOnly;
 		this.lockOptions = lockOptions;
 		this.subSelectFetchableKeysHandler = subSelectFetchableKeysHandler;
@@ -48,6 +52,11 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 	@Override
 	public Object getEntityId() {
 		return entityId;
+	}
+
+	@Override
+	public EntityMappingType getRootEntityDescriptor() {
+		return rootEntityDescriptor;
 	}
 
 	@Override

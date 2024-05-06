@@ -108,7 +108,11 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			SqlAstCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		return expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableGroup.getPrimaryTableReference(), getSelectionExpression() ),
+				createColumnReferenceKey(
+						tableGroup.getPrimaryTableReference(),
+						getSelectionExpression(),
+						jdbcMappingToUse
+				),
 				sqlAstProcessingState -> createCaseSearchedExpression( tableGroup )
 		);
 	}
@@ -174,10 +178,10 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 
 	@Override
 	public String getContainingTableExpression() {
-		throw new UnsupportedOperationException();
+//		throw new UnsupportedOperationException();
 //		// this *should* only be used to create the sql-expression key, so just
 //		// using the primary table expr should be fine
-//		return entityDescriptor.getRootTableName();
+		return getEntityDescriptor().getMappedTableDetails().getTableName();
 	}
 
 	@Override

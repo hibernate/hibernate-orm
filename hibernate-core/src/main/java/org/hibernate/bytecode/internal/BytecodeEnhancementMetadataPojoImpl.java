@@ -27,6 +27,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
@@ -136,7 +138,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 	}
 
 	@Override
-	public LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException {
+	public @Nullable LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException {
 		return (LazyAttributeLoadingInterceptor) extractLazyInterceptor( entity );
 	}
 
@@ -257,7 +259,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 	}
 
 	@Override
-	public BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException {
+	public @Nullable BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException {
 		if ( !enhancedForLazyLoading ) {
 			throw new NotInstrumentedException( "Entity class [" + entityClass.getName() + "] is not enhanced for lazy loading" );
 		}

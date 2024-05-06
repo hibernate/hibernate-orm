@@ -71,8 +71,8 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	void usingUrl(String url);
 
 	@LogMessage(level = WARN)
-	@Message(value = "No JDBC Driver class was specified by property %s", id = 10001006)
-	void jdbcDriverNotSpecified(String driver);
+	@Message(id = 10001006, value = "No JDBC Driver class was specified by property `jakarta.persistence.jdbc.driver`, `hibernate.driver` or `javax.persistence.jdbc.driver`")
+	void jdbcDriverNotSpecified();
 
 	@LogMessage(level = INFO)
 	@Message(value = "JDBC isolation level: %s", id = 10001007)

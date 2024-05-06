@@ -14,7 +14,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,6 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -38,7 +38,7 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 	@Test
 	public void testSqlGeneratedForIdentityInsertNoColumns() {
 		ServiceRegistryScope.using(
-				() -> new StandardServiceRegistryBuilder()
+				() -> ServiceRegistryUtil.serviceRegistryBuilder()
 						.applySetting( AvailableSettings.DIALECT, HANAColumnStoreDialect.class )
 						.build(),
 				registryScope -> {
@@ -101,15 +101,15 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 
 		lockOptions.setTimeOut( 500 );
 		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, new HashMap<>() );
-		assertEquals( sql + " for update nowait", sqlWithLock );
+		assertEquals( sql + " for update wait 1", sqlWithLock );
 
 		lockOptions.setTimeOut( 1500 );
 		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, new HashMap<>() );
-		assertEquals( sql + " for update wait 1", sqlWithLock );
+		assertEquals( sql + " for update wait 2", sqlWithLock );
 
 		lockOptions.setAliasSpecificLockMode( "dummy", LockMode.PESSIMISTIC_READ );
 		keyColumns.put( "dummy", new String[]{ "dummy" } );
 		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, keyColumns );
-		assertEquals( sql + " for update of dummy.dummy wait 1", sqlWithLock );
+		assertEquals( sql + " for update of dummy.dummy wait 2", sqlWithLock );
 	}
 }

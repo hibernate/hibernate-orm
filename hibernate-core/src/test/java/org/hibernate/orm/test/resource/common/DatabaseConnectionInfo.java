@@ -24,7 +24,7 @@ public class DatabaseConnectionInfo {
 	public static final DatabaseConnectionInfo INSTANCE = new DatabaseConnectionInfo();
 
 	public static final String DRIVER = "org.h2.Driver";
-	public static final String URL = "jdbc:h2:mem:hibernate-core";
+	public static final String URL = "jdbc:h2:mem:hibernate-core;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE";
 	public static final String USER = "hibernate";
 	public static final String PASS = "hibernate";
 

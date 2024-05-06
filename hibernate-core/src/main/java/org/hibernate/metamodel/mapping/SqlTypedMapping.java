@@ -16,5 +16,8 @@ public interface SqlTypedMapping {
 	Long getLength();
 	Integer getPrecision();
 	Integer getScale();
+	default boolean isLob() {
+		return getJdbcMapping().getJdbcType().isLob();
+	}
 	JdbcMapping getJdbcMapping();
 }

@@ -28,6 +28,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.Test;
 
@@ -70,7 +71,7 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 			BasicTypeReference<?> binaryTypeClass,
 			BasicTypeReference<?> charTypeClass,
 			boolean preferLongRaw) {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, dialectClass.getName() )
 				.applySetting( OracleDialect.PREFER_LONG_RAW, Boolean.toString( preferLongRaw ) )
 				.applySetting( "hibernate.temp.use_jdbc_metadata_defaults", false )

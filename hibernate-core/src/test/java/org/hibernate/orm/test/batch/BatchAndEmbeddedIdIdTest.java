@@ -93,13 +93,13 @@ public class BatchAndEmbeddedIdIdTest {
 			statementInspector.clear();
 			List<Child> children = session.createQuery( "select c from Child c", Child.class ).getResultList();
 			statementInspector.assertExecutedCount( 3 );
-			if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsStandardArrays() ) {
+			if ( scope.getSessionFactory().getJdbcServices().getDialect().useArrayForMultiValuedParameters() ) {
 				assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "?" );
 				assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "?" );
 			}
 			else {
-				assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
-				assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
+				assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
+				assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
 			}
 
 			statementInspector.clear();

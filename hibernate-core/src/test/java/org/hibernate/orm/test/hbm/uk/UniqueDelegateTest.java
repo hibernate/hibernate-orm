@@ -24,6 +24,8 @@ import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.hbm.index.JournalingSchemaToolingTarget;
 import org.junit.After;
 import org.junit.Before;
@@ -45,7 +47,7 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 
 	@Before
 	public void before() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, MyDialect.class )
 				.build();
 	}

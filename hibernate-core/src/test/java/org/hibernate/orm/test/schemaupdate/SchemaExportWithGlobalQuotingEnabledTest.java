@@ -44,6 +44,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,10 +76,9 @@ public class SchemaExportWithGlobalQuotingEnabledTest {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = new StandardServiceRegistryBuilder().applySetting(
-				Environment.GLOBALLY_QUOTED_IDENTIFIERS,
-				"true"
-		).build();
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" )
+				.build();
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( MyEntity.class )
 				.addAnnotatedClass( Role.class )

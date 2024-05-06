@@ -46,17 +46,22 @@ public class MutationGroupNone implements MutationGroup {
 	}
 
 	@Override
-	public <O extends MutationOperation, M extends TableMutation<O>> M getSingleTableMutation() {
+	public TableMutation getSingleTableMutation() {
 		return null;
 	}
 
 	@Override
-	public <O extends MutationOperation, M extends TableMutation<O>> M getTableMutation(String tableName) {
+	public TableMutation getTableMutation(String tableName) {
 		return null;
 	}
 
 	@Override
 	public <O extends MutationOperation, M extends TableMutation<O>> void forEachTableMutation(BiConsumer<Integer, M> action) {
+	}
+
+	@Override
+	public TableMutation getTableMutation(int i) {
+		return null;
 	}
 
 	@Override

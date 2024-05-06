@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -400,9 +401,9 @@ public class EntityMetamodel implements Serializable {
 
 		lazy = persistentClass.isLazy() && (
 				// TODO: this disables laziness even in non-pojo entity modes:
-				!persistentClass.hasPojoRepresentation() ||
-				!isFinalClass( persistentClass.getProxyInterface() )
-		);
+				!persistentClass.hasPojoRepresentation() || !isFinalClass( persistentClass.getProxyInterface() ) )
+				|| bytecodeEnhancementMetadata.isEnhancedForLazyLoading();
+
 		mutable = persistentClass.isMutable();
 		if ( persistentClass.isAbstract() == null ) {
 			// legacy behavior (with no abstract attribute specified)
@@ -446,11 +447,12 @@ public class EntityMetamodel implements Serializable {
 		hasOwnedCollections = foundOwnedCollection;
 		mutablePropertiesIndexes = mutableIndexes;
 
-		final Set<String> subclassEntityNamesLocal = new HashSet<>();
+		// Need deterministic ordering
+		final Set<String> subclassEntityNamesLocal = new LinkedHashSet<>();
+		subclassEntityNamesLocal.add( name );
 		for ( Subclass subclass : persistentClass.getSubclasses() ) {
 			subclassEntityNamesLocal.add( subclass.getEntityName() );
 		}
-		subclassEntityNamesLocal.add( name );
 		subclassEntityNames = toSmallSet( subclassEntityNamesLocal );
 
 		HashMap<Class<?>, String> entityNameByInheritanceClassMapLocal = new HashMap<>();

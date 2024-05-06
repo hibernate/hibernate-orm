@@ -53,9 +53,9 @@ import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.transaction.TransactionUtil2;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 
@@ -197,12 +197,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		configuration.getProperties().put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		configuration.getProperties().put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		configuration.getProperties().put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			configuration.getProperties().put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
+		ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );
 		return configuration;
 	}
 
@@ -304,6 +299,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 			StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry, cfgRegistryBuilder.getAggregatedCfgXml() )
 					.applySettings( properties );
+			ServiceRegistryUtil.applySettings( registryBuilder );
 
 			prepareBasicRegistryBuilder( registryBuilder );
 			return (StandardServiceRegistryImpl) registryBuilder.build();

@@ -21,6 +21,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +38,7 @@ public class CommentGenerationTest {
 	@Test
 	public void testSchemaUpdateScriptGeneration() throws Exception {
 		final String resource = "org/hibernate/orm/test/schemaupdate/CommentGeneration.hbm.xml";
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();
 		try {

@@ -24,18 +24,19 @@ import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnu
  *
  * @author Steve Ebersole
  */
-public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,String>, Serializable {
+public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E, Object>, Serializable {
 	private final EnumJavaType<E> domainTypeDescriptor;
 	private final JdbcType jdbcType;
-	private final JavaType<String> relationalTypeDescriptor;
+	private final JavaType<Object> relationalTypeDescriptor;
 
 	public NamedEnumValueConverter(
 			EnumJavaType<E> domainTypeDescriptor,
 			JdbcType jdbcType,
-			JavaType<String> relationalTypeDescriptor) {
+			JavaType<?> relationalTypeDescriptor) {
 		this.domainTypeDescriptor = domainTypeDescriptor;
 		this.jdbcType = jdbcType;
-		this.relationalTypeDescriptor = relationalTypeDescriptor;
+		//noinspection unchecked
+		this.relationalTypeDescriptor = (JavaType<Object>) relationalTypeDescriptor;
 	}
 
 	@Override
@@ -44,18 +45,21 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	}
 
 	@Override
-	public JavaType<String> getRelationalJavaType() {
+	public JavaType<Object> getRelationalJavaType() {
 		return relationalTypeDescriptor;
 	}
 
 	@Override
-	public E toDomainValue(String relationalForm) {
-		return domainTypeDescriptor.fromName( relationalForm );
+	public E toDomainValue(Object relationalForm) {
+		return relationalForm == null
+				? null
+				: domainTypeDescriptor.fromName( relationalTypeDescriptor.toString( relationalForm ) );
 	}
 
 	@Override
-	public String toRelationalValue(E domainForm) {
-		return domainTypeDescriptor.toName( domainForm );
+	public Object toRelationalValue(E domainForm) {
+		final String name = domainTypeDescriptor.toName( domainForm );
+		return name == null ? null : relationalTypeDescriptor.fromString( name );
 	}
 
 	@Override

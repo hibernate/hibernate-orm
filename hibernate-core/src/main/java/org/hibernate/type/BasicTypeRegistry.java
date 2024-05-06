@@ -146,9 +146,9 @@ public class BasicTypeRegistry implements Serializable {
 		return resolve( typeConfiguration.getJavaTypeRegistry().getDescriptor( javaType ), sqlTypeCode );
 	}
 
-	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, int sqlTypeCode) {
+	public <J> BasicType<J> resolve(JavaType<J> javaType, int sqlTypeCode) {
 		return resolve(
-				jtdToUse,
+				javaType,
 				typeConfiguration.getJdbcTypeRegistry().getDescriptor( sqlTypeCode )
 		);
 	}
@@ -157,32 +157,19 @@ public class BasicTypeRegistry implements Serializable {
 	 * Find an existing {@link BasicType} registration for the given {@link JavaType}
 	 * descriptor and {@link JdbcType} descriptor combo or create (and register) one.
 	 */
-	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcType stdToUse) {
+	public <J> BasicType<J> resolve(JavaType<J> javaType, JdbcType jdbcType) {
 		return resolve(
-				jtdToUse,
-				stdToUse,
-				() -> {
-					final BasicTypeImpl<J> basicType = new BasicTypeImpl<>( jtdToUse, stdToUse );
-
-					// if we are still building mappings, register this ad-hoc type
-					// via a unique code.  this is to support envers
-					try {
-						typeConfiguration.getMetadataBuildingContext().getBootstrapContext()
-								.registerAdHocBasicType( basicType );
-					}
-					catch (Exception ignore) {
-					}
-
-					return basicType;
-				}
+				javaType,
+				jdbcType,
+				() -> new BasicTypeImpl<>( javaType, jdbcType )
 		);
 	}
 
-	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcType stdToUse, String baseTypeName) {
+	public <J> BasicType<J> resolve(JavaType<J> javaType, JdbcType jdbcType, String baseTypeName) {
 		return resolve(
-				jtdToUse,
-				stdToUse,
-				() -> new NamedBasicTypeImpl<>( jtdToUse, stdToUse, baseTypeName )
+				javaType,
+				jdbcType,
+				() -> new NamedBasicTypeImpl<>( javaType, jdbcType, baseTypeName )
 		);
 	}
 
@@ -190,30 +177,34 @@ public class BasicTypeRegistry implements Serializable {
 	 * Find an existing BasicType registration for the given JavaType and
 	 * JdbcType combo or create (and register) one.
 	 */
-	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcType stdToUse, Supplier<BasicType<J>> creator) {
-		final Map<JavaType<?>, BasicType<?>> typeByJtdForStd = registryValues.computeIfAbsent(
-				stdToUse,
-				sqlTypeDescriptor -> new ConcurrentHashMap<>()
+	public <J> BasicType<J> resolve(JavaType<J> javaType, JdbcType jdbcType, Supplier<BasicType<J>> creator) {
+		final Map<JavaType<?>, BasicType<?>> typeByJavaTypeForJdbcType = registryValues.computeIfAbsent(
+				jdbcType,
+				key -> new ConcurrentHashMap<>()
 		);
 
-		final BasicType<?> foundBasicType = typeByJtdForStd.get( jtdToUse );
+		final BasicType<?> foundBasicType = typeByJavaTypeForJdbcType.get( javaType );
 		if ( foundBasicType != null ) {
 			//noinspection unchecked
 			return (BasicType<J>) foundBasicType;
 		}
 		// Before simply creating the type, we try to find if there is a registered type for this java type,
 		// and if so, if the jdbc type descriptor matches. Unless it does, we at least reuse the name
-		final BasicType<J> basicType = getRegisteredType( jtdToUse.getJavaType() );
-		if ( basicType != null ) {
-			if ( basicType.getJdbcType() == stdToUse ) {
-				return basicType;
-			}
-			else {
-				return new NamedBasicTypeImpl<>( jtdToUse, stdToUse, basicType.getName() );
-			}
+		final BasicType<J> registeredType = getRegisteredType( javaType.getJavaType() );
+		if ( registeredType != null && registeredType.getJdbcType() == jdbcType && registeredType.getMappedJavaType() == javaType ) {
+			return registeredType;
 		}
 		final BasicType<J> createdBasicType = creator.get();
-		typeByJtdForStd.put( jtdToUse, createdBasicType );
+		typeByJavaTypeForJdbcType.put( javaType, createdBasicType );
+
+		// if we are still building mappings, register this ad-hoc type
+		// via a unique code.  this is to support envers
+		try {
+			typeConfiguration.getMetadataBuildingContext().getBootstrapContext()
+					.registerAdHocBasicType( createdBasicType );
+		}
+		catch (Exception ignore) {
+		}
 		return createdBasicType;
 	}
 
@@ -250,12 +241,12 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	private void applyOrOverwriteEntry(BasicType<?> type) {
-		final Map<JavaType<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
+		final Map<JavaType<?>, BasicType<?>> typeByJavaTypeForJdbcType = registryValues.computeIfAbsent(
 				type.getJdbcType(),
-				sqlTypeDescriptor -> new ConcurrentHashMap<>()
+				jdbcType -> new ConcurrentHashMap<>()
 		);
 
-		final BasicType<?> existing = mappingsForStdToUse.put( type.getMappedJavaType(), type );
+		final BasicType<?> existing = typeByJavaTypeForJdbcType.put( type.getMappedJavaType(), type );
 		if ( existing != null ) {
 			LOG.debugf(
 					"BasicTypeRegistry registration overwritten (%s + %s); previous =`%s`",
@@ -350,12 +341,12 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	private void primeRegistryEntry(BasicType<?> type) {
-		final Map<JavaType<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
+		final Map<JavaType<?>, BasicType<?>> typeByJavaTypeForJdbcType = registryValues.computeIfAbsent(
 				type.getJdbcType(),
-				sqlTypeDescriptor -> new ConcurrentHashMap<>()
+				jdbcType -> new ConcurrentHashMap<>()
 		);
 
-		final BasicType<?> existing = mappingsForStdToUse.get( type.getMappedJavaType() );
+		final BasicType<?> existing = typeByJavaTypeForJdbcType.get( type.getMappedJavaType() );
 
 		if ( existing != null ) {
 			LOG.debugf(
@@ -366,7 +357,7 @@ public class BasicTypeRegistry implements Serializable {
 			);
 		}
 		else {
-			mappingsForStdToUse.put( type.getMappedJavaType(), type );
+			typeByJavaTypeForJdbcType.put( type.getMappedJavaType(), type );
 		}
 	}
 

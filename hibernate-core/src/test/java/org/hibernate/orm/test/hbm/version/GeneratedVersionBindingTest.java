@@ -12,6 +12,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -20,7 +21,7 @@ import org.junit.Test;
 public class GeneratedVersionBindingTest extends BaseUnitTestCase {
 	@Test
 	public void testIt() {
-		MetadataSources metadataSources = new MetadataSources()
+		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 			.addResource( "org/hibernate/orm/test/hbm/version/Mappings.hbm.xml" );
 
 		try {

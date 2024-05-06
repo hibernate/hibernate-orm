@@ -36,6 +36,8 @@ import org.junit.Assume;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 
 import static org.hamcrest.core.Is.is;
@@ -163,10 +165,10 @@ public class TestExtraPhysicalTableTypes {
 
 	private void buildMetadata(String extraPhysicalTableTypes) {
 		if ( extraPhysicalTableTypes == null ) {
-			ssr = new StandardServiceRegistryBuilder().build();
+			ssr = ServiceRegistryUtil.serviceRegistry();
 		}
 		else {
-			ssr = new StandardServiceRegistryBuilder()
+			ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( Environment.EXTRA_PHYSICAL_TABLE_TYPES, extraPhysicalTableTypes )
 					.build();
 		}

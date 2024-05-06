@@ -24,12 +24,12 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -39,7 +39,7 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 public class CollectionElementLoaderByIndex implements Loader {
 	private final PluralAttributeMapping attributeMapping;
 	private final SelectStatement sqlAst;
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 	private final int baseIndex;
 
 	private final int keyJdbcCount;
@@ -88,7 +88,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 		List<ModelPart> partsToSelect = new ArrayList<>();
 		partsToSelect.add( attributeMapping.getElementDescriptor() );
 
-		this.jdbcParameters = new ArrayList<>( keyJdbcCount );
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder( keyJdbcCount );
 		this.sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				partsToSelect,
@@ -97,9 +97,10 @@ public class CollectionElementLoaderByIndex implements Loader {
 				1,
 				influencers,
 				LockOptions.NONE,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+		this.jdbcParameters = jdbcParametersBuilder.build();
 	}
 
 	@Override
@@ -115,7 +116,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 		return sqlAst;
 	}
 
-	public List<JdbcParameter> getJdbcParameters() {
+	public JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
 

@@ -46,16 +46,31 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	private final int valuesArrayPosition;
 	private final Expression sqlExpression;
 	private final JavaType<?> jdbcJavaType;
+	private final boolean virtual;
 
-	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression) {
-		this( jdbcPosition, valuesArrayPosition, null, sqlExpression );
+	public SqlSelectionImpl(Expression sqlExpression) {
+		this( 0, -1, null, sqlExpression, false );
 	}
 
-	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, JavaType<?> jdbcJavaType, Expression sqlExpression) {
+	public SqlSelectionImpl(int valuesArrayPosition, Expression sqlExpression) {
+		this( valuesArrayPosition + 1, valuesArrayPosition, null, sqlExpression, false );
+	}
+
+	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, boolean virtual) {
+		this( jdbcPosition, valuesArrayPosition, null, sqlExpression, virtual );
+	}
+
+	public SqlSelectionImpl(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaType<?> jdbcJavaType,
+			Expression sqlExpression,
+			boolean virtual) {
 		this.jdbcPosition = jdbcPosition;
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.jdbcJavaType = jdbcJavaType;
 		this.sqlExpression = sqlExpression;
+		this.virtual = virtual;
 	}
 
 	@Override
@@ -65,7 +80,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 
 	@Override
 	public ValueExtractor getJdbcValueExtractor() {
-		final JdbcMapping jdbcMapping = ( (SqlExpressible) sqlExpression.getExpressionType() ).getJdbcMapping();
+		final JdbcMapping jdbcMapping = sqlExpression.getExpressionType().getSingleJdbcMapping();
 		if ( jdbcJavaType == null || jdbcMapping.getMappedJavaType() == jdbcJavaType ) {
 			return jdbcMapping.getJdbcValueExtractor();
 		}
@@ -85,6 +100,11 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	@Override
 	public JdbcMappingContainer getExpressionType() {
 		return getExpression().getExpressionType();
+	}
+
+	@Override
+	public boolean isVirtual() {
+		return virtual;
 	}
 
 	@Override
@@ -126,11 +146,12 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 		final SqlSelection that = (SqlSelection) o;
 		return jdbcPosition == that.getJdbcResultSetIndex() &&
 				valuesArrayPosition == that.getValuesArrayPosition() &&
-				Objects.equals( sqlExpression, that.getExpression() );
+				Objects.equals( sqlExpression, that.getExpression() ) &&
+				virtual == that.isVirtual();
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( jdbcPosition, valuesArrayPosition, sqlExpression );
+		return Objects.hash( jdbcPosition, valuesArrayPosition, sqlExpression, virtual );
 	}
 }

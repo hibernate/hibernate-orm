@@ -316,7 +316,7 @@ public class MySQLDialect extends Dialect {
 
 		final CapacityDependentDdlType.Builder varcharBuilder = CapacityDependentDdlType.builder(
 						VARCHAR,
-						columnType( CLOB ),
+						CapacityDependentDdlType.LobKind.BIGGEST_LOB,columnType( CLOB ),
 						"char",
 						this
 				)
@@ -329,7 +329,7 @@ public class MySQLDialect extends Dialect {
 
 		final CapacityDependentDdlType.Builder nvarcharBuilder = CapacityDependentDdlType.builder(
 						NVARCHAR,
-						columnType( NCLOB ),
+						CapacityDependentDdlType.LobKind.BIGGEST_LOB,columnType( NCLOB ),
 						"char",
 						this
 				)
@@ -342,7 +342,7 @@ public class MySQLDialect extends Dialect {
 
 		final CapacityDependentDdlType.Builder varbinaryBuilder = CapacityDependentDdlType.builder(
 						VARBINARY,
-						columnType( BLOB ),
+						CapacityDependentDdlType.LobKind.BIGGEST_LOB,columnType( BLOB ),
 						"binary",
 						this
 				)
@@ -954,7 +954,7 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
 		// no way to change just the column type, leaving other attributes intact
-		return "modify column " + columnName + " " + columnDefinition;
+		return "modify column " + columnName + " " + columnDefinition.trim();
 	}
 
 	@Override
@@ -1338,7 +1338,7 @@ public class MySQLDialect extends Dialect {
 			case LockOptions.WAIT_FOREVER:
 				return lockString;
 			default:
-				return supportsWait() ? lockString + " wait " + timeout : lockString;
+				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
 		}
 	}
 

@@ -99,7 +99,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 				respectNulls,
 				fromFirst,
 				resultType,
-				getMappingModelExpressible( walker, resultType )
+				getMappingModelExpressible( walker, resultType, arguments )
 		);
 	}
 

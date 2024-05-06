@@ -19,6 +19,10 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 
+import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.BATCH_INITIALIZE;
+import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.BATCH_LOAD;
+import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.NONE;
+
 public class EntitySelectFetchInitializerBuilder {
 
 	public static AbstractFetchParentAccess createInitializer(
@@ -31,6 +35,16 @@ public class EntitySelectFetchInitializerBuilder {
 			AssemblerCreationState creationState) {
 		if ( selectByUniqueKey ) {
 			return new EntitySelectFetchByUniqueKeyInitializer(
+					parentAccess,
+					fetchedAttribute,
+					navigablePath,
+					entityPersister,
+					keyResult.createResultAssembler( parentAccess, creationState )
+			);
+		}
+		if ( parentAccess.findFirstEntityInitializer() == null ) {
+			// Batch initializers require parentAccess.findFirstEntityInitializer() != null
+			return new EntitySelectFetchInitializer(
 					parentAccess,
 					fetchedAttribute,
 					navigablePath,
@@ -84,7 +98,13 @@ public class EntitySelectFetchInitializerBuilder {
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		if ( !entityPersister.isBatchLoadable() || creationState.isScrollResult() ) {
-			return BatchMode.NONE;
+			return NONE;
+		}
+		else if ( creationState.isDynamicInstantiation() ) {
+			if ( canBatchInitializeBeUsed( entityPersister ) ) {
+				return BatchMode.BATCH_INITIALIZE;
+			}
+			return NONE;
 		}
 		while ( parentAccess.isEmbeddableInitializer() ) {
 			final EmbeddableInitializer embeddableInitializer = parentAccess.asEmbeddableInitializer();
@@ -111,10 +131,18 @@ public class EntitySelectFetchInitializerBuilder {
 			if ( cacheAccess != null ) {
 				// Do batch initialization instead of batch loading if the parent entity is cacheable
 				// to avoid putting entity state into the cache at a point when the association is not yet set
-				return BatchMode.BATCH_INITIALIZE;
+				if ( canBatchInitializeBeUsed( entityPersister ) ) {
+					return BATCH_INITIALIZE;
+				}
+				return NONE;
 			}
 		}
-		return BatchMode.BATCH_LOAD;
+		return BATCH_LOAD;
+	}
+
+	private static boolean canBatchInitializeBeUsed(EntityPersister entityPersister) {
+		//  we need to create a Proxy in order to use batch initialize
+		return entityPersister.getRepresentationStrategy().getProxyFactory() != null;
 	}
 
 	enum BatchMode {

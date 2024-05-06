@@ -66,7 +66,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	protected void applySettings(StandardServiceRegistryBuilder ssrBuilder) {
 		super.applySettings( ssrBuilder );
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
-		ssrBuilder.getSettings().remove( AvailableSettings.CONNECTION_PROVIDER );
+//		ssrBuilder.getSettings().remove( AvailableSettings.CONNECTION_PROVIDER );
 	}
 
 	@BeforeEach
@@ -280,26 +280,27 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 		try {
 			executeSync( () -> doInHibernate( this::sessionFactory, _session -> {
-					TransactionUtil.setJdbcTimeout( _session );
-					try {
-						// load with write lock to deal with databases that block (wait indefinitely) direct attempts
-						// to write a locked row
-						A it = _session.get(
-								A.class,
-								id,
-								new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
-						);
-						_session.createNativeQuery( updateStatement() )
-								.setParameter( "value", "changed" )
-								.setParameter( "id", it.getId() )
-								.executeUpdate();
-						fail( "Pessimistic lock not obtained/held" );
-					}
-					catch ( Exception e ) {
-						if ( !ExceptionUtil.isSqlLockTimeout( e) ) {
-							fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
+					TransactionUtil.withJdbcTimeout( _session, () -> {
+						try {
+							// load with write lock to deal with databases that block (wait indefinitely) direct attempts
+							// to write a locked row
+							A it = _session.get(
+									A.class,
+									id,
+									new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
+							);
+							_session.createNativeQuery( updateStatement() )
+									.setParameter( "value", "changed" )
+									.setParameter( "id", it.getId() )
+									.executeUpdate();
+							fail( "Pessimistic lock not obtained/held" );
 						}
-					}
+						catch ( Exception e ) {
+							if ( !ExceptionUtil.isSqlLockTimeout( e) ) {
+								fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
+							}
+						}
+					} );
 				} )
 			);
 		}

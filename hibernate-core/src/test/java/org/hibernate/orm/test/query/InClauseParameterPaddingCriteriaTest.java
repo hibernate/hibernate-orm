@@ -75,7 +75,7 @@ public class InClauseParameterPaddingCriteriaTest {
 			assertEquals( 1, ids.size() );
 		} );
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in(?,?,?,?,?,?,?,?)" ) );
+		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in (?,?,?,?,?,?,?,?)" ) );
 	}
 
 	@Test
@@ -102,7 +102,7 @@ public class InClauseParameterPaddingCriteriaTest {
 			assertEquals( 1, ids.size() );
 		} );
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in(d1_0.id,d1_0.id,d1_0.id)" ) );
+		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in (d1_0.id,d1_0.id,d1_0.id)" ) );
 	}
 
 	@Entity(name = "Document")

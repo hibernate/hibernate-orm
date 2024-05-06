@@ -120,6 +120,7 @@ public class MapProxy implements HibernateProxy, Map, Serializable {
 				li.getInternalIdentifier(),
 				( li.isReadOnlySettingAvailable() ? Boolean.valueOf( li.isReadOnly() ) : li.isReadOnlyBeforeAttachedToSession() ),
 				li.getSessionFactoryUuid(),
+				li.getSessionFactoryName(),
 				li.isAllowLoadOutsideTransaction()
 		);
 	}

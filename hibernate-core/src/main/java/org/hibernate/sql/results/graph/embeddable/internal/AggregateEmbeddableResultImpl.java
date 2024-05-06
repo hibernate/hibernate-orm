@@ -48,13 +48,15 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 	private final boolean containsAnyNonScalars;
 	private final NavigablePath initializerNavigablePath;
 	private final SqlSelection aggregateSelection;
+	private final EmbeddableMappingType fetchContainer;
 
 	public AggregateEmbeddableResultImpl(
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart embeddedPartDescriptor,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( embeddedPartDescriptor.getEmbeddableTypeDescriptor(), navigablePath );
+		super( navigablePath );
+		this.fetchContainer = embeddedPartDescriptor.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
 		/*
 			An `{embeddable_result}` sub-path is created for the corresponding initializer to differentiate it from a fetch-initializer if this embedded is also fetched.
@@ -127,7 +129,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return this.fetchContainer;
 	}
 
 	@Override

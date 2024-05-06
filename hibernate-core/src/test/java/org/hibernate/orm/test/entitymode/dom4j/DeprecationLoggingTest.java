@@ -14,6 +14,7 @@ import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -32,7 +33,7 @@ public class DeprecationLoggingTest extends BaseUnitTestCase {
 	public void basicTest() {
 		logInspection.registerListener( LogListenerImpl.INSTANCE );
 
-		MetadataSources metadataSources = new MetadataSources()
+		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 			.addResource( "org/hibernate/orm/test/entitymode/dom4j/Car.hbm.xml" );
 		try {
 			metadataSources.buildMetadata();

@@ -8,6 +8,7 @@ package org.hibernate.bytecode.spi;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 
@@ -39,28 +40,18 @@ public class ByteCodeHelper {
 			throw new IOException( "null input stream" );
 		}
 
-		final byte[] buffer = new byte[409600];
+		final byte[] buffer = new byte[8_000]; //reasonably large enough for most classes
 		byte[] classBytes = ArrayHelper.EMPTY_BYTE_ARRAY;
 
 		try {
 			int r = inputStream.read( buffer );
-			while ( r >= buffer.length ) {
-				final byte[] temp = new byte[ classBytes.length + buffer.length ];
-				// copy any previously read bytes into the temp array
-				System.arraycopy( classBytes, 0, temp, 0, classBytes.length );
-				// copy the just read bytes into the temp array (after the previously read)
-				System.arraycopy( buffer, 0, temp, classBytes.length, buffer.length );
-				classBytes = temp;
-				// read the next set of bytes into buffer
-				r = inputStream.read( buffer );
-			}
-			if ( r != -1 ) {
-				final byte[] temp = new byte[ classBytes.length + r ];
-				// copy any previously read bytes into the temp array
-				System.arraycopy( classBytes, 0, temp, 0, classBytes.length );
+			while ( r != -1 ) {
+				final byte[] temp = Arrays.copyOf( classBytes, classBytes.length + r );
 				// copy the just read bytes into the temp array (after the previously read)
 				System.arraycopy( buffer, 0, temp, classBytes.length, r );
 				classBytes = temp;
+				// read the next set of bytes into buffer
+				r = inputStream.read( buffer );
 			}
 		}
 		finally {

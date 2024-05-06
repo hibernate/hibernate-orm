@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -19,7 +18,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * This mutable representation of AttributeMappingsList is meant to
- * exist temporarily to assit migration to the new contract.
+ * exist temporarily to assist migration to the new contract.
  * @deprecated  Please get rid of it: such collections should be immutable.
  */
 @Deprecated
@@ -39,11 +38,6 @@ public final class MutableAttributeMappingList implements AttributeMappingsList 
 	@Override
 	public AttributeMapping get(int idx) {
 		return asAttributeMapping( this.list.get( idx ) );
-	}
-
-	@Override
-	public Iterator<AttributeMapping> iterator() {
-		return new AttributeMappingIterator();
 	}
 
 	@Override
@@ -97,22 +91,6 @@ public final class MutableAttributeMappingList implements AttributeMappingsList 
 			//ideally both the JDK issue gets fixed and this class gets removed.
 			return ((Fetchable) o).asAttributeMapping();
 		}
-	}
-
-	private final class AttributeMappingIterator implements Iterator<AttributeMapping> {
-
-		private Iterator iter = MutableAttributeMappingList.this.list.iterator();
-
-		@Override
-		public boolean hasNext() {
-			return iter.hasNext();
-		}
-
-		@Override
-		public AttributeMapping next() {
-			return asAttributeMapping( iter.next() );
-		}
-
 	}
 
 }

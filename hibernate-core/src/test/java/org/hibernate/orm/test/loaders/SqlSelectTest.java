@@ -11,6 +11,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLSelect;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -30,9 +32,9 @@ public class SqlSelectTest {
 	void test(SessionFactoryScope scope) {
 		WithSqlSelect withSqlSelect = new WithSqlSelect();
 		withSqlSelect.name = "Hibernate";
-		withSqlSelect.uuids.add( UUID.randomUUID() );
-		withSqlSelect.uuids.add( UUID.randomUUID() );
-		withSqlSelect.uuids.add( UUID.randomUUID() );
+		withSqlSelect.uuids.add( SafeRandomUUIDGenerator.safeRandomUUID() );
+		withSqlSelect.uuids.add( SafeRandomUUIDGenerator.safeRandomUUID() );
+		withSqlSelect.uuids.add( SafeRandomUUIDGenerator.safeRandomUUID() );
 
 		scope.inTransaction( s -> s.persist( withSqlSelect ) );
 

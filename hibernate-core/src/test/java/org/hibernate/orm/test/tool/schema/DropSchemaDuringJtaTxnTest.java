@@ -22,6 +22,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.resource.transaction.jta.JtaPlatformStandardTestingImpl;
 import org.junit.Test;
 
@@ -52,7 +54,7 @@ public class DropSchemaDuringJtaTxnTest extends BaseUnitTestCase {
 		TestingJtaBootstrap.prepare( settings );
 		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().applySettings( settings ).build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder().applySettings( settings ).build();
 		try {
 			return new MetadataSources( ssr )
 					.addAnnotatedClass( TestEntity.class )

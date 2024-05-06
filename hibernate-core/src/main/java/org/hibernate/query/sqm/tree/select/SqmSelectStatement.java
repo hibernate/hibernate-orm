@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -113,7 +113,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			parameters = null;
 		}
 		else {
-			parameters = new HashSet<>( this.parameters.size() );
+			parameters = new LinkedHashSet<>( this.parameters.size() );
 			for ( SqmParameter<?> parameter : this.parameters ) {
 				parameters.add( parameter.copy( context ) );
 			}
@@ -225,7 +225,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public void addParameter(SqmParameter<?> parameter) {
 		if ( parameters == null ) {
-			parameters = new HashSet<>();
+			parameters = new LinkedHashSet<>();
 		}
 
 		parameters.add( parameter );

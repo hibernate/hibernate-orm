@@ -12,17 +12,17 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
 
 /**
  * @author Steve Ebersole
@@ -32,16 +32,19 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 	private final RowMutationOperations rowMutationOperations;
 
 	private final BasicBatchKey batchKey;
+	private final MutationExecutorService mutationExecutorService;
 
-	private MutationOperationGroupSingle operationGroup;
+	private MutationOperationGroup operationGroup;
 
 	public InsertRowsCoordinatorStandard(
 			CollectionMutationTarget mutationTarget,
-			RowMutationOperations rowMutationOperations) {
+			RowMutationOperations rowMutationOperations,
+			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 
 		this.batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT" );
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -64,7 +67,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 			operationGroup = createOperationGroup();
 		}
 
-		if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 			MODEL_MUTATION_LOGGER.debugf(
 					"Inserting collection rows - %s : %s",
 					mutationTarget.getRolePath(),
@@ -75,10 +78,6 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
 		final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();
 
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> batchKey,
 				operationGroup,
@@ -129,11 +128,11 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 		}
 	}
 
-	private MutationOperationGroupSingle createOperationGroup() {
+	private MutationOperationGroup createOperationGroup() {
 		assert mutationTarget.getTargetPart() != null;
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
 		final JdbcMutationOperation operation = rowMutationOperations.getInsertRowOperation();
-		return new MutationOperationGroupSingle( MutationType.INSERT, mutationTarget, operation );
+		return MutationOperationGroupFactory.singleOperation( MutationType.INSERT, mutationTarget, operation );
 	}
 }

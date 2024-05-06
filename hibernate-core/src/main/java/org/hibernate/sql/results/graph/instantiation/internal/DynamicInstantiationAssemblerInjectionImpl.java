@@ -7,7 +7,9 @@
 package org.hibernate.sql.results.graph.instantiation.internal;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,8 +80,8 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 						}
 						else {
 							throw new InstantiationException(
-									"Unable to determine dynamic instantiation injection strategy for " +
-											targetJavaType.getName() + "#" + argumentReader.getAlias()
+									"Cannot set field '" + argumentReader.getAlias()
+											+ "' to instantiate '" + targetJavaType.getName() + "'"
 							);
 						}
 					}
@@ -114,18 +116,22 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	@Override
 	@SuppressWarnings("unchecked")
 	public T assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+		final T result;
 		try {
-			final T result = target.getJavaTypeClass().newInstance();
-			for ( BeanInjection beanInjection : beanInjections ) {
-				beanInjection.getBeanInjector().inject(
-						result,
-						beanInjection.getValueAssembler().assemble( rowProcessingState, options )
-				);
-			}
-			return result;
+			final Constructor<T> constructor = target.getJavaTypeClass().getDeclaredConstructor();
+			constructor.setAccessible( true );
+			result = constructor.newInstance();
 		}
-		catch (IllegalAccessException | InstantiationException | java.lang.InstantiationException e) {
-			throw new InstantiationException( "Could not call default constructor [" + target.getJavaType().getTypeName() + "]", e );
+		catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | java.lang.InstantiationException e) {
+			throw new InstantiationException( "Error instantiating class '"
+					+ target.getJavaType().getTypeName() + "' using default constructor: " + e.getMessage(), e );
 		}
+		for ( BeanInjection beanInjection : beanInjections ) {
+			beanInjection.getBeanInjector().inject(
+					result,
+					beanInjection.getValueAssembler().assemble( rowProcessingState, options )
+			);
+		}
+		return result;
 	}
 }

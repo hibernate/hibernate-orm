@@ -26,7 +26,6 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -159,11 +158,6 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public MappingType getPartMappingType() {
-		return this;
-	}
-
-	@Override
 	public JavaType<?> getJavaType() {
 		return domainType.getExpressibleJavaType();
 	}
@@ -287,6 +281,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return getSelectable( index ).getJdbcMapping();
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		final List<JdbcMapping> results = new ArrayList<>();

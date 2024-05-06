@@ -38,6 +38,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
@@ -146,7 +147,7 @@ public class EmbeddableBinder {
 	static boolean isEmbedded(XProperty property, XClass returnedClass) {
 		return property.isAnnotationPresent( Embedded.class )
 			|| property.isAnnotationPresent( EmbeddedId.class )
-			|| returnedClass.isAnnotationPresent( Embeddable.class );
+			|| returnedClass.isAnnotationPresent( Embeddable.class ) && !property.isAnnotationPresent( Convert.class );
 	}
 
 	private static Component bindEmbeddable(
@@ -192,7 +193,7 @@ public class EmbeddableBinder {
 					entityBinder,
 					isComponentEmbedded,
 					isIdentifierMapper,
-					false,
+					context.getMetadataCollector().isInSecondPass(),
 					customInstantiatorImpl,
 					compositeUserTypeClass,
 					annotatedColumns,
@@ -297,7 +298,8 @@ public class EmbeddableBinder {
 				compositeUserTypeClass,
 				columns,
 				context,
-				inheritanceStatePerClass
+				inheritanceStatePerClass,
+				false
 		);
 	}
 
@@ -315,7 +317,8 @@ public class EmbeddableBinder {
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			AnnotatedColumns columns,
 			MetadataBuildingContext context,
-			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			boolean isIdClass) {
 		// inSecondPass can only be used to apply right away the second pass of a composite-element
 		// Because it's a value type, there is no bidirectional association, hence second pass
 		// ordering does not matter
@@ -357,7 +360,7 @@ public class EmbeddableBinder {
 
 		final XClass annotatedClass = inferredData.getPropertyClass();
 		final List<PropertyData> classElements =
-				collectClassElements( propertyAccessor, context, returnedClassOrElement, annotatedClass );
+				collectClassElements( propertyAccessor, context, returnedClassOrElement, annotatedClass, isIdClass );
 		final List<PropertyData> baseClassElements =
 				collectBaseClassElements( baseInferredData, propertyAccessor, context, annotatedClass );
 		if ( baseClassElements != null
@@ -402,7 +405,7 @@ public class EmbeddableBinder {
 	private static CompositeUserType<?> compositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			MetadataBuildingContext context) {
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !context.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
 		}
 
@@ -417,7 +420,8 @@ public class EmbeddableBinder {
 			AccessType propertyAccessor,
 			MetadataBuildingContext context,
 			XClass returnedClassOrElement,
-			XClass annotatedClass) {
+			XClass annotatedClass,
+			boolean isIdClass) {
 		final List<PropertyData> classElements = new ArrayList<>();
 		//embeddable elements can have type defs
 		final PropertyContainer container =
@@ -425,7 +429,8 @@ public class EmbeddableBinder {
 		addElementsOfClass( classElements, container, context);
 		//add elements of the embeddable's mapped superclasses
 		XClass superClass = annotatedClass.getSuperclass();
-		while ( superClass != null && superClass.isAnnotationPresent( MappedSuperclass.class ) ) {
+		while ( superClass != null && ( superClass.isAnnotationPresent( MappedSuperclass.class )
+				|| ( isIdClass && !Object.class.getName().equals( superClass.getName() ) ) ) ) {
 			//FIXME: proper support of type variables incl var resolved at upper levels
 			final PropertyContainer superContainer =
 					new PropertyContainer( superClass, annotatedClass, propertyAccessor );

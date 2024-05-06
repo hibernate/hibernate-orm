@@ -17,7 +17,6 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.Logging.AST_LOGGER;
-import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.Logging.TRACE_ENABLED;
 
 /**
  * Printer for DomainResult graphs
@@ -32,8 +31,6 @@ public class DomainResultGraphPrinter {
 	interface Logging {
 		String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".graph.AST";
 		Logger AST_LOGGER = Logger.getLogger( LOGGER_NAME );
-		boolean DEBUG_ENABLED = AST_LOGGER.isDebugEnabled();
-		boolean TRACE_ENABLED = AST_LOGGER.isTraceEnabled();
 	}
 
 	public static void logDomainResultGraph(List<DomainResult<?>> domainResults) {
@@ -41,7 +38,7 @@ public class DomainResultGraphPrinter {
 	}
 
 	public static void logDomainResultGraph(String header, List<DomainResult<?>> domainResults) {
-		if ( ! Logging.DEBUG_ENABLED ) {
+		if ( !AST_LOGGER.isDebugEnabled() ) {
 			return;
 		}
 
@@ -69,7 +66,7 @@ public class DomainResultGraphPrinter {
 
 		AST_LOGGER.debug( buffer.toString() );
 
-		if ( TRACE_ENABLED ) {
+		if ( AST_LOGGER.isTraceEnabled() ) {
 			AST_LOGGER.tracef( new Exception(), "Stack trace calling DomainResultGraphPrinter" );
 		}
 	}

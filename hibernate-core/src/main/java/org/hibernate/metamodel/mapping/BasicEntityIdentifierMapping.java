@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 
 /**
@@ -24,5 +27,13 @@ public interface BasicEntityIdentifierMapping extends SingleAttributeIdentifierM
 
 	@Override
 	boolean isInsertable();
+
+	@Deprecated(forRemoval = true)
+	@Override
+	default List<JdbcMapping> getJdbcMappings() {
+		final List<JdbcMapping> results = new ArrayList<>();
+		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
+		return results;
+	}
 
 }

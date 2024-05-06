@@ -48,4 +48,6 @@ public interface EmbeddableInitializer extends FetchParentAccess {
 	default EmbeddableInitializer asEmbeddableInitializer() {
 		return this;
 	}
+
+	void resolveState(RowProcessingState rowProcessingState);
 }

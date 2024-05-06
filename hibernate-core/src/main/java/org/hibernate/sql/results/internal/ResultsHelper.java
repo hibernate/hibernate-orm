@@ -6,14 +6,10 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -28,7 +24,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -42,6 +37,7 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.RowReader;
@@ -72,15 +68,27 @@ public class ResultsHelper {
 			JdbcValuesMapping jdbcValuesMapping) {
 		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 
-		final Map<NavigablePath, Initializer> initializerMap = new LinkedHashMap<>();
+		//custom Map<NavigablePath, Initializer>
+		final NavigablePathMapToInitializer initializerMap = new NavigablePathMapToInitializer();
 		final InitializersList.Builder initializersBuilder = new InitializersList.Builder();
 
 		final List<DomainResultAssembler<?>> assemblers = jdbcValuesMapping.resolveAssemblers(
 				new AssemblerCreationState() {
+					Boolean dynamicInstantiation;
 
 					@Override
 					public boolean isScrollResult() {
 						return executionContext.isScrollResult();
+					}
+
+					@Override
+					public boolean isDynamicInstantiation() {
+						if ( dynamicInstantiation == null ) {
+							dynamicInstantiation = jdbcValuesMapping.getDomainResults()
+									.stream()
+									.anyMatch( domainResult -> domainResult instanceof DynamicInstantiationResult );
+						}
+						return dynamicInstantiation;
 					}
 
 					@Override
@@ -124,28 +132,11 @@ public class ResultsHelper {
 				}
 		);
 
-		logInitializers( initializerMap );
+		initializerMap.logInitializers();
 
 		final InitializersList initializersList = initializersBuilder.build( initializerMap );
 
 		return new StandardRowReader<>( assemblers, initializersList, rowTransformer, transformedResultJavaType );
-	}
-
-	private static void logInitializers(Map<NavigablePath, Initializer> initializerMap) {
-		if ( ! ResultsLogger.DEBUG_ENABLED ) {
-			return;
-		}
-
-		ResultsLogger.RESULTS_MESSAGE_LOGGER.debug( "Initializer list" );
-		initializerMap.forEach( (navigablePath, initializer) -> {
-			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
-					"    %s -> %s@%s (%s)",
-					navigablePath,
-					initializer,
-					initializer.hashCode(),
-					initializer.getInitializedPart()
-			);
-		} );
 	}
 
 	public static void finalizeCollectionLoading(
@@ -232,9 +223,7 @@ public class ResultsHelper {
 
 		if ( session.getLoadQueryInfluencers().hasEnabledFilters() && collectionDescriptor.isAffectedByEnabledFilters( session ) ) {
 			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Refusing to add to cache due to enabled filters" );
-			}
+			LOG.debug( "Refusing to add to cache due to enabled filters" );
 			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from non-filtered;
 			//      DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read from
 			//      cache with enabled filters).
@@ -259,9 +248,7 @@ public class ResultsHelper {
 					}
 				}
 				if ( collectionOwner == null ) {
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debugf( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
-					}
+					LOG.debugf( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
 					return;
 				}
 			}

@@ -16,7 +16,6 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 
 /**
  * Acts as the {@link JdbcValuesMappingProducer} for {@link NativeQuery}
@@ -96,8 +95,8 @@ public interface ResultSetMapping extends JdbcValuesMappingProducer {
 
 	static ResultSetMapping resolveResultSetMapping(String name, boolean isDynamic, SessionFactoryImplementor sessionFactory) {
 		return sessionFactory
-				.getServiceRegistry()
-				.getService( JdbcValuesMappingProducerProvider.class )
+				.getFastSessionServices()
+				.getJdbcValuesMappingProducerProvider()
 				.buildResultSetMapping( name, isDynamic, sessionFactory );
 	}
 }

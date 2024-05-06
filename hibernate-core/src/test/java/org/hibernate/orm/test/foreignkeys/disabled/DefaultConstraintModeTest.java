@@ -19,11 +19,11 @@ import jakarta.persistence.ManyToOne;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Table;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -46,7 +46,7 @@ public class DefaultConstraintModeTest extends BaseUnitTestCase {
 	}
 
 	private void testForeignKeyCreation(boolean created) {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(Environment.HBM2DDL_DEFAULT_CONSTRAINT_MODE, created ? "CONSTRAINT" : "NO_CONSTRAINT").build()) {
 			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( TestEntity.class ).buildMetadata();
 			assertThat( findTable( metadata, TABLE_NAME ).getForeignKeys().isEmpty(), is( !created ) );

@@ -9,6 +9,7 @@ package org.hibernate.orm.test.query.criteria;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -23,6 +24,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Marco Belladelli
  */
-@ServiceRegistry
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true"))
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFunctions.class)

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +36,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -58,7 +60,7 @@ public abstract class AbstractManagedType<J>
 	private volatile Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes ;
 	private volatile Map<String, PersistentAttribute<J, ?>> declaredConcreteGenericAttributes;
 
-	private final List<ManagedDomainType> subTypes = new ArrayList<>();
+	private final List<ManagedDomainType<? extends J>> subTypes = new ArrayList<>();
 
 	protected AbstractManagedType(
 			String hibernateTypeName,
@@ -85,6 +87,11 @@ public abstract class AbstractManagedType<J>
 	@Override
 	public ManagedDomainType<? super J> getSuperType() {
 		return superType;
+	}
+
+	@Override
+	public Collection<? extends ManagedDomainType<? extends J>> getSubTypes() {
+		return subTypes;
 	}
 
 	@Override
@@ -200,17 +207,43 @@ public abstract class AbstractManagedType<J>
 			return true;
 		}
 		final MappingMetamodel runtimeMetamodels = jpaMetamodel().getMappingMetamodel();
-		final EntityMappingType entity1 = runtimeMetamodels.getEntityDescriptor(
-				attribute1.getDeclaringType().getTypeName()
+		final ModelPart modelPart1 = getEntityAttributeModelPart(
+				attribute1,
+				attribute1.getDeclaringType(),
+				runtimeMetamodels
 		);
-		final EntityMappingType entity2 = runtimeMetamodels.getEntityDescriptor(
-				attribute2.getDeclaringType().getTypeName()
+		final ModelPart modelPart2 = getEntityAttributeModelPart(
+				attribute2,
+				attribute2.getDeclaringType(),
+				runtimeMetamodels
 		);
+		return modelPart1 != null && modelPart2 != null && MappingModelHelper.isCompatibleModelPart(
+				modelPart1,
+				modelPart2
+		);
+	}
 
-		return entity1 != null && entity2 != null && MappingModelHelper.isCompatibleModelPart(
-				entity1.findSubPart( attribute1.getName() ),
-				entity2.findSubPart( attribute2.getName() )
-		);
+	private static ModelPart getEntityAttributeModelPart(
+			PersistentAttribute<?, ?> attribute,
+			ManagedDomainType<?> domainType,
+			MappingMetamodel mappingMetamodel) {
+		if ( domainType instanceof EntityDomainType<?> ) {
+			final EntityMappingType entity = mappingMetamodel.getEntityDescriptor( domainType.getTypeName() );
+			return entity.findSubPart( attribute.getName() );
+		}
+		else {
+			ModelPart candidate = null;
+			for ( ManagedDomainType<?> subType : domainType.getSubTypes() ) {
+				final ModelPart modelPart = getEntityAttributeModelPart( attribute, subType, mappingMetamodel );
+				if ( modelPart != null ) {
+					if ( candidate != null && !MappingModelHelper.isCompatibleModelPart( candidate, modelPart ) ) {
+						return null;
+					}
+					candidate = modelPart;
+				}
+			}
+			return candidate;
+		}
 	}
 
 	@Override
@@ -435,7 +468,7 @@ public abstract class AbstractManagedType<J>
 			return attribute;
 		}
 		else if ( getSuperType() != null ) {
-			return getSuperType().findDeclaredPluralAttribute( name );
+			return getSuperType().findPluralAttribute( name );
 		}
 		else {
 			return null;

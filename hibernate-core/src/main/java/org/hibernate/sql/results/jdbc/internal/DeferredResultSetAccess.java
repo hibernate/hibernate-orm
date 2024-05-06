@@ -240,7 +240,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			}
 			finally {
 				eventListenerManager.jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( preparedStatement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( finalSql, executeStartNanos );
 			}
 
 			skipRows( resultSet );

@@ -33,13 +33,15 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
 	private final NavigablePath initializerNavigablePath;
+	private final EmbeddableMappingType fetchContainer;
 
 	public EmbeddableResultImpl(
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart modelPart,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( modelPart.getEmbeddableTypeDescriptor(), navigablePath );
+		super( navigablePath );
+		this.fetchContainer = modelPart.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
 		/*
 			An `{embeddable_result}` sub-path is created for the corresponding initializer to differentiate it from a fetch-initializer if this embedded is also fetched.
@@ -98,7 +100,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return this.fetchContainer;
 	}
 
 	@Override

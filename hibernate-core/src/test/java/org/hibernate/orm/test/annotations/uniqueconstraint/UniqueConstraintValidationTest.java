@@ -19,6 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -44,7 +45,7 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 	}
 
 	private void buildSessionFactory(Class<?> entity) {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			new MetadataSources( serviceRegistry )

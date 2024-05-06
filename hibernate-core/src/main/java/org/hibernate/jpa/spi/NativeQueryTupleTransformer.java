@@ -7,6 +7,7 @@
 package org.hibernate.jpa.spi;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,6 +125,11 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 		public Object[] toArray() {
 			// todo : make a copy?
 			return tuple;
+		}
+
+		@Override
+		public String toString() {
+			return Arrays.toString( tuple );
 		}
 
 		@Override

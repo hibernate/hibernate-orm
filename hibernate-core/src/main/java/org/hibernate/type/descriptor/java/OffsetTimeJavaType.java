@@ -105,7 +105,7 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 				return (X) time;
 			}
 			// Preserve milliseconds, which java.sql.Time supports
-			return (X) new Time( time.getTime() + DateTimeUtils.roundToPrecision( jdbcOffsetTime.getNano(), 3 ) );
+			return (X) new Time( time.getTime() + DateTimeUtils.roundToPrecision( jdbcOffsetTime.getNano(), 3 ) / 1000000 );
 		}
 
 		final OffsetDateTime jdbcOffsetDateTime = jdbcOffsetTime.atDate( LocalDate.EPOCH );

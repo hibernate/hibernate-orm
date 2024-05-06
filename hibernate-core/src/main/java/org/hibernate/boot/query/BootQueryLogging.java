@@ -21,7 +21,4 @@ import org.jboss.logging.Logger;
 public interface BootQueryLogging {
 	String NAME = BootLogging.NAME + ".query";
 	Logger BOOT_QUERY_LOGGER = Logger.getLogger( NAME );
-
-	boolean DEBUG_ENABLED = BOOT_QUERY_LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = BOOT_QUERY_LOGGER.isTraceEnabled();
 }

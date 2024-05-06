@@ -20,6 +20,7 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.Test;
 
@@ -94,7 +95,7 @@ public class CfgXmlResourceNameClosingTest extends BaseUnitTestCase {
 		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
 				.applyClassLoaderService( classLoaderService )
 				.build();
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 				.configure( "org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" )
 				.build();
 		try {

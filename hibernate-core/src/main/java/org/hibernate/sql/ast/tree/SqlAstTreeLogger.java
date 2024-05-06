@@ -33,6 +33,4 @@ public interface SqlAstTreeLogger extends BasicLogger {
 	 */
 	SqlAstTreeLogger INSTANCE = Logger.getMessageLogger( SqlAstTreeLogger.class, LOGGER_NAME );
 
-	boolean DEBUG_ENABLED = INSTANCE.isDebugEnabled();
-	boolean TRACE_ENABLED = INSTANCE.isTraceEnabled();
 }

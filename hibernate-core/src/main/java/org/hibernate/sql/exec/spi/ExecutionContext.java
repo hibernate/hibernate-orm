@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -35,6 +36,11 @@ public interface ExecutionContext {
 
 	Callback getCallback();
 
+	default boolean hasCallbackActions() {
+		final Callback callback = getCallback();
+		return callback != null && callback.hasAfterLoadActions();
+	}
+
 	String getQueryIdentifier(String sql);
 
 	/**
@@ -52,6 +58,10 @@ public interface ExecutionContext {
 	}
 
 	default Object getEntityId() {
+		return null;
+	}
+
+	default EntityMappingType getRootEntityDescriptor() {
 		return null;
 	}
 

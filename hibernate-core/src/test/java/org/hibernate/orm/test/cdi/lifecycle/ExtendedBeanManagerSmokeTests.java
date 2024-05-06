@@ -6,6 +6,9 @@
  */
 package org.hibernate.orm.test.cdi.lifecycle;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerExtendedAccessImpl;
@@ -13,12 +16,12 @@ import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManagerFactory;
 
-import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.AvailableSettings.CDI_BEAN_MANAGER;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_CDI_BEAN_MANAGER;
@@ -41,7 +44,7 @@ public class ExtendedBeanManagerSmokeTests {
 
 		final EntityManagerFactoryBuilder emfb = getEntityManagerFactoryBuilder(
 				new PersistenceUnitInfoAdapter(),
-				singletonMap( settingName, ref )
+				integrationSettings( settingName, ref )
 		);
 
 		assertApplied( ref, emfb.build() );
@@ -59,10 +62,16 @@ public class ExtendedBeanManagerSmokeTests {
 
 		final EntityManagerFactoryBuilder emfb = getEntityManagerFactoryBuilder(
 				new PersistenceUnitInfoAdapter(),
-				singletonMap( settingName, ref )
+				integrationSettings( settingName, ref )
 		);
 
 		assertApplied( ref, emfb.build() );
+	}
+
+	private static Map<String, Object> integrationSettings(String settingName, Object value) {
+		final Map<String, Object> settings = ServiceRegistryUtil.createBaseSettings();
+		settings.put( settingName, value );
+		return settings;
 	}
 
 	private static void assertApplied(ExtendedBeanManagerImpl ref, EntityManagerFactory emf) {

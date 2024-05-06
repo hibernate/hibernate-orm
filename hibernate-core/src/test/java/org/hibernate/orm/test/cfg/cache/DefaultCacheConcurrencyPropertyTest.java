@@ -25,6 +25,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -42,7 +43,7 @@ public class DefaultCacheConcurrencyPropertyTest extends BaseUnitTestCase {
 	@FailureExpected( jiraKey = "HHH-9763" )
 	public void testExplicitDefault() {
 
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "read-only" )
 				.build();
 		try {

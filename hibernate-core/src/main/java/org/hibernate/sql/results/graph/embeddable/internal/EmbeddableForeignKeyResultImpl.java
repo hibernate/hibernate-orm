@@ -34,6 +34,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 
 	private final String resultVariable;
 	private final FetchParent fetchParent;
+	private final EmbeddableMappingType fetchContainer;
 
 	public EmbeddableForeignKeyResultImpl(
 			NavigablePath navigablePath,
@@ -41,7 +42,8 @@ public class EmbeddableForeignKeyResultImpl<T>
 			String resultVariable,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath );
+		super( navigablePath );
+		this.fetchContainer = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
 		this.fetchParent = fetchParent;
 		resetFetches( creationState.visitFetches( this ) );
@@ -112,12 +114,12 @@ public class EmbeddableForeignKeyResultImpl<T>
 
 	@Override
 	public EmbeddableMappingType getReferencedMappingType() {
-		return (EmbeddableMappingType) getFetchContainer().getPartMappingType();
+		return fetchContainer.getPartMappingType();
 	}
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return fetchContainer;
 	}
 
 	@Override

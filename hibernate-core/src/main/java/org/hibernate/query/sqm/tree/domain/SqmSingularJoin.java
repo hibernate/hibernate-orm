@@ -11,6 +11,7 @@ import java.util.Locale;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -66,12 +67,13 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 		if ( existing != null ) {
 			return existing;
 		}
+		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
 		final SqmSingularJoin<O, T> path = context.registerCopy(
 				this,
 				new SqmSingularJoin<>(
-						getLhs().copy( context ),
-						getNavigablePath(),
-						getReferencedPathSource(),
+						lhsCopy,
+						getNavigablePathCopy( lhsCopy ),
+						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -83,19 +85,13 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 	}
 
 	@Override
-	public SingularPersistentAttribute<O, T> getReferencedPathSource() {
-		return (SingularPersistentAttribute<O, T>) super.getReferencedPathSource();
-	}
-
-	@Override
 	public SingularPersistentAttribute<O, T> getModel() {
-		return getReferencedPathSource();
+		return (SingularPersistentAttribute<O, T>) super.getNodeType();
 	}
 
 	@Override
 	public SingularPersistentAttribute<O, T> getAttribute() {
-		//noinspection unchecked
-		return (SingularPersistentAttribute<O, T>) super.getAttribute();
+		return getModel();
 	}
 
 	@Override
@@ -141,7 +137,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 	public SqmAttributeJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmSingularJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
+				getAttribute(),
 				getExplicitAlias(),
 				getSqmJoinType(),
 				isFetched(),

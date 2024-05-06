@@ -99,7 +99,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				(sql) -> executionContext.getSession()
 						.getJdbcCoordinator()
 						.getStatementPreparer()
-						.prepareStatement( sql ),
+						.prepareQueryStatement( sql, false, null ),
 				ListResultsConsumer.instance( uniqueSemantic )
 		);
 	}
@@ -334,8 +334,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
 				executionContext,
-				processingOptions,
-				executionContext::registerLoadingEntityEntry
+				processingOptions
 		);
 
 		final RowReader<R> rowReader = ResultsHelper.createRowReader(
@@ -792,6 +791,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		@Override
 		public Callback getCallback() {
 			return context.getCallback();
+		}
+
+		@Override
+		public boolean hasCallbackActions() {
+			return context.hasCallbackActions();
 		}
 
 	}

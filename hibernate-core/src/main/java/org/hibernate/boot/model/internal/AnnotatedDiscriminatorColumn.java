@@ -94,6 +94,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 				case CHAR:
 					column.setDiscriminatorTypeName( "character" );
 					column.setImplicit( false );
+					column.setLength( 1L );
 					break;
 				case INTEGER:
 					column.setDiscriminatorTypeName( "integer" );

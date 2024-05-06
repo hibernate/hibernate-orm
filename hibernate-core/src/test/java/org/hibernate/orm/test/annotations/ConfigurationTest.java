@@ -17,6 +17,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.query.sqm.UnknownEntityException;
+
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
@@ -32,6 +34,7 @@ public class ConfigurationTest {
 	@Test
 	public void testDeclarativeMix()  {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		try (SessionFactory sf = cfg.buildSessionFactory()) {
@@ -50,6 +53,7 @@ public class ConfigurationTest {
 	@Test
 	public void testIgnoringHbm()  {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( Configuration.ARTEFACT_PROCESSING_ORDER, "class" );
@@ -87,6 +91,7 @@ public class ConfigurationTest {
 	@Test
 	public void testPrecedenceHbm()  {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.addAnnotatedClass( Boat.class );
@@ -113,6 +118,7 @@ public class ConfigurationTest {
 	@Test
 	public void testPrecedenceAnnotation()  {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( Configuration.ARTEFACT_PROCESSING_ORDER, "class, hbm" );
@@ -139,6 +145,7 @@ public class ConfigurationTest {
 	@Test
 	public void testHbmWithSubclassExtends()  {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.addClass( Ferry.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
@@ -158,6 +165,7 @@ public class ConfigurationTest {
 	@Test
 	public void testAnnReferencesHbm()  {
 		Configuration cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.addAnnotatedClass( Port.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );

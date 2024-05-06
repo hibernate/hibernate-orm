@@ -34,7 +34,7 @@ public class CdiBeanContainerExtendedAccessImpl
 
 	private CdiBeanContainerExtendedAccessImpl(ExtendedBeanManager beanManager) {
 		beanManager.registerLifecycleListener( this );
-		log.debugf( "Extended access requested to CDI BeanManager : " + beanManager );
+		log.debugf( "Extended access requested to CDI BeanManager : %s", beanManager );
 	}
 
 	@Override

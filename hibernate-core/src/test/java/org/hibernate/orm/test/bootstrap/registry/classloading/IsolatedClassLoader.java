@@ -28,7 +28,7 @@ class IsolatedClassLoader extends ClassLoader {
 	private final ClassLoader resourceSource;
 
 	IsolatedClassLoader(ClassLoader resourceSource) {
-		super( getTopLevelClassLoader( resourceSource ) );
+		super( "TestIsolatedIsolatedClassLoader", getTopLevelClassLoader( resourceSource ) );
 		this.resourceSource = resourceSource;
 	}
 

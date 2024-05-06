@@ -28,7 +28,4 @@ public interface MultiKeyLoadLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".loader.multi";
 
 	Logger MULTI_KEY_LOAD_LOGGER = Logger.getLogger( LOGGER_NAME );
-
-	boolean MULTI_KEY_LOAD_TRACE_ENABLED = MULTI_KEY_LOAD_LOGGER.isTraceEnabled();
-	boolean MULTI_KEY_LOAD_DEBUG_ENABLED = MULTI_KEY_LOAD_LOGGER.isDebugEnabled();
 }

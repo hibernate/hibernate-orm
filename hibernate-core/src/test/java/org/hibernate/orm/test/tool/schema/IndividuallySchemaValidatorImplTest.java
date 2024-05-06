@@ -46,6 +46,8 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
 import org.junit.Assert;
@@ -78,7 +80,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() throws IOException {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 
 		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
@@ -159,7 +161,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 		Map<String, Object> settings = new HashMap<>(  );
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build();
 
@@ -216,7 +218,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 		Map<String, Object> settings = new HashMap<>(  );
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build();
 

@@ -23,6 +23,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
 	private Map<EntityKey, List<ParentInfo>> toBatchLoad;
@@ -37,10 +38,29 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	}
 
 	@Override
+	public void resolveInstance(RowProcessingState rowProcessingState) {
+		if ( state == State.INITIALIZED ) {
+			return;
+		}
+		resolveKey( rowProcessingState, referencedModelPart, parentAccess );
+		if ( entityKey == null ) {
+			return;
+		}
+		state = State.INITIALIZED;
+
+		initializedEntityInstance = getExistingInitializedInstance( rowProcessingState );
+		if ( initializedEntityInstance == null ) {
+			// need to add the key to the batch queue only when the entity has not been already loaded or
+			// there isn't another initializer that is loading it
+			registerToBatchFetchQueue( rowProcessingState );
+		}
+	}
+
+	@Override
 	protected void registerResolutionListener() {
 		parentAccess.registerResolutionListener( parentInstance -> {
 			final AttributeMapping parentAttribute = getParentEntityAttribute( referencedModelPart.getAttributeName() );
-			if ( parentAttribute != null ) {
+			if ( parentAttribute != null && !firstEntityInitializer.isEntityInitialized() ) {
 				getParentInfos().add( new ParentInfo( parentInstance, parentAttribute.getStateArrayPosition() ) );
 			}
 		} );
@@ -92,7 +112,6 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			);
 			toBatchLoad.clear();
 		}
-		parentAccess = null;
 	}
 
 	protected static void setInstance(

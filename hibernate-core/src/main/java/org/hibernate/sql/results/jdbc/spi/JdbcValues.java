@@ -21,7 +21,7 @@ public interface JdbcValues {
 
 	/**
 	 * Advances the "cursor position" and returns a boolean indicating whether
-	 * there is a row available to read via {@link #getCurrentRowValuesArray()}.
+	 * there is a row available to read via {@link #getCurrentRowValue(int)}.
 	 *
 	 * @return {@code true} if there are results
 	 */
@@ -29,7 +29,7 @@ public interface JdbcValues {
 
 	/**
 	 * Advances the "cursor position" in reverse and returns a boolean indicating whether
-	 * there is a row available to read via {@link #getCurrentRowValuesArray()}.
+	 * there is a row available to read via {@link #getCurrentRowValue(int)}.
 	 *
 	 * @return {@code true} if there are results available
 	 */
@@ -37,7 +37,7 @@ public interface JdbcValues {
 
 	/**
 	 * Advances the "cursor position" the indicated number of rows and returns a boolean
-	 * indicating whether there is a row available to read via {@link #getCurrentRowValuesArray()}.
+	 * indicating whether there is a row available to read via {@link #getCurrentRowValue(int)}.
 	 *
 	 * @param numberOfRows The number of rows to advance.  This can also be negative meaning to
 	 * move in reverse
@@ -73,6 +73,17 @@ public interface JdbcValues {
 	 * is beyond the end of the available results.
 	 */
 	Object[] getCurrentRowValuesArray();
+
+	/**
+	 * Get the JDBC value at the given index for the row currently positioned at within
+	 * this source.
+	 *
+	 * @return The current row's JDBC values, or {@code null} if the position
+	 * is beyond the end of the available results.
+	 */
+	Object getCurrentRowValue(int valueIndex);
+
+	void finishRowProcessing(RowProcessingState rowProcessingState);
 
 	/**
 	 * Give implementations a chance to finish processing

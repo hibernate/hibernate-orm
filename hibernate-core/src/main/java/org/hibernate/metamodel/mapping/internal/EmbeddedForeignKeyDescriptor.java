@@ -156,6 +156,20 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.hasConstraint = original.hasConstraint;
 	}
 
+	private EmbeddedForeignKeyDescriptor(EmbeddedForeignKeyDescriptor original, EmbeddableValuedModelPart targetPart) {
+		this.keyTable = original.keyTable;
+		this.keySelectableMappings = original.keySelectableMappings;
+		this.keySide = original.keySide;
+		this.targetTable = targetPart.getContainingTableExpression();
+		this.targetSelectableMappings = targetPart;
+		this.targetSide = new EmbeddedForeignKeyDescriptorSide(
+				Nature.TARGET,
+				targetPart
+		);
+		this.associationKey = original.associationKey;
+		this.hasConstraint = original.hasConstraint;
+	}
+
 	@Override
 	public String getKeyTable() {
 		return keyTable;
@@ -230,6 +244,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				new SelectableMappingsImpl( selectionMappings ),
 				creationProcess
 		);
+	}
+
+	@Override
+	public ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart) {
+		return new EmbeddedForeignKeyDescriptor( this, (EmbeddableValuedModelPart) targetPart );
 	}
 
 	@Override
@@ -617,6 +636,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(final int index) {
+		return targetSide.getModelPart().getJdbcMapping( index );
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return targetSide.getModelPart().forEachJdbcType( offset, action );
 	}
@@ -645,5 +669,10 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return keySide.getModelPart().hasPartitionedSelectionMapping();
+	}
+
+	@Override
+	public boolean isEmbedded() {
+		return true;
 	}
 }

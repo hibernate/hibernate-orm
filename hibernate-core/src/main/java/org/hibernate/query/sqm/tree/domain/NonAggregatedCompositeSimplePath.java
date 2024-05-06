@@ -39,12 +39,13 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final NonAggregatedCompositeSimplePath<T> path = context.registerCopy(
 				this,
 				new NonAggregatedCompositeSimplePath<>(
-						getNavigablePath(),
-						getReferencedPathSource(),
-						getLhs().copy( context ),
+						getNavigablePathCopy( lhsCopy ),
+						getModel(),
+						lhsCopy,
 						nodeBuilder()
 				)
 		);

@@ -2,9 +2,15 @@
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
-  print "INFO: Build skipped due to trigger being Branch Indexing"
-  currentBuild.result = 'ABORTED'
-  return
+	print "INFO: Build skipped due to trigger being Branch Indexing"
+	currentBuild.result = 'NOT_BUILT'
+	return
+}
+// This is a limited maintenance branch, so don't run this on pushes to the branch, only on PRs
+if ( !env.CHANGE_ID ) {
+	print "INFO: Build skipped because this job should only run for pull request, not for branch pushes"
+	currentBuild.result = 'NOT_BUILT'
+	return
 }
 
 pipeline {
@@ -15,7 +21,6 @@ pipeline {
         jdk 'OpenJDK 11 Latest'
     }
     options {
-  		rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true])
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds(abortPrevious: true)
     }
@@ -35,7 +40,7 @@ pipeline {
 				}
 				dir('hibernate') {
 					checkout scm
-					sh './gradlew publishToMavenLocal -DjakartaJpaVersion=3.1.0'
+					sh './gradlew publishToMavenLocal -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com -DjakartaJpaVersion=3.1.0'
 					script {
 						env.HIBERNATE_VERSION = sh (
 							script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",

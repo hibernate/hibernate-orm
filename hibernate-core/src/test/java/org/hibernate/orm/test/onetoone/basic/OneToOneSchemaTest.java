@@ -14,6 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Table;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -26,7 +27,7 @@ public class OneToOneSchemaTest {
 
 	@Test
 	public void testUniqueKeyNotGeneratedViaAnnotations() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			Metadata metadata = new MetadataSources( ssr )
 					.addAnnotatedClass( Parent.class )

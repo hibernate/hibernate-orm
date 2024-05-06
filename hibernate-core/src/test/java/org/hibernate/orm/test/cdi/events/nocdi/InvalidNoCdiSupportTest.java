@@ -17,6 +17,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.cdi.events.Monitor;
 import org.hibernate.orm.test.cdi.events.TheEntity;
 import org.junit.Test;
@@ -37,7 +39,7 @@ public class InvalidNoCdiSupportTest extends BaseUnitTestCase {
 
 		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.build();
 

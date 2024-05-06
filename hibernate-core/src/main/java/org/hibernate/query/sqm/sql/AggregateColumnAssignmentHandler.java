@@ -64,7 +64,7 @@ public class AggregateColumnAssignmentHandler {
 				final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
 				final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 				if ( aggregateMapping == null ) {
-					collectRootAggregates( rootAggregates, mappingType );
+					collectRootAggregates( rootAggregates, embeddableMappingType );
 				}
 				else {
 					rootAggregates.put( aggregateMapping.getSelectablePath(), embeddableMappingType );

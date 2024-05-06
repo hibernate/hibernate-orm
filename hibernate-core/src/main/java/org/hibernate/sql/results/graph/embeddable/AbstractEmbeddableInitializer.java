@@ -6,13 +6,14 @@
  */
 package org.hibernate.sql.results.graph.embeddable;
 
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
+import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -66,19 +67,20 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		this.rowState = new Object[ size ];
 
-		this.isPartOfKey = isPartOfKey( navigablePath );
+		this.isPartOfKey = isPartOfKey( embedded, navigablePath, fetchParentAccess );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
 		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
-
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		this.assemblers = createAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
 	}
 
-	private static boolean isPartOfKey(NavigablePath navigablePath) {
-		return ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+	private static boolean isPartOfKey(EmbeddableValuedModelPart modelPart, NavigablePath navigablePath, FetchParentAccess fetchParentAccess) {
+		return modelPart.isEntityIdentifierMapping()
+				|| ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
 				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
 				|| navigablePath instanceof EntityIdentifierNavigablePath
-				|| navigablePath.getParent().getParent() != null && isPartOfKey( navigablePath.getParent() );
+				|| fetchParentAccess != null && fetchParentAccess.isEmbeddableInitializer()
+				&& ( (AbstractEmbeddableInitializer) fetchParentAccess ).isPartOfKey;
 	}
 
 	protected DomainResultAssembler<?>[] createAssemblers(
@@ -173,8 +175,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			case NULL:
 				return;
 			case INITIAL:
-				if ( isParentInstanceNull() ) {
-					state = State.NULL;
+				state = determinInitialState();
+				if ( state != State.INITIAL ) {
 					return;
 				}
 
@@ -256,9 +258,28 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		);
 	}
 
-	private boolean isParentInstanceNull() {
+	private State determinInitialState(){
+		final EntityInitializer entityInitializer = getOwningEntityInitializer();
+		if ( entityInitializer != null ) {
+			if ( entityInitializer.getParentKey() == null ) {
+				// parent instance is null;
+				return State.NULL;
+			}
+			else if ( !entityInitializer.getConcreteDescriptor().isTypeOrSuperType( embedded.findContainingEntityMapping() ) ) {
+				// parent instance is of a supertype which doesn't contain this embeddable
+				return State.NULL;
+			}
+			else if ( entityInitializer.isEntityInitialized() && !(embedded instanceof EmbeddedCollectionPart )) {
+				// parent instance has been initialized, we do not need to inject the state
+				return State.INJECTED;
+			}
+		}
+		return State.INITIAL;
+	}
+
+	private EntityInitializer getOwningEntityInitializer() {
 		if ( isPartOfKey ) {
-			return false;
+			return null;
 		}
 		FetchParentAccess parentAccess = fetchParentAccess;
 
@@ -267,16 +288,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					: "isPartOfKey should have been true in this case";
 			parentAccess = parentAccess.getFetchParentAccess();
 		}
-
 		if ( parentAccess == null ) {
-			return false;
+			return null;
 		}
-
 		final EntityInitializer entityInitializer = parentAccess.asEntityInitializer();
-		if ( entityInitializer != null && entityInitializer.getParentKey() == null ) {
-			return true;
-		}
-		return false;
+		return entityInitializer;
 	}
 
 	private void extractRowState(RowProcessingState processingState) {
@@ -305,6 +321,15 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		state = stateAllNull ? State.NULL : State.EXTRACTED;
+	}
+
+	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		if ( determinInitialState() == State.INITIAL ) {
+			for ( final DomainResultAssembler<?> assembler : assemblers ) {
+				assembler.resolveState( rowProcessingState );
+			}
+		}
 	}
 
 	private Object createCompositeInstance(NavigablePath navigablePath, SessionFactoryImplementor sessionFactory) {
@@ -349,7 +374,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			return;
 		}
 
-		final Object parent = determineParentInstance( processingState );
+		Initializer parentInitializer = determineParentInitializer( processingState );
+		final Object parent = determineParentInstance( parentInitializer );
 		if ( parent == null ) {
 			EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
 					"Unable to determine parent for injection into embeddable [%s]",
@@ -365,10 +391,27 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				compositeInstance
 		);
 
-		parentInjectionAccess.getSetter().set( compositeInstance, parent );
+
+		final HibernateProxy proxy;
+		if ( fetchParentAccess != null
+				&& ( proxy = ManagedTypeHelper.asHibernateProxyOrNull( parent ) ) != null ) {
+			assert parentInitializer != null;
+			assert parentInitializer instanceof EntityInitializer;
+			parentInitializer.asEntityInitializer().registerResolutionListener(
+					o ->
+							parentInjectionAccess.getSetter()
+									.set(
+											compositeInstance,
+											proxy.getHibernateLazyInitializer().getImplementation()
+									)
+			);
+		}
+		else {
+			parentInjectionAccess.getSetter().set( compositeInstance, parent );
+		}
 	}
 
-	private Object determineParentInstance(RowProcessingState processingState) {
+	private Initializer determineParentInitializer(RowProcessingState processingState){
 		// use `fetchParentAccess` if it is available - it is more efficient
 		// and the correct way to do it.
 
@@ -386,8 +429,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			// todo (6.x) - allow injection of containing composite as parent if
 			//  	it is the direct parent
 
-			final FetchParentAccess firstEntityDescriptorAccess = fetchParentAccess.findFirstEntityDescriptorAccess();
-			return firstEntityDescriptorAccess.getInitializedInstance();
+			return fetchParentAccess.findFirstEntityDescriptorAccess();
 		}
 
 		// Otherwise, fallback to determining the parent-initializer by path
@@ -395,11 +437,15 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		//			comment above
 
 		final NavigablePath parentPath = navigablePath.getParent();
-		if ( parentPath == null ) {
-			return null;
-		}
+		assert parentPath != null;
 
-		final Initializer parentInitializer = processingState.resolveInitializer( parentPath );
+		return processingState.resolveInitializer( parentPath );
+	}
+
+	private Object determineParentInstance(Initializer parentInitializer) {
+		if ( parentInitializer == null ) {
+			throw new UnsupportedOperationException( "Cannot determine Embeddable: " + navigablePath + " parent instance, parent initializer is null" );
+		}
 
 		if ( parentInitializer.isCollectionInitializer() ) {
 			return ( (CollectionInitializer) parentInitializer ).getCollectionInstance().getOwner();
@@ -407,10 +453,10 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		final EntityInitializer parentEntityInitializer = parentInitializer.asEntityInitializer();
 		if ( parentEntityInitializer != null ) {
-			return parentEntityInitializer.getEntityInstance();
+			return parentEntityInitializer.getInitializedInstance();
 		}
 
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException( "The Embeddable: " + navigablePath + " parent initializer is neither an instance of an EntityInitializer nor of a CollectionInitializer" );
 	}
 
 	@Override

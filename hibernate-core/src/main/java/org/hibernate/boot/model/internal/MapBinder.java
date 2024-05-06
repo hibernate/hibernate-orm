@@ -507,7 +507,7 @@ public class MapBinder extends CollectionBinder {
 
 	private static void addSelectable(SimpleValue targetValue, Selectable selectable) {
 		if ( selectable instanceof Column ) {
-			targetValue.addColumn( ( (Column) selectable).clone() );
+			targetValue.addColumn( ( (Column) selectable).clone(), false, false  );
 		}
 		else if ( selectable instanceof Formula ) {
 			targetValue.addFormula( new Formula( ( (Formula) selectable).getFormula() ) );

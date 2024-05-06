@@ -9,7 +9,6 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -95,65 +94,6 @@ public abstract class TestsBase {
 			// and again
 			final ClassLoader classLoader = Helper.toClassLoader( classesDir );
 			TestHelper.verifyEnhanced( classLoader, "TheEntity" );
-		}
-	}
-
-	@Test
-	public void testJpaMetamodelGen(@TempDir Path projectDir) {
-		final String buildFilePath = getProjectName() + "/build.gradle";
-		Copier.copyProject( buildFilePath, projectDir );
-
-		System.out.println( "Starting execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-
-		final GradleRunner gradleRunner = GradleRunner.create()
-				.withProjectDir( projectDir.toFile() )
-				.withPluginClasspath()
-				.withDebug( true )
-				.withArguments( "clean", "generateJpaMetamodel", "--stacktrace", "--no-build-cache" )
-				.forwardOutput();
-
-		final BuildResult result = gradleRunner.build();
-		final BuildTask task = result.task( ":generateJpaMetamodel" );
-		assertThat( task ).isNotNull();
-		assertThat( task.getOutcome() ).isEqualTo( TaskOutcome.SUCCESS );
-		assertThat( new File( projectDir.toFile(), "build/classes/java/jpaMetamodel" ) ).exists();
-	}
-
-	@Test
-	public void testJpaMetamodelGenUpToDate(@TempDir Path projectDir) {
-		final String buildFilePath = getProjectName() + "/build.gradle";
-		Copier.copyProject( buildFilePath, projectDir );
-
-		{
-			System.out.println( "Starting first execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-			final GradleRunner gradleRunner = GradleRunner.create()
-					.withProjectDir( projectDir.toFile() )
-					.withPluginClasspath()
-					.withDebug( true )
-					.withArguments( "clean", "generateJpaMetamodel", "--stacktrace", "--no-build-cache" )
-					.forwardOutput();
-
-			final BuildResult result = gradleRunner.build();
-			final BuildTask task = result.task( ":generateJpaMetamodel" );
-			assertThat( task ).isNotNull();
-			assertThat( task.getOutcome() ).isEqualTo( TaskOutcome.SUCCESS );
-			assertThat( new File( projectDir.toFile(), "build/classes/java/jpaMetamodel" ) ).exists();
-		}
-
-		{
-			System.out.println( "Starting second execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-			final GradleRunner gradleRunner2 = GradleRunner.create()
-					.withProjectDir( projectDir.toFile() )
-					.withPluginClasspath()
-					.withDebug( true )
-					.withArguments( "generateJpaMetamodel", "--stacktrace", "--no-build-cache" )
-					.forwardOutput();
-
-			final BuildResult result2 = gradleRunner2.build();
-			final BuildTask task2 = result2.task( ":generateJpaMetamodel" );
-			assertThat( task2 ).isNotNull();
-			assertThat( task2.getOutcome() ).isEqualTo( TaskOutcome.UP_TO_DATE );
-			assertThat( new File( projectDir.toFile(), "build/classes/java/jpaMetamodel" ) ).exists();
 		}
 	}
 

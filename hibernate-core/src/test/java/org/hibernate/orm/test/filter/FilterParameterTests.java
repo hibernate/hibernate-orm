@@ -87,6 +87,7 @@ public class FilterParameterTests {
 	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "Cockroach silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird silently converts a boolean to string")
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23 interprets Y and T as true and N and F as false, so this works")
 	public void testYesNoMismatch(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );

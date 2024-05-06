@@ -88,7 +88,7 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 				return (X) time;
 			}
 			// Preserve milliseconds, which java.sql.Time supports
-			return (X) new Time( time.getTime() + DateTimeUtils.roundToPrecision( value.getNano(), 3 ) );
+			return (X) new Time( time.getTime() + DateTimeUtils.roundToPrecision( value.getNano(), 3 ) / 1000000 );
 		}
 
 		// Oracle documentation says to set the Date to January 1, 1970 when convert from

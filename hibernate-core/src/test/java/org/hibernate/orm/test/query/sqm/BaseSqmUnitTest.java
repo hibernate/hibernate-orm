@@ -55,6 +55,11 @@ public abstract class BaseSqmUnitTest
 	public void invokeAfterLoadActions(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session) {
 	}
 
+	@Override
+	public boolean hasAfterLoadActions() {
+		return false;
+	}
+
 	protected SqmSelectStatement<?> interpretSelect(String hql) {
 		return interpretSelect( hql, sessionFactory() );
 	}

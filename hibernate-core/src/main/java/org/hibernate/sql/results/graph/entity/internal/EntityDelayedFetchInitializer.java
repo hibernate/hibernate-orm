@@ -144,6 +144,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 							if ( parentAccess != null
 									&& !parentAccess.isEmbeddableInitializer()
 									&& isEnhancedForLazyLoading( parentEntityInitializer ) ) {
+								entityInstance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 								return;
 							}
 							entityInstance = concreteDescriptor.loadByUniqueKey(

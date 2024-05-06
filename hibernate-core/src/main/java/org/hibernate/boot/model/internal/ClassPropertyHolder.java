@@ -6,8 +6,10 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -229,7 +231,39 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return join;
 	}
 
+	/**
+	 * Embeddable classes can be defined using generics. For this reason, we must check
+	 * every property value and specially handle generic components by setting the property
+	 * as generic, to later be able to resolve its concrete type, and creating a new component
+	 * with correctly typed sub-properties for the metamodel.
+	 */
+	public static void handleGenericComponentProperty(Property property, MetadataBuildingContext context) {
+		final Value value = property.getValue();
+		if ( value instanceof Component ) {
+			final Component component = (Component) value;
+			if ( component.isGeneric() && context.getMetadataCollector()
+					.getGenericComponent( component.getComponentClass() ) == null ) {
+				// If we didn't already, register the generic component to use it later
+				// as the metamodel type for generic embeddable attributes
+				final Component copy = component.copy();
+				copy.setGeneric( false );
+				copy.getProperties().clear();
+				for ( Property prop : component.getProperties() ) {
+					prepareActualProperty(
+							prop,
+							component.getComponentClass(),
+							true,
+							context,
+							copy::addProperty
+					);
+				}
+				context.getMetadataCollector().registerGenericComponent( copy );
+			}
+		}
+	}
+
 	private void addPropertyToPersistentClass(Property property, XClass declaringClass) {
+		handleGenericComponentProperty( property, getContext() );
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
@@ -253,10 +287,10 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	private void addPropertyToMappedSuperclass(Property prop, XClass declaringClass) {
 		final Class<?> type = getContext().getBootstrapContext().getReflectionManager().toClass( declaringClass );
 		final MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( type );
-		prepareActualPropertyForSuperclass( prop, type, true, getContext(), superclass::addDeclaredProperty );
+		prepareActualProperty( prop, type, true, getContext(), superclass::addDeclaredProperty );
 	}
 
-	static void prepareActualPropertyForSuperclass(
+	static void prepareActualProperty(
 			Property prop,
 			Class<?> type,
 			boolean allowCollections,
@@ -270,7 +304,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			// because the given XClass has a TypeEnvironment based on the type variable assignments of a subclass
 			// and that might result in a wrong property type being used for a property which uses a type variable
 			final XClass actualDeclaringClass = context.getBootstrapContext().getReflectionManager().toXClass( type );
-			for ( XProperty declaredProperty : actualDeclaringClass.getDeclaredProperties( prop.getPropertyAccessorName() ) ) {
+			for ( XProperty declaredProperty : getDeclaredProperties( actualDeclaringClass, prop.getPropertyAccessorName() ) ) {
 				if ( prop.getName().equals( declaredProperty.getName() ) ) {
 					final PropertyData inferredData = new PropertyInferredData(
 							actualDeclaringClass,
@@ -309,7 +343,9 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 										setTypeName( element, inferredData.getProperty().getElementClass().getName() );
 										if ( initializedCollection instanceof IndexedCollection ) {
 											final Value index = ( (IndexedCollection) initializedCollection ).getIndex().copy();
-											setTypeName( index, inferredData.getProperty().getMapKey().getName() );
+											if ( inferredData.getProperty().getMapKey() != null ) {
+												setTypeName( index, inferredData.getProperty().getMapKey().getName() );
+											}
 											( (IndexedCollection) collection ).setIndex( index );
 										}
 										collection.setElement( element );
@@ -322,14 +358,25 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					}
 					if ( value instanceof Component ) {
 						final Component component = ( (Component) value );
-						final Iterator<Property> propertyIterator = component.getPropertyIterator();
-						while ( propertyIterator.hasNext() ) {
-							Property property = propertyIterator.next();
-							try {
-								property.getGetter( component.getComponentClass() );
+						final Class<?> componentClass = component.getComponentClass();
+						if ( component.isGeneric() ) {
+							actualProperty.setValue( context.getMetadataCollector().getGenericComponent( componentClass ) );
+						}
+						else {
+							if ( componentClass == Object.class ) {
+								// Object is not a valid component class, but that is what we get when using a type variable
+								component.getProperties().clear();
 							}
-							catch (PropertyNotFoundException e) {
-								propertyIterator.remove();
+							else {
+								final Iterator<Property> propertyIterator = component.getPropertyIterator();
+								while ( propertyIterator.hasNext() ) {
+									try {
+										propertyIterator.next().getGetter( componentClass );
+									}
+									catch (PropertyNotFoundException e) {
+										propertyIterator.remove();
+									}
+								}
 							}
 						}
 					}
@@ -339,6 +386,16 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
+	}
+
+	private static List<XProperty> getDeclaredProperties(XClass declaringClass, String accessType) {
+		final List<XProperty> properties = new ArrayList<>();
+		XClass superclass = declaringClass;
+		while ( superclass != null ) {
+			properties.addAll( superclass.getDeclaredProperties( accessType ) );
+			superclass = superclass.getSuperclass();
+		}
+		return properties;
 	}
 
 	private static String getTypeName(Property property) {
@@ -366,9 +423,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 		else if ( value instanceof Component ) {
 			final Component component = (Component) value;
-			// Avoid setting component class name to java.lang.Object
-			// for embeddable types with generic type parameters
-			if ( !typeName.equals( Object.class.getName() ) ) {
+			// Avoid setting type name for generic components
+			if ( !component.isGeneric() ) {
 				component.setComponentClassName( typeName );
 			}
 			if ( component.getTypeName() != null ) {

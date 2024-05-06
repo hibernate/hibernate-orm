@@ -26,6 +26,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -41,7 +42,7 @@ public class SequenceReadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSequenceReading() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, MyExtendedH2Dialect.class )
 				.build();
 		try {

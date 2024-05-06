@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
-import java.util.Collections;
 
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -18,9 +17,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -29,11 +31,11 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 
-import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
@@ -44,7 +46,7 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
 public class CollectionBatchLoaderArrayParam
 		extends AbstractCollectionBatchLoader
 		implements CollectionBatchLoader, SqlArrayMultiKeyLoader {
-	private final  Class<?> arrayElementType;
+	private final Class<?> keyDomainType;
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlSelect;
@@ -57,7 +59,7 @@ public class CollectionBatchLoaderArrayParam
 			SessionFactoryImplementor sessionFactory) {
 		super( domainBatchSize, loadQueryInfluencers, attributeMapping, sessionFactory );
 
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(
 					"Using ARRAY batch fetching strategy for collection `%s` : %s",
 					attributeMapping.getNavigableRole().getFullPath(),
@@ -65,18 +67,19 @@ public class CollectionBatchLoaderArrayParam
 			);
 		}
 
-		final SimpleForeignKeyDescriptor keyDescriptor = (SimpleForeignKeyDescriptor) getLoadable().getKeyDescriptor();
-
-		arrayElementType = keyDescriptor.getJavaType().getJavaTypeClass();
-		Class<?> arrayClass = Array.newInstance( arrayElementType, 0 ).getClass();
+		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
+		final JdbcMapping jdbcMapping = keyDescriptor.getSingleJdbcMapping();
+		final Class<?> jdbcArrayClass = Array.newInstance( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), 0 )
+				.getClass();
+		keyDomainType = getKeyType( keyDescriptor.getKeyPart() );
 
 		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
 				.getBasicTypeRegistry()
-				.getRegisteredType( arrayClass );
+				.getRegisteredType( jdbcArrayClass );
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				arrayBasicType,
-				keyDescriptor.getJdbcMapping(),
-				arrayClass,
+				jdbcMapping,
+				jdbcArrayClass,
 				getSessionFactory()
 		);
 
@@ -97,25 +100,83 @@ public class CollectionBatchLoaderArrayParam
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
+	private Class<?> getKeyType(ValuedModelPart keyPart) {
+		if ( keyPart instanceof NonAggregatedIdentifierMapping ) {
+			final IdClassEmbeddable idClassEmbeddable = ( (NonAggregatedIdentifierMapping) keyPart ).getIdClassEmbeddable();
+			if ( idClassEmbeddable != null ) {
+				return idClassEmbeddable.getMappedJavaType().getJavaTypeClass();
+			}
+		}
+		return keyPart.getJavaType().getJavaTypeClass();
+	}
+
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch loading entity `%s#%s`", getLoadable().getNavigableRole().getFullPath(), key );
 		}
+		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
+		if ( keyDescriptor.isEmbedded() ) {
+			assert keyDescriptor.getJdbcTypeCount() == 1;
+			return loadEmbeddable( key, session, keyDescriptor );
+		}
+		else {
 
-		final Object[] keysToInitialize = resolveKeysToInitialize( key, session );
-		initializeKeys( keysToInitialize, session );
+			final Object[] keysToInitialize = resolveKeysToInitialize( key, session );
+			initializeKeys( keysToInitialize, session );
 
-		for ( int i = 0; i < keysToInitialize.length; i++ ) {
-			finishInitializingKey( keysToInitialize[i], session );
+			for ( int i = 0; i < keysToInitialize.length; i++ ) {
+				finishInitializingKey( keysToInitialize[i], session );
+			}
+
+			final CollectionKey collectionKey = new CollectionKey( getLoadable().getCollectionDescriptor(), key );
+			return session.getPersistenceContext().getCollection( collectionKey );
+		}
+	}
+
+	private PersistentCollection<?> loadEmbeddable(
+			Object keyBeingLoaded,
+			SharedSessionContractImplementor session,
+			ForeignKeyDescriptor keyDescriptor) {
+
+		final int length = getDomainBatchSize();
+		final Object[] jdbcKeysToInitialize = (Object[]) Array.newInstance(
+				jdbcParameter.getExpressionType()
+						.getSingleJdbcMapping()
+						.getJdbcJavaType()
+						.getJavaTypeClass()
+						.getComponentType(),
+				length
+		);
+		final Object[] embeddedKeys = (Object[]) Array.newInstance( keyDomainType, length );
+		session.getPersistenceContextInternal().getBatchFetchQueue()
+				.collectBatchLoadableCollectionKeys(
+						length,
+						(index, key) ->
+								keyDescriptor.forEachJdbcValue( key, (i, value, jdbcMapping) -> {
+									jdbcKeysToInitialize[index] = value;
+									embeddedKeys[index] = key;
+								}, session )
+						,
+						keyBeingLoaded,
+						getLoadable()
+				);
+
+		initializeKeys( jdbcKeysToInitialize, session );
+
+		for ( Object initializedKey : embeddedKeys ) {
+			finishInitializingKey( initializedKey, session );
 		}
 
-		final CollectionKey collectionKey = new CollectionKey( getLoadable().getCollectionDescriptor(), key );
+		final CollectionKey collectionKey = new CollectionKey(
+				getLoadable().getCollectionDescriptor(),
+				keyBeingLoaded
+		);
 		return session.getPersistenceContext().getCollection( collectionKey );
 	}
 
 	private Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
-		final Object[] keysToInitialize = (Object[]) Array.newInstance( arrayElementType, getDomainBatchSize() );
+		final Object[] keysToInitialize = (Object[]) Array.newInstance( keyDomainType, getDomainBatchSize() );
 		session.getPersistenceContextInternal().getBatchFetchQueue().collectBatchLoadableCollectionKeys(
 				getDomainBatchSize(),
 				(index, value) -> keysToInitialize[index] = value,
@@ -138,20 +199,16 @@ public class CollectionBatchLoaderArrayParam
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 				session.getPersistenceContext().getBatchFetchQueue(),
 				sqlSelect,
-				Collections.singletonList( jdbcParameter ),
+				JdbcParametersList.singleton( jdbcParameter ),
 				jdbcParameterBindings
 		);
 
 		session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelectOperation,
 				jdbcParameterBindings,
-				new SingleIdExecutionContext(
-						null,
-						null,
-						null,
-						LockOptions.NONE,
-						subSelectFetchableKeysHandler,
-						session
+				new ExecutionContextWithSubselectFetchHandler(
+						session,
+						subSelectFetchableKeysHandler
 				),
 				RowTransformerStandardImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER

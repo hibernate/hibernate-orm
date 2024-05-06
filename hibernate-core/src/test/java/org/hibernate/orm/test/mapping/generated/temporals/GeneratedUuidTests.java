@@ -22,6 +22,7 @@ import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.generator.BeforeExecutionGenerator;
 
@@ -102,7 +103,7 @@ public class GeneratedUuidTests {
 
 		@Override
 		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-			return UUID.randomUUID();
+			return SafeRandomUUIDGenerator.safeRandomUUID();
 		}
 	}
 	//end::mapping-generated-custom-ex3[]

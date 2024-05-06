@@ -42,11 +42,12 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final SqmIndexedCollectionAccessPath<T> path = context.registerCopy(
 				this,
 				new SqmIndexedCollectionAccessPath<T>(
-						getNavigablePath(),
-						getLhs().copy( context ),
+						getNavigablePathCopy( lhsCopy ),
+						lhsCopy,
 						selectorExpression.copy( context )
 				)
 		);

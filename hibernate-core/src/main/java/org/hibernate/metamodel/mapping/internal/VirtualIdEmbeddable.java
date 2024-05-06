@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -16,6 +17,7 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
@@ -245,4 +247,23 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		);
 	}
 
+	@Override
+	public int compare(Object value1, Object value2) {
+		final IdClassEmbeddable idClassEmbeddable = idMapping.getIdClassEmbeddable();
+		if ( idClassEmbeddable != null ) {
+			final AttributeMappingsList attributeMappings = idClassEmbeddable.getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final Getter getter = attributeMapping.getPropertyAccess().getGetter();
+				final int comparison = attributeMapping.compare( getter.get( value1 ), getter.get( value2 ) );
+				if ( comparison != 0 ) {
+					return comparison;
+				}
+			}
+			return 0;
+		}
+		else {
+			return super.compare( value1, value2 );
+		}
+	}
 }

@@ -47,6 +47,7 @@ import org.hibernate.orm.test.mapping.basic.bitset.BitSetUserType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import jakarta.persistence.AttributeConverter;
@@ -303,7 +304,7 @@ public class BootstrapTest {
                 properties
            );
 
-            Map<String, Object> integrationSettings = new HashMap<>();
+            Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
             integrationSettings.put(
                 AvailableSettings.INTERCEPTOR,
                 new CustomSessionFactoryInterceptor()

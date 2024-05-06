@@ -162,9 +162,6 @@ logical{fn-logical-1-1} one-to-one associations marked as optional.  That is not
 from a modeling perspective as the foreign-key should be constrained as unique.  Starting in
 6.2, those UNIQUE constraints are now created.
 
-If this causes problems for an application, creation of the UNIQUE constraint can be skipped
-using `@jakarta.persistence.ForeignKey(NO_CONSTRAINT)`.
-
 Often the association can also be remapped using `@ManyToOne` + `@UniqueConstraint` instead.
 
 [[oracle-number]]
@@ -366,3 +363,71 @@ but has to be changed to the proper temporal literal now
 ```sql
 from MyEntity e where e.temporalAttribute > date 2020-01-01
 ```
+
+[[batch-fetching-changes]]
+== Batch Fetching and LockMode
+
+When LockMode is greater than READ Hibernate does not execute the batch fetching so existing uninitialized proxies will not be initialized.
+This because the lock mode is different from the one of the proxies in the batch fetch queue.
+
+E.g.
+
+`
+MyEntity proxy = session.getReference( MyEntity.class, 1 );
+MyEntity myEntity = session.find(MyEntity.class, 2, LockMode.WRITE);
+`
+only the entity with id equals to 2 will be loaded but the proxy will not be initialized.
+
+[[metamodel-generation]]
+== Integrating Static Metamodel Generation
+The integration of static metamodel generation in a project has changed; the recommended way to do this now is by harnessing the annotation processor classpath. This is true for both gradle and maven.
+
+Check out the specific sections in the User Guide for a guideline on how to do this for {userGuideBase}#tooling-gradle-modelgen[Gradle] or {userGuideBase}#tooling-maven-modelgen[Maven].
+
+[[mative-query]]
+== Native query with joins
+
+A Native query that uses a result set mapping, explicit or implicitly by specifying an entity class as result type to `createNativeQuery`,
+requires unique select item aliases.
+If the native query contains a join to a table with same named columns, a query that e.g. does `select * from ..` will lead to an error.
+If the desire is to select only columns for the result type entity, prefix the * with a tables alias e.g.
+`select p.* from ...`
+
+
+E.g.
+
+```
+@Entity
+class Person {
+    @Id
+    private Long id;
+
+    @OneToMany(mappedBy = "person")
+    private Set<Dog> dogs = new HashSet<>( 0 );
+}
+
+@Entity
+class Dog {
+    @Id
+    private Long id;
+}
+```
+
+Queries like
+
+```
+session.createNativeQuery(
+"SELECT * FROM person p LEFT JOIN dog d on d.person_id = p.id", Person.class )
+.getResultList();
+```
+
+have to be changed to
+
+```
+session.createNativeQuery(
+"SELECT p.* FROM person p LEFT JOIN dog d on d.person_id = p.id", Person.class )
+.getResultList();
+```
+
+
+

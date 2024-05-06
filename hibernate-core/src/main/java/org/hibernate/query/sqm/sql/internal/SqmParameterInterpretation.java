@@ -7,9 +7,7 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import java.util.List;
-import java.util.function.Function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
@@ -17,12 +15,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -38,22 +31,13 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class SqmParameterInterpretation implements Expression, DomainResultProducer, SqlTupleContainer {
-	private final SqmParameter<?> sqmParameter;
-	private final QueryParameterImplementor<?> queryParameter;
 	private final MappingModelExpressible<?> valueMapping;
-	private final Function<QueryParameterImplementor<?>, QueryParameterBinding<?>> queryParameterBindingResolver;
 	private final List<JdbcParameter> jdbcParameters;
 	private Expression resolvedExpression;
 
 	public SqmParameterInterpretation(
-			SqmParameter<?> sqmParameter,
-			QueryParameterImplementor<?> queryParameter,
 			List<JdbcParameter> jdbcParameters,
-			MappingModelExpressible<?> valueMapping,
-			Function<QueryParameterImplementor<?>, QueryParameterBinding<?>> queryParameterBindingResolver) {
-		this.sqmParameter = sqmParameter;
-		this.queryParameter = queryParameter;
-		this.queryParameterBindingResolver = queryParameterBindingResolver;
+			MappingModelExpressible<?> valueMapping) {
 
 		if ( valueMapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping mapping = (EntityAssociationMapping) valueMapping;
@@ -109,39 +93,21 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			throw new SemanticException( "Composite query parameter cannot be used in select" );
 		}
 
-		BindableType<?> nodeType = sqmParameter.getNodeType();
-		if ( nodeType == null ) {
-			final QueryParameterBinding<?> binding = queryParameterBindingResolver.apply( queryParameter );
-			nodeType = binding.getBindType();
-		}
-		final SessionFactoryImplementor sessionFactory = creationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getSessionFactory();
-
-		final SqmExpressible<?> sqmExpressible = nodeType.resolveExpressible( sessionFactory );
-		final JavaType<?> jdbcJavaType;
-		final BasicValueConverter<?, ?> converter;
-		if ( sqmExpressible instanceof JdbcMapping ) {
-			final JdbcMapping jdbcMapping = (JdbcMapping) sqmExpressible;
-			jdbcJavaType = jdbcMapping.getJdbcJavaType();
-			converter = jdbcMapping.getValueConverter();
-		}
-		else {
-			jdbcJavaType = sqmExpressible.getExpressibleJavaType();
-			converter = null;
-		}
+		final JdbcMapping jdbcMapping = resolvedExpression.getExpressionType().getSingleJdbcMapping();
+		final JavaType<?> jdbcJavaType = jdbcMapping.getJdbcJavaType();
+		final BasicValueConverter<?, ?> converter = jdbcMapping.getValueConverter();
 
 		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
 				jdbcJavaType,
 				null,
-				sessionFactory.getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				sqmExpressible.getExpressibleJavaType(),
+				jdbcMapping.getMappedJavaType(),
 				converter
 		);
 	}
@@ -165,31 +131,11 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			throw new SemanticException( "Composite query parameter cannot be used in select" );
 		}
 
-		BindableType<?> nodeType = sqmParameter.getNodeType();
-		if ( nodeType == null ) {
-			final QueryParameterBinding<?> binding = queryParameterBindingResolver.apply( queryParameter );
-			nodeType = binding.getBindType();
-		}
-
-		final SessionFactoryImplementor sessionFactory = creationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getSessionFactory();
-
-		final SqmExpressible<?> sqmExpressible = nodeType.resolveExpressible( sessionFactory );
-		final JavaType<?> jdbcJavaType;
-		if ( sqmExpressible instanceof JdbcMapping ) {
-			final JdbcMapping jdbcMapping = (JdbcMapping) sqmExpressible;
-			jdbcJavaType = jdbcMapping.getJdbcJavaType();
-		}
-		else {
-			jdbcJavaType = sqmExpressible.getExpressibleJavaType();
-		}
-
 		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
-				jdbcJavaType,
+				resolvedExpression.getExpressionType().getSingleJdbcMapping().getMappedJavaType(),
 				null,
-				sessionFactory.getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}
 }

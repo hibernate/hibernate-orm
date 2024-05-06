@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
@@ -46,6 +47,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
+import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 import static org.hibernate.sql.Template.collectColumnNames;
 
 /**
@@ -1041,47 +1043,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.isAbstract = isAbstract;
 	}
 
-	protected void checkColumnDuplication(Set<String> distinctColumns, Value value)
-			throws MappingException {
-		if ( value != null ) {
-			for ( Selectable columnOrFormula : value.getSelectables() ) {
-				if ( !columnOrFormula.isFormula() ) {
-					final Column col = (Column) columnOrFormula;
-					if ( !distinctColumns.add( col.getName() ) ) {
-						throw new MappingException(
-								"Column '" + col.getName()
-										+ "' is duplicated in mapping for entity '" + getEntityName()
-										+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
-						);
-					}
-				}
-			}
-		}
-	}
-
-	protected void checkPropertyColumnDuplication(Set<String> distinctColumns, List<Property> properties)
-			throws MappingException {
-		for ( Property prop : properties ) {
-			final Value value = prop.getValue();
-			if ( value instanceof Component ) {
-				final Component component = (Component) value;
-				final AggregateColumn aggregateColumn = component.getAggregateColumn();
-				if ( aggregateColumn == null ) {
-					checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
-				}
-				else {
-					component.checkColumnDuplication();
-					checkColumnDuplication( distinctColumns, aggregateColumn.getValue() );
-				}
-			}
-			else {
-				if ( prop.isUpdateable() || prop.isInsertable() ) {
-					checkColumnDuplication( distinctColumns, value);
-				}
-			}
-		}
-	}
-
 	@Deprecated(since = "6.0")
 	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
 		return getUnjoinedPropertyIterator();
@@ -1097,20 +1058,21 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	protected void checkColumnDuplication() {
+		final String owner = "entity '" + getEntityName() + "'";
 		final HashSet<String> cols = new HashSet<>();
 		if ( getIdentifierMapper() == null ) {
 			//an identifier mapper => getKey will be included in the getNonDuplicatedPropertyIterator()
 			//and checked later, so it needs to be excluded
-			checkColumnDuplication( cols, getKey() );
+			getKey().checkColumnDuplication( cols, owner );
 		}
-		if ( isDiscriminatorInsertable() ) {
-			checkColumnDuplication( cols, getDiscriminator() );
+		if ( isDiscriminatorInsertable() && getDiscriminator() != null ) {
+			getDiscriminator().checkColumnDuplication( cols, owner );
 		}
-		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties() );
+		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties(), owner );
 		for ( Join join : getJoins() ) {
 			cols.clear();
-			checkColumnDuplication( cols, join.getKey() );
-			checkPropertyColumnDuplication( cols, join.getProperties() );
+			join.getKey().checkColumnDuplication( cols, owner );
+			checkPropertyColumnDuplication( cols, join.getProperties(), owner );
 		}
 	}
 
@@ -1257,22 +1219,21 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.superMappedSuperclass = superMappedSuperclass;
 	}
 
-	// End of @MappedSuperclass support
+	public void assignCheckConstraintsToTable(Dialect dialect, TypeConfiguration types, SqmFunctionRegistry functions) {
+		for ( CheckConstraint checkConstraint : checkConstraints ) {
+			container( collectColumnNames( checkConstraint.getConstraint(), dialect, types, functions ) )
+					.getTable().addCheck( checkConstraint );
+		}
+	}
 
+	// End of @MappedSuperclass support
 	public void prepareForMappingModel(RuntimeModelCreationContext context) {
 		if ( !joins.isEmpty() ) {
 			// we need to deal with references to secondary tables
-			// in SQL formulas and check constraints
-
+			// in SQL formulas
 			final Dialect dialect = context.getDialect();
 			final TypeConfiguration types = context.getTypeConfiguration();
 			final SqmFunctionRegistry functions = context.getFunctionRegistry();
-
-			// assign check constraints to the right table
-			for ( CheckConstraint checkConstraint : checkConstraints ) {
-				container( collectColumnNames( checkConstraint.getConstraint(), dialect, types, functions ) )
-						.getTable().addCheck( checkConstraint );
-			}
 
 			// now, move @Formulas to the correct AttributeContainers
 			//TODO: skip this step for hbm.xml
@@ -1330,5 +1291,46 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public List<CheckConstraint> getCheckConstraints() {
 		return checkConstraints;
+	}
+
+	private boolean containsColumn(Column column) {
+		for ( Property declaredProperty : declaredProperties ) {
+			if ( declaredProperty.getSelectables().contains( column ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Internal
+	public boolean isDefinedOnMultipleSubclasses(Column column) {
+		PersistentClass declaringType = null;
+		for ( PersistentClass persistentClass : getSubclassClosure() ) {
+			if ( persistentClass.containsColumn( column ) ) {
+				if ( declaringType != null && declaringType != persistentClass ) {
+					return true;
+				}
+				else {
+					declaringType = persistentClass;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Internal
+	public PersistentClass getSuperPersistentClass() {
+		return getSuperclass() != null ? getSuperclass() : getSuperPersistentClass( getSuperMappedSuperclass() );
+	}
+
+	private static PersistentClass getSuperPersistentClass(MappedSuperclass mappedSuperclass) {
+		if ( mappedSuperclass != null ) {
+			final PersistentClass superClass = mappedSuperclass.getSuperPersistentClass();
+			if ( superClass != null ) {
+				return superClass;
+			}
+			return getSuperPersistentClass( mappedSuperclass.getSuperMappedSuperclass() );
+		}
+		return null;
 	}
 }

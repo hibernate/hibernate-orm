@@ -32,9 +32,21 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
+		this( mutatingTable, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, null, null );
+	}
+
+	public TableUpdateStandard(
+			MutatingTableReference mutatingTable,
+			MutationTarget<?> mutationTarget,
+			String sqlComment,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			String whereFragment,
+			Expectation expectation) {
 		super( mutatingTable, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
-		this.whereFragment = null;
-		this.expectation = null;
+		this.whereFragment = whereFragment;
+		this.expectation = expectation;
 	}
 
 	public TableUpdateStandard(

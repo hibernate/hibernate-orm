@@ -45,14 +45,16 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 		int size = 0;
 		for ( int i = 0; i < inputs.length; i++ ) {
 			final AbstractScriptSourceInput scriptSourceInput = inputs[i];
-			final Reader reader = scriptSourceInput.prepareReader();
-			try {
-				log.executingScript( scriptSourceInput.getScriptDescription() );
-				lists[i] = extractor.apply( reader );
-				size += lists[i].size();
-			}
-			finally {
-				scriptSourceInput.releaseReader( reader );
+			if ( scriptSourceInput.exists() ) {
+				final Reader reader = scriptSourceInput.prepareReader();
+				try {
+					log.executingScript( scriptSourceInput.getScriptDescription() );
+					lists[i] = extractor.apply( reader );
+					size += lists[i].size();
+				}
+				finally {
+					scriptSourceInput.releaseReader( reader );
+				}
 			}
 		}
 		final List<String> list = new ArrayList<>( size );

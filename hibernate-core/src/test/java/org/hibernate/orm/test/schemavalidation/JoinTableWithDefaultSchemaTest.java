@@ -26,6 +26,8 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.TargetType;
@@ -40,7 +42,7 @@ public class JoinTableWithDefaultSchemaTest extends BaseUnitTestCase {
 	@TestForIssue(jiraKey = "HHH-10978")
 	@RequiresDialect(SQLServerDialect.class)
 	public void testGetTableDataForJoinTableWithDefaultSchema() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DEFAULT_CATALOG, "hibernate_orm_test" )
 				.build();
 		try {

@@ -10,6 +10,7 @@ import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -61,6 +62,15 @@ public final class DialectContext {
 			throw new HibernateException( "Could not instantiate given JDBC driver class: " + dialectName, e );
 		}
 		try ( Connection connection = driver.connect( jdbcUrl, props ) ) {
+//			if ( jdbcUrl.startsWith( "jdbc:derby:" ) ) {
+//				// Unfortunately we may only configure this once
+//				try ( Statement s = connection.createStatement() ) {
+//					s.execute( "CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(\'derby.locks.waitTimeout\', \'10\')" );
+//					if ( !connection.getAutoCommit() ) {
+//						connection.commit();
+//					}
+//				}
+//			}
 			dialect = constructor.newInstance( new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() ) );
 		}
 		catch (SQLException sqle) {

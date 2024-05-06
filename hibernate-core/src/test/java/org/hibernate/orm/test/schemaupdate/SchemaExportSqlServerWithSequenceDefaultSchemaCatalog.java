@@ -20,6 +20,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ public class SchemaExportSqlServerWithSequenceDefaultSchemaCatalog {
 
 	@BeforeEach
 	public void setUp() {
-		serviceRegistry = new StandardServiceRegistryBuilder()
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.DEFAULT_SCHEMA, "dbo" )
 				.applySetting( Environment.DEFAULT_CATALOG, "hibernate_orm_test" )
 				.build();

@@ -16,6 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -30,7 +31,7 @@ public class FlushModeConfigTest {
 	@ParameterizedTest
 	@EnumSource( FlushMode.class )
 	public void testFlushModeSettingTakingEffect(FlushMode flushMode) {
-		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.FLUSH_MODE, flushMode.name() )
 				.build();
 		try ( final SessionFactory sessionFactory = new MetadataSources(serviceRegistry).buildMetadata().buildSessionFactory() ) {

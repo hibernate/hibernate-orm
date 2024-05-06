@@ -345,7 +345,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		for ( Assignment assignment : assignments ) {
 			targetColumnReferences.addAll( assignment.getAssignable().getColumnReferences() );
 			insertSourceSelectQuerySpec.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl( 0, -1, assignment.getAssignedValue() )
+					new SqlSelectionImpl( assignment.getAssignedValue() )
 			);
 		}
 
@@ -380,8 +380,6 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		final QuerySpec existsSubQuerySpec = new QuerySpec( false );
 		existsSubQuerySpec.getSelectClause().addSqlSelection(
 				new SqlSelectionImpl(
-						-1,
-						0,
 						new QueryLiteral<>(
 								1,
 								sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )

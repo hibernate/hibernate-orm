@@ -31,7 +31,6 @@ import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_TRACE_ENABLED;
 
 /**
  * Specialized executor for the case of more than one table operation, with the
@@ -61,8 +60,8 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 
 	protected final JdbcValueBindingsImpl valueBindings;
 
-	public MutationExecutorPostInsert(MutationOperationGroup mutationOperationGroup, SharedSessionContractImplementor session) {
-		this.mutationTarget = (EntityMutationTarget) mutationOperationGroup.getMutationTarget();
+	public MutationExecutorPostInsert(EntityMutationOperationGroup mutationOperationGroup, SharedSessionContractImplementor session) {
+		this.mutationTarget = mutationOperationGroup.getMutationTarget();
 		this.valueBindings = new JdbcValueBindingsImpl(
 				MutationType.INSERT,
 				mutationTarget,
@@ -71,7 +70,7 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 		);
 		this.mutationOperationGroup = mutationOperationGroup;
 
-		final PreparableMutationOperation identityInsertOperation = mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
+		final PreparableMutationOperation identityInsertOperation = (PreparableMutationOperation) mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
 		this.identityInsertStatementDetails = ModelMutationHelper.identityPreparation(
 				identityInsertOperation,
 				session
@@ -79,9 +78,8 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 
 		List<PreparableMutationOperation> secondaryTableMutations = null;
 
-		final List<MutationOperation> operations = mutationOperationGroup.getOperations();
-		for ( int i = 0; i < operations.size(); i++ ) {
-			final MutationOperation operation = operations.get( i );
+		for ( int i = 0; i < mutationOperationGroup.getNumberOfOperations(); i++ ) {
+			final MutationOperation operation = mutationOperationGroup.getOperation( i );
 
 			if ( operation.getTableDetails().isIdentifierTable() ) {
 				// the identifier table is handled via `identityInsertStatementDetails`
@@ -141,7 +139,7 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 		final InsertGeneratedIdentifierDelegate identityHandler = mutationTarget.getIdentityInsertDelegate();
 		final Object id = identityHandler.performInsert( identityInsertStatementDetails, valueBindings, modelReference, session );
 
-		if ( MODEL_MUTATION_LOGGER_TRACE_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.tracef(
 					"Post-insert generated value : `%s` (%s)",
 					id,
@@ -178,7 +176,7 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 		assert !tableDetails.isIdentifierTable();
 
 		if ( inclusionChecker != null && !inclusionChecker.include( tableDetails ) ) {
-			if ( MODEL_MUTATION_LOGGER_TRACE_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 				MODEL_MUTATION_LOGGER.tracef(
 						"Skipping execution of secondary insert : %s",
 						tableDetails.getTableName()

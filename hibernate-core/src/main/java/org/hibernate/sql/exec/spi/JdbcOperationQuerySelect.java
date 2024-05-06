@@ -223,7 +223,7 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 				else {
 					value = requestedValue;
 				}
-				return value != (int) jdbcParameterBinding.getBindValue();
+				return value == (int) jdbcParameterBinding.getBindValue();
 			}
 		}
 	}

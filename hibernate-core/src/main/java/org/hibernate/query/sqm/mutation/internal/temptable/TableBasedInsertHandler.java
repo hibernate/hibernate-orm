@@ -219,7 +219,6 @@ public class TableBasedInsertHandler implements InsertHandler {
 								targetPathColumns.add( new Assignment( columnReference, columnReference ) );
 								querySpec.getSelectClause().addSqlSelection(
 										new SqlSelectionImpl(
-												1,
 												0,
 												SqmInsertStrategyHelper.createRowNumberingExpression(
 														querySpec,
@@ -237,13 +236,12 @@ public class TableBasedInsertHandler implements InsertHandler {
 									null,
 									sessionUidColumn.getJdbcMapping()
 							);
-							insertStatement.getTargetColumns().add( sessionUidColumnReference );
-							targetPathColumns.add( new Assignment( sessionUidColumnReference, sessionUidParameter ) );
 							querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl(
 									insertStatement.getTargetColumns().size(),
-									insertStatement.getTargetColumns().size() - 1,
 									sessionUidParameter
 							) );
+							insertStatement.getTargetColumns().add( sessionUidColumnReference );
+							targetPathColumns.add( new Assignment( sessionUidColumnReference, sessionUidParameter ) );
 						}
 					}
 			);
@@ -257,7 +255,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 				final Optimizer optimizer = ( (OptimizableGenerator) generator ).getOptimizer();
 				if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
 					final TemporaryTableColumn rowNumberColumn = entityTable.getColumns()
-							.get( entityTable.getColumns().size() - 1 );
+							.get( entityTable.getColumns().size() - ( sessionUidColumn == null ? 1 : 2 ) );
 					rowNumberType = (BasicType<?>) rowNumberColumn.getJdbcMapping();
 					final ColumnReference columnReference = new ColumnReference(
 							(String) null,
@@ -295,7 +293,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 				if ( rowNumberType != null ) {
 					values.getExpressions().add(
 							new QueryLiteral<>(
-									i + 1,
+									rowNumberType.getJavaTypeDescriptor()
+											.wrap( i + 1, sessionFactory.getWrapperOptions() ),
 									rowNumberType
 							)
 					);

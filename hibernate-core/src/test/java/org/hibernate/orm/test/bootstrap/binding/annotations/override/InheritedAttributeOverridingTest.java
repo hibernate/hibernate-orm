@@ -18,6 +18,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,7 @@ public class InheritedAttributeOverridingTest extends BaseUnitTestCase {
 
 	@Before
 	public void buildServiceRegistry() {
-		standardServiceRegistry = new StandardServiceRegistryBuilder().build();
+		standardServiceRegistry = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@After

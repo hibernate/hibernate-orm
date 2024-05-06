@@ -36,6 +36,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T>, EmbeddableResult<T> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
+	private final EmbeddableMappingType fetchContainer;
 
 	public EmbeddableExpressionResultImpl(
 			NavigablePath navigablePath,
@@ -43,7 +44,8 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 			SqlTuple sqlExpression,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( modelPart.getEmbeddableTypeDescriptor(), navigablePath );
+		super( navigablePath );
+		this.fetchContainer = modelPart.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
 
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( modelPart );
@@ -100,7 +102,7 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return this.fetchContainer;
 	}
 
 	@Override

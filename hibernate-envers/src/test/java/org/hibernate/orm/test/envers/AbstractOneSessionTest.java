@@ -25,6 +25,7 @@ import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Before;
 
 /**
@@ -59,12 +60,7 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest {
 
 		this.initMappings();
 
-		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			config.getProperties().put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
+		ServiceRegistryUtil.applySettings( config.getProperties() );
 
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
 		sessionFactory = config.buildSessionFactory( serviceRegistry );

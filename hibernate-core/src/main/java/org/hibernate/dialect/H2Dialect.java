@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -193,6 +194,12 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean useArrayForMultiValuedParameters() {
+		// Performance is worse than the in-predicate version
+		return false;
+	}
+
+	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
@@ -348,10 +355,10 @@ public class H2Dialect extends Dialect {
 		functionFactory.rownum();
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			functionFactory.windowFunctions();
+			functionFactory.inverseDistributionOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates();
 			if ( getVersion().isSameOrAfter( 2 ) ) {
 				functionFactory.listagg( null );
-				functionFactory.inverseDistributionOrderedSetAggregates();
-				functionFactory.hypotheticalOrderedSetAggregates();
 			}
 			else {
 				// Use group_concat until 2.x as listagg was buggy
@@ -753,6 +760,8 @@ public class H2Dialect extends Dialect {
 					// NULL not allowed for column [90006-145]
 					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
 					return new ConstraintViolationException(message, sqlException, sql, constraintName);
+				case 57014:
+					return new QueryTimeoutException( message, sqlException, sql );
 			}
 
 			return null;

@@ -66,6 +66,11 @@ public class SqmJdbcExecutionContextAdapter extends BaseExecutionContext {
 	}
 
 	@Override
+	public boolean hasCallbackActions() {
+		return sqmExecutionContext.hasCallbackActions();
+	}
+
+	@Override
 	public boolean hasQueryExecutionToBeAddedToStatistics() {
 		return true;
 	}

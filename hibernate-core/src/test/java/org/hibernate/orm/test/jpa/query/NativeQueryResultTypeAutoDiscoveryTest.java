@@ -60,6 +60,7 @@ import org.hibernate.testing.junit4.CustomRunner;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -372,6 +373,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, DIALECT.getClass().getName() );
 		settings.put( AvailableSettings.LOADED_CLASSES, Arrays.asList( entityTypes ) );
+		ServiceRegistryUtil.applySettings( settings );
 
 		return settings;
 	}

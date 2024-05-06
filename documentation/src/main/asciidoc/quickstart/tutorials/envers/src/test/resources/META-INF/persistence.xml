@@ -17,13 +17,18 @@
         <class>org.hibernate.tutorial.envers.Event</class>
 
         <properties>
-            <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver" />
+            <!-- Database connection settings -->
             <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1" />
             <property name="jakarta.persistence.jdbc.user" value="sa" />
             <property name="jakarta.persistence.jdbc.password" value="" />
 
+            <!-- Automatically export the schema -->
+            <property name="jakarta.persistence.schema-generation.database.action" value="create" />
+
+            <!-- Echo all executed SQL to console -->
             <property name="hibernate.show_sql" value="true" />
-            <property name="hibernate.hbm2ddl.auto" value="create" />
+            <property name="hibernate.format_sql" value="true" />
+            <property name="hibernate.highlight_sql" value="true" />
         </properties>
 
     </persistence-unit>

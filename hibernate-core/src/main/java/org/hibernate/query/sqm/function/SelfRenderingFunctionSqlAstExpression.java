@@ -91,7 +91,22 @@ public class SelfRenderingFunctionSqlAstExpression
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
-				this
+				this,
+				false
+		);
+	}
+	@Override
+	public SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaType javaType,
+			boolean virtual,
+			TypeConfiguration typeConfiguration) {
+		return new SqlSelectionImpl(
+				jdbcPosition,
+				valuesArrayPosition,
+				this,
+				virtual
 		);
 	}
 

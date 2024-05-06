@@ -47,7 +47,7 @@ public enum JdbcMetadaAccessStrategy {
 		if ( options == null ) {
 			return interpretHbm2ddlSetting( null );
 		}
-		else if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, options, false ) ) {
+		else if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, options ) ) {
 			// Use of synonyms can cause issues during schema validation or schema update when GROUPED strategy is used (especially in Oracle)
 			return INDIVIDUALLY;
 		}

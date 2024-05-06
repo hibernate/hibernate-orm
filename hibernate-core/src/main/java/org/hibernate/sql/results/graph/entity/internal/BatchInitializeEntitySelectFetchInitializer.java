@@ -18,7 +18,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -28,7 +27,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
 
 	private final Set<EntityKey> toBatchLoad = new HashSet<>();
-	private State state = State.UNINITIALIZED;
+
 
 	public BatchInitializeEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
@@ -45,40 +44,30 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 	}
 
 	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
-		if ( state != State.UNINITIALIZED ) {
+	public void resolveInstance(RowProcessingState rowProcessingState) {
+		if ( state == State.INITIALIZED ) {
 			return;
 		}
-		super.resolveKey( rowProcessingState );
-		state = entityKey == null ? State.MISSING : State.KEY_RESOLVED;
-	}
+		resolveKey( rowProcessingState, referencedModelPart, parentAccess );
 
-	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state != State.KEY_RESOLVED ) {
+		if ( entityKey == null ) {
 			return;
 		}
 
 		state = State.INITIALIZED;
-		final SharedSessionContractImplementor session = rowProcessingState.getSession();
-		entityInstance = session.getPersistenceContext().getEntity( entityKey );
-		if ( entityInstance == null ) {
-			final LoadingEntityEntry loadingEntityEntry = rowProcessingState.getJdbcValuesSourceProcessingState()
-					.findLoadingEntityLocally( entityKey );
-			if ( loadingEntityEntry != null ) {
-				loadingEntityEntry.getEntityInitializer().resolveInstance( rowProcessingState );
-				entityInstance = loadingEntityEntry.getEntityInstance();
-			}
-			else {
-				// Force creating a proxy
-				entityInstance = session.internalLoad(
-						entityKey.getEntityName(),
-						entityKey.getIdentifier(),
-						false,
-						false
-				);
-				toBatchLoad.add( entityKey );
-			}
+		initializedEntityInstance = getExistingInitializedInstance( rowProcessingState );
+		if ( initializedEntityInstance == null ) {
+			// need to add the key to the batch queue only when the entity has not been already loaded or
+			// there isn't another initializer that is loading it
+			registerToBatchFetchQueue( rowProcessingState );
+			// Force creating a proxy
+			initializedEntityInstance = rowProcessingState.getSession().internalLoad(
+					entityKey.getEntityName(),
+					entityKey.getIdentifier(),
+					false,
+					false
+			);
+			toBatchLoad.add( entityKey );
 		}
 	}
 
@@ -88,31 +77,17 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 	}
 
 	@Override
-	public void finishUpRow(RowProcessingState rowProcessingState) {
-		super.finishUpRow( rowProcessingState );
-		state = State.UNINITIALIZED;
-	}
-
-	@Override
 	public void endLoading(ExecutionContext context) {
 		final SharedSessionContractImplementor session = context.getSession();
 		for ( EntityKey key : toBatchLoad ) {
 			loadInstance( key, referencedModelPart, session );
 		}
 		toBatchLoad.clear();
-		parentAccess = null;
 	}
 
 	@Override
 	public String toString() {
 		return "BatchInitializeEntitySelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
-	}
-
-	enum State {
-		UNINITIALIZED,
-		MISSING,
-		KEY_RESOLVED,
-		INITIALIZED
 	}
 
 }

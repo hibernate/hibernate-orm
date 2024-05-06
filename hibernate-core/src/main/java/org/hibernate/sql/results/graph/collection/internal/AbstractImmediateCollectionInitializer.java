@@ -70,7 +70,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			return;
 		}
 
-		if ( CollectionLoadingLogger.TRACE_ENABLED ) {
+		if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isTraceEnabled() ) {
 			COLL_LOAD_LOGGER.tracef(
 					"(%s) Beginning Initializer#resolveInstance for collection : %s",
 					getSimpleConcreteImplName(),
@@ -93,7 +93,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		if ( existingLoadingEntry != null ) {
 			collectionInstance = existingLoadingEntry.getCollectionInstance();
 
-			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+			if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
 				COLL_LOAD_LOGGER.debugf(
 						"(%s) Found existing loading collection entry [%s]; using loading collection instance - %s",
 						getSimpleConcreteImplName(),
@@ -108,7 +108,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			}
 			else {
 				// the entity is already being loaded elsewhere
-				if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
 					COLL_LOAD_LOGGER.debugf(
 							"(%s) Collection [%s] being loaded by another initializer [%s] - skipping processing",
 							getSimpleConcreteImplName(),
@@ -130,7 +130,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				// it is already initialized we have nothing to do
 
 				if ( collectionInstance.wasInitialized() ) {
-					if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+					if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
 						COLL_LOAD_LOGGER.debugf(
 								"(%s) Found existing collection instance [%s] in Session; skipping processing - [%s]",
 								getSimpleConcreteImplName(),
@@ -155,7 +155,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 					// it is already initialized we have nothing to do
 
 					if ( collectionInstance.wasInitialized() ) {
-						if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+						if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
 							COLL_LOAD_LOGGER.debugf(
 									"(%s) Found existing unowned collection instance [%s] in Session; skipping processing - [%s]",
 									getSimpleConcreteImplName(),
@@ -184,7 +184,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 					session
 			);
 
-			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+			if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
 				COLL_LOAD_LOGGER.debugf(
 						"(%s) Created new collection wrapper [%s] : %s",
 						getSimpleConcreteImplName(),
@@ -203,7 +203,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		}
 
 		if ( responsibility != null ) {
-			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+			if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
 				COLL_LOAD_LOGGER.debugf(
 						"(%s) Responsible for loading collection [%s] : %s",
 						getSimpleConcreteImplName(),
@@ -212,8 +212,11 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				);
 			}
 
-			if ( getParentAccess() != null ) {
-				getParentAccess().registerResolutionListener(
+			final FetchParentAccess entityParentAccess = getParentAccess() != null ?
+					getParentAccess().findFirstEntityDescriptorAccess() :
+					null;
+			if ( entityParentAccess != null ) {
+				entityParentAccess.registerResolutionListener(
 						owner -> collectionInstance.setOwner( owner )
 				);
 			}
@@ -282,7 +285,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 		if ( collectionValueKey != null ) {
 			// the row contains an element in the collection...
-			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+			if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
 				COLL_LOAD_LOGGER.debugf(
 						"(%s) Reading element from row for collection [%s] -> %s",
 						getSimpleConcreteImplName(),

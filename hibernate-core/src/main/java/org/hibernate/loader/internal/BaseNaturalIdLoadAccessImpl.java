@@ -101,13 +101,14 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 
 		final PersistenceContext persistenceContext = context.getSession().getPersistenceContextInternal();
 		final Collection<?> cachedPkResolutions = persistenceContext.getNaturalIdResolutions().getCachedPkResolutions( entityPersister() );
+		final boolean loggerDebugEnabled = LoaderLogging.LOADER_LOGGER.isDebugEnabled();
 		for ( Object pk : cachedPkResolutions ) {
 			final EntityKey entityKey = context.getSession().generateEntityKey( pk, entityPersister() );
 			final Object entity = persistenceContext.getEntity( entityKey );
 			final EntityEntry entry = persistenceContext.getEntry( entity );
 
 			if ( entry == null ) {
-				if ( LoaderLogging.DEBUG_ENABLED ) {
+				if ( loggerDebugEnabled ) {
 					LoaderLogging.LOADER_LOGGER.debugf(
 							"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : %s#%s",
 							entityDescriptor.getEntityName(),

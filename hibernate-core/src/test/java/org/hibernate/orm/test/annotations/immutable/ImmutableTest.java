@@ -20,6 +20,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -220,7 +221,8 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	public void testMisplacedImmutableAnnotation() {
-		MetadataSources metadataSources = new MetadataSources().addAnnotatedClass( Foobar.class );
+		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
+				.addAnnotatedClass( Foobar.class );
 		try {
 			metadataSources.buildMetadata();
 //			fail( "Expecting exception due to misplaced @Immutable annotation");

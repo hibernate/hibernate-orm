@@ -1,0 +1,27 @@
+[appendix]
+[[settings]]
+== Configuration Settings
+
+Configuration settings can be broadly broken down into 3 categories -
+
+Jakarta Persistence::
+    Settings which are standardized by the Jakarta Persistence specification for configuring any persistence provider.  These
+    settings are defined by the `jakarta.persistence.` namespace
+Hibernate::
+    Hibernate-specific settings which control various Hibernate behaviors which are extensions to or outside the scope
+    of the Jakarta Persistence specification.  These settings are defined by the `hibernate.` namespace
+Legacy JPA::
+    Settings which were standardized by Java Persistence, the legacy version of the Jakarta Persistence specification
+    (prior to version 3.1).  These settings are defined by the `javax.persistence.` namespace
+
+[NOTE]
+====
+For the time being, Hibernate continues to support the legacy Java Persistence settings in addition to
+the Jakarta Persistence forms.  Applications should strongly consider migrating to the new Jakarta Persistence
+as support for the legacy Java Persistence will likely be removed at some point.
+
+For (legacy) Hibernate settings which have a direct Jakarta Persistence corollary, the Jakarta Persistence
+form should be preferred - e.g. `hibernate.connection.driver_class` -> `jakarta.persistence.jdbc.driver`.
+====
+
+include::../../../../../target/asciidoc/fragments/config-settings.adoc[]

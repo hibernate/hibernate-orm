@@ -21,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -67,6 +68,7 @@ import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -180,6 +182,8 @@ public final class FastSessionServices {
 	private final ConnectionObserverStatsBridge defaultJdbcObservers;
 	private final FormatMapper jsonFormatMapper;
 	private final FormatMapper xmlFormatMapper;
+	private final MutationExecutorService mutationExecutorService;
+	private final JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 
 	FastSessionServices(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
@@ -235,6 +239,7 @@ public final class FastSessionServices {
 		this.defaultJdbcBatchSize = sessionFactoryOptions.getJdbcBatchSize();
 		this.requiresMultiTenantConnectionProvider = sessionFactory.getSessionFactoryOptions().isMultiTenancyEnabled();
 		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 
 		//Some "hot" services:
 		this.connectionProvider = requiresMultiTenantConnectionProvider
@@ -247,6 +252,8 @@ public final class FastSessionServices {
 		this.transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
 		this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		this.entityCopyObserverFactory = serviceRegistry.getService( EntityCopyObserverFactory.class );
+		this.jdbcValuesMappingProducerProvider = serviceRegistry.getService( JdbcValuesMappingProducerProvider.class );
+
 
 		this.isJtaTransactionAccessible = isTransactionAccessible( sessionFactory, transactionCoordinatorBuilder );
 
@@ -366,6 +373,10 @@ public final class FastSessionServices {
 		return defaultJdbcObservers;
 	}
 
+	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
+		return this.jdbcValuesMappingProducerProvider;
+	}
+
 	public boolean useStreamForLobBinding() {
 		return useStreamForLobBinding;
 	}
@@ -399,4 +410,10 @@ public final class FastSessionServices {
 		}
 		return xmlFormatMapper;
 	}
+
+	@Deprecated //This seems no longer used - cleanup?
+	public MutationExecutorService getMutationExecutorService() {
+		return mutationExecutorService;
+	}
+
 }

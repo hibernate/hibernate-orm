@@ -1868,6 +1868,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
+	public void removeDeletedUnloadedEntityKey(EntityKey key) {
+		assert deletedUnloadedEntityKeys != null;
+		deletedUnloadedEntityKeys.remove( key );
+	}
+
+	@Override
+	public boolean containsDeletedUnloadedEntityKeys() {
+		return deletedUnloadedEntityKeys != null && !deletedUnloadedEntityKeys.isEmpty();
+	}
+
+	@Override
 	public int getCollectionEntriesSize() {
 		return collectionEntries == null ? 0 : collectionEntries.size();
 	}

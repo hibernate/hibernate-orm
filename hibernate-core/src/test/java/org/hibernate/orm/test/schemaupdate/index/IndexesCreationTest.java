@@ -19,6 +19,7 @@ import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class IndexesCreationTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 		metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( TestEntity.class )
 				.buildMetadata();

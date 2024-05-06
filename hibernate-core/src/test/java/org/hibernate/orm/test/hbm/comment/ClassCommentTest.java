@@ -6,13 +6,19 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.ReaderInputStream;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ClassCommentTest {
+@RequiresDialect( H2Dialect.class )
+public class ClassCommentTest extends BaseUnitTestCase {
 
 	private static String CLASS_COMMENT_HBM_XML =
 		"<hibernate-mapping package='org.hibernate.test.hbm'>                "+
@@ -27,9 +33,7 @@ public class ClassCommentTest {
 
 	@Test
 	public void testClassComment() {
-		StandardServiceRegistryBuilder serviceRegistryBuilder = new StandardServiceRegistryBuilder()
-				.applySetting("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
-		try (StandardServiceRegistry serviceRegistry = serviceRegistryBuilder.build()) {
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 			metadataSources.addInputStream( new ReaderInputStream( new StringReader( CLASS_COMMENT_HBM_XML ) ) );
 			Metadata metadata = metadataSources.buildMetadata();

@@ -210,7 +210,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 			if ( inListPredicate.isNegated() ) {
 				appendSql( " not" );
 			}
-			appendSql( " in(" );
+			appendSql( " in (" );
 			renderCommaSeparated( listExpressions );
 			appendSql( CLOSE_PARENTHESIS );
 		}
@@ -261,6 +261,11 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	private boolean supportsOffsetFetchClause() {
 		// Before version 10.5 Derby didn't support OFFSET and FETCH
 		return getDialect().getVersion().isSameOrAfter( 10, 5 );
+	}
+
+	@Override
+	protected boolean supportsJoinInMutationStatementSubquery() {
+		return false;
 	}
 
 	@Override

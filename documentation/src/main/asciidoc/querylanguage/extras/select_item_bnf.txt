@@ -1,0 +1,8 @@
+selection
+    : (expression | instantiation) alias?
+
+instantiation
+    : "NEW" instantiationTarget "(" selection ("," selection)* ")"
+
+alias
+    : "AS"? IDENTIFIER

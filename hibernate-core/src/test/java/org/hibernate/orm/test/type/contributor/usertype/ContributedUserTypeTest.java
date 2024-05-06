@@ -40,7 +40,19 @@ public class ContributedUserTypeTest {
 		Assertions.assertTrue( type instanceof CustomType, "Type was initialized too early i.e. before type-contributors were run" );
 	}
 
-	@Entity
+	@Test
+	@JiraKey( "HHH-17100" )
+	public void testParameter(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					session.createSelectionQuery( "from StringWrapperTestEntity e where e.stringWrapper = :p" )
+							.setParameter( "p", new StringWrapper( "abc" ) )
+							.getResultList();
+				}
+		);
+	}
+
+	@Entity(name = "StringWrapperTestEntity")
 	public static class StringWrapperTestEntity implements Serializable {
 		@Id
 		private Integer id;

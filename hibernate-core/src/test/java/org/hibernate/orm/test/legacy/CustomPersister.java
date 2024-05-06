@@ -170,6 +170,11 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		throw new IndexOutOfBoundsException( index );
+	}
+
+	@Override
 	public int forEachJdbcType(
 			int offset, IndexedConsumer<JdbcMapping> action) {
 		return 0;

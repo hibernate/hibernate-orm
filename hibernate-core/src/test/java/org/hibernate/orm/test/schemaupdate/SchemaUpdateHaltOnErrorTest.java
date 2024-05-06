@@ -24,6 +24,7 @@ import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -51,7 +52,7 @@ public class SchemaUpdateHaltOnErrorTest {
 	public void setUp() throws IOException {
 		File output = File.createTempFile("update_script", ".sql");
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 
 		final MetadataSources metadataSources = new MetadataSources( ssr )
 				.addAnnotatedClass( From.class );

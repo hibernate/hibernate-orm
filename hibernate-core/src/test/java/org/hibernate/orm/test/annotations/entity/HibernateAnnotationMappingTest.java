@@ -15,6 +15,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -26,6 +27,7 @@ public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-7446" )
 	public void testUniqueConstraintAnnotationOnNaturalIds() throws Exception {
 		Configuration configuration = new Configuration();
+		ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );
 		configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		configuration.addAnnotatedClass( Month.class);
 		SessionFactory sf = null;

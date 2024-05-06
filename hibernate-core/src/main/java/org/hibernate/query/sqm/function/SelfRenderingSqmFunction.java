@@ -115,7 +115,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
 			for ( int i = 0; i < sqmArguments.size(); i++ ) {
 				sqlAstArguments.add(
-						(SqlAstNode) ( (SqmVisitableNode) sqmArguments.get( i ) ).accept( walker )
+						(SqlAstNode) sqmArguments.get( i ).accept( walker )
 				);
 			}
 			return sqlAstArguments;
@@ -129,7 +129,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		for ( int i = 0; i < sqmArguments.size(); i++ ) {
 			typeAccess.argumentIndex = i;
 			sqlAstArguments.add(
-					(SqlAstNode) walker.visitWithInferredType( (SqmVisitableNode) sqmArguments.get( i ), typeAccess )
+					(SqlAstNode) walker.visitWithInferredType( sqmArguments.get( i ), typeAccess )
 			);
 		}
 		return sqlAstArguments;
@@ -150,7 +150,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				getRenderingSupport(),
 				arguments,
 				resultType,
-				resultType == null ? null : getMappingModelExpressible( walker, resultType )
+				resultType == null ? null : getMappingModelExpressible( walker, resultType, arguments )
 		);
 	}
 
@@ -175,11 +175,19 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return resultType;
 	}
 
+	@Deprecated(forRemoval = true)
 	protected MappingModelExpressible<?> getMappingModelExpressible(
 			SqmToSqlAstConverter walker,
 			ReturnableType<?> resultType) {
+		return getMappingModelExpressible( walker, resultType, resolveSqlAstArguments( getArguments(), walker ) );
+	}
+
+	protected MappingModelExpressible<?> getMappingModelExpressible(
+			SqmToSqlAstConverter walker,
+			ReturnableType<?> resultType,
+			List<SqlAstNode> arguments) {
 		MappingModelExpressible<?> mapping;
-		if ( resultType instanceof MappingModelExpressible) {
+		if ( resultType instanceof MappingModelExpressible ) {
 			// here we have a BasicType, which can be cast
 			// directly to BasicValuedMapping
 			mapping = (MappingModelExpressible<?>) resultType;
@@ -204,7 +212,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 							return null; // this works at least approximately
 						}
 					},
-					resolveSqlAstArguments( getArguments(), walker )
+					arguments
 			);
 		}
 		return mapping;

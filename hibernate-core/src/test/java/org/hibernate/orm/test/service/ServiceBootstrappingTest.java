@@ -21,6 +21,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -40,12 +41,9 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		final String showSqlPropertyFromOutside = System.getProperty(Environment.SHOW_SQL);
 		Assume.assumeFalse("true".equals(showSqlPropertyFromOutside));
 
-		final StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
-				.build();
+		final StandardServiceRegistryImpl serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 			final ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()
@@ -60,17 +58,13 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBuildWithLogging() {
-		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
-		props.put( Environment.SHOW_SQL, "true" );
-
-		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-			.applySettings( props )
+		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) ServiceRegistryUtil.serviceRegistryBuilder()
+			.applySetting( Environment.SHOW_SQL, "true" )
 			.build();
 
 		try {
 			JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 			final ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()
@@ -85,17 +79,11 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBuildWithServiceOverride() {
-		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
-				.build();
-
-		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
-		props.setProperty( Environment.DIALECT, H2Dialect.class.getName() );
+		StandardServiceRegistryImpl serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 			ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()
@@ -107,13 +95,11 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		}
 
 		try {
-			serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-					.applySettings( props )
+			serviceRegistry = (StandardServiceRegistryImpl) ServiceRegistryUtil.serviceRegistryBuilder()
 					.addService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() )
 					.build();
 			JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 			ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()

@@ -62,9 +62,7 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 			SessionFactoryImplementor factory) {
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		final int columnCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
-		if ( columnCount == 1
-				&& dialect.supportsStandardArrays()
-				&& dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY ) {
+		if ( columnCount == 1 && MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 			// we can use a single ARRAY parameter to send all the ids
 			return new CollectionBatchLoaderArrayParam( domainBatchSize, influencers, attributeMapping, factory );
 		}

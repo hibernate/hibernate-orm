@@ -18,4 +18,11 @@ public interface SqlExpressible extends JdbcMappingContainer {
 	 * would be of basic type.
 	 */
 	JdbcMapping getJdbcMapping();
+
+	@Override
+	default JdbcMapping getJdbcMapping(int index) {
+		assert index == 0;
+		return getJdbcMapping();
+	}
+
 }

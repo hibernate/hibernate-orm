@@ -236,9 +236,10 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.findEntityDescriptor( entityClass.getName() );
-		AttributeMappingsList attributeMappings = person.getAttributeMappings();
+		final AttributeMappingsList attributeMappings = person.getAttributeMappings();
 		Fetchable fetchable = null;
-		for ( AttributeMapping mapping : attributeMappings ){
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			AttributeMapping mapping = attributeMappings.get( i );
 			if ( mapping.getAttributeName().equals( attributeName ) ) {
 				fetchable = mapping;
 			}

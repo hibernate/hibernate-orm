@@ -39,14 +39,41 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 				jdbcPosition,
 				valuesArrayPosition,
 				javaType,
-				this
+				this,
+				false
 		);
+	}
+
+	@Override
+	default SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaType javaType,
+			boolean virtual,
+			TypeConfiguration typeConfiguration) {
+		return new SqlSelectionImpl(
+				jdbcPosition,
+				valuesArrayPosition,
+				javaType,
+				this,
+				virtual
+		);
+	}
+
+	@Deprecated(forRemoval = true)
+	default SqlSelection createDomainResultSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaType javaType,
+			TypeConfiguration typeConfiguration) {
+		return createDomainResultSqlSelection( jdbcPosition, valuesArrayPosition, javaType, false, typeConfiguration );
 	}
 
 	default SqlSelection createDomainResultSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
 			JavaType javaType,
+			boolean virtual,
 			TypeConfiguration typeConfiguration) {
 		// Apply possible jdbc type wrapping
 		final Expression expression;
@@ -55,10 +82,10 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 			expression = this;
 		}
 		else {
-			expression = expressionType.getJdbcMappings().get( 0 ).getJdbcType().wrapTopLevelSelectionExpression( this );
+			expression = expressionType.getJdbcMapping( 0 ).getJdbcType().wrapTopLevelSelectionExpression( this );
 		}
 		return expression == this
-			? createSqlSelection( jdbcPosition, valuesArrayPosition, javaType, typeConfiguration )
-			: new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, expression );
+			? createSqlSelection( jdbcPosition, valuesArrayPosition, javaType, virtual, typeConfiguration )
+			: new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, expression, virtual );
 	}
 }

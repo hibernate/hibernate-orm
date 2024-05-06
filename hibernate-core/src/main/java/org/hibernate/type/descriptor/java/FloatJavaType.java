@@ -196,7 +196,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce value `%s` [%s] as Float",
+						"Cannot coerce value '%s' [%s] to Float",
 						value,
 						value.getClass().getName()
 				)

@@ -32,7 +32,6 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -488,7 +487,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 * @return The default segment value to use.
 	 */
 	protected String determineDefaultSegmentValue(Properties params) {
-		final boolean preferSegmentPerEntity = getBoolean( CONFIG_PREFER_SEGMENT_PER_ENTITY, params, false );
+		final boolean preferSegmentPerEntity = getBoolean( CONFIG_PREFER_SEGMENT_PER_ENTITY, params );
 		final String defaultToUse = preferSegmentPerEntity ? params.getProperty( TABLE ) : DEF_SEGMENT_VALUE;
 		LOG.usingDefaultIdGeneratorSegmentValue( qualifiedTableName.render(), segmentColumnName, defaultToUse );
 		return defaultToUse;
@@ -555,8 +554,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	@Override
 	public Object generate(final SharedSessionContractImplementor session, final Object obj) {
-		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
-				.getService( JdbcServices.class )
+		final SqlStatementLogger statementLogger = session.
+				getFactory().getJdbcServices()
 				.getSqlStatementLogger();
 		final SessionEventListenerManager statsCollector = session.getEventListenerManager();
 

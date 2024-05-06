@@ -127,7 +127,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 				getFilter() == null ? null : walker.visitNestedTopLevelPredicate( getFilter() ),
 				withinGroup,
 				resultType,
-				getMappingModelExpressible( walker, resultType )
+				getMappingModelExpressible( walker, resultType, arguments )
 		);
 	}
 

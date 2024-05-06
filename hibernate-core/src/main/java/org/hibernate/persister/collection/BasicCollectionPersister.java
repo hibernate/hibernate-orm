@@ -26,7 +26,6 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.collection.mutation.CollectionTableMapping;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
@@ -44,20 +43,16 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.model.ast.ColumnValueParameterList;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.TableMutation;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
+import org.hibernate.sql.model.ast.builder.CollectionRowDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
 
 /**
  * A {@link CollectionPersister} for {@linkplain jakarta.persistence.ElementCollection
@@ -155,7 +150,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				&& !isInverse();
 
 		if ( !performUpdates ) {
-			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 				MODEL_MUTATION_LOGGER.debugf(
 						"Skipping collection row updates - %s",
 						getRolePath()
@@ -169,7 +164,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private InsertRowsCoordinator buildInsertRowCoordinator() {
 		if ( isInverse() || !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 				MODEL_MUTATION_LOGGER.debugf(
 						"Skipping collection inserts - %s",
 						getRolePath()
@@ -178,12 +173,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 
-		return new InsertRowsCoordinatorStandard( this, rowMutationOperations );
+		return new InsertRowsCoordinatorStandard( this, rowMutationOperations, getFactory().getServiceRegistry() );
 	}
 
 	private DeleteRowsCoordinator buildDeleteRowCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 				MODEL_MUTATION_LOGGER.debugf(
 						"Skipping collection row deletions - %s",
 						getRolePath()
@@ -192,12 +187,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 
-		return new DeleteRowsCoordinatorStandard( this, rowMutationOperations, hasPhysicalIndexColumn() );
+		return new DeleteRowsCoordinatorStandard( this, rowMutationOperations, hasPhysicalIndexColumn(), getFactory().getServiceRegistry() );
 	}
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 				MODEL_MUTATION_LOGGER.debugf(
 						"Skipping collection removals - %s",
 						getRolePath()
@@ -206,7 +201,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			return new RemoveCoordinatorNoOp( this );
 		}
 
-		return new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation );
+		return new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation, getFactory().getServiceRegistry() );
 	}
 
 
@@ -411,40 +406,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	// Update handling
 
 	private JdbcMutationOperation generateUpdateRowOperation(MutatingTableReference tableReference) {
-		if ( getIdentifierTableMapping().getInsertDetails().getCustomSql() != null ) {
-			return buildCustomSqlUpdateRowOperation( tableReference );
-		}
-
-		return buildGeneratedUpdateRowOperation( tableReference );
-
-	}
-
-	private JdbcMutationOperation buildCustomSqlUpdateRowOperation(MutatingTableReference tableReference) {
-		final PluralAttributeMapping attribute = getAttributeMapping();
-		assert attribute != null;
-
-		final ForeignKeyDescriptor foreignKey = attribute.getKeyDescriptor();
-		assert foreignKey != null;
-
-		final int keyColumnCount = foreignKey.getJdbcTypeCount();
-		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
-				tableReference,
-				ParameterUsage.RESTRICT,
-				keyColumnCount
-		);
-		foreignKey.getKeyPart().forEachSelectable( parameterBinders );
-
-		return new JdbcUpdateMutation(
-				getCollectionTableMapping(),
-				this,
-				getCollectionTableMapping().getDeleteDetails().getCustomSql(),
-				getCollectionTableMapping().getDeleteDetails().isCallable(),
-				getCollectionTableMapping().getDeleteDetails().getExpectation(),
-				parameterBinders
-		);
-	}
-
-	private JdbcMutationOperation buildGeneratedUpdateRowOperation(MutatingTableReference tableReference) {
 		final RestrictedTableMutation<JdbcMutationOperation> sqlAst = generateUpdateRowAst( tableReference );
 
 		final SqlAstTranslator<JdbcMutationOperation> translator = getFactory().getJdbcServices()
@@ -459,13 +420,43 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final PluralAttributeMapping attribute = getAttributeMapping();
 		assert attribute != null;
 
-		final TableUpdateBuilderStandard<?> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
+		// note that custom sql update row details are handled by TableUpdateBuilderStandard
+		final TableUpdateBuilderStandard<?> updateBuilder = new TableUpdateBuilderStandard<>(
+				this,
+				tableReference,
+				getFactory(),
+				sqlWhereString
+		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SET
 
-		attribute.getElementDescriptor().forEachUpdatable( updateBuilder );
+		if ( hasIndex() ) {
+			/*
+				Given :
 
+				class MyEntity {
+					@ElementCollection(fetch = FetchType.LAZY)
+					@OrderColumn
+					private List<MyEmbeddable> myEmbeddables;
+				}
+
+				@Embeddable
+				public static class MyEmbeddable {
+					@Column(updatable = false)
+					private String embeddedProperty;
+				}
+
+			 	we cannot understand if the update is due to a change in the value embeddedProperty or because a
+			 	new element has been added to the list in an existing position (update) shifting the old value (insert).
+
+			 	For this reason we cannot take into consideration the `@Column(updatable = false)`
+			 */
+			attribute.getElementDescriptor().forEachNonFormula( updateBuilder );
+		}
+		else {
+			attribute.getElementDescriptor().forEachUpdatable( updateBuilder );
+		}
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// WHERE
 
@@ -501,16 +492,28 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				0,
 				jdbcValueBindings,
 				null,
-				(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
-					if ( !jdbcValueMapping.isUpdateable() || jdbcValueMapping.isFormula() ) {
-						return;
-					}
-					bindings.bindValue(
-							jdbcValue,
-							jdbcValueMapping,
-							ParameterUsage.SET
-					);
-				},
+				hasIndex() ?
+						(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
+							if ( jdbcValueMapping.isFormula() ) {
+								return;
+							}
+							bindings.bindValue(
+									jdbcValue,
+									jdbcValueMapping,
+									ParameterUsage.SET
+							);
+						}
+						:
+						(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
+							if ( !jdbcValueMapping.isUpdateable() || jdbcValueMapping.isFormula() ) {
+								return;
+							}
+							bindings.bindValue(
+									jdbcValue,
+									jdbcValueMapping,
+									ParameterUsage.SET
+							);
+						},
 				session
 		);
 	}
@@ -580,41 +583,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	// Delete handling
 
 	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {
-		if ( getIdentifierTableMapping().getDeleteRowDetails().getCustomSql() != null ) {
-			return buildCustomSqlDeleteRowOperation( tableReference );
-		}
-
-		return buildGeneratedDeleteRowOperation( tableReference );
-	}
-
-	private JdbcMutationOperation buildCustomSqlDeleteRowOperation(MutatingTableReference tableReference) {
-		final PluralAttributeMapping attribute = getAttributeMapping();
-		assert attribute != null;
-
-		final ForeignKeyDescriptor foreignKey = attribute.getKeyDescriptor();
-		assert foreignKey != null;
-
-		final CollectionTableMapping tableMapping = (CollectionTableMapping) tableReference.getTableMapping();
-
-		final int keyColumnCount = foreignKey.getJdbcTypeCount();
-		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
-				tableReference,
-				ParameterUsage.RESTRICT,
-				keyColumnCount
-		);
-		foreignKey.getKeyPart().forEachSelectable( parameterBinders );
-
-		return new JdbcDeleteMutation(
-				tableMapping,
-				this,
-				tableMapping.getDeleteDetails().getCustomSql(),
-				tableMapping.getDeleteDetails().isCallable(),
-				tableMapping.getDeleteDetails().getExpectation(),
-				parameterBinders
-		);
-	}
-
-	private JdbcMutationOperation buildGeneratedDeleteRowOperation(MutatingTableReference tableReference) {
 		final RestrictedTableMutation<JdbcMutationOperation> sqlAst = generateDeleteRowAst( tableReference );
 
 		final SqlAstTranslator<JdbcMutationOperation> translator = getFactory().getJdbcServices()
@@ -632,7 +600,13 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final ForeignKeyDescriptor fkDescriptor = pluralAttribute.getKeyDescriptor();
 		assert fkDescriptor != null;
 
-		final TableDeleteBuilderStandard deleteBuilder = new TableDeleteBuilderStandard( this, tableReference, getFactory() );
+		// note that custom sql delete row details are handled by CollectionRowDeleteBuilder
+		final CollectionRowDeleteBuilder deleteBuilder = new CollectionRowDeleteBuilder(
+				this,
+				tableReference,
+				getFactory(),
+				sqlWhereString
+		);
 
 		if ( pluralAttribute.getIdentifierDescriptor() != null ) {
 			deleteBuilder.addKeyRestrictionsLeniently( pluralAttribute.getIdentifierDescriptor() );

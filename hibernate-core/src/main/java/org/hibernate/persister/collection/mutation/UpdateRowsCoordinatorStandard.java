@@ -13,13 +13,13 @@ import java.util.List;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 /**
  * UpdateRowsCoordinator implementation for cases with a separate collection table
@@ -29,9 +29,9 @@ import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
  * @author Steve Ebersole
  */
 public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
-	private final RowMutationOperations rowMutationOperations;
 
-	private MutationOperationGroupSingle operationGroup;
+	private final RowMutationOperations rowMutationOperations;
+	private MutationOperationGroup operationGroup;
 
 	public UpdateRowsCoordinatorStandard(
 			CollectionMutationTarget mutationTarget,
@@ -43,12 +43,8 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 
 	@Override
 	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-		final MutationOperationGroupSingle operationGroup = getOperationGroup();
+		final MutationOperationGroup operationGroup = getOperationGroup();
 
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE" ),
 				operationGroup,
@@ -115,42 +111,48 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 			int entryPosition,
 			MutationExecutor mutationExecutor,
 			SharedSessionContractImplementor session) {
-		final PluralAttributeMapping attribute = getMutationTarget().getTargetPart();
-		if ( !collection.needsUpdating( entry, entryPosition, attribute ) ) {
+		if ( rowMutationOperations.getUpdateRowOperation() != null ) {
+			final PluralAttributeMapping attribute = getMutationTarget().getTargetPart();
+			if ( !collection.needsUpdating( entry, entryPosition, attribute ) ) {
+				return false;
+			}
+
+			rowMutationOperations.getUpdateRowValues().applyValues(
+					collection,
+					key,
+					entry,
+					entryPosition,
+					session,
+					mutationExecutor.getJdbcValueBindings()
+			);
+
+			rowMutationOperations.getUpdateRowRestrictions().applyRestrictions(
+					collection,
+					key,
+					entry,
+					entryPosition,
+					session,
+					mutationExecutor.getJdbcValueBindings()
+			);
+
+			mutationExecutor.execute( collection, null, null, null, session );
+			return true;
+		}
+		else {
 			return false;
 		}
-
-		rowMutationOperations.getUpdateRowValues().applyValues(
-				collection,
-				key,
-				entry,
-				entryPosition,
-				session,
-				mutationExecutor.getJdbcValueBindings()
-		);
-
-		rowMutationOperations.getUpdateRowRestrictions().applyRestrictions(
-				collection,
-				key,
-				entry,
-				entryPosition,
-				session,
-				mutationExecutor.getJdbcValueBindings()
-		);
-
-		mutationExecutor.execute( collection, null, null, null, session );
-		return true;
 	}
 
-	protected MutationOperationGroupSingle getOperationGroup() {
+	protected MutationOperationGroup getOperationGroup() {
 		if ( operationGroup == null ) {
-			operationGroup = new MutationOperationGroupSingle(
-					MutationType.UPDATE,
-					getMutationTarget(),
-					rowMutationOperations.getUpdateRowOperation()
-			);
+			final JdbcMutationOperation updateRowOperation = rowMutationOperations.getUpdateRowOperation();
+			if ( updateRowOperation == null ) {
+				operationGroup = MutationOperationGroupFactory.noOperations( MutationType.UPDATE, getMutationTarget() );
+			}
+			else {
+				operationGroup = MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, getMutationTarget(), updateRowOperation );
+			}
 		}
-
 		return operationGroup;
 	}
 

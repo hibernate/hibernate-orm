@@ -31,6 +31,7 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.results.spi.LoadContexts;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
@@ -108,6 +109,12 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			return;
 		}
 
+		final EntityInitializer parentEntityInitializer = parentAccess.findFirstEntityInitializer();
+		if ( parentEntityInitializer != null && parentEntityInitializer.isEntityInitialized() ) {
+			isInitialized = true;
+			return;
+		}
+
 		if ( !isAttributeAssignableToConcreteDescriptor() ) {
 			return;
 		}
@@ -119,7 +126,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			return;
 		}
 
-		if ( EntityLoadingLogging.TRACE_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 					"(%s) Beginning Initializer#resolveInstance process for entity (%s) : %s",
 					StringHelper.collapse( this.getClass().getName() ),
@@ -139,13 +146,11 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			return;
 		}
 
-		final LoadingEntityEntry existingLoadingEntry = session
-				.getPersistenceContext()
-				.getLoadContexts()
-				.findLoadingEntityEntry( entityKey );
+		final LoadContexts loadContexts = session.getPersistenceContext().getLoadContexts();
+		final LoadingEntityEntry existingLoadingEntry = loadContexts.findLoadingEntityEntry( entityKey );
 
 		if ( existingLoadingEntry != null ) {
-			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 						"(%s) Found existing loading entry [%s] - using loading instance",
 						CONCRETE_NAME,
@@ -157,14 +162,15 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			}
 			this.entityInstance = existingLoadingEntry.getEntityInstance();
 
-			if ( existingLoadingEntry.getEntityInitializer() != this ) {
+			final EntityInitializer entityInitializer = existingLoadingEntry.getEntityInitializer();
+			if ( entityInitializer != this ) {
 				// the entity is already being loaded elsewhere
-				if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+				if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 					EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 							"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
 							CONCRETE_NAME,
 							toLoggableString( getNavigablePath(), entityIdentifier ),
-							existingLoadingEntry.getEntityInitializer()
+							entityInitializer
 					);
 				}
 
@@ -172,9 +178,15 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 				isInitialized = true;
 				return;
 			}
+			else {
+				if ( entityInstance == null ) {
+					isInitialized = true;
+					return;
+				}
+			}
 		}
 
-		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Invoking session#internalLoad for entity (%s) : %s",
 					CONCRETE_NAME,
@@ -193,9 +205,14 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
 				throw new FetchNotFoundException( entityName, entityIdentifier );
 			}
+			rowProcessingState.getJdbcValuesSourceProcessingState()
+					.registerLoadingEntity(
+							entityKey,
+							new LoadingEntityEntry( this, entityKey, concreteDescriptor, entityInstance )
+					);
 		}
 
-		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Entity [%s] : %s has being loaded by session.internalLoad.",
 					CONCRETE_NAME,
@@ -209,6 +226,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		if ( lazyInitializer != null ) {
 			lazyInitializer.setUnwrap( unwrapProxy );
 		}
+
 		isInitialized = true;
 	}
 

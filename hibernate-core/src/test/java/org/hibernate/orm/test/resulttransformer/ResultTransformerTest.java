@@ -60,21 +60,21 @@ public class ResultTransformerTest {
 					}
 			);
 
-			ScrollableResults sr = q.scroll();
-			// HANA supports only ResultSet.TYPE_FORWARD_ONLY and
-			// does not support java.sql.ResultSet.first()
-            if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof AbstractHANADialect ) {
-				sr.next();
-			}
-			else {
-				sr.first();
-			}
+			try (ScrollableResults sr = q.scroll()) {
+				// HANA supports only ResultSet.TYPE_FORWARD_ONLY and
+				// does not support java.sql.ResultSet.first()
+				if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof AbstractHANADialect ) {
+					sr.next();
+				}
+				else {
+					sr.first();
+				}
 
-			Object obj = sr.get();
-			assertTrue(obj instanceof PartnerA);
-			PartnerA obj2 = (PartnerA) obj;
-			assertEquals("Partner A", obj2.getName());
-
+				Object obj = sr.get();
+				assertTrue( obj instanceof PartnerA );
+				PartnerA obj2 = (PartnerA) obj;
+				assertEquals( "Partner A", obj2.getName() );
+			}
 		} );
 	}
 }

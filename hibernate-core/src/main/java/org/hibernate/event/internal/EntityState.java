@@ -8,10 +8,13 @@ package org.hibernate.event.internal;
 
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.persister.entity.EntityPersister;
 
 public enum EntityState {
 	PERSISTENT, TRANSIENT, DETACHED, DELETED;
@@ -64,6 +67,16 @@ public enum EntityState {
 		}
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Detached instance of: {0}", EventUtil.getLoggableName( entityName, entity ) );
+		}
+
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		if ( persistenceContext.containsDeletedUnloadedEntityKeys() ) {
+			final EntityPersister entityPersister = source.getEntityPersister( entityName, entity );
+			final Object identifier = entityPersister.getIdentifier( entity, source );
+			final EntityKey entityKey = source.generateEntityKey( identifier, entityPersister );
+			if ( persistenceContext.containsDeletedUnloadedEntityKey( entityKey ) ) {
+				return EntityState.DELETED;
+			}
 		}
 		return DETACHED;
 	}

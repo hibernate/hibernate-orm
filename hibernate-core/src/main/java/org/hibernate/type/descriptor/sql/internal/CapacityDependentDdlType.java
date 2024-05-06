@@ -11,6 +11,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Descriptor for a SQL type.
@@ -19,6 +21,7 @@ import org.hibernate.dialect.Dialect;
  */
 public class CapacityDependentDdlType extends DdlTypeImpl {
 
+	private final LobKind lobKind;
 	private final TypeEntry[] typeEntries;
 
 	private CapacityDependentDdlType(Builder builder) {
@@ -26,8 +29,10 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 				builder.sqlTypeCode,
 				builder.typeNamePattern,
 				builder.castTypeNamePattern,
+				builder.castTypeName,
 				builder.dialect
 		);
+		this.lobKind = builder.lobKind;
 		builder.typeEntries.sort( Comparator.naturalOrder() );
 		this.typeEntries = builder.typeEntries.toArray(new TypeEntry[0]);
 	}
@@ -71,33 +76,106 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		return super.getTypeName( size, precision, scale );
 	}
 
+	@Override
+	public boolean isLob(Size size) {
+		if ( lobKind == LobKind.ALL_LOB ) {
+			return true;
+		}
+		final Long length = size.getLength();
+		if ( length != null && length > 0 ) {
+			for ( TypeEntry typeEntry : typeEntries ) {
+				if ( length <= typeEntry.capacity ) {
+					return false;
+				}
+			}
+		}
+		return lobKind == LobKind.BIGGEST_LOB;
+	}
+
 	public static Builder builder(int sqlTypeCode, String typeNamePattern, Dialect dialect) {
-		return builder( sqlTypeCode, typeNamePattern, typeNamePattern, dialect );
+		return builder(
+				sqlTypeCode,
+				JdbcType.isLob( sqlTypeCode ) ? LobKind.ALL_LOB : LobKind.NONE,
+				typeNamePattern,
+				typeNamePattern,
+				dialect
+		);
+	}
+
+	public static Builder builder(int sqlTypeCode, LobKind lobKind, String typeNamePattern, Dialect dialect) {
+		return builder( sqlTypeCode, lobKind, typeNamePattern, typeNamePattern, dialect );
+	}
+
+	public static Builder builder(
+			int sqlTypeCode,
+			String typeNamePattern,
+			String castTypeName,
+			Dialect dialect) {
+		return builder(
+				sqlTypeCode,
+				JdbcType.isLob( sqlTypeCode ) ? LobKind.ALL_LOB : LobKind.NONE,
+				typeNamePattern,
+				castTypeName,
+				dialect
+		);
+	}
+
+	public static Builder builder(
+			int sqlTypeCode,
+			LobKind lobKind,
+			String typeNamePattern,
+			String castTypeName,
+			Dialect dialect) {
+		return builder( sqlTypeCode, lobKind, typeNamePattern, null, castTypeName, dialect );
 	}
 
 	public static Builder builder(
 			int sqlTypeCode,
 			String typeNamePattern,
 			String castTypeNamePattern,
+			String castTypeName,
 			Dialect dialect) {
-		return new Builder( sqlTypeCode, typeNamePattern, castTypeNamePattern, dialect );
+		return builder(
+				sqlTypeCode,
+				JdbcType.isLob( sqlTypeCode ) ? LobKind.ALL_LOB : LobKind.NONE,
+				typeNamePattern,
+				castTypeNamePattern,
+				castTypeName,
+				dialect
+		);
+	}
+
+	public static Builder builder(
+			int sqlTypeCode,
+			LobKind lobKind,
+			String typeNamePattern,
+			String castTypeNamePattern,
+			String castTypeName,
+			Dialect dialect) {
+		return new Builder( sqlTypeCode, lobKind, typeNamePattern, castTypeNamePattern, castTypeName, dialect );
 	}
 
 	public static class Builder {
 		private final int sqlTypeCode;
+		private final LobKind lobKind;
 		private final String typeNamePattern;
 		private final String castTypeNamePattern;
+		private final String castTypeName;
 		private final Dialect dialect;
 		private final List<TypeEntry> typeEntries;
 
 		private Builder(
 				int sqlTypeCode,
+				LobKind lobKind,
 				String typeNamePattern,
 				String castTypeNamePattern,
+				String castTypeName,
 				Dialect dialect) {
 			this.sqlTypeCode = sqlTypeCode;
+			this.lobKind = lobKind;
 			this.typeNamePattern = typeNamePattern;
 			this.castTypeNamePattern = castTypeNamePattern;
+			this.castTypeName = castTypeName;
 			this.dialect = dialect;
 			this.typeEntries = new ArrayList<>();
 		}
@@ -125,5 +203,11 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		public int compareTo(TypeEntry o) {
 			return Long.compare( capacity, o.capacity );
 		}
+	}
+
+	public enum LobKind {
+		BIGGEST_LOB,
+		ALL_LOB,
+		NONE
 	}
 }

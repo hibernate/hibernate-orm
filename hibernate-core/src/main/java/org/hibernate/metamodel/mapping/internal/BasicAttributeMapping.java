@@ -60,6 +60,7 @@ public class BasicAttributeMapping
 	private final Integer scale;
 
 	private final JdbcMapping jdbcMapping;
+	private final boolean isLob;
 	private final boolean nullable;
 	private final boolean insertable;
 	private final boolean updateable;
@@ -85,6 +86,7 @@ public class BasicAttributeMapping
 			Long length,
 			Integer precision,
 			Integer scale,
+			boolean isLob,
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
@@ -116,6 +118,7 @@ public class BasicAttributeMapping
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+		this.isLob = isLob;
 		this.nullable = nullable;
 		this.insertable = insertable;
 		this.updateable = updateable;
@@ -183,6 +186,7 @@ public class BasicAttributeMapping
 				selectableMapping.getLength(),
 				selectableMapping.getPrecision(),
 				selectableMapping.getScale(),
+				selectableMapping.isLob(),
 				selectableMapping.isNullable(),
 				insertable,
 				updateable,
@@ -221,6 +225,11 @@ public class BasicAttributeMapping
 	@Override
 	public SelectablePath getSelectablePath() {
 		return selectablePath;
+	}
+
+	@Override
+	public boolean isLob() {
+		return isLob;
 	}
 
 	@Override

@@ -210,6 +210,16 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(final int index) {
+		switch (index) {
+			case 0 : return discriminatorMapping.getDiscriminatorPart().getJdbcMapping();
+			case 1 : return discriminatorMapping.getKeyPart().getJdbcMapping();
+			default:
+				throw new IndexOutOfBoundsException( index );
+		}
+	}
+
+	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		if ( columnIndex == 0 ) {
 			return getDiscriminatorPart();

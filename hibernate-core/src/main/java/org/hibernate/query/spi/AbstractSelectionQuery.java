@@ -535,6 +535,11 @@ public abstract class AbstractSelectionQuery<R>
 		return callback;
 	}
 
+	@Override
+	public boolean hasCallbackActions() {
+		return callback != null && callback.hasAfterLoadActions();
+	}
+
 	protected void resetCallback() {
 		callback = null;
 	}
@@ -760,6 +765,12 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setTimeout(int timeout) {
 		super.setTimeout( timeout );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setComment(String comment) {
+		super.setComment( comment );
 		return this;
 	}
 

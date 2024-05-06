@@ -18,6 +18,7 @@ public abstract class AbstractSerializableProxy implements Serializable {
 	private final Object id;
 	private final Boolean readOnly;
 	protected final String sessionFactoryUuid;
+	protected final String sessionFactoryName;
 	private final boolean allowLoadOutsideTransaction;
 
 	protected AbstractSerializableProxy(
@@ -25,11 +26,13 @@ public abstract class AbstractSerializableProxy implements Serializable {
 			Object id,
 			Boolean readOnly,
 			String sessionFactoryUuid,
+			String sessionFactoryName,
 			boolean allowLoadOutsideTransaction) {
 		this.entityName = entityName;
 		this.id = id;
 		this.readOnly = readOnly;
 		this.sessionFactoryUuid = sessionFactoryUuid;
+		this.sessionFactoryName = sessionFactoryName;
 		this.allowLoadOutsideTransaction = allowLoadOutsideTransaction;
 	}
 
@@ -50,6 +53,6 @@ public abstract class AbstractSerializableProxy implements Serializable {
 	 * @param li the {@link AbstractLazyInitializer} to initialize.
 	 */
 	protected void afterDeserialization(AbstractLazyInitializer li) {
-		li.afterDeserialization( readOnly, sessionFactoryUuid, allowLoadOutsideTransaction );
+		li.afterDeserialization( readOnly, sessionFactoryUuid, sessionFactoryName, allowLoadOutsideTransaction );
 	}
 }

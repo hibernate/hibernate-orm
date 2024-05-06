@@ -283,6 +283,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final Long length;
 				final Integer precision;
 				final Integer scale;
+				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column ) {
 					final Column column = (Column) selectable;
@@ -291,6 +292,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					precision = column.getPrecision();
 					scale = column.getScale();
 					nullable = column.isNullable();
+					isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
 				}
 				else {
@@ -299,7 +301,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					precision = null;
 					scale = null;
 					nullable = true;
-					selectablePath = basicValue.createSelectablePath( bootPropertyDescriptor.getName() );
+					isLob = false;
+					selectablePath = new SelectablePath( determineEmbeddablePrefix() + bootPropertyDescriptor.getName() );
 				}
 
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
@@ -320,6 +323,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						length,
 						precision,
 						scale,
+						isLob,
 						nullable,
 						value.isColumnInsertable( 0 ),
 						value.isColumnUpdateable( 0 ),
@@ -449,6 +453,14 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		return true;
 	}
 
+	protected String determineEmbeddablePrefix() {
+		NavigableRole root = getNavigableRole().getParent();
+		while ( !root.isRoot() ) {
+			root = root.getParent();
+		}
+		return getNavigableRole().getFullPath().substring( root.getFullPath().length() + 1 ) + ".";
+	}
+
 	@Override
 	public int getNumberOfFetchables() {
 		return getAttributeMappings().size();
@@ -536,6 +548,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		);
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return getSelectableMappings().getJdbcMappings();

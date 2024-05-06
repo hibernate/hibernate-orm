@@ -76,4 +76,16 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState);
+
+	default SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
+		if ( requestedJoinType != null ) {
+			return requestedJoinType;
+		}
+
+		if ( fetched ) {
+			return getDefaultSqlAstJoinType( lhs );
+		}
+
+		return SqlAstJoinType.INNER;
+	}
 }

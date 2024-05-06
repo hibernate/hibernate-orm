@@ -680,22 +680,6 @@ public class PluralAttributeMappingImpl
 		);
 	}
 
-	private SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			if ( fetched ) {
-				joinType = getDefaultSqlAstJoinType( lhs );
-			}
-			else {
-				joinType = SqlAstJoinType.INNER;
-			}
-		}
-		else {
-			joinType = requestedJoinType;
-		}
-		return joinType;
-	}
-
 	@Override
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
@@ -707,9 +691,7 @@ public class PluralAttributeMappingImpl
 			Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
-		final SqlAstJoinType joinType = requestedJoinType == null
-				? SqlAstJoinType.INNER
-				: requestedJoinType;
+		final SqlAstJoinType joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
 		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
 		final TableGroup tableGroup;
@@ -740,6 +722,7 @@ public class PluralAttributeMappingImpl
 
 		return tableGroup;
 	}
+
 
 	@Override
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor fkDescriptor) {
@@ -991,6 +974,11 @@ public class PluralAttributeMappingImpl
 	@Override
 	public int getJdbcTypeCount() {
 		return 0;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		throw new IndexOutOfBoundsException( index );
 	}
 
 	@Override

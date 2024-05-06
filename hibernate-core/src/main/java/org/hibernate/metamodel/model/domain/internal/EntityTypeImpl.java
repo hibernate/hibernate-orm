@@ -8,6 +8,8 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.util.Collection;
+
 import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.graph.internal.SubGraphImpl;
@@ -21,6 +23,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -167,6 +170,12 @@ public class EntityTypeImpl<J>
 	@Override
 	public IdentifiableDomainType<? super J> getSuperType() {
 		return super.getSuperType();
+	}
+
+	@Override
+	public Collection<? extends EntityDomainType<? extends J>> getSubTypes() {
+		//noinspection unchecked
+		return (Collection<? extends EntityDomainType<? extends J>>) super.getSubTypes();
 	}
 
 	@Override

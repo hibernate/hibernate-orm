@@ -21,7 +21,6 @@ import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.jdbc.JdbcInsertMutation;
 
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_LOGGER;
-import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_TRACE_ENABLED;
 import static org.hibernate.jdbc.Expectations.NONE;
 
 /**
@@ -39,7 +38,7 @@ public class BatchBuilderImpl implements BatchBuilder {
 	 * on {@link #buildBatch}
 	 */
 	public BatchBuilderImpl(int globalBatchSize) {
-		if ( BATCH_TRACE_ENABLED ) {
+		if ( BATCH_LOGGER.isTraceEnabled() ) {
 			BATCH_LOGGER.tracef(
 					"Using standard BatchBuilder (%s)",
 					globalBatchSize

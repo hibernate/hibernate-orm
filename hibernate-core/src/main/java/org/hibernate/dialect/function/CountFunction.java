@@ -49,6 +49,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private final String concatOperator;
 	private final String concatArgumentCastType;
 	private final boolean castDistinctStringConcat;
+	private final String distinctArgumentCastType;
 
 	public CountFunction(
 			Dialect dialect,
@@ -79,7 +80,8 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				"count",
 				concatOperator,
 				concatArgumentCastType,
-				castDistinctStringConcat
+				castDistinctStringConcat,
+				concatArgumentCastType
 		);
 	}
 
@@ -91,6 +93,27 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			String concatOperator,
 			String concatArgumentCastType,
 			boolean castDistinctStringConcat) {
+		this(
+				dialect,
+				typeConfiguration,
+				defaultArgumentRenderingMode,
+				countFunctionName,
+				concatOperator,
+				concatArgumentCastType,
+				castDistinctStringConcat,
+				concatArgumentCastType
+		);
+	}
+
+	public CountFunction(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqlAstNodeRenderingMode defaultArgumentRenderingMode,
+			String countFunctionName,
+			String concatOperator,
+			String concatArgumentCastType,
+			boolean castDistinctStringConcat,
+			String distinctArgumentCastType) {
 		super(
 				"count",
 				FunctionKind.AGGREGATE,
@@ -106,6 +129,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		this.concatOperator = concatOperator;
 		this.concatArgumentCastType = concatArgumentCastType;
 		this.castDistinctStringConcat = castDistinctStringConcat;
+		this.distinctArgumentCastType = distinctArgumentCastType;
 	}
 
 	@Override
@@ -211,7 +235,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 					sqlAppender.appendSql( "')" );
 					if ( castDistinctStringConcat ) {
 						sqlAppender.appendSql( " as " );
-						sqlAppender.appendSql( concatArgumentCastType );
+						sqlAppender.appendSql( distinctArgumentCastType );
 						sqlAppender.appendSql( ')' );
 					}
 					if ( caseWrapper ) {

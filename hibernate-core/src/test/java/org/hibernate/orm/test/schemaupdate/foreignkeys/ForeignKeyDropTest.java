@@ -34,6 +34,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class ForeignKeyDropTest extends BaseUnitTestCase {
 	public void setUp() throws Exception {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.applySetting( Environment.FORMAT_SQL, "false" )
 				.applySetting( Environment.SHOW_SQL, "true" )

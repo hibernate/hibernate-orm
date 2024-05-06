@@ -38,7 +38,7 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 
 	public UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
-			Member idMember,
+			Member member,
 			CustomIdGeneratorCreationContext creationContext) {
 		if ( config.style() == TIME ) {
 			generator = new CustomVersionOneStrategy();
@@ -47,7 +47,7 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			generator = StandardRandomStrategy.INSTANCE;
 		}
 
-		final Class<?> propertyType = getPropertyType( idMember );
+		final Class<?> propertyType = getPropertyType( member );
 
 		if ( UUID.class.isAssignableFrom( propertyType ) ) {
 			valueTransformer = UUIDJavaType.PassThroughTransformer.INSTANCE;

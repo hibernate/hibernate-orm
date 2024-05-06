@@ -7,7 +7,6 @@
 package org.hibernate.query.derived;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Incubating;
@@ -16,7 +15,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
@@ -107,7 +105,7 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 
 	@Override
 	public EmbeddableMappingType getPartMappingType() {
-		return (EmbeddableMappingType) super.getPartMappingType();
+		return this;
 	}
 
 	@Override

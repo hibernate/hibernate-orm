@@ -154,7 +154,7 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce value `%s` [%s] as Long",
+						"Cannot coerce value '%s' [%s] to Long",
 						value,
 						value.getClass().getName()
 				)

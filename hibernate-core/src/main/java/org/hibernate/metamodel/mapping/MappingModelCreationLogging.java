@@ -29,7 +29,4 @@ public interface MappingModelCreationLogging extends BasicLogger {
 
 	Logger MAPPING_MODEL_CREATION_LOGGER = Logger.getLogger( LOGGER_NAME );
 	MappingModelCreationLogging MAPPING_MODEL_CREATION_MESSAGE_LOGGER = Logger.getMessageLogger( MappingModelCreationLogging.class, LOGGER_NAME );
-
-	boolean MAPPING_MODEL_CREATION_TRACE_ENABLED = MAPPING_MODEL_CREATION_LOGGER.isTraceEnabled();
-	boolean MAPPING_MODEL_CREATION_DEBUG_ENABLED = MAPPING_MODEL_CREATION_LOGGER.isDebugEnabled();
 }

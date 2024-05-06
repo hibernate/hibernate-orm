@@ -26,8 +26,6 @@ import java.util.Map;
 @Table( name = "USER_TABLE" )
 public class User {
 	@jakarta.persistence.Id
-	@jakarta.persistence.GeneratedValue(generator = "system-uuid")
-	@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid2")
 	@jakarta.persistence.Column(name = "id", unique = true)
 	private String id;
 
@@ -39,7 +37,8 @@ public class User {
 	protected User() {
 	}
 
-	public User(SocialNetwork sn, String socialNetworkId) {
+	public User(String id, SocialNetwork sn, String socialNetworkId) {
+		this.id = id;
 		SocialNetworkProfile profile = new SocialNetworkProfile(this, sn, socialNetworkId);
 		socialNetworkProfiles.put(sn, profile);
 	}

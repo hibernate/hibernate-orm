@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -13,6 +14,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.Service;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
@@ -50,6 +52,13 @@ public interface JdbcServices extends Service {
 	 * @return The SQL statement logger.
 	 */
 	SqlStatementLogger getSqlStatementLogger();
+
+	/**
+	 * Obtains the service used for marking SQL parameters
+	 * @return the registered ParameterMarkerStrategy implementation.
+	 */
+	@Incubating
+	ParameterMarkerStrategy getParameterMarkerStrategy();
 
 	/**
 	 * Obtain service for dealing with exceptions.

@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
@@ -35,7 +36,12 @@ public interface QueryInterpretationCache {
 	int getNumberOfCachedHqlInterpretations();
 	int getNumberOfCachedQueryPlans();
 
+	@Deprecated(forRemoval = true)
 	HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, Function<String, SqmStatement<?>> creator);
+
+	default HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, HqlTranslator translator) {
+		return resolveHqlInterpretation( queryString, expectedResultType, s -> translator.translate( queryString, expectedResultType ) );
+	}
 
 	<R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator);
 

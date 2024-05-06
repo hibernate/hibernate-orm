@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.from;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
@@ -87,7 +88,8 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return path;
 	}
 
-	protected void copyTo(SqmRoot<E> target, SqmCopyContext context) {
+	@Internal
+	public void copyTo(SqmRoot<E> target, SqmCopyContext context) {
 		super.copyTo( target, context );
 		if ( orderedJoins != null ) {
 			target.orderedJoins = new ArrayList<>( orderedJoins.size() );

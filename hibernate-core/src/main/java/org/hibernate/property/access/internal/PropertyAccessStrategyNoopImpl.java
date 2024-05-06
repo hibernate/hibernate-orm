@@ -67,6 +67,7 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 		}
 
 		@Override
+		@SuppressWarnings("rawtypes")
 		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 			return null;
 		}

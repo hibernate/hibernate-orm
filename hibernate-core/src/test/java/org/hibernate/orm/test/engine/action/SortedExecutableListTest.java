@@ -18,9 +18,8 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.action.spi.Executable;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.ExecutableList;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -37,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SortedExecutableListTest {
 
 	// For testing, we need an Executable that is also Comparable and Serializable
-	private static class AnExecutable implements Executable, Comparable<AnExecutable>, Serializable {
+	private static class AnExecutable implements ComparableExecutable {
 
 		private final int n;
 		private Serializable[] spaces;
@@ -53,8 +52,9 @@ public class SortedExecutableListTest {
 		}
 
 		@Override
-		public int compareTo(AnExecutable o) {
-			return Integer.compare( n, o.n );
+		public int compareTo(ComparableExecutable o) {
+			Integer index = (Integer) o.getSecondarySortIndex();
+			return Integer.compare( n, index.intValue() );
 		}
 
 		@Override
@@ -101,9 +101,18 @@ public class SortedExecutableListTest {
 		}
 
 		public String toString() {
-			return String.valueOf(n);
+			return String.valueOf( n );
 		}
 
+		@Override
+		public String getPrimarySortClassifier() {
+			return toString();
+		}
+
+		@Override
+		public Object getSecondarySortIndex() {
+			return Integer.valueOf( n );
+		}
 	}
 
 	private ExecutableList<AnExecutable> actionList;
@@ -288,4 +297,3 @@ public class SortedExecutableListTest {
 		assertThat( actionList ).element( 3 ).isEqualTo( action4 );
 	}
 }
-

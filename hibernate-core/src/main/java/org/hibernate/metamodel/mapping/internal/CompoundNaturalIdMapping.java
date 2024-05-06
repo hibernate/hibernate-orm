@@ -376,6 +376,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		return jdbcMappings.size();
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return jdbcMappings;
@@ -665,6 +666,13 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				result[ i ] = subAssemblers[i].assemble( rowProcessingState, options );
 			}
 			return result;
+		}
+
+		@Override
+		public void resolveState(RowProcessingState rowProcessingState) {
+			for ( DomainResultAssembler<?> subAssembler : subAssemblers ) {
+				subAssembler.resolveState( rowProcessingState );
+			}
 		}
 
 		@Override

@@ -48,6 +48,7 @@ import org.hibernate.boot.model.internal.CreateKeySecondPass;
 import org.hibernate.boot.model.internal.FkSecondPass;
 import org.hibernate.boot.model.internal.IdGeneratorResolverSecondPass;
 import org.hibernate.boot.model.internal.JPAIndexHolder;
+import org.hibernate.boot.model.internal.OptionalDeterminationSecondPass;
 import org.hibernate.boot.model.internal.QuerySecondPass;
 import org.hibernate.boot.model.internal.SecondaryTableFromAnnotationSecondPass;
 import org.hibernate.boot.model.internal.SecondaryTableSecondPass;
@@ -141,6 +142,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final List<Component> composites = new ArrayList<>();
+	private final Map<Class<?>, Component> genericComponentsMap = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
@@ -280,6 +282,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	@Override
 	public void visitRegisteredComponents(Consumer<Component> consumer) {
 		composites.forEach( consumer );
+	}
+
+	@Override
+	public void registerGenericComponent(Component component) {
+		genericComponentsMap.put( component.getComponentClass(), component );
+	}
+
+	@Override
+	public Component getGenericComponent(Class<?> componentClass) {
+		return genericComponentsMap.get( componentClass );
 	}
 
 	@Override
@@ -1656,6 +1668,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private ArrayList<ImplicitColumnNamingSecondPass> implicitColumnNamingSecondPassList;
 
 	private ArrayList<SecondPass> generalSecondPassList;
+	private ArrayList<OptionalDeterminationSecondPass> optionalDeterminationSecondPassList;
 
 	@Override
 	public void addSecondPass(SecondPass secondPass) {
@@ -1693,6 +1706,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 		else if ( secondPass instanceof ImplicitColumnNamingSecondPass ) {
 			addImplicitColumnNamingSecondPass( (ImplicitColumnNamingSecondPass) secondPass );
+		}
+		else if ( secondPass instanceof OptionalDeterminationSecondPass ) {
+			addOptionalDeterminationSecondPass( (OptionalDeterminationSecondPass) secondPass );
 		}
 		else {
 			// add to the general SecondPass list
@@ -1775,6 +1791,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		implicitColumnNamingSecondPassList.add( secondPass );
 	}
 
+	private void addOptionalDeterminationSecondPass(OptionalDeterminationSecondPass secondPass) {
+		if ( optionalDeterminationSecondPassList == null ) {
+			optionalDeterminationSecondPassList = new ArrayList<>();
+		}
+		optionalDeterminationSecondPassList.add( secondPass );
+	}
+
 
 	private boolean inSecondPass = false;
 
@@ -1801,6 +1824,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 			processSecondPasses( querySecondPassList );
 			processSecondPasses( generalSecondPassList );
+			processSecondPasses( optionalDeterminationSecondPassList );
 
 			processPropertyReferences();
 
@@ -2313,6 +2337,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 					options,
 					entityBindingMap,
 					composites,
+					genericComponentsMap,
 					mappedSuperClasses,
 					collectionBindingMap,
 					typeDefRegistry.copyRegistrationMap(),
@@ -2341,6 +2366,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
 
 		for ( PersistentClass entityBinding : entityBindingMap.values() ) {
+			entityBinding.assignCheckConstraintsToTable(
+					dialect,
+					bootstrapContext.getTypeConfiguration(),
+					bootstrapContext.getFunctionRegistry()
+			);
+
 			if ( entityBinding.isInherited() ) {
 				continue;
 			}
@@ -2350,6 +2381,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 					dialect,
 					(RootClass) entityBinding
 			);
+
 		}
 
 		for ( Collection collection : collectionBindingMap.values() ) {

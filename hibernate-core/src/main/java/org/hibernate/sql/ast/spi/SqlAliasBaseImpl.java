@@ -30,9 +30,7 @@ public class SqlAliasBaseImpl implements SqlAliasBase {
 	public String generateNewAlias() {
 		synchronized (this) {
 			final String alias = stem + "_" + ( aliasCount++ );
-			if ( SqlTreeCreationLogger.DEBUG_ENABLED ) {
-				SqlTreeCreationLogger.LOGGER.debugf( "Created new SQL alias : %s", alias );
-			}
+			SqlTreeCreationLogger.LOGGER.debugf( "Created new SQL alias : %s", alias );
 			return alias;
 		}
 	}

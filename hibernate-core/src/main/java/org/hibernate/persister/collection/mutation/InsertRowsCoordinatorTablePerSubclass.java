@@ -11,6 +11,7 @@ import java.util.Iterator;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.EntityEntry;
@@ -19,12 +20,12 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
 
 /**
  * OneToMany insert coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
@@ -34,13 +35,19 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 	private final RowMutationOperations rowMutationOperations;
 
 	private final SubclassEntry[] subclassEntries;
+	private final MutationExecutorService mutationExecutorService;
 
 	public InsertRowsCoordinatorTablePerSubclass(
 			OneToManyPersister mutationTarget,
-			RowMutationOperations rowMutationOperations) {
+			RowMutationOperations rowMutationOperations,
+			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
-		this.subclassEntries = new SubclassEntry[mutationTarget.getElementPersister().getRootEntityDescriptor().getSubclassEntityNames().size()];
+		this.subclassEntries = new SubclassEntry[mutationTarget.getElementPersister()
+				.getRootEntityDescriptor()
+				.getSubclassEntityNames()
+				.size()];
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -59,7 +66,8 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			Object id,
 			EntryFilter entryChecker,
 			SharedSessionContractImplementor session) {
-		if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		final boolean loggerDebugEnabled = MODEL_MUTATION_LOGGER.isDebugEnabled();
+		if ( loggerDebugEnabled ) {
 			MODEL_MUTATION_LOGGER.debugf(
 					"Inserting collection rows - %s : %s",
 					mutationTarget.getRolePath(),
@@ -70,19 +78,16 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
 		final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();
 
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
-
 		final Iterator<?> entries = collection.entries( collectionDescriptor );
 		collection.preInsert( collectionDescriptor );
 		if ( !entries.hasNext() ) {
-			MODEL_MUTATION_LOGGER.debugf(
-					"No collection rows to insert - %s : %s",
-					mutationTarget.getRolePath(),
-					id
-			);
+			if ( loggerDebugEnabled ) {
+				MODEL_MUTATION_LOGGER.debugf(
+						"No collection rows to insert - %s : %s",
+						mutationTarget.getRolePath(),
+						id
+				);
+			}
 			return;
 		}
 		final MutationExecutor[] executors = new MutationExecutor[subclassEntries.length];
@@ -121,7 +126,13 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 				entryCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.debugf( "Done inserting `%s` collection rows : %s", entryCount, mutationTarget.getRolePath() );
+			if ( loggerDebugEnabled ) {
+				MODEL_MUTATION_LOGGER.debugf(
+						"Done inserting `%s` collection rows : %s",
+						entryCount,
+						mutationTarget.getRolePath()
+				);
+			}
 
 		}
 		finally {
@@ -146,7 +157,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		);
 	}
 
-	private MutationOperationGroupSingle createOperationGroup(EntityPersister elementPersister) {
+	private MutationOperationGroup createOperationGroup(EntityPersister elementPersister) {
 		assert mutationTarget.getTargetPart() != null;
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
@@ -164,16 +175,16 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 						collectionTableMapping.getDeleteRowDetails()
 				)
 		);
-		return new MutationOperationGroupSingle( MutationType.INSERT, mutationTarget, operation );
+		return MutationOperationGroupFactory.singleOperation( MutationType.INSERT, mutationTarget, operation );
 	}
 
 	private static class SubclassEntry {
 
 		private final BatchKeyAccess batchKeySupplier;
 
-		private final MutationOperationGroupSingle operationGroup;
+		private final MutationOperationGroup operationGroup;
 
-		public SubclassEntry(BatchKeyAccess batchKeySupplier, MutationOperationGroupSingle operationGroup) {
+		public SubclassEntry(BatchKeyAccess batchKeySupplier, MutationOperationGroup operationGroup) {
 			this.batchKeySupplier = batchKeySupplier;
 			this.operationGroup = operationGroup;
 		}

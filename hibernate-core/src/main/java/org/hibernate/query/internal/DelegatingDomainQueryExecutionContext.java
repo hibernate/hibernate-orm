@@ -38,6 +38,11 @@ public class DelegatingDomainQueryExecutionContext implements DomainQueryExecuti
 	}
 
 	@Override
+	public boolean hasCallbackActions() {
+		return delegate.hasCallbackActions();
+	}
+
+	@Override
 	public SharedSessionContractImplementor getSession() {
 		return delegate.getSession();
 	}

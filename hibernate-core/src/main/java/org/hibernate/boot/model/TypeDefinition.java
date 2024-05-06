@@ -227,8 +227,7 @@ public class TypeDefinition implements Serializable {
 			return createBasicTypeResolution( legacyType, typeImplementorClass, indicators, typeConfiguration );
 		}
 
-		if ( indicators.getEnumeratedType() != null ) {
-			assert typeImplementorClass.isInterface();
+		if ( typeImplementorClass.isInterface() ) {
 			return createBasicTypeResolution( new JavaObjectType(), typeImplementorClass, indicators, typeConfiguration );
 		}
 
@@ -303,7 +302,7 @@ public class TypeDefinition implements Serializable {
 			String name,
 			Class<?> typeImplementorClass,
 			BeanInstanceProducer instanceProducer) {
-		if ( buildingOptions.disallowExtensionsInCdi() ) {
+		if ( !buildingOptions.isAllowExtensionsInCdi() ) {
 			return name != null
 					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
 					: instanceProducer.produceBeanInstance( typeImplementorClass );

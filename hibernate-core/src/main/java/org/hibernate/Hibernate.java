@@ -234,57 +234,6 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Remove the value associated with the given key by the given persistent
-	 * map, without fetching the state of the map from the database.
-	 *
-	 * @param map a persistent map associated with an open session
-	 * @param key a key belonging to the map
-	 * @return the previous value associated by the map with the given key, or null if there was no value associated
-	 * with the given key
-	 *
-	 * @since 6.2.0
-	 */
-	public static <K, V> V remove(Map<? super K, V> map, K key) {
-		return ( map instanceof PersistentMap )
-				? ( (PersistentMap<K, V>) map ).queuedRemove( key )
-				: map.remove( key );
-	}
-
-	/**
-	 * Remove the specified element of the given persistent set,
-	 * without fetching the state of the set from the database.
-	 *
-	 * @param set a persistent set associated with an open session
-	 * @param element an element belonging to the set
-	 * @return true if this set contained the specified element
-	 *
-	 * @since 6.2.0
-	 */
-	public static <T> boolean remove(Set<T> set, T element) {
-		return ( set instanceof PersistentSet )
-				? ( (PersistentSet<T>) set ).queuedRemove( element )
-				: set.remove( element );
-	}
-
-	/**
-	 * Remove the specified element of the given persistent list,
-	 * without fetching the state of the list from the database.
-	 *
-	 * @param list a persistent list associated with an open session
-	 * @param element an element belonging to the list
-	 * @return true if this list contained the specified element
-	 *
-	 * @since 6.2.0
-	 */
-	public static <T> boolean remove(List<T> list, T element) {
-		return ( list instanceof PersistentList )
-				? ( (PersistentList<T>) list ).queuedRemove( element )
-				: ( list instanceof PersistentBag )
-					? ( (PersistentBag<T>) list ).queuedRemove( element )
-					: list.remove( element );
-	}
-
-	/**
 	 * Get the true, underlying class of a proxied entity. This operation will
 	 * initialize a proxy by side effect.
 	 *

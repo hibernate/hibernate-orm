@@ -228,27 +228,6 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 		}
 	}
 
-	@Internal
-	public boolean queuedRemove(Object element) {
-		final CollectionEntry entry = getSession().getPersistenceContextInternal().getCollectionEntry( PersistentSet.this );
-		if ( entry == null ) {
-			throwLazyInitializationExceptionIfNotConnected();
-			throwLazyInitializationException("collection not associated with session");
-		}
-		else {
-			final CollectionPersister persister = entry.getLoadedPersister();
-			if ( hasQueuedOperations() ) {
-				getSession().flush();
-			}
-			if ( persister.elementExists( entry.getLoadedKey(), element, getSession() ) ) {
-				elementRemoved = true;
-				queueOperation( new SimpleRemove( (E) element ) );
-				return true;
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public boolean containsAll(Collection<?> coll) {
 		read();

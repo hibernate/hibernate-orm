@@ -39,7 +39,9 @@ public class SessionJdbcBatchTest
 	protected void addSettings(Map<String,Object> settings) {
 		settings.put( AvailableSettings.STATEMENT_BATCH_SIZE, 2 );
 		settings.put( AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, Boolean.FALSE );
-		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
+		if ( settings.containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
+			connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
+		}
 		settings.put(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider

@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.batch;
 
-import java.util.UUID;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,6 +18,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertThat;
 @RunWith(BytecodeEnhancerRunner.class)
 @CustomEnhancementContext({ NoDirtyCheckEnhancementContext.class })
 public abstract class AbstractBatchingTest extends BaseNonConfigCoreFunctionalTestCase {
-	protected String childName = UUID.randomUUID().toString();
+	protected String childName = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 	protected Long parentId;
 
 	@Override

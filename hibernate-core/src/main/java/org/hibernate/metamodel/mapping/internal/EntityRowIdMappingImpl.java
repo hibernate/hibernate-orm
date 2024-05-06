@@ -114,10 +114,17 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	}
 
 	@Override
-	public JdbcMapping getSingleJdbcMapping() {
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
 		return getJdbcMapping();
 	}
 
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return getJdbcMapping();
+	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {

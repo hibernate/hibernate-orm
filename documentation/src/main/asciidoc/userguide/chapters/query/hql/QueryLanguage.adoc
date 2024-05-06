@@ -1219,6 +1219,17 @@ include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-exampl
 ----
 ====
 
+Alternatively, it's also possible to construct an array with the shorthand bracket syntax `[` and `]`,
+which is syntax sugar that translates to the array constructor function.
+
+[[hql-array-constructor-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-hql-example]
+----
+====
+
 [[hql-array-aggregate-functions]]
 ===== `array_agg()`
 

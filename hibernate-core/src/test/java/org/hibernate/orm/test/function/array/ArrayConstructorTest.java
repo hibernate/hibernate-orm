@@ -109,4 +109,26 @@ public class ArrayConstructorTest {
 		} );
 	}
 
+	@Test
+	public void testArrayConstructorSyntaxEmpty(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray = []", EntityWithArrays.class )
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 1L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testArrayConstructorSyntaxNonEmpty(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-hql-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray is not distinct from ['abc', null, 'def']", EntityWithArrays.class )
+					.getResultList();
+			//end::hql-array-hql-example[]
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
 }

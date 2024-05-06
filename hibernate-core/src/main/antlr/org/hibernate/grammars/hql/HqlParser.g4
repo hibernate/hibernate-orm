@@ -889,6 +889,7 @@ literal
 	| numericLiteral
 	| binaryLiteral
 	| temporalLiteral
+	| arrayLiteral
 	| generalizedLiteral
 	;
 
@@ -1056,6 +1057,13 @@ jdbcTimeLiteral
 
 genericTemporalLiteralText
 	: STRING_LITERAL
+	;
+
+/**
+ * A generic format for specifying literal values of arbitary types
+ */
+arrayLiteral
+	: LEFT_BRACKET (expression (COMMA expression)*)? RIGHT_BRACKET
 	;
 
 /**

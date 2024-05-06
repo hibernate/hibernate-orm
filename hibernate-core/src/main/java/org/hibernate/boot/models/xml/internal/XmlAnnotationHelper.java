@@ -1490,7 +1490,7 @@ public class XmlAnnotationHelper {
 		assert jaxbNode != null;
 
 		final NotFoundAction notFoundAction = jaxbNode.getNotFound();
-		if ( notFoundAction == null || jaxbNode.getNotFound() != NotFoundAction.EXCEPTION ) {
+		if ( notFoundAction == null || notFoundAction == NotFoundAction.EXCEPTION ) {
 			return;
 		}
 

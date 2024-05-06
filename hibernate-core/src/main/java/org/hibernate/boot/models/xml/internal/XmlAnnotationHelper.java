@@ -27,6 +27,8 @@ import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.NaturalIdCache;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.RowId;
@@ -61,8 +63,10 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallbackContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLobImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNationalizedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalId;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
@@ -1477,5 +1481,23 @@ public class XmlAnnotationHelper {
 		return xmlDocumentContext.getXmlDocument()
 				.getDefaults()
 				.getCatalog();
+	}
+
+	public static void applyNotFound(
+			JaxbNotFoundCapable jaxbNode,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		assert jaxbNode != null;
+
+		final NotFoundAction notFoundAction = jaxbNode.getNotFound();
+		if ( notFoundAction == null || jaxbNode.getNotFound() != NotFoundAction.EXCEPTION ) {
+			return;
+		}
+
+		final MutableAnnotationUsage<NotFound> notFoundAnn = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.NOT_FOUND,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		notFoundAnn.setAttributeValue( "action", notFoundAction );
 	}
 }

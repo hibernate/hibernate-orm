@@ -28,6 +28,7 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 
+import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyNotFound;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
@@ -59,7 +60,7 @@ public class ManyToOneAttributeProcessing {
 		TableProcessing.transformJoinTable( jaxbManyToOne.getJoinTable(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
 
-		applyNotFound( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
+		applyNotFound( jaxbManyToOne, memberDetails, xmlDocumentContext );
 		applyOnDelete( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
 		applyTarget( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
 		XmlAnnotationHelper.applyCascading( jaxbManyToOne.getCascade(), memberDetails, xmlDocumentContext );
@@ -91,23 +92,6 @@ public class ManyToOneAttributeProcessing {
 		}
 
 		return manyToOneUsage;
-	}
-
-	private static void applyNotFound(
-			MutableMemberDetails memberDetails,
-			JaxbManyToOneImpl jaxbManyToOne,
-			MutableAnnotationUsage<ManyToOne> manyToOneAnn,
-			XmlDocumentContext xmlDocumentContext) {
-		final NotFoundAction notFoundAction = jaxbManyToOne.getNotFound();
-		if ( notFoundAction == null ) {
-			return;
-		}
-
-		final MutableAnnotationUsage<NotFound> notFoundAnn = memberDetails.applyAnnotationUsage(
-				HibernateAnnotations.NOT_FOUND,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-		notFoundAnn.setAttributeValue( "action", notFoundAction );
 	}
 
 	@SuppressWarnings("unused")

@@ -66,6 +66,8 @@ public class ManyToManyAttributeProcessing {
 
 		XmlAnnotationHelper.applyJoinTableFilters( jaxbManyToMany.getJoinTableFilters(), memberDetails, xmlDocumentContext );
 
+		XmlAnnotationHelper.applyNotFound( jaxbManyToMany, memberDetails, xmlDocumentContext );
+
 		return memberDetails;
 	}
 

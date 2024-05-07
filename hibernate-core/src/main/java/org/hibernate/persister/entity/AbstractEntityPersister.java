@@ -4115,7 +4115,7 @@ public abstract class AbstractEntityPersister
 				? null
 				: naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot );
 
-		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this );
+		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this, false );
 		final Object naturalId = naturalIdMapping.extractNaturalIdFromEntity( entity );
 		naturalIdResolutions.manageLocalResolution( id, naturalId, this, CachedNaturalIdValueSource.UPDATE );
 	}

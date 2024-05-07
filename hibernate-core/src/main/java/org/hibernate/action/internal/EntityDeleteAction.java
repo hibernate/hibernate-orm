@@ -174,7 +174,7 @@ public class EntityDeleteAction extends EntityAction {
 		final EntityKey key = entry.getEntityKey();
 		persistenceContext.removeEntityHolder( key );
 		removeCacheItem( ck );
-		persistenceContext.getNaturalIdResolutions().removeSharedResolution( id, naturalIdValues, persister );
+		persistenceContext.getNaturalIdResolutions().removeSharedResolution( id, naturalIdValues, persister, true);
 		postDelete();
 	}
 

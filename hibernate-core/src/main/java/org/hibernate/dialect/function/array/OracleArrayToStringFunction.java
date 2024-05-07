@@ -46,6 +46,13 @@ public class OracleArrayToStringFunction extends ArrayToStringFunction {
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );
+		if ( sqlAstArguments.size() > 2 ) {
+			sqlAppender.append( ',' );
+			sqlAstArguments.get( 2 ).accept( walker );
+		}
+		else {
+			sqlAppender.append( ",null" );
+		}
 		sqlAppender.append( ')' );
 	}
 }

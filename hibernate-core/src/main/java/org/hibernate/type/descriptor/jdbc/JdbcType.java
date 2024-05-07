@@ -293,6 +293,21 @@ public interface JdbcType extends Serializable {
 				|| isIntervalType( ddlTypeCode );
 	}
 
+	default boolean isArray() {
+		return isArray( getDdlTypeCode() );
+	}
+
+	static boolean isArray(int jdbcTypeCode) {
+		switch ( jdbcTypeCode ) {
+			case ARRAY:
+			case STRUCT_ARRAY:
+			case JSON_ARRAY:
+			case XML_ARRAY:
+				return true;
+		}
+		return false;
+	}
+
 	default CastType getCastType() {
 		return getCastType( getDdlTypeCode() );
 	}

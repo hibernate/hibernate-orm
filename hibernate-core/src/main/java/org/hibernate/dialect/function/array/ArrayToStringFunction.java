@@ -34,13 +34,16 @@ public class ArrayToStringFunction extends AbstractSqmSelfRenderingFunctionDescr
 				"array_to_string",
 				FunctionKind.NORMAL,
 				StandardArgumentsValidators.composite(
-					new ArgumentTypesValidator( null, ANY, STRING ),
-					ArrayArgumentValidator.DEFAULT_INSTANCE
+					new ArgumentTypesValidator( StandardArgumentsValidators.between( 2, 3 ), ANY, STRING, ANY ),
+					new ArrayAndElementArgumentValidator( 0, 2 )
 				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				),
-				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, ANY, STRING )
+				StandardFunctionArgumentTypeResolvers.composite(
+						new ArrayAndElementArgumentTypeResolver( 0, 2 ),
+						StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, ANY, STRING )
+				)
 		);
 	}
 
@@ -54,6 +57,10 @@ public class ArrayToStringFunction extends AbstractSqmSelfRenderingFunctionDescr
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.appendSql( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );
+		if ( sqlAstArguments.size() > 2 ) {
+			sqlAppender.appendSql( ',' );
+			sqlAstArguments.get( 2 ).accept( walker );
+		}
 		sqlAppender.appendSql( ')' );
 	}
 

@@ -248,13 +248,16 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 						"return res; " +
 						"end;",
 				"create or replace function " + arrayTypeName + "_to_string(arr in " + arrayTypeName +
-						", sep in varchar2) return varchar2 deterministic is " +
+						", sep in varchar2, nullVal in varchar2) return varchar2 deterministic is " +
 						"res varchar2(4000):=''; begin " +
 						"if arr is null or sep is null then return null; end if; " +
 						"for i in 1 .. arr.count loop " +
 						"if arr(i) is not null then " +
 						"if length(res)<>0 then res:=res||sep; end if; " +
 						"res:=res||arr(i); " +
+						"elsif nullVal is not null then " +
+						"if length(res)<>0 then res:=res||sep; end if; " +
+						"res:=res||nullVal; " +
 						"end if; " +
 						"end loop; " +
 						"return res; " +

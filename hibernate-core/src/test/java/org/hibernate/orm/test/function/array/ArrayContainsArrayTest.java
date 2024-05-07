@@ -199,4 +199,16 @@ public class ArrayContainsArrayTest {
 		} );
 	}
 
+	@Test
+	public void testContainsArraySyntax(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-contains-array-hql-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray contains ['abc', 'def']", EntityWithArrays.class )
+					.getResultList();
+			//end::hql-array-contains-array-hql-example[]
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
 }

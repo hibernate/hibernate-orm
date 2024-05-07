@@ -95,6 +95,7 @@ import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
@@ -2638,6 +2639,26 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		return null;
+	}
+
+	@Override
+	public SqmPredicate visitContainsPredicate(HqlParser.ContainsPredicateContext ctx) {
+		final boolean negated = ctx.NOT() != null;
+		final SqmExpression<?> lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
+		if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+			throw new SemanticException(
+					"First operand for contains predicate must be a basic plural type expression, but found: " + lhsExpressible.getSqmType(),
+					query
+			);
+		}
+		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( lhs, rhs ),
+				null,
+				creationContext.getQueryEngine()
+		);
+		return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
 	}
 
 	@Override

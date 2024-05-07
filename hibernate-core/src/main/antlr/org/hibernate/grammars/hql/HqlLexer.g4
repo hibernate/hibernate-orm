@@ -161,6 +161,7 @@ COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
 COLUMN				: [cC] [oO] [lL] [uU] [mM] [nN];
 CONFLICT			: [cC] [oO] [nN] [fF] [lL] [iI] [cC] [tT];
 CONSTRAINT			: [cC] [oO] [nN] [sS] [tT] [rR] [aA] [iI] [nN] [tT];
+CONTAINS			: [cC] [oO] [nN] [tT] [aA] [iI] [nN] [sS];
 COUNT				: [cC] [oO] [uU] [nN] [tT];
 CROSS				: [cC] [rR] [oO] [sS] [sS];
 CUBE				: [cC] [uU] [bB] [eE];

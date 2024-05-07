@@ -10,6 +10,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -46,14 +48,29 @@ public class SecondaryTableTest {
 	@Test
 	public void testSecondaryTablesAreCreated() throws Exception {
 		createSchema( "org/hibernate/orm/test/schemaupdate/secondarytable/TestEntity.xml" );
+
 		assertTrue(
-				isTableCreated( output, "CATALOG1.SCHEMA1.SECONDARY_TABLE_1" ),
+				isTableCreated( output, getExpectedTableName( "SECONDARY_TABLE_1", "SCHEMA1", "CATALOG1" ) ),
 				"Table SECONDARY_TABLE_1 has not been created "
 		);
 		assertTrue(
-				isTableCreated( output, "SECONDARY_TABLE_2" ),
+				isTableCreated( output, getExpectedTableName( "SECONDARY_TABLE_2", null, null ) ),
 				"Table SECONDARY_TABLE_2 has not been created "
 		);
+	}
+
+	private String getExpectedTableName(String tableName, String schema, String catalog) {
+		String expectedTableName = tableName;
+		NameQualifierSupport nameQualifierSupport = metadata.getDatabase()
+				.getJdbcEnvironment()
+				.getNameQualifierSupport();
+		if ( StringHelper.isNotEmpty( schema ) && nameQualifierSupport.supportsSchemas() ) {
+			expectedTableName = schema + "." + expectedTableName;
+		}
+		if ( StringHelper.isNotEmpty( catalog ) && nameQualifierSupport.supportsCatalogs() ) {
+			expectedTableName = catalog + "." + expectedTableName;
+		}
+		return expectedTableName;
 	}
 
 	private static boolean isTableCreated(

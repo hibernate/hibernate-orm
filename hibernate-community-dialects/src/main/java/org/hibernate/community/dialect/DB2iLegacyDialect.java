@@ -42,13 +42,15 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 
 	final static DatabaseVersion DB2_LUW_VERSION9 = DatabaseVersion.make( 9, 0);
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 7 );
+
 	public DB2iLegacyDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public DB2iLegacyDialect() {
-		this( DatabaseVersion.make(7) );
+		this( DEFAULT_VERSION );
 	}
 
 	public DB2iLegacyDialect(DatabaseVersion version) {

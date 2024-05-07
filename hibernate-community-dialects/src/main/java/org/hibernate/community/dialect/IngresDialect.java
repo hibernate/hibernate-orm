@@ -100,15 +100,17 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  */
 public class IngresDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 9, 2 );
+
 	private final LimitHandler limitHandler;
 	private final SequenceSupport sequenceSupport;
 
 	public IngresDialect() {
-		this( DatabaseVersion.make( 9, 2 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public IngresDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 

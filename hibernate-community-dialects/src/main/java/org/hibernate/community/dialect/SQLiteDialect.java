@@ -95,15 +95,17 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class SQLiteDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 2, 0 );
+
 	private final UniqueDelegate uniqueDelegate;
 
 	public SQLiteDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public SQLiteDialect() {
-		this( DatabaseVersion.make( 2, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public SQLiteDialect(DatabaseVersion version) {

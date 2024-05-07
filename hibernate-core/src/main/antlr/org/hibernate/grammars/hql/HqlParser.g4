@@ -438,9 +438,11 @@ syntacticDomainPath
 	| collectionValueNavigablePath
 	| mapKeyNavigablePath
 	| simplePath indexedPathAccessFragment
+	| simplePath slicedPathAccessFragment
 	| toOneFkReference
 	| function pathContinuation
 	| function indexedPathAccessFragment pathContinuation?
+	| function slicedPathAccessFragment
 	;
 
 /**
@@ -461,6 +463,13 @@ generalPathFragment
  */
 indexedPathAccessFragment
 	: LEFT_BRACKET expression RIGHT_BRACKET (DOT generalPathFragment)?
+	;
+
+/**
+ * The slice operator to obtain elements between the lower and upper bound.
+ */
+slicedPathAccessFragment
+	: LEFT_BRACKET expression COLON expression RIGHT_BRACKET
 	;
 
 /**

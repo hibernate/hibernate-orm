@@ -53,7 +53,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorFormulaImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
@@ -63,12 +62,12 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallbackContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLobImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNationalizedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalId;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
@@ -88,7 +87,6 @@ import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.KeyedConsumer;
 import org.hibernate.internal.util.StringHelper;
@@ -125,6 +123,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
@@ -1499,5 +1499,44 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 		notFoundAnn.setAttributeValue( "action", notFoundAction );
+	}
+
+	public static void applySecondaryTables(List<JaxbSecondaryTableImpl> secondaryTables, MutableAnnotationTarget target, XmlDocumentContext xmlDocumentContext) {
+		if ( secondaryTables == null || secondaryTables.isEmpty() ) {
+			return;
+		}
+
+		final MutableAnnotationUsage<SecondaryTables> listenersUsage = target.replaceAnnotationUsage(
+				JpaAnnotations.SECONDARY_TABLE,
+				JpaAnnotations.SECONDARY_TABLES,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		final List<MutableAnnotationUsage<SecondaryTable>> values = arrayList( secondaryTables.size() );
+		listenersUsage.setAttributeValue( "value", values );
+
+		for ( JaxbSecondaryTableImpl secondaryTable : secondaryTables ) {
+			final MutableAnnotationUsage<SecondaryTable> tableAnn = JpaAnnotations.SECONDARY_TABLE
+					.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			tableAnn.setAttributeValue( "name", secondaryTable.getName() );
+
+			ForeignKeyProcessing.applyForeignKey( secondaryTable.getForeignKey(), tableAnn, xmlDocumentContext );
+
+			JoinColumnProcessing.applyPrimaryKeyJoinColumns(
+					secondaryTable.getPrimaryKeyJoinColumn(),
+					tableAnn,
+					xmlDocumentContext
+			);
+
+			applyTableAttributes(
+					secondaryTable,
+					target,
+					tableAnn,
+					JpaAnnotations.SECONDARY_TABLE,
+					xmlDocumentContext
+			);
+
+			values.add( tableAnn );
+		}
 	}
 }

@@ -517,6 +517,7 @@ public class ManagedTypeProcessor {
 		}
 
 		XmlAnnotationHelper.applyTable( jaxbEntity.getTable(), classDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applySecondaryTables( jaxbEntity.getSecondaryTables(), classDetails, xmlDocumentContext );
 
 		final JaxbAttributesContainerImpl attributes = jaxbEntity.getAttributes();
 		if ( attributes != null ) {

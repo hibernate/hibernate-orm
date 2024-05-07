@@ -134,4 +134,16 @@ public class ArrayPositionTest {
 		} );
 	}
 
+	@Test
+	public void testPositionOverload(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-position-hql-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where position('abc' in e.theArray) = 1", EntityWithArrays.class )
+					.getResultList();
+			//end::hql-array-position-hql-example[]
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
 }

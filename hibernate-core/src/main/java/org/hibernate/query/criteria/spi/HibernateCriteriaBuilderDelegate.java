@@ -2531,39 +2531,81 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayOverlaps( arrayExpression1, arrayExpression2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
 		return criteriaBuilder.arrayOverlaps( arrayExpression1, array2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayOverlaps( array1, arrayExpression2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayOverlapsNullable( arrayExpression1, arrayExpression2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
 		return criteriaBuilder.arrayOverlapsNullable( arrayExpression1, array2 );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayOverlapsNullable( array1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayIntersects( arrayExpression1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, T[] array2) {
+		return criteriaBuilder.arrayIntersects( arrayExpression1, array2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersects(T[] array1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayIntersects( array1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayIntersectsNullable( arrayExpression1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, T[] array2) {
+		return criteriaBuilder.arrayIntersectsNullable( arrayExpression1, array2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIntersectsNullable(T[] array1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayIntersectsNullable( array1, arrayExpression2 );
 	}
 
 	@Override
@@ -2985,6 +3027,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlaps(
 			Expression<? extends Collection<E>> collectionExpression1,
@@ -2993,6 +3036,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlaps(
 			Expression<? extends Collection<E>> collectionExpression1,
@@ -3001,6 +3045,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlaps(
 			Collection<E> collection1,
@@ -3009,6 +3054,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlapsNullable(
 			Expression<? extends Collection<E>> collectionExpression1,
@@ -3017,6 +3063,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlapsNullable(
 			Expression<? extends Collection<E>> collectionExpression1,
@@ -3025,10 +3072,59 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionOverlapsNullable(
 			Collection<E> collection1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
 		return criteriaBuilder.collectionOverlapsNullable( collection1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersects(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionIntersects( collectionExpression1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersects(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Collection<? extends E> collection2) {
+		return criteriaBuilder.collectionIntersects( collectionExpression1, collection2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersects(
+			Collection<E> collection1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionIntersects( collection1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersectsNullable(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionIntersectsNullable( collectionExpression1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersectsNullable(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Collection<? extends E> collection2) {
+		return criteriaBuilder.collectionIntersectsNullable( collectionExpression1, collection2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIntersectsNullable(
+			Collection<E> collection1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionIntersectsNullable( collection1, collectionExpression2 );
 	}
 }

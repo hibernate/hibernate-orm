@@ -420,6 +420,16 @@
             </bindings>
         </bindings>
 
+        <bindings node=".//xsd:complexType[@name='secondary-table']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping</inheritance:implements>
+            <bindings node=".//xsd:element[@name='unique-constraint']">
+                <property name="uniqueConstraints"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='index']">
+                <property name="indexes"/>
+            </bindings>
+        </bindings>
+
         <bindings node="//xsd:complexType[@name='check-constraint']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckConstraint</inheritance:implements>
         </bindings>

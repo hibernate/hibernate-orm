@@ -1191,8 +1191,8 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_append()` | Appends element to array
 | `array_contains()` | Whether an array contains element(s)
 | `array_contains_nullable()` | Whether an array contains element(s), supporting `null` elements
-| `array_overlaps()` | Whether an array holds at least one element of another array
-| `array_overlaps_nullable()` | Whether an array holds at least one element of another array, supporting `null` elements
+| `array_intersects()` | Whether an array holds at least one element of another array
+| `array_intersects_nullable()` | Whether an array holds at least one element of another array, supporting `null` elements
 | `array_get()` | Accesses the element of an array by index
 | `array_set()` | Creates array copy with given element at given index
 | `array_remove()` | Creates array copy with given element removed
@@ -1421,26 +1421,41 @@ include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-cont
 ====
 
 [[hql-array-overlaps-functions]]
-===== `array_overlaps()` and `array_overlaps_nullable()`
+[[hql-array-intersects-functions]]
+===== `array_intersects()` and `array_intersects_nullable()`
 
 Checks if the first array argument any of the elements of the second array argument.
-Returns `null` if either of the arguments is `null`. The result of `array_overlaps`
+Returns `null` if either of the arguments is `null`. The result of `array_intersects`
 is undefined when the second array argument contains a `null` array element.
-Only `array_overlaps_nullable` is guaranteed to produce correct results for `null` array elements.
+Only `array_intersects_nullable` is guaranteed to produce correct results for `null` array elements.
 
 [[hql-array-overlaps-example]]
+[[hql-array-intersects-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayOverlapsTest.java[tags=hql-array-overlaps-example]
+include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-example]
 ----
 ====
 
 [[hql-array-overlaps-nullable-example]]
+[[hql-array-intersects-nullable-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayOverlapsTest.java[tags=hql-array-overlaps-nullable-example]
+include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-nullable-example]
+----
+====
+
+Alternatively, it's also possible to check for intersection with the `intersects` predicate.
+This is syntax sugar that translates to the `array_intersects` function.
+
+[[hql-array-overlaps-hql-example]]
+[[hql-array-intersects-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayIntersectsTest.java[tags=hql-array-intersects-hql-example]
 ----
 ====
 
@@ -1864,6 +1879,20 @@ include::{extrasdir}/predicate_contains_bnf.txt[]
 ----
 
 For further details, refer to the <<hql-array-contains-example,`array_contains` section>>.
+
+[[hql-intersects-predicate]]
+==== `intersects`
+
+The `intersects` predicates evaluates to true if the value to its left has at least one element common with the value to its right.
+Currently, this predicate only works with an array typed expressions.
+
+[[hql-intersects-predicate-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/predicate_intersects_bnf.txt[]
+----
+
+For further details, refer to the <<hql-array-intersects-example,`array_intersects` section>>.
 
 [[hql-relational-comparisons-subqueries]]
 ==== Relational operators and subqueries

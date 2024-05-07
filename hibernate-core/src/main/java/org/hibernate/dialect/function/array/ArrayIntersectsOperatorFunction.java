@@ -16,11 +16,11 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Array overlaps function that uses the PostgreSQL {@code &&} operator.
+ * Array intersects function that uses the PostgreSQL {@code &&} operator.
  */
-public class ArrayOverlapsOperatorFunction extends ArrayOverlapsUnnestFunction {
+public class ArrayIntersectsOperatorFunction extends ArrayIntersectsUnnestFunction {
 
-	public ArrayOverlapsOperatorFunction(boolean nullable, TypeConfiguration typeConfiguration) {
+	public ArrayIntersectsOperatorFunction(boolean nullable, TypeConfiguration typeConfiguration) {
 		super( nullable, typeConfiguration );
 	}
 

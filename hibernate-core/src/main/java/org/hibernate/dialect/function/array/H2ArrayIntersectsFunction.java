@@ -16,12 +16,17 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Implement the overlaps function by using {@code unnest}.
+ * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+ * due to https://github.com/h2database/h2database/issues/1815.
+ * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same.
  */
-public class ArrayOverlapsUnnestFunction extends AbstractArrayOverlapsFunction {
+public class H2ArrayIntersectsFunction extends AbstractArrayIntersectsFunction {
 
-	public ArrayOverlapsUnnestFunction(boolean nullable, TypeConfiguration typeConfiguration) {
+	private final int maximumArraySize;
+
+	public H2ArrayIntersectsFunction(boolean nullable, int maximumArraySize, TypeConfiguration typeConfiguration) {
 		super( nullable, typeConfiguration );
+		this.maximumArraySize = maximumArraySize;
 	}
 
 	@Override
@@ -42,16 +47,25 @@ public class ArrayOverlapsUnnestFunction extends AbstractArrayOverlapsFunction {
 			sqlAppender.append( " is not null and " );
 		}
 		if ( !nullable ) {
-			sqlAppender.append( "not exists(select 1 from unnest(" );
+			sqlAppender.append( "not array_contains(" );
 			needleExpression.accept( walker );
-			sqlAppender.append( ") t(i) where t.i is null) and " );
+			sqlAppender.append( ",null) and " );
 		}
-		sqlAppender.append( "exists(select * from unnest(" );
+		sqlAppender.append( "exists(select array_get(" );
 		needleExpression.accept( walker );
-		sqlAppender.append( ")" );
+		sqlAppender.append( ",t.i) from system_range(1," );
+		sqlAppender.append( Integer.toString( maximumArraySize ) );
+		sqlAppender.append( ") t(i) where array_length(" );
+		needleExpression.accept( walker );
+		sqlAppender.append( ")>=t.i" );
 		sqlAppender.append( " intersect " );
-		sqlAppender.append( "select * from unnest(" );
+		sqlAppender.append( "select array_get(" );
 		haystackExpression.accept( walker );
-		sqlAppender.append( ")))" );
+		sqlAppender.append( ",t.i) from system_range(1," );
+		sqlAppender.append( Integer.toString( maximumArraySize ) );
+		sqlAppender.append( ") t(i) where array_length(" );
+		haystackExpression.accept( walker );
+		sqlAppender.append( ")>=t.i))" );
 	}
+
 }

@@ -84,7 +84,6 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -355,7 +354,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.arrayPrepend_oracle();
 		functionFactory.arrayAppend_oracle();
 		functionFactory.arrayContains_oracle();
-		functionFactory.arrayOverlaps_oracle();
+		functionFactory.arrayIntersects_oracle();
 		functionFactory.arrayGet_oracle();
 		functionFactory.arraySet_oracle();
 		functionFactory.arrayRemove_oracle();

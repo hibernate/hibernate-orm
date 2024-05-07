@@ -121,7 +121,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 						"end loop; " +
 						"return 1; " +
 						"end;",
-				"create or replace function " + arrayTypeName + "_overlaps(haystack in " + arrayTypeName +
+				"create or replace function " + arrayTypeName + "_intersects(haystack in " + arrayTypeName +
 						", needle in " + arrayTypeName + ", nullable in number) return number deterministic is begin " +
 						"if haystack is null or needle is null then return null; end if; " +
 						"if needle.count = 0 then return 1; end if; " +
@@ -296,7 +296,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 				"drop function " + arrayTypeName + "_length",
 				"drop function " + arrayTypeName + "_concat",
 				"drop function " + arrayTypeName + "_contains",
-				"drop function " + arrayTypeName + "_overlaps",
+				"drop function " + arrayTypeName + "_intersects",
 				"drop function " + arrayTypeName + "_get",
 				"drop function " + arrayTypeName + "_set",
 				"drop function " + arrayTypeName + "_remove",

@@ -13,16 +13,16 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolv
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Encapsulates the validator, return type and argument type resolvers for the array_overlaps function.
+ * Encapsulates the validator, return type and argument type resolvers for the array_intersects function.
  * Subclasses only have to implement the rendering.
  */
-public abstract class AbstractArrayOverlapsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public abstract class AbstractArrayIntersectsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	protected final boolean nullable;
 
-	public AbstractArrayOverlapsFunction(boolean nullable, TypeConfiguration typeConfiguration) {
+	public AbstractArrayIntersectsFunction(boolean nullable, TypeConfiguration typeConfiguration) {
 		super(
-				"array_overlaps" + ( nullable ? "_nullable" : "" ),
+				"array_intersects" + ( nullable ? "_nullable" : "" ),
 				StandardArgumentsValidators.composite(
 						StandardArgumentsValidators.exactly( 2 ),
 						ArraysOfSameTypeArgumentValidator.INSTANCE

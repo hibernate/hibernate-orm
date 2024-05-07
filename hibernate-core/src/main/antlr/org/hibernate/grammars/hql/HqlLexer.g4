@@ -216,6 +216,7 @@ INNER				: [iI] [nN] [nN] [eE] [rR];
 INSERT				: [iI] [nN] [sS] [eE] [rR] [tT];
 INSTANT				: [iI] [nN] [sS] [tT] [aA] [nN] [tT];
 INTERSECT			: [iI] [nN] [tT] [eE] [rR] [sS] [eE] [cC] [tT];
+INTERSECTS			: [iI] [nN] [tT] [eE] [rR] [sS] [eE] [cC] [tT] [sS];
 INTO 				: [iI] [nN] [tT] [oO];
 IS					: [iI] [sS];
 JOIN				: [jJ] [oO] [iI] [nN];

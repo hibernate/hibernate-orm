@@ -21,8 +21,8 @@ import org.hibernate.dialect.function.array.ArrayConcatFunction;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayOverlapsOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayOverlapsUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayIntersectsOperatorFunction;
+import org.hibernate.dialect.function.array.ArrayIntersectsUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayReplaceUnnestFunction;
@@ -34,7 +34,7 @@ import org.hibernate.dialect.function.array.CockroachArrayFillFunction;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
 import org.hibernate.dialect.function.array.H2ArrayFillFunction;
-import org.hibernate.dialect.function.array.H2ArrayOverlapsFunction;
+import org.hibernate.dialect.function.array.H2ArrayIntersectsFunction;
 import org.hibernate.dialect.function.array.H2ArrayPositionFunction;
 import org.hibernate.dialect.function.array.H2ArrayPositionsFunction;
 import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
@@ -52,7 +52,7 @@ import org.hibernate.dialect.function.array.HSQLArrayToStringFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
 import org.hibernate.dialect.function.array.OracleArrayFillFunction;
-import org.hibernate.dialect.function.array.OracleArrayOverlapsFunction;
+import org.hibernate.dialect.function.array.OracleArrayIntersectsFunction;
 import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
@@ -2714,53 +2714,61 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * H2 array_overlaps() function
+	 * H2 array_intersects() function
 	 */
-	public void arrayOverlaps_h2(int maximumArraySize) {
+	public void arrayIntersects_h2(int maximumArraySize) {
 		functionRegistry.register(
-				"array_overlaps",
-				new H2ArrayOverlapsFunction( false, maximumArraySize, typeConfiguration )
+				"array_intersects",
+				new H2ArrayIntersectsFunction( false, maximumArraySize, typeConfiguration )
 		);
 		functionRegistry.register(
-				"array_overlaps_nullable",
-				new H2ArrayOverlapsFunction( true, maximumArraySize, typeConfiguration )
+				"array_intersects_nullable",
+				new H2ArrayIntersectsFunction( true, maximumArraySize, typeConfiguration )
 		);
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
-	 * HSQL array_overlaps() function
+	 * HSQL array_intersects() function
 	 */
-	public void arrayOverlaps_hsql() {
+	public void arrayIntersects_hsql() {
 		functionRegistry.register(
-				"array_overlaps",
-				new ArrayOverlapsUnnestFunction( false, typeConfiguration )
+				"array_intersects",
+				new ArrayIntersectsUnnestFunction( false, typeConfiguration )
 		);
 		functionRegistry.register(
-				"array_overlaps_nullable",
-				new ArrayOverlapsUnnestFunction( true, typeConfiguration )
+				"array_intersects_nullable",
+				new ArrayIntersectsUnnestFunction( true, typeConfiguration )
 		);
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
-	 * CockroachDB and PostgreSQL array overlaps operator
+	 * CockroachDB and PostgreSQL array intersects operator
 	 */
-	public void arrayOverlaps_postgresql() {
-		functionRegistry.register( "array_overlaps", new ArrayOverlapsOperatorFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_overlaps_nullable", new ArrayOverlapsOperatorFunction( true, typeConfiguration ) );
+	public void arrayIntersects_postgresql() {
+		functionRegistry.register( "array_intersects", new ArrayIntersectsOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_intersects_nullable", new ArrayIntersectsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**
-	 * Oracle array_overlaps() function
+	 * Oracle array_intersects() function
 	 */
-	public void arrayOverlaps_oracle() {
+	public void arrayIntersects_oracle() {
 		functionRegistry.register(
-				"array_overlaps",
-				new OracleArrayOverlapsFunction( typeConfiguration, false )
+				"array_intersects",
+				new OracleArrayIntersectsFunction( typeConfiguration, false )
 		);
 		functionRegistry.register(
-				"array_overlaps_nullable",
-				new OracleArrayOverlapsFunction( typeConfiguration, true )
+				"array_intersects_nullable",
+				new OracleArrayIntersectsFunction( typeConfiguration, true )
 		);
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
 
 	/**

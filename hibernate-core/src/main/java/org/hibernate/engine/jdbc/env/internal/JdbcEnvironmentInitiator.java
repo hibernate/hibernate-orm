@@ -15,6 +15,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
@@ -163,13 +164,13 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		final DialectResolutionInfo dialectResolutionInfo = new DialectResolutionInfoImpl(
 				null,
 				explicitDatabaseName,
-				explicitDatabaseVersion != null ? explicitDatabaseVersion : "0",
-				explicitDatabaseMajorVersion != null ? explicitDatabaseMajorVersion : 0,
-				explicitDatabaseMinorVersion != null ? explicitDatabaseMinorVersion : 0,
-				0,
+				explicitDatabaseVersion,
+				explicitDatabaseMajorVersion != null ? explicitDatabaseMajorVersion : DatabaseVersion.NO_VERSION,
+				explicitDatabaseMinorVersion != null ? explicitDatabaseMinorVersion : DatabaseVersion.NO_VERSION,
+				DatabaseVersion.NO_VERSION,
 				null,
-				0,
-				0,
+				DatabaseVersion.NO_VERSION,
+				DatabaseVersion.NO_VERSION,
 				null,
 				configurationValues
 		);

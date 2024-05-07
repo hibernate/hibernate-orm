@@ -84,16 +84,18 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  */
 public class InformixDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 7, 0 );
+
 	private final UniqueDelegate uniqueDelegate;
 	private final LimitHandler limitHandler;
 
 	public InformixDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public InformixDialect() {
-		this( DatabaseVersion.make( 7, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	/**

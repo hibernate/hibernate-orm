@@ -1202,7 +1202,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_trim()` | Creates array copy trimming the last _N_ elements
 | `array_fill()` | Creates array filled with the same element _N_ times
 | `array_fill_list()` | Like `array_fill`, but returns the result as `List<?>`
-| `array_to_string()` | String representation of non-null array elements
+| `array_to_string()` | String representation of array
 |===
 
 [[hql-array-constructor-functions]]
@@ -1546,9 +1546,11 @@ include::{array-example-dir-hql}/ArrayFillTest.java[tags=hql-array-fill-example]
 ====
 
 [[hql-array-to-string-functions]]
-===== `array_to_string()`
+===== `array_to_string()` or `cast(array as String)`
 
-Concatenates the non-null array elements with a separator, as specified by the arguments.
+Concatenates the array elements with a separator, as specified by the arguments.
+Null values are filtered, but the optional third argument can be specified to define a default value to use
+when a `null` array element is encountered.
 Returns `null` if the first argument is `null`.
 
 [[hql-array-to-string-example]]
@@ -1556,6 +1558,17 @@ Returns `null` if the first argument is `null`.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-example]
+----
+====
+
+Alternatively, it is also possible to use `cast(array as String)`,
+which is a short version of `concat('[', array_to_string(array, ',', 'null'), ']')`.
+
+[[hql-array-to-string-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-hql-example]
 ----
 ====
 

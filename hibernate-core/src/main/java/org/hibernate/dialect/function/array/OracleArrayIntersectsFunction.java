@@ -15,9 +15,9 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
-public class OracleArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
+public class OracleArrayIntersectsFunction extends AbstractArrayIntersectsFunction {
 
-	public OracleArrayOverlapsFunction(TypeConfiguration typeConfiguration, boolean nullable) {
+	public OracleArrayIntersectsFunction(TypeConfiguration typeConfiguration, boolean nullable) {
 		super( nullable, typeConfiguration );
 	}
 
@@ -33,7 +33,7 @@ public class OracleArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
 				walker.getSessionFactory().getTypeConfiguration()
 		);
 		sqlAppender.appendSql( arrayTypeName );
-		sqlAppender.append( "_overlaps(" );
+		sqlAppender.append( "_intersects(" );
 		haystackExpression.accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );

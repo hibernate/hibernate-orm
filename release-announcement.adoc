@@ -98,3 +98,41 @@ class MyEmbeddable { ... }
 
 ----
 
+[[array-syntax-sugar]]
+== Syntax sugar for array functions
+
+Plenty of syntax sugar for array operations was added:
+
+
+|===
+|Function |Syntax sugar |
+
+|`array(1, 2)`
+|`[1, 2]`
+|Shorthand bracket syntax for array construction
+
+|`array_slice(array, 1, 2)`
+|`array[1:2]`
+|Shorthand bracket syntax for array slicing
+
+|`array_length(array)`
+|`length(array)`
+|Overload length function with array_length semantics on array input
+
+|`array_position(array, element)`
+|`position(element in array)`
+|Overload position function with array_position semantics on array input
+
+|`array_to_string(array, ',', 'null')`
+|`cast(array as String)`
+|Support casting array to string
+
+|`array_contains(array, element)`
+|`array contains element`
+|Contains predicate for containment check
+
+|`array_intersects(array, array(1, 2))`
+|`array intersects [1, 2]`
+|Overlaps predicate for overlaps check
+|===
+

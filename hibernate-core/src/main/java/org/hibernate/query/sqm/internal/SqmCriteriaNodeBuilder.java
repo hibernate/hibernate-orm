@@ -3987,8 +3987,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+	public <T> SqmPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return isTrue( getFunctionDescriptor( "array_intersects" ).generateSqmExpression(
 				asList( (SqmExpression<?>) arrayExpression1, (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
@@ -3996,8 +3996,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+	public <T> SqmPredicate arrayIntersects(Expression<T[]> arrayExpression1, T[] array2) {
+		return isTrue( getFunctionDescriptor( "array_intersects" ).generateSqmExpression(
 				asList( (SqmExpression<?>) arrayExpression1, value( array2, (SqmExpression<?>) arrayExpression1 ) ),
 				null,
 				queryEngine
@@ -4005,8 +4005,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+	public <T> SqmPredicate arrayIntersects(T[] array1, Expression<T[]> arrayExpression2) {
+		return isTrue( getFunctionDescriptor( "array_intersects" ).generateSqmExpression(
 				asList( value( array1, (SqmExpression<?>) arrayExpression2 ), (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
@@ -4014,10 +4014,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlapsNullable(
+	public <T> SqmPredicate arrayIntersectsNullable(
 			Expression<T[]> arrayExpression1,
 			Expression<T[]> arrayExpression2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_intersects_nullable" ).generateSqmExpression(
 				asList( (SqmExpression<?>) arrayExpression1, (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
@@ -4025,8 +4025,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+	public <T> SqmPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, T[] array2) {
+		return isTrue( getFunctionDescriptor( "array_intersects_nullable" ).generateSqmExpression(
 				asList( (SqmExpression<?>) arrayExpression1, value( array2, (SqmExpression<?>) arrayExpression1 ) ),
 				null,
 				queryEngine
@@ -4034,8 +4034,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+	public <T> SqmPredicate arrayIntersectsNullable(T[] array1, Expression<T[]> arrayExpression2) {
+		return isTrue( getFunctionDescriptor( "array_intersects_nullable" ).generateSqmExpression(
 				asList( value( array1, (SqmExpression<?>) arrayExpression2 ), (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
@@ -4614,10 +4614,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionOverlaps(
+	public <E> SqmPredicate collectionIntersects(
 			Expression<? extends Collection<E>> collectionExpression1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_intersects" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression1, (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine
@@ -4625,10 +4625,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionOverlaps(
+	public <E> SqmPredicate collectionIntersects(
 			Expression<? extends Collection<E>> collectionExpression1,
 			Collection<? extends E> collection2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_intersects" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression1, value( collection2, (SqmExpression<?>) collectionExpression1 ) ),
 				null,
 				queryEngine
@@ -4636,10 +4636,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionOverlaps(
+	public <E> SqmPredicate collectionIntersects(
 			Collection<E> collection1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_intersects" ).generateSqmExpression(
 				asList( value( collection1, (SqmExpression<?>) collectionExpression2 ), (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine
@@ -4647,10 +4647,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionOverlapsNullable(
+	public <E> SqmPredicate collectionIntersectsNullable(
 			Expression<? extends Collection<E>> collectionExpression1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_intersects_nullable" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression1, (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine
@@ -4658,10 +4658,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionOverlapsNullable(
+	public <E> SqmPredicate collectionIntersectsNullable(
 			Expression<? extends Collection<E>> collectionExpression1,
 			Collection<? extends E> collection2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_intersects_nullable" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression1, value( collection2, (SqmExpression<?>) collectionExpression1 ) ),
 				null,
 				queryEngine
@@ -4669,10 +4669,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionOverlapsNullable(
+	public <E> SqmPredicate collectionIntersectsNullable(
 			Collection<E> collection1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_intersects_nullable" ).generateSqmExpression(
 				asList( value( collection1, (SqmExpression<?>) collectionExpression2 ), (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine

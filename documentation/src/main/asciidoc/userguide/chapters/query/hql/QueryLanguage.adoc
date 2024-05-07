@@ -1244,7 +1244,7 @@ include::{array-example-dir-hql}/ArrayAggregateTest.java[tags=hql-array-agg-exam
 ====
 
 [[hql-array-position-functions]]
-===== `array_position()`
+===== `array_position()` or `position()`
 
 Returns the 1-based position of an element in the array. Returns 0 if the element is not found and `null` if the array is `null`.
 
@@ -1253,6 +1253,17 @@ Returns the 1-based position of an element in the array. Returns 0 if the elemen
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-example]
+----
+====
+
+Alternatively, it is also possible to use the `position()` function,
+which is overloaded to also accept an array argument.
+
+[[hql-array-position-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-hql-example]
 ----
 ====
 

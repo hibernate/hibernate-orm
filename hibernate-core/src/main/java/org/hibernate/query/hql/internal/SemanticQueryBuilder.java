@@ -4566,14 +4566,24 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitPositionFunction(HqlParser.PositionFunctionContext ctx) {
-		final SqmExpression<?> pattern = (SqmExpression<?>) ctx.positionFunctionPatternArgument().accept( this );
-		final SqmExpression<?> string = (SqmExpression<?>) ctx.positionFunctionStringArgument().accept( this );
+		final SqmExpression<?> patternOrElement = (SqmExpression<?>) ctx.positionFunctionPatternArgument().accept( this );
+		final SqmExpression<?> stringOrArray = (SqmExpression<?>) ctx.positionFunctionStringArgument().accept( this );
 
-		return getFunctionDescriptor("position").generateSqmExpression(
-				asList( pattern, string ),
-				null,
-				creationContext.getQueryEngine()
-		);
+		final SqmExpressible<?> stringOrArrayExpressible = stringOrArray.getExpressible();
+		if ( stringOrArrayExpressible != null && stringOrArrayExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			return getFunctionDescriptor( "array_position" ).generateSqmExpression(
+					asList( stringOrArray, patternOrElement ),
+					null,
+					creationContext.getQueryEngine()
+			);
+		}
+		else {
+			return getFunctionDescriptor( "position" ).generateSqmExpression(
+					asList( patternOrElement, stringOrArray ),
+					null,
+					creationContext.getQueryEngine()
+			);
+		}
 	}
 
 	@Override

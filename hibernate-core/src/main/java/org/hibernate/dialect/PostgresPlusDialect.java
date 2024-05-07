@@ -105,6 +105,11 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	public boolean isEmptyStringTreatedAsNull() {
+		return true;
+	}
+
+	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		statement.registerOutParameter( col, Types.REF );
 		col++;

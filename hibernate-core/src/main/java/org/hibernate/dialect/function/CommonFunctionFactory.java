@@ -1605,34 +1605,34 @@ public class CommonFunctionFactory {
 	 * Transact SQL-style
 	 */
 	public void characterLength_len() {
-		functionRegistry.namedDescriptorBuilder( "len" )
+		functionRegistry.namedDescriptorBuilder( "character_length", "len" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
 				.register();
-		functionRegistry.registerAlternateKey( "character_length", "len" );
-		functionRegistry.registerAlternateKey( "length", "len" );
+		functionRegistry.registerAlternateKey( "len", "character_length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	/**
 	 * Oracle-style
 	 */
 	public void characterLength_length(SqlAstNodeRenderingMode argumentRenderingMode) {
-		functionRegistry.namedDescriptorBuilder( "length" )
+		functionRegistry.namedDescriptorBuilder( "character_length", "length" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
 				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
-		functionRegistry.registerAlternateKey( "character_length", "length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	public void characterLength_length(String clobPattern) {
 		functionRegistry.register(
-				"length",
+				"character_length",
 				new LengthFunction( "length", "length(?1)", clobPattern, typeConfiguration )
 		);
-		functionRegistry.registerAlternateKey( "character_length", "length" );
+		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
 
 	public void octetLength() {
@@ -2861,6 +2861,7 @@ public class CommonFunctionFactory {
 				)
 				.setArgumentListSignature( "(ARRAY array)" )
 				.register();
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 	}
 
 	/**
@@ -2868,6 +2869,7 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayLength_oracle() {
 		functionRegistry.register( "array_length", new OracleArrayLengthFunction( typeConfiguration ) );
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 	}
 
 	/**

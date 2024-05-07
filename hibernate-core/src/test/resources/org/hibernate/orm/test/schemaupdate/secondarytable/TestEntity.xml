@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="3.2">
+    <package>org.hibernate.orm.test.schemaupdate.secondarytable</package>
+    <entity class="TestEntity" metadata-complete="true">
+        <secondary-table name="SECONDARY_TABLE_1" options="option 1" catalog="catalog1" schema="schema1" owned="false"/>
+        <secondary-table name="SECONDARY_TABLE_2" optional="true">
+            <primary-key-join-column name="pk_jc"></primary-key-join-column>
+            <index column-list="name asc"/>
+        </secondary-table>
+        <attributes>
+            <id name="id"/>
+            <basic name="name">
+                <column name="NAME_COLUMN" table="SECONDARY_TABLE_2"/>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

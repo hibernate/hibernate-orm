@@ -66,7 +66,7 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	public AltibaseDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
 		registerKeywords( info );
 	}
 

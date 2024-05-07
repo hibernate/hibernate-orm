@@ -144,7 +144,7 @@ public class CockroachDialect extends Dialect {
 
 	public CockroachDialect(DialectResolutionInfo info, String versionString) {
 		this(
-				versionString != null ? parseVersion( versionString ) : info.makeCopy(),
+				versionString != null ? parseVersion( versionString ) : info.makeCopyOrDefault( MINIMUM_VERSION ),
 				PostgreSQLDriverKind.determineKind( info )
 		);
 		registerKeywords( info );
@@ -177,7 +177,7 @@ public class CockroachDialect extends Dialect {
 			// default to the dialect-specific configuration setting
 			versionString = ConfigurationHelper.getString( COCKROACH_VERSION_STRING, info.getConfigurationValues() );
 		}
-		return versionString != null ? parseVersion( versionString ) : info.makeCopy();
+		return versionString != null ? parseVersion( versionString ) : info.makeCopyOrDefault( MINIMUM_VERSION );
 	}
 
 	public static DatabaseVersion parseVersion( String versionString ) {

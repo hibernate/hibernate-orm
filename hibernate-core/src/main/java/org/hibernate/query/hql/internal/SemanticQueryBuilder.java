@@ -5205,16 +5205,43 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return visitToOneFkReference( ctx.toOneFkReference() );
 		}
 		else if ( ctx.function() != null ) {
-			return visitPathContinuation(
-					visitIndexedPathAccessFragment(
-							(SemanticPathPart) visitFunction( ctx.function() ),
-							ctx.indexedPathAccessFragment()
-					),
-					ctx.pathContinuation()
-			);
+			final HqlParser.SlicedPathAccessFragmentContext slicedFragmentsCtx = ctx.slicedPathAccessFragment();
+			if ( slicedFragmentsCtx != null ) {
+				final List<HqlParser.ExpressionContext> slicedFragments = slicedFragmentsCtx.expression();
+				return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+						List.of(
+								(SqmTypedNode<?>) visitFunction( ctx.function() ),
+								(SqmTypedNode<?>) slicedFragments.get( 0 ).accept( this ),
+								(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
+						),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+			else {
+				return visitPathContinuation(
+						visitIndexedPathAccessFragment(
+								(SemanticPathPart) visitFunction( ctx.function() ),
+								ctx.indexedPathAccessFragment()
+						),
+						ctx.pathContinuation()
+				);
+			}
 		}
 		else if ( ctx.simplePath() != null && ctx.indexedPathAccessFragment() != null ) {
 			return visitIndexedPathAccessFragment( visitSimplePath( ctx.simplePath() ), ctx.indexedPathAccessFragment() );
+		}
+		else if ( ctx.simplePath() != null && ctx.slicedPathAccessFragment() != null ) {
+			final List<HqlParser.ExpressionContext> slicedFragments = ctx.slicedPathAccessFragment().expression();
+			return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+					List.of(
+							(SqmTypedNode<?>) visitSimplePath( ctx.simplePath() ),
+							(SqmTypedNode<?>) slicedFragments.get( 0 ).accept( this ),
+							(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
+					),
+					null,
+					creationContext.getQueryEngine()
+			);
 		}
 		else {
 			throw new ParsingException( "Illegal domain path '" + ctx.getText() + "'" );

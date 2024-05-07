@@ -47,6 +47,7 @@ class KeyedResult<R> {
 				}
 				break;
 			case KEY_OF_FIRST_ON_NEXT_PAGE:
+				// the results come in reverse order
 				for (int i = pageSize-1; i>=0; i--) {
 					if (i < size) {
 						resultList.add( executed.get(i).getResult() );

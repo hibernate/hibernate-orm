@@ -181,6 +181,12 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	private static <R> KeyedPage<R> nextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
+		if (keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE) {
+			return !results.isEmpty()
+					? keyedPage.nextPage( results.get(0).getKey() )
+					: null;
+		}
+
 		final int pageSize = keyedPage.getPage().getSize();
 		return results.size() == pageSize + 1
 				? keyedPage.nextPage( results.get(pageSize - 1).getKey() )
@@ -188,6 +194,13 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	private static <R> KeyedPage<R> previousPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
+		if (keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE) {
+			final int pageSize = keyedPage.getPage().getSize();
+			return results.size() == pageSize + 1
+					? keyedPage.previousPage( results.get(pageSize - 1).getKey() )
+					: null;
+		}
+
 		return !results.isEmpty()
 				? keyedPage.previousPage( results.get(0).getKey() )
 				: null;

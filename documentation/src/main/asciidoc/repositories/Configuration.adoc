@@ -18,7 +18,7 @@ We definitely need the following dependencies in our project:
 
 | `jakarta.data:jakarta.data-api` | The Jakarta Data API
 | `org.hibernate.orm:hibernate-core` | Hibernate ORM
-| `org.hibernate.orm:hibernate-jpamodelgen` | The annotation processor itself
+| `org.hibernate.orm:hibernate-processor` | The annotation processor itself
 |===
 
 And we'll need to pick a JDBC driver:
@@ -55,7 +55,7 @@ In Gradle, for example, you'll need to use `annotationProcessor`.
 
 [source,groovy]
 ----
-annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.5.0'
+annotationProcessor 'org.hibernate.orm:hibernate-processor:7.0.0'
 ----
 
 === Excluding classes from processing

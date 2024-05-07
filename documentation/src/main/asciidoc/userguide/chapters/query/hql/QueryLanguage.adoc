@@ -1271,7 +1271,7 @@ include::{array-example-dir-hql}/ArrayPositionsTest.java[tags=hql-array-position
 ====
 
 [[hql-array-length-functions]]
-===== `array_length()`
+===== `array_length()` or `length()`
 
 Returns size of the passed array. Returns `null` if the array is `null`.
 
@@ -1280,6 +1280,17 @@ Returns size of the passed array. Returns `null` if the array is `null`.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-example]
+----
+====
+
+Alternatively, it is also possible to use the `length()` function,
+which is overloaded to also accept an array argument.
+
+[[hql-array-length-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-hql-example]
 ----
 ====
 

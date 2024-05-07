@@ -75,15 +75,17 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  */
 public class TeradataDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 12, 0 );
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	public TeradataDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public TeradataDialect() {
-		this( DatabaseVersion.make( 12, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public TeradataDialect(DatabaseVersion version) {

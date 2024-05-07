@@ -340,7 +340,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	protected Dialect(DialectResolutionInfo info) {
-		this.version = info.makeCopy();
+		this.version = info.makeCopyOrDefault( getMinimumSupportedVersion() );
 		checkVersion();
 		registerDefaultKeywords();
 		registerKeywords(info);

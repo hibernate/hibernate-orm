@@ -207,7 +207,7 @@ public class MySQLDialect extends Dialect {
 				}
 			}
 		}
-		return info.makeCopy();
+		return info.makeCopyOrDefault( MINIMUM_VERSION );
 	}
 
 	@Override

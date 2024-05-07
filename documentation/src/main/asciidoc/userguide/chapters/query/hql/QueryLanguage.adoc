@@ -1400,6 +1400,26 @@ include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-cont
 ----
 ====
 
+Alternatively, it's also possible to check for containment with the `contains` predicate,
+where the left hand side of the predicate is the array and the right hand side the value(s) to check.
+This is syntax sugar that translates to the `array_contains` function.
+
+[[hql-array-contains-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-hql-example]
+----
+====
+
+[[hql-array-contains-array-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-contains-array-hql-example]
+----
+====
+
 [[hql-array-overlaps-functions]]
 ===== `array_overlaps()` and `array_overlaps_nullable()`
 
@@ -1830,6 +1850,20 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-in-predicate-example]
 include::{example-dir-hql}/HQLTest.java[tags=hql-collection-expressions-in-example]
 ----
 ====
+
+[[hql-contains-predicate]]
+==== `contains`
+
+The `contains` predicates evaluates to true if the value to its right is contained in the value to its left.
+Currently, this predicate only works with an array typed expression on the left side.
+
+[[hql-contains-predicate-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/predicate_contains_bnf.txt[]
+----
+
+For further details, refer to the <<hql-array-contains-example,`array_contains` section>>.
 
 [[hql-relational-comparisons-subqueries]]
 ==== Relational operators and subqueries

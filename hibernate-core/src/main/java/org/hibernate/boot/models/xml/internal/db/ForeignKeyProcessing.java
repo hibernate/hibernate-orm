@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.models.xml.internal.db;
 
+import java.lang.annotation.Annotation;
+
 import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
@@ -78,5 +80,39 @@ public class ForeignKeyProcessing {
 		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "options", jaxbForeignKey.getOptions() );
 
 		return foreignKeyUsage;
+	}
+
+	public static <A extends Annotation> void applyForeignKey(
+			JaxbForeignKeyImpl jaxbForeignKey,
+			MutableAnnotationUsage<A> tableAnn,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbForeignKey == null ) {
+			return;
+		}
+		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage(
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "name", jaxbForeignKey.getName() );
+		XmlAnnotationHelper.applyOptionalAttribute(
+				foreignKeyUsage,
+				"value",
+				jaxbForeignKey.getConstraintMode()
+		);
+		XmlAnnotationHelper.applyOptionalAttribute(
+				foreignKeyUsage,
+				"foreignKeyDefinition",
+				jaxbForeignKey.getForeignKeyDefinition()
+		);
+		XmlAnnotationHelper.applyOptionalAttribute(
+				foreignKeyUsage,
+				"options",
+				jaxbForeignKey.getOptions()
+		);
+
+		tableAnn.setAttributeValue(
+				"foreignkey",
+				foreignKeyUsage
+		);;
 	}
 }

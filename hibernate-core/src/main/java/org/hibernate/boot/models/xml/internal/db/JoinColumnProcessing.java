@@ -183,4 +183,44 @@ public class JoinColumnProcessing {
 		);
 		columnsAnn.setAttributeValue( "value", createJoinColumns( jaxbJoinColumns, memberDetails, xmlDocumentContext ) );
 	}
+
+	public static <A extends Annotation> void applyPrimaryKeyJoinColumns(
+			List<JaxbPrimaryKeyJoinColumnImpl> jaxbJoinColumns,
+			MutableAnnotationUsage<A> tableAnn,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
+			return;
+		}
+
+		final List<MutableAnnotationUsage<PrimaryKeyJoinColumn>> columnUsages = CollectionHelper.arrayList( jaxbJoinColumns.size() );
+
+		jaxbJoinColumns.forEach( (jaxbJoinColumn) -> {
+			final MutableAnnotationUsage<PrimaryKeyJoinColumn> columnUsage =
+					JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			columnUsages.add( columnUsage );
+
+			ColumnProcessing.applyColumnDetails(
+					jaxbJoinColumn,
+					(MutableAnnotationUsage<? extends Annotation>) columnUsage,
+					xmlDocumentContext
+			);
+			XmlAnnotationHelper.applyOptionalAttribute(
+					columnUsage,
+					"referencedColumnName",
+					((JaxbColumnJoined) jaxbJoinColumn).getReferencedColumnName()
+			);
+
+			ForeignKeyProcessing.applyForeignKey(
+					( (JaxbColumnJoined) jaxbJoinColumn ).getForeignKey(),
+					(MutableAnnotationUsage<? extends Annotation>) columnUsage,
+					xmlDocumentContext
+			);
+		} );
+
+		tableAnn.setAttributeValue(
+				"pkJoinColumns",
+				columnUsages
+		);
+	}
+
 }

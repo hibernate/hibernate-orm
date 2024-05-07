@@ -5,6 +5,8 @@ import jakarta.persistence.Id;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
+import org.hibernate.query.SelectionQuery;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -13,9 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SessionFactory
 @DomainModel(annotatedClasses = KeyBasedPagingTest.Person.class)
@@ -59,8 +59,7 @@ public class KeyBasedPagingTest {
 			KeyedResultList<Person> previous = next;
 			while ( !previous.isFirstPage() ) {
 				page --;
-				previous = session.createSelectionQuery("from Person where dob > :minDate", Person.class)
-						.setParameter("minDate", LocalDate.of(1970, 2, 5))
+				previous = session.createSelectionQuery("from Person", Person.class)
 						.getKeyedResultList(previous.getPreviousPage());
 				assertEquals(page, previous.getPage().getPage().getNumber());
 				assertEquals(5, previous.getResultList().size());
@@ -130,6 +129,23 @@ public class KeyBasedPagingTest {
 			assertEquals(5, previous.getResultList().size());
 			assertTrue( previous.isFirstPage() );
 			assertFalse( previous.isLastPage() );
+		});
+
+		scope.inSession(session -> {
+			SelectionQuery<Person> query = session.createSelectionQuery( "from Person", Person.class);
+			KeyedResultList<Person> list =
+							query.getKeyedResultList(Page.first(5).keyedBy(Order.asc(Person.class, "ssn")));
+			List<Person> resultList1 = list.getResultList();
+			list = query.getKeyedResultList(list.getNextPage());
+			List<Person> resultList2 = list.getResultList();
+			list = query.getKeyedResultList(list.getNextPage());
+			List<Person> resultList3 = list.getResultList();
+			list = query.getKeyedResultList(list.getPreviousPage());
+			List<Person> resultList4 = list.getResultList();
+			list = query.getKeyedResultList(list.getPreviousPage());
+			List<Person> resultList5 = list.getResultList();
+			assertEquals( resultList1, resultList5 );
+			assertEquals( resultList2, resultList4 );
 		});
 	}
 

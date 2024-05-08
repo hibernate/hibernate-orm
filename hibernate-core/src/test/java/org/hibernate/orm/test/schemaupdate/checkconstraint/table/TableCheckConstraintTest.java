@@ -29,13 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @JiraKey("HHH-18054")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsColumnCheck.class)
 public class TableCheckConstraintTest {
-	static final String CONSTRAINTS = "NAME_COLUMN <> null";
-	static final String SECONDARY_TABLE_CONSTRAINTS = "SECOND_NAME <> null";
-	static final String ONE_TO_ONE_JOIN_TABLE_CONSTRAINTS = "ID <> null";
-	static final String ONE_TO_MANY_JOIN_TABLE_CONSTRAINTS = "ID > 2";
-	static final String MANY_TO_ONE_JOIN_TABLE_CONSTRAINTS = "ID > 3 ";
-	static final String MANY_TO_MANY_JOIN_TABLE_CONSTRAINTS = "ID > 4";
-	static final String ANY_JOIN_TABLE_CONSTRAINTS = "ID > 5";
+	static final String CONSTRAINTS = "NAME_COLUMN is not null";
+	static final String SECONDARY_TABLE_CONSTRAINTS = "SECOND_NAME is not null";
+	static final String ONE_TO_ONE_JOIN_TABLE_CONSTRAINTS = "ID is not null";
+	static final String ONE_TO_MANY_JOIN_TABLE_CONSTRAINTS = "ID = 2";
+	static final String MANY_TO_ONE_JOIN_TABLE_CONSTRAINTS = "ID = 3";
+	static final String MANY_TO_MANY_JOIN_TABLE_CONSTRAINTS = "ID = 4";
+	static final String ANY_JOIN_TABLE_CONSTRAINTS = "ID = 5";
 
 	static final String SECONDARY_TABLE_NAME = "SECOND_TABLE_NAME";
 	static final String ONE_TO_ONE_JOIN_TABLE_NAME = "ONE_TO_ONE_JOIN_TABLE_NAME";
@@ -70,6 +70,14 @@ public class TableCheckConstraintTest {
 	}
 
 	@Test
+	public void testXmlMappingTableConstraintsAreApplied() throws Exception {
+		createSchema( "org/hibernate/orm/test/schemaupdate/checkconstraint/table/mapping.xml" );
+		String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
+				.replace( System.lineSeparator(), "" );
+		assertThat( fileContent.toUpperCase( Locale.ROOT ) ).contains( CONSTRAINTS.toUpperCase( Locale.ROOT ) );
+	}
+
+	@Test
 	public void testSecondaryTableConstraintsAreApplied() throws Exception {
 		createSchema( EntityWithSecondaryTables.class, AnotherTestEntity.class );
 		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
@@ -82,8 +90,47 @@ public class TableCheckConstraintTest {
 	}
 
 	@Test
+	public void testXmlMappingSecondaryTableConstraintsAreApplied() throws Exception {
+		createSchema( "org/hibernate/orm/test/schemaupdate/checkconstraint/table/mapping.xml" );
+		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
+				.split( System.lineSeparator() );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				SECONDARY_TABLE_NAME,
+				SECONDARY_TABLE_CONSTRAINTS
+		), "Check Constraints on secondary table have not been created" );
+	}
+
+	@Test
 	public void testJoinTableConstraintsAreApplied() throws Exception {
 		createSchema( EntityWithSecondaryTables.class, AnotherTestEntity.class );
+		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
+				.split( System.lineSeparator() );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				MANY_TO_ONE_JOIN_TABLE_NAME,
+				MANY_TO_ONE_JOIN_TABLE_CONSTRAINTS
+		), "Check Constraints on ManyToOne join table have not been created" );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				MANY_TO_MANY_JOIN_TABLE_NAME,
+				MANY_TO_MANY_JOIN_TABLE_CONSTRAINTS
+		), "Check Constraints on ManyToMany join table have not been created" );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				ONE_TO_ONE_JOIN_TABLE_NAME,
+				ONE_TO_ONE_JOIN_TABLE_CONSTRAINTS
+		), "Check Constraints on OneToOne join table have not been created" );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				ONE_TO_MANY_JOIN_TABLE_NAME,
+				ONE_TO_MANY_JOIN_TABLE_CONSTRAINTS
+		), "Check Constraints on OneToOne join table have not been created" );
+	}
+
+	@Test
+	public void testXmlMappingJoinTableConstraintsAreApplied() throws Exception {
+		createSchema( "org/hibernate/orm/test/schemaupdate/checkconstraint/table/mapping.xml" );
 		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
 				.split( System.lineSeparator() );
 		assertTrue( tableCreationStatementContainsConstraints(
@@ -140,6 +187,22 @@ public class TableCheckConstraintTest {
 
 		for ( Class c : annotatedClasses ) {
 			metadataSources.addAnnotatedClass( c );
+		}
+		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
+		metadata.validate();
+		new SchemaExport()
+				.setHaltOnError( true )
+				.setOutputFile( output.getAbsolutePath() )
+				.setFormat( false )
+				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
+	}
+
+	private void createSchema(String... xmlMapping) {
+		final MetadataSources metadataSources = new MetadataSources( ssr );
+
+		for ( String xml : xmlMapping ) {
+			metadataSources.addResource( xml );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.orderColumns( false );

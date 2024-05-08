@@ -1589,4 +1589,9 @@ public class PostgreSQLDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsTableOptions() {
+		return true;
+	}
 }

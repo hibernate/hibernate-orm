@@ -19,6 +19,7 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
@@ -113,6 +114,12 @@ public class StandardTableExporter implements Exporter<Table> {
 			}
 
 			final List<String> sqlStrings = new ArrayList<>();
+			if ( StringHelper.isNotEmpty( table.getOptions() ) ) {
+				if ( dialect.supportsTableOptions() ) {
+					createTable.append( " " );
+					createTable.append( table.getOptions() );
+				}
+			}
 			sqlStrings.add( createTable.toString() );
 			applyComments( table, formattedTableName, sqlStrings );
 			applyInitCommands( table, sqlStrings, context );

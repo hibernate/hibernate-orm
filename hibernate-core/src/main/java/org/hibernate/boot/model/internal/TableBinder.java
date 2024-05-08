@@ -77,6 +77,7 @@ public class TableBinder {
 	private boolean isJPA2ElementCollection;
 	private List<AnnotationUsage<UniqueConstraint>> uniqueConstraints;
 	private List<AnnotationUsage<Index>> indexes;
+	private String options;
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
@@ -108,6 +109,10 @@ public class TableBinder {
 
 	public void setJpaIndex(List<AnnotationUsage<Index>> indexes){
 		this.indexes = indexes;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
 	}
 
 	public void setJPA2ElementCollection(boolean isJPA2ElementCollection) {
@@ -293,6 +298,7 @@ public class TableBinder {
 				isAbstract,
 				uniqueConstraints,
 				indexes,
+				options,
 				buildingContext,
 				null,
 				null
@@ -443,6 +449,7 @@ public class TableBinder {
 				isAbstract,
 				uniqueConstraints,
 				null,
+				null,
 				buildingContext,
 				null,
 				null
@@ -465,6 +472,7 @@ public class TableBinder {
 				isAbstract,
 				uniqueConstraints,
 				null,
+				null,
 				buildingContext,
 				subselect,
 				denormalizedSuperTableXref
@@ -478,6 +486,7 @@ public class TableBinder {
 			boolean isAbstract,
 			List<AnnotationUsage<UniqueConstraint>> uniqueConstraints,
 			List<AnnotationUsage<Index>> indexes,
+			String options,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
@@ -502,6 +511,9 @@ public class TableBinder {
 			new IndexBinder( buildingContext ).bindIndexes( table, indexes );
 		}
 
+		if ( options != null ) {
+			table.setOptions( options );
+		}
 		metadataCollector.addTableNameBinding( logicalName, table );
 
 		return table;
@@ -888,6 +900,12 @@ public class TableBinder {
 	static void addTableComment(Table table, String comment) {
 		if ( StringHelper.isNotEmpty( comment ) ) {
 			table.setComment( comment );
+		}
+	}
+
+	static void addTableOptions(Table table, String options) {
+		if ( StringHelper.isNotEmpty( options ) ) {
+			table.setOptions( options );
 		}
 	}
 

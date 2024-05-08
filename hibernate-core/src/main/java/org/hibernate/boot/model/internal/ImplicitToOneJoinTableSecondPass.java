@@ -106,6 +106,7 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 
 		tableBinder.setUniqueConstraints( joinTable.getList( "uniqueConstraints" ) );
 		tableBinder.setJpaIndex( joinTable.getList( "indexes" ) );
+		tableBinder.setOptions( joinTable.getString( "options" ) );
 
 		return tableBinder;
 	}

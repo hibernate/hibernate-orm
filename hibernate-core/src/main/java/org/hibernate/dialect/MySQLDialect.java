@@ -1561,4 +1561,9 @@ public class MySQLDialect extends Dialect {
 		}
 		return sqlCheckConstraint;
 	}
+
+	@Override
+	public boolean supportsTableOptions() {
+		return true;
+	}
 }

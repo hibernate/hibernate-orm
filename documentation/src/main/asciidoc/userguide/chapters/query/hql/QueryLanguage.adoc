@@ -1420,6 +1420,24 @@ include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-cont
 ----
 ====
 
+In addition to that, it is also possible to use the `in` predicate with arrays.
+
+[[hql-array-in-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-in-hql-example]
+----
+====
+
+[[hql-array-in-array-hql-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-in-array-hql-example]
+----
+====
+
 [[hql-array-overlaps-functions]]
 [[hql-array-intersects-functions]]
 ===== `array_intersects()` and `array_intersects_nullable()`

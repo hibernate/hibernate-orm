@@ -128,7 +128,7 @@ Plenty of syntax sugar for array operations was added:
 |Support casting array to string
 
 |`array_contains(array, element)`
-|`array contains element`
+|`array contains element` or `element in array`
 |Contains predicate for containment check
 
 |`array_intersects(array, array(1, 2))`

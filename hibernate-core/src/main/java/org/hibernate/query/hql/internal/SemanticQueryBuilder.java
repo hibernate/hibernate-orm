@@ -2846,6 +2846,28 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					creationContext.getNodeBuilder()
 			);
 		}
+		else if ( inListContext instanceof HqlParser.ArrayInListContext ) {
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+			}
+			final HqlParser.ArrayInListContext arrayInListContext =
+					(HqlParser.ArrayInListContext) inListContext;
+
+			final SqmExpression<?> arrayExpr = (SqmExpression<?>) arrayInListContext.expression().accept( this );
+			final SqmExpressible<?> arrayExpressible = arrayExpr.getExpressible();
+			if ( arrayExpressible != null && !( arrayExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+				throw new SemanticException(
+						"Right operand for in-array predicate must be a basic plural type expression, but found: " + arrayExpressible.getSqmType(),
+						query
+				);
+			}
+			final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+					asList( arrayExpr, testExpression ),
+					null,
+					creationContext.getQueryEngine()
+			);
+			return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
+		}
 		else {
 			throw new ParsingException( "Unexpected IN predicate type [" + ctx.getClass().getSimpleName() + "] : " + ctx.getText() );
 		}

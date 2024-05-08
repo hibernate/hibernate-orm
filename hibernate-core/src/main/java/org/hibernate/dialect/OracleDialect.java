@@ -1708,4 +1708,9 @@ public class OracleDialect extends Dialect {
 		}
 		return sqlCheckConstraint;
 	}
+
+	@Override
+	public boolean supportsTableOptions() {
+		return true;
+	}
 }

@@ -5652,5 +5652,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return sqlCheckConstraint;
 	}
 
+	/**
+	 * Does this dialect support appending table options SQL fragment at the end of the SQL Table creation statement?
+	 *
+	 *  @return {@code true} indicates it does; {@code false} indicates it does not;
+	 */
+	public boolean supportsTableOptions(){
+		return false;
+	}
 
 }

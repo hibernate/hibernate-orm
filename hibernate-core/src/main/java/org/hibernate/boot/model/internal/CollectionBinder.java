@@ -713,6 +713,7 @@ public abstract class CollectionBinder {
 			final List<AnnotationUsage<JoinColumn>> joins;
 			final List<AnnotationUsage<JoinColumn>> inverseJoins;
 			final List<AnnotationUsage<Index>> jpaIndexes;
+			final String options;
 
 			//JPA 2 has priority
 			if ( collectionTable != null ) {
@@ -723,6 +724,7 @@ public abstract class CollectionBinder {
 				joins = collectionTable.getList( "joinColumns" );
 				inverseJoins = null;
 				jpaIndexes = collectionTable.getList( "indexes" );
+				options = collectionTable.getString( "options" );
 			}
 			else {
 				catalog = assocTable.getString( "catalog" );
@@ -732,6 +734,7 @@ public abstract class CollectionBinder {
 				joins = assocTable.getList( "joinColumns" );
 				inverseJoins = assocTable.getList( "inverseJoinColumns" );
 				jpaIndexes = assocTable.getList( "indexes" );
+				options = assocTable.getString( "options" );
 			}
 
 			collectionBinder.setExplicitAssociationTable( true );
@@ -749,6 +752,7 @@ public abstract class CollectionBinder {
 			}
 			associationTableBinder.setUniqueConstraints( uniqueConstraints );
 			associationTableBinder.setJpaIndex( jpaIndexes );
+			associationTableBinder.setOptions( options );
 			//set check constraint in the second pass
 			annJoins = joins.isEmpty() ? null : joins;
 			annInverseJoins = inverseJoins == null || inverseJoins.isEmpty() ? null : inverseJoins;
@@ -2589,6 +2593,7 @@ public abstract class CollectionBinder {
 				(usage) -> {
 					TableBinder.addTableCheck( collectionTable, usage.findAttributeValue( "check" ) );
 					TableBinder.addTableComment( collectionTable, usage.getString( "comment" ) );
+					TableBinder.addTableOptions( collectionTable, usage.getString( "options" ) );
 				}
 		);
 	}

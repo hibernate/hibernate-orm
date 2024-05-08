@@ -75,6 +75,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private boolean hasDenormalizedTables;
 	private String comment;
 	private String viewQuery;
+	private String options;
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 
@@ -883,5 +884,13 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			}
 			return unmodifiableList( initCommands );
 		}
+	}
+
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
 	}
 }

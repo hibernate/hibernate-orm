@@ -1288,4 +1288,9 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return getDB2Version().isSameOrAfter( 11 );
 	}
+
+	@Override
+	public boolean supportsTableOptions() {
+		return true;
+	}
 }

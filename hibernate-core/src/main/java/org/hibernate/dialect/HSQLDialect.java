@@ -727,4 +727,9 @@ public class HSQLDialect extends Dialect {
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
+
+	@Override
+	public boolean supportsTableOptions() {
+		return true;
+	}
 }

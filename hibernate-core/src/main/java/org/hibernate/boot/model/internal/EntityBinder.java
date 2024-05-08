@@ -451,6 +451,7 @@ public class EntityBinder {
 			TableBinder.addJpaIndexes( table, jpaTableUsage.getList( "indexes" ), context );
 			TableBinder.addTableCheck( table, jpaTableUsage.findAttributeValue( "check" ) );
 			TableBinder.addTableComment( table, jpaTableUsage.getString( "comment" ) );
+			TableBinder.addTableOptions( table, jpaTableUsage.getString( "options" ) );
 		}
 
 		final InFlightMetadataCollector.EntityTableXref entityTableXref = context
@@ -2182,6 +2183,7 @@ public class EntityBinder {
 		final Table table = join.getTable();
 		TableBinder.addTableCheck( table, joinTable.findAttributeValue( "check" ) );
 		TableBinder.addTableComment( table, joinTable.getString( "comment" ) );
+		TableBinder.addTableOptions( table, joinTable.getString( "options" ) );
 		return join;
 	}
 
@@ -2200,6 +2202,7 @@ public class EntityBinder {
 		new IndexBinder( context ).bindIndexes( table, secondaryTable.getList( "indexes" ) );
 		TableBinder.addTableCheck( table, secondaryTable.findAttributeValue( "check" ) );
 		TableBinder.addTableComment( table, secondaryTable.getString( "comment" ) );
+		TableBinder.addTableOptions( table, secondaryTable.getString( "options" ) );
 		return join;
 	}
 

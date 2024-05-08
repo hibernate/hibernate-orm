@@ -92,7 +92,7 @@ public class AnnotatedColumns {
 		}
 		if ( join == null ) {
 			throw new AnnotationException(
-					"Secondary table '" + explicitTableName + "' for property '" + getPropertyHolder().getClassName()
+					"Secondary table '" + explicitTableName + "' for property '" + propertyName + "' of entity'" + getPropertyHolder().getClassName()
 							+ "' is not declared (use '@SecondaryTable' to declare the secondary table)"
 			);
 		}

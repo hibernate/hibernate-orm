@@ -29,13 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @JiraKey("HHH-18054")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsColumnCheck.class)
 public class ColumnCheckConstraintTest {
-	static final String COLUMN_CONSTRAINTS = "name_column <> null";
+	static final String COLUMN_CONSTRAINTS = "name_column is not null";
 
-	static final String ONE_TO_ONE_JOIN_COLUMN_CONSTRAINTS = "ID <> null";
-	static final String ONE_TO_MANY_JOIN_COLUMN_CONSTRAINTS = "ID > 2";
-	static final String MANY_TO_ONE_JOIN_COLUMN_CONSTRAINTS = "ID > 3 ";
-	static final String MANY_TO_MANY_JOIN_COLUMN_CONSTRAINTS = "ID > 4";
-	static final String MANY_TO_MANY_INVERSE_JOIN_COLUMN_CONSTRAINTS = "ID > 5";
+	static final String ONE_TO_ONE_JOIN_COLUMN_CONSTRAINTS = "ID is not null";
+	static final String ONE_TO_MANY_JOIN_COLUMN_CONSTRAINTS = "ID = 2";
+	static final String MANY_TO_ONE_JOIN_COLUMN_CONSTRAINTS = "ID = 3";
+	static final String MANY_TO_MANY_JOIN_COLUMN_CONSTRAINTS = "ID = 4";
+	static final String MANY_TO_MANY_INVERSE_JOIN_COLUMN_CONSTRAINTS = "ID = 5";
 	static final String ANY_JOIN_COLUMN_CONSTRAINTS = "ID > 5";
 
 	static final String ONE_TO_ONE_JOIN_COLUMN_NAME = "ONE_TO_ONE_JOIN_COLUMN_NAME";
@@ -70,6 +70,14 @@ public class ColumnCheckConstraintTest {
 	}
 
 	@Test
+	public void testXmlMappingColumnConstraintsAreApplied() throws Exception {
+		createSchema( "org/hibernate/orm/test/schemaupdate/checkconstraint/column/mapping.xml" );
+		String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
+				.replace( System.lineSeparator(), "" );
+		assertThat( fileContent.toUpperCase( Locale.ROOT ) ).contains( COLUMN_CONSTRAINTS.toUpperCase( Locale.ROOT ) );
+	}
+
+	@Test
 	public void testJoinColumConstraintsAreApplied() throws Exception {
 		createSchema( TestEntity.class, AnotherTestEntity.class );
 		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
@@ -92,7 +100,46 @@ public class ColumnCheckConstraintTest {
 	}
 
 	@Test
+	public void testXmlMappingJoinColumConstraintsAreApplied() throws Exception {
+		createSchema( "org/hibernate/orm/test/schemaupdate/checkconstraint/column/mapping.xml" );
+		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
+				.split( System.lineSeparator() );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				"TEST_ENTITY",
+				MANY_TO_ONE_JOIN_COLUMN_CONSTRAINTS
+		), "Check Constraints on ManyToOne join table have not been created" );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				"TEST_ENTITY",
+				ONE_TO_ONE_JOIN_COLUMN_CONSTRAINTS
+		), "Check Constraints on OneToOne join table have not been created" );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				"ANOTHER_TEST_ENTITY",
+				ONE_TO_MANY_JOIN_COLUMN_CONSTRAINTS
+		), "Check Constraints on OneToOne join table have not been created" );
+	}
+
+	@Test
 	public void testJoinColumOfJoinTableConstraintsAreApplied() throws Exception {
+		createSchema( "org/hibernate/orm/test/schemaupdate/checkconstraint/column/mapping.xml" );
+		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
+				.split( System.lineSeparator() );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				"MANY_T0_MANY_TABLE",
+				MANY_TO_MANY_JOIN_COLUMN_CONSTRAINTS
+		), "Join column Check Constraints on ManyToMany join table have not been created" );
+		assertTrue( tableCreationStatementContainsConstraints(
+				fileContent,
+				"MANY_T0_MANY_TABLE",
+				MANY_TO_MANY_INVERSE_JOIN_COLUMN_CONSTRAINTS
+		), "Inverse join column Check Constraints on ManyToMany join table have not been created" );
+	}
+
+	@Test
+	public void testXmlMappingJoinColumOfJoinTableConstraintsAreApplied() throws Exception {
 		createSchema( TestEntity.class, AnotherTestEntity.class );
 		String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
 				.split( System.lineSeparator() );
@@ -140,6 +187,22 @@ public class ColumnCheckConstraintTest {
 
 		for ( Class c : annotatedClasses ) {
 			metadataSources.addAnnotatedClass( c );
+		}
+		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
+		metadata.validate();
+		new SchemaExport()
+				.setHaltOnError( true )
+				.setOutputFile( output.getAbsolutePath() )
+				.setFormat( false )
+				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
+	}
+
+	private void createSchema(String... xmlMapping) {
+		final MetadataSources metadataSources = new MetadataSources( ssr );
+
+		for ( String xml : xmlMapping ) {
+			metadataSources.addResource( xml );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.orderColumns( false );

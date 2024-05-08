@@ -107,5 +107,69 @@ public class EntityWithSecondaryTables {
 			}
 	)
 	private Another another;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getSecondName() {
+		return secondName;
+	}
+
+	public void setSecondName(String secondName) {
+		this.secondName = secondName;
+	}
+
+	public AnotherTestEntity getEntity() {
+		return entity;
+	}
+
+	public void setEntity(AnotherTestEntity entity) {
+		this.entity = entity;
+	}
+
+	public AnotherTestEntity getTestEntity() {
+		return testEntity;
+	}
+
+	public void setTestEntity(AnotherTestEntity testEntity) {
+		this.testEntity = testEntity;
+	}
+
+	public List<AnotherTestEntity> getTestEntities() {
+		return testEntities;
+	}
+
+	public void setTestEntities(List<AnotherTestEntity> testEntities) {
+		this.testEntities = testEntities;
+	}
+
+	public List<AnotherTestEntity> getTestEntities2() {
+		return testEntities2;
+	}
+
+	public void setTestEntities2(List<AnotherTestEntity> testEntities2) {
+		this.testEntities2 = testEntities2;
+	}
+
+	public Another getAnother() {
+		return another;
+	}
+
+	public void setAnother(Another another) {
+		this.another = another;
+	}
 }
 

@@ -852,13 +852,16 @@ public class CockroachDialect extends Dialect {
 				//all the following units:
 
 				// Note that CockroachDB also has an extract_duration function which returns an int,
-				// but we don't use that here because it is deprecated since v20
+				// but we don't use that here because it is deprecated since v20.
+				// We need to use round() instead of cast(... as int) because extract epoch returns
+				// float8 which can cause loss-of-precision in some cases
+				// https://github.com/cockroachdb/cockroach/issues/72523
 				case HOUR:
 				case MINUTE:
 				case SECOND:
 				case NANOSECOND:
 				case NATIVE:
-					return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
+					return "round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")";
 				default:
 					throw new SemanticException( "Unrecognized field: " + unit );
 			}

@@ -487,6 +487,8 @@ public class SqmUtil {
 			}
 		}
 
+		domainParameterXref.clearExpansions();
+
 		return jdbcParameterBindings;
 	}
 

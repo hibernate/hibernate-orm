@@ -69,11 +69,11 @@ public final class ByteBuddyState {
 
 	private final ByteBuddy byteBuddy;
 
-	private static final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
+	private final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
 
 	private final ClassRewriter classRewriter;
 
-	final EnhancerImplConstants enhancerConstants = new EnhancerImplConstants();
+	private final EnhancerImplConstants enhancerConstants = new EnhancerImplConstants();
 
 	/**
 	 * It will be easier to maintain the cache and its state when it will no longer be static

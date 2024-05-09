@@ -60,16 +60,13 @@ public class ManyToOneAttributeProcessing {
 		CommonAttributeProcessing.applyAttributeBasics( jaxbManyToOne, memberDetails, manyToOneAnn, accessType, xmlDocumentContext );
 
 		TableProcessing.transformJoinTable( jaxbManyToOne.getJoinTable(), memberDetails, xmlDocumentContext );
-
+		JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
 		if ( jaxbManyToOne.getPropertyRef() != null ) {
 			final MutableAnnotationUsage<PropertyRef> propertyRefUsage = memberDetails.applyAnnotationUsage(
 					PROPERTY_REF,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			propertyRefUsage.setAttributeValue( "value", jaxbManyToOne.getPropertyRef().getName() );
-		}
-		else {
-			JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
 		}
 
 		applyNotFound( jaxbManyToOne, memberDetails, xmlDocumentContext );

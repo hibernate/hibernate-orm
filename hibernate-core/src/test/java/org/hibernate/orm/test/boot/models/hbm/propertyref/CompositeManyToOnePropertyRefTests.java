@@ -7,21 +7,23 @@
 package org.hibernate.orm.test.boot.models.hbm.propertyref;
 
 import org.hibernate.annotations.PropertyRef;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
-import org.hibernate.mapping.Value;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -32,14 +34,33 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 
 @SuppressWarnings("JUnitMalformedDeclaration")
-@FailureExpected(reason = "Support for composite property-ref is going to be very messy as annotation binding assumes join columns are knowable very early.")
 public class CompositeManyToOnePropertyRefTests {
+	@Test
+	@DomainModel(
+			annotatedClasses = {Name.class, Person.class, Account.class},
+			xmlMappings = "mappings/models/hbm/propertyref/composite-many-to-one.hbm.xml"
+	)
+	@SessionFactory
+	void testHbm(DomainModelScope modelScope, SessionFactoryScope sfScope) {
+		verify( modelScope.getEntityBinding( Account.class ), sfScope );
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(name= MappingSettings.TRANSFORM_HBM_XML, value="true"))
+	@DomainModel(
+			annotatedClasses = {Name.class, Person.class, Account.class},
+			xmlMappings = "mappings/models/hbm/propertyref/composite-many-to-one.hbm.xml"
+	)
+	@SessionFactory
+	void testHbmTransformed(DomainModelScope modelScope, SessionFactoryScope sfScope) {
+		verify( modelScope.getEntityBinding( Account.class ), sfScope );
+	}
+
 	@Test
 	@DomainModel(annotatedClasses = {Name.class, Person.class, Account.class})
 	@SessionFactory
 	void testAnnotations(DomainModelScope modelScope, SessionFactoryScope sfScope) {
 		verify( modelScope.getEntityBinding( Account.class ), sfScope );
-		final PersistentClass entityBinding = modelScope.getEntityBinding( Account.class );
 	}
 
 	private void verify(PersistentClass entityBinding, SessionFactoryScope sfScope) {
@@ -117,7 +138,9 @@ public class CompositeManyToOnePropertyRefTests {
 		private Integer id;
 		private String name;
 		@ManyToOne
-		@PropertyRef( "name" )
+		@PropertyRef("name")
+		@JoinColumn(name="owner_name_first")
+		@JoinColumn(name="owner_name_last")
 		private Person owner;
 
 		public Account() {

@@ -53,11 +53,6 @@ public class LoadEntityWithElementCollectionTest {
 			isPostUpdateCalled = true;
 		}
 
-		@Override
-		public boolean requiresPostCommitHandling(EntityPersister persister) {
-			return false;
-		}
-
 		public boolean isPostUpdateCalled() {
 			return isPostUpdateCalled;
 		}

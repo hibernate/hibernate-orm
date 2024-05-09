@@ -31,6 +31,8 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Steve Ebersole
  */
@@ -135,7 +137,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
 						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
-						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
+						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable
+						&& castNonNull( navigablePath.getParent() ).equals( getNavigablePath() ) ) {
 					return navigablePath;
 				}
 			}

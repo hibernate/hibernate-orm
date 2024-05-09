@@ -2063,14 +2063,20 @@ public class SessionImpl
 
 		@Override @Deprecated
 		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
-			// todo : is this always true?  Or just in the case of sharing JDBC resources?
-			throw new SessionException( "Cannot redefine tenant identifier on child session" );
+			if ( !session.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
+				throw new SessionException( "Cannot redefine tenant identifier on child session" );
+			}
+			super.tenantIdentifier( tenantIdentifier );
+			return this;
 		}
 
 		@Override
 		public SharedSessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
-			// todo : is this always true?  Or just in the case of sharing JDBC resources?
-			throw new SessionException( "Cannot redefine tenant identifier on child session" );
+			if ( session.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
+				throw new SessionException( "Cannot redefine tenant identifier on child session" );
+			}
+			super.tenantIdentifier( tenantIdentifier );
+			return this;
 		}
 
 		@Override

@@ -71,6 +71,8 @@ public interface Integrator {
 	 * @param sessionFactory The session factory being closed.
 	 * @param serviceRegistry That session factory's service registry
 	 */
-	void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry);
+	default void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		// do nothing by default
+	}
 
 }

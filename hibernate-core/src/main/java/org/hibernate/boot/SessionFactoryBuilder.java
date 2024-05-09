@@ -362,7 +362,7 @@ public interface SessionFactoryBuilder {
 	/**
 	 * Specifies whether multi-tenancy is enabled
 	 *
-	 * @param enabled True if multi-tenancy in use.
+	 * @param enabled True if multi-tenancy in use through a {@link org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */

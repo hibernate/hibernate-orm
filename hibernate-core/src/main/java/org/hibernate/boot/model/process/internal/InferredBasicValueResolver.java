@@ -384,11 +384,12 @@ public class InferredBasicValueResolver {
 		if ( stdIndicators.getEnumeratedType() == EnumType.STRING ) {
 			// JPA says only String is valid here
 			// todo (7.0) : support char/Character as well
-			if ( !String.class.equals( fieldType ) ) {
+			if ( !String.class.equals( fieldType )
+					&& !char.class.equals( fieldType ) ) {
 				throw new MappingException(
 						String.format(
 								Locale.ROOT,
-								"@EnumeratedValue for EnumType.STRING must be placed on a field whose type is String: %s.%s",
+								"@EnumeratedValue for EnumType.STRING must be placed on a field whose type is String or char: %s.%s",
 								enumeratedValueField.getDeclaringClass().getName(),
 								enumeratedValueField.getName()
 						)

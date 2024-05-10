@@ -106,6 +106,12 @@ class Book {
 ----
 
 
+[[enum-checks]]
+== Enums and Check Constraints
+
+Hibernate previously added support for generating check constraints for enums mapped using `@Enumerated`
+as part of schema generation.  7.0 adds the same capability for enums mapped using an `AttributeConverter`,
+by asking the converter to convert all the enum constants on start up.
 
 
 [[java-beans]]

@@ -95,11 +95,14 @@ unsupported for use by applications (as should have been obvious from the name).
 
 This setting controls whether Hibernate should be allowed to access the JDBC `DatabaseMetaData` during bootstrapping.
 With this setting enabled (the default), Hibernate will access the `DatabaseMetaData` to perform some internal
-configuration based on the reported capabilities of the underlying database.  Disabling this setting requires
-explicit settings for this configuration.  At a minimum this includes:
+configuration based on the reported capabilities of the underlying database.
 
-* `hibernate.dialect` or `jakarta.persistence.database-product-name` to indicate the type of database
-* `jakarta.persistence.database-product-version` to indicate the database version
+Disabling this setting requires explicit, additional settings for this configuration.  At a minimum, this
+includes `hibernate.dialect` or `jakarta.persistence.database-product-name` to indicate the type of database.
+In such cases, Hibernate will assume the link:{userGuideBase}#compatibility-database[minimum supported version]
+of the database (as reported by the link:{javadocsBase}/org/hibernate/dialect/Dialect.html#getMinimumSupportedVersion()[Dialect]).
+Users may also configure `jakarta.persistence.database-product-version` to indicate a specific database version.
+
 
 [[generic-generator]]
 == Deprecation of `@GenericGenerator`

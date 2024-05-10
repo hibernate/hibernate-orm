@@ -869,10 +869,14 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			PersistenceContext persistenceContext,
 			Object entityIdentifier,
 			Object version) {
-		// No need to put into the entity cache if this is coming from the query cache already
-		final EntityDataAccess cacheAccess = concreteDescriptor.getCacheAccessStrategy();
-		if ( !rowProcessingState.isQueryCacheHit() && cacheAccess != null && session.getCacheMode().isPutEnabled() ) {
-			putInCache( toInitialize, session, persistenceContext, entityIdentifier, version, cacheAccess );
+		if ( concreteDescriptor.canWriteToCache()
+				// No need to put into the entity cache if this is coming from the query cache already
+				&& !rowProcessingState.isQueryCacheHit()
+				&& session.getCacheMode().isPutEnabled() ) {
+			final EntityDataAccess cacheAccess = concreteDescriptor.getCacheAccessStrategy();
+			if ( cacheAccess != null  ) {
+				putInCache( toInitialize, session, persistenceContext, entityIdentifier, version, cacheAccess );
+			}
 		}
 	}
 

@@ -107,18 +107,6 @@
                 <property name="entityListenerContainer"/>
             </bindings>
 
-            <bindings node=".//xsd:element[@name='sequence-generator']">
-                <property name="sequenceGenerators"/>
-            </bindings>
-
-            <bindings node=".//xsd:element[@name='table-generator']">
-                <property name="tableGenerators"/>
-            </bindings>
-
-            <bindings node=".//xsd:element[@name='identifier-generator']">
-                <property name="identifierGenerators"/>
-            </bindings>
-
             <bindings node=".//xsd:element[@name='primary-key-join-column']">
                 <property name="primaryKeyJoinColumns"/>
             </bindings>

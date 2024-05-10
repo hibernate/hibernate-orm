@@ -23,6 +23,7 @@ import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -56,6 +57,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIndexImpl;
@@ -561,6 +563,36 @@ public class XmlAnnotationHelper {
 		);
 
 		uuidGenAnn.setAttributeValue( "style", jaxbGenerator.getStyle() );
+	}
+
+	public static void applyGenericGenerator(
+			JaxbGenericIdGeneratorImpl jaxbGenerator,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbGenerator == null ) {
+			return;
+		}
+
+		final MutableAnnotationUsage<GenericGenerator> generatorAnn = memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.GENERIC_GENERATOR,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		generatorAnn.setAttributeValue( "name", "" );
+		generatorAnn.setAttributeValue( "strategy", jaxbGenerator.getClazz() );
+
+		final List<JaxbConfigurationParameterImpl> jaxbParameters = jaxbGenerator.getParameters();
+		if ( CollectionHelper.isNotEmpty( jaxbParameters ) ) {
+			final List<AnnotationUsage<Parameter>> parameterUsages = CollectionHelper.arrayList( jaxbParameters.size() );
+			generatorAnn.setAttributeValue( "parameters", parameterUsages );
+			for ( JaxbConfigurationParameterImpl jaxbParameter : jaxbParameters ) {
+				final MutableAnnotationUsage<Parameter> parameterUsage = HibernateAnnotations.PARAMETER.createUsage( xmlDocumentContext.getModelBuildingContext() );
+				parameterUsages.add( parameterUsage );
+				parameterUsage.setAttributeValue(
+						jaxbParameter.getName(),
+						jaxbParameter.getValue()
+				);
+			}
+		}
 	}
 
 	public static void applyAttributeOverrides(

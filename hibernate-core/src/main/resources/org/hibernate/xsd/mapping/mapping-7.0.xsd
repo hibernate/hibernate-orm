@@ -369,12 +369,9 @@
                 <xsd:element name="discriminator-formula" type="orm:discriminator-formula" />
             </xsd:choice>
 
-            <xsd:element name="sequence-generator" type="orm:sequence-generator"
-                         minOccurs="0"/>
-            <xsd:element name="table-generator" type="orm:table-generator"
-                         minOccurs="0"/>
-
-            <xsd:element name="identifier-generator" type="orm:generic-id-generator" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="sequence-generator" type="orm:sequence-generator" minOccurs="0"/>
+            <xsd:element name="table-generator" type="orm:table-generator" minOccurs="0"/>
+            <xsd:element name="generic-generator" type="orm:generic-id-generator" minOccurs="0" />
 
             <xsd:element name="named-query" type="orm:named-query"
                          minOccurs="0" maxOccurs="unbounded"/>
@@ -1357,16 +1354,13 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="column" type="orm:column"
-                         minOccurs="0"/>
-            <xsd:element name="generated-value" type="orm:generated-value"
-                         minOccurs="0"/>
-            <xsd:element name="temporal" type="orm:temporal"
-                         minOccurs="0"/>
-            <xsd:element name="table-generator" type="orm:table-generator"
-                         minOccurs="0"/>
-            <xsd:element name="sequence-generator" type="orm:sequence-generator"
-                         minOccurs="0"/>
+            <xsd:element name="column" type="orm:column" minOccurs="0"/>
+            <xsd:element name="generated-value" type="orm:generated-value" minOccurs="0"/>
+            <xsd:element name="temporal" type="orm:temporal" minOccurs="0"/>
+
+            <xsd:element name="table-generator" type="orm:table-generator" minOccurs="0"/>
+            <xsd:element name="sequence-generator" type="orm:sequence-generator" minOccurs="0"/>
+            <xsd:element name="generic-generator" type="orm:generic-id-generator" minOccurs="0"/>
             <xsd:element name="uuid-generator" type="orm:uuid-generator" minOccurs="0"/>
 
             <xsd:element name="unsaved-value" type="xsd:string" minOccurs="0"/>

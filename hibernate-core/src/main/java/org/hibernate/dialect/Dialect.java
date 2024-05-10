@@ -238,8 +238,10 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.isCharacterType;
 import static org.hibernate.type.SqlTypes.isEnumType;
 import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
+import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isVarbinaryType;
 import static org.hibernate.type.SqlTypes.isVarcharType;
@@ -876,6 +878,39 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				continue;
 			}
 			check.append( separator ).append( value );
+			separator = ",";
+		}
+		check.append( ')' );
+		if ( nullIsValid ) {
+			check.append( " or " ).append( columnName ).append( " is null" );
+		}
+		return check.toString();
+	}
+
+	/**
+	 * Generate a check condition for column with the given set of values.
+	 *
+	 * @apiNote Only supports TINYINT, SMALLINT and (VAR)CHAR
+	 */
+	public String getCheckCondition(String columnName, Set<?> valueSet, JdbcType jdbcType) {
+		final boolean isCharacterJdbcType = isCharacterType( jdbcType.getJdbcTypeCode() );
+		assert isCharacterJdbcType || isIntegral( jdbcType.getJdbcTypeCode() );
+
+		StringBuilder check = new StringBuilder();
+		check.append( columnName ).append( " in (" );
+		String separator = "";
+		boolean nullIsValid = false;
+		for ( Object value : valueSet ) {
+			if ( value == null ) {
+				nullIsValid = true;
+				continue;
+			}
+			if ( isCharacterJdbcType ) {
+				check.append( separator ).append('\'').append( value ).append('\'');
+			}
+			else {
+				check.append( separator ).append( value );
+			}
 			separator = ",";
 		}
 		check.append( ')' );

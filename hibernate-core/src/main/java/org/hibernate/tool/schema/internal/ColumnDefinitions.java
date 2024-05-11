@@ -11,6 +11,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
@@ -105,6 +106,14 @@ class ColumnDefinitions {
 		appendColumnDefinition( statement, column, table, metadata, dialect );
 		appendComment( statement, column, dialect );
 		appendConstraints( statement, column, table, dialect, context );
+		appendOptions(statement, column, dialect);
+	}
+
+	private static void appendOptions(StringBuilder statement, Column column, Dialect dialect) {
+		final String options = column.getOptions();
+		if ( StringHelper.isNotEmpty( options ) ) {
+			statement.append( " " ).append( options );
+		}
 	}
 
 	private static void appendConstraints(

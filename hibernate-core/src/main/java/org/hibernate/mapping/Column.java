@@ -79,6 +79,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private Size columnSize;
 	private String collation;
 	private java.util.List<CheckConstraint> checkConstraints = new ArrayList<>();
+	private String options;
 
 	public Column() {
 	}
@@ -779,6 +780,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return quoted ? name : name.toLowerCase( Locale.ROOT );
 	}
 
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
+	}
+
 	/**
 	 * Shallow copy, the value is not copied
 	 */
@@ -808,6 +817,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.customWrite = customWrite;
 //		copy.specializedTypeDeclaration = specializedTypeDeclaration;
 		copy.columnSize = columnSize;
+		copy.options = options;
 		return copy;
 	}
 }

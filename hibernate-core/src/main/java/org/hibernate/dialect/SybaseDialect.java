@@ -535,4 +535,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsTableOptions() {
+		return true;
+	}
 }

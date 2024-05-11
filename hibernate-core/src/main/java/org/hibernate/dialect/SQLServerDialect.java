@@ -1171,4 +1171,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 		return "";
 	}
+
+	@Override
+	public boolean supportsTableOptions() {
+		return true;
+	}
 }

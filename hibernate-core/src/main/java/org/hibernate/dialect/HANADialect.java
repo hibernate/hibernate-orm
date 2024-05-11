@@ -52,4 +52,9 @@ public class HANADialect extends AbstractHANADialect {
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
+
+	@Override
+	public boolean supportsTableOptions() {
+		return true;
+	}
 }

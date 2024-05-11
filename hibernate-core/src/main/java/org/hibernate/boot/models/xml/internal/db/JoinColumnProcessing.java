@@ -194,33 +194,41 @@ public class JoinColumnProcessing {
 
 		final List<MutableAnnotationUsage<PrimaryKeyJoinColumn>> columnUsages = CollectionHelper.arrayList( jaxbJoinColumns.size() );
 
-		jaxbJoinColumns.forEach( (jaxbJoinColumn) -> {
-			final MutableAnnotationUsage<PrimaryKeyJoinColumn> columnUsage =
-					JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			columnUsages.add( columnUsage );
-
-			ColumnProcessing.applyColumnDetails(
-					jaxbJoinColumn,
-					(MutableAnnotationUsage<? extends Annotation>) columnUsage,
-					xmlDocumentContext
-			);
-			XmlAnnotationHelper.applyOptionalAttribute(
-					columnUsage,
-					"referencedColumnName",
-					((JaxbColumnJoined) jaxbJoinColumn).getReferencedColumnName()
-			);
-
-			ForeignKeyProcessing.applyForeignKey(
-					( (JaxbColumnJoined) jaxbJoinColumn ).getForeignKey(),
-					(MutableAnnotationUsage<? extends Annotation>) columnUsage,
-					xmlDocumentContext
-			);
-		} );
+		jaxbJoinColumns.forEach(
+				(jaxbJoinColumn) ->
+						columnUsages.add( createPrimaryKeyJoinColumnUsage( jaxbJoinColumn, xmlDocumentContext ) )
+		);
 
 		tableAnn.setAttributeValue(
 				"pkJoinColumns",
 				columnUsages
 		);
+	}
+
+	public static MutableAnnotationUsage<PrimaryKeyJoinColumn> createPrimaryKeyJoinColumnUsage(
+			JaxbPrimaryKeyJoinColumnImpl jaxbJoinColumn,
+			XmlDocumentContext xmlDocumentContext) {
+		final MutableAnnotationUsage<PrimaryKeyJoinColumn> columnUsage =
+				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
+
+		ColumnProcessing.applyColumnDetails(
+				jaxbJoinColumn,
+				(MutableAnnotationUsage<? extends Annotation>) columnUsage,
+				xmlDocumentContext
+		);
+
+		XmlAnnotationHelper.applyOptionalAttribute(
+				columnUsage,
+				"referencedColumnName",
+				((JaxbColumnJoined) jaxbJoinColumn ).getReferencedColumnName()
+		);
+
+		ForeignKeyProcessing.applyForeignKey(
+				( (JaxbColumnJoined) jaxbJoinColumn ).getForeignKey(),
+				(MutableAnnotationUsage<? extends Annotation>) columnUsage,
+				xmlDocumentContext
+		);
+		return columnUsage;
 	}
 
 }

@@ -72,6 +72,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 				column.setLogicalColumnName( discriminatorColumn.getString( "name" ) );
 			}
 			column.setNullable( false );
+			column.setOptions( discriminatorColumn.getString( "options" ) );
 		}
 		else {
 			discriminatorType = DiscriminatorType.STRING;

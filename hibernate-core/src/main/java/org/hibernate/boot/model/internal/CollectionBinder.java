@@ -647,12 +647,10 @@ public abstract class CollectionBinder {
 			}
 			final List<AnnotationUsage<MapKeyJoinColumn>> mapKeyJoinColumns = property.getAnnotationUsage( MapKeyJoinColumns.class ).getList( "value" );
 			final List<AnnotationUsage<JoinColumn>> joinKeyColumns = CollectionHelper.arrayList( mapKeyJoinColumns.size() );
-			int index = 0;
 			for ( AnnotationUsage<MapKeyJoinColumn> mapKeyJoinColumn : mapKeyJoinColumns ) {
 				final MutableAnnotationUsage<JoinColumn> joinColumn
 						= MapKeyJoinColumnDelegator.fromMapKeyJoinColumn( mapKeyJoinColumn, property, context );
 				joinKeyColumns.add( joinColumn );
-				index++;
 			}
 			return joinKeyColumns;
 		}

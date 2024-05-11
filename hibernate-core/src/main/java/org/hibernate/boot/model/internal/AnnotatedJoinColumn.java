@@ -196,6 +196,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			setUpdatable( joinColumn.getBoolean( "updatable" ) );
 			setReferencedColumn( joinColumn.getString( "referencedColumnName" ) );
 			applyColumnCheckConstraint( joinColumn );
+			setOptions( joinColumn.getString( "options" ) );
 
 			final String table = joinColumn.getString( "table" );
 			if ( table.isEmpty() ) {
@@ -237,15 +238,18 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final String columnName;
 		final String columnDefinition;
 		final String referencedColumnName;
+		final String options;
 		if ( primaryKeyJoinColumn != null ) {
 			columnName = primaryKeyJoinColumn.getString( "name" );
 			columnDefinition = primaryKeyJoinColumn.getString( "columnDefinition" );
 			referencedColumnName = primaryKeyJoinColumn.getString( "referencedColumnName" );
+			options = primaryKeyJoinColumn.getString( "options" );
 		}
 		else {
 			columnName = joinColumn.getString( "name" );
 			columnDefinition = joinColumn.getString( "columnDefinition" );
 			referencedColumnName = joinColumn.getString( "referencedColumnName" );
+			options = joinColumn.getString( "options" );
 		}
 
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
@@ -261,6 +265,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 //		column.setPropertyHolder(propertyHolder);
 //		column.setJoins(joins);
 //		column.setContext( context );
+		column.setOptions( options );
 		column.setImplicit( false );
 		column.setNullable( false );
 		column.setParent( parent );

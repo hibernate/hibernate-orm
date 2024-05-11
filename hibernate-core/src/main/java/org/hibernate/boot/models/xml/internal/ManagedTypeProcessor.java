@@ -592,6 +592,10 @@ public class ManagedTypeProcessor {
 				xmlDocumentContext
 		);
 
+		XmlAnnotationHelper.applyPrimaryKeyJoinColumns(
+				jaxbEntity, classDetails, xmlDocumentContext
+		);
+
 		renderClass( classDetails, xmlDocumentContext );
 	}
 

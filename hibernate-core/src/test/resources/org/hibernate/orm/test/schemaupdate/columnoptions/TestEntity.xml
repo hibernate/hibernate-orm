@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="3.2">
+    <package>org.hibernate.orm.test.schemaupdate.columnoptions</package>
+    <entity class="TestEntity" metadata-complete="true">
+        <table name="PRIMARY_TABLE" options="option_1"/>
+        <inheritance strategy="JOINED"/>
+        <discriminator-column name="DISC_COLUMN" options="option_2"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name">
+                <column name="NAME_COLUMN" options="option_1"/>
+            </basic>
+            <many-to-one name="testEntity">
+                <join-column name="JOIN_COLUMN" options="option_4"/>
+            </many-to-one>
+            <one-to-many name="testEntityMap">
+                <map-key-column name="MAP_KEY_COLUMN_2" options="option_7"/>
+            </one-to-many>
+            <one-to-many name="testEntityMap3">
+                <map-key-join-column name="MAP_KEY_JOIN_COLUMN_2" options="option_8"/>
+                <join-table name="TEST_ENTITY_3"/>
+            </one-to-many>
+            <many-to-many name="testEntityMap2">
+                <map-key-column name="MAP_KEY_COLUMN_3" options="option_9"/>
+            </many-to-many>
+            <many-to-many name="testEntityMap4">
+                <map-key-join-column name="MAP_KEY_JOIN_COLUMN_3" options="option__10"/>
+                <join-table name="TEST_ENTITY_4"/>
+            </many-to-many>
+            <element-collection name="colorPerDate">
+                <map-key-temporal>DATE</map-key-temporal>
+                <map-key-column name="MAP_KEY_COLUMN" options="option_5"/>
+            </element-collection>
+            <element-collection name="stringMap">
+                <map-key-join-column name="MAP_KEY_JOIN_COLUMN" options="option_6"/>
+                <collection-table name="ELEMENT_COLLECTION_TABLE"/>
+            </element-collection>
+            <element-collection name="theNumbers">
+                <order-column name="ORDER_COLUMN" options="option__11"/>
+            </element-collection>
+
+        </attributes>
+    </entity>
+    <entity class="AnotherTestEntity" metadata-complete="true">
+        <table name="ANOTHER_TEST_ENTITY"/>
+        <primary-key-join-column name="joined_fk" options="option_3"/>
+    </entity>
+</entity-mappings>

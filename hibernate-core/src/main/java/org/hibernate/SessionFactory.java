@@ -136,7 +136,7 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactory extends EntityManagerFactory, Referenceable, Serializable, java.io.Closeable {
+public interface SessionFactory extends EntityManagerFactory, Referenceable, Serializable {
 	/**
 	 * The JNDI name, used to bind the SessionFactory to JNDI
 	 */

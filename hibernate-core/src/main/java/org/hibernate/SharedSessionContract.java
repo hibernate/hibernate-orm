@@ -6,7 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Closeable;
 import java.io.Serializable;
 import java.util.List;
 
@@ -23,7 +22,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
  *
  * @author Steve Ebersole
  */
-public interface SharedSessionContract extends QueryProducer, Closeable, Serializable {
+public interface SharedSessionContract extends QueryProducer, AutoCloseable, Serializable {
 	/**
 	 * Obtain the tenant identifier associated with this session.
 	 *

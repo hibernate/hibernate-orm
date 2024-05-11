@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,10 +24,8 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
@@ -361,77 +358,4 @@ class ColumnsBuilder {
 		}
 	}
 
-	@SuppressWarnings("ClassExplicitlyAnnotation")
-	private static final class JoinColumnAdapter implements JoinColumn {
-		private final PrimaryKeyJoinColumn column;
-
-		public JoinColumnAdapter(PrimaryKeyJoinColumn column) {
-			this.column = column;
-		}
-
-		@Override
-		public String name() {
-			return column.name();
-		}
-
-		@Override
-		public String referencedColumnName() {
-			return column.referencedColumnName();
-		}
-
-		@Override
-		public boolean unique() {
-			return false;
-		}
-
-		@Override
-		public boolean nullable() {
-			return false;
-		}
-
-		@Override
-		public boolean insertable() {
-			return false;
-		}
-
-		@Override
-		public boolean updatable() {
-			return false;
-		}
-
-		@Override
-		public String columnDefinition() {
-			return column.columnDefinition();
-		}
-
-		@Override
-		public String table() {
-			return "";
-		}
-
-		@Override
-		public String options() {
-			return column.options();
-		}
-
-		@Override
-		public String comment() {
-			return "";
-		}
-
-		@Override
-		public ForeignKey foreignKey() {
-			return column.foreignKey();
-		}
-
-		@Override
-		public CheckConstraint[] check() {
-			return new CheckConstraint[0];
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return JoinColumn.class;
-		}
-	}
 }

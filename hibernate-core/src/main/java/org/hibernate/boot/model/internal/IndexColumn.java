@@ -114,6 +114,7 @@ public class IndexColumn extends AnnotatedColumn {
 //			column.setJoins( secondaryTables );
 			column.setInsertable( orderColumn.getBoolean( "insertable" ) );
 			column.setUpdatable( orderColumn.getBoolean( "updatable" ) );
+			column.setOptions( orderColumn.getString( "options" ) );
 //			column.setContext( context );
 //			column.setPropertyHolder( propertyHolder );
 			createParent( propertyHolder, secondaryTables, column, context );

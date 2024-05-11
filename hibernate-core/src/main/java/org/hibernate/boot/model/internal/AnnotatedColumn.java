@@ -97,6 +97,8 @@ public class AnnotatedColumn {
 
 	private AnnotatedColumns parent;
 
+	private String options;
+
 	public AnnotatedColumns getParent() {
 		return parent;
 	}
@@ -263,6 +265,8 @@ public class AnnotatedColumn {
 			for ( CheckConstraint constraint : checkConstraints ) {
 				mappingColumn.addCheckConstraint( constraint );
 			}
+			mappingColumn.setOptions( options );
+
 //			if ( isNotEmpty( comment ) ) {
 //				mappingColumn.setComment( comment );
 //			}
@@ -313,6 +317,7 @@ public class AnnotatedColumn {
 				mappingColumn.addCheckConstraint( constraint );
 			}
 			mappingColumn.setDefaultValue( defaultValue );
+			mappingColumn.setOptions( options );
 
 			if ( writeExpression != null ) {
 				final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
@@ -806,6 +811,7 @@ public class AnnotatedColumn {
 		annotatedColumn.applyColumnDefault( inferredData, numberOfColumns );
 		annotatedColumn.applyGeneratedAs( inferredData, numberOfColumns );
 		annotatedColumn.applyColumnCheckConstraint( column );
+		annotatedColumn.applyColumnOptions( column );
 		annotatedColumn.applyCheckConstraint( inferredData, numberOfColumns );
 		annotatedColumn.extractDataFromPropertyData( propertyHolder, inferredData );
 		annotatedColumn.bind();
@@ -1052,4 +1058,13 @@ public class AnnotatedColumn {
 	MetadataBuildingContext getBuildingContext() {
 		return getParent().getBuildingContext();
 	}
+
+	private void applyColumnOptions(AnnotationUsage<jakarta.persistence.Column> column) {
+		options = column.findAttributeValue( "options" );
+	}
+
+	void setOptions(String options){
+		this.options = options;
+	}
+
 }

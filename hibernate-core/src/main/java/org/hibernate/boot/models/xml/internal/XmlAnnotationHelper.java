@@ -52,6 +52,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorFormulaImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
@@ -66,6 +67,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbNationalizedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalId;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
@@ -123,6 +125,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
+import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SequenceGenerator;
@@ -1537,6 +1540,32 @@ public class XmlAnnotationHelper {
 			);
 
 			values.add( tableAnn );
+		}
+	}
+
+	public static void applyPrimaryKeyJoinColumns(
+			JaxbEntityImpl jaxbEntity,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		List<JaxbPrimaryKeyJoinColumnImpl> primaryKeyJoinColumns = jaxbEntity.getPrimaryKeyJoinColumns();
+		if ( CollectionHelper.isEmpty( primaryKeyJoinColumns ) ) {
+			return;
+		}
+
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final MutableAnnotationUsage<PrimaryKeyJoinColumns> primaryKeyJoinColumnsAnnotationUsage = classDetails.replaceAnnotationUsage(
+				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
+				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMNS,
+				modelBuildingContext
+		);
+
+		final ArrayList<Object> primaryKeyJoinColumnList = arrayList( primaryKeyJoinColumns.size() );
+		primaryKeyJoinColumnsAnnotationUsage.setAttributeValue( "value", primaryKeyJoinColumnList );
+
+		for ( JaxbPrimaryKeyJoinColumnImpl primaryKeyJoinColumn : primaryKeyJoinColumns ) {
+			primaryKeyJoinColumnList.add(
+					JoinColumnProcessing.createPrimaryKeyJoinColumnUsage( primaryKeyJoinColumn, xmlDocumentContext )
+			);
 		}
 	}
 }

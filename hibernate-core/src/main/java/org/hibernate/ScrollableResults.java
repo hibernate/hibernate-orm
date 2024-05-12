@@ -6,8 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Closeable;
-
 import org.hibernate.query.Query;
 
 /**
@@ -24,7 +22,7 @@ import org.hibernate.query.Query;
  *
  * @author Gavin King
  */
-public interface ScrollableResults<R> extends AutoCloseable, Closeable {
+public interface ScrollableResults<R> extends AutoCloseable {
 	/**
 	 * Get the current row of results.
 	 *

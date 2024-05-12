@@ -14,6 +14,7 @@ import jakarta.persistence.EntityResult;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.FieldResult;
 import jakarta.persistence.Id;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.SqlResultSetMapping;
 
 /**
@@ -55,6 +56,13 @@ import jakarta.persistence.SqlResultSetMapping;
 		name = "entity-none",
 		entities = @EntityResult(
 				entityClass = SimpleEntityWithNamedMappings.class
+		)
+)
+@SqlResultSetMapping(
+		name = "entity-lockmode",
+		entities = @EntityResult(
+				entityClass = SimpleEntityWithNamedMappings.class,
+				lockMode = LockModeType.PESSIMISTIC_WRITE
 		)
 )
 @SqlResultSetMapping(

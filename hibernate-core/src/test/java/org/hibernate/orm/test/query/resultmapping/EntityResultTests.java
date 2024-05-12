@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.LockModeType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 
@@ -115,6 +116,29 @@ public class EntityResultTests extends AbstractUsageTest {
 
 					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
 					session.createStoredProcedureCall( "abc", "entity-none" );
+				}
+		);
+	}
+
+	@Test
+	public void testImplicitAttributeMappingWithLockMode(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// make sure it is in the repository
+					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
+							.getQueryEngine()
+							.getNamedObjectRepository()
+							.getResultSetMappingMemento(
+									"entity-lockmode" );
+					assertThat( mappingMemento, notNullValue() );
+
+					// apply it to a native-query
+					final String qryString = "select id, name, notes from SimpleEntityWithNamedMappings for update";
+					final List<SimpleEntityWithNamedMappings> results = session
+							.createNativeQuery( qryString, "entity-lockmode" )
+							.list();
+					assertThat( results.size(), is( 1 ) );
+					assertThat( session.getLockMode(results.get(0)), is(LockModeType.PESSIMISTIC_WRITE));
 				}
 		);
 	}

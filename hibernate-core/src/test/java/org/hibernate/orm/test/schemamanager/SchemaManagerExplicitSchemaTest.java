@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.schemamanager;
 
+import jakarta.persistence.SchemaValidationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
@@ -63,6 +64,13 @@ public class SchemaManagerExplicitSchemaTest {
 			fail();
 		}
 		catch (SchemaManagementException e) {
+			assertTrue( e.getMessage().contains("ForTesting") );
+		}
+		try {
+			factory.getSchemaManager().validate();
+			fail();
+		}
+		catch (SchemaValidationException e) {
 			assertTrue( e.getMessage().contains("ForTesting") );
 		}
 	}

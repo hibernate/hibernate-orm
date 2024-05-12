@@ -10,6 +10,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SchemaValidationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -57,6 +58,13 @@ public class SchemaManagerDefaultSchemaTest {
 			fail();
 		}
 		catch (SchemaManagementException e) {
+			assertTrue( e.getMessage().contains("ForTesting") );
+		}
+		try {
+			factory.getSchemaManager().validate();
+			fail();
+		}
+		catch (SchemaValidationException e) {
 			assertTrue( e.getMessage().contains("ForTesting") );
 		}
 	}

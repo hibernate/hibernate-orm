@@ -34,20 +34,20 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -56,43 +56,37 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				ManyToOnePropertyAccessByFieldTest.User.class,
+				ManyToOnePropertyAccessByFieldTest.Office.class,
+				ManyToOnePropertyAccessByFieldTest.Client.class,
+				ManyToOnePropertyAccessByFieldTest.Request.class,
+				ManyToOnePropertyAccessByFieldTest.InternalRequest.class,
+				ManyToOnePropertyAccessByFieldTest.Phone.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ DirtyCheckEnhancementContext.class, NoDirtyCheckEnhancementContext.class })
-@TestForIssue(jiraKey = "HHH-13705")
-public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( User.class );
-		sources.addAnnotatedClass( Office.class );
-		sources.addAnnotatedClass( Client.class );
-		sources.addAnnotatedClass( Request.class );
-		sources.addAnnotatedClass( InternalRequest.class );
-		sources.addAnnotatedClass( Phone.class );
-	}
+@JiraKey("HHH-13705")
+public class ManyToOnePropertyAccessByFieldTest {
 
 	private Long userId;
 	private Long targetUserId;
 	private Long officeId;
 
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Log log = new Log();
 					log.setCreationDate( OffsetDateTime.now() );
@@ -127,9 +121,9 @@ public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctio
 		);
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Request" ).executeUpdate();
 					session.createQuery( "delete from User" ).executeUpdate();
@@ -141,12 +135,12 @@ public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctio
 	}
 
 	@Test
-	public void testPersist() {
-		final Statistics stats = sessionFactory().getStatistics();
+	public void testPersist(SessionFactoryScope scope) {
+		final Statistics stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
 		InternalRequest internalRequest = new InternalRequest( 1L );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User user = session.find( User.class, userId );
 					internalRequest.setUser( user );
@@ -165,18 +159,18 @@ public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctio
 	}
 
 	@Test
-	public void testDelete() {
+	public void testDelete(SessionFactoryScope scope) {
 		Set<Phone> officePhones = new HashSet<>();
 		officePhones.add( new Phone( 1L, "landline", "028-234-9876" ) );
 		officePhones.add( new Phone( 2L, "mobile", "072-122-9876" ) );
 		Office office = buildOffice( "second office", "Fab", officePhones );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.save( office );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Office result = session.find( Office.class, office.id );
 					session.delete( result );
@@ -184,7 +178,7 @@ public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctio
 		);
 
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					List<Office> offices = session.createQuery( "from Office" ).list();
 					assertThat( offices.size(), is( 1 ) );
@@ -197,9 +191,9 @@ public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctio
 	}
 
 	@Test
-	public void testUpdate() {
+	public void testUpdate(SessionFactoryScope scope) {
 		InternalRequest internalRequest = new InternalRequest( 1L );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User user = session.find( User.class, userId );
 					internalRequest.setUser( user );
@@ -212,7 +206,7 @@ public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctio
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					InternalRequest result = session.find( InternalRequest.class, internalRequest.getId() );
 					assertThat( result.getTargetUser().getId(), is( targetUserId ) );
@@ -221,7 +215,7 @@ public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctio
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					InternalRequest result = session.find( InternalRequest.class, internalRequest.getId() );
 					assertThat( result.getTargetUser().getId(), is( targetUserId ) );
@@ -233,7 +227,7 @@ public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctio
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					InternalRequest result = session.find( InternalRequest.class, internalRequest.getId() );
 					assertThat( result.getTargetUser().getId(), is( userId ) );
@@ -257,7 +251,7 @@ public class ManyToOnePropertyAccessByFieldTest extends BaseNonConfigCoreFunctio
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					InternalRequest result = session.find( InternalRequest.class, internalRequest.getId() );
 					assertThat( result.getTargetUser().getId(), is( userId ) );

@@ -13,6 +13,8 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
+import org.hibernate.sql.ast.tree.from.EmbeddableFunctionTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.NullType;
@@ -94,10 +96,12 @@ public interface SqlExpressionResolver {
 	default Expression resolveSqlExpression(TableReference tableReference, SelectableMapping selectableMapping) {
 		return resolveSqlExpression(
 				createColumnReferenceKey( tableReference, selectableMapping ),
-				processingState -> new ColumnReference(
-						tableReference,
-						selectableMapping
-				)
+				processingState -> tableReference.isEmbeddableFunctionTableReference()
+						? new NestedColumnReference(
+								tableReference.asEmbeddableFunctionTableReference(),
+								selectableMapping
+						)
+						: new ColumnReference( tableReference, selectableMapping )
 		);
 	}
 

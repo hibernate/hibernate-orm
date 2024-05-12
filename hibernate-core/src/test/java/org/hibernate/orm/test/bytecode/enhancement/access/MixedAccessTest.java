@@ -1,16 +1,17 @@
 package org.hibernate.orm.test.bytecode.enhancement.access;
 
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -27,7 +28,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.joining;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Requires a custom enhancement context to disable dirty checking as bytecode enhancement is not expected to fully work with AccessType.PROPERTY
@@ -35,23 +37,24 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
  *
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-10851" )
-@RunWith( BytecodeEnhancerRunner.class )
-@CustomEnhancementContext( MixedAccessTest.NoDirtyCheckingContext.class )
-public class MixedAccessTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-10851" )
+@DomainModel(
+        annotatedClasses = {
+                MixedAccessTest.TestEntity.class, MixedAccessTest.TestOtherEntity.class,
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+@CustomEnhancementContext(MixedAccessTest.NoDirtyCheckingContext.class)
+public class MixedAccessTest {
 
     private static final Pattern PARAM_PATTERN = Pattern.compile( "\\{\\\"(.*)\\\"\\:\\\"(.*)\\\"\\}" );
     private static final Function<Map.Entry, String> MAPPING_FUNCTION = e -> "\"" + e.getKey() + "\":\"" + e.getValue() + "\"";
     private static final String ID = "foo", PARAM_KEY = "paramName", PARAM_VAL = "paramValue", PARAMS_AS_STR = "{\"" + PARAM_KEY + "\":\"" + PARAM_VAL + "\"}";
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{TestEntity.class, TestOtherEntity.class};
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             TestEntity testEntity = new TestEntity( ID );
             testEntity.setParamsAsString( PARAMS_AS_STR );
             s.persist( testEntity );
@@ -63,13 +66,13 @@ public class MixedAccessTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             TestEntity testEntity = s.get( TestEntity.class, ID );
-            Assert.assertEquals( PARAMS_AS_STR, testEntity.getParamsAsString() );
+            assertEquals( PARAMS_AS_STR, testEntity.getParamsAsString() );
 
             TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, ID );
-            Assert.assertEquals( PARAMS_AS_STR, testOtherEntity.getParamsAsString() );
+            assertEquals( PARAMS_AS_STR, testOtherEntity.getParamsAsString() );
 
             // Clean parameters
             testEntity.setParamsAsString( "{}" );
@@ -77,14 +80,14 @@ public class MixedAccessTest extends BaseCoreFunctionalTestCase {
         } );
     }
 
-    @After
-    public void cleanup() {
-        doInHibernate( this::sessionFactory, s -> {
+    @AfterEach
+    public void cleanup(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             TestEntity testEntity = s.get( TestEntity.class, ID );
-            Assert.assertTrue( testEntity.getParams().isEmpty() );
+            assertTrue( testEntity.getParams().isEmpty() );
 
             TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, ID );
-            Assert.assertTrue( testOtherEntity.getParams().isEmpty() );
+            assertTrue( testOtherEntity.getParams().isEmpty() );
         } );
     }
 
@@ -92,7 +95,7 @@ public class MixedAccessTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "TEST_ENTITY" )
-    private static class TestEntity {
+    static class TestEntity {
 
         @Id
         String name;
@@ -137,7 +140,7 @@ public class MixedAccessTest extends BaseCoreFunctionalTestCase {
     @Entity
     @Table( name = "OTHER_ENTITY" )
     @Access( AccessType.FIELD )
-    private static class TestOtherEntity {
+    static class TestOtherEntity {
 
         @Id
         String name;

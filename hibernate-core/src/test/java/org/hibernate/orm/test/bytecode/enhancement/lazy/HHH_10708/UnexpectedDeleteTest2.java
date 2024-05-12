@@ -6,13 +6,15 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,22 +25,21 @@ import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-
-@TestForIssue( jiraKey = "HHH-10708" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class UnexpectedDeleteTest2 extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10708" )
+@DomainModel(
+        annotatedClasses = {
+               UnexpectedDeleteTest2.Foo.class, UnexpectedDeleteTest2.Bar.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class UnexpectedDeleteTest2 {
 
     private Bar myBar;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Foo.class, Bar.class};
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Bar bar = new Bar();
             Foo foo1 = new Foo();
             Foo foo2 = new Foo();
@@ -54,17 +55,17 @@ public class UnexpectedDeleteTest2 extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             s.refresh( myBar );
-            Assert.assertFalse( myBar.foos.isEmpty() );
+            assertFalse( myBar.foos.isEmpty() );
 
             // The issue is that currently, for some unknown reason, foos are deleted on flush
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             Bar bar = s.get( Bar.class, myBar.id );
-            Assert.assertFalse( bar.foos.isEmpty() );
+            assertFalse( bar.foos.isEmpty() );
         } );
     }
 
@@ -72,7 +73,7 @@ public class UnexpectedDeleteTest2 extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "Bar")
     @Table( name = "BAR" )
-    private static class Bar {
+    static class Bar {
 
         @Id
         @GeneratedValue
@@ -84,7 +85,7 @@ public class UnexpectedDeleteTest2 extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "Foo")
     @Table( name = "FOO" )
-    private static class Foo {
+    static class Foo {
 
         @Id
         @GeneratedValue

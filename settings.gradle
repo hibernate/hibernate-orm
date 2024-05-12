@@ -66,12 +66,12 @@ dependencyResolutionManagement {
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"
-            def byteBuddyVersion = version "byteBuddy", "1.14.12"
+            def byteBuddyVersion = version "byteBuddy", "1.14.15"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.8.2"
             def hcannVersion = version "hcann", "6.0.6.Final"
             def jandexVersion = version "jandex", "3.1.2"
-            def jacksonVersion = version "jackson", "2.14.1"
+            def jacksonVersion = version "jackson", "2.17.0"
             def jbossLoggingVersion = version "jbossLogging", "3.5.0.Final"
             def jbossLoggingToolVersion = version "jbossLoggingTool", "2.2.1.Final"
 
@@ -169,8 +169,9 @@ dependencyResolutionManagement {
             library( "el", "org.glassfish.expressly", "expressly" ).versionRef( elVersion )
         }
         testLibs {
-            def junit5Version = version "junit5", "5.9.2"
+            def junit5Version = version "junit5", "5.10.2"
             def junit4Version = version "junit4", "4.13.2"
+            def junit5LauncherVersion = version "junit5Launcher", "1.10.2"
 
             def assertjVersion = version "assertj", "3.22.0"
             def bytemanVersion = version "byteman", "4.0.20"
@@ -191,6 +192,7 @@ dependencyResolutionManagement {
             library( "junit5Engine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junit5Version )
             library( "junit5Params", "org.junit.jupiter", "junit-jupiter-params" ).versionRef( junit5Version )
             library( "junit4Engine", "org.junit.vintage", "junit-vintage-engine" ).versionRef( junit5Version )
+            library( "junit5Launcher", "org.junit.platform", "junit-platform-launcher" ).versionRef( junit5LauncherVersion )
             library( "junit4", "junit", "junit" ).versionRef( junit4Version )
 
             library( "assertjCore", "org.assertj", "assertj-core" ).versionRef( assertjVersion )

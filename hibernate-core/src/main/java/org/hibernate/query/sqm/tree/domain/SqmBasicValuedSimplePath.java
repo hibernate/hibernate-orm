@@ -6,9 +6,15 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.UnknownPathException;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -17,8 +23,11 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static java.util.Arrays.asList;
 
 /**
  * @author Steve Ebersole
@@ -84,6 +93,37 @@ public class SqmBasicValuedSimplePath<T>
 						name, getNavigablePath()
 				)
 		);
+	}
+
+	@Override
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
+		final String alias = selector.toHqlString();
+		final NavigablePath navigablePath = getNavigablePath().getParent().append(
+				CollectionPart.Nature.ELEMENT.getName(),
+				alias
+		);
+		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );
+		if ( indexedPath != null ) {
+			return indexedPath;
+		}
+		if ( !( getNodeType().getSqmPathType() instanceof BasicPluralType<?, ?> ) ) {
+			throw new UnsupportedOperationException( "Index access is only supported for basic plural types." );
+		}
+		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();
+		final SelfRenderingSqmFunction<?> result = queryEngine.getSqmFunctionRegistry()
+				.findFunctionDescriptor( "array_get" )
+				.generateSqmExpression(
+						asList( this, selector ),
+						null,
+						queryEngine
+				);
+		final SqmFunctionPath<Object> path = new SqmFunctionPath<>( result );
+		pathRegistry.register( path );
+		return path;
 	}
 
 

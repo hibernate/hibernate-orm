@@ -6,42 +6,46 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.association;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Marco Belladelli
  * @author Tomas Cerskus
  */
-@RunWith(BytecodeEnhancerRunner.class)
-@TestForIssue(jiraKey = "HHH-16477")
-public class OneToManyLazyAndEagerTest2 extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				User.class,
-				Coupon.class,
-				Order.class
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				OneToManyLazyAndEagerTest2.User.class,
+				OneToManyLazyAndEagerTest2.Coupon.class,
+				OneToManyLazyAndEagerTest2.Order.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@JiraKey("HHH-16477")
+public class OneToManyLazyAndEagerTest2 {
 
-	@Before
-	public void prepare() {
-		doInJPA( this::entityManagerFactory, em -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			final User user = new User( "User 1", "Marco" );
 			final User targetUser = new User( "User 2", "Andrea" );
 			final Coupon coupon = new Coupon( "Coupon 1", targetUser );
@@ -53,9 +57,9 @@ public class OneToManyLazyAndEagerTest2 extends BaseEntityManagerFunctionalTestC
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		doInJPA( this::entityManagerFactory, em -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			em.createQuery( "delete from Order" ).executeUpdate();
 			em.createQuery( "delete from Coupon" ).executeUpdate();
 			em.createQuery( "delete from User" ).executeUpdate();
@@ -63,22 +67,22 @@ public class OneToManyLazyAndEagerTest2 extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Test
-	public void testQuery() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void testQuery(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
 			final Order order = em.createQuery( "select o from Order o", Order.class )
 					.getResultList()
 					.get( 0 );
 
 			final User user = order.getUser();
-			assertTrue( "Proxy should be initialized", Hibernate.isInitialized( user ) );
+			assertTrue( Hibernate.isInitialized( user ), "Proxy should be initialized" );
 			assertEquals( "Marco", user.getName() );
 
 			final User targetUser = order.getTargetUser();
-			assertTrue( "Proxy should be initialized", Hibernate.isInitialized( targetUser ) );
+			assertTrue( Hibernate.isInitialized( targetUser ), "Proxy should be initialized" );
 			assertEquals( "Andrea", targetUser.getName() );
 
 			final Coupon coupon = order.getCoupon();
-			assertTrue( "Proxy should be initialized", Hibernate.isInitialized( coupon ) );
+			assertTrue( Hibernate.isInitialized( coupon ), "Proxy should be initialized" );
 			assertThat( coupon.getTargetUser() ).isSameAs( targetUser );
 
 

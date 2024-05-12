@@ -14,11 +14,11 @@ import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UserDefinedType;
+import org.hibernate.mapping.UserDefinedObjectType;
 
 /**
  * A pluggable contract that allows ordering of columns within {@link org.hibernate.mapping.Table},
- * {@link org.hibernate.mapping.Constraint} and {@link org.hibernate.mapping.UserDefinedType}.
+ * {@link org.hibernate.mapping.Constraint} and {@link UserDefinedObjectType}.
  * <p>
  * An {@linkplain ColumnOrderingStrategy} may be selected using the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY}.
@@ -46,7 +46,7 @@ public interface ColumnOrderingStrategy {
 	 * Orders the columns of the user defined type.
 	 * May return null if columns were not ordered.
 	 */
-	List<Column> orderUserDefinedTypeColumns(UserDefinedType userDefinedType, Metadata metadata);
+	List<Column> orderUserDefinedTypeColumns(UserDefinedObjectType userDefinedType, Metadata metadata);
 
 	/**
 	 * Orders the columns of the temporary table.

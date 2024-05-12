@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
+import java.util.Collection;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
@@ -68,7 +69,9 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
 		if ( elementType instanceof BasicPluralType<?, ?>
-				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
+				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray()
+				&& elementJavaTypeClass != byte[].class ) {
+			// No support for nested arrays, except for byte[][]
 			return null;
 		}
 		final ArrayJavaType<T> arrayJavaType;
@@ -326,6 +329,16 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( getElementJavaType().getJavaTypeClass(), 1 );
 			//noinspection unchecked
 			wrapped[0] = (T) value;
+			return wrapped;
+		}
+		else if ( value instanceof Collection<?> ) {
+			final Collection<?> collection = (Collection<?>) value;
+			//noinspection unchecked
+			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( getElementJavaType().getJavaTypeClass(), collection.size() );
+			int i = 0;
+			for ( Object e : collection ) {
+				wrapped[i++] = getElementJavaType().wrap( e, options );
+			}
 			return wrapped;
 		}
 

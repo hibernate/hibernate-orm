@@ -11,53 +11,48 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Christian Beikov
  */
-@TestForIssue( jiraKey = "HHH-14348" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class DirtyTrackingCollectionInDefaultFetchGroupTest extends BaseNonConfigCoreFunctionalTestCase {
+@JiraKey( "HHH-14348" )
+@DomainModel(
+        annotatedClasses = {
+                DirtyTrackingCollectionInDefaultFetchGroupTest.StringsEntity.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class DirtyTrackingCollectionInDefaultFetchGroupTest {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{StringsEntity.class};
-    }
-
-    @Override
-    protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-        super.configureSessionFactoryBuilder( sfb );
-        sfb.applyCollectionsInDefaultFetchGroup( true );
-    }
-
-    @Before
-    public void prepare() {
-        assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
-        doInJPA( this::sessionFactory, em -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        assertTrue( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+        scope.inTransaction( em -> {
             StringsEntity entity = new StringsEntity();
             entity.id = 1L;
             entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
@@ -66,8 +61,8 @@ public class DirtyTrackingCollectionInDefaultFetchGroupTest extends BaseNonConfi
     }
 
     @Test
-    public void test() {
-        doInJPA( this::sessionFactory, entityManager -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
 
             StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
             entityManager.flush();
@@ -88,12 +83,13 @@ public class DirtyTrackingCollectionInDefaultFetchGroupTest extends BaseNonConfi
 
     @Entity
     @Table( name = "STRINGS_ENTITY" )
-    private static class StringsEntity {
+    static class StringsEntity {
 
         @Id
         Long id;
 
         @ElementCollection
+        @CollectionTable(name = "STRINGS_ENTITY_SOME", joinColumns = @JoinColumn(name = "SOME_ID"))
         List<String> someStrings;
 
         @ManyToOne(fetch = FetchType.LAZY)

@@ -342,23 +342,8 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
-		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			append( "mod" );
-			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
-			appendSql( ',' );
-			arithmeticExpression.getRightHandOperand().accept( this );
-			appendSql( CLOSE_PARENTHESIS );
-		}
-		else {
-			appendSql( OPEN_PARENTHESIS );
-			render( arithmeticExpression.getLeftHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-			render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-			appendSql( CLOSE_PARENTHESIS );
-		}
+	protected void visitArithmeticOperand(Expression expression) {
+		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 
 }

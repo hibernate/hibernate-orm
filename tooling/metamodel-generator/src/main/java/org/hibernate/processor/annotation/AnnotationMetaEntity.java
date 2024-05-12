@@ -1149,9 +1149,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private TypeMirror ununiIfPossible(ExecutableElement method, TypeMirror returnType) {
-		final TypeMirror result = ununi(returnType);
-		if ( result != returnType && repository && !usingReactiveSession(sessionType) ) {
-			message(method, "not backed by a reactive session", Diagnostic.Kind.ERROR);
+		final TypeMirror result = ununi( returnType );
+		if ( repository ) {
+			if ( usingReactiveSession( sessionType ) )  {
+				if ( result == returnType ) {
+					message( method, "backed by a reactive session, must return 'Uni'", Diagnostic.Kind.ERROR );
+				}
+			}
+			else {
+				if ( result != returnType ) {
+					message( method, "not backed by a reactive session, must not return 'Uni'", Diagnostic.Kind.ERROR );
+				}
+			}
 		}
 		return result;
 	}
@@ -1482,7 +1491,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		else if ( returnType.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) ununiIfPossible(method, returnType);
+			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement entity = (TypeElement) declaredType.asElement();
 			if ( !containsAnnotation( entity, ENTITY ) ) {
 				message( method,
@@ -2549,9 +2558,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				// TODO: anything more we can do here? e.g. check constructor
 				try {
 					final Class<?> javaResultType = selection.getJavaType();
-					final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
-					final Types types = context.getTypeUtils();
-					returnTypeCorrect = types.isAssignable( returnType,  types.erasure( typeElement.asType() ) );
+					if ( javaResultType == null ) {
+						returnTypeCorrect = true;
+					}
+					else {
+						final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
+						final Types types = context.getTypeUtils();
+						returnTypeCorrect = context.getTypeUtils().isAssignable( returnType, types.erasure( typeElement.asType() ) );
+					}
 				}
 				catch (Exception e) {
 					//ignore
@@ -2661,7 +2675,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean parameterMatches(VariableElement parameter, JpaSelection<?> item) {
-		return parameterMatches( parameter.asType(), item.getJavaType() );
+		final Class<?> javaType = item.getJavaType();
+		return javaType != null && parameterMatches( parameter.asType(), javaType );
 	}
 
 	private static boolean parameterMatches(TypeMirror parameterType, Class<?> itemType) {

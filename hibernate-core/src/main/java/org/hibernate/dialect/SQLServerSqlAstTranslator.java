@@ -272,6 +272,15 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	}
 
 	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		// No need for follow on locking
+		return LockStrategy.CLAUSE;
+	}
+
+	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
 		// SQL Server does not support the FOR UPDATE clause
 	}
@@ -492,9 +501,9 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		arithmeticExpression.getLeftHandOperand().accept( this );
+		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		arithmeticExpression.getRightHandOperand().accept( this );
+		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 

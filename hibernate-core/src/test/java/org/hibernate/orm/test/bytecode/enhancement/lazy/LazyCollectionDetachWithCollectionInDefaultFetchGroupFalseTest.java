@@ -12,24 +12,20 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -47,38 +43,23 @@ import jakarta.persistence.Table;
  * <p>
  * Kept here for <a href="https://github.com/hibernate/hibernate-orm/pull/5252#pullrequestreview-1095843220">historical reasons</a>.
  */
-@TestForIssue(jiraKey = "HHH-12260")
-@RunWith(BytecodeEnhancerRunner.class)
-public class LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-12260")
+@DomainModel(
+		annotatedClasses = {
+				LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest.Parent.class,
+				LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest.Child.class
+		}
+)
+@SessionFactory(applyCollectionsInDefaultFetchGroup = false)
+@BytecodeEnhanced
+public class LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest {
 
 	private static final int CHILDREN_SIZE = 10;
 	private Long parentID;
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Parent.class, Child.class };
-	}
-
-	@Override
-	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.addService(
-				SessionFactoryBuilderService.class,
-				(SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-					SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-							metadata.getMetadataBuildingOptions().getServiceRegistry(),
-							bootstrapContext
-					);
-					// We want to test with this setting set to false explicitly,
-					// because another test already takes care of the default.
-					optionsBuilder.enableCollectionInDefaultFetchGroup( false );
-					return new SessionFactoryBuilderImpl( metadata, optionsBuilder, bootstrapContext );
-				}
-		);
-	}
-
-	@Before
-	public void prepare() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = new Parent();
 			parent.setChildren( new ArrayList<>() );
 			for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
@@ -92,8 +73,8 @@ public class LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest exte
 	}
 
 	@Test
-	public void testDetach() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testDetach(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = s.find( Parent.class, parentID );
 
 			assertThat( parent, notNullValue() );
@@ -108,8 +89,8 @@ public class LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest exte
 	}
 
 	@Test
-	public void testDetachProxy() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testDetachProxy(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = s.getReference( Parent.class, parentID );
 
 			checkDirtyTracking( parent );
@@ -121,8 +102,8 @@ public class LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest exte
 	}
 
 	@Test
-	public void testRefresh() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testRefresh(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Parent parent = s.find( Parent.class, parentID );
 
 			assertThat( parent, notNullValue() );
@@ -139,7 +120,7 @@ public class LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest exte
 
 	@Entity(name = "Parent")
 	@Table(name = "PARENT")
-	private static class Parent {
+	static class Parent {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
@@ -155,7 +136,7 @@ public class LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest exte
 
 	@Entity(name = "Child")
 	@Table(name = "CHILD")
-	private static class Child {
+	static class Child {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

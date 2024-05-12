@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -14,42 +13,54 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestForIssue( jiraKey = "HHH-11147" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-11147" )
+@DomainModel(
+		annotatedClasses = {
+				MergeDetachedToProxyTest.AEntity.class,
+				MergeDetachedToProxyTest.BEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCase {
+public class MergeDetachedToProxyTest {
 
 	@Test
-	public void testMergeInitializedDetachedOntoProxy() {
-		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+	public void testMergeInitializedDetachedOntoProxy(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 
-		final AEntity aEntityDetached = fromTransaction(
+		final AEntity aEntityDetached = scope.fromTransaction(
 				session -> {
 					AEntity aEntity = session.get( AEntity.class, 1 );
 					assertIsEnhancedProxy( aEntity.bEntity );
@@ -59,16 +70,16 @@ public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCas
 		);
 
 		statistics.clear();
-		assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+		assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 0L );
 
-		inSession(
+		scope.inSession(
 				session -> {
 					BEntity bEntity = session.getReference( BEntity.class, 2 );
 					assertIsEnhancedProxy( bEntity );
-					assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+					assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 0L );
 
 					AEntity aEntityMerged = (AEntity) session.merge( aEntityDetached );
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 1L );
 
 					assertSame( bEntity, aEntityMerged.bEntity );
 					assertEquals( "a description", aEntityDetached.bEntity.description );
@@ -76,14 +87,14 @@ public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+		assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 1L );
 	}
 
 	@Test
-	public void testMergeUpdatedDetachedOntoProxy() {
-		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+	public void testMergeUpdatedDetachedOntoProxy(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 
-		final AEntity aEntityDetached = fromTransaction(
+		final AEntity aEntityDetached = scope.fromTransaction(
 				session -> {
 					AEntity aEntity = session.get( AEntity.class, 1 );
 					assertIsEnhancedProxy( aEntity.bEntity );
@@ -95,16 +106,16 @@ public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCas
 		aEntityDetached.bEntity.description = "new description";
 
 		statistics.clear();
-		assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+		assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 0L );
 
-		inSession(
+		scope.inSession(
 				session -> {
 					BEntity bEntity = session.getReference( BEntity.class, 2 );
 					assertIsEnhancedProxy( bEntity );
-					assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+					assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 0L );
 
 					AEntity aEntityMerged = (AEntity) session.merge( aEntityDetached );
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 1L );
 
 					assertSame( bEntity, aEntityMerged.bEntity );
 					assertEquals( "new description", aEntityDetached.bEntity.description );
@@ -112,34 +123,12 @@ public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCas
 				}
 		);
 
-		assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+		assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 1L );
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( AEntity.class );
-		sources.addAnnotatedClass( BEntity.class );
-	}
-
-	@Before
-	public void prepareTestData() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final AEntity aEntity = new AEntity();
 					aEntity.id = 1;
@@ -152,9 +141,9 @@ public class MergeDetachedToProxyTest extends BaseNonConfigCoreFunctionalTestCas
 		);
 	}
 
-	@After
-	public void clearTestData(){
-		inTransaction(
+	@AfterEach
+	public void clearTestData(SessionFactoryScope scope){
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from AEntity" ).executeUpdate();
 					session.createQuery( "delete from BEntity" ).executeUpdate();

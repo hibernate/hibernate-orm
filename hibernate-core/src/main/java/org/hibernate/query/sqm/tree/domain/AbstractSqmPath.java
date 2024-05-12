@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -79,12 +80,12 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public SqmPathSource<T> getNodeType() {
-		return (SqmPathSource<T>) super.getNodeType();
+		return (SqmPathSource<T>) NullnessUtil.castNonNull( super.getNodeType() );
 	}
 
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
-		return (SqmPathSource<T>) super.getNodeType();
+		return (SqmPathSource<T>) NullnessUtil.castNonNull( super.getNodeType() );
 	}
 
 	@Override

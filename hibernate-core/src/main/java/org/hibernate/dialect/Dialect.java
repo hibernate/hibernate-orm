@@ -340,7 +340,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	protected Dialect(DialectResolutionInfo info) {
-		this.version = info.makeCopy();
+		this.version = info.makeCopyOrDefault( getMinimumSupportedVersion() );
 		checkVersion();
 		registerDefaultKeywords();
 		registerKeywords(info);
@@ -1686,13 +1686,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			jdbcTypeRegistry.addDescriptor( NVarcharJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( LongNVarcharJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( NClobJdbcType.DEFAULT );
-		}
-
-		if ( useInputStreamToInsertBlob() ) {
-			jdbcTypeRegistry.addDescriptor(
-					Types.CLOB,
-					ClobJdbcType.STREAM_BINDING
-			);
 		}
 
 		if ( getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
@@ -4828,7 +4821,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public int getDefaultTimestampPrecision() {
 		//milliseconds or microseconds is the maximum
 		//for most dialects that support explicit
-		//precision, with the exception of DB2 which
+		//precision, with the exception of Oracle,
+		//which accepts up to 9 digits, and DB2 which
 		//accepts up to 12 digits!
 		return 6; //microseconds!
 	}

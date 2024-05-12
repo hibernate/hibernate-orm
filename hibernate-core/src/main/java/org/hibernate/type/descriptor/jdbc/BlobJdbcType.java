@@ -93,35 +93,32 @@ public abstract class BlobJdbcType implements JdbcType {
 			return byte[].class;
 		}
 
+		private BlobJdbcType getDescriptor(Object value, WrapperOptions options) {
+			if ( value instanceof byte[] ) {
+				// performance shortcut for binding BLOB data in byte[] format
+				return PRIMITIVE_ARRAY_BINDING;
+			}
+			else if ( options.useStreamForLobBinding() ) {
+				return STREAM_BINDING;
+			}
+			else {
+				return BLOB_BINDING;
+			}
+		}
+
 		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
 			return new BasicBinder<>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					BlobJdbcType descriptor = BLOB_BINDING;
-					if ( value instanceof byte[] ) {
-						// performance shortcut for binding BLOB data in byte[] format
-						descriptor = PRIMITIVE_ARRAY_BINDING;
-					}
-					else if ( options.useStreamForLobBinding() ) {
-						descriptor = STREAM_BINDING;
-					}
-					descriptor.getBlobBinder( javaType ).doBind( st, value, index, options );
+					getDescriptor( value, options ).getBlobBinder( javaType ).doBind( st, value, index, options );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					BlobJdbcType descriptor = BLOB_BINDING;
-					if ( value instanceof byte[] ) {
-						// performance shortcut for binding BLOB data in byte[] format
-						descriptor = PRIMITIVE_ARRAY_BINDING;
-					}
-					else if ( options.useStreamForLobBinding() ) {
-						descriptor = STREAM_BINDING;
-					}
-					descriptor.getBlobBinder( javaType ).doBind( st, value, name, options );
+					getDescriptor( value, options ).getBlobBinder( javaType ).doBind( st, value, name, options );
 				}
 			};
 		}
@@ -202,22 +199,14 @@ public abstract class BlobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final BinaryStream binaryStream = javaType.unwrap(
-							value,
-							BinaryStream.class,
-							options
-					);
+					final BinaryStream binaryStream = javaType.unwrap( value, BinaryStream.class, options );
 					st.setBinaryStream( index, binaryStream.getInputStream(), binaryStream.getLength() );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final BinaryStream binaryStream = javaType.unwrap(
-							value,
-							BinaryStream.class,
-							options
-					);
+					final BinaryStream binaryStream = javaType.unwrap( value, BinaryStream.class, options );
 					st.setBinaryStream( name, binaryStream.getInputStream(), binaryStream.getLength() );
 				}
 			};

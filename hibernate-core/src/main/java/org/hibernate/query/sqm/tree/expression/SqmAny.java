@@ -12,6 +12,8 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Gavin King
  */
@@ -25,7 +27,7 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public SqmExpressible<T> getNodeType() {
+	public @Nullable SqmExpressible<T> getNodeType() {
 		return subquery.getNodeType();
 	}
 

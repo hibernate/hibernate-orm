@@ -560,7 +560,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				appendSql( ')' );
 				break;
 			case SqlTypes.ARRAY:
-				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getTypeName();
+				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getSqlTypeName();
 				switch ( operator ) {
 					case DISTINCT_FROM:
 					case NOT_DISTINCT_FROM:

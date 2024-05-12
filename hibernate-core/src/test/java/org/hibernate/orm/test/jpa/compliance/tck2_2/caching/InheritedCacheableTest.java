@@ -75,12 +75,32 @@ public class InheritedCacheableTest extends BaseNonConfigCoreFunctionalTestCase 
 					final Customer customer = s.get( Customer.class, "2" );
 					assertTrue( Hibernate.isInitialized( customer ) );
 					assertThat( statistics.getSecondLevelCacheHitCount(), CoreMatchers.is(0L) );
+					assertThat( statistics.getSecondLevelCachePutCount(), CoreMatchers.is(0L) );
 
 					statistics.clear();
 
 					final Employee emp = s.get( Employee.class, "1" );
 					assertTrue( Hibernate.isInitialized( emp ) );
 					assertThat( statistics.getSecondLevelCacheHitCount(), CoreMatchers.is(1L) );
+					assertThat( statistics.getSecondLevelCachePutCount(), CoreMatchers.is(0L) );
+				}
+		);
+
+		inTransaction(
+				s -> {
+					statistics.clear();
+
+					final Person customer = s.get( Person.class, "2" );
+					assertTrue( Hibernate.isInitialized( customer ) );
+					assertThat( statistics.getSecondLevelCacheHitCount(), CoreMatchers.is(0L) );
+					assertThat( statistics.getSecondLevelCachePutCount(), CoreMatchers.is(0L) );
+
+					statistics.clear();
+
+					final Person emp = s.get( Person.class, "1" );
+					assertTrue( Hibernate.isInitialized( emp ) );
+					assertThat( statistics.getSecondLevelCacheHitCount(), CoreMatchers.is(1L) );
+					assertThat( statistics.getSecondLevelCachePutCount(), CoreMatchers.is(0L) );
 				}
 		);
 	}

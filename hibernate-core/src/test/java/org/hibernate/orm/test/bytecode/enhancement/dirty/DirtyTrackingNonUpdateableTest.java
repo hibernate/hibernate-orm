@@ -6,11 +6,12 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,23 +21,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-12051" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class DirtyTrackingNonUpdateableTest extends BaseCoreFunctionalTestCase {
-
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Thing.class};
-    }
+@JiraKey( "HHH-12051" )
+@DomainModel(
+        annotatedClasses = {
+               DirtyTrackingNonUpdateableTest.Thing.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class DirtyTrackingNonUpdateableTest {
 
     @Test
-    public void test() {
-        doInJPA( this::sessionFactory, entityManager -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( entityManager -> {
             Thing thing = new Thing();
             entityManager.persist( thing );
 

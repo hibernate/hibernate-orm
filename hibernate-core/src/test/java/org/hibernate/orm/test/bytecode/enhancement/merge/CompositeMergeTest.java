@@ -6,12 +6,12 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.CollectionTable;
@@ -28,23 +28,24 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+        annotatedClasses = {
+            CompositeMergeTest.ParentEntity.class, CompositeMergeTest.Address.class, CompositeMergeTest.Country.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class CompositeMergeTest {
 
     private long entityId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{ParentEntity.class, Address.class, Country.class};
-    }
-
-    @Before
-    public void prepare() {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
         ParentEntity parent = new ParentEntity();
         parent.description = "desc";
         parent.address = new Address();
@@ -55,7 +56,7 @@ public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
 
         parent.lazyField = new byte[100];
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             s.persist( parent );
         } );
 
@@ -64,10 +65,10 @@ public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
+    public void test(SessionFactoryScope scope) {
         ParentEntity[] parent = new ParentEntity[3];
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             parent[0] = s.get( ParentEntity.class, entityId );
         } );
 
@@ -77,7 +78,7 @@ public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
 
         checkDirtyTracking( parent[0], "address.country" );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             parent[1] = (ParentEntity) s.merge( parent[0] );
             checkDirtyTracking( parent[0], "address.country" );
             checkDirtyTracking( parent[1], "address.country" );
@@ -90,14 +91,14 @@ public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
 
         checkDirtyTracking( parent[1], "address.country" );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             s.saveOrUpdate( parent[1] );
             checkDirtyTracking( parent[1], "address.country" );
         } );
 
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             parent[2] = s.get( ParentEntity.class, entityId );
-            Assert.assertEquals( "Honduras", parent[2].address.country.name );
+            assertEquals( "Honduras", parent[2].address.country.name );
         } );
     }
 
@@ -105,7 +106,7 @@ public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "Parent")
     @Table( name = "PARENT_ENTITY" )
-    private static class ParentEntity {
+    static class ParentEntity {
 
         @Id
         @GeneratedValue
@@ -122,7 +123,7 @@ public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
 
     @Embeddable
     @Table( name = "ADDRESS" )
-    private static class Address {
+    static class Address {
 
         String street;
 
@@ -132,7 +133,7 @@ public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
 
     @Embeddable
     @Table( name = "COUNTRY" )
-    private static class Country {
+    static class Country {
 
         String name;
 

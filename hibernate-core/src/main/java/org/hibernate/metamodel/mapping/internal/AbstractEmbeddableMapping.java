@@ -278,6 +278,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					containingTableExpression = rootTableExpression;
 					columnExpression = rootTableKeyColumnNames[ columnPosition ];
 				}
+				final NavigableRole role = navigableRole.append( bootPropertyDescriptor.getName() );
 				final SelectablePath selectablePath;
 				final String columnDefinition;
 				final Long length;
@@ -296,6 +297,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
+					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {
 					columnDefinition = null;
@@ -310,18 +312,18 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),
-						navigableRole.append( bootPropertyDescriptor.getName() ),
+						role,
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
 						declarer,
-						(BasicType<?>) subtype,
+						basicValue.getResolution().getLegacyResolvedBasicType(),
 						containingTableExpression,
 						columnExpression,
 						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
-						selectable.getWriteExpr( ( (BasicType<?>) subtype ).getJdbcMapping(), dialect ),
+						selectable.getWriteExpr( basicValue.getResolution().getJdbcMapping(), dialect ),
 						columnDefinition,
 						length,
 						precision,

@@ -6,9 +6,11 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.callbacks;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -20,42 +22,44 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 @JiraKey("HHH-12718")
-@RunWith(BytecodeEnhancerRunner.class)
-public class PreUpdateBytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Person.class };
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.CLASSLOADERS, getClass().getClassLoader() );
-		options.put( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION, "true" );
-		options.put( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING, "true" );
-	}
+@DomainModel(
+		annotatedClasses = {
+				PreUpdateBytecodeEnhancementTest.Person.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				// TODO: how to convert this, or even is it needed?
+				// options.put( AvailableSettings.CLASSLOADERS, getClass().getClassLoader() );
+				@Setting( name = AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION, value = "true" ),
+				@Setting( name = AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class PreUpdateBytecodeEnhancementTest {
 
 	@Test
-	public void testPreUpdateModifications() {
+	public void testPreUpdateModifications(SessionFactoryScope scope) {
 		Person person = new Person();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			entityManager.persist( person );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person p = entityManager.find( Person.class, person.id );
 			assertNotNull( p );
 			assertNotNull( p.createdAt );
@@ -64,14 +68,14 @@ public class PreUpdateBytecodeEnhancementTest extends BaseEntityManagerFunctiona
 			p.setName( "Changed Name" );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person p = entityManager.find( Person.class, person.id );
 			assertNotNull( p.lastUpdatedAt );
 		} );
 	}
 
 	@Entity(name = "Person")
-	private static class Person {
+	static class Person {
 		@Id
 		@GeneratedValue
 		private int id;

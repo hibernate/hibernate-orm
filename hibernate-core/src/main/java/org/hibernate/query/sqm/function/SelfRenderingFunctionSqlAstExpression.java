@@ -33,6 +33,8 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Representation of a function call in the SQL AST for impls that know how to
  * render themselves.
@@ -44,8 +46,8 @@ public class SelfRenderingFunctionSqlAstExpression
 	private final String functionName;
 	private final FunctionRenderer renderer;
 	private final List<? extends SqlAstNode> sqlAstArguments;
-	private final ReturnableType<?> type;
-	private final JdbcMappingContainer expressible;
+	private final @Nullable ReturnableType<?> type;
+	private final @Nullable JdbcMappingContainer expressible;
 
 	/**
 	 * @deprecated Use {@link #SelfRenderingFunctionSqlAstExpression(String, FunctionRenderer, List, ReturnableType, JdbcMappingContainer)} instead
@@ -55,8 +57,8 @@ public class SelfRenderingFunctionSqlAstExpression
 			String functionName,
 			FunctionRenderingSupport renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
-			ReturnableType<?> type,
-			JdbcMappingContainer expressible) {
+			@Nullable ReturnableType<?> type,
+			@Nullable JdbcMappingContainer expressible) {
 		this.functionName = functionName;
 		this.renderer = renderer::render;
 		this.sqlAstArguments = sqlAstArguments;
@@ -69,8 +71,8 @@ public class SelfRenderingFunctionSqlAstExpression
 			String functionName,
 			FunctionRenderer renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
-			ReturnableType<?> type,
-			JdbcMappingContainer expressible) {
+			@Nullable ReturnableType<?> type,
+			@Nullable JdbcMappingContainer expressible) {
 		this.functionName = functionName;
 		this.renderer = renderer;
 		this.sqlAstArguments = sqlAstArguments;
@@ -108,7 +110,7 @@ public class SelfRenderingFunctionSqlAstExpression
 		return renderer;
 	}
 
-	protected ReturnableType<?> getType() {
+	protected @Nullable ReturnableType<?> getType() {
 		return type;
 	}
 

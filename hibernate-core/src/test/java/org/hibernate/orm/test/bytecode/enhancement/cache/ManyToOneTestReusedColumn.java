@@ -9,14 +9,16 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.DiscriminatorColumn;
@@ -34,31 +36,30 @@ import jakarta.persistence.OneToMany;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
-@RunWith(BytecodeEnhancerRunner.class)
 @JiraKey("HHH-16744")
-public class ManyToOneTestReusedColumn extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ManyToOneTestReusedColumn.Fridge.class,
+				ManyToOneTestReusedColumn.Container.class,
+				ManyToOneTestReusedColumn.CheeseContainer.class,
+				ManyToOneTestReusedColumn.FruitContainer.class,
+				ManyToOneTestReusedColumn.Food.class,
+				ManyToOneTestReusedColumn.Fruit.class,
+				ManyToOneTestReusedColumn.Cheese.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class ManyToOneTestReusedColumn {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Fridge.class,
-				Container.class,
-				CheeseContainer.class,
-				FruitContainer.class,
-				Food.class,
-				Fruit.class,
-				Cheese.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Fridge fridge = new Fridge();
 					FruitContainer fruitContainer = new FruitContainer();
@@ -91,8 +92,8 @@ public class ManyToOneTestReusedColumn extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSelect() {
-		inTransaction(
+	public void testSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Fridge fridge = session.getReference( Fridge.class, 1 );
 

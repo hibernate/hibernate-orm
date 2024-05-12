@@ -12,7 +12,10 @@ import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.BasicPluralJavaType;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static java.sql.Types.ARRAY;
@@ -32,20 +35,25 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 	@Override
 	public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
 		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) type;
-		final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) pluralType.getJavaTypeDescriptor();
 		final BasicType<?> elementType = pluralType.getElementType();
-		String arrayElementTypeName = ddlTypeRegistry.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
-				.getCastTypeName(
-						dialect.getSizeStrategy().resolveSize(
-								elementType.getJdbcMapping().getJdbcType(),
-								elementType.getJavaTypeDescriptor(),
-								columnSize.getPrecision(),
-								columnSize.getScale(),
-								columnSize.getLength()
-						),
-						elementType,
-						ddlTypeRegistry
-				);
+		String arrayElementTypeName;
+		if ( elementType.getJavaTypeDescriptor() instanceof EmbeddableAggregateJavaType<?> ) {
+			arrayElementTypeName = ( (EmbeddableAggregateJavaType<?>) elementType.getJavaTypeDescriptor() ).getStructName();
+		}
+		else {
+			arrayElementTypeName = ddlTypeRegistry.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
+					.getCastTypeName(
+							dialect.getSizeStrategy().resolveSize(
+									elementType.getJdbcMapping().getJdbcType(),
+									elementType.getJavaTypeDescriptor(),
+									columnSize.getPrecision(),
+									columnSize.getScale(),
+									columnSize.getLength()
+							),
+							elementType,
+							ddlTypeRegistry
+					);
+		}
 		if ( castRawElementType ) {
 			final int paren = arrayElementTypeName.indexOf( '(' );
 			if ( paren > 0 ) {
@@ -56,7 +64,7 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 			}
 		}
 		return dialect.getArrayTypeName(
-				javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
+				getElementTypeSimpleName( pluralType.getElementType(), dialect ),
 				arrayElementTypeName,
 				columnSize.getArrayLength()
 		);
@@ -65,7 +73,6 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 	@Override
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
 		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) type;
-		final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) pluralType.getJavaTypeDescriptor();
 		final BasicType<?> elementType = pluralType.getElementType();
 		final String arrayElementTypeName = ddlTypeRegistry.getTypeName(
 				elementType.getJdbcType().getDdlTypeCode(),
@@ -79,10 +86,50 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 				elementType
 		);
 		return dialect.getArrayTypeName(
-				javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
+				getElementTypeSimpleName( pluralType.getElementType(), dialect ),
 				arrayElementTypeName,
 				columnSize.getArrayLength()
 		);
+	}
+
+	private static String getElementTypeSimpleName(BasicType<?> elementType, Dialect dialect) {
+		final BasicValueConverter<?, ?> converter = elementType.getValueConverter();
+		if ( converter != null ) {
+			if ( converter instanceof JpaAttributeConverter<?, ?> ) {
+				return ( (JpaAttributeConverter<?, ?>) converter ).getConverterJavaType()
+						.getJavaTypeClass()
+						.getSimpleName();
+			}
+			else {
+				return converter.getClass().getSimpleName();
+			}
+		}
+		final JavaType<?> elementJavaType = elementType.getJavaTypeDescriptor();
+		if ( elementJavaType.getJavaTypeClass().isArray() ) {
+			return dialect.getArrayTypeName(
+					elementJavaType.getJavaTypeClass().getComponentType().getSimpleName(),
+					null,
+					null
+			);
+		}
+		else {
+			final Class<?> preferredJavaTypeClass = elementType.getJdbcType().getPreferredJavaTypeClass( null );
+			if ( preferredJavaTypeClass == null || preferredJavaTypeClass == elementJavaType.getJavaTypeClass() ) {
+				return elementJavaType.getJavaTypeClass().getSimpleName();
+			}
+			else {
+				if ( preferredJavaTypeClass.isArray() ) {
+					return elementJavaType.getJavaTypeClass().getSimpleName() + dialect.getArrayTypeName(
+							preferredJavaTypeClass.getComponentType().getSimpleName(),
+							null,
+							null
+					);
+				}
+				else {
+					return elementJavaType.getJavaTypeClass().getSimpleName() + preferredJavaTypeClass.getSimpleName();
+				}
+			}
+		}
 	}
 
 }

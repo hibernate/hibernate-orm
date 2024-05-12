@@ -45,6 +45,11 @@ public class PropertyPreloadedData implements PropertyData {
 	}
 
 	@Override
+	public XClass getClassOrPluralElement() throws MappingException {
+		return getPropertyClass();
+	}
+
+	@Override
 	public XClass getPropertyClass() throws MappingException {
 		return returnedClass;
 	}

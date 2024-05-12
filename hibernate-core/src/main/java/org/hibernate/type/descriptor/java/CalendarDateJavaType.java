@@ -102,7 +102,7 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 			return (X) new java.sql.Date( value.getTimeInMillis() );
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( value.getTimeInMillis() );
+			return (X) new java.sql.Time( value.getTimeInMillis() % 86_400_000 );
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
 			return (X) new java.sql.Timestamp( value.getTimeInMillis() );

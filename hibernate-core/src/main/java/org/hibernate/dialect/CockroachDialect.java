@@ -142,7 +142,7 @@ public class CockroachDialect extends Dialect {
 
 	public CockroachDialect(DialectResolutionInfo info, String versionString) {
 		this(
-				versionString != null ? parseVersion( versionString ) : info.makeCopy(),
+				versionString != null ? parseVersion( versionString ) : info.makeCopyOrDefault( MINIMUM_VERSION ),
 				PostgreSQLDriverKind.determineKind( info )
 		);
 		registerKeywords( info );
@@ -175,7 +175,7 @@ public class CockroachDialect extends Dialect {
 			// default to the dialect-specific configuration setting
 			versionString = ConfigurationHelper.getString( COCKROACH_VERSION_STRING, info.getConfigurationValues() );
 		}
-		return versionString != null ? parseVersion( versionString ) : info.makeCopy();
+		return versionString != null ? parseVersion( versionString ) : info.makeCopyOrDefault( MINIMUM_VERSION );
 	}
 
 	public static DatabaseVersion parseVersion( String versionString ) {
@@ -803,10 +803,10 @@ public class CockroachDialect extends Dialect {
 
 	private static String intervalPattern(TemporalUnit unit) {
 		switch (unit) {
+			case NATIVE:
+				return "(?2)*interval '1 microsecond'";
 			case NANOSECOND:
 				return "(?2)/1e3*interval '1 microsecond'";
-			case NATIVE:
-				return "(?2)*interval '1 second'";
 			case QUARTER: //quarter is not supported in interval literals
 				return "(?2)*interval '3 month'";
 			case WEEK: //week is not supported in interval literals
@@ -852,13 +852,16 @@ public class CockroachDialect extends Dialect {
 				//all the following units:
 
 				// Note that CockroachDB also has an extract_duration function which returns an int,
-				// but we don't use that here because it is deprecated since v20
+				// but we don't use that here because it is deprecated since v20.
+				// We need to use round() instead of cast(... as int) because extract epoch returns
+				// float8 which can cause loss-of-precision in some cases
+				// https://github.com/cockroachdb/cockroach/issues/72523
 				case HOUR:
 				case MINUTE:
 				case SECOND:
 				case NANOSECOND:
 				case NATIVE:
-					return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
+					return "round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")";
 				default:
 					throw new SemanticException( "Unrecognized field: " + unit );
 			}

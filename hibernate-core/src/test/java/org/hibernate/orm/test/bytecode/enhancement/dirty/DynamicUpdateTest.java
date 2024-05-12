@@ -5,12 +5,13 @@ import java.time.LocalDate;
 
 import org.hibernate.annotations.DynamicUpdate;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -20,23 +21,22 @@ import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@RunWith(BytecodeEnhancerRunner.class)
-public class DynamicUpdateTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				DynamicUpdateTest.Payment.class,
+				DynamicUpdateTest.StuffToPay.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class DynamicUpdateTest {
 
 	public static final Long STUFF_TO_PAY_ID = 1l;
 	public static final Long PAYMENT_ID = 2l;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Payment.class,
-				StuffToPay.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Payment payment = new Payment(PAYMENT_ID);
 					payment.setFee( new BigDecimal( 42 ) );
@@ -51,8 +51,8 @@ public class DynamicUpdateTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey("HHH-16577")
-	public void testSetAttribute() {
-		inTransaction(
+	public void testSetAttribute(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					StuffToPay stuffToPay = session.find( StuffToPay.class, STUFF_TO_PAY_ID );
 					stuffToPay.confirmPayment();
@@ -61,7 +61,7 @@ public class DynamicUpdateTest extends BaseCoreFunctionalTestCase {
 					assertThat( payment.getPaidAt() ).isNotNull();				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Payment payment = session.find( Payment.class, PAYMENT_ID );
 					assertThat(payment).isNotNull();

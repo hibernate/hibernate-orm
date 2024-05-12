@@ -23,36 +23,52 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 
-@TestForIssue( jiraKey = "HHH-11147" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-11147" )
+@DomainModel(
+		annotatedClasses = {
+				BidirectionalProxyTest.BEntity.class,
+				BidirectionalProxyTest.CEntity.class,
+				BidirectionalProxyTest.AMappedSuperclass.class,
+				BidirectionalProxyTest.AEntity.class,
+				BidirectionalProxyTest.AChildEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions( lazyLoading = true )
-public class BidirectionalProxyTest  extends BaseNonConfigCoreFunctionalTestCase {
+public class BidirectionalProxyTest {
 
 	@Test
-	public void testIt() {
-		inTransaction(
+	public void testIt(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					for (BEntity b : session.createQuery("from BEntity b", BEntity.class).getResultList()) {
-						final Statistics stats = sessionFactory().getStatistics();
+						final Statistics stats = scope.getSessionFactory().getStatistics();
 						stats.clear();
 						AChildEntity a = b.getA();
 						assertEquals( 0, stats.getPrepareStatementCount() );
@@ -78,10 +94,10 @@ public class BidirectionalProxyTest  extends BaseNonConfigCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					for (BEntity b : session.createQuery("from BEntity b", BEntity.class).getResultList()) {
-						final Statistics stats = sessionFactory().getStatistics();
+						final Statistics stats = scope.getSessionFactory().getStatistics();
 						stats.clear();
 						AChildEntity a = b.getA();
 						assertEquals( "this is a string", a.getStringField() );
@@ -91,10 +107,10 @@ public class BidirectionalProxyTest  extends BaseNonConfigCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					for (CEntity c : session.createQuery("from CEntity c", CEntity.class).getResultList()) {
-						final Statistics stats = sessionFactory().getStatistics();
+						final Statistics stats = scope.getSessionFactory().getStatistics();
 						stats.clear();
 						AEntity a = c.getA();
 						assertEquals( 0, stats.getPrepareStatementCount() );
@@ -110,10 +126,10 @@ public class BidirectionalProxyTest  extends BaseNonConfigCoreFunctionalTestCase
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					for (CEntity c : session.createQuery("from CEntity c", CEntity.class).getResultList()) {
-						final Statistics stats = sessionFactory().getStatistics();
+						final Statistics stats = scope.getSessionFactory().getStatistics();
 						stats.clear();
 						AEntity a = c.getA();
 						assertEquals( 2, a.getVersion() );
@@ -123,34 +139,9 @@ public class BidirectionalProxyTest  extends BaseNonConfigCoreFunctionalTestCase
 		);
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( BEntity.class );
-		sources.addAnnotatedClass( CEntity.class );
-		sources.addAnnotatedClass( AMappedSuperclass.class );
-		sources.addAnnotatedClass( AEntity.class );
-		sources.addAnnotatedClass( AChildEntity.class );
-	}
-
-	@Before
-	public void prepareTestData() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					AChildEntity a = new AChildEntity("a");
 					BEntity b = new BEntity("b");
@@ -167,9 +158,9 @@ public class BidirectionalProxyTest  extends BaseNonConfigCoreFunctionalTestCase
 		);
 	}
 
-	@After
-	public void clearTestData(){
-		inTransaction(
+	@AfterEach
+	public void clearTestData(SessionFactoryScope scope){
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from BEntity" ).executeUpdate();
 					session.createQuery( "delete from CEntity" ).executeUpdate();

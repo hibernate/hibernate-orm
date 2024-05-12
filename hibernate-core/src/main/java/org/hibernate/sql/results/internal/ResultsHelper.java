@@ -184,16 +184,14 @@ public class ResultsHelper {
 			PersistentCollection<?> collectionInstance,
 			Object key,
 			boolean hasNoQueuedAdds) {
+		final SharedSessionContractImplementor session = persistenceContext.getSession();
+
 		CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
 		if ( collectionEntry == null ) {
-			collectionEntry = persistenceContext.addInitializedCollection(
-					collectionDescriptor,
-					collectionInstance,
-					key
-			);
+			collectionEntry = persistenceContext.addInitializedCollection( collectionDescriptor, collectionInstance, key );
 		}
 		else {
-			collectionEntry.postInitialize( collectionInstance );
+			collectionEntry.postInitialize( collectionInstance, session );
 		}
 
 		if ( collectionDescriptor.getCollectionType().hasHolder() ) {
@@ -211,7 +209,6 @@ public class ResultsHelper {
 		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
 		batchFetchQueue.removeBatchLoadableCollection( collectionEntry );
 
-		final SharedSessionContractImplementor session = persistenceContext.getSession();
 		// add to cache if:
 		final boolean addToCache =
 				// there were no queued additions

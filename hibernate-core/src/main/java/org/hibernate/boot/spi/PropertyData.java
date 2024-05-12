@@ -33,6 +33,11 @@ public interface PropertyData {
 	XClass getClassOrElement() throws MappingException;
 
 	/**
+	 * Returns the returned class itself or the element type if an array or collection
+	 */
+	XClass getClassOrPluralElement() throws MappingException;
+
+	/**
 	 * Return the class itself
 	 */
 	XClass getPropertyClass() throws MappingException;

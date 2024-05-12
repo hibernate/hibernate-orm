@@ -9,7 +9,6 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecki
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,52 +21,44 @@ import jakarta.persistence.Table;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-@TestForIssue(jiraKey = "HHH-14549")
-@RunWith(BytecodeEnhancerRunner.class)
+@JiraKey("HHH-14549")
+@DomainModel(
+		annotatedClasses = {
+				LoadUninitializedCollectionTest.Bank.class,
+				LoadUninitializedCollectionTest.BankAccount.class,
+				LoadUninitializedCollectionTest.BankDepartment.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @CustomEnhancementContext({ DirtyCheckEnhancementContext.class, NoDirtyCheckEnhancementContext.class })
-public class LoadUninitializedCollectionTest extends BaseEntityManagerFunctionalTestCase {
+public class LoadUninitializedCollectionTest {
 
-	boolean skipTest;
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Bank.class,
-				BankAccount.class,
-				BankDepartment.class
-		};
-	}
-
-	@Override
-	protected void addMappings(Map settings) {
+	@BeforeAll
+	static void beforeAll() {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		if ( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
-			// skip the test if the bytecode provider is Javassist
-			skipTest = true;
-		}
+		assumeFalse( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals(
+				byteCodeProvider ) );
 	}
 
-
-	@Before
-	public void setUp() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					Bank bank = new Bank( 1L, "International" );
 					BankAccount bankAccount = new BankAccount( 1L, bank, "1234567890" );
 					BankDepartment bankDepartmentA = new BankDepartment( 1L, "A" );
@@ -88,11 +79,8 @@ public class LoadUninitializedCollectionTest extends BaseEntityManagerFunctional
 	}
 
 	@Test
-	public void testLoadAfterNativeQueryExecution() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testLoadAfterNativeQueryExecution(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					 BankAccount account = entityManager.find( BankAccount.class, 1L );
 
 					 Query nativeQuery = entityManager.createNativeQuery( "SELECT ID FROM BANK" );
@@ -107,11 +95,8 @@ public class LoadUninitializedCollectionTest extends BaseEntityManagerFunctional
 	}
 
 	@Test
-	public void testLoadAfterFlush() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testLoadAfterFlush(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					 BankAccount account = entityManager.find( BankAccount.class, 1L );
 
 					 entityManager.flush();
@@ -124,12 +109,9 @@ public class LoadUninitializedCollectionTest extends BaseEntityManagerFunctional
 		);
 	}
 
-	@After
-	public void tearDown() {
-		if ( skipTest ) {
-			return;
-		}
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 					 Bank bank = entityManager.find( Bank.class, 1L );
 					 bank.getDepartments().forEach(
 							 department -> entityManager.remove( department )

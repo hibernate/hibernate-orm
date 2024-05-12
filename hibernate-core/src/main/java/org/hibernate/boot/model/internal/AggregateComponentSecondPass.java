@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -26,18 +25,16 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.UserDefinedType;
+import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableHelper;
 import org.hibernate.sql.Template;
-import org.hibernate.type.BasicPluralType;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -47,17 +44,17 @@ public class AggregateComponentSecondPass implements SecondPass {
 
 	private final PropertyHolder propertyHolder;
 	private final Component component;
-	private final XClass returnedClassOrElement;
+	private final XClass componentXClass;
 	private final MetadataBuildingContext context;
 
 	public AggregateComponentSecondPass(
 			PropertyHolder propertyHolder,
 			Component component,
-			XClass returnedClassOrElement,
+			XClass componentXClass,
 			MetadataBuildingContext context) {
 		this.propertyHolder = propertyHolder;
 		this.component = component;
-		this.returnedClassOrElement = returnedClassOrElement;
+		this.componentXClass = componentXClass;
 		this.context = context;
 	}
 
@@ -86,15 +83,15 @@ public class AggregateComponentSecondPass implements SecondPass {
 		if ( structName != null ) {
 			final Namespace defaultNamespace = database.getDefaultNamespace();
 			final Identifier udtName = Identifier.toIdentifier( structName );
-			final UserDefinedType udt = new UserDefinedType( "orm", defaultNamespace, udtName );
-			final Comment comment = returnedClassOrElement.getAnnotation( Comment.class );
+			final UserDefinedObjectType udt = new UserDefinedObjectType( "orm", defaultNamespace, udtName );
+			final Comment comment = componentXClass.getAnnotation( Comment.class );
 			if ( comment != null ) {
 				udt.setComment( comment.value() );
 			}
 			for ( org.hibernate.mapping.Column aggregatedColumn : aggregatedColumns ) {
 				udt.addColumn( aggregatedColumn );
 			}
-			final UserDefinedType registeredUdt = defaultNamespace.createUserDefinedType(
+			final UserDefinedObjectType registeredUdt = defaultNamespace.createUserDefinedType(
 					udtName,
 					name -> udt
 			);
@@ -187,7 +184,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 		propertyHolder.getTable().getColumns().removeAll( aggregatedColumns );
 	}
 
-	private void orderColumns(UserDefinedType userDefinedType) {
+	private void orderColumns(UserDefinedObjectType userDefinedType) {
 		final Class<?> componentClass = component.getComponentClass();
 		final int[] originalOrder = component.sortProperties();
 		final String[] structColumnNames = component.getStructColumnNames();
@@ -296,18 +293,6 @@ public class AggregateComponentSecondPass implements SecondPass {
 					validateSupportedColumnTypes( StringHelper.qualify( basePath, property.getName() ), subComponent );
 				}
 			}
-			else if ( value instanceof BasicValue ) {
-				final BasicType<?> basicType = (BasicType<?>) value.getType();
-				if ( basicType instanceof BasicPluralType<?, ?> ) {
-					// todo: see HHH-15862
-					throw new AnnotationException(
-							"Property '" + StringHelper.qualify( basePath, property.getName() )
-									+ "' uses not yet supported array mapping type in component class '"
-									+ component.getComponentClassName()
-									+ "'. Aggregate components currently may only contain simple basic values and components of simple basic values."
-					);
-				}
-			}
 		}
 	}
 
@@ -326,7 +311,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 		} while ( aggregateColumn != null );
 	}
 
-	private void validateEqual(UserDefinedType udt1, UserDefinedType udt2) {
+	private void validateEqual(UserDefinedObjectType udt1, UserDefinedObjectType udt2) {
 		if ( udt1.getColumnSpan() != udt2.getColumnSpan() ) {
 			throw new MappingException(
 					String.format(
@@ -350,7 +335,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 						String.format(
 								"Struct [%s] of class [%s] is defined by multiple components with different mappings [%s] and [%s] for column [%s]",
 								udt1.getName(),
-								returnedClassOrElement.getName(),
+								componentXClass.getName(),
 								column1.getSqlType(),
 								column2.getSqlType(),
 								column1.getCanonicalName()
@@ -365,7 +350,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 							"Struct [%s] is defined by multiple components %s but some columns are missing in [%s]: %s",
 							udt1.getName(),
 							findComponentClasses(),
-							returnedClassOrElement.getName(),
+							componentXClass.getName(),
 							missingColumns
 					)
 			);

@@ -112,6 +112,8 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  */
 public class MySQLLegacyDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 5, 0 );
+
 	private final MySQLStorageEngine storageEngine = createStorageEngine();
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -138,7 +140,7 @@ public class MySQLLegacyDialect extends Dialect {
 	private final boolean noBackslashEscapesEnabled;
 
 	public MySQLLegacyDialect() {
-		this( DatabaseVersion.make( 5, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public MySQLLegacyDialect(DatabaseVersion version) {
@@ -179,7 +181,7 @@ public class MySQLLegacyDialect extends Dialect {
 				// Ignore
 			}
 		}
-		return info.makeCopy();
+		return info.makeCopyOrDefault( DEFAULT_VERSION );
 	}
 
 	@Override

@@ -2,15 +2,14 @@ package org.hibernate.orm.test.bytecode.enhancement.update;
 
 import java.util.List;
 
-import org.hibernate.annotations.Formula;
-
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -27,20 +26,19 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+				JoinedInheritanceTest.Plane.class, JoinedInheritanceTest.A320.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @JiraKey("HHH-17632")
-public class JoinedInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
+public class JoinedInheritanceTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Plane.class, A320.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					A320 a320 = new A320( 1l, "Airbus A320", 101, true, "1.0" );
 					session.persist( a320 );
@@ -48,9 +46,9 @@ public class JoinedInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createMutationQuery( "delete from A320" ).executeUpdate();
 				}
@@ -58,8 +56,8 @@ public class JoinedInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUpdateField() {
-		inTransaction(
+	public void testUpdateField(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					A320 referenceById = session.getReference( A320.class, 1L );
 
@@ -80,8 +78,8 @@ public class JoinedInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUpdateTwoFields() {
-		inTransaction(
+	public void testUpdateTwoFields(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					A320 referenceById = session.getReference( A320.class, 1L );
 

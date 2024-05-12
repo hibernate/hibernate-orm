@@ -1869,7 +1869,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					}
 			);
 			try {
-				part = (SemanticPathPart) ctx.pathContinuation().accept( this );
+				part = (SemanticPathPart) ctx.pathContinuation().simplePath().accept( this );
 			}
 			finally {
 				dotIdentifierConsumerStack.pop();
@@ -2965,11 +2965,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
 				+ "' of 'naturalid()' function does not resolve to an entity type" );
 	}
-
-	@Override
-	public Object visitToOneFkExpression(HqlParser.ToOneFkExpressionContext ctx) {
-		return visitToOneFkReference( (HqlParser.ToOneFkReferenceContext) ctx.getChild( 0 ) );
-	}
+//
+//	@Override
+//	public Object visitToOneFkExpression(HqlParser.ToOneFkExpressionContext ctx) {
+//		return visitToOneFkReference( (HqlParser.ToOneFkReferenceContext) ctx.getChild( 0 ) );
+//	}
 
 	@Override
 	public SqmFkExpression<?> visitToOneFkReference(HqlParser.ToOneFkReferenceContext ctx) {
@@ -2990,7 +2990,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		}
 
-		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) sqmPath, creationContext.getNodeBuilder() );
+		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) sqmPath );
 	}
 
 	@Override
@@ -3513,44 +3513,44 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitDateLiteral(HqlParser.DateLiteralContext ctx) {
-		return ctx.getChild( 1 ).accept( this );
+		return ctx.date().accept( this );
 	}
 
 	@Override
 	public Object visitTimeLiteral(HqlParser.TimeLiteralContext ctx) {
-		return ctx.getChild( 1 ).accept( this );
+		return ctx.time().accept( this );
 	}
 
 	@Override
 	public Object visitJdbcTimestampLiteral(HqlParser.JdbcTimestampLiteralContext ctx) {
-		final ParseTree parseTree = ctx.getChild( 1 );
-		if ( parseTree instanceof HqlParser.DateTimeContext ) {
-			return parseTree.accept( this );
+		final HqlParser.DateTimeContext dateTime = ctx.dateTime();
+		if ( dateTime != null ) {
+			return dateTime.accept( this );
 		}
 		else {
-			return sqlTimestampLiteralFrom( parseTree.getText() );
+			return sqlTimestampLiteralFrom( ctx.genericTemporalLiteralText().getText() );
 		}
 	}
 
 	@Override
 	public Object visitJdbcDateLiteral(HqlParser.JdbcDateLiteralContext ctx) {
-		final ParseTree parseTree = ctx.getChild( 1 );
-		if ( parseTree instanceof HqlParser.DateContext ) {
-			return parseTree.accept( this );
+		final HqlParser.DateContext date = ctx.date();
+		if ( date != null ) {
+			return date.accept( this );
 		}
 		else {
-			return sqlDateLiteralFrom( parseTree.getText() );
+			return sqlDateLiteralFrom( ctx.genericTemporalLiteralText().getText() );
 		}
 	}
 
 	@Override
 	public Object visitJdbcTimeLiteral(HqlParser.JdbcTimeLiteralContext ctx) {
-		final ParseTree parseTree = ctx.getChild( 1 );
-		if ( parseTree instanceof HqlParser.TimeContext ) {
-			return parseTree.accept( this );
+		final HqlParser.TimeContext time = ctx.time();
+		if ( time != null ) {
+			return time.accept( this );
 		}
 		else {
-			return sqlTimeLiteralFrom( parseTree.getText() );
+			return sqlTimeLiteralFrom( ctx.genericTemporalLiteralText().getText() );
 		}
 	}
 
@@ -5160,25 +5160,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final HqlParser.SyntacticDomainPathContext syntacticDomainPath = ctx.syntacticDomainPath();
 		final HqlParser.GeneralPathFragmentContext generalPathFragment = ctx.generalPathFragment();
 		if ( syntacticDomainPath != null ) {
-			final SemanticPathPart syntacticNavigablePathResult =
-					visitSyntacticDomainPath(syntacticDomainPath);
-			final HqlParser.PathContinuationContext pathContinuation = ctx.pathContinuation();
-			if ( pathContinuation != null ) {
-				dotIdentifierConsumerStack.push(
-						new BasicDotIdentifierConsumer( syntacticNavigablePathResult, this ) {
-							@Override
-							protected void reset() {
-							}
-						}
-				);
-				try {
-					return (SemanticPathPart) pathContinuation.accept( this );
-				}
-				finally {
-					dotIdentifierConsumerStack.pop();
-				}
-			}
-			return syntacticNavigablePathResult;
+			return visitPathContinuation( visitSyntacticDomainPath( syntacticDomainPath ), ctx.pathContinuation() );
 		}
 		else if (generalPathFragment != null) {
 			return (SemanticPathPart) generalPathFragment.accept(this);
@@ -5190,7 +5172,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SemanticPathPart visitGeneralPathFragment(HqlParser.GeneralPathFragmentContext ctx) {
-		return visitIndexedPathAccessFragment( ctx.simplePath(), ctx.indexedPathAccessFragment() );
+		return visitIndexedPathAccessFragment( visitSimplePath( ctx.simplePath() ), ctx.indexedPathAccessFragment() );
 	}
 
 	@Override
@@ -5204,8 +5186,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else if ( ctx.mapKeyNavigablePath() != null ) {
 			return visitMapKeyNavigablePath( ctx.mapKeyNavigablePath() );
 		}
+		else if ( ctx.toOneFkReference() != null ) {
+			return visitToOneFkReference( ctx.toOneFkReference() );
+		}
+		else if ( ctx.function() != null ) {
+			return visitPathContinuation(
+					visitIndexedPathAccessFragment(
+							(SemanticPathPart) visitFunction( ctx.function() ),
+							ctx.indexedPathAccessFragment()
+					),
+					ctx.pathContinuation()
+			);
+		}
 		else if ( ctx.simplePath() != null && ctx.indexedPathAccessFragment() != null ) {
-			return visitIndexedPathAccessFragment( ctx.simplePath(), ctx.indexedPathAccessFragment() );
+			return visitIndexedPathAccessFragment( visitSimplePath( ctx.simplePath() ), ctx.indexedPathAccessFragment() );
 		}
 		else {
 			throw new ParsingException( "Illegal domain path '" + ctx.getText() + "'" );
@@ -5213,10 +5207,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SemanticPathPart visitIndexedPathAccessFragment(
-			HqlParser.SimplePathContext ctx,
+			SemanticPathPart pathPart,
 			HqlParser.IndexedPathAccessFragmentContext idxCtx) {
-		final SemanticPathPart pathPart = visitSimplePath( ctx );
-
 		if ( idxCtx == null ) {
 			return pathPart;
 		}
@@ -5241,6 +5233,27 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 		return indexedPath;
+	}
+
+	private SemanticPathPart visitPathContinuation(
+			SemanticPathPart pathPart,
+			HqlParser.PathContinuationContext pathContinuation) {
+		if ( pathContinuation == null ) {
+			return pathPart;
+		}
+		dotIdentifierConsumerStack.push(
+				new BasicDotIdentifierConsumer( pathPart, this ) {
+					@Override
+					protected void reset() {
+					}
+				}
+		);
+		try {
+			return (SemanticPathPart) pathContinuation.simplePath().accept( this );
+		}
+		finally {
+			dotIdentifierConsumerStack.pop();
+		}
 	}
 
 	@Override

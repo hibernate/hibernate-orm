@@ -789,18 +789,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	/**
-	 * SQL server supports up to 7 decimal digits of
-	 * fractional second precision in {@code datetime2},
-	 * but unfortunately its duration arithmetic
-	 * functions have a nasty habit of overflowing.
-	 * So to give ourselves a little extra headroom,
-	 * we will use {@code microsecond} as the native
-	 * unit of precision (but even then we have to
-	 * use tricks when calling {@code dateadd()}).
+	 * Even though SQL Server only supports 1/10th microsecond precision,
+	 * we use nanosecond as the "native" precision for datetime arithmetic
+	 * since it simplifies calculations.
 	 */
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-		return 1_000; //microseconds!
+//		return 100; // 1/10th microsecond
+		return 1;
 	}
 
 	@Override
@@ -817,7 +813,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 //				return "(datepart(second,?2)*1000000000+datepart(nanosecond,?2))";
 			case SECOND:
 				//this should evaluate to a floating point type
-				return "(datepart(second,?2)+datepart(nanosecond,?2)/1e9)";
+				return "(datepart(second,?2)+datepart(nanosecond,?2)/1000000000)";
 			case EPOCH:
 				return "datediff_big(second, '1970-01-01', ?2)";
 			default:
@@ -832,14 +828,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		// there's no dateadd_big()) so here we need to use two
 		// calls to dateadd() to add a whole duration
 		switch (unit) {
-			case NANOSECOND:
-				//Java Durations are usually the only thing
-				//we find expressed in nanosecond precision,
-				//and they can easily be very large
-				return "dateadd(nanosecond,?2%1000000000,dateadd(second,?2/1000000000,?3))";
+			case NANOSECOND: //use nanosecond as the "native" precision
 			case NATIVE:
-				//microsecond is the "native" precision
-				return "dateadd(microsecond,?2%1000000,dateadd(second,?2/1000000,?3))";
+				return "dateadd(nanosecond,?2%1000000000,dateadd(second,?2/1000000000,?3))";
+//			case NATIVE:
+//				// we could in principle use 1/10th microsecond as the "native" precision
+//				return "dateadd(nanosecond,?2%10000000,dateadd(second,?2/10000000,?3))";
+			case SECOND:
+				return "dateadd(nanosecond,cast(?2*1e9 as bigint)%1000000000,dateadd(second,?2,?3))";
 			default:
 				return "dateadd(?1,?2,?3)";
 		}
@@ -848,8 +844,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == TemporalUnit.NATIVE ) {
-			//use microsecond as the "native" precision
-			return "datediff_big(microsecond,?2,?3)";
+			//use nanosecond as the "native" precision
+			return "datediff_big(nanosecond,?2,?3)";
 		}
 		else {
 			//datediff() returns an int, and can easily
@@ -863,9 +859,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String translateDurationField(TemporalUnit unit) {
-		//use microsecond as the "native" precision
+		//use nanosecond as the "native" precision
 		if ( unit == TemporalUnit.NATIVE ) {
-			return "microsecond";
+			return "nanosecond";
 		}
 		else {
 			return super.translateDurationField( unit );

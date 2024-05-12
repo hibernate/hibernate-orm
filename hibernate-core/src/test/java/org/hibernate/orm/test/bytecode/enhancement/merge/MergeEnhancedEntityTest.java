@@ -6,13 +6,14 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -26,32 +27,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Luis Barreiro
  */
-@TestForIssue( jiraKey = "HHH-11459" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-11459" )
+@DomainModel(
+        annotatedClasses = {
+               MergeEnhancedEntityTest.Person.class,
+				MergeEnhancedEntityTest.PersonAddress.class,
+				MergeEnhancedEntityTest.NullablePerson.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class MergeEnhancedEntityTest {
     private Person person;
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Person.class, PersonAddress.class, NullablePerson.class};
-    }
 
-    @Before
-    public void prepare() {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
         person = new Person( 1L, "Sam" );
-        doInHibernate( this::sessionFactory, s -> {
+        scope.inTransaction( s -> {
             s.persist( person );
         } );
     }
 
     @Test
-    public void testMerge() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void testMerge(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Person entity = s.find( Person.class, 1L );
             entity.name = "John";
             try {
@@ -63,8 +67,8 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void testRefresh() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void testRefresh(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Person entity = s.find( Person.class, 1L );
             entity.name = "John";
 
@@ -78,47 +82,47 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
         } );
     }
 
-    @Test
-    public void testMergeWithNullValues() {
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson nullablePerson = new NullablePerson( 1L, "Sam", 100 );
-            em.persist( nullablePerson );
-        } );
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson updated = em.find( NullablePerson.class, 1L );
-            assertThat( updated.name ).isEqualTo( "Sam" );
-            assertThat( updated.number ).isEqualTo( 100 );
-        } );
+	@Test
+	public void testMergeWithNullValues(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			NullablePerson nullablePerson = new NullablePerson( 1L, "Sam", 100 );
+			em.persist( nullablePerson );
+		} );
+		scope.inTransaction( em -> {
+			NullablePerson updated = em.find( NullablePerson.class, 1L );
+			assertThat( updated.name ).isEqualTo( "Sam" );
+			assertThat( updated.number ).isEqualTo( 100 );
+		} );
 
-        // only some properties are null
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson nullablePerson = new NullablePerson( 1L, "Joe", null );
-            em.merge( nullablePerson );
-        } );
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson updated = em.find( NullablePerson.class, 1L );
-            assertThat( updated.name ).isEqualTo( "Joe" );
-            assertThat( updated.number ).isNull();
-        } );
+		// only some properties are null
+		scope.inTransaction( em -> {
+			NullablePerson nullablePerson = new NullablePerson( 1L, "Joe", null );
+			em.merge( nullablePerson );
+		} );
+		scope.inTransaction( em -> {
+			NullablePerson updated = em.find( NullablePerson.class, 1L );
+			assertThat( updated.name ).isEqualTo( "Joe" );
+			assertThat( updated.number ).isNull();
+		} );
 
-        // all properties are null:
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson nullablePerson = new NullablePerson( 1L, null, null );
-            em.merge( nullablePerson );
-        } );
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson updated = em.find( NullablePerson.class, 1L );
-            assertThat( updated.name ).isNull();
-            assertThat( updated.number ).isNull();
-        } );
-    }
+		// all properties are null:
+		scope.inTransaction( em -> {
+			NullablePerson nullablePerson = new NullablePerson( 1L, null, null );
+			em.merge( nullablePerson );
+		} );
+		scope.inTransaction( em -> {
+			NullablePerson updated = em.find( NullablePerson.class, 1L );
+			assertThat( updated.name ).isNull();
+			assertThat( updated.number ).isNull();
+		} );
+	}
 
-    @After
-    public void cleanup() {
-        doInHibernate( this::sessionFactory, s -> {
+    @AfterEach
+    public void cleanup(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             s.delete( person );
         } );
-        doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
             s.createQuery( "delete from NullablePerson" );
         } );
     }
@@ -127,7 +131,7 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "PERSON" )
-    private static class Person {
+    static class Person {
 
         @Id
         Long id;
@@ -149,7 +153,7 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Entity
     @Table( name = "PERSON_ADDRESS" )
-    private static class PersonAddress {
+    static class PersonAddress {
 
         @Id
         Long id;
@@ -160,7 +164,7 @@ public class MergeEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "NullablePerson")
     @Table(name = "NULLABLE_PERSON")
-    private static class NullablePerson {
+    static class NullablePerson {
 
         @Id
         Long id;

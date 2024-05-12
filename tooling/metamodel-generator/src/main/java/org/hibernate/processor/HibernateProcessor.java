@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.annotation.AnnotationMetaPackage;
 import org.hibernate.processor.model.Metamodel;
+import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.xml.JpaDescriptorParser;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -138,6 +139,22 @@ public class HibernateProcessor extends AbstractProcessor {
 	 */
 	public static final String SUPPRESS_JAKARTA_DATA_METAMODEL = "suppressJakartaDataMetamodel";
 
+	/**
+	 * Option to include only certain types, according to a list of patterns.
+	 * The wildcard character is {@code *}, and patterns are comma-separated.
+	 * For example: {@code *.entity.*,*Repository}. The default include is
+	 * simply {@code *}, meaning that all types are included.
+	 */
+	public static final String INCLUDE = "include";
+
+	/**
+	 * Option to exclude certain types, according to a list of patterns.
+	 * The wildcard character is {@code *}, and patterns are comma-separated.
+	 * For example: {@code *.framework.*,*$$}. The default exclude is
+	 * empty.
+	 */
+	public static final String EXCLUDE = "exclude";
+
 	private static final boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = false;
 
 	private Context context;
@@ -228,6 +245,9 @@ public class HibernateProcessor extends AbstractProcessor {
 			}
 		}
 
+		context.setInclude( options.getOrDefault( INCLUDE, "*" ) );
+		context.setExclude( options.getOrDefault( EXCLUDE, "" ) );
+
 		return parseBoolean( options.get( FULLY_ANNOTATION_CONFIGURED_OPTION ) );
 	}
 
@@ -276,6 +296,16 @@ public class HibernateProcessor extends AbstractProcessor {
 		return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 	}
 
+	private boolean included(Element element) {
+		if ( element instanceof TypeElement) {
+			final TypeElement typeElement = (TypeElement) element;
+			return context.isIncluded( typeElement.getQualifiedName().toString() );
+		}
+		else {
+			return false;
+		}
+	}
+
 	private void processClasses(RoundEnvironment roundEnvironment) {
 		for ( CharSequence elementName : new HashSet<>( context.getElementsToRedo() ) ) {
 			context.logMessage( Diagnostic.Kind.OTHER, "Redoing element '" + elementName + "'" );
@@ -293,8 +323,9 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
 			try {
-				if ( hasAnnotation( element, SUPPRESS)
-						|| hasAnnotation( context.getElementUtils().getPackageOf(element), SUPPRESS ) ) {
+				if ( !included( element )
+						|| hasAnnotation( element, Constants.EXCLUDE )
+						|| hasAnnotation( context.getElementUtils().getPackageOf(element), Constants.EXCLUDE ) ) {
 					// skip it completely
 				}
 				else if ( isEntityOrEmbeddable( element ) ) {

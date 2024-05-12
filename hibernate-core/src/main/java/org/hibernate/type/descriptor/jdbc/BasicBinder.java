@@ -85,6 +85,12 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 		}
 	}
 
+	@Override
+	public Object getBindValue(J value, WrapperOptions options) throws SQLException {
+		final Class<?> preferredJavaTypeClass = jdbcType.getPreferredJavaTypeClass( options );
+		return preferredJavaTypeClass == null ? value : getJavaType().unwrap( value, preferredJavaTypeClass, options );
+	}
+
 	/**
 	 * Perform the null binding.
 	 *

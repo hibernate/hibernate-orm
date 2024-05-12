@@ -36,6 +36,12 @@ public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAs
 	void registerQueryTransformer(QueryTransformer transformer);
 
 	/**
+	 * Returns whether the state of the translation is currently in type inference mode.
+	 * This is useful to avoid type inference based on other incomplete inference information.
+	 */
+	boolean isInTypeInference();
+
+	/**
 	 * Returns the function return type implied from the context within which it is used.
 	 * If there is no current function being processed or no context implied type, the return is <code>null</code>.
 	 */

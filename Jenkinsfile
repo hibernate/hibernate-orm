@@ -13,7 +13,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.9') _
+@Library('hibernate-jenkins-pipeline-helpers@1.13') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
 @Field final String DEFAULT_JDK_VERSION = '11'
@@ -244,7 +244,7 @@ void ciBuild(buildEnv, String args) {
 		def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
 
 		withCredentials([string(credentialsId: develocityCredentialsId,
-				variable: 'GRADLE_ENTERPRISE_ACCESS_KEY')]) {
+				variable: 'DEVELOCITY_ACCESS_KEY')]) {
 			withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
 				sh "./ci/build.sh $args"
 			}
@@ -257,7 +257,7 @@ void ciBuild(buildEnv, String args) {
 			sh "./ci/build.sh $args"
 		}, { // Finally
 			withCredentials([string(credentialsId: 'ge.hibernate.org-access-key-pr',
-					variable: 'GRADLE_ENTERPRISE_ACCESS_KEY')]) {
+					variable: 'DEVELOCITY_ACCESS_KEY')]) {
 				withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
 					sh './gradlew buildScanPublishPrevious'
 				}

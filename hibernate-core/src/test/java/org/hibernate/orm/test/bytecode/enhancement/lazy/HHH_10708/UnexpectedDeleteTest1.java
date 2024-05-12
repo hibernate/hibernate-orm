@@ -10,12 +10,14 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,22 +28,21 @@ import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-
-@TestForIssue( jiraKey = "HHH-10708" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class UnexpectedDeleteTest1 extends BaseCoreFunctionalTestCase {
+@JiraKey( "HHH-10708" )
+@DomainModel(
+        annotatedClasses = {
+               UnexpectedDeleteTest1.Foo.class, UnexpectedDeleteTest1.Bar.class
+        }
+)
+@SessionFactory
+@BytecodeEnhanced
+public class UnexpectedDeleteTest1 {
 
     private long fooId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Foo.class, Bar.class};
-    }
-
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
+    @BeforeEach
+    public void prepare(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Bar bar1 = new Bar();
             Bar bar2 = new Bar();
             Foo foo = new Foo();
@@ -55,8 +56,8 @@ public class UnexpectedDeleteTest1 extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
+    public void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
             Foo foo = s.get( Foo.class, fooId );
 
             // accessing the collection results in an exception
@@ -68,7 +69,7 @@ public class UnexpectedDeleteTest1 extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "Bar")
     @Table( name = "BAR" )
-    private static class Bar {
+    static class Bar {
 
         @Id
         @GeneratedValue
@@ -81,7 +82,7 @@ public class UnexpectedDeleteTest1 extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "Foo")
     @Table( name = "FOO" )
-    private static class Foo {
+    static class Foo {
 
         @Id
         @GeneratedValue

@@ -21,31 +21,40 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-@RunWith(BytecodeEnhancerRunner.class)
-public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				StatelessQueryScrollingTest.Task.class,
+				StatelessQueryScrollingTest.User.class,
+				StatelessQueryScrollingTest.Resource.class,
+				StatelessQueryScrollingTest.Product.class,
+				StatelessQueryScrollingTest.Producer.class,
+				StatelessQueryScrollingTest.Vendor.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class StatelessQueryScrollingTest {
 
 	@Test
-	public void testDynamicFetchScMapsIdProxyBidirectionalTestroll() {
+	public void testDynamicFetchScMapsIdProxyBidirectionalTestroll(SessionFactoryScope scope) {
 		ScrollableResults scrollableResults = null;
-		final StatelessSession statelessSession = sessionFactory().openStatelessSession();
+		final StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession();
 		try {
 			final Query query = statelessSession.createQuery( "from Task t join fetch t.resource join fetch t.user" );
 			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
@@ -66,9 +75,9 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Test
-	public void testDynamicFetchCollectionScroll() {
+	public void testDynamicFetchCollectionScroll(SessionFactoryScope scope) {
 		ScrollableResults scrollableResults = null;
-		StatelessSession statelessSession = sessionFactory().openStatelessSession();
+		StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession();
 		statelessSession.beginTransaction();
 
 		try {
@@ -96,9 +105,9 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 
-	@Before
-	public void createTestData() {
-		inTransaction(
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Date now = new Date();
 					User me = new User( "me" );
@@ -123,7 +132,7 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Producer p1 = new Producer( 1, "Acme" );
 					Producer p2 = new Producer( 2, "ABC" );
@@ -148,9 +157,9 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 		);
 	}
 
-	@After
-	public void deleteTestData() {
-		inTransaction(
+	@AfterEach
+	public void deleteTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					s.createQuery( "delete Task" ).executeUpdate();
 					s.createQuery( "delete Resource" ).executeUpdate();
@@ -162,18 +171,6 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 				}
 		);
 	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Task.class );
-		sources.addAnnotatedClass( User.class );
-		sources.addAnnotatedClass( Resource.class );
-		sources.addAnnotatedClass( Product.class );
-		sources.addAnnotatedClass( Producer.class );
-		sources.addAnnotatedClass( Vendor.class );
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Collection fetch scrolling

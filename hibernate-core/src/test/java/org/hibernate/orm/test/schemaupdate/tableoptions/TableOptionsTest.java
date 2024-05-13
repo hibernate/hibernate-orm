@@ -14,8 +14,6 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +22,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @BaseUnitTest
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTableOptions.class)
 public class TableOptionsTest {
 	static final String TABLE_NAME = "PRIMARY_TABLE";
 	static final String TABLE_OPTIONS = "option_1";

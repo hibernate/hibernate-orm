@@ -2493,24 +2493,28 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
 		return criteriaBuilder.arrayContainsAll( arrayExpression, subArrayExpression );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
 		return criteriaBuilder.arrayContainsAll( arrayExpression, subArray );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
 		return criteriaBuilder.arrayContainsAll( array, subArrayExpression );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAllNullable(
 			Expression<T[]> arrayExpression,
@@ -2519,15 +2523,55 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
 		return criteriaBuilder.arrayContainsAllNullable( arrayExpression, subArray );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <T> JpaPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
 		return criteriaBuilder.arrayContainsAllNullable( array, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayIncludes( arrayExpression, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, T[] subArray) {
+		return criteriaBuilder.arrayIncludes( arrayExpression, subArray );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludes(T[] array, Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayIncludes( array, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludesNullable(
+			Expression<T[]> arrayExpression,
+			Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayIncludesNullable( arrayExpression, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, T[] subArray) {
+		return criteriaBuilder.arrayIncludesNullable( arrayExpression, subArray );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayIncludesNullable( array, subArrayExpression );
 	}
 
 	@Override
@@ -2979,6 +3023,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAll(
 			Expression<? extends Collection<E>> collectionExpression,
@@ -2987,6 +3032,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAll(
 			Expression<? extends Collection<E>> collectionExpression,
@@ -2995,14 +3041,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAll(
 			Collection<E> collection,
-			Expression<? extends Collection<? extends E>> subArrayExpression) {
-		return criteriaBuilder.collectionContainsAll( collection, subArrayExpression );
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionContainsAll( collection, subCollectionExpression );
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAllNullable(
 			Expression<? extends Collection<E>> collectionExpression,
@@ -3011,6 +3059,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAllNullable(
 			Expression<? extends Collection<E>> collectionExpression,
@@ -3019,11 +3068,60 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	@Incubating
 	public <E> JpaPredicate collectionContainsAllNullable(
 			Collection<E> collection,
 			Expression<? extends Collection<? extends E>> subCollectionExpression) {
 		return criteriaBuilder.collectionContainsAllNullable( collection, subCollectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludes(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionIncludes( collectionExpression, subCollectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludes(
+			Expression<? extends Collection<E>> collectionExpression,
+			Collection<? extends E> subCollection) {
+		return criteriaBuilder.collectionIncludes( collectionExpression, subCollection );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludes(
+			Collection<E> collection,
+			Expression<? extends Collection<? extends E>> subArrayExpression) {
+		return criteriaBuilder.collectionIncludes( collection, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludesNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionIncludesNullable( collectionExpression, subCollectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludesNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			Collection<? extends E> subCollection) {
+		return criteriaBuilder.collectionIncludesNullable( collectionExpression, subCollection );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionIncludesNullable(
+			Collection<E> collection,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionIncludesNullable( collection, subCollectionExpression );
 	}
 
 	@Override

@@ -2662,6 +2662,33 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public SqmPredicate visitIncludesPredicate(HqlParser.IncludesPredicateContext ctx) {
+		final boolean negated = ctx.NOT() != null;
+		final SqmExpression<?> lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
+		final SqmExpressible<?> rhsExpressible = rhs.getExpressible();
+		if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+			throw new SemanticException(
+					"First operand for includes predicate must be a basic plural type expression, but found: " + lhsExpressible.getSqmType(),
+					query
+			);
+		}
+		if ( rhsExpressible != null && !( rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+			throw new SemanticException(
+					"Second operand for includes predicate must be a basic plural type expression, but found: " + rhsExpressible.getSqmType(),
+					query
+			);
+		}
+		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_includes" ).generateSqmExpression(
+				asList( lhs, rhs ),
+				null,
+				creationContext.getQueryEngine()
+		);
+		return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
+	}
+
+	@Override
 	public SqmPredicate visitIntersectsPredicate(HqlParser.IntersectsPredicateContext ctx) {
 		final boolean negated = ctx.NOT() != null;
 		final SqmExpression<?> lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );

@@ -1189,8 +1189,10 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_concat()` | Concatenates array with each other in order
 | `array_prepend()` | Prepends element to array
 | `array_append()` | Appends element to array
-| `array_contains()` | Whether an array contains element(s)
-| `array_contains_nullable()` | Whether an array contains element(s), supporting `null` elements
+| `array_contains()` | Whether an array contains an element
+| `array_contains_nullable()` | Whether an array contains an element, supporting `null` element
+| `array_includes()` | Whether an array contains another array
+| `array_includes_nullable()` | Whether an array contains another array, supporting `null` elements
 | `array_intersects()` | Whether an array holds at least one element of another array
 | `array_intersects_nullable()` | Whether an array holds at least one element of another array, supporting `null` elements
 | `array_get()` | Accesses the element of an array by index
@@ -1367,7 +1369,7 @@ include::{array-example-dir-hql}/ArrayAppendTest.java[tags=hql-array-append-exam
 [[hql-array-contains-functions]]
 ===== `array_contains()` and `array_contains_nullable()`
 
-Checks if the first array argument contains the element(s) of the second argument.
+Checks if the first array argument contains the element represented by the second argument.
 Returns `null` if the first argument is `null`. The result of the `array_contains` function
 is undefined when the second argument, the element to search, is `null`.
 
@@ -1379,29 +1381,8 @@ include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-
 ----
 ====
 
-The second argument may be an array of the same type as the first argument.
-The result of `array_contains` is undefined when the second argument is an array that contains a `null` element.
-
-[[hql-array-contains-array-example]]
-====
-[source, JAVA, indent=0]
-----
-include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-contains-array-example]
-----
-====
-
-To search for `null` elements, the `array_contains_nullable` function must be used with an array argument.
-
-[[hql-array-contains-array-nullable-example]]
-====
-[source, JAVA, indent=0]
-----
-include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-contains-array-nullable-example]
-----
-====
-
 Alternatively, it's also possible to check for containment with the `contains` predicate,
-where the left hand side of the predicate is the array and the right hand side the value(s) to check.
+where the left hand side of the predicate is the array and the right hand side the value to check.
 This is syntax sugar that translates to the `array_contains` function.
 
 [[hql-array-contains-hql-example]]
@@ -1412,29 +1393,42 @@ include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-
 ----
 ====
 
-[[hql-array-contains-array-hql-example]]
+[[hql-array-includes-functions]]
+===== `array_includes()` and `array_includes_nullable()`
+
+Checks if the first array argument contains the elements of the second array argument.
+Returns `null` if the first argument is `null`. The result of the `array_includes` function
+is undefined when the second argument contains a `null`.
+
+[[hql-array-contains-array-example]]
+[[hql-array-includes-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-contains-array-hql-example]
+include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-example]
 ----
 ====
 
-In addition to that, it is also possible to use the `in` predicate with arrays.
+To search for `null` elements, the `array_includes_nullable` function must be used.
 
-[[hql-array-in-hql-example]]
+[[hql-array-contains-array-nullable-example]]
+[[hql-array-includes-nullable-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-in-hql-example]
+include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-nullable-example]
 ----
 ====
 
-[[hql-array-in-array-hql-example]]
+Alternatively, it's also possible to use the `includes` predicate,
+where the left hand side of the predicate is the array and the right hand side the array of values to check.
+This is syntax sugar that translates to the `array_includes` function.
+
+[[hql-array-includes-hql-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-in-array-hql-example]
+include::{array-example-dir-hql}/ArrayIncludesTest.java[tags=hql-array-includes-hql-example]
 ----
 ====
 

@@ -14,22 +14,17 @@ import jakarta.persistence.Embeddable;
  * @author Marco Belladelli
  */
 @Embeddable
-class ChildTwoEmbeddable extends ParentEmbeddable {
-	private Long childTwoProp;
+public class SimpleEmbeddable {
+	private String data;
 
-	public ChildTwoEmbeddable() {
+	public SimpleEmbeddable() {
 	}
 
-	public ChildTwoEmbeddable(String parentProp, Long childTwoProp) {
-		super( parentProp );
-		this.childTwoProp = childTwoProp;
+	public SimpleEmbeddable(String data) {
+		this.data = data;
 	}
 
-	public Long getChildTwoProp() {
-		return childTwoProp;
-	}
-
-	public void setChildTwoProp(Long childTwoProp) {
-		this.childTwoProp = childTwoProp;
+	public String getData() {
+		return data;
 	}
 }

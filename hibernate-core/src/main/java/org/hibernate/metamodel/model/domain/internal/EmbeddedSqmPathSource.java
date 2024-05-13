@@ -14,6 +14,8 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
+
 /**
  * @author Steve Ebersole
  */
@@ -21,6 +23,7 @@ public class EmbeddedSqmPathSource<J>
 		extends AbstractSqmPathSource<J>
 		implements CompositeSqmPathSource<J> {
 	private final boolean isGeneric;
+	private final EmbeddedDiscriminatorSqmPathSource<?> discriminatorPathSource;
 
 	public EmbeddedSqmPathSource(
 			String localPathName,
@@ -30,6 +33,12 @@ public class EmbeddedSqmPathSource<J>
 			boolean isGeneric) {
 		super( localPathName, pathModel, domainType, jpaBindableType );
 		this.isGeneric = isGeneric;
+		if ( domainType.isPolymorphic() ) {
+			discriminatorPathSource = new EmbeddedDiscriminatorSqmPathSource<>( domainType );
+		}
+		else {
+			discriminatorPathSource = null;
+		}
 	}
 
 	@Override
@@ -38,18 +47,17 @@ public class EmbeddedSqmPathSource<J>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
-		final PersistentAttribute<? super J, ?> attribute = getSqmPathType().findAttribute( name );
-		if ( attribute != null ) {
-			return (SqmPathSource<?>) attribute;
+	public SqmPathSource<?> findSubPathSource(String name) {
+		final SqmPathSource<?> subPathSource = getSqmPathType().findSubPathSource( name );
+		if ( subPathSource != null ) {
+			return subPathSource;
 		}
 
-		return (SqmPathSource<?>) getSqmPathType().findSubTypesAttribute( name );
-	}
+		if ( name.equals( DISCRIMINATOR_ROLE_NAME ) && discriminatorPathSource != null ) {
+			return discriminatorPathSource;
+		}
 
-	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
-		return (SqmPathSource<?>) getSqmPathType().findAttribute( name );
+		return null;
 	}
 
 	@Override

@@ -136,8 +136,8 @@ public class StructHelper {
 			instantiator = representationStrategy.getInstantiator();
 		}
 		else {
-			// the discriminator here is the composite class name because it gets converted to the domain type when extracted
-			instantiator = representationStrategy.getInstantiatorForClass( (String) attributeValues.getDiscriminator() );
+			// the discriminator here is the composite class because it gets converted to the domain type when extracted
+			instantiator = representationStrategy.getInstantiatorForClass( ( (Class<?>) attributeValues.getDiscriminator() ).getName() );
 		}
 		return instantiator.instantiate( attributeValues, sessionFactory );
 	}

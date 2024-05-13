@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.hibernate.HibernateException;
@@ -60,6 +61,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -91,6 +93,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final List<Component> composites;
 	private final Map<Class<?>, Component> genericComponentsMap;
+	private final Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap;
 	private final Map<Class<?>, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;
 	private final Map<String, TypeDefinition> typeDefinitionMap;
@@ -112,6 +115,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, PersistentClass> entityBindingMap,
 			List<Component> composites,
 			Map<Class<?>, Component> genericComponentsMap,
+			Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap,
 			Map<Class<?>, MappedSuperclass> mappedSuperclassMap,
 			Map<String, Collection> collectionBindingMap,
 			Map<String, TypeDefinition> typeDefinitionMap,
@@ -132,6 +136,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.entityBindingMap = entityBindingMap;
 		this.composites = composites;
 		this.genericComponentsMap = genericComponentsMap;
+		this.embeddableDiscriminatorTypesMap = embeddableDiscriminatorTypesMap;
 		this.mappedSuperclassMap = mappedSuperclassMap;
 		this.collectionBindingMap = collectionBindingMap;
 		this.typeDefinitionMap = typeDefinitionMap;
@@ -570,6 +575,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	public DiscriminatorType<?> resolveEmbeddableDiscriminatorType(
+			Class<?> embeddableClass,
+			Supplier<DiscriminatorType<?>> supplier) {
+		return embeddableDiscriminatorTypesMap.computeIfAbsent( embeddableClass, k -> supplier.get() );
+	}
+
+	@Override
 	public org.hibernate.type.Type getIdentifierType(String entityName) throws MappingException {
 		final PersistentClass pc = entityBindingMap.get( entityName );
 		if ( pc == null ) {
@@ -664,4 +676,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return genericComponentsMap;
 	}
 
+	public Map<Class<?>, DiscriminatorType<?>> getEmbeddableDiscriminatorTypesMap() {
+		return embeddableDiscriminatorTypesMap;
+	}
 }

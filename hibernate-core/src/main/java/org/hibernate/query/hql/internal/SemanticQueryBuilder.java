@@ -5481,14 +5481,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		consumeManagedTypeReference( ctx.path() );
 
 		final String treatTargetName = ctx.simplePath().getText();
-		final String treatTargetEntityName =
-				getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
-		if ( treatTargetEntityName == null ) {
+		final String importableName = getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
+		if ( importableName == null ) {
 			throw new SemanticException( "Could not resolve treat target type '" + treatTargetName + "'", query );
 		}
 
 		final boolean hasContinuation = ctx.getChildCount() == 7;
-		consumer.consumeTreat( treatTargetEntityName, !hasContinuation );
+		consumer.consumeTreat( importableName, !hasContinuation );
 		SqmPath<?> result = (SqmPath<?>) consumer.getConsumedPart();
 
 		if ( hasContinuation ) {

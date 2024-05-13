@@ -9,28 +9,23 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-
-import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
-import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
  * SqmPathSource implementation for entity discriminator
  *
  * @author Steve Ebersole
  */
-public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
-		implements ReturnableType<D> {
+public class EntityDiscriminatorSqmPathSource<D> extends AbstractDiscriminatorSqmPathSource<D> {
 	private final EntityDomainType<?> entityDomainType;
 	private final EntityMappingType entityMapping;
 
-	public DiscriminatorSqmPathSource(
+	public EntityDiscriminatorSqmPathSource(
 			DomainType<D> discriminatorValueType,
 			EntityDomainType<?> entityDomainType,
 			EntityMappingType entityMapping) {
-		super( DISCRIMINATOR_ROLE_NAME, null, discriminatorValueType, SINGULAR_ATTRIBUTE );
+		super( discriminatorValueType );
 		this.entityDomainType = entityDomainType;
 		this.entityMapping = entityMapping;
 	}
@@ -53,25 +48,5 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 				entityMapping,
 				lhs.nodeBuilder()
 		);
-	}
-
-	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
-		throw new IllegalStateException( "Entity discriminator cannot be de-referenced" );
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
-
-	@Override
-	public Class<D> getJavaType() {
-		return getExpressibleJavaType().getJavaTypeClass();
-	}
-
-	@Override
-	public DomainType<D> getSqmType() {
-		return this;
 	}
 }

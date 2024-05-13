@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
@@ -30,6 +31,7 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -247,6 +249,13 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	@Override
 	public Component getGenericComponent(Class<?> componentClass) {
 		return delegate().getGenericComponent( componentClass );
+	}
+
+	@Override
+	public DiscriminatorType<?> resolveEmbeddableDiscriminatorType(
+			Class<?> embeddableClass,
+			Supplier<DiscriminatorType<?>> supplier) {
+		return delegate().resolveEmbeddableDiscriminatorType( embeddableClass, supplier );
 	}
 
 	@Override

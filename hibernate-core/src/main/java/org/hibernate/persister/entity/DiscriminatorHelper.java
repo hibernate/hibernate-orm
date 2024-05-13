@@ -97,7 +97,7 @@ public class DiscriminatorHelper {
 		);
 	}
 
-	private static <T> String jdbcLiteral(
+	public static <T> String jdbcLiteral(
 			T value,
 			JdbcLiteralFormatter<T> formatter,
 			Dialect dialect) {

@@ -47,7 +47,7 @@ public class DefaultDiscriminatorConverter<O,R> extends DiscriminatorConverter<O
 			JavaType<O> domainJavaType,
 			JavaType<R> relationalJavaType,
 			MappingMetamodelImplementor mappingMetamodel) {
-		super( discriminatorRole, domainJavaType, relationalJavaType );
+		super( discriminatorRole.getFullPath(), domainJavaType, relationalJavaType );
 		this.mappingMetamodel = mappingMetamodel;
 	}
 

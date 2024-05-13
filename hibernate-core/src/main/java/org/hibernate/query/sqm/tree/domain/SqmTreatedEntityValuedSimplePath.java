@@ -17,14 +17,14 @@ import org.hibernate.spi.NavigablePath;
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedSimplePath<T, S extends T>
+public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 		extends SqmEntityValuedSimplePath<S>
 		implements SqmSimplePath<S>, SqmTreatedPath<T,S> {
 
 	private final EntityDomainType<S> treatTarget;
 	private final SqmPath<T> wrappedPath;
 
-	public SqmTreatedSimplePath(
+	public SqmTreatedEntityValuedSimplePath(
 			SqmPluralValuedSimplePath<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
@@ -41,7 +41,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 		this.wrappedPath = wrappedPath;
 	}
 
-	public SqmTreatedSimplePath(
+	public SqmTreatedEntityValuedSimplePath(
 			SqmPath<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
@@ -58,7 +58,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 		this.wrappedPath = wrappedPath;
 	}
 
-	private SqmTreatedSimplePath(
+	private SqmTreatedEntityValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPath<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
@@ -75,15 +75,15 @@ public class SqmTreatedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public SqmTreatedSimplePath<T, S> copy(SqmCopyContext context) {
-		final SqmTreatedSimplePath<T, S> existing = context.getCopy( this );
+	public SqmTreatedEntityValuedSimplePath<T, S> copy(SqmCopyContext context) {
+		final SqmTreatedEntityValuedSimplePath<T, S> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final SqmTreatedSimplePath<T, S> path = context.registerCopy(
+		final SqmTreatedEntityValuedSimplePath<T, S> path = context.registerCopy(
 				this,
-				new SqmTreatedSimplePath<>(
+				new SqmTreatedEntityValuedSimplePath<>(
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						getTreatTarget(),
@@ -120,7 +120,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) throws PathException {
+	public <S1 extends S> SqmTreatedEntityValuedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) throws PathException {
 		return super.treatAs( treatJavaType );
 	}
 

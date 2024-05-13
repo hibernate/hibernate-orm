@@ -35,6 +35,7 @@ import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -268,7 +269,7 @@ public class AttributeFactory {
 				false,
 				context.getJpaMetamodel()
 		);
-		context.registerEmbeddableType( embeddableType, component);
+		context.registerEmbeddableType( embeddableType, component );
 
 		if ( component.isPolymorphic() ) {
 			final java.util.Collection<String> embeddableSubclasses = component.getDiscriminatorValues().values();
@@ -283,12 +284,14 @@ public class AttributeFactory {
 					continue;
 				}
 				final Class<?> subclass = cls.classForName( subclassName );
-				context.registerEmbeddableType( new EmbeddableTypeImpl<>(
+				final EmbeddableTypeImpl<?> subType = new EmbeddableTypeImpl<>(
 						context.getJavaTypeRegistry().resolveManagedTypeDescriptor( subclass ),
 						domainTypes.get( component.getSuperclass( subclassName ) ),
 						false,
 						context.getJpaMetamodel()
-				), component );
+				);
+				domainTypes.put( subclassName, subType );
+				context.registerEmbeddableType( subType, component );
 			}
 		}
 

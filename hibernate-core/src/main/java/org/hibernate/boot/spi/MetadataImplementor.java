@@ -8,6 +8,7 @@ package org.hibernate.boot.spi;
 
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
@@ -15,6 +16,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -58,4 +60,6 @@ public interface MetadataImplementor extends Metadata {
 	void visitRegisteredComponents(Consumer<Component> consumer);
 
 	Component getGenericComponent(Class<?> componentClass);
+
+	DiscriminatorType<?> resolveEmbeddableDiscriminatorType(Class<?> embeddableClass, Supplier<DiscriminatorType<?>> supplier);
 }

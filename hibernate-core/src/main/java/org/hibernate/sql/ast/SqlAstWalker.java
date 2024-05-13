@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
@@ -166,6 +167,8 @@ public interface SqlAstWalker {
 	void visitSqlSelectionExpression(SqlSelectionExpression expression);
 
 	void visitEntityTypeLiteral(EntityTypeLiteral expression);
+
+	void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression);
 
 	void visitTuple(SqlTuple tuple);
 

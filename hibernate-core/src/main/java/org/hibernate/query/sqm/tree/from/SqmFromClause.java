@@ -141,7 +141,7 @@ public class SqmFromClause implements Serializable {
 					final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmFrom;
 					sb.append( "treat(" );
 					sb.append( treatedPath.getWrappedPath().resolveAlias() );
-					sb.append( " as " ).append( treatedPath.getTreatTarget().getName() ).append( ')' );
+					sb.append( " as " ).append( treatedPath.getTreatTarget().getTypeName() ).append( ')' );
 				}
 				else {
 					sb.append( sqmFrom.resolveAlias() );

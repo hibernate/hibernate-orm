@@ -17,14 +17,14 @@ import org.hibernate.query.sqm.SqmPathSource;
  *
  * @author Steve Ebersole
  */
-public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityType<J>, SqmPathSource<J> {
+public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityType<J>, TreatableDomainType<J> {
 	String getHibernateEntityName();
 
 	@Override
 	Collection<? extends EntityDomainType<? extends J>> getSubTypes();
 
 	@Override
-	default DomainType<J> getSqmType() {
+	default EntityDomainType<J> getSqmType() {
 		return this;
 	}
 }

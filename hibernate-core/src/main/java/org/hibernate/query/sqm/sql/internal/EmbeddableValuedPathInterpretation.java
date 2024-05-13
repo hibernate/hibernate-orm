@@ -28,6 +28,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static org.hibernate.query.sqm.internal.SqmUtil.getTargetMappingIfNeeded;
 
 /**
@@ -50,16 +51,14 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 					.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel();
-			if ( lhs instanceof SqmTreatedPath ) {
-				//noinspection rawtypes
-				final EntityDomainType<?> treatTargetDomainType = ( (SqmTreatedPath) lhs ).getTreatTarget();
+			if ( lhs instanceof SqmTreatedPath<?, ?> && ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget().getPersistenceType() == ENTITY ) {
+				final EntityDomainType<?> treatTargetDomainType = (EntityDomainType<?>) ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget();
 				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
 			}
 			else if ( lhs.getNodeType() instanceof EntityDomainType ) {
 				//noinspection rawtypes
 				final EntityDomainType<?> entityDomainType = (EntityDomainType) lhs.getNodeType();
 				treatTarget = mappingMetamodel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
-
 			}
 		}
 

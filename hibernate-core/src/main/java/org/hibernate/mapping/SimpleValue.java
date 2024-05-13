@@ -103,6 +103,7 @@ public abstract class SimpleValue implements KeyValue {
 	private Table table;
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
+	private String foreignKeyOptions;
 	private boolean alternateUniqueKey;
 	private OnDeleteAction onDeleteAction;
 	private boolean foreignKeyEnabled = true;
@@ -542,6 +543,14 @@ public abstract class SimpleValue implements KeyValue {
 
 	public void setForeignKeyDefinition(String foreignKeyDefinition) {
 		this.foreignKeyDefinition = foreignKeyDefinition;
+	}
+
+	public String getForeignKeyOptions() {
+		return foreignKeyOptions;
+	}
+
+	public void setForeignKeyOptions(String foreignKeyOptions) {
+		this.foreignKeyOptions = foreignKeyOptions;
 	}
 
 	public boolean isAlternateUniqueKey() {

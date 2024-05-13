@@ -2115,6 +2115,7 @@ public abstract class CollectionBinder {
 					else {
 						key.setForeignKeyName( nullIfEmpty( foreignKey.getString( "name" ) ) );
 						key.setForeignKeyDefinition( nullIfEmpty( foreignKey.getString( "foreignKeyDefinition" ) ) );
+						key.setForeignKeyOptions( foreignKey.getString( "options" ) );
 						if ( key.getForeignKeyName() == null
 								&& key.getForeignKeyDefinition() == null
 								&& collectionTableAnn.getList( "joinColumns" ).size() == 1 ) {
@@ -2123,6 +2124,7 @@ public abstract class CollectionBinder {
 							final AnnotationUsage<Annotation> nestedForeignKey = joinColumn.getNestedUsage( "foreignKey" );
 							key.setForeignKeyName( nullIfEmpty( nestedForeignKey.getString( "name" ) ) );
 							key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.getString( "foreignKeyDefinition" ) ) );
+							key.setForeignKeyOptions( nestedForeignKey.getString( "options" ) );
 						}
 					}
 				}

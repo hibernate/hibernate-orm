@@ -950,6 +950,7 @@ public class EntityBinder {
 				else if ( foreignKey != null ) {
 					key.setForeignKeyName( nullIfEmpty( foreignKey.getString( "name" ) ) );
 					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.getString( "foreignKeyDefinition" ) ) );
+					key.setForeignKeyOptions( foreignKey.getString( "options" ) );
 				}
 				else if ( noConstraintByDefault ) {
 					key.disableForeignKey();
@@ -958,11 +959,13 @@ public class EntityBinder {
 					final AnnotationUsage<ForeignKey> nestedFk = pkJoinColumns.getNestedUsage( "foreignKey" );
 					key.setForeignKeyName( nullIfEmpty( nestedFk.getString( "name" ) ) );
 					key.setForeignKeyDefinition( nullIfEmpty( nestedFk.getString( "foreignKeyDefinition" ) ) );
+					key.setForeignKeyOptions( nestedFk.getString( "options" ) );
 				}
 				else if ( pkJoinColumn != null ) {
 					final AnnotationUsage<ForeignKey> nestedFk = pkJoinColumn.getNestedUsage( "foreignKey" );
 					key.setForeignKeyName( nullIfEmpty( nestedFk.getString( "name" ) ) );
 					key.setForeignKeyDefinition( nullIfEmpty( nestedFk.getString( "foreignKeyDefinition" ) ) );
+					key.setForeignKeyOptions( nestedFk.getString( "options" ) );
 				}
 			}
 		}
@@ -2079,6 +2082,8 @@ public class EntityBinder {
 				else {
 					key.setForeignKeyName( nullIfEmpty( jpaSecondaryTable.getNestedUsage( "foreignKey" ).getString( "name" ) ) );
 					key.setForeignKeyDefinition( nullIfEmpty( jpaSecondaryTable.getNestedUsage( "foreignKey" ).getString( "foreignKeyDefinition" ) ) );
+					key.setForeignKeyOptions( jpaSecondaryTable.getNestedUsage( "foreignKey" ).getString( "options" ) );
+
 				}
 			}
 		}

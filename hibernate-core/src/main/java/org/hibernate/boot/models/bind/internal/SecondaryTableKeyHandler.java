@@ -46,20 +46,14 @@ public record SecondaryTableKeyHandler(
 		}
 
 		final AnnotationUsage<ForeignKey> foreignKeyAnn = annotationUsage.getAttributeValue( "foreignKey" );
-		// todo : generate the name here - this *is* equiv to legacy second pass
-		final String foreignKeyName = foreignKeyAnn == null
-				? ""
-				: foreignKeyAnn.getString( "name" );
-		final String foreignKeyDefinition = foreignKeyAnn == null
-				? ""
-				: foreignKeyAnn.getString( "foreignKeyDefinition" );
-
 		final RootEntityBinding rootEntityBinding = entityBinding.getRootEntityBinding();
 		final org.hibernate.mapping.ForeignKey foreignKey = join.getTable().createForeignKey(
-				foreignKeyName,
+				// todo : generate the name here - this *is* equiv to legacy second pass
+				foreignKeyAnn == null ? "" : foreignKeyAnn.getString( "name" ),
 				targetKeyValue.getColumns(),
 				rootEntityBinding.getPersistentClass().getEntityName(),
-				foreignKeyDefinition,
+				foreignKeyAnn == null ? "" : foreignKeyAnn.getString( "foreignKeyDefinition" ),
+				foreignKeyAnn == null ? "" : foreignKeyAnn.getString( "options" ),
 				rootEntityBinding.getTableReference().table().getPrimaryKey().getColumns()
 		);
 		foreignKey.setReferencedTable( rootEntityBinding.getTableReference().table() );

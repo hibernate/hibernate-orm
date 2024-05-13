@@ -629,7 +629,17 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition) {
-		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null );
+		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null, null );
+	}
+
+	@Deprecated(forRemoval = true)
+	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition, String options) {
+		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, options, null );
+	}
+
+	@Deprecated(forRemoval = true)
+	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition, List<Column> referencedColumns) {
+		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null, referencedColumns );
 	}
 
 	public ForeignKey createForeignKey(
@@ -637,6 +647,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			List<Column> keyColumns,
 			String referencedEntityName,
 			String keyDefinition,
+			String options,
 			List<Column> referencedColumns) {
 		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
@@ -646,6 +657,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			foreignKey.setTable( this );
 			foreignKey.setReferencedEntityName( referencedEntityName );
 			foreignKey.setKeyDefinition( keyDefinition );
+			foreignKey.setOptions( options );
 			for ( Column keyColumn : keyColumns ) {
 				foreignKey.addColumn( keyColumn );
 			}

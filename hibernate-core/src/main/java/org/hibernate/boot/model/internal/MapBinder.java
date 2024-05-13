@@ -300,6 +300,7 @@ public class MapBinder extends CollectionBinder {
 			else {
 				element.setForeignKeyName( nullIfEmpty( foreignKey.getString( "name" ) ) );
 				element.setForeignKeyDefinition( nullIfEmpty( foreignKey.getString( "foreignKeyDefinition" ) ) );
+				element.setForeignKeyOptions( foreignKey.getString( "options" ) );
 			}
 		}
 	}

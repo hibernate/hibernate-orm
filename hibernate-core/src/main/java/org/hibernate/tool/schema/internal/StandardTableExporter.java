@@ -113,13 +113,12 @@ public class StandardTableExporter implements Exporter<Table> {
 				applyTableTypeString( createTable );
 			}
 
-			final List<String> sqlStrings = new ArrayList<>();
 			if ( StringHelper.isNotEmpty( table.getOptions() ) ) {
-				if ( dialect.supportsTableOptions() ) {
-					createTable.append( " " );
-					createTable.append( table.getOptions() );
-				}
+				createTable.append( " " );
+				createTable.append( table.getOptions() );
 			}
+
+			final List<String> sqlStrings = new ArrayList<>();
 			sqlStrings.add( createTable.toString() );
 			applyComments( table, formattedTableName, sqlStrings );
 			applyInitCommands( table, sqlStrings, context );

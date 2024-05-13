@@ -705,11 +705,4 @@ abstract public class DialectFeatureChecks {
 			return dialect.getNationalizationSupport() == NationalizationSupport.EXPLICIT;
 		}
 	}
-
-	public static class SupportsTableOptions implements DialectFeatureCheck{
-		@Override
-		public boolean apply(Dialect dialect) {
-			return dialect.supportsTableOptions();
-		}
-	}
 }

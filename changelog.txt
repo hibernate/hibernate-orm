@@ -3,6 +3,28 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.5.1.Final (May 13, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32303
+
+** Bug
+    * [HHH-18080] - hibernate.boot.allow_jdbc_metadata_access=false leads to warning about "0.0.0 version"
+    * [HHH-18046] - DB2 numeric parameter arithmetic issue
+    * [HHH-18032] - CompositeId, when the id assigned by PrePersist method an HibernateException: identifier of an instance of _ was altered is thrown
+    * [HHH-18018] - Derby implementation for 'right' function wrongly passes parameter to 'length'
+    * [HHH-18011] - Parallel entity enhancement causes a classloader cache stampede
+    * [HHH-17837] - Join + GroupBy: Wrong column used for many-to-many association
+    * [HHH-17834] - lock(e, OPTIMISTIC_FORCE_INCREMENT) with TABLE_PER_SUBCLASS
+    * [HHH-17827] - “Not a managed type” error when using entity interface extending from java.util.Map
+    * [HHH-17421] - On SQL Server, combining DISTINCT with PESSIMISTIC_WRITE causes needless follow-on locking
+
+** Improvement
+    * [HHH-18094] - Bytebuddy enhancer: make better use of constants and memory
+    * [HHH-18091] - Upgrade to ByteBuddy 1.14.15
+    * [HHH-17305] - Keep order of selected tables in polymorphic query
+
+
 Changes in 6.5.0.Final (April 25, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -25,7 +25,7 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 					ConnectionProvider.class,
 					org.hibernate.ucp.internal.UCPConnectionProvider.class,
 					"ucp",
-					"oracleucp",
+					"ucp",
 					org.hibernate.ucp.internal.UCPConnectionProvider.class.getSimpleName(),
 					"org.oracle.ucp.connection.UCPConnectionProvider"
 			)

@@ -43,7 +43,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	private static final Logger LOGGER = Logger.getLogger( "UCPConnectionProvider.class" );
 	private PoolDataSource ucpDS = null;
 	private UniversalConnectionPoolManager poolManager = null;
-	private static final String CONFIG_PREFIX = "hibernate.oracleucp.";
+	private static final String CONFIG_PREFIX = "hibernate.ucp.";
 	private boolean autoCommit;
 	private Integer isolation;
 
@@ -51,7 +51,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	@Override
 	public void configure(Map props) throws HibernateException {
 		try {
-			LOGGER.trace( "Configuring oracle UCP" );
+			LOGGER.trace( "Configuring UCP" );
 
 			isolation = ConnectionProviderInitiator.extractIsolation( props );
 			autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, props );
@@ -63,11 +63,11 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 			configureDataSource(ucpDS, ucpProps);
 		}
 		catch (Exception e) {
-			LOGGER.debug( "oracle UCP Configuration failed" );
+			LOGGER.debug( "UCP Configuration failed" );
 			throw new HibernateException( e );
 		}
 
-		LOGGER.trace( "oracle UCP Configured" );
+		LOGGER.trace( "UCP Configured" );
 	}
 	
 	private void configureDataSource(PoolDataSource ucpDS, Properties ucpProps) {

@@ -356,7 +356,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private boolean oracleUCPConfigDefined(Map<String, Object> configValues) {
 		for ( String key : configValues.keySet() ) {
-			if ( key.startsWith( "hibernate.oracleucp." ) ) {
+			if ( key.startsWith( "hibernate.ucp." ) ) {
 				return true;
 			}
 		}

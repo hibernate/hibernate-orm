@@ -205,6 +205,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	private final transient SchemaManager schemaManager;
 
+	private final transient BootstrapContext bootstrapContext;
+
 	/**
 	 * @deprecated This constructor will be removed
 	 */
@@ -218,6 +220,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
 		LOG.debug( "Building session factory" );
+		this.bootstrapContext = bootstrapContext;
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		sessionFactoryOptions = options;
@@ -339,6 +342,10 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		LOG.debug( "Instantiated SessionFactory" );
+	}
+
+	public BootstrapContext getBootstrapContext() {
+		return this.bootstrapContext;
 	}
 
 	private void deprecationCheck(Map<String, Object> settings) {

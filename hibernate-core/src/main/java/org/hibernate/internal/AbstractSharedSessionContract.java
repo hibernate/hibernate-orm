@@ -950,7 +950,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected <T> void addResultType(Class<T> resultClass, NativeQueryImplementor<T> query) {
 		if ( Tuple.class.equals( resultClass ) ) {
-			query.setTupleTransformer( NativeQueryTupleTransformer.INSTANCE );
+			query.setTupleTransformer( new NativeQueryTupleTransformer(
+					factory.getBootstrapContext().getMetadataBuildingOptions().getPhysicalNamingStrategy(),
+					getJdbcServices().getJdbcEnvironment()
+			) );
 		}
 		else if ( Map.class.equals( resultClass ) ) {
 			query.setTupleTransformer( NativeQueryMapTransformer.INSTANCE );
@@ -991,7 +994,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		@SuppressWarnings("unchecked")
 		final NativeQueryImplementor<T> query = createNativeQuery( sqlString, resultSetMappingName );
 		if ( Tuple.class.equals( resultClass ) ) {
-			query.setTupleTransformer( NativeQueryTupleTransformer.INSTANCE );
+			query.setTupleTransformer(new NativeQueryTupleTransformer(
+					factory.getBootstrapContext().getMetadataBuildingOptions().getPhysicalNamingStrategy(),
+					getJdbcServices().getJdbcEnvironment()
+			) );
 		}
 		else if ( Map.class.equals( resultClass ) ) {
 			query.setTupleTransformer( NativeQueryMapTransformer.INSTANCE );

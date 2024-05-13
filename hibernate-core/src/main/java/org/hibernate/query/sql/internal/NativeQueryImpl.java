@@ -35,6 +35,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.AbstractSharedSessionContract;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -220,7 +221,11 @@ public class NativeQueryImpl<R>
 		);
 
 		if ( resultJavaType == Tuple.class ) {
-			setTupleTransformer( new NativeQueryTupleTransformer() );
+			SessionFactoryImpl sf = (SessionFactoryImpl) session.getFactory();
+			setTupleTransformer( new NativeQueryTupleTransformer(
+					sf.getBootstrapContext().getMetadataBuildingOptions().getPhysicalNamingStrategy(),
+					sf.getJdbcServices().getJdbcEnvironment()
+			) );
 		}
 		else if ( resultJavaType != null && !resultJavaType.isArray() ) {
 			switch ( resultSetMapping.getNumberOfResultBuilders() ) {

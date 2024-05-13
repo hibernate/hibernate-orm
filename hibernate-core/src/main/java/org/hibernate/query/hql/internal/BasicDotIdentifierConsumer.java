@@ -205,11 +205,10 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				final String prefix = path.substring( 0, splitPosition );
 				final String terminal = path.substring( splitPosition + 1 );
 
-				//TODO: try interpreting paths of form foo.bar.Foo.Bar as foo.bar.Foo$Bar
-				final EnumJavaType<?> enumType = jpaMetamodel.getEnumType(prefix);
+				final EnumJavaType<?> enumType = jpaMetamodel.getEnumType( prefix );
 				if ( enumType != null ) {
 					return new SqmEnumLiteral(
-							jpaMetamodel.enumValue(enumType, terminal),
+							jpaMetamodel.enumValue( enumType, terminal ),
 							enumType,
 							terminal,
 							nodeBuilder

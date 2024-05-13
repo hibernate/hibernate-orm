@@ -842,7 +842,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
+		public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String enumValueName) {
 			return null;
 		}
 

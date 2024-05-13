@@ -12,6 +12,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.NotIndexedCollectionException;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -31,8 +32,11 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.BasicType;
 
 import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Type;
 
 import static java.util.Arrays.asList;
 
@@ -56,16 +60,34 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	private static <X> SqmPathSource<X> determinePathSource(NavigablePath navigablePath, SqmFunction<?> function) {
 		//noinspection unchecked
 		final SqmExpressible<X> nodeType = (SqmExpressible<X>) function.getNodeType();
-		final EmbeddableDomainType<X> embeddableDomainType = function.nodeBuilder()
+		final Class<X> bindableJavaType = nodeType.getBindableJavaType();
+		final ManagedType<X> managedType = function.nodeBuilder()
 				.getJpaMetamodel()
-				.embeddable( nodeType.getBindableJavaType() );
-		return new EmbeddedSqmPathSource<>(
-				navigablePath.getFullPath(),
-				null,
-				embeddableDomainType,
-				Bindable.BindableType.SINGULAR_ATTRIBUTE,
-				false
-		);
+				.findManagedType( bindableJavaType );
+		if ( managedType == null ) {
+			final BasicType<X> basicType = function.nodeBuilder().getTypeConfiguration()
+					.getBasicTypeForJavaType( bindableJavaType );
+			return new BasicSqmPathSource<>(
+					navigablePath.getFullPath(),
+					null,
+					basicType,
+					basicType.getRelationalJavaType(),
+					Bindable.BindableType.SINGULAR_ATTRIBUTE,
+					false
+			);
+		}
+		else if ( managedType.getPersistenceType() == Type.PersistenceType.EMBEDDABLE ) {
+			return new EmbeddedSqmPathSource<>(
+					navigablePath.getFullPath(),
+					null,
+					(EmbeddableDomainType<X>) managedType,
+					Bindable.BindableType.SINGULAR_ATTRIBUTE,
+					false
+			);
+		}
+		else {
+			throw new IllegalArgumentException( "Unsupported return type for function: " + bindableJavaType.getName() );
+		}
 	}
 
 	public SqmFunction<?> getFunction() {

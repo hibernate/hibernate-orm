@@ -4,7 +4,7 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.oracleucp.internal.UCPConnectionProvider;
+import org.hibernate.ucp.internal.UCPConnectionProvider;
 import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 

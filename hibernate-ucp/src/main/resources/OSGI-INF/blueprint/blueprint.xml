@@ -10,7 +10,7 @@
             xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-  <bean id="strategyRegistrationProvider" class="org.hibernate.oracleucp.internal.StrategyRegistrationProviderImpl"/>
+  <bean id="strategyRegistrationProvider" class="org.hibernate.ucp.internal.StrategyRegistrationProviderImpl"/>
   <service ref="strategyRegistrationProvider" interface="org.hibernate.boot.registry.selector.StrategyRegistrationProvider"/>
   
 </blueprint>

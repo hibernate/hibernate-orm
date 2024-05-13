@@ -15,7 +15,7 @@ import java.util.List;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.oracleucp.internal.UCPConnectionProvider;
+import org.hibernate.ucp.internal.UCPConnectionProvider;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;

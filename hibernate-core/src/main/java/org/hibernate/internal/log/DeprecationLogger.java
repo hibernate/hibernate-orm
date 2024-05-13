@@ -290,4 +290,11 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	void deprecatedNativeQueryColonEscaping(String oldOperator, String newOperator);
 
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000032,
+			value = "The support for passing arrays to array_contains() is deprecated and will be removed. Use array_includes() instead."
+	)
+	void deprecatedArrayContainsWithArray();
+
 }

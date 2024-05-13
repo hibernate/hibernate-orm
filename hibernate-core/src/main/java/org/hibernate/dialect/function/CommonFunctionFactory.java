@@ -21,6 +21,8 @@ import org.hibernate.dialect.function.array.ArrayConcatFunction;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
+import org.hibernate.dialect.function.array.ArrayIncludesUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayIntersectsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayIntersectsUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
@@ -34,6 +36,7 @@ import org.hibernate.dialect.function.array.CockroachArrayFillFunction;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
 import org.hibernate.dialect.function.array.H2ArrayFillFunction;
+import org.hibernate.dialect.function.array.H2ArrayIncludesFunction;
 import org.hibernate.dialect.function.array.H2ArrayIntersectsFunction;
 import org.hibernate.dialect.function.array.H2ArrayPositionFunction;
 import org.hibernate.dialect.function.array.H2ArrayPositionsFunction;
@@ -52,6 +55,7 @@ import org.hibernate.dialect.function.array.HSQLArrayToStringFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
 import org.hibernate.dialect.function.array.OracleArrayFillFunction;
+import org.hibernate.dialect.function.array.OracleArrayIncludesFunction;
 import org.hibernate.dialect.function.array.OracleArrayIntersectsFunction;
 import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
@@ -2681,6 +2685,14 @@ public class CommonFunctionFactory {
 				"array_contains_nullable",
 				new H2ArrayContainsFunction( true, maximumArraySize, typeConfiguration )
 		);
+		functionRegistry.register(
+				"array_includes",
+				new H2ArrayIncludesFunction( false, maximumArraySize, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_includes_nullable",
+				new H2ArrayIncludesFunction( true, maximumArraySize, typeConfiguration )
+		);
 	}
 
 	/**
@@ -2695,6 +2707,14 @@ public class CommonFunctionFactory {
 				"array_contains_nullable",
 				new ArrayContainsUnnestFunction( true, typeConfiguration )
 		);
+		functionRegistry.register(
+				"array_includes",
+				new ArrayIncludesUnnestFunction( false, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_includes_nullable",
+				new ArrayIncludesUnnestFunction( true, typeConfiguration )
+		);
 	}
 
 	/**
@@ -2703,6 +2723,8 @@ public class CommonFunctionFactory {
 	public void arrayContains_postgresql() {
 		functionRegistry.register( "array_contains", new ArrayContainsOperatorFunction( false, typeConfiguration ) );
 		functionRegistry.register( "array_contains_nullable", new ArrayContainsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes", new ArrayIncludesOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable", new ArrayIncludesOperatorFunction( true, typeConfiguration ) );
 	}
 
 	/**
@@ -2711,6 +2733,8 @@ public class CommonFunctionFactory {
 	public void arrayContains_oracle() {
 		functionRegistry.register( "array_contains", new OracleArrayContainsFunction( false, typeConfiguration ) );
 		functionRegistry.register( "array_contains_nullable", new OracleArrayContainsFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes", new OracleArrayIncludesFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable", new OracleArrayIncludesFunction( true, typeConfiguration ) );
 	}
 
 	/**

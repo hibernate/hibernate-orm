@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.oracleucp.internal;
+package org.hibernate.ucp.internal;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;

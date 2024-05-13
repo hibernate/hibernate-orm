@@ -1008,8 +1008,4 @@ public class H2Dialect extends Dialect {
 		return true;
 	}
 
-	@Override
-	public boolean supportsTableOptions() {
-		return true;
-	}
 }

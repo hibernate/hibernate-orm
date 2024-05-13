@@ -3694,7 +3694,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		if ( parentPath == null ) {
 			if ( sqmPath instanceof SqmFunctionPath<?> ) {
-				return visitFunctionPath( (SqmFunctionPath<?>) sqmPath );
+				final SqmFunctionPath<?> functionPath = (SqmFunctionPath<?>) sqmPath;
+				if ( functionPath.getReferencedPathSource() instanceof CompositeSqmPathSource<?> ) {
+					return (TableGroup) visitFunctionPath( functionPath );
+				}
 			}
 			return null;
 		}
@@ -3794,7 +3797,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( tableGroup == null ) {
 			prepareReusablePath( path, () -> null );
 
-			if ( !( path instanceof SqmEntityValuedSimplePath<?>
+			if ( path.getLhs() != null && !( path instanceof SqmEntityValuedSimplePath<?>
 					|| path instanceof SqmEmbeddedValuedSimplePath<?>
 					|| path instanceof SqmAnyValuedSimplePath<?>
 					|| path instanceof SqmTreatedPath<?, ?> ) ) {
@@ -4537,20 +4540,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public TableGroup visitFunctionPath(SqmFunctionPath<?> functionPath) {
+	public Expression visitFunctionPath(SqmFunctionPath<?> functionPath) {
 		final NavigablePath navigablePath = functionPath.getNavigablePath();
 		TableGroup tableGroup = getFromClauseAccess().findTableGroup( navigablePath );
 		if ( tableGroup == null ) {
 			final Expression functionExpression = (Expression) functionPath.getFunction().accept( this );
-			final EmbeddableMappingType embeddableMappingType = ( (AggregateJdbcType) functionExpression.getExpressionType()
+			final JdbcType jdbcType = functionExpression.getExpressionType()
 					.getSingleJdbcMapping()
-					.getJdbcType() ).getEmbeddableMappingType();
-			tableGroup = new EmbeddableFunctionTableGroup(
-					navigablePath,
-					embeddableMappingType,
-					functionExpression
-			);
-			getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+					.getJdbcType();
+			if ( jdbcType instanceof AggregateJdbcType ) {
+				tableGroup = new EmbeddableFunctionTableGroup(
+						navigablePath,
+						( (AggregateJdbcType) jdbcType ).getEmbeddableMappingType(),
+						functionExpression
+				);
+				getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+			}
+			else {
+				return functionExpression;
+			}
 		}
 		return tableGroup;
 	}

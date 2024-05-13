@@ -140,3 +140,12 @@ Plenty of syntax sugar for array operations was added:
 |Overlaps predicate for overlaps check
 |===
 
+[[string-syntax-sugar]]
+== Syntax sugar for string functions
+
+The bracket syntax can now also be used for string typed expressions to select a single character by index,
+or obtain a substring by start and end index.
+
+`stringPath[2]` is syntax sugar for `substring(stringPath, 2, 1)` and returns a `Character`.
+`stringPath[2:3]` is syntax sugar for `substring(stringPath, 2, 3-2+1)`,
+where `3-2+1` is the expression to determine the desired string length.

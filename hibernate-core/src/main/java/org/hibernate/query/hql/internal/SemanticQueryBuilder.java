@@ -5333,15 +5333,48 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else if ( ctx.simplePath() != null && ctx.slicedPathAccessFragment() != null ) {
 			final List<HqlParser.ExpressionContext> slicedFragments = ctx.slicedPathAccessFragment().expression();
-			return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-					List.of(
-							(SqmTypedNode<?>) visitSimplePath( ctx.simplePath() ),
-							(SqmTypedNode<?>) slicedFragments.get( 0 ).accept( this ),
-							(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
-					),
-					null,
-					creationContext.getQueryEngine()
-			);
+			final SqmTypedNode<?> lhs = (SqmTypedNode<?>) visitSimplePath( ctx.simplePath() );
+			final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
+			if ( lhsExpressible != null && lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+				return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+						List.of(
+								lhs,
+								(SqmTypedNode<?>) slicedFragments.get( 0 ).accept( this ),
+								(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
+						),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+			else {
+				final SqmExpression<?> start = (SqmExpression<?>) slicedFragments.get( 0 ).accept( this );
+				final SqmExpression<?> end = (SqmExpression<?>) slicedFragments.get( 1 ).accept( this );
+				return getFunctionDescriptor( "substring" ).generateSqmExpression(
+						List.of(
+								lhs,
+								start,
+								new SqmBinaryArithmetic<>(
+										BinaryArithmeticOperator.ADD,
+										new SqmBinaryArithmetic<>(
+												BinaryArithmeticOperator.SUBTRACT,
+												end,
+												start,
+												creationContext.getJpaMetamodel(),
+												creationContext.getNodeBuilder()
+										),
+										new SqmLiteral<>(
+												1,
+												creationContext.getNodeBuilder().getIntegerType(),
+												creationContext.getNodeBuilder()
+										),
+										creationContext.getJpaMetamodel(),
+										creationContext.getNodeBuilder()
+								)
+						),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
 		}
 		else {
 			throw new ParsingException( "Illegal domain path '" + ctx.getText() + "'" );

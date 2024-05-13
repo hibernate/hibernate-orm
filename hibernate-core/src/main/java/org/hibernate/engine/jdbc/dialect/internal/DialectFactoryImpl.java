@@ -149,9 +149,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 			if ( dialect == null ) {
 				throw new HibernateException( "Unable to construct requested dialect [" + dialectReference + "]" );
 			}
-			else if ( Dialect.class.getPackage() == dialect.getClass().getPackage() ) {
-				DEPRECATION_LOGGER.automaticDialect( dialect.getClass().getSimpleName() );
-			}
+			// else if ( Dialect.class.getPackage() == dialect.getClass().getPackage() ) {
+			//	DEPRECATION_LOGGER.automaticDialect( dialect.getClass().getSimpleName() );
+			// }
 			return dialect;
 		}
 		catch (StrategySelectionException e) {

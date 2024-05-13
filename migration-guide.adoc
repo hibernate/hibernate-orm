@@ -31,6 +31,7 @@ and would now be `BigIntegerBigDecimalArray`, because the preferred Java type fo
 To specify a custom array type name, annotate the persistent property with `@Column(columnDefinition = "BigIntegerArray")`.
 
 [[user-defined-type]]
+== Changes to `UserDefinedType`
 
 `UserDefinedType` was renamed to `UserDefinedObjectType` and everything except access to column information
 was abstracted in a new interface named `UserDefinedType`. This was done to allow modelling dependencies between
@@ -48,3 +49,11 @@ to make it clear that these contracts might still evolve.
 
 Another change is to the already incubating `ColumnOrderingStrategy`,
 where the argument type of `orderUserDefinedTypeColumns` was changed from `UserDefinedType` to `UserDefinedObjectType`.
+
+[[array-contains-array-deprecation]]
+== Subset check for arrays to use `array_includes`
+
+Support for `array_contains()` to accept an array as element argument is deprecated and will emit a warning.
+To check if an array is a subset of another array, use the `array_includes()` function,
+or the new `INCLUDES` predicate i.e. `array INCLUDES subarray`.
+

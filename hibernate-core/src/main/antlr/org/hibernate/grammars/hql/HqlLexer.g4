@@ -210,6 +210,7 @@ HOUR				: [hH] [oO] [uU] [rR];
 IGNORE				: [iI] [gG] [nN] [oO] [rR] [eE];
 ILIKE				: [iI] [lL] [iI] [kK] [eE];
 IN					: [iI] [nN];
+INCLUDES			: [iI] [nN] [cC] [lL] [uU] [dD] [eE] [sS];
 INDEX				: [iI] [nN] [dD] [eE] [xX];
 INDICES				: [iI] [nN] [dD] [iI] [cC] [eE] [sS];
 INNER				: [iI] [nN] [nN] [eE] [rR];

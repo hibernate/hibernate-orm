@@ -131,6 +131,10 @@ Plenty of syntax sugar for array operations was added:
 |`array contains element` or `element in array`
 |Contains predicate for containment check
 
+|`array_includes(array, array)`
+|`array includes subArray`
+|Predicate to for subset checking
+
 |`array_intersects(array, array(1, 2))`
 |`array intersects [1, 2]`
 |Overlaps predicate for overlaps check

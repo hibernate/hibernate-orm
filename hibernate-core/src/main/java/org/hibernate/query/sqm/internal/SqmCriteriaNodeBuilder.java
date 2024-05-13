@@ -3929,10 +3929,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAll(
+	public <T> SqmPredicate arrayIncludes(
 			Expression<T[]> arrayExpression,
 			Expression<T[]> subArrayExpression) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_includes" ).generateSqmExpression(
 				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) subArrayExpression ),
 				null,
 				queryEngine
@@ -3940,8 +3940,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+	public <T> SqmPredicate arrayIncludes(Expression<T[]> arrayExpression, T[] subArray) {
+		return isTrue( getFunctionDescriptor( "array_includes" ).generateSqmExpression(
 				asList( (SqmExpression<?>) arrayExpression, value( subArray, (SqmExpression<?>) arrayExpression ) ),
 				null,
 				queryEngine
@@ -3949,8 +3949,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+	public <T> SqmPredicate arrayIncludes(T[] array, Expression<T[]> subArrayExpression) {
+		return isTrue( getFunctionDescriptor( "array_includes" ).generateSqmExpression(
 				asList( value( array, (SqmExpression<?>) subArrayExpression ), (SqmExpression<?>) subArrayExpression ),
 				null,
 				queryEngine
@@ -3958,10 +3958,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAllNullable(
+	public <T> SqmPredicate arrayIncludesNullable(
 			Expression<T[]> arrayExpression,
 			Expression<T[]> subArrayExpression) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_includes_nullable" ).generateSqmExpression(
 				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) subArrayExpression ),
 				null,
 				queryEngine
@@ -3969,8 +3969,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+	public <T> SqmPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, T[] subArray) {
+		return isTrue( getFunctionDescriptor( "array_includes_nullable" ).generateSqmExpression(
 				asList( (SqmExpression<?>) arrayExpression, value( subArray, (SqmExpression<?>) arrayExpression ) ),
 				null,
 				queryEngine
@@ -3978,8 +3978,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+	public <T> SqmPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression) {
+		return isTrue( getFunctionDescriptor( "array_includes_nullable" ).generateSqmExpression(
 				asList( value( array, (SqmExpression<?>) subArrayExpression ), (SqmExpression<?>) subArrayExpression ),
 				null,
 				queryEngine
@@ -4548,10 +4548,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionContainsAll(
+	public <E> SqmPredicate collectionIncludes(
 			Expression<? extends Collection<E>> collectionExpression,
 			Expression<? extends Collection<? extends E>> subCollectionExpression) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_includes" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) subCollectionExpression ),
 				null,
 				queryEngine
@@ -4559,10 +4559,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionContainsAll(
+	public <E> SqmPredicate collectionIncludes(
 			Expression<? extends Collection<E>> collectionExpression,
 			Collection<? extends E> subCollection) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_includes" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression, value( subCollection, (SqmExpression<?>) collectionExpression ) ),
 				null,
 				queryEngine
@@ -4570,10 +4570,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionContainsAll(
+	public <E> SqmPredicate collectionIncludes(
 			Collection<E> collection,
 			Expression<? extends Collection<? extends E>> subCollectionExpression) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_includes" ).generateSqmExpression(
 				asList( value( collection, (SqmExpression<?>) subCollectionExpression ), (SqmExpression<?>) subCollectionExpression ),
 				null,
 				queryEngine
@@ -4581,10 +4581,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionContainsAllNullable(
+	public <E> SqmPredicate collectionIncludesNullable(
 			Expression<? extends Collection<E>> collectionExpression,
 			Expression<? extends Collection<? extends E>> subCollectionExpression) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_includes_nullable" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) subCollectionExpression ),
 				null,
 				queryEngine
@@ -4592,10 +4592,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionContainsAllNullable(
+	public <E> SqmPredicate collectionIncludesNullable(
 			Expression<? extends Collection<E>> collectionExpression,
 			Collection<? extends E> subCollection) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_includes_nullable" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression, value( subCollection, (SqmExpression<?>) collectionExpression ) ),
 				null,
 				queryEngine
@@ -4603,10 +4603,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <E> SqmPredicate collectionContainsAllNullable(
+	public <E> SqmPredicate collectionIncludesNullable(
 			Collection<E> collection,
 			Expression<? extends Collection<? extends E>> subCollectionExpression) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+		return isTrue( getFunctionDescriptor( "array_includes_nullable" ).generateSqmExpression(
 				asList( value( collection, (SqmExpression<?>) subCollectionExpression ), (SqmExpression<?>) subCollectionExpression ),
 				null,
 				queryEngine

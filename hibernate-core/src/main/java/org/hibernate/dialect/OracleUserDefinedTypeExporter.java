@@ -109,7 +109,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 						"return arr.count; " +
 						"end;",
 				createOrReplaceConcatFunction( arrayTypeName ),
-				"create or replace function " + arrayTypeName + "_contains(haystack in " + arrayTypeName +
+				"create or replace function " + arrayTypeName + "_includes(haystack in " + arrayTypeName +
 						", needle in " + arrayTypeName + ", nullable in number) return number deterministic is found number(1,0); begin " +
 						"if haystack is null or needle is null then return null; end if; " +
 						"for i in 1 .. needle.count loop " +
@@ -295,7 +295,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 				"drop function " + arrayTypeName + "_position",
 				"drop function " + arrayTypeName + "_length",
 				"drop function " + arrayTypeName + "_concat",
-				"drop function " + arrayTypeName + "_contains",
+				"drop function " + arrayTypeName + "_includes",
 				"drop function " + arrayTypeName + "_intersects",
 				"drop function " + arrayTypeName + "_get",
 				"drop function " + arrayTypeName + "_set",

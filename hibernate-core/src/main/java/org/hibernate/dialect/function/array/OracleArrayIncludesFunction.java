@@ -18,9 +18,9 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-public class OracleArrayContainsFunction extends AbstractArrayContainsFunction {
+public class OracleArrayIncludesFunction extends AbstractArrayIncludesFunction {
 
-	public OracleArrayContainsFunction(boolean nullable, TypeConfiguration typeConfiguration) {
+	public OracleArrayIncludesFunction(boolean nullable, TypeConfiguration typeConfiguration) {
 		super( nullable, typeConfiguration );
 	}
 
@@ -31,30 +31,17 @@ public class OracleArrayContainsFunction extends AbstractArrayContainsFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
-		final Expression needleExpression = (Expression) sqlAstArguments.get( 1 );
-		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
-		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
 		final String arrayTypeName = DdlTypeHelper.getTypeName(
 				haystackExpression.getExpressionType(),
 				walker.getSessionFactory().getTypeConfiguration()
 		);
 		sqlAppender.appendSql( arrayTypeName );
-		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
-			LOG.deprecatedArrayContainsWithArray();
-			sqlAppender.append( "_includes(" );
-			haystackExpression.accept( walker );
-			sqlAppender.append( ',' );
-			sqlAstArguments.get( 1 ).accept( walker );
-			sqlAppender.append( ',' );
-			sqlAppender.append( nullable ? "1" : "0" );
-			sqlAppender.append( ")>0" );
-		}
-		else {
-			sqlAppender.append( "_position(" );
-			haystackExpression.accept( walker );
-			sqlAppender.append( ',' );
-			needleExpression.accept( walker );
-			sqlAppender.append( ")>0" );
-		}
+		sqlAppender.append( "_includes(" );
+		haystackExpression.accept( walker );
+		sqlAppender.append( ',' );
+		sqlAstArguments.get( 1 ).accept( walker );
+		sqlAppender.append( ',' );
+		sqlAppender.append( nullable ? "1" : "0" );
+		sqlAppender.append( ")>0" );
 	}
 }

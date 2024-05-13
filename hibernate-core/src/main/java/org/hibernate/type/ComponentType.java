@@ -800,8 +800,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		final EmbeddableRepresentationStrategy representationStrategy = embeddableTypeDescriptor().getRepresentationStrategy();
 		final EmbeddableInstantiator instantiator;
 		if ( embeddableTypeDescriptor().isPolymorphic() ) {
-			// the discriminator here is the composite class name because it gets converted to the domain type when extracted
-			instantiator = representationStrategy.getInstantiatorForClass( (String) value[value.length - 1] );
+			// the discriminator here is the composite class because it gets converted to the domain type when extracted
+			instantiator = representationStrategy.getInstantiatorForClass( ( (Class<?>) value[value.length - 1] ).getName() );
 		}
 		else {
 			instantiator = representationStrategy.getInstantiator();

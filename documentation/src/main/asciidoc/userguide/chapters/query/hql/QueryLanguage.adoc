@@ -750,8 +750,8 @@ The following special functions make it possible to discover or narrow expressio
 |===
 | Special function | Purpose | Signature | JPA standard
 
-| `type()` | The (concrete) entity name | `type(e)` | &check;
-| `treat()` | Narrow an entity type | `treat(e as Entity)` | &check;
+| `type()` | The (concrete) entity or embeddable type | `type(e)` | &check;
+| `treat()` | Narrow an entity or embeddable type | `treat(e as Entity)` | &check;
 | `cast()` | Narrow a basic type | `cast(x as Type)` | &cross;
 | `str()` | Cast to a string | `str(x)` | &cross;
 |===
@@ -761,7 +761,7 @@ Let's see what these functions do.
 [[hql-function-type]]
 ===== `type()`
 
-The function `type()`, applied to an identification variable, evaluates to the entity name of the referenced entity.
+The function `type()`, applied to an identification variable or to an entity-valued or embeddable-valued path expression, evaluates to the concrete type, that is, the Java `Class`, of the referenced entity or embeddable.
 This is mainly useful when dealing with entity inheritance hierarchies.
 
 [[hql-entity-type-exp-example]]
@@ -777,7 +777,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-entity-type-exp-example]
 ===== `treat()`
 
 The function `treat()` may be used to narrow the type of an identification variable.
-This is useful when dealing with entity inheritance hierarchies.
+This is useful when dealing with entity or embeddable inheritance hierarchies.
 
 [[hql-treat-example]]
 ====

@@ -171,13 +171,13 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	}
 
 	@Override
-	public <S extends E> SqmTreatedSimplePath<E,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return (SqmTreatedSimplePath<E, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	public <S extends E> SqmTreatedPath<E, S> treatAs(Class<S> treatJavaType) throws PathException {
+		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return getTreatedPath( treatTarget );
+	public <S extends E> SqmTreatedEntityValuedSimplePath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
 	}
 
 //	@Override

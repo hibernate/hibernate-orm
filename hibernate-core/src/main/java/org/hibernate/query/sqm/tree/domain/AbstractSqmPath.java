@@ -17,6 +17,7 @@ import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -219,12 +220,17 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		}
 	}
 
-	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(EntityDomainType<S> treatTarget) {
-		final NavigablePath treat = getNavigablePath().treatAs( treatTarget.getHibernateEntityName() );
+	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(ManagedDomainType<S> treatTarget) {
+		final NavigablePath treat = getNavigablePath().treatAs( treatTarget.getTypeName() );
 		//noinspection unchecked
 		SqmTreatedPath<T, S> path = (SqmTreatedPath<T, S>) getLhs().getReusablePath( treat.getLocalName() );
 		if ( path == null ) {
-			path = new SqmTreatedSimplePath<>( this, treatTarget, nodeBuilder() );
+			if ( treatTarget instanceof EntityDomainType<?> ) {
+				path = new SqmTreatedEntityValuedSimplePath<>( this, (EntityDomainType<S>) treatTarget, nodeBuilder() );
+			}
+			else {
+				path = new SqmTreatedEmbeddedValuedSimplePath<>( this, (EmbeddableDomainType<S>) treatTarget );
+			}
 			getLhs().registerReusablePath( path );
 		}
 		return path;

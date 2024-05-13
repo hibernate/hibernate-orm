@@ -8,8 +8,8 @@ package org.hibernate.query.sqm;
 
 import java.util.List;
 
+import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
-import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -67,6 +67,7 @@ import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
@@ -238,7 +239,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFkExpression(SqmFkExpression<?> fkExpression);
 
-	T visitDiscriminatorPath(EntityDiscriminatorSqmPath sqmPath);
+	T visitDiscriminatorPath(DiscriminatorSqmPath<?> sqmPath);
 	
 	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path);
 
@@ -319,6 +320,8 @@ public interface SemanticQueryWalker<T> {
 	T visitJpaCriteriaParameter(JpaCriteriaParameter<?> expression);
 
 	T visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> expression);
+
+	T visitEmbeddableTypeLiteralExpression(SqmLiteralEmbeddableType<?> expression);
 
 	T visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath<?> expression);
 

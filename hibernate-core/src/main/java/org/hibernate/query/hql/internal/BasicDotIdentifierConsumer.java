@@ -205,17 +205,17 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				final String prefix = path.substring( 0, splitPosition );
 				final String terminal = path.substring( splitPosition + 1 );
 
-				final EnumJavaType<?> enumType = jpaMetamodel.getEnumType( prefix );
-				if ( enumType != null ) {
-					return new SqmEnumLiteral(
-							jpaMetamodel.enumValue( enumType, terminal ),
-							enumType,
-							terminal,
-							nodeBuilder
-					);
-				}
-
 				try {
+					final EnumJavaType<?> enumType = jpaMetamodel.getEnumType( prefix );
+					if ( enumType != null ) {
+						return new SqmEnumLiteral(
+								jpaMetamodel.enumValue( enumType, terminal ),
+								enumType,
+								terminal,
+								nodeBuilder
+						);
+					}
+
 					final Class<?> namedClass =
 							creationContext.getServiceRegistry()
 									.requireService( ClassLoaderService.class )

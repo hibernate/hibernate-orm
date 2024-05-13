@@ -118,6 +118,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -285,6 +286,8 @@ public abstract class MockSessionFactory
 	abstract boolean isClassDefined(String qualifiedName);
 
 	abstract boolean isEnum(String className);
+
+	abstract boolean isEnumConstant(String className, String terminal);
 
 	abstract boolean isFieldDefined(String qualifiedClassName, String fieldName);
 
@@ -843,6 +846,9 @@ public abstract class MockSessionFactory
 
 		@Override
 		public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String enumValueName) {
+			if ( !isEnumConstant( enumType.getTypeName(), enumValueName ) ) {
+				throw new IllegalArgumentException( "No enum constant " + enumType.getTypeName() + "." + enumValueName );
+			}
 			return null;
 		}
 

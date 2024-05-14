@@ -652,10 +652,11 @@ public class ProcedureCallImpl<R>
 		}
 
 		LOG.debugf( "Preparing procedure call : %s", call);
+		final String sqlString = call.getSqlString();
 		final CallableStatement statement = (CallableStatement) getSession()
 				.getJdbcCoordinator()
 				.getStatementPreparer()
-				.prepareStatement( call.getSqlString(), true );
+				.prepareStatement( sqlString, true );
 		try {
 			// Register the parameter mode and type
 			callableStatementSupport.registerParameters(
@@ -721,7 +722,8 @@ public class ProcedureCallImpl<R>
 				this,
 				parameterRegistrations,
 				refCursorExtractors.toArray( new JdbcCallRefCursorExtractor[0] ),
-				statement
+				statement,
+				sqlString
 		);
 
 	}

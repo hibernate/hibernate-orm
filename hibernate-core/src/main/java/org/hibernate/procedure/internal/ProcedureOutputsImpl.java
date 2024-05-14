@@ -40,8 +40,9 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 			ProcedureCallImpl<?> procedureCall,
 			Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations,
 			JdbcCallRefCursorExtractor[] refCursorParameters,
-			CallableStatement callableStatement) {
-		super( procedureCall, callableStatement );
+			CallableStatement callableStatement,
+			String sql) {
+		super( procedureCall, callableStatement, sql );
 		this.procedureCall = procedureCall;
 		this.callableStatement = callableStatement;
 		this.parameterRegistrations = parameterRegistrations;

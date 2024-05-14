@@ -27,22 +27,16 @@ public class Sequence implements ContributableDatabaseObject {
 	private final QualifiedSequenceName name;
 	private final String exportIdentifier;
 	private final String contributor;
-
-	private int initialValue = 1;
-	private int incrementSize = 1;
+	private final int initialValue;
+	private final int incrementSize;
+	private final String options;
 
 	public Sequence(
 			String contributor,
 			Identifier catalogName,
 			Identifier schemaName,
 			Identifier sequenceName) {
-		this.contributor = contributor;
-		this.name = new QualifiedSequenceName(
-				catalogName,
-				schemaName,
-				sequenceName
-		);
-		this.exportIdentifier = name.render();
+		this( contributor, catalogName, schemaName, sequenceName, 1, 1, null );
 	}
 
 	public Sequence(
@@ -52,9 +46,27 @@ public class Sequence implements ContributableDatabaseObject {
 			Identifier sequenceName,
 			int initialValue,
 			int incrementSize) {
-		this( contributor, catalogName, schemaName, sequenceName );
+		this( contributor, catalogName, schemaName, sequenceName, initialValue, incrementSize, null );
+	}
+
+	public Sequence(
+			String contributor,
+			Identifier catalogName,
+			Identifier schemaName,
+			Identifier sequenceName,
+			int initialValue,
+			int incrementSize,
+			String options) {
+		this.contributor = contributor;
+		this.name = new QualifiedSequenceName(
+				catalogName,
+				schemaName,
+				sequenceName
+		);
+		this.exportIdentifier = name.render();
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
+		this.options = options;
 	}
 
 	public QualifiedSequenceName getName() {
@@ -77,6 +89,10 @@ public class Sequence implements ContributableDatabaseObject {
 
 	public int getIncrementSize() {
 		return incrementSize;
+	}
+
+	public String getOptions() {
+		return options;
 	}
 
 	public void validate(int initialValue, int incrementSize) {

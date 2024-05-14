@@ -40,6 +40,7 @@ public class SequenceStructure implements DatabaseStructure {
 	private final int initialValue;
 	private final int incrementSize;
 	private final Class numberType;
+	private final String options;
 
 	private String sql;
 	private boolean applyIncrementSizeToSourceValues;
@@ -58,6 +59,24 @@ public class SequenceStructure implements DatabaseStructure {
 
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
+		this.numberType = numberType;
+		this.options = null;
+	}
+
+	public SequenceStructure(
+			JdbcEnvironment jdbcEnvironment,
+			String contributor,
+			QualifiedName qualifiedSequenceName,
+			int initialValue,
+			int incrementSize,
+			String options,
+			Class numberType) {
+		this.contributor = contributor;
+		this.logicalQualifiedSequenceName = qualifiedSequenceName;
+
+		this.initialValue = initialValue;
+		this.incrementSize = incrementSize;
+		this.options = options;
 		this.numberType = numberType;
 	}
 
@@ -188,7 +207,8 @@ public class SequenceStructure implements DatabaseStructure {
 							namespace.getPhysicalName().getSchema(),
 							physicalName,
 							initialValue,
-							sourceIncrementSize
+							sourceIncrementSize,
+							options
 					)
 			);
 		}

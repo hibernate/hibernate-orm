@@ -28,7 +28,6 @@ import org.hibernate.service.spi.Stoppable;
 
 import org.jboss.logging.Logger;
 
-import oracle.ucp.UniversalConnectionPoolAdapter;
 import oracle.ucp.UniversalConnectionPoolException;
 import oracle.ucp.admin.UniversalConnectionPoolManager;
 import oracle.ucp.admin.UniversalConnectionPoolManagerImpl;

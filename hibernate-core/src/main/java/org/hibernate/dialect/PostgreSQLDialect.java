@@ -152,7 +152,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
-		this( info, PostgreSQLDriverKind.determineKind( info ) );
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ), PostgreSQLDriverKind.determineKind( info ) );
 		registerKeywords( info );
 	}
 

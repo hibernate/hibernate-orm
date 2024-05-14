@@ -191,7 +191,12 @@ public class MySQLDialect extends Dialect {
 		registerKeywords( info );
 	}
 
+	@Deprecated
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
+		return createVersion( info, MINIMUM_VERSION );
+	}
+
+	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
 		final String versionString = info.getDatabaseVersion();
 		if ( versionString != null ) {
 			final String[] components = versionString.split( "\\." );
@@ -207,7 +212,7 @@ public class MySQLDialect extends Dialect {
 				}
 			}
 		}
-		return info.makeCopyOrDefault( MINIMUM_VERSION );
+		return info.makeCopyOrDefault( defaultVersion );
 	}
 
 	@Override

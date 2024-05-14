@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 @SuppressWarnings("removal")
 public class HANADialect extends AbstractHANADialect {
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 1, 0, 120 );
+	static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 1, 0, 120 );
 
 	public HANADialect(DialectResolutionInfo info) {
 		this( HANAServerConfiguration.fromDialectResolutionInfo( info ), true );

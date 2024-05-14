@@ -596,6 +596,8 @@ public class ManagedTypeProcessor {
 				jaxbEntity, classDetails, xmlDocumentContext
 		);
 
+		XmlAnnotationHelper.applyTableGenerators( jaxbEntity.getTableGenerators(), classDetails, xmlDocumentContext );
+
 		renderClass( classDetails, xmlDocumentContext );
 	}
 

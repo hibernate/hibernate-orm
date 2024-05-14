@@ -19,6 +19,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.EnumJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -93,6 +94,10 @@ public interface JpaMetamodel extends Metamodel {
 	EnumJavaType<?> getEnumType(String prefix);
 
 	<E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal);
+
+	JavaType<?> getJavaConstantType(String className, String fieldName);
+
+	<T> T getJavaConstant(String className, String fieldName);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns

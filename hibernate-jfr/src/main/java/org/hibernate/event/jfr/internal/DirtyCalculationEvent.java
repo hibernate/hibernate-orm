@@ -28,9 +28,6 @@ public class DirtyCalculationEvent extends Event implements HibernateMonitoringE
 	@Label("Session Identifier")
 	public String sessionIdentifier;
 
-	@Label("PartialFlushEvent time")
-	public long executionTime;
-
 	@Label("Entity Name")
 	public String entityName;
 
@@ -45,5 +42,4 @@ public class DirtyCalculationEvent extends Event implements HibernateMonitoringE
 		return NAME;
 	}
 
-	public transient long startedAt;
 }

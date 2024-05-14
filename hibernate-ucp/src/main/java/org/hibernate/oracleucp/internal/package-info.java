@@ -8,4 +8,4 @@
 /**
  * Implementation of ConnectionProvider using UCP.
  */
-package org.hibernate.ucp.internal;
+package org.hibernate.oracleucp.internal;

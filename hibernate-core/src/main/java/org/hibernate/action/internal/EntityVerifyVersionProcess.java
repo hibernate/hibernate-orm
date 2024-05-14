@@ -34,7 +34,7 @@ public class EntityVerifyVersionProcess implements BeforeTransactionCompletionPr
 	@Override
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
 		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
-		// Don't check version for an entity that is not in the PersistenceContext;
+		// Don't check version for an entity that is not in the PersistenceContext
 		if ( entry != null ) {
 			final Object latestVersion = entry.getPersister().getCurrentVersion( entry.getId(), session );
 			if ( !entry.getVersion().equals( latestVersion ) ) {

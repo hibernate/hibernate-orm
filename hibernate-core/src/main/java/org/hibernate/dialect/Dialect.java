@@ -2018,16 +2018,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		switch ( lockMode ) {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
+			case UPGRADE_NOWAIT:
+			case UPGRADE_SKIPLOCKED:
 			case PESSIMISTIC_WRITE:
 				return new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
 			case PESSIMISTIC_READ:
 				return new PessimisticReadSelectLockingStrategy( lockable, lockMode );
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy( lockable, lockMode );
 			case OPTIMISTIC_FORCE_INCREMENT:
 				return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
-			default:
+			case OPTIMISTIC:
+				return new OptimisticLockingStrategy( lockable, lockMode );
+			case READ:
 				return new SelectLockingStrategy( lockable, lockMode );
+			default:
+				// WRITE, NONE are not allowed here
+				throw new IllegalArgumentException( "Unsupported lock mode" );
 		}
 	}
 

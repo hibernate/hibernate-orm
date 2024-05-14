@@ -31,13 +31,9 @@ public class JdbcConnectionAcquisitionEvent extends Event implements HibernateMo
 	@Label("Tenant Identifier")
 	public String tenantIdentifier;
 
-	@Label("Connection Acquisition Time")
-	public long executionTime;
-
 	@Override
 	public String toString() {
 		return NAME;
 	}
 
-	public transient long startedAt;
 }

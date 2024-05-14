@@ -31,14 +31,9 @@ public class JdbcConnectionReleaseEvent extends Event implements HibernateMonito
 	@Label("Tenant Identifier")
 	public String tenantIdentifier;
 
-	@Label("Connection Release Time")
-	public long executionTime;
-
 	@Override
 	public String toString() {
 		return NAME;
 	}
-
-	public transient long startedAt;
 
 }

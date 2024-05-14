@@ -28,14 +28,9 @@ public class JdbcPreparedStatementCreationEvent extends Event implements Hiberna
 	@Label("PreparedStatement SQL")
 	public String sql;
 
-	@Label("PreparedStatement Creation Time")
-	public long executionTime;
-
 	@Override
 	public String toString() {
 		return NAME;
 	}
-
-	public transient long startedAt;
 
 }

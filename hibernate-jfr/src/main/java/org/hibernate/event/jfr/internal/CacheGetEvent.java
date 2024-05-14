@@ -40,9 +40,6 @@ public class CacheGetEvent extends Event implements HibernateMonitoringEvent {
 	@Label( "Region Name" )
 	public String regionName;
 
-	@Label( "Cache Get Execution Time" )
-	public long executionTime;
-
 	@Label("Cache Hit")
 	public boolean hit;
 
@@ -50,7 +47,5 @@ public class CacheGetEvent extends Event implements HibernateMonitoringEvent {
 	public String toString() {
 		return NAME ;
 	}
-
-	public transient long startedAt;
 
 }

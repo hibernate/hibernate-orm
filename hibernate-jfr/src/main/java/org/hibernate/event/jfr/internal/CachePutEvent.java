@@ -40,9 +40,6 @@ public class CachePutEvent extends Event implements HibernateMonitoringEvent {
 	@Label( "Used Natural Id" )
 	public boolean isNaturalId;
 
-	@Label( "Cache Put Execution Time" )
-	public long executionTime;
-
 	@Label( "Description" )
 	public String description;
 
@@ -53,7 +50,5 @@ public class CachePutEvent extends Event implements HibernateMonitoringEvent {
 	public String toString() {
 		return NAME ;
 	}
-
-	public transient long startedAt;
 
 }

@@ -28,15 +28,9 @@ public class JdbcBatchExecutionEvent extends Event implements HibernateMonitorin
 	@Label("PreparedStatement SQL")
 	public String sql;
 
-	@Label("Batch Execution time")
-	public long executionTime;
-
 	@Override
 	public String toString() {
 		return NAME;
 	}
-
-	public transient long startedAt;
-
 
 }

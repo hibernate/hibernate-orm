@@ -51,6 +51,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.engine.internal.Collections.skipRemoval;
+
 /**
  * Defines the default delete event listener used by hibernate for deleting entities
  * from the datastore in response to generated delete events.
@@ -138,7 +140,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		if ( type.isCollectionType() ) {
 			final String role = ( (CollectionType) type ).getRole();
 			final CollectionPersister persister = mappingMetamodel.getCollectionDescriptor(role);
-			if ( !persister.isInverse() ) {
+			if ( !persister.isInverse() && !skipRemoval( session, persister, key ) ) {
 				actionQueue.addAction( new CollectionRemoveAction( persister, key, session ) );
 			}
 		}

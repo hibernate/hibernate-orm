@@ -16,11 +16,11 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Implement the overlaps function by using {@code unnest}.
+ * Special array includes implementation that uses the PostgreSQL {@code @>} operator.
  */
-public class ArrayOverlapsUnnestFunction extends AbstractArrayOverlapsFunction {
+public class ArrayIncludesOperatorFunction extends ArrayIncludesUnnestFunction {
 
-	public ArrayOverlapsUnnestFunction(boolean nullable, TypeConfiguration typeConfiguration) {
+	public ArrayIncludesOperatorFunction(boolean nullable, TypeConfiguration typeConfiguration) {
 		super( nullable, typeConfiguration );
 	}
 
@@ -32,26 +32,13 @@ public class ArrayOverlapsUnnestFunction extends AbstractArrayOverlapsFunction {
 			SqlAstTranslator<?> walker) {
 		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression needleExpression = (Expression) sqlAstArguments.get( 1 );
-		sqlAppender.append( '(' );
-		if ( ArrayHelper.isNullable( haystackExpression ) ) {
+		if ( nullable ) {
+			super.render( sqlAppender, sqlAstArguments, returnType, walker );
+		}
+		else {
 			haystackExpression.accept( walker );
-			sqlAppender.append( " is not null and " );
-		}
-		if ( ArrayHelper.isNullable( needleExpression ) ) {
+			sqlAppender.append( "@>" );
 			needleExpression.accept( walker );
-			sqlAppender.append( " is not null and " );
 		}
-		if ( !nullable ) {
-			sqlAppender.append( "not exists(select 1 from unnest(" );
-			needleExpression.accept( walker );
-			sqlAppender.append( ") t(i) where t.i is null) and " );
-		}
-		sqlAppender.append( "exists(select * from unnest(" );
-		needleExpression.accept( walker );
-		sqlAppender.append( ")" );
-		sqlAppender.append( " intersect " );
-		sqlAppender.append( "select * from unnest(" );
-		haystackExpression.accept( walker );
-		sqlAppender.append( ")))" );
 	}
 }

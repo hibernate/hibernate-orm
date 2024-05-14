@@ -8,11 +8,15 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -20,11 +24,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  * due to https://github.com/h2database/h2database/issues/1815.
  * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same.
  */
-public class H2ArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
+public class H2ArrayIncludesFunction extends AbstractArrayIncludesFunction {
 
 	private final int maximumArraySize;
 
-	public H2ArrayOverlapsFunction(boolean nullable, int maximumArraySize, TypeConfiguration typeConfiguration) {
+	public H2ArrayIncludesFunction(boolean nullable, int maximumArraySize, TypeConfiguration typeConfiguration) {
 		super( nullable, typeConfiguration );
 		this.maximumArraySize = maximumArraySize;
 	}
@@ -51,14 +55,15 @@ public class H2ArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
 			needleExpression.accept( walker );
 			sqlAppender.append( ",null) and " );
 		}
+		sqlAppender.append( "not " );
 		sqlAppender.append( "exists(select array_get(" );
-		needleExpression.accept( walker );
+		walker.render( needleExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		sqlAppender.append( ",t.i) from system_range(1," );
 		sqlAppender.append( Integer.toString( maximumArraySize ) );
 		sqlAppender.append( ") t(i) where array_length(" );
 		needleExpression.accept( walker );
 		sqlAppender.append( ")>=t.i" );
-		sqlAppender.append( " intersect " );
+		sqlAppender.append( " except " );
 		sqlAppender.append( "select array_get(" );
 		haystackExpression.accept( walker );
 		sqlAppender.append( ",t.i) from system_range(1," );

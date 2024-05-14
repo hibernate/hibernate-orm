@@ -39,6 +39,8 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.dialect.function.CastFunction.renderCastArrayToString;
+
 /**
  * @author Christian Beikov
  */
@@ -401,13 +403,18 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		}
 		else {
 			final JdbcMapping sourceMapping = realArg.getExpressionType().getSingleJdbcMapping();
+			final CastType sourceType = sourceMapping.getCastType();
 			// No need to cast if we already have a string
-			if ( sourceMapping.getCastType() == CastType.STRING ) {
+			if ( sourceType == CastType.STRING ) {
 				translator.render( realArg, defaultArgumentRenderingMode );
 				return false;
 			}
+			else if ( sourceType == CastType.OTHER && sourceMapping.getJdbcType().isArray() ) {
+				renderCastArrayToString( sqlAppender, realArg, dialect, translator );
+				return false;
+			}
 			else {
-				final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.STRING );
+				final String cast = dialect.castPattern( sourceType, CastType.STRING );
 				new PatternRenderer( cast.replace( "?2", concatArgumentCastType ) )
 						.render( sqlAppender, Collections.singletonList( realArg ), translator );
 				return false;

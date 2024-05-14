@@ -11,6 +11,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -28,8 +29,10 @@ public class AggregateEmbeddableFetchInitializer extends AbstractEmbeddableIniti
 	public AggregateEmbeddableFetchInitializer(
 			FetchParentAccess fetchParentAccess,
 			EmbeddableResultGraphNode resultDescriptor,
-			AssemblerCreationState creationState, SqlSelection structSelection) {
-		super( resultDescriptor, fetchParentAccess, creationState );
+			BasicFetch<?> discriminatorFetch,
+			AssemblerCreationState creationState,
+			SqlSelection structSelection) {
+		super( resultDescriptor, fetchParentAccess, discriminatorFetch, creationState );
 		this.aggregateValuesArrayPositions = AggregateEmbeddableInitializer.determineAggregateValuesArrayPositions(
 				fetchParentAccess,
 				structSelection

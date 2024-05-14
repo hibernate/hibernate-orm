@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Tuple;
 import org.assertj.core.api.Assertions;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isOneOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -59,12 +61,25 @@ public class ArrayToStringTest {
 	public void test(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-to-string-example[]
-			List<String> results = em.createQuery( "select array_to_string(e.theArray, ',') from EntityWithArrays e", String.class )
+			List<String> results = em.createQuery( "select array_to_string(e.theArray, ',') from EntityWithArrays e order by e.id", String.class )
 					.getResultList();
 			//end::hql-array-to-string-example[]
 			assertEquals( 3, results.size() );
+			// We expect an empty string, but Oracle returns NULL instead of empty strings
 			Assertions.assertThat( results.get( 0 ) ).isNullOrEmpty();
 			assertEquals( "abc,def", results.get( 1 ) );
+			assertNull( results.get( 2 ) );
+		} );
+	}
+
+	@Test
+	public void testNullValue(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<String> results = em.createQuery( "select array_to_string(e.theArray, ',', 'null') from EntityWithArrays e order by e.id", String.class )
+					.getResultList();
+			assertEquals( 3, results.size() );
+			Assertions.assertThat( results.get( 0 ) ).isNullOrEmpty();
+			assertEquals( "abc,null,def", results.get( 1 ) );
 			assertNull( results.get( 2 ) );
 		} );
 	}
@@ -96,6 +111,32 @@ public class ArrayToStringTest {
 					cb.collectionToString( root.get( "theCollection" ), "," )
 			);
 			em.createQuery( cq ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testCast(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-to-string-hql-example[]
+			List<String> results = em.createQuery( "select cast(e.theArray as String) from EntityWithArrays e order by e.id", String.class )
+					.getResultList();
+			//end::hql-array-to-string-hql-example[]
+			assertEquals( 3, results.size() );
+			assertEquals( "[]", results.get( 0 ) );
+			assertEquals( "[abc,null,def]", results.get( 1 ) );
+			assertNull( results.get( 2 ) );
+		} );
+	}
+
+	@Test
+	public void testStr(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<String> results = em.createQuery( "select str(e.theArray) from EntityWithArrays e order by e.id", String.class )
+					.getResultList();
+			assertEquals( 3, results.size() );
+			assertEquals( "[]", results.get( 0 ) );
+			assertEquals( "[abc,null,def]", results.get( 1 ) );
+			assertNull( results.get( 2 ) );
 		} );
 	}
 

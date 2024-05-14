@@ -8,16 +8,19 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-public class OracleArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
+public class OracleArrayIncludesFunction extends AbstractArrayIncludesFunction {
 
-	public OracleArrayOverlapsFunction(TypeConfiguration typeConfiguration, boolean nullable) {
+	public OracleArrayIncludesFunction(boolean nullable, TypeConfiguration typeConfiguration) {
 		super( nullable, typeConfiguration );
 	}
 
@@ -33,7 +36,7 @@ public class OracleArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
 				walker.getSessionFactory().getTypeConfiguration()
 		);
 		sqlAppender.appendSql( arrayTypeName );
-		sqlAppender.append( "_overlaps(" );
+		sqlAppender.append( "_includes(" );
 		haystackExpression.accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );
@@ -41,5 +44,4 @@ public class OracleArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
 		sqlAppender.append( nullable ? "1" : "0" );
 		sqlAppender.append( ")>0" );
 	}
-
 }

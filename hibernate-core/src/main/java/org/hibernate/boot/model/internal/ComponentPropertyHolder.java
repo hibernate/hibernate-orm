@@ -308,7 +308,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public void addProperty(Property prop, XClass declaringClass) {
-		component.addProperty( prop );
+		component.addProperty( prop, declaringClass );
 	}
 
 	@Override

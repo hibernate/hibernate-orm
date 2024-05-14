@@ -322,7 +322,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayPrepend_operator();
 		functionFactory.arrayAppend_operator();
 		functionFactory.arrayContains_h2( getMaximumArraySize() );
-		functionFactory.arrayOverlaps_h2( getMaximumArraySize() );
+		functionFactory.arrayIntersects_h2( getMaximumArraySize() );
 		functionFactory.arrayGet_h2();
 		functionFactory.arraySet_h2( getMaximumArraySize() );
 		functionFactory.arrayRemove_h2( getMaximumArraySize() );

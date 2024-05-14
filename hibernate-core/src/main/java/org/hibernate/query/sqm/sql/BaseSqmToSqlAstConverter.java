@@ -28,7 +28,6 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
@@ -60,7 +59,6 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
@@ -356,7 +354,6 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -3694,7 +3691,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		if ( parentPath == null ) {
 			if ( sqmPath instanceof SqmFunctionPath<?> ) {
-				return visitFunctionPath( (SqmFunctionPath<?>) sqmPath );
+				final SqmFunctionPath<?> functionPath = (SqmFunctionPath<?>) sqmPath;
+				if ( functionPath.getReferencedPathSource() instanceof CompositeSqmPathSource<?> ) {
+					return (TableGroup) visitFunctionPath( functionPath );
+				}
 			}
 			return null;
 		}
@@ -3794,7 +3794,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( tableGroup == null ) {
 			prepareReusablePath( path, () -> null );
 
-			if ( !( path instanceof SqmEntityValuedSimplePath<?>
+			if ( path.getLhs() != null && !( path instanceof SqmEntityValuedSimplePath<?>
 					|| path instanceof SqmEmbeddedValuedSimplePath<?>
 					|| path instanceof SqmAnyValuedSimplePath<?>
 					|| path instanceof SqmTreatedPath<?, ?> ) ) {
@@ -4537,20 +4537,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public TableGroup visitFunctionPath(SqmFunctionPath<?> functionPath) {
+	public Expression visitFunctionPath(SqmFunctionPath<?> functionPath) {
 		final NavigablePath navigablePath = functionPath.getNavigablePath();
 		TableGroup tableGroup = getFromClauseAccess().findTableGroup( navigablePath );
 		if ( tableGroup == null ) {
 			final Expression functionExpression = (Expression) functionPath.getFunction().accept( this );
-			final EmbeddableMappingType embeddableMappingType = ( (AggregateJdbcType) functionExpression.getExpressionType()
+			final JdbcType jdbcType = functionExpression.getExpressionType()
 					.getSingleJdbcMapping()
-					.getJdbcType() ).getEmbeddableMappingType();
-			tableGroup = new EmbeddableFunctionTableGroup(
-					navigablePath,
-					embeddableMappingType,
-					functionExpression
-			);
-			getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+					.getJdbcType();
+			if ( jdbcType instanceof AggregateJdbcType ) {
+				tableGroup = new EmbeddableFunctionTableGroup(
+						navigablePath,
+						( (AggregateJdbcType) jdbcType ).getEmbeddableMappingType(),
+						functionExpression
+				);
+				getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+			}
+			else {
+				return functionExpression;
+			}
 		}
 		return tableGroup;
 	}
@@ -8342,13 +8347,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
+	public <R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action) {
 		final SqlAstQueryPartProcessingStateImpl processingState = (SqlAstQueryPartProcessingStateImpl) getCurrentProcessingState();
 		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
 		processingState.setNestingFetchParent( fetchParent );
-		final ImmutableFetchList fetches = visitFetches( fetchParent );
+		final R result = action.apply( fetchParent );
 		processingState.setNestingFetchParent( nestingFetchParent );
-		return fetches;
+		return result;
 	}
 
 	@Override

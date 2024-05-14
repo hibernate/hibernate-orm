@@ -10,6 +10,7 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.BasicType;
@@ -33,6 +34,16 @@ public class DiscriminatorHelper {
 	 */
 	static BasicType<?> getDiscriminatorType(PersistentClass persistentClass) {
 		Type discriminatorType = persistentClass.getDiscriminator().getType();
+		if ( discriminatorType instanceof BasicType ) {
+			return (BasicType<?>) discriminatorType;
+		}
+		else {
+			throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
+		}
+	}
+
+	public static BasicType<?> getDiscriminatorType(Component component) {
+		Type discriminatorType = component.getDiscriminator().getType();
 		if ( discriminatorType instanceof BasicType ) {
 			return (BasicType<?>) discriminatorType;
 		}

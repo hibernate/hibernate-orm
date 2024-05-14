@@ -2745,100 +2745,244 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression);
 
 	/**
-	 * Whether an array contains another array.
+	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludes(Expression, Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
+		return arrayIncludes( arrayExpression, subArrayExpression );
+	}
 
 	/**
-	 * Whether an array contains another array.
+	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludes(Expression, T[])}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
+		return arrayIncludes( arrayExpression, subArray );
+	}
 
 	/**
-	 * Whether an array contains another array.
+	 * Whether an array is a subset of another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludes(T[], Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
+		return arrayIncludes( array, subArrayExpression );
+	}
 
 	/**
-	 * Whether an array contains another array with nullable elements.
+	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(Expression, Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
+		return arrayIncludesNullable( arrayExpression, subArrayExpression );
+	}
 
 	/**
-	 * Whether an array contains another array with nullable elements.
+	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(Expression, T[])}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
+		return arrayIncludesNullable( arrayExpression, subArray );
+	}
 
 	/**
-	 * Whether an array contains another array with nullable elements.
+	 * Whether an array is a subset of another array with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIncludesNullable(T[], Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
+		return arrayIncludesNullable( array, subArrayExpression );
+	}
+
+	/**
+	 * Whether an array is a subset of another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array is a subset of another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, T[] subArray);
+
+	/**
+	 * Whether an array is a subset of another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludes(T[] array, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array is a subset of another array with nullable elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array is a subset of another array with nullable elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, T[] subArray);
+
+	/**
+	 * Whether an array is a subset of another array with nullable elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression);
 
 	/**
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersects(Expression, Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return arrayIntersects( arrayExpression1, arrayExpression2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersects(Expression, T[])}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
+		return arrayIntersects( arrayExpression1, array2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersects(T[], Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
+		return arrayIntersects( array1, arrayExpression2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Expression, Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return arrayIntersectsNullable( arrayExpression1, arrayExpression2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(Expression, T[])}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
+		return arrayIntersectsNullable( arrayExpression1, array2 );
+	}
 
 	/**
 	 * Whether one array has any elements common with another array, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #arrayIntersectsNullable(T[], Expression)}
 	 */
 	@Incubating
-	<T> JpaPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2);
+	@Deprecated(forRemoval = true)
+	default <T> JpaPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
+		return arrayIntersectsNullable( array1, arrayExpression2 );
+	}
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersects(T[] array1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<T> JpaPredicate arrayIntersectsNullable(T[] array1, Expression<T[]> arrayExpression2);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
@@ -3224,98 +3368,242 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<E> JpaPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression);
 
 	/**
-	 * Whether a basic collection contains another basic collection.
+	 * Whether a basic collection is a subset of another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludes(Expression, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludes( collectionExpression, subCollectionExpression );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection.
+	 * Whether a basic collection is a subset of another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludes(Expression, Collection)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection) {
+		return collectionIncludes( collectionExpression, subCollection );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection.
+	 * Whether a basic collection is a subset of another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludes(Collection, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAll(Collection<E> collection, Expression<? extends Collection<? extends E>> subArrayExpression);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAll(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludes( collection, subCollectionExpression );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludesNullable(Expression, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludesNullable( collectionExpression, subCollectionExpression );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludesNullable(Expression, Collection)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection) {
+		return collectionIncludesNullable( collectionExpression, subCollection );
+	}
 
 	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIncludesNullable(Collection, Expression)}
+	 */
+	@Incubating
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionContainsAllNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return collectionIncludesNullable( collection, subCollectionExpression );
+	}
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection.
 	 *
 	 * @since 6.4
 	 */
 	@Incubating
-	<E> JpaPredicate collectionContainsAllNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	<E> JpaPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludes(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether a basic collection is a subset of another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIncludesNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersects(Expression, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersects( collectionExpression1, collectionExpression2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersects(Expression, Collection)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2) {
+		return collectionIntersects( collectionExpression1, collection2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersects(Collection, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlaps(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlaps(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersects( collection1, collectionExpression2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersectsNullable(Expression, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersectsNullable( collectionExpression1, collectionExpression2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersectsNullable(Expression, Collection)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2) {
+		return collectionIntersectsNullable( collectionExpression1, collection2 );
+	}
 
 	/**
 	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
 	 *
 	 * @since 6.4
+	 * @deprecated Replaced with {@link #collectionIntersectsNullable(Collection, Expression)}
 	 */
 	@Incubating
-	<E> JpaPredicate collectionOverlapsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	@Deprecated(forRemoval = true)
+	default <E> JpaPredicate collectionOverlapsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return collectionIntersectsNullable( collection1, collectionExpression2 );
+	}
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersects(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.6
+	 */
+	@Incubating
+	<E> JpaPredicate collectionIntersectsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
 }

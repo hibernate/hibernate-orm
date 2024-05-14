@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
@@ -163,12 +165,12 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
+	public <R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action) {
 		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
 		processingState.setNestingFetchParent( fetchParent );
-		final ImmutableFetchList fetches = fetchProcessor.visitFetches( fetchParent, this );
+		final R result = action.apply( fetchParent );
 		processingState.setNestingFetchParent( nestingFetchParent );
-		return fetches;
+		return result;
 	}
 
 	@Override

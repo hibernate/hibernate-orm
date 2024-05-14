@@ -206,6 +206,8 @@ public abstract class AbstractCollectionPersister
 	private final boolean hasOrphanDelete;
 	private final boolean subselectLoadable;
 
+	private final boolean cascadeDeleteEnabled;
+
 	// extra information about the element type
 	private final Class<?> elementClass;
 
@@ -589,6 +591,9 @@ public abstract class AbstractCollectionPersister
 		}
 
 		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, getTableName(), getCollectionSpaces() );
+
+		cascadeDeleteEnabled = collectionBootDescriptor.getKey().isCascadeDeleteEnabled()
+				&& creationContext.getDialect().supportsCascadeDelete();
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
@@ -1113,6 +1118,10 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean isInverse() {
 		return isInverse;
+	}
+
+	public boolean isCascadeDeleteEnabled() {
+		return cascadeDeleteEnabled;
 	}
 
 	@Override

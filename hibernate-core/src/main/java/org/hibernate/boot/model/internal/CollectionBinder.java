@@ -65,7 +65,6 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.QueryCacheLayout;
-import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -97,7 +96,6 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
@@ -520,7 +518,6 @@ public abstract class CollectionBinder {
 			final Class<?> targetElement = elementCollectionAnn.targetClass();
 			collectionBinder.setTargetEntity( reflectionManager.toXClass( targetElement ) );
 			//collectionBinder.setCascadeStrategy( getCascadeStrategy( embeddedCollectionAnn.cascade(), hibernateCascade ) );
-			//While this is a collection-valued property, its mapping significantly differs from those of one-to-many.
 			collectionBinder.setOneToMany( false );
 		}
 		else if ( manyToManyAnn != null ) {
@@ -1294,8 +1291,7 @@ public abstract class CollectionBinder {
 				&& !property.isAnnotationPresent( JoinColumns.class )) {
 			throw new AnnotationException( "Unidirectional '@OneToMany' association '"
 					+ qualify( propertyHolder.getPath(), propertyName )
-					+ "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'"
-					+ " (so that Join Table mechanic is not used)" );
+					+ "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" );
 		}
 	}
 

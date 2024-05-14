@@ -10,6 +10,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.exception.ConstraintViolationException;
 
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ExpectedException;
@@ -28,6 +29,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(
 		annotatedClasses = {
@@ -36,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 				OnDeleteCascadeToElementCollectionTest.NonCascading.class
 		}
 )
-@SessionFactory
+@SessionFactory(generateStatistics = true)
 @ExtendWith(ExpectedExceptionExtension.class)
 @JiraKey("HHH-4301")
 public class OnDeleteCascadeToElementCollectionTest {
@@ -72,6 +74,99 @@ public class OnDeleteCascadeToElementCollectionTest {
 									"select count(id) from Cascading" )
 							.getSingleResult();
 					assertThat( remained ).isEqualTo( 0L );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
+	public void testCascadingDeleteUnloaded(SessionFactoryScope scope) {
+		var instance = new Cascading();
+
+		scope.inTransaction(
+				session -> {
+					instance.labels = new HashSet<>( Set.of( "one", "two" ) );
+					instance.tickets = new HashMap<>( Map.of(
+							"t1", new Ticket( "t1-2398", LocalDate.of( 2023, 8, 26 ) ),
+							"t2", new Ticket( "t2-23132", LocalDate.of( 2007, 9, 26 ) )
+					) );
+					session.persist( instance );
+				}
+		);
+
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+
+		scope.inTransaction(
+				session -> {
+					session.remove(session.getReference(instance));
+				}
+		);
+
+		assertEquals( 0, statistics.getEntityLoadCount() );
+		assertEquals( 1, statistics.getEntityDeleteCount() );
+		assertEquals( 0, statistics.getCollectionLoadCount() );
+		assertEquals( 0, statistics.getCollectionRemoveCount() );
+
+		scope.inTransaction(
+				session -> {
+					assertEquals( 0L,
+							session.createSelectionQuery( "from Cascading", Long.class )
+									.getResultCount() );
+					assertEquals( 0L,
+							session.createNativeQuery( "select count(*) from Cascading_tickets", Long.class )
+									.getSingleResult() );
+					assertEquals( 0L,
+							session.createNativeQuery( "select count(*) from Cascading_labels", Long.class )
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
+	public void testCascadingDeleteLoaded(SessionFactoryScope scope) {
+		var instance = new Cascading();
+
+		scope.inTransaction(
+				session -> {
+					instance.labels = new HashSet<>( Set.of( "one", "two" ) );
+					instance.tickets = new HashMap<>( Map.of(
+							"t1", new Ticket( "t1-2398", LocalDate.of( 2023, 8, 26 ) ),
+							"t2", new Ticket( "t2-23132", LocalDate.of( 2007, 9, 26 ) )
+					) );
+					session.persist( instance );
+				}
+		);
+
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+
+		scope.inTransaction(
+				session -> {
+					Cascading entity = session.find(Cascading.class, instance.id);
+					entity.labels.size();
+					entity.tickets.size();
+					session.remove( entity );
+				}
+		);
+
+		assertEquals( 1, statistics.getEntityLoadCount() );
+		assertEquals( 1, statistics.getEntityDeleteCount() );
+		assertEquals( 2, statistics.getCollectionLoadCount() );
+		assertEquals( 0, statistics.getCollectionRemoveCount() );
+
+		scope.inTransaction(
+				session -> {
+					assertEquals( 0L,
+							session.createSelectionQuery( "from Cascading", Long.class )
+									.getResultCount() );
+					assertEquals( 0L,
+							session.createNativeQuery( "select count(*) from Cascading_tickets", Long.class )
+									.getSingleResult() );
+					assertEquals( 0L,
+							session.createNativeQuery( "select count(*) from Cascading_labels", Long.class )
+									.getSingleResult() );
 				}
 		);
 	}

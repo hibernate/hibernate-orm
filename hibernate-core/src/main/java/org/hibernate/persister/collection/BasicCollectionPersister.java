@@ -81,10 +81,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private final DeleteRowsCoordinator deleteRowsCoordinator;
 	private final RemoveCoordinator removeCoordinator;
 
-	public boolean isCascadeDeleteEnabled() {
-		return false;
-	}
-
 	@Deprecated(since = "6.0")
 	public BasicCollectionPersister(
 			Collection collectionBinding,

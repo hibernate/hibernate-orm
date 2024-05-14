@@ -607,6 +607,54 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				.anyMatch(e -> e.getKind() == ElementKind.ENUM_CONSTANT);
 	}
 
+	@Override
+	Class<?> javaConstantType(String className, String fieldName) {
+		final TypeElement typeElement = elementUtil.getTypeElement( className );
+		if ( typeElement == null ) {
+			return null;
+		}
+		final TypeMirror typeMirror = typeElement.getEnclosedElements()
+				.stream()
+				.filter( e -> fieldName.equals( e.getSimpleName().toString() ) )
+				.filter( ProcessorSessionFactory::isStaticFinalField )
+				.findFirst().map( Element::asType )
+				.orElse( null );
+		if ( typeMirror == null ) {
+			return null;
+		}
+		try {
+			switch ( typeMirror.getKind() ) {
+				case BYTE:
+					return byte.class;
+				case SHORT:
+					return short.class;
+				case INT:
+					return int.class;
+				case LONG:
+					return long.class;
+				case FLOAT:
+					return float.class;
+				case DOUBLE:
+					return double.class;
+				case BOOLEAN:
+					return boolean.class;
+				case CHAR:
+					return char.class;
+				default:
+					return Class.forName( typeMirror.toString() );
+			}
+		}
+		catch (ClassNotFoundException ignored) {
+			return null;
+		}
+	}
+
+	private static boolean isStaticFinalField(Element e) {
+		return e.getKind() == ElementKind.FIELD
+				&& e.getModifiers().contains( Modifier.STATIC )
+				&& e.getModifiers().contains( Modifier.FINAL );
+	}
+
 	private static boolean isEmbeddableType(TypeElement type) {
 		return hasAnnotation(type, "Embeddable");
 	}

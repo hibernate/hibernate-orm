@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
+import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
@@ -27,6 +28,7 @@ import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * The main runtime interface between a Java application and Hibernate. Represents the
@@ -990,6 +992,36 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * {@link ScrollableResults}.
 	 */
 	void clear();
+
+	/**
+	 * Clear a Session specific to the given entity
+	 *
+	 * @param entityName The name of the entity to be cleared.
+	 */
+	@Incubating
+	void clear(String entityName);
+
+	/**
+	 * Clear a Session specific to the given entity
+	 *
+	 * @param entityType The type of the entity to be cleared.
+	 */
+	@Incubating
+	default void clear(Class<?> entityType) {
+		assert entityType != null;
+		clear( entityType.getName() );
+	}
+
+	/**
+	 * Clear a Session specific to the given entity
+	 *
+	 * @param entityType The type of the entity to be cleared.
+	 */
+	@Incubating
+	default void clear(EntityType<?> entityType) {
+		assert entityType != null;
+		clear( ( (EntityTypeImpl<?>) entityType ).getHibernateEntityName() );
+	}
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,

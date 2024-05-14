@@ -264,6 +264,38 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
+	public void clearEntityReferences(String entityName) {
+		if ( entitiesByKey != null ) {
+			final Iterator<Entry<EntityKey, EntityHolderImpl>> iterator = entitiesByKey.entrySet().iterator();
+			while ( iterator.hasNext() ) {
+				final EntityHolderImpl entityHolder = iterator.next().getValue();
+				if ( entityHolder != null && entityHolder.descriptor.getEntityName().equals( entityName ) ) {
+					if ( entityHolder.proxy != null ) {
+						final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( entityHolder.proxy );
+						assert initializer != null;
+						initializer.unsetSession();
+					}
+					iterator.remove();
+					entityEntryContext.removeEntityEntry( entityHolder.entity );
+					if ( entitySnapshotsByKey != null ) {
+						entitySnapshotsByKey.remove( entityHolder.entityKey );
+					}
+					if ( batchFetchQueue != null ) {
+						batchFetchQueue.removeBatchLoadableEntityKey( entityHolder.entityKey );
+					}
+				}
+			}
+		}
+
+		if ( naturalIdResolutions != null ) {
+			naturalIdResolutions.clearCachedPkResolutions( getSession().getFactory().getRuntimeMetamodels().getEntityMappingType( entityName ) );
+		}
+		if ( entitiesByUniqueKey != null ) {
+			entitiesByUniqueKey.entrySet().removeIf( next -> next.getKey().getEntityName().equals( entityName ) );
+		}
+	}
+
+	@Override
 	public boolean isDefaultReadOnly() {
 		return defaultReadOnly;
 	}

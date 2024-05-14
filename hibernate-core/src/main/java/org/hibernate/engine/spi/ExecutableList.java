@@ -18,6 +18,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Incubating;
+import org.hibernate.action.internal.EntityAction;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -277,6 +279,24 @@ public class ExecutableList<E extends ComparableExecutable>
 	@Override
 	public Iterator<E> iterator() {
 		return Collections.unmodifiableList( executables ).iterator();
+	}
+
+	@Incubating
+	public void clearEntityActions(String entityName) {
+		// NOTE - this is "hidden" behind the call on ActionQueue which knows the concrete action/executable types
+		// in each list.  ActionQueue only calls this method on lists which contain EntityAction executables
+		if ( executables.isEmpty() ) {
+			return;
+		}
+
+		//noinspection unchecked
+		final Iterator<EntityAction> iterator = (Iterator<EntityAction>) executables.iterator();
+		while ( iterator().hasNext() ) {
+			final EntityAction action = iterator.next();
+			if ( action.getEntityName().equals( entityName ) ) {
+				iterator.remove();
+			}
+		}
 	}
 
 	/**

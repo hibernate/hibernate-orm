@@ -47,7 +47,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
@@ -384,7 +383,7 @@ public class SessionImpl
 
 	private void internalClear() {
 		persistenceContext.clear();
-		actionQueue.clear();
+		actionQueue.clearEntityActions();
 
 		fastSessionServices.eventListenerGroup_CLEAR
 				.fireLazyEventOnEachListener( this::createClearEvent, ClearEventListener::onClear );
@@ -392,6 +391,27 @@ public class SessionImpl
 
 	private ClearEvent createClearEvent() {
 		return new ClearEvent( this );
+	}
+
+	@Override
+	public void clear(String entityName) {
+		checkOpen();
+		// Do not call checkTransactionSynchStatus() here -- if a delayed
+		// afterCompletion exists, it can cause an infinite loop.
+		pulseTransactionCoordinator();
+
+		try {
+			internalTypedClear( entityName );
+		}
+		catch (RuntimeException e) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	private void internalTypedClear(String entityName) {
+		// todo (7.0) : account for collections with this entity-type as the key/element
+		persistenceContext.clearEntityReferences( entityName );
+		actionQueue.clearEntityActions( entityName );
 	}
 
 	@Override

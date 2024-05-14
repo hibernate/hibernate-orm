@@ -148,7 +148,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
-		return DatabaseVersion.make( info.getMajor(), info.getMinor(), parseBuildId( info ) );
+		DatabaseVersion version = info.makeCopyOrDefault( MINIMUM_VERSION );
+		if ( info.getDatabaseVersion() != null ) {
+			version = DatabaseVersion.make( version.getMajor(), version.getMinor(), parseBuildId( info ) );
+		}
+		return version;
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {

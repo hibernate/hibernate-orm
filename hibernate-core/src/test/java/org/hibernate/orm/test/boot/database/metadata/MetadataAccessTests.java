@@ -6,15 +6,33 @@
  */
 package org.hibernate.orm.test.boot.database.metadata;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.lang.reflect.Field;
+import java.util.stream.Stream;
+
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANADialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceException;
@@ -26,9 +44,9 @@ import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import org.jboss.logging.Logger;
 
@@ -76,23 +94,62 @@ public class MetadataAccessTests {
 			assertThat( dialect ).isNotNull();
 			assertThat( dialect ).isInstanceOf( H2Dialect.class );
 		}
+
+		assertThat( triggerable.triggerMessages() )
+				.as( triggerable.toString() )
+				.isEmpty();
 	}
 
-	@Test
-	void testAccessDisabledExplicitDialect() {
+	static Stream<Arguments> dialects() {
+		return Stream.of(
+				Arguments.of( "DB2", DB2Dialect.class,
+						getVersionConstant( DB2Dialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "Apache Derby", DerbyDialect.class,
+						getVersionConstant( DerbyDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "EnterpriseDB", PostgresPlusDialect.class,
+						getVersionConstant( PostgreSQLDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "H2", H2Dialect.class,
+						getVersionConstant( H2Dialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "HSQL Database Engine", HSQLDialect.class,
+						getVersionConstant( HSQLDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "HDB", HANADialect.class,
+						getVersionConstant( HANADialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "MariaDB", MariaDBDialect.class,
+						getVersionConstant( MariaDBDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "MySQL", MySQLDialect.class,
+						getVersionConstant( MySQLDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "Oracle", OracleDialect.class,
+						getVersionConstant( OracleDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "PostgreSQL", PostgreSQLDialect.class,
+						getVersionConstant( PostgreSQLDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "Google Cloud Spanner", SpannerDialect.class, ZERO_VERSION ),
+				Arguments.of( "Microsoft SQL Server", SQLServerDialect.class,
+						getVersionConstant( SQLServerDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "Sybase SQL Server", SybaseDialect.class,
+						getVersionConstant( SybaseDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "Adaptive Server Enterprise", SybaseDialect.class,
+						getVersionConstant( SybaseDialect.class, "MINIMUM_VERSION") ),
+				Arguments.of( "ASE", SybaseDialect.class,
+						getVersionConstant( SybaseDialect.class, "MINIMUM_VERSION") )
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("dialects")
+	void testAccessDisabledExplicitDialect(String productName, Class<?> dialectClass, DatabaseVersion expectedDatabaseVersion) {
 		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
 		registryBuilder.clearSettings();
 
 		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
-		registryBuilder.applySetting( JdbcSettings.DIALECT, "org.hibernate.dialect.OracleDialect" );
+		registryBuilder.applySetting( JdbcSettings.DIALECT, dialectClass.getName() );
 		assertThat( registryBuilder.getSettings() )
 				.doesNotContainKeys( JdbcSettings.JAKARTA_HBM2DDL_DB_NAME );
 
 		try (StandardServiceRegistry registry = registryBuilder.build()) {
 			final JdbcEnvironment jdbcEnvironment = registry.getService( JdbcEnvironment.class );
 			final Dialect dialect = jdbcEnvironment.getDialect();
-			assertThat( dialect ).isInstanceOf( OracleDialect.class );
-			assertThat( dialect.getVersion() ).isEqualTo( getOracleMinimumSupportedVersion() );
+			assertThat( dialect ).isInstanceOf( dialectClass );
+			assertThat( dialect.getVersion() ).isEqualTo( expectedDatabaseVersion );
 		}
 
 		assertThat( triggerable.triggerMessages() )
@@ -100,23 +157,24 @@ public class MetadataAccessTests {
 				.isEmpty();
 	}
 
-	@Test
+	@ParameterizedTest
+	@MethodSource("dialects")
 	@Jira("https://hibernate.atlassian.net/browse/HHH-18079")
 	@Jira("https://hibernate.atlassian.net/browse/HHH-18080")
-	void testAccessDisabledExplicitProductName() {
+	void testAccessDisabledExplicitProductName(String productName, Class<?> dialectClass, DatabaseVersion expectedDatabaseVersion) {
 		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
 		registryBuilder.clearSettings();
 
 		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
-		registryBuilder.applySetting( JdbcSettings.JAKARTA_HBM2DDL_DB_NAME, "Oracle" );
+		registryBuilder.applySetting( JdbcSettings.JAKARTA_HBM2DDL_DB_NAME, productName );
 		assertThat( registryBuilder.getSettings() )
 				.doesNotContainKeys( JdbcSettings.DIALECT );
 
 		try (StandardServiceRegistry registry = registryBuilder.build()) {
 			final JdbcEnvironment jdbcEnvironment = registry.getService( JdbcEnvironment.class );
 			final Dialect dialect = jdbcEnvironment.getDialect();
-			assertThat( dialect ).isInstanceOf( OracleDialect.class );
-			assertThat( dialect.getVersion() ).isEqualTo( getOracleMinimumSupportedVersion() );
+			assertThat( dialect ).isInstanceOf( dialectClass );
+			assertThat( dialect.getVersion() ).isEqualTo( expectedDatabaseVersion );
 		}
 
 		assertThat( triggerable.triggerMessages() )
@@ -147,15 +205,14 @@ public class MetadataAccessTests {
 
 	// Ugly hack because neither MINIMUM_VERSION nor getMinimumSupportedVersion()
 	// can be accessed from this test.
-	private Object getOracleMinimumSupportedVersion() {
-		return new OracleDialect() {
-			// Change access from protected to public
-			@Override
-			public DatabaseVersion getMinimumSupportedVersion() {
-				return super.getMinimumSupportedVersion();
-			}
+	private static DatabaseVersion getVersionConstant(Class<? extends Dialect> dialectClass, String versionConstantName) {
+		try {
+			Field field = dialectClass.getDeclaredField( versionConstantName );
+			field.setAccessible( true );
+			return (DatabaseVersion) field.get( null );
 		}
-				// Call the now-accessible method
-				.getMinimumSupportedVersion();
+		catch (IllegalAccessException | NoSuchFieldException e) {
+			throw new RuntimeException( "Error extracting '" + versionConstantName + "' from '" + dialectClass + "'", e );
+		}
 	}
 }

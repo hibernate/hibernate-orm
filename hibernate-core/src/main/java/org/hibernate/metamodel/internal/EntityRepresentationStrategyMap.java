@@ -39,8 +39,6 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	private final ProxyFactory proxyFactory;
 	private final EntityInstantiatorDynamicMap instantiator;
 
-	private final Map<String, PropertyAccess> propertyAccessMap = new ConcurrentHashMap<>();
-
 	public EntityRepresentationStrategyMap(
 			PersistentClass bootType,
 			RuntimeModelCreationContext creationContext) {
@@ -50,14 +48,6 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 
 		this.proxyFactory = createProxyFactory( bootType );
 		this.instantiator = new EntityInstantiatorDynamicMap( bootType );
-
-		for ( Property property : bootType.getPropertyClosure() ) {
-			//TODO: redesign how PropertyAccessors are acquired...
-			final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE
-					.buildPropertyAccess( null, property.getName(), true );
-
-			propertyAccessMap.put(property.getName(), propertyAccess);
-		}
 
 		createProxyFactory( bootType );
 	}

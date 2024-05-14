@@ -73,9 +73,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private final Map<String, QueryResultsCache> namedQueryResultsCacheMap = new ConcurrentHashMap<>();
 
 
-	private final Set<String> legacySecondLevelCacheNames = new LinkedHashSet<>();
-	private final Map<String,Set<NaturalIdDataAccess>> legacyNaturalIdAccessesForRegion = new ConcurrentHashMap<>();
-
 	public EnabledCaching(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 
@@ -92,7 +89,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			timestampsCache = sessionFactory.getSessionFactoryOptions()
 					.getTimestampsCacheFactory()
 					.buildTimestampsCache( this, timestampsRegion );
-			legacySecondLevelCacheNames.add( timestampsRegion.getName() );
 
 			final QueryResultsRegion queryResultsRegion = regionFactory.buildQueryResultsRegion(
 					RegionFactory.DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME,
@@ -137,36 +133,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 						entityAccessConfig.getNavigableRole(),
 						region.getEntityDataAccess( entityAccessConfig.getNavigableRole() )
 				);
-
-				legacySecondLevelCacheNames.add(
-						StringHelper.qualifyConditionally(
-								getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix(),
-								region.getName()
-						)
-				);
 			}
-
-
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			// Natural-id caching
-
-			if ( regionConfig.getNaturalIdCaching().isEmpty() ) {
-				legacyNaturalIdAccessesForRegion.put( region.getName(), Collections.emptySet() );
-			}
-			else {
-				final HashSet<NaturalIdDataAccess> accesses = new HashSet<>();
-
-				for ( NaturalIdDataCachingConfig naturalIdAccessConfig : regionConfig.getNaturalIdCaching() ) {
-					final NaturalIdDataAccess naturalIdDataAccess = naturalIdAccessMap.put(
-							naturalIdAccessConfig.getNavigableRole(),
-							region.getNaturalIdDataAccess( naturalIdAccessConfig.getNavigableRole() )
-					);
-					accesses.add( naturalIdDataAccess );
-				}
-
-				legacyNaturalIdAccessesForRegion.put( region.getName(), accesses );
-			}
-
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Collection caching
@@ -175,13 +142,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 				collectionAccessMap.put(
 						collectionAccessConfig.getNavigableRole(),
 						region.getCollectionDataAccess( collectionAccessConfig.getNavigableRole() )
-				);
-
-				legacySecondLevelCacheNames.add(
-						StringHelper.qualifyConditionally(
-								getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix(),
-								region.getName()
-						)
 				);
 			}
 		}
@@ -553,7 +513,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 				timestampsCache
 		);
 		namedQueryResultsCacheMap.put( regionName, regionAccess );
-		legacySecondLevelCacheNames.add( regionName );
 		return regionAccess;
 	}
 

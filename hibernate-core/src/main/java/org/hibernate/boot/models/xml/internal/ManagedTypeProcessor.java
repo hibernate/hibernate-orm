@@ -29,7 +29,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTenantIdImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicIdAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
@@ -55,7 +54,6 @@ import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -596,7 +594,13 @@ public class ManagedTypeProcessor {
 				jaxbEntity, classDetails, xmlDocumentContext
 		);
 
-		XmlAnnotationHelper.applyTableGenerators( jaxbEntity.getTableGenerators(), classDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyTableGenerator( jaxbEntity.getTableGenerators(), classDetails, xmlDocumentContext );
+
+		XmlAnnotationHelper.applySequenceGenerator(
+				jaxbEntity.getSequenceGenerators(),
+				classDetails,
+				xmlDocumentContext
+		);
 
 		renderClass( classDetails, xmlDocumentContext );
 	}

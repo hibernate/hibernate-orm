@@ -30,7 +30,8 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 		return dialect.getSequenceSupport().getCreateSequenceStrings(
 				getFormattedSequenceName( sequence.getName(), metadata, context ),
 				sequence.getInitialValue(),
-				sequence.getIncrementSize()
+				sequence.getIncrementSize(),
+				sequence.getOptions()
 		);
 	}
 

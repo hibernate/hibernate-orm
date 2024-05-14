@@ -162,6 +162,7 @@ public class SequenceStyleGenerator
 	private DatabaseStructure databaseStructure;
 	private Optimizer optimizer;
 	private Type identifierType;
+	private String options;
 
 	/**
 	 * Getter for property 'databaseStructure'.
@@ -242,6 +243,8 @@ public class SequenceStyleGenerator
 				getInt( INITIAL_PARAM, parameters, -1 )
 		);
 		this.databaseStructure.configure( optimizer );
+
+		this.options = parameters.getProperty( OPTIONS );
 	}
 
 	private int adjustIncrementSize(
@@ -531,6 +534,7 @@ public class SequenceStyleGenerator
 				sequenceName,
 				initialValue,
 				incrementSize,
+				params.getProperty( OPTIONS ),
 				type.getReturnedClass()
 		);
 	}
@@ -552,6 +556,7 @@ public class SequenceStyleGenerator
 				valueColumnName,
 				initialValue,
 				incrementSize,
+				params.getProperty( OPTIONS ),
 				type.getReturnedClass()
 		);
 	}

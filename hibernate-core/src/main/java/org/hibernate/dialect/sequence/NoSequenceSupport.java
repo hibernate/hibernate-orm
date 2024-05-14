@@ -44,6 +44,12 @@ public class NoSequenceSupport implements SequenceSupport {
 	}
 
 	@Override
+	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize, String options)
+			throws MappingException {
+		throw new MappingException( "dialect does not support sequences" );
+	}
+
+	@Override
 	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) throws MappingException {
 		throw new MappingException("dialect does not support sequences");
 	}

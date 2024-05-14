@@ -55,4 +55,9 @@ public interface PersistentIdentifierGenerator extends OptimizableGenerator {
 	 * The key under which to find the {@link org.hibernate.boot.model.naming.ObjectNameNormalizer} in the config param map.
 	 */
 	String IDENTIFIER_NORMALIZER = "identifier_normalizer";
+
+	/**
+	 * The configuration parameter holding the generator options.
+	 */
+	String OPTIONS = "options";
 }

@@ -55,6 +55,7 @@ public class TableStructure implements DatabaseStructure {
 	private final int initialValue;
 	private final int incrementSize;
 	private final Class numberType;
+	private final String options;
 
 	private String contributor;
 
@@ -76,12 +77,34 @@ public class TableStructure implements DatabaseStructure {
 			int initialValue,
 			int incrementSize,
 			Class numberType) {
+		this(
+				jdbcEnvironment,
+				contributor,
+				qualifiedTableName,
+				valueColumnNameIdentifier,
+				initialValue,
+				incrementSize,
+				null,
+				numberType
+		);
+	}
+
+	public TableStructure(
+			JdbcEnvironment jdbcEnvironment,
+			String contributor,
+			QualifiedName qualifiedTableName,
+			Identifier valueColumnNameIdentifier,
+			int initialValue,
+			int incrementSize,
+			String options,
+			Class numberType) {
 		this.contributor = contributor;
 		this.logicalQualifiedTableName = qualifiedTableName;
 		this.logicalValueColumnNameIdentifier = valueColumnNameIdentifier;
 
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
+		this.options = options;
 		this.numberType = numberType;
 	}
 
@@ -291,6 +314,8 @@ public class TableStructure implements DatabaseStructure {
 			);
 
 			table.addColumn( valueColumn );
+
+			table.setOptions( options );
 
 			table.addInitCommand( context -> new InitCommand( "insert into "
 					+ context.format( physicalTableName ) + " values ( " + initialValue + " )" ) );

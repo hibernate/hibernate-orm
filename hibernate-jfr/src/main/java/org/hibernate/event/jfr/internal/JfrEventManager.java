@@ -20,8 +20,6 @@ import org.hibernate.stat.internal.StatsHelper;
 
 import jdk.jfr.EventType;
 
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-
 
 @AllowNonPortable
 public class JfrEventManager implements EventManager {
@@ -101,7 +99,6 @@ public class JfrEventManager implements EventManager {
 		if ( jdbcConnectionAcquisitionEventType.isEnabled() ) {
 			final JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = new JdbcConnectionAcquisitionEvent();
 			jdbcConnectionAcquisitionEvent.begin();
-			jdbcConnectionAcquisitionEvent.startedAt = System.nanoTime();
 			return jdbcConnectionAcquisitionEvent;
 		}
 		else {
@@ -118,7 +115,6 @@ public class JfrEventManager implements EventManager {
 			final JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = (JdbcConnectionAcquisitionEvent) event;
 			jdbcConnectionAcquisitionEvent.end();
 			if ( jdbcConnectionAcquisitionEvent.shouldCommit() ) {
-				jdbcConnectionAcquisitionEvent.executionTime = getExecutionTime( jdbcConnectionAcquisitionEvent.startedAt );
 				jdbcConnectionAcquisitionEvent.sessionIdentifier = getSessionIdentifier( session );
 				jdbcConnectionAcquisitionEvent.tenantIdentifier = tenantId == null ? null : session.getFactory()
 						.getTenantIdentifierJavaType()
@@ -133,7 +129,6 @@ public class JfrEventManager implements EventManager {
 		if ( jdbcConnectionReleaseEventType.isEnabled() ) {
 			final JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent = new JdbcConnectionReleaseEvent();
 			jdbcConnectionReleaseEvent.begin();
-			jdbcConnectionReleaseEvent.startedAt = System.nanoTime();
 			return jdbcConnectionReleaseEvent;
 		}
 		else {
@@ -150,7 +145,6 @@ public class JfrEventManager implements EventManager {
 			final JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent = (JdbcConnectionReleaseEvent) event;
 			jdbcConnectionReleaseEvent.end();
 			if ( jdbcConnectionReleaseEvent.shouldCommit() ) {
-				jdbcConnectionReleaseEvent.executionTime = getExecutionTime( jdbcConnectionReleaseEvent.startedAt );
 				jdbcConnectionReleaseEvent.sessionIdentifier = getSessionIdentifier( session );
 				jdbcConnectionReleaseEvent.tenantIdentifier = tenantId == null ? null : session.getFactory()
 						.getTenantIdentifierJavaType()
@@ -165,7 +159,6 @@ public class JfrEventManager implements EventManager {
 		if ( jdbcPreparedStatementCreationEventType.isEnabled() ) {
 			final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = new JdbcPreparedStatementCreationEvent();
 			jdbcPreparedStatementCreation.begin();
-			jdbcPreparedStatementCreation.startedAt = System.nanoTime();
 			return jdbcPreparedStatementCreation;
 		}
 		else {
@@ -181,7 +174,6 @@ public class JfrEventManager implements EventManager {
 			final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = (JdbcPreparedStatementCreationEvent) event;
 			jdbcPreparedStatementCreation.end();
 			if ( jdbcPreparedStatementCreation.shouldCommit() ) {
-				jdbcPreparedStatementCreation.executionTime = getExecutionTime( jdbcPreparedStatementCreation.startedAt );
 				jdbcPreparedStatementCreation.sql = preparedStatementSql;
 				jdbcPreparedStatementCreation.commit();
 			}
@@ -193,7 +185,6 @@ public class JfrEventManager implements EventManager {
 		if ( jdbcPreparedStatementExecutionEventType.isEnabled() ) {
 			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = new JdbcPreparedStatementExecutionEvent();
 			jdbcPreparedStatementExecutionEvent.begin();
-			jdbcPreparedStatementExecutionEvent.startedAt = System.nanoTime();
 			return jdbcPreparedStatementExecutionEvent;
 		}
 		else {
@@ -209,8 +200,6 @@ public class JfrEventManager implements EventManager {
 			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = (JdbcPreparedStatementExecutionEvent) event;
 			jdbcPreparedStatementExecutionEvent.end();
 			if ( jdbcPreparedStatementExecutionEvent.shouldCommit() ) {
-				jdbcPreparedStatementExecutionEvent.executionTime = getExecutionTime(
-						jdbcPreparedStatementExecutionEvent.startedAt );
 				jdbcPreparedStatementExecutionEvent.sql = preparedStatementSql;
 				jdbcPreparedStatementExecutionEvent.commit();
 			}
@@ -222,7 +211,6 @@ public class JfrEventManager implements EventManager {
 		if ( jdbcBatchExecutionEventType.isEnabled() ) {
 			final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = new JdbcBatchExecutionEvent();
 			jdbcBatchExecutionEvent.begin();
-			jdbcBatchExecutionEvent.startedAt = System.nanoTime();
 			return jdbcBatchExecutionEvent;
 		}
 		else {
@@ -238,7 +226,6 @@ public class JfrEventManager implements EventManager {
 			final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = (JdbcBatchExecutionEvent) event;
 			jdbcBatchExecutionEvent.end();
 			if ( jdbcBatchExecutionEvent.shouldCommit() ) {
-				jdbcBatchExecutionEvent.executionTime = getExecutionTime( jdbcBatchExecutionEvent.startedAt );
 				jdbcBatchExecutionEvent.sql = statementSql;
 				jdbcBatchExecutionEvent.commit();
 			}
@@ -250,7 +237,6 @@ public class JfrEventManager implements EventManager {
 		if ( cachePutEventType.isEnabled() ) {
 			final CachePutEvent cachePutEvent = new CachePutEvent();
 			cachePutEvent.begin();
-			cachePutEvent.startedAt = System.nanoTime();
 			return cachePutEvent;
 		}
 		else {
@@ -269,7 +255,6 @@ public class JfrEventManager implements EventManager {
 			final CachePutEvent cachePutEvent = (CachePutEvent) event;
 			cachePutEvent.end();
 			if ( cachePutEvent.shouldCommit() ) {
-				cachePutEvent.executionTime = getExecutionTime( cachePutEvent.startedAt );
 				cachePutEvent.sessionIdentifier = getSessionIdentifier( session );
 				cachePutEvent.regionName = region.getName();
 				cachePutEvent.description = description.getText();
@@ -311,7 +296,6 @@ public class JfrEventManager implements EventManager {
 			final CachePutEvent cachePutEvent = (CachePutEvent) event;
 			cachePutEvent.end();
 			if ( cachePutEvent.shouldCommit() ) {
-				cachePutEvent.executionTime = getExecutionTime( cachePutEvent.startedAt );
 				cachePutEvent.sessionIdentifier = getSessionIdentifier( session );
 				cachePutEvent.regionName = cachedDomainDataAccess.getRegion().getName();
 				cachePutEvent.entityName = getEntityName( persister );
@@ -335,7 +319,6 @@ public class JfrEventManager implements EventManager {
 			final CachePutEvent cachePutEvent = (CachePutEvent) event;
 			cachePutEvent.end();
 			if ( cachePutEvent.shouldCommit() ) {
-				cachePutEvent.executionTime = getExecutionTime( cachePutEvent.startedAt );
 				cachePutEvent.sessionIdentifier = getSessionIdentifier( session );
 				cachePutEvent.regionName = cachedDomainDataAccess.getRegion().getName();
 				cachePutEvent.collectionName = persister.getNavigableRole().getFullPath();
@@ -351,7 +334,6 @@ public class JfrEventManager implements EventManager {
 		if ( cacheGetEventType.isEnabled() ) {
 			final CacheGetEvent cacheGetEvent = new CacheGetEvent();
 			cacheGetEvent.begin();
-			cacheGetEvent.startedAt = System.nanoTime();
 			return cacheGetEvent;
 		}
 		else {
@@ -369,7 +351,6 @@ public class JfrEventManager implements EventManager {
 			final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
 			cacheGetEvent.end();
 			if ( cacheGetEvent.shouldCommit() ) {
-				cacheGetEvent.executionTime = getExecutionTime( cacheGetEvent.startedAt );
 				cacheGetEvent.sessionIdentifier = getSessionIdentifier( session );
 				cacheGetEvent.regionName = region.getName();
 				cacheGetEvent.hit = hit;
@@ -390,7 +371,6 @@ public class JfrEventManager implements EventManager {
 			final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
 			cacheGetEvent.end();
 			if ( cacheGetEvent.shouldCommit() ) {
-				cacheGetEvent.executionTime = getExecutionTime( cacheGetEvent.startedAt );
 				cacheGetEvent.sessionIdentifier = getSessionIdentifier( session );
 				cacheGetEvent.entityName = getEntityName( persister );
 				cacheGetEvent.regionName = region.getName();
@@ -412,7 +392,6 @@ public class JfrEventManager implements EventManager {
 			final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
 			cacheGetEvent.end();
 			if ( cacheGetEvent.shouldCommit() ) {
-				cacheGetEvent.executionTime = getExecutionTime( cacheGetEvent.startedAt );
 				cacheGetEvent.sessionIdentifier = getSessionIdentifier( session );
 				cacheGetEvent.collectionName = persister.getNavigableRole().getFullPath();
 				cacheGetEvent.regionName = region.getName();
@@ -427,7 +406,6 @@ public class JfrEventManager implements EventManager {
 		if ( flushEventType.isEnabled() ) {
 			final FlushEvent flushEvent = new FlushEvent();
 			flushEvent.begin();
-			flushEvent.startedAt = System.nanoTime();
 			return flushEvent;
 		}
 		else {
@@ -451,7 +429,6 @@ public class JfrEventManager implements EventManager {
 			final FlushEvent flushEvent = (FlushEvent) hibernateMonitoringEvent;
 			flushEvent.end();
 			if ( flushEvent.shouldCommit() ) {
-				flushEvent.executionTime = getExecutionTime( flushEvent.startedAt );
 				flushEvent.sessionIdentifier = getSessionIdentifier( event.getSession() );
 				flushEvent.numberOfEntitiesProcessed = event.getNumberOfEntitiesProcessed();
 				flushEvent.numberOfCollectionsProcessed = event.getNumberOfCollectionsProcessed();
@@ -465,7 +442,6 @@ public class JfrEventManager implements EventManager {
 	public PartialFlushEvent beginPartialFlushEvent() {
 		if ( partialFlushEventType.isEnabled() ) {
 			final PartialFlushEvent partialFlushEvent = new PartialFlushEvent();
-			partialFlushEvent.startedAt = System.nanoTime();
 			partialFlushEvent.begin();
 			return partialFlushEvent;
 		}
@@ -482,7 +458,6 @@ public class JfrEventManager implements EventManager {
 			final PartialFlushEvent flushEvent = (PartialFlushEvent) hibernateMonitoringEvent;
 			flushEvent.end();
 			if ( flushEvent.shouldCommit() ) {
-				flushEvent.executionTime = getExecutionTime( flushEvent.startedAt );
 				flushEvent.sessionIdentifier = getSessionIdentifier( event.getSession() );
 				flushEvent.numberOfEntitiesProcessed = event.getNumberOfEntitiesProcessed();
 				flushEvent.numberOfCollectionsProcessed = event.getNumberOfCollectionsProcessed();
@@ -496,7 +471,6 @@ public class JfrEventManager implements EventManager {
 	public DirtyCalculationEvent beginDirtyCalculationEvent() {
 		if ( dirtyCalculationEventType.isEnabled() ) {
 			final DirtyCalculationEvent dirtyCalculationEvent = new DirtyCalculationEvent();
-			dirtyCalculationEvent.startedAt = System.nanoTime();
 			dirtyCalculationEvent.begin();
 			return dirtyCalculationEvent;
 		}
@@ -516,7 +490,6 @@ public class JfrEventManager implements EventManager {
 			final DirtyCalculationEvent dirtyCalculationEvent = (DirtyCalculationEvent) event;
 			dirtyCalculationEvent.end();
 			if ( dirtyCalculationEvent.shouldCommit() ) {
-				dirtyCalculationEvent.executionTime = getExecutionTime( dirtyCalculationEvent.startedAt );
 				dirtyCalculationEvent.sessionIdentifier = getSessionIdentifier( session );
 				dirtyCalculationEvent.entityName = getEntityName( persister );
 				dirtyCalculationEvent.entityStatus = entry.getStatus().name();
@@ -530,7 +503,6 @@ public class JfrEventManager implements EventManager {
 	public PrePartialFlushEvent beginPrePartialFlush() {
 		if ( prePartialFlushEventType.isEnabled() ) {
 			final PrePartialFlushEvent partialFlushEvent = new PrePartialFlushEvent();
-			partialFlushEvent.startedAt = System.nanoTime();
 			partialFlushEvent.begin();
 			return partialFlushEvent;
 		}
@@ -547,15 +519,10 @@ public class JfrEventManager implements EventManager {
 			final PrePartialFlushEvent prePartialFlushEvent = (PrePartialFlushEvent) event;
 			prePartialFlushEvent.end();
 			if ( prePartialFlushEvent.shouldCommit() ) {
-				prePartialFlushEvent.executionTime = getExecutionTime( prePartialFlushEvent.startedAt );
 				prePartialFlushEvent.sessionIdentifier = getSessionIdentifier( session );
 				prePartialFlushEvent.commit();
 			}
 		}
-	}
-
-	private long getExecutionTime(Long startTime) {
-		return NANOSECONDS.convert( System.nanoTime() - startTime, NANOSECONDS );
 	}
 
 	private String getSessionIdentifier(SharedSessionContractImplementor session) {

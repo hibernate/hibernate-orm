@@ -62,7 +62,7 @@ public class DirtyCalculationEventTests {
 		RecordedEvent event = events.get( 0 );
 		assertThat( event.getEventType().getName() )
 				.isEqualTo( DirtyCalculationEvent.NAME );
-		assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+		assertThat( event.getDuration() ).isPositive();
 		assertThat( event.getString( "sessionIdentifier" ) )
 				.isEqualTo( sessionId );
 		assertThat( event.getString( "entityName" ) )

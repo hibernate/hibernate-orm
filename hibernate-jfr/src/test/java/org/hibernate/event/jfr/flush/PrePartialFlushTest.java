@@ -65,7 +65,7 @@ public class PrePartialFlushTest {
 		RecordedEvent event = events.get( 0 );
 		assertThat( event.getEventType().getName() )
 				.isEqualTo( PrePartialFlushEvent.NAME );
-		assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+		assertThat( event.getDuration() ).isPositive();
 		assertThat( event.getString( "sessionIdentifier" ) )
 				.isEqualTo( sessionId );
 	}

@@ -61,7 +61,7 @@ public class NaturalIdPutCacheTests {
 					RecordedEvent event = events.get( 0 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( CachePutEvent.NAME );
-					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getDuration() ).isPositive();
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );
 					assertThat( event.getString( "entityName" ) ).isEqualTo( TestEntity.class.getName() );
@@ -73,7 +73,7 @@ public class NaturalIdPutCacheTests {
 					event = events.get( 1 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( CachePutEvent.NAME );
-					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getDuration() ).isPositive();
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );
 					assertThat( event.getString( "entityName" ) ).isEqualTo( TestEntity.class.getName() );

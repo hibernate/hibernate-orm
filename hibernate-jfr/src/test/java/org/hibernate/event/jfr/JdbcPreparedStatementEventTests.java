@@ -47,14 +47,14 @@ public class JdbcPreparedStatementEventTests {
 					RecordedEvent preparedStatementCreationEvent = events.get( 0 );
 					assertThat( preparedStatementCreationEvent.getEventType().getName() )
 							.isEqualTo( JdbcPreparedStatementCreationEvent.NAME );
-					assertThat( preparedStatementCreationEvent.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( preparedStatementCreationEvent.getDuration() ).isPositive();
 					assertThat( preparedStatementCreationEvent.getString( "sql" ).toLowerCase( Locale.ROOT ) )
 							.contains( "select " );
 
 					RecordedEvent preparedStatementExecutionEvent = events.get( 1 );
 					assertThat( preparedStatementExecutionEvent.getEventType().getName() )
 							.isEqualTo( JdbcPreparedStatementExecutionEvent.NAME );
-					assertThat( preparedStatementExecutionEvent.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( preparedStatementExecutionEvent.getDuration() ).isPositive();
 					assertThat( preparedStatementExecutionEvent.getString( "sql" ) )
 							.isEqualTo( preparedStatementCreationEvent.getString( "sql" ) );
 				}

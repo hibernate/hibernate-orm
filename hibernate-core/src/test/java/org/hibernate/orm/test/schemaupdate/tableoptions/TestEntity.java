@@ -7,12 +7,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
 
 @Entity
 @Table(
@@ -25,6 +28,12 @@ import jakarta.persistence.Table;
 )
 public class TestEntity {
 	@Id
+	@TableGenerator(
+			name = "id-table-generator",
+			table = TableOptionsTest.TABLE_GENERATOR_NAME,
+			options = TableOptionsTest.TABLE_GENERATOR_OPTIONS
+	)
+	@GeneratedValue(strategy = GenerationType.TABLE, generator = "id-table-generator")
 	private Long id;
 
 	@Column(name = "NAME_COLUMN")

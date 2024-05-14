@@ -196,11 +196,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 */
 	public static final int DEF_SEGMENT_LENGTH = 255;
 
-	/**
-	 * Configures the options of the table to use.
-	 */
-	public static final String TABLE_OPTIONS = "options";
-
 	private boolean storeLastUsedValue;
 
 
@@ -365,7 +360,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		if ( contributor == null ) {
 			contributor = "orm";
 		}
-		options = parameters.getProperty( TABLE_OPTIONS );
+		options = parameters.getProperty( OPTIONS );
 	}
 
 	private static OptimizerDescriptor determineOptimizationStrategy(Properties parameters, int incrementSize) {

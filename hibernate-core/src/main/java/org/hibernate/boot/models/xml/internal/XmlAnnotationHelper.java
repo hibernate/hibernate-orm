@@ -131,7 +131,6 @@ import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.TableGenerators;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
@@ -564,6 +563,29 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
+		applySequenceGeneratorAttributes( jaxbGenerator, sequenceAnn );
+	}
+
+	public static void applySequenceGenerator(
+			JaxbSequenceGeneratorImpl jaxbGenerator,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbGenerator == null ) {
+			return;
+		}
+
+		final MutableAnnotationUsage<SequenceGenerator> sequenceAnn = classDetails.replaceAnnotationUsage(
+				JpaAnnotations.SEQUENCE_GENERATOR,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		applySequenceGeneratorAttributes( jaxbGenerator, sequenceAnn );
+	}
+
+	private static void applySequenceGeneratorAttributes(
+			JaxbSequenceGeneratorImpl jaxbGenerator,
+			MutableAnnotationUsage<SequenceGenerator> sequenceAnn) {
+		XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbGenerator.getName(), sequenceAnn );
 		XmlProcessingHelper.applyAttributeIfSpecified( "sequenceName", jaxbGenerator.getSequenceName(), sequenceAnn );
 
 		XmlProcessingHelper.applyAttributeIfSpecified( "catalog", jaxbGenerator.getCatalog(), sequenceAnn );
@@ -573,7 +595,7 @@ public class XmlAnnotationHelper {
 		XmlProcessingHelper.applyAttributeIfSpecified( "options", jaxbGenerator.getOptions(), sequenceAnn );
 	}
 
-	public static void applyTableGenerators(
+	public static void applyTableGenerator(
 			JaxbTableGeneratorImpl jaxbGenerator,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {

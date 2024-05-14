@@ -15,7 +15,7 @@ import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 /**
- * Provides the {@link UCPCPConnectionProvider} to the
+ * Provides the {@link UCPConnectionProvider} to the
  * {@link org.hibernate.boot.registry.selector.spi.StrategySelector} service.
  * 
  */

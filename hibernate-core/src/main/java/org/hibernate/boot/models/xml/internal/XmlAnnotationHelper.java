@@ -131,6 +131,7 @@ import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
+import jakarta.persistence.TableGenerators;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
@@ -389,6 +390,27 @@ public class XmlAnnotationHelper {
 		} );
 	}
 
+	public static <A extends Annotation> void applyUniqueConstraints(
+			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
+			MutableAnnotationUsage<A> annotationUsage,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( jaxbUniqueConstraints ) ) {
+			return;
+		}
+
+		final List<AnnotationUsage<UniqueConstraint>> uniqueConstraintUsages = new ArrayList<>( jaxbUniqueConstraints.size() );
+		annotationUsage.setAttributeValue( "uniqueConstraints", uniqueConstraintUsages );
+
+		jaxbUniqueConstraints.forEach( (jaxbUniqueConstraint) -> {
+			final MutableAnnotationUsage<UniqueConstraint> ucUsage =
+					JpaAnnotations.UNIQUE_CONSTRAINT.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "name", jaxbUniqueConstraint.getName() );
+			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "options", jaxbUniqueConstraint.getOptions() );
+			ucUsage.setAttributeValue( "columnNames", jaxbUniqueConstraint.getColumnName() );
+			uniqueConstraintUsages.add( ucUsage );
+		} );
+	}
+
 	public static <A extends Annotation> void applyIndexes(
 			List<JaxbIndexImpl> jaxbIndexes,
 			AnnotationTarget target,
@@ -405,6 +427,29 @@ public class XmlAnnotationHelper {
 			applyOr( jaxbIndex, JaxbIndexImpl::getName, "name", indexAnn, JpaAnnotations.INDEX );
 			applyOr( jaxbIndex, JaxbIndexImpl::getColumnList, "columnList", indexAnn, JpaAnnotations.INDEX );
 			applyOr( jaxbIndex, JaxbIndexImpl::isUnique, "unique", indexAnn, JpaAnnotations.INDEX );
+			applyOr( jaxbIndex, JaxbIndexImpl::getOptions, "options", indexAnn, JpaAnnotations.INDEX );
+			indexes.add( indexAnn );
+		} );
+
+		annotationUsage.setAttributeValue( "indexes", indexes );
+	}
+
+	public static <A extends Annotation> void applyIndexes(
+			List<JaxbIndexImpl> jaxbIndexes,
+			MutableAnnotationUsage<A> annotationUsage,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( jaxbIndexes ) ) {
+			return;
+		}
+
+		final List<AnnotationUsage<Index>> indexes = new ArrayList<>( jaxbIndexes.size() );
+		jaxbIndexes.forEach( jaxbIndex -> {
+			final MutableAnnotationUsage<Index> indexAnn =
+					JpaAnnotations.INDEX.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			applyOr( jaxbIndex, JaxbIndexImpl::getName, "name", indexAnn, JpaAnnotations.INDEX );
+			applyOr( jaxbIndex, JaxbIndexImpl::getColumnList, "columnList", indexAnn, JpaAnnotations.INDEX );
+			applyOr( jaxbIndex, JaxbIndexImpl::isUnique, "unique", indexAnn, JpaAnnotations.INDEX );
+			applyOr( jaxbIndex, JaxbIndexImpl::getOptions, "options", indexAnn, JpaAnnotations.INDEX );
 			indexes.add( indexAnn );
 		} );
 
@@ -528,6 +573,24 @@ public class XmlAnnotationHelper {
 		XmlProcessingHelper.applyAttributeIfSpecified( "options", jaxbGenerator.getOptions(), sequenceAnn );
 	}
 
+	public static void applyTableGenerators(
+			JaxbTableGeneratorImpl jaxbGenerator,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbGenerator == null ) {
+			return;
+		}
+
+		final MutableAnnotationUsage<TableGenerator> tableAnn = classDetails.replaceAnnotationUsage(
+				JpaAnnotations.TABLE_GENERATOR,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		applyTableGeneratorAttributes( jaxbGenerator, tableAnn );
+		applyUniqueConstraints( jaxbGenerator.getUniqueConstraints(), tableAnn, xmlDocumentContext );
+		applyIndexes( jaxbGenerator.getIndexes(), tableAnn, xmlDocumentContext );
+	}
+
 	public static void applyTableGenerator(
 			JaxbTableGeneratorImpl jaxbGenerator,
 			MutableMemberDetails memberDetails,
@@ -537,6 +600,14 @@ public class XmlAnnotationHelper {
 		}
 
 		final MutableAnnotationUsage<TableGenerator> tableAnn = memberDetails.applyAnnotationUsage( JpaAnnotations.TABLE_GENERATOR, xmlDocumentContext.getModelBuildingContext() );
+		applyTableGeneratorAttributes( jaxbGenerator, tableAnn );
+		applyUniqueConstraints( jaxbGenerator.getUniqueConstraints(), memberDetails, tableAnn, xmlDocumentContext );
+		applyIndexes( jaxbGenerator.getIndexes(), memberDetails, tableAnn, xmlDocumentContext );
+	}
+
+	private static void applyTableGeneratorAttributes(
+			JaxbTableGeneratorImpl jaxbGenerator,
+			MutableAnnotationUsage<TableGenerator> tableAnn) {
 		XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbGenerator.getName(), tableAnn );
 		XmlProcessingHelper.applyAttributeIfSpecified( "table", jaxbGenerator.getTable(), tableAnn );
 		XmlProcessingHelper.applyAttributeIfSpecified( "catalog", jaxbGenerator.getCatalog(), tableAnn );
@@ -546,8 +617,7 @@ public class XmlAnnotationHelper {
 		XmlProcessingHelper.applyAttributeIfSpecified( "pkColumnValue", jaxbGenerator.getPkColumnValue(), tableAnn );
 		XmlProcessingHelper.applyAttributeIfSpecified( "initialValue", jaxbGenerator.getInitialValue(), tableAnn );
 		XmlProcessingHelper.applyAttributeIfSpecified( "allocationSize", jaxbGenerator.getInitialValue(), tableAnn );
-		applyUniqueConstraints( jaxbGenerator.getUniqueConstraints(), memberDetails, tableAnn, xmlDocumentContext );
-		applyIndexes( jaxbGenerator.getIndexes(), memberDetails, tableAnn, xmlDocumentContext );
+		XmlProcessingHelper.applyAttributeIfSpecified( "options", jaxbGenerator.getOptions(), tableAnn );
 	}
 
 	public static void applyUuidGenerator(

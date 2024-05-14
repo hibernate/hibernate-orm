@@ -23,6 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @BaseUnitTest
 public class TableOptionsTest {
+
+	static final String TABLE_GENERATOR_NAME = "TEST_TABLE_GENERATOR";
+	static final String TABLE_GENERATOR_OPTIONS = "option_0";
+
 	static final String TABLE_NAME = "PRIMARY_TABLE";
 	static final String TABLE_OPTIONS = "option_1";
 
@@ -53,7 +57,7 @@ public class TableOptionsTest {
 	}
 
 	@Test
-	public void testTableCommentAreCreated() throws Exception {
+	public void testTableOptionsAreCreated() throws Exception {
 		createSchema( TestEntity.class );
 		assertTrue(
 				tableCreationStatementContainsOptions( output, TABLE_NAME, TABLE_OPTIONS ),
@@ -67,12 +71,17 @@ public class TableOptionsTest {
 
 		assertTrue(
 				tableCreationStatementContainsOptions( output, JOIN_TABLE_NAME, JOIN_TABLE_OPTIONS ),
-				"Join Table " + JOIN_TABLE_NAME + " options has not been created "
+				"JoinTable " + JOIN_TABLE_NAME + " options has not been created "
 		);
 
 		assertTrue(
 				tableCreationStatementContainsOptions( output, COLLECTION_TABLE_NAME, COLLECTION_TABLE_OPTIONS ),
-				"Join Table " + COLLECTION_TABLE_NAME + " options has not been created "
+				"JoinTable " + COLLECTION_TABLE_NAME + " options has not been created "
+		);
+
+		assertTrue(
+				tableCreationStatementContainsOptions( output, TABLE_GENERATOR_NAME, TABLE_GENERATOR_OPTIONS ),
+				"TableGenerator " + COLLECTION_TABLE_NAME + " options has not been created "
 		);
 	}
 
@@ -97,6 +106,11 @@ public class TableOptionsTest {
 		assertTrue(
 				tableCreationStatementContainsOptions( output, COLLECTION_TABLE_NAME, COLLECTION_TABLE_OPTIONS ),
 				"Join Table " + COLLECTION_TABLE_NAME + " options has not been created "
+		);
+
+		assertTrue(
+				tableCreationStatementContainsOptions( output, TABLE_GENERATOR_NAME, TABLE_GENERATOR_OPTIONS ),
+				"TableGenerator " + TABLE_GENERATOR_NAME + " options has not been created "
 		);
 	}
 
@@ -130,7 +144,7 @@ public class TableOptionsTest {
 				.setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
 				.setFormat( false )
-				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
+				.createOnly( EnumSet.of( TargetType.SCRIPT ), metadata );
 	}
 
 	private void createSchema(Class... annotatedClasses) {
@@ -146,7 +160,7 @@ public class TableOptionsTest {
 				.setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
 				.setFormat( false )
-				.create( EnumSet.of( TargetType.SCRIPT ), metadata );
+				.createOnly( EnumSet.of( TargetType.SCRIPT ), metadata );
 	}
 
 }

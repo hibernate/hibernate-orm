@@ -39,6 +39,8 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.Collections.skipRemoval;
+
 /**
  * A convenience base class for listeners whose functionality results in flushing.
  *
@@ -301,15 +303,17 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 					}
 					if ( ce.isDoremove() ) {
 						interceptor.onCollectionRemove( coll, ce.getLoadedKey() );
-						actionQueue.addAction(
-								new CollectionRemoveAction(
-										coll,
-										ce.getLoadedPersister(),
-										ce.getLoadedKey(),
-										ce.isSnapshotEmpty( coll ),
-										session
-								)
-						);
+						if ( !skipRemoval( session, ce.getLoadedPersister(), ce.getLoadedKey() ) ) {
+							actionQueue.addAction(
+									new CollectionRemoveAction(
+											coll,
+											ce.getLoadedPersister(),
+											ce.getLoadedKey(),
+											ce.isSnapshotEmpty( coll ),
+											session
+									)
+							);
+						}
 					}
 					if ( ce.isDoupdate() ) {
 						interceptor.onCollectionUpdate( coll, ce.getLoadedKey() );

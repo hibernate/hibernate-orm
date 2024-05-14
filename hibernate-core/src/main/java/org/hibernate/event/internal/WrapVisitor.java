@@ -136,8 +136,8 @@ public class WrapVisitor extends ProxyVisitor {
 										session
 								);
 								persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
-								final CollectionEntry collectionEntry = persistenceContext.getCollectionEntry(
-										collectionInstance );
+								final CollectionEntry collectionEntry =
+										persistenceContext.getCollectionEntry( collectionInstance );
 								collectionEntry.setDoremove( true );
 							}
 						}

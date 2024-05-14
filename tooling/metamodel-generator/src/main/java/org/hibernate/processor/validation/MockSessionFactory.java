@@ -119,7 +119,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -290,6 +289,8 @@ public abstract class MockSessionFactory
 	abstract boolean isEnum(String className);
 
 	abstract boolean isEnumConstant(String className, String terminal);
+
+	abstract Class<?> javaConstantType(String className, String fieldName);
 
 	abstract boolean isFieldDefined(String qualifiedClassName, String fieldName);
 
@@ -844,6 +845,19 @@ public abstract class MockSessionFactory
 			else {
 				return null;
 			}
+		}
+
+		@Override
+		public JavaType<?> getJavaConstantType(String className, String fieldName) {
+			final Class<?> fieldType = javaConstantType( className, fieldName );
+			return MockSessionFactory.this.getTypeConfiguration()
+					.getJavaTypeRegistry()
+					.getDescriptor( fieldType );
+		}
+
+		@Override
+		public <T> T getJavaConstant(String className, String fieldName) {
+			return null;
 		}
 
 		@Override

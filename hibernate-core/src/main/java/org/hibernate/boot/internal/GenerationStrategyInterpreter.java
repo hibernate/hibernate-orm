@@ -131,6 +131,14 @@ public class GenerationStrategyInterpreter {
 			);
 		}
 
+		final String options = tableGeneratorAnnotation.getString( "options" );
+		if ( StringHelper.isNotEmpty( options ) ) {
+			definitionBuilder.addParam(
+					org.hibernate.id.enhanced.TableGenerator.TABLE_OPTIONS,
+					options
+			);
+		}
+
 		definitionBuilder.addParam(
 				org.hibernate.id.enhanced.TableGenerator.INCREMENT_PARAM,
 				String.valueOf( tableGeneratorAnnotation.getInteger( "allocationSize" ) )

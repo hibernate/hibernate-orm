@@ -83,6 +83,9 @@ public class HANAServerConfiguration {
 		int majorVersion = 1;
 		int minorVersion = 0;
 		int patchLevel = 0;
+		if ( versionString == null ) {
+			return HANADialect.MINIMUM_VERSION;
+		}
 		final String[] components = versionString.split( "\\." );
 		if ( components.length >= 3 ) {
 			try {

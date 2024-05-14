@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -317,6 +318,43 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	@Override
 	public <E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String terminal) {
 		return Enum.valueOf( enumType.getJavaTypeClass(), terminal );
+	}
+
+	@Override
+	public JavaType<?> getJavaConstantType(String className, String fieldName) {
+		try {
+			final Field referencedField = getJavaField( className, fieldName );
+			if ( referencedField != null ) {
+				return getTypeConfiguration()
+						.getJavaTypeRegistry()
+						.getDescriptor( referencedField.getType() );
+			}
+		}
+		catch (NoSuchFieldException e) {
+		}
+		return null;
+	}
+
+	@Override
+	public <T> T getJavaConstant(String className, String fieldName) {
+		try {
+			final Field referencedField = getJavaField( className, fieldName );
+			return (T) referencedField.get( null );
+		}
+		catch (NoSuchFieldException | IllegalAccessException e) {
+			throw new RuntimeException( e );
+		}
+	}
+
+	private Field getJavaField(String className, String fieldName) throws NoSuchFieldException {
+		final Class<?> namedClass =
+				getServiceRegistry()
+						.requireService( ClassLoaderService.class )
+						.classForName( className );
+		if ( namedClass != null ) {
+			return namedClass.getDeclaredField( fieldName );
+		}
+		return null;
 	}
 
 	@Override

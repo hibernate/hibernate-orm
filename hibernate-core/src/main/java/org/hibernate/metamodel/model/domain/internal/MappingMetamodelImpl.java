@@ -535,6 +535,16 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
+	public JavaType<?> getJavaConstantType(String className, String fieldName) {
+		return jpaMetamodel.getJavaConstantType( className, fieldName );
+	}
+
+	@Override
+	public <T> T getJavaConstant(String className, String fieldName) {
+		return jpaMetamodel.getJavaConstant( className, fieldName );
+	}
+
+	@Override
 	public EnumJavaType<?> getEnumType(String className) {
 		return jpaMetamodel.getEnumType(className);
 	}

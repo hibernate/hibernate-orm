@@ -228,16 +228,11 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 						);
 					}
 
-					final Class<?> namedClass =
-							creationContext.getServiceRegistry()
-									.requireService( ClassLoaderService.class )
-									.classForName( prefix );
-					if ( namedClass != null ) {
-						final Field referencedField = namedClass.getDeclaredField( terminal );
-						final JavaType<?> fieldJtd =
-								jpaMetamodel.getTypeConfiguration().getJavaTypeRegistry()
-										.getDescriptor( referencedField.getType() );
-						return new SqmFieldLiteral<>( referencedField, fieldJtd, nodeBuilder);
+					final JavaType<?> fieldJtdTest = jpaMetamodel.getJavaConstantType( prefix, terminal );
+					if ( fieldJtdTest != null ) {
+						final Object constantValue = jpaMetamodel.getJavaConstant( prefix, terminal );
+						return new SqmFieldLiteral( constantValue, fieldJtdTest, terminal, nodeBuilder );
+
 					}
 				}
 				catch (Exception ignore) {

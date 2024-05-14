@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
@@ -51,13 +53,16 @@ public class OutputsImpl implements Outputs {
 
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
+	private final SqlStatementLogger sqlStatementLogger;
+	private final String sql;
 
 	private CurrentReturnState currentReturnState;
 
-	public OutputsImpl(ResultContext context, PreparedStatement jdbcStatement) {
+	public OutputsImpl(ResultContext context, PreparedStatement jdbcStatement, String sql) {
 		this.context = context;
 		this.jdbcStatement = jdbcStatement;
-
+		this.sqlStatementLogger = context.getSession().getJdbcServices().getSqlStatementLogger();
+		this.sql = sql;
 	}
 
 	protected ResultContext getResultContext(){
@@ -65,12 +70,19 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected void executeStatement() {
+		long executeStartNanos = 0;
+		if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
+			executeStartNanos = System.nanoTime();
+		}
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
 			currentReturnState = buildCurrentReturnState( isResultSet );
 		}
 		catch (SQLException e) {
 			throw convert( e, "Error calling CallableStatement.getMoreResults" );
+		}
+		finally {
+			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, this.context.getSession().getJdbcSessionContext() );
 		}
 	}
 

@@ -134,7 +134,7 @@ public class GenerationStrategyInterpreter {
 		final String options = tableGeneratorAnnotation.getString( "options" );
 		if ( StringHelper.isNotEmpty( options ) ) {
 			definitionBuilder.addParam(
-					org.hibernate.id.enhanced.TableGenerator.TABLE_OPTIONS,
+					PersistentIdentifierGenerator.OPTIONS,
 					options
 			);
 		}
@@ -186,5 +186,10 @@ public class GenerationStrategyInterpreter {
 				SequenceStyleGenerator.INITIAL_PARAM,
 				String.valueOf( sequenceGeneratorAnnotation.getInteger( "initialValue" ) )
 		);
+
+		final String options = sequenceGeneratorAnnotation.getString( "options" );
+		if ( StringHelper.isNotEmpty( options ) ) {
+			definitionBuilder.addParam( PersistentIdentifierGenerator.OPTIONS, options );
+		}
 	}
 }

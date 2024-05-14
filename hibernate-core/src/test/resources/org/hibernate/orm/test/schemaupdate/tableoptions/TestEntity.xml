@@ -10,8 +10,11 @@
     <entity class="TestEntity" metadata-complete="true">
         <table name="PRIMARY_TABLE" options="option_1"/>
         <secondary-table name="SECOND_TABLE" options="option_2"/>
+        <table-generator name="id-table-generator" table="TEST_TABLE_GENERATOR" options="option_0"/>
         <attributes>
-            <id name="id"/>
+            <id name="id">
+                <generated-value strategy="TABLE" generator="id-table-generator"/>
+            </id>
             <basic name="name">
                 <column name="NAME_COLUMN"/>
             </basic>

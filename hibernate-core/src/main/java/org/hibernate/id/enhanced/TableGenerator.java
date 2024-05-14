@@ -196,6 +196,11 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 */
 	public static final int DEF_SEGMENT_LENGTH = 255;
 
+	/**
+	 * Configures the options of the table to use.
+	 */
+	public static final String TABLE_OPTIONS = "options";
+
 	private boolean storeLastUsedValue;
 
 
@@ -221,6 +226,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	private String contributor;
 
+	private String options;
 	/**
 	 * Type mapping for the identifier.
 	 *
@@ -359,6 +365,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		if ( contributor == null ) {
 			contributor = "orm";
 		}
+		options = parameters.getProperty( TABLE_OPTIONS );
 	}
 
 	private static OptimizerDescriptor determineOptimizationStrategy(Properties parameters, int incrementSize) {
@@ -727,6 +734,9 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 					qualifiedTableName.getObjectName(),
 					(identifier) -> new Table( contributor, namespace, identifier, false )
 			);
+			if ( StringHelper.isNotEmpty( options ) ) {
+				table.setOptions( options );
+			}
 
 			final BasicTypeRegistry basicTypeRegistry = database.getTypeConfiguration().getBasicTypeRegistry();
 			// todo : not sure the best solution here.  do we add the columns if missing?  other?

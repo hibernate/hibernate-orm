@@ -23,6 +23,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
@@ -200,7 +201,6 @@ public class ToOneAttributeMapping
 		sideNature = original.sideNature;
 		identifyingColumnsTableExpression = original.identifyingColumnsTableExpression;
 		canUseParentTableGroup = original.canUseParentTableGroup;
-
 	}
 
 	public ToOneAttributeMapping(
@@ -227,6 +227,7 @@ public class ToOneAttributeMapping
 				entityMappingType,
 				declaringType,
 				declaringEntityPersister,
+				declaringEntityPersister.getEntityMetamodel().getGenerators()[stateArrayPosition],
 				propertyAccess
 		);
 	}
@@ -243,6 +244,7 @@ public class ToOneAttributeMapping
 			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
 			EntityPersister declaringEntityPersister,
+			Generator generator,
 			PropertyAccess propertyAccess) {
 		super(
 				name,
@@ -252,6 +254,7 @@ public class ToOneAttributeMapping
 				adjustFetchTiming( mappedFetchTiming, bootValue ),
 				mappedFetchStyle,
 				declaringType,
+				generator,
 				propertyAccess
 		);
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
@@ -684,6 +687,7 @@ public class ToOneAttributeMapping
 				original.getAttributeMetadata(),
 				original,
 				declaringType,
+				original.getGenerator(),
 				original.getPropertyAccess()
 		);
 		this.navigableRole = original.navigableRole;
@@ -2569,4 +2573,5 @@ public class ToOneAttributeMapping
 				session
 		);
 	}
+
 }

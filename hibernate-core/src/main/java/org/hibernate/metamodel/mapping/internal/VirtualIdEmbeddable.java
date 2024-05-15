@@ -245,6 +245,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 							this::initColumnMappings
 					);
 				},
+				null,
 				creationProcess
 		);
 	}

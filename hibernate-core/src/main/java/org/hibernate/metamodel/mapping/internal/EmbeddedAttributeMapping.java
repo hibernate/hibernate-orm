@@ -13,6 +13,8 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.generator.CompositeGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
@@ -24,6 +26,7 @@ import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -116,6 +119,7 @@ public class EmbeddedAttributeMapping
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
+				getGenerator( stateArrayPosition, declaringType ),
 				propertyAccess
 		);
 		this.navigableRole = navigableRole;
@@ -131,6 +135,24 @@ public class EmbeddedAttributeMapping
 		else {
 			selectable = attributeMetadata.isSelectable();
 		}
+	}
+
+	private static Generator getGenerator(int stateArrayPosition, ManagedMappingType declaringType) {
+		final Generator[] generators = declaringType.findContainingEntityMapping()
+				.getEntityPersister()
+				.getEntityMetamodel()
+				.getGenerators();
+		if ( stateArrayPosition < 0 || generators == null ) {
+			return null;
+		}
+		if ( declaringType instanceof AbstractEntityPersister ) {
+			return generators[stateArrayPosition];
+		}
+		else if ( declaringType.asAttributeMapping() != null && declaringType.asAttributeMapping().isEmbeddedAttributeMapping() ) {
+			final CompositeGenerator generator = (CompositeGenerator) generators[stateArrayPosition];
+			return generator.getGenerator( declaringType.getPartName() );
+		}
+		return null;
 	}
 
 	// Constructor is only used for creating the inverse attribute mapping
@@ -150,6 +172,7 @@ public class EmbeddedAttributeMapping
 						: null,
 				inverseModelPart.getMappedFetchOptions(),
 				keyDeclaringType,
+				null,
 				inverseModelPart instanceof PropertyBasedMapping
 						? ( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess()
 						: null

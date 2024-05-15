@@ -23,6 +23,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Any;
@@ -268,6 +269,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			ConcreteTableResolver concreteTableResolver,
 			Consumer<AttributeMapping> attributeConsumer,
 			SuccessfulCompletionCallback completionCallback,
+			Generator generator,
 			MappingModelCreationProcess creationProcess) {
 		final TypeConfiguration typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
 		final JdbcServices jdbcServices = creationProcess.getCreationContext().getJdbcServices();
@@ -278,7 +280,6 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 		int attributeIndex = 0;
 		int columnPosition = 0;
-
 		for ( Property bootPropertyDescriptor : bootDescriptor.getProperties() ) {
 			final Type subtype = subtypes[ attributeIndex ];
 
@@ -373,6 +374,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						value.isColumnUpdateable( 0 ),
 						propertyAccess,
 						compositeType.getCascadeStyle( attributeIndex ),
+						generator,
 						creationProcess
 				);
 
@@ -440,6 +442,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						subRootTableKeyColumnNames,
 						propertyAccess,
 						compositeType.getCascadeStyle( attributeIndex ),
+						generator,
 						creationProcess
 				);
 
@@ -473,6 +476,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						(EntityType) subtype,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
+						generator,
 						creationProcess
 				);
 				columnPosition += bootPropertyDescriptor.getColumnSpan();

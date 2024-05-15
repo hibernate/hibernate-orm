@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -43,7 +44,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 @SuppressWarnings("rawtypes")
 public class BasicAttributeMapping
 		extends AbstractSingularAttributeMapping
-		implements SingularAttributeMapping, BasicValuedModelPart {
+		implements BasicValuedModelPart {
 	private final NavigableRole navigableRole;
 
 	private final String tableExpression;
@@ -95,6 +96,65 @@ public class BasicAttributeMapping
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
+		this(
+				attributeName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				attributeMetadata,
+				mappedFetchTiming,
+				mappedFetchStyle,
+				tableExpression,
+				mappedColumnExpression,
+				selectablePath,
+				isFormula,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				length,
+				precision,
+				scale,
+				temporalPrecision,
+				isLob,
+				nullable,
+				insertable,
+				updateable,
+				partitioned,
+				jdbcMapping,
+				declaringType,
+				null,
+				propertyAccess
+		);
+	}
+
+	public BasicAttributeMapping(
+			String attributeName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
+			FetchTiming mappedFetchTiming,
+			FetchStyle mappedFetchStyle,
+			String tableExpression,
+			String mappedColumnExpression,
+			SelectablePath selectablePath,
+			boolean isFormula,
+			String customReadExpression,
+			String customWriteExpression,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
+			Integer temporalPrecision,
+			boolean isLob,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			JdbcMapping jdbcMapping,
+			ManagedMappingType declaringType,
+			Generator generator,
+			PropertyAccess propertyAccess) {
 		super(
 				attributeName,
 				stateArrayPosition,
@@ -103,6 +163,7 @@ public class BasicAttributeMapping
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
+				generator,
 				propertyAccess
 		);
 		this.navigableRole = navigableRole;

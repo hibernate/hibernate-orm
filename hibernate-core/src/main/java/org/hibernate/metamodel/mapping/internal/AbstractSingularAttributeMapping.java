@@ -23,6 +23,7 @@ public abstract class AbstractSingularAttributeMapping
 		implements SingularAttributeMapping {
 
 	private final PropertyAccess propertyAccess;
+	private final Generator generator;
 
 	public AbstractSingularAttributeMapping(
 			String name,
@@ -31,9 +32,11 @@ public abstract class AbstractSingularAttributeMapping
 			AttributeMetadata attributeMetadata,
 			FetchOptions mappedFetchOptions,
 			ManagedMappingType declaringType,
+			Generator generator,
 			PropertyAccess propertyAccess) {
 		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
+		this.generator = generator;
 	}
 
 	public AbstractSingularAttributeMapping(
@@ -44,9 +47,11 @@ public abstract class AbstractSingularAttributeMapping
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			ManagedMappingType declaringType,
+			Generator generator,
 			PropertyAccess propertyAccess) {
 		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
+		this.generator = generator;
 	}
 
 	/**
@@ -55,6 +60,7 @@ public abstract class AbstractSingularAttributeMapping
 	protected AbstractSingularAttributeMapping( AbstractSingularAttributeMapping original ) {
 		super( original );
 		this.propertyAccess = original.propertyAccess;
+		this.generator = original.getGenerator();
 	}
 
 	@Override
@@ -64,7 +70,7 @@ public abstract class AbstractSingularAttributeMapping
 
 	@Override
 	public Generator getGenerator() {
-		return findContainingEntityMapping().getEntityPersister().getEntityMetamodel().getGenerators()[getStateArrayPosition()];
+		return generator;
 	}
 
 }

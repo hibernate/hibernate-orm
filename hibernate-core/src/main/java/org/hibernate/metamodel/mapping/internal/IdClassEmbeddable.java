@@ -353,6 +353,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 							this::initColumnMappings
 					);
 				},
+				null,
 				creationProcess
 		);
 	}

@@ -5651,6 +5651,7 @@ public abstract class AbstractEntityPersister
 					value.isColumnUpdateable( 0 ),
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
+					getEntityMetamodel().getGenerators()[stateArrayPosition],
 					creationProcess
 			);
 		}
@@ -5753,6 +5754,7 @@ public abstract class AbstractEntityPersister
 					value.isColumnUpdateable( 0 ),
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
+					getEntityMetamodel().getGenerators()[stateArrayPosition],
 					creationProcess
 			);
 		}
@@ -5808,6 +5810,7 @@ public abstract class AbstractEntityPersister
 					null,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
+					getEntityMetamodel().getGenerators()[stateArrayPosition],
 					creationProcess
 			);
 		}
@@ -5861,6 +5864,7 @@ public abstract class AbstractEntityPersister
 			String[] rootTableKeyColumnNames,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
+			Generator generator,
 			MappingModelCreationProcess creationProcess) {
 		return MappingModelCreationHelper.buildEmbeddedAttributeMapping(
 				attrName,
@@ -5875,6 +5879,7 @@ public abstract class AbstractEntityPersister
 				rootTableKeyColumnNames,
 				propertyAccess,
 				cascadeStyle,
+				generator,
 				creationProcess
 		);
 	}
@@ -5905,6 +5910,7 @@ public abstract class AbstractEntityPersister
 				attrType,
 				propertyAccess,
 				cascadeStyle,
+				getEntityMetamodel().getGenerators()[stateArrayPosition],
 				creationProcess
 		);
 	}

@@ -29,6 +29,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
@@ -162,6 +163,7 @@ public class MappingModelCreationHelper {
 				0,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
+				null,
 				embeddable -> new EmbeddedIdentifierMappingImpl(
 						entityPersister,
 						attributeName,
@@ -220,6 +222,7 @@ public class MappingModelCreationHelper {
 			boolean insertable,
 			boolean updateable,
 			PropertyAccess propertyAccess,
+			Generator generator,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
 		final SimpleValue value = (SimpleValue) bootProperty.getValue();
@@ -273,6 +276,90 @@ public class MappingModelCreationHelper {
 				partitioned,
 				attrType,
 				declaringType,
+				generator,
+				propertyAccess
+		);
+	}
+	@SuppressWarnings("rawtypes")
+	public static BasicAttributeMapping buildBasicAttributeMapping(
+			String attrName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			BasicType attrType,
+			String tableExpression,
+			String attrColumnName,
+			SelectablePath selectablePath,
+			boolean isAttrFormula,
+			String readExpr,
+			String writeExpr,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
+			Integer temporalPrecision,
+			boolean isLob,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			Generator generator,
+			MappingModelCreationProcess creationProcess) {
+		final SimpleValue value = (SimpleValue) bootProperty.getValue();
+		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
+		final SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
+
+		final FetchTiming fetchTiming;
+		final FetchStyle fetchStyle;
+		final boolean partitioned;
+		if ( declaringType instanceof EmbeddableMappingType ) {
+			if ( bootProperty.isLazy() ) {
+				MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
+						"Attribute was declared lazy, but is part of an embeddable - `%s#%s` - LAZY will be ignored",
+						declaringType.getNavigableRole().getFullPath(),
+						bootProperty.getName()
+				);
+			}
+			fetchTiming = FetchTiming.IMMEDIATE;
+			fetchStyle = FetchStyle.JOIN;
+			partitioned = value.isPartitionKey() && !( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping().isVirtual();
+		}
+		else {
+			fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
+			fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+			partitioned = value.isPartitionKey();
+		}
+
+		return new BasicAttributeMapping(
+				attrName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				attributeMetadata,
+				fetchTiming,
+				fetchStyle,
+				tableExpression,
+				attrColumnName,
+				selectablePath,
+				isAttrFormula,
+				readExpr,
+				writeExpr,
+				columnDefinition,
+				length,
+				precision,
+				scale,
+				temporalPrecision,
+				isLob,
+				nullable,
+				insertable,
+				updateable,
+				partitioned,
+				attrType,
+				declaringType,
+				generator,
 				propertyAccess
 		);
 	}
@@ -288,6 +375,7 @@ public class MappingModelCreationHelper {
 			String[] rootTableKeyColumnNames,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
+			Generator generator,
 			MappingModelCreationProcess creationProcess) {
 		return buildEmbeddedAttributeMapping(
 				attrName,
@@ -302,6 +390,7 @@ public class MappingModelCreationHelper {
 				rootTableKeyColumnNames,
 				propertyAccess,
 				cascadeStyle,
+				generator,
 				creationProcess
 		);
 	}
@@ -319,6 +408,7 @@ public class MappingModelCreationHelper {
 			String[] rootTableKeyColumnNames,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
+			Generator generator,
 			MappingModelCreationProcess creationProcess) {
 		final AttributeMetadata attributeMetadataAccess = getAttributeMetadata(
 				bootProperty,
@@ -344,6 +434,7 @@ public class MappingModelCreationHelper {
 				dependantColumnIndex,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
+				generator,
 				attributeMappingType -> {
 					if ( component.isEmbedded() ) {
 						return new VirtualEmbeddedAttributeMapping(
@@ -1361,7 +1452,7 @@ public class MappingModelCreationHelper {
 
 		if ( bootMapKeyDescriptor instanceof Component ) {
 			final Component component = (Component) bootMapKeyDescriptor;
-			final CompositeType compositeType = (CompositeType) component.getType();
+			final CompositeType compositeType = component.getType();
 
 
 			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
@@ -1811,6 +1902,37 @@ public class MappingModelCreationHelper {
 		}
 	}
 
+
+	public static ToOneAttributeMapping buildSingularAssociationAttributeMapping(
+			String attrName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			EntityPersister declaringEntityPersister,
+			EntityType attrType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			Generator generator,
+			MappingModelCreationProcess creationProcess) {
+		return buildSingularAssociationAttributeMapping(
+				attrName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				declaringType,
+				declaringEntityPersister,
+				attrType,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess,
+				generator,
+				Function.identity()
+		);
+	}
+
 	/**
 	 * For Hibernate Reactive
 	 */
@@ -1840,6 +1962,106 @@ public class MappingModelCreationHelper {
 				creationProcess,
 				Function.identity()
 		);
+	}
+
+	public static ToOneAttributeMapping buildSingularAssociationAttributeMapping(
+			String attrName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			EntityPersister declaringEntityPersister,
+			EntityType attrType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess,
+			Generator generator,
+			Function<ToOneAttributeMapping, ToOneAttributeMapping> mappingConverter) {
+		if ( bootProperty.getValue() instanceof ToOne ) {
+			final ToOne value = (ToOne) bootProperty.getValue();
+			final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
+			final AttributeMetadata attributeMetadata = getAttributeMetadata(
+					bootProperty,
+					attrType,
+					propertyAccess,
+					cascadeStyle,
+					creationProcess
+			);
+			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+
+			final AssociationType type = (AssociationType) bootProperty.getType();
+			final FetchStyle fetchStyle = FetchOptionsHelper
+					.determineFetchStyleByMetadata(
+							bootProperty.getValue().getFetchMode(),
+							type,
+							sessionFactory
+					);
+
+			final FetchTiming fetchTiming;
+			final String role = declaringType.getNavigableRole().toString() + "." + bootProperty.getName();
+			final boolean lazy = value.isLazy();
+			if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+				if ( value.isUnwrapProxy() ) {
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+				}
+				else if ( value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
+					fetchTiming = FetchTiming.IMMEDIATE;
+				}
+				else {
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+				}
+			}
+			else if ( !lazy
+					|| value instanceof OneToOne && value.isNullable()
+					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
+				fetchTiming = FetchTiming.IMMEDIATE;
+				if ( lazy ) {
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isDebugEnabled() ) {
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
+								"Forcing FetchTiming.IMMEDIATE for to-one association : %s.%s",
+								declaringType.getNavigableRole(),
+								bootProperty.getName()
+						);
+					}
+				}
+			}
+			else {
+				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+			}
+
+			final ToOneAttributeMapping attributeMapping = mappingConverter.apply( new ToOneAttributeMapping(
+					attrName,
+					navigableRole,
+					stateArrayPosition,
+					fetchableIndex,
+					(ToOne) bootProperty.getValue(),
+					attributeMetadata,
+					fetchTiming,
+					fetchStyle,
+					entityPersister,
+					declaringType,
+					declaringEntityPersister,
+					generator,
+					propertyAccess
+			) );
+
+			creationProcess.registerForeignKeyPostInitCallbacks(
+					"To-one key - " + navigableRole,
+					() -> MappingModelCreationHelper.interpretToOneKeyDescriptor(
+							attributeMapping,
+							bootProperty,
+							(ToOne) bootProperty.getValue(),
+							null,
+							creationProcess.getCreationContext().getDialect(),
+							creationProcess
+					)
+			);
+			return attributeMapping;
+		}
+		else {
+			throw new UnsupportedOperationException( "AnyType support has not yet been implemented" );
+		}
 	}
 
 	public static ToOneAttributeMapping buildSingularAssociationAttributeMapping(
@@ -1919,6 +2141,7 @@ public class MappingModelCreationHelper {
 					entityPersister,
 					declaringType,
 					declaringEntityPersister,
+					declaringEntityPersister.getEntityMetamodel().getGenerators()[stateArrayPosition],
 					propertyAccess
 			) );
 

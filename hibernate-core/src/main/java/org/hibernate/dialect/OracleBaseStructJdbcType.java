@@ -6,6 +6,9 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
@@ -17,9 +20,12 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
 
 import oracle.sql.TIMESTAMPTZ;
 
@@ -42,6 +48,28 @@ public class OracleBaseStructJdbcType extends StructJdbcType {
 	}
 
 	@Override
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		return new BasicBinder<>( javaType, this ) {
+			@Override
+			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+					throws SQLException {
+				st.setObject( index, createJdbcValue( value, options ) );
+			}
+
+			@Override
+			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				st.setObject( name, createJdbcValue( value, options ) );
+			}
+
+			@Override
+			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+				return createJdbcValue( value, options );
+			}
+		};
+	}
+
+	@Override
 	public String getExtraCreateTableInfo(
 			JavaType<?> javaType,
 			String columnName,
@@ -51,21 +79,24 @@ public class OracleBaseStructJdbcType extends StructJdbcType {
 				.locateUserDefinedType( Identifier.toIdentifier( getSqlTypeName() ) );
 		StringBuilder sb = null;
 		for ( Column column : udt.getColumns() ) {
-			final JdbcMapping jdbcMapping = (JdbcMapping) column.getValue().getType();
-			final String extraCreateTableInfo = jdbcMapping.getJdbcType().getExtraCreateTableInfo(
-					jdbcMapping.getJavaTypeDescriptor(),
-					columnName + "." + column.getName(),
-					tableName,
-					database
-			);
-			if ( !extraCreateTableInfo.isEmpty() ) {
-				if ( sb == null ) {
-					sb = new StringBuilder();
+			final Type columnType = column.getValue().getType();
+			if ( columnType instanceof JdbcMapping ) {
+				final JdbcMapping jdbcMapping = (JdbcMapping) columnType;
+				final String extraCreateTableInfo = jdbcMapping.getJdbcType().getExtraCreateTableInfo(
+						jdbcMapping.getJavaTypeDescriptor(),
+						columnName + "." + column.getName(),
+						tableName,
+						database
+				);
+				if ( !extraCreateTableInfo.isEmpty() ) {
+					if ( sb == null ) {
+						sb = new StringBuilder();
+					}
+					else {
+						sb.append( ',' );
+					}
+					sb.append( extraCreateTableInfo );
 				}
-				else {
-					sb.append( ',' );
-				}
-				sb.append( extraCreateTableInfo );
 			}
 		}
 		return sb != null ? sb.toString() : "";

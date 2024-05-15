@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -64,6 +65,11 @@ public class BasicValuedCollectionPart
 	@Override
 	public Nature getNature() {
 		return nature;
+	}
+
+	@Override
+	public PluralAttributeMapping getCollectionAttribute() {
+		return collectionDescriptor.getAttributeMapping();
 	}
 
 	@Override
@@ -168,7 +174,9 @@ public class BasicValuedCollectionPart
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				selectableMapping.getJdbcMapping(),
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -280,7 +288,8 @@ public class BasicValuedCollectionPart
 				fetchablePath,
 				this,
 				FetchTiming.IMMEDIATE,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 

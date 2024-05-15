@@ -12,9 +12,11 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.spi.NavigablePath;
@@ -156,9 +158,43 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		int count = 0;
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );
-			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType ) {
-				final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
+			if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping ) {
+				final DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping = (DiscriminatedAssociationAttributeMapping) attributeMapping;
+				if ( count == columnIndex ) {
+					return discriminatedAssociationAttributeMapping.getDiscriminatorMapping();
+				}
+				count++;
+				if ( count == columnIndex ) {
+					return discriminatedAssociationAttributeMapping.getKeyPart();
+				}
+				count++;
+			}
+			else if ( attributeMapping instanceof ToOneAttributeMapping ) {
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+				if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
+					final ValuedModelPart keyPart = toOneAttributeMapping.getForeignKeyDescriptor().getKeyPart();
+					if ( keyPart instanceof BasicValuedMapping ) {
+						if ( count == columnIndex ) {
+							return (SelectableMapping) keyPart;
+						}
+						count++;
+					}
+					else if ( keyPart instanceof EmbeddableValuedModelPart ) {
+						final EmbeddableMappingType mappingType = ( (EmbeddableValuedModelPart) keyPart ).getEmbeddableTypeDescriptor();
+						final SelectableMapping selectable = mappingType.getJdbcValueSelectable( columnIndex - count );
+						if ( selectable != null ) {
+							return selectable;
+						}
+						count += mappingType.getJdbcValueCount();
+					}
+					else {
+						throw new UnsupportedOperationException( "Unsupported foreign key part: " + keyPart );
+					}
+				}
+			}
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
+				final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) attributeMapping;
+				final EmbeddableMappingType embeddableMappingType = embeddableValuedModelPart.getMappedType();
 				final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 				if ( aggregateMapping == null ) {
 					final SelectableMapping subSelectable = embeddableMappingType.getJdbcValueSelectable( columnIndex - count );
@@ -176,7 +212,10 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 			}
 			else {
 				if ( count == columnIndex ) {
-					return (SelectableMapping) attributeMapping;
+					if ( attributeMapping instanceof SelectableMapping ) {
+						return (SelectableMapping) attributeMapping;
+					}
+					assert attributeMapping.getJdbcTypeCount() == 0;
 				}
 				count += attributeMapping.getJdbcTypeCount();
 			}

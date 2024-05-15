@@ -29,26 +29,30 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 	protected final int valuesArrayPosition;
 	protected final JavaType<J> assembledJavaType;
 	private final BasicValueConverter<J,?> valueConverter;
+	private final boolean unwrapRowProcessingState;
 
-	public BasicResultAssembler(
-			int valuesArrayPosition,
-			JavaType<J> assembledJavaType) {
-		this( valuesArrayPosition, assembledJavaType, null );
+	public BasicResultAssembler(int valuesArrayPosition, JavaType<J> assembledJavaType) {
+		this( valuesArrayPosition, assembledJavaType, null, false );
 	}
 
 	public BasicResultAssembler(
 			int valuesArrayPosition,
 			JavaType<J> assembledJavaType,
-			BasicValueConverter<J, ?> valueConverter) {
+			BasicValueConverter<J, ?> valueConverter,
+			boolean unwrapRowProcessingState) {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.assembledJavaType = assembledJavaType;
 		this.valueConverter = valueConverter;
+		this.unwrapRowProcessingState = unwrapRowProcessingState;
 	}
 
 	/**
 	 * Access to the raw value (unconverted, if a converter applied)
 	 */
 	public Object extractRawValue(RowProcessingState rowProcessingState) {
+		if ( unwrapRowProcessingState ) {
+			rowProcessingState = rowProcessingState.unwrap();
+		}
 		return rowProcessingState.getJdbcValue( valuesArrayPosition );
 	}
 

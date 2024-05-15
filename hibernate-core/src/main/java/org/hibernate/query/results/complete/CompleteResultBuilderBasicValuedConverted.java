@@ -111,7 +111,10 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 				sqlSelection.getValuesArrayPosition(),
 				columnName,
 				valueConverter.getDomainJavaType(),
-				valueConverter
+				valueConverter,
+				null,
+				false,
+				false
 		);
 	}
 

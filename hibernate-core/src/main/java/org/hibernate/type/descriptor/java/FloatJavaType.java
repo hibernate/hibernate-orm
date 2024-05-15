@@ -50,7 +50,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 		if ( value == null ) {
 			return null;
 		}
-		if ( Float.class.isAssignableFrom( type ) ) {
+		if ( Float.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Double.class.isAssignableFrom( type ) ) {

@@ -1474,6 +1474,8 @@ public class PostgreSQLDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( PostgreSQLUUIDJdbcType.INSTANCE );
+
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override

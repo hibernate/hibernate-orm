@@ -174,7 +174,10 @@ public class SelfRenderingFunctionSqlAstExpression
 						.getValuesArrayPosition(),
 				resultVariable,
 				type == null ? null : type.getExpressibleJavaType(),
-				converter
+				converter,
+				null,
+				false,
+				false
 		);
 	}
 

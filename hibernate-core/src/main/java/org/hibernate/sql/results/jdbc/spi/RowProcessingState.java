@@ -68,4 +68,12 @@ public interface RowProcessingState extends ExecutionContext {
 		finishRowProcessing();
 	}
 
+	/**
+	 * If this is a row processing state for aggregate components,
+	 * this will return the underlying row processing state.
+	 */
+	default RowProcessingState unwrap() {
+		return this;
+	}
+
 }

@@ -1778,7 +1778,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			processSecondPasses( idGeneratorResolverSecondPassList );
 			processSecondPasses( implicitColumnNamingSecondPassList );
 			processSecondPasses( setBasicValueTypeSecondPassList );
-			processSecondPasses( aggregateComponentSecondPassList );
 			processSecondPasses( toOneJoinTableSecondPassList );
 
 			composites.forEach( Component::sortProperties );
@@ -1794,6 +1793,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 			processPropertyReferences();
 
+			processSecondPasses( aggregateComponentSecondPassList );
 			secondPassCompileForeignKeys( buildingContext );
 
 			processNaturalIdUniqueKeyBinders();

@@ -292,7 +292,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			case STRUCT_TABLE:
 				isArray = true;
 				aggregateSqlTypeCode = STRUCT;
-				structTypeName = bootDescriptor.getStructName();
+				structTypeName = bootDescriptor.getStructName().render();
 				if ( structTypeName == null ) {
 					final String arrayTypeName = aggregateColumn.getSqlType( creationContext.getMetadata() );
 					if ( arrayTypeName.endsWith( " array" ) ) {
@@ -322,7 +322,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		);
 		// Register the resolved type under its struct name and java class name
 		if ( bootDescriptor.getStructName() != null ) {
-			basicTypeRegistry.register( basicType, bootDescriptor.getStructName() );
+			basicTypeRegistry.register( basicType, bootDescriptor.getStructName().render() );
 			basicTypeRegistry.register( basicType, getMappedJavaType().getJavaTypeClass().getName() );
 		}
 		final BasicValue basicValue = (BasicValue) aggregateColumn.getValue();

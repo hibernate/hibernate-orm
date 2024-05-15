@@ -642,6 +642,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		@Override
 		public boolean equals(Object o) {
+			if (!(o instanceof ArrayCacheKey)) {
+				return false;
+			}
 			return Arrays.equals( components, ((ArrayCacheKey) o).components );
 		}
 

@@ -126,6 +126,10 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
+		if (!(other instanceof NavigablePath)) {
+			return false;
+		}
+
 		if ( this == other ) {
 			return true;
 		}

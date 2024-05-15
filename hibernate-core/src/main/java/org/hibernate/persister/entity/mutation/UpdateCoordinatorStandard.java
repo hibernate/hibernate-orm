@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.CompositeGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
@@ -40,6 +41,8 @@ import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
@@ -850,11 +853,31 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			final AttributeAnalysis attributeAnalysisRef = valuesAnalysis.attributeAnalyses.get( attributeIndex );
 			if ( !attributeAnalysisRef.isSkipped() ) {
 				final IncludedAttributeAnalysis attributeAnalysis = (IncludedAttributeAnalysis) attributeAnalysisRef;
-
 				if ( attributeAnalysis.includeInSet() ) {
 					// apply the new values
-					if ( includeInSet( dirtinessChecker, attributeIndex, attributeMapping, attributeAnalysis ) ) {
-						decomposeAttributeMapping(session, jdbcValueBindings, tableMapping, attributeMapping, values[attributeIndex] );
+					if ( attributeMapping.isEmbeddedAttributeMapping() ) {
+						decomposeEmbeddedAttributeMapping(
+								values[attributeIndex],
+								session,
+								jdbcValueBindings,
+								tableMapping,
+								entityPersister().getEntityMetamodel().isDynamicUpdate() && dirtinessChecker != null,
+								dirtinessChecker != null ?
+										dirtinessChecker.isDirty( attributeIndex, attributeMapping ).isDirty() :
+										true,
+								attributeMapping
+						);
+					}
+					else {
+						if ( includeInSet( dirtinessChecker, attributeIndex, attributeMapping, attributeAnalysis ) ) {
+							decomposeAttributeMapping(
+									session,
+									jdbcValueBindings,
+									tableMapping,
+									attributeMapping,
+									values[attributeIndex]
+							);
+						}
 					}
 				}
 
@@ -864,6 +887,84 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				}
 			}
 		}
+	}
+
+	private void decomposeEmbeddedAttributeMapping(
+			Object value,
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings,
+			EntityTableMapping tableMapping,
+			boolean isDynamicUpdate,
+			boolean isDirty,
+			AttributeMapping attributeMapping) {
+		final CompositeGenerator compositeGenerator = (CompositeGenerator) attributeMapping.getGenerator();
+		attributeMapping.decompose(
+				value,
+				0,
+				jdbcValueBindings,
+				tableMapping,
+				(valueIndex, bindings, table, jdbcValue, jdbcMapping) -> {
+					if ( jdbcMapping instanceof EmbeddedAttributeMapping ) {
+						decomposeEmbeddedAttributeMapping(
+								jdbcValue,
+								session,
+								jdbcValueBindings,
+								tableMapping,
+								isDynamicUpdate,
+								isDirty,
+								(AttributeMapping) jdbcMapping
+						);
+					}
+					else if ( !isDynamicUpdate || ( isDynamicUpdate && isDirty ) ) {
+						if ( jdbcMapping instanceof SingularAttributeMapping ) {
+							final SingularAttributeMapping singularAttributeMapping = (SingularAttributeMapping) jdbcMapping;
+							final Generator generator = compositeGenerator == null ?
+									null :
+									compositeGenerator.getGenerator( singularAttributeMapping.getStateArrayPosition() );
+							final boolean valueGenerated = isValueGenerated( generator );
+							if ( valueGenerated ) {
+								if ( isValueGenerationInSql( generator, dialect )
+										&& ( (OnExecutionGenerator) generator ).writePropertyValue() ) {
+									bindings.bindValue(
+											jdbcValue,
+											table.getTableName(),
+											jdbcMapping.getSelectionExpression(),
+											ParameterUsage.SET
+									);
+								}
+								else if ( !jdbcMapping.isFormula() && jdbcMapping.isUpdateable() ) {
+									bindings.bindValue(
+											jdbcValue,
+											table.getTableName(),
+											jdbcMapping.getSelectionExpression(),
+											ParameterUsage.SET
+									);
+								}
+							}
+							else {
+								decomposeAttributeMapping(
+										session,
+										bindings,
+										tableMapping,
+										singularAttributeMapping,
+										jdbcValue
+								);
+							}
+						}
+						else {
+							if ( !jdbcMapping.isFormula() && jdbcMapping.isUpdateable() ) {
+								bindings.bindValue(
+										jdbcValue,
+										table.getTableName(),
+										jdbcMapping.getSelectionExpression(),
+										ParameterUsage.SET
+								);
+							}
+						}
+					}
+				},
+				session
+		);
 	}
 
 	private static void optimisticLock(
@@ -1238,10 +1339,42 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			SharedSessionContractImplementor session) {
 		final Generator generator = attributeMapping.getGenerator();
-		if ( isValueGenerated( generator )
-				&& ( session == null && generator.generatedOnExecution() || generator.generatedOnExecution( entity, session ) )
-				&& isValueGenerationInSql( generator, dialect ) ) {
-			handleValueGeneration( attributeMapping, updateGroupBuilder, (OnExecutionGenerator) generator );
+		if ( attributeMapping.isEmbeddedAttributeMapping() ) {
+			final CompositeGenerator compositeGenerator = (CompositeGenerator) generator;
+			attributeMapping.forEachUpdatable(
+					(index, selectable) -> {
+						Generator gen = null;
+						if ( compositeGenerator != null && selectable instanceof AttributeMapping ) {
+							gen = compositeGenerator.getGenerator( ( (AttributeMapping) selectable ).getStateArrayPosition() );
+						}
+						if ( handleGeneratedValue( entity, session, gen ) ) {
+							handleUpdateValueGeneration(
+									(AttributeMapping) selectable,
+									updateGroupBuilder,
+									dirtinessChecker,
+									(OnExecutionGenerator) gen
+							);
+						}
+					}
+			);
+			// todo: this code is ugly, I think it can ve included in the the previous foreach
+			final boolean includeInSet = !entityPersister().getEntityMetamodel().isDynamicUpdate()
+					|| dirtinessChecker == null
+					|| dirtinessChecker.isDirty( attributeIndex, attributeMapping ).isDirty();
+			if ( includeInSet ) {
+				attributeMapping.forEachUpdatable( (index, selectable) -> {
+					Generator gen = null;
+					if ( compositeGenerator != null && selectable instanceof AttributeMapping ) {
+						gen = compositeGenerator.getGenerator( ( (AttributeMapping) selectable ).getStateArrayPosition() );
+					}
+					if ( !handleGeneratedValue( entity, session, gen ) ) {
+						tableUpdateBuilder.addValueColumn( selectable );
+					}
+				} );
+			}
+		}
+		else if ( handleGeneratedValue( entity, session, generator ) ) {
+			handleUpdateValueGeneration( attributeMapping, updateGroupBuilder, dirtinessChecker, (OnExecutionGenerator) generator );
 		}
 		else if ( versionMapping != null
 				&& versionMapping.getVersionAttribute() == attributeMapping) {
@@ -1255,6 +1388,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				attributeMapping.forEachUpdatable( tableUpdateBuilder );
 			}
 		}
+	}
+
+	private boolean handleGeneratedValue(Object entity, SharedSessionContractImplementor session, Generator gen) {
+		return isValueGenerated( gen )
+				&& ( session == null && gen.generatedOnExecution() || gen.generatedOnExecution( entity, session ) )
+				&& isValueGenerationInSql( gen, dialect );
 	}
 
 	/**

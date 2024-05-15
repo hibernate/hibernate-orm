@@ -43,7 +43,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 @SuppressWarnings("rawtypes")
 public class BasicAttributeMapping
 		extends AbstractSingularAttributeMapping
-		implements SingularAttributeMapping, BasicValuedModelPart {
+		implements BasicValuedModelPart {
 	private final NavigableRole navigableRole;
 
 	private final String tableExpression;

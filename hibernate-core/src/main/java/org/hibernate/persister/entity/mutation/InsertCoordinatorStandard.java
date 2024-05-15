@@ -20,6 +20,7 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.CompositeGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
@@ -222,7 +223,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
-
+		final boolean isDynamicInsert = entityPersister().getEntityMetamodel().isDynamicInsert();
 		for ( int position = 0; position < mutationGroup.getNumberOfOperations(); position++ ) {
 			final MutationOperation operation = mutationGroup.getOperation( position );
 			final EntityTableMapping tableDetails = (EntityTableMapping) operation.getTableDetails();
@@ -230,9 +231,31 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				final int[] attributeIndexes = tableDetails.getAttributeIndexes();
 				for ( int i = 0; i < attributeIndexes.length; i++ ) {
 					final int attributeIndex = attributeIndexes[ i ];
-					if ( propertyInclusions[attributeIndex] ) {
+					final Object value = values[attributeIndex];
+					if ( propertyInclusions[attributeIndex] && !( isDynamicInsert && value == null ) ) {
 						final AttributeMapping mapping = attributeMappings.get( attributeIndex );
-						decomposeAttribute( values[attributeIndex], session, jdbcValueBindings, mapping );
+						if ( mapping.isEmbeddedAttributeMapping() ) {
+							mapping.decompose(
+									value,
+									0,
+									jdbcValueBindings,
+									null,
+									(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
+										if ( selectableMapping.isInsertable() && !( isDynamicInsert && jdbcValue == null ) ) {
+											bindings.bindValue(
+													jdbcValue,
+													entityPersister().physicalTableNameForMutation( selectableMapping ),
+													selectableMapping.getSelectionExpression(),
+													ParameterUsage.SET
+											);
+										}
+									},
+									session
+							);
+						}
+						else {
+							decomposeAttribute( value, session, jdbcValueBindings, mapping );
+						}
 					}
 				}
 			}
@@ -303,7 +326,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
 		final boolean[] insertability = getPropertiesToInsert( values );
-		final MutationOperationGroup insertGroup = generateDynamicInsertSqlGroup( insertability, object, session, forceIdentifierBinding );
+		final MutationOperationGroup insertGroup = generateDynamicInsertSqlGroup( insertability, values, object, session, forceIdentifierBinding );
 
 		final MutationExecutor mutationExecutor = executor( session, insertGroup, true );
 
@@ -360,14 +383,14 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	protected MutationOperationGroup generateDynamicInsertSqlGroup(
 			boolean[] insertable,
+			Object[] values,
 			Object object,
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
 		final MutationGroupBuilder insertGroupBuilder = new MutationGroupBuilder( MutationType.INSERT, entityPersister() );
 		entityPersister().forEachMutableTable(
-				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, forceIdentifierBinding ) )
-		);
-		applyTableInsertDetails( insertGroupBuilder, insertable, object, session, forceIdentifierBinding );
+				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, forceIdentifierBinding ) ) );
+		applyDynamicTableInsertDetails( insertGroupBuilder, insertable, values, object, session, forceIdentifierBinding );
 		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
 	}
 
@@ -397,7 +420,6 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
 		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
-
 		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
 			assert !tableMapping.isInverse();
@@ -409,7 +431,36 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				final int attributeIndex = attributeIndexes[ i ];
 				final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
 				if ( attributeInclusions[attributeIndex] ) {
-					attributeMapping.forEachInsertable( insertGroupBuilder );
+					if ( attributeMapping.isEmbeddedAttributeMapping() ) {
+						final CompositeGenerator compositeGenerator = (CompositeGenerator) attributeMapping.getGenerator();
+						attributeMapping.forEachInsertable(
+								(selectionIndex, selectableMapping) -> {
+									if ( selectableMapping instanceof AttributeMapping ) {
+										final AttributeMapping mapping = (AttributeMapping) selectableMapping;
+										final Generator generator = compositeGenerator == null ?
+												null :
+												compositeGenerator.getGenerator( mapping.getStateArrayPosition() );
+										if ( isValueGenerated( generator ) ) {
+											if ( session != null && !generator.generatedOnExecution( object, session ) ) {
+												mapping.forEachInsertable( insertGroupBuilder );
+											}
+											else if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect() ) ) {
+												handleValueGeneration( mapping, insertGroupBuilder, (OnExecutionGenerator) generator );
+											}
+										}
+										else {
+											mapping.forEachInsertable( insertGroupBuilder );
+										}
+									}
+									else {
+										insertGroupBuilder.accept( selectionIndex, selectableMapping );
+									}
+								}
+						);
+					}
+					else {
+						attributeMapping.forEachInsertable( insertGroupBuilder );
+					}
 				}
 				else {
 					final Generator generator = attributeMapping.getGenerator();
@@ -419,6 +470,112 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 							attributeMapping.forEachInsertable( insertGroupBuilder );
 						}
 						else if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect() ) ) {
+							handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
+						}
+					}
+				}
+			}
+		} );
+
+		// add the discriminator
+		entityPersister().addDiscriminatorToInsertGroup( insertGroupBuilder );
+		entityPersister().addSoftDeleteToInsertGroup( insertGroupBuilder );
+
+		// add the keys
+		insertGroupBuilder.forEachTableMutationBuilder( (tableMutationBuilder) -> {
+			final TableInsertBuilder tableInsertBuilder = (TableInsertBuilder) tableMutationBuilder;
+			final EntityTableMapping tableMapping = (EntityTableMapping) tableInsertBuilder.getMutatingTable().getTableMapping();
+			if ( tableMapping.isIdentifierTable() && entityPersister().isIdentifierAssignedByInsert() && !forceIdentifierBinding ) {
+				assert entityPersister().getInsertDelegate() != null;
+				final OnExecutionGenerator generator = (OnExecutionGenerator) entityPersister().getGenerator();
+				if ( generator.referenceColumnsInSql( dialect() ) ) {
+					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
+					final String[] columnValues = generator.getReferencedColumnValues( dialect );
+					tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
+							column.getColumnName(),
+							columnValues[i],
+							identifierMapping.getJdbcMapping()
+					) );
+				}
+			}
+			else {
+				tableMapping.getKeyMapping().forEachKeyColumn( tableInsertBuilder::addKeyColumn );
+			}
+		} );
+	}
+
+	private void applyDynamicTableInsertDetails(
+			MutationGroupBuilder insertGroupBuilder,
+			boolean[] attributeInclusions,
+			Object[] values,
+			Object object,
+			SharedSessionContractImplementor session,
+			boolean forceIdentifierBinding) {
+		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
+
+		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
+			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
+			assert !tableMapping.isInverse();
+
+			// `attributeIndexes` represents the indexes (relative to `attributeMappings`) of
+			// the attributes mapped to the table
+			final int[] attributeIndexes = tableMapping.getAttributeIndexes();
+			for ( int i = 0; i < attributeIndexes.length; i++ ) {
+				final int attributeIndex = attributeIndexes[ i ];
+				final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
+				final Object attributeValue =  values[attributeIndex] ;
+				if ( attributeInclusions[attributeIndex] ) {
+					if ( attributeMapping.isEmbeddedAttributeMapping() ) {
+						CompositeGenerator compositeGenerator = (CompositeGenerator) attributeMapping.getGenerator();
+						attributeMapping.forEachInsertable(
+								(selectionIndex, selectableMapping) -> {
+									if ( selectableMapping instanceof AttributeMapping ) {
+										final AttributeMapping mapping = (AttributeMapping) selectableMapping;
+										final Object value = mapping.getValue( attributeValue );
+										final Generator generator = compositeGenerator == null ?
+												null :
+												compositeGenerator.getGenerator( mapping.getStateArrayPosition() );
+										if ( isValueGenerated( generator ) ) {
+											if ( session != null && !generator.generatedOnExecution(
+													object,
+													session
+											) ) {
+												mapping.forEachInsertable( insertGroupBuilder );
+											}
+											else if ( value != null
+													&& isValueGenerationInSql(
+													generator,
+													factory().getJdbcServices().getDialect()
+											) ) {
+												handleValueGeneration(
+														mapping,
+														insertGroupBuilder,
+														(OnExecutionGenerator) generator
+												);
+											}
+										}
+										else if ( value != null ) {
+											mapping.forEachInsertable( insertGroupBuilder );
+										}
+									}
+									else if ( attributeValue != null ) {
+										insertGroupBuilder.accept( selectionIndex, selectableMapping );
+									}
+								}
+						);
+					}
+					else {
+						attributeMapping.forEachInsertable( insertGroupBuilder );
+					}
+				}
+				else {
+					final Generator generator = attributeMapping.getGenerator();
+					if ( isValueGenerated( generator ) ) {
+						if ( session != null && !generator.generatedOnExecution( object, session ) ) {
+							attributeInclusions[attributeIndex] = true;
+							attributeMapping.forEachInsertable( insertGroupBuilder );
+						}
+						else if ( attributeValue != null && isValueGenerationInSql( generator, factory().getJdbcServices().getDialect() ) ) {
 							handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
 						}
 					}

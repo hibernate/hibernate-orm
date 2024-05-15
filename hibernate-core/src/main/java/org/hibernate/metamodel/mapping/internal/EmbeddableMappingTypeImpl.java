@@ -27,6 +27,9 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.internal.OnExecutionCompositeGenerator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
@@ -48,6 +51,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -57,6 +61,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -183,6 +188,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private final boolean preferSelectAggregateMapping;
 	private final boolean preferBindAggregateMapping;
 
+	private final OnExecutionCompositeGenerator onExecutionCompositeGenerator;
+
 	private EmbeddableMappingTypeImpl(
 			Component bootDescriptor,
 			Property componentProperty,
@@ -196,6 +203,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		this.embeddableJtd = representationStrategy.getMappedJavaType();
 		this.valueMapping = embeddedPartBuilder.apply( this );
+		onExecutionCompositeGenerator = getOnExecutionCompositeGenerator( valueMapping );
 		this.discriminatorMapping = generateDiscriminatorMapping( bootDescriptor, creationContext );
 		if ( bootDescriptor.isPolymorphic() ) {
 			this.concreteEmbeddableByDiscriminator = new HashMap<>();
@@ -266,6 +274,86 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			this.aggregateMappingRequiresColumnWriter = false;
 			this.preferSelectAggregateMapping = false;
 			this.preferBindAggregateMapping = false;
+		}
+	}
+
+	public EmbeddableMappingTypeImpl(
+			EmbeddedAttributeMapping valueMapping,
+			TableGroupProducer declaringTableGroupProducer,
+			SelectableMappings selectableMappings,
+			EmbeddableMappingType inverseMappingType,
+			MappingModelCreationProcess creationProcess) {
+		super( new MutableAttributeMappingList( 5 ) );
+
+		this.embeddableJtd = inverseMappingType.getJavaType();
+		this.representationStrategy = inverseMappingType.getRepresentationStrategy();
+		this.valueMapping = valueMapping;
+		onExecutionCompositeGenerator = getOnExecutionCompositeGenerator( valueMapping );
+		this.discriminatorMapping = null;
+		this.concreteEmbeddableBySubclass = null;
+		this.concreteEmbeddableByDiscriminator = null;
+		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
+		this.aggregateMapping = null;
+		this.aggregateMappingRequiresColumnWriter = false;
+		this.preferSelectAggregateMapping = false;
+		this.preferBindAggregateMapping = false;
+		this.selectableMappings = selectableMappings;
+		creationProcess.registerInitializationCallback(
+				"EmbeddableMappingType(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
+				() -> inverseInitializeCallback(
+						declaringTableGroupProducer,
+						selectableMappings,
+						inverseMappingType,
+						creationProcess,
+						this,
+						attributeMappings
+				)
+		);
+	}
+
+	public EmbeddableMappingType createInverseMappingType(
+			EmbeddedAttributeMapping valueMapping,
+			TableGroupProducer declaringTableGroupProducer,
+			SelectableMappings selectableMappings,
+			MappingModelCreationProcess creationProcess) {
+		return new EmbeddableMappingTypeImpl(
+				valueMapping,
+				declaringTableGroupProducer,
+				selectableMappings,
+				this,
+				creationProcess
+		);
+	}
+
+	private static OnExecutionCompositeGenerator getOnExecutionCompositeGenerator(EmbeddableValuedModelPart valueMapping) {
+		if ( valueMapping instanceof EmbeddedAttributeMapping ) {
+			final EmbeddedAttributeMapping embeddedAttributeMapping = (EmbeddedAttributeMapping) valueMapping;
+			final int stateArrayPosition = embeddedAttributeMapping.getStateArrayPosition();
+			if ( stateArrayPosition == -1 ) {
+				return null;
+			}
+			final Generator generator;
+			ManagedMappingType declaringType = ( (EmbeddedAttributeMapping) valueMapping ).getDeclaringType();
+			if ( declaringType instanceof AbstractEntityPersister ) {
+				generator = valueMapping.findContainingEntityMapping().getEntityPersister()
+						.getEntityMetamodel()
+						.getGenerators()[stateArrayPosition];
+			}
+			else if ( declaringType instanceof EmbeddableMappingTypeImpl ) {
+				generator = ( (EmbeddableMappingTypeImpl) declaringType ).getOnExecutionCompositeGenerator();
+			}
+			else {
+				return null;
+			}
+			if ( generator instanceof OnExecutionCompositeGenerator ) {
+				return (OnExecutionCompositeGenerator) generator;
+			}
+			else {
+				return null;
+			}
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -350,53 +438,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return resolvedJdbcMapping;
 	}
 
-	public EmbeddableMappingTypeImpl(
-			EmbeddedAttributeMapping valueMapping,
-			TableGroupProducer declaringTableGroupProducer,
-			SelectableMappings selectableMappings,
-			EmbeddableMappingType inverseMappingType,
-			MappingModelCreationProcess creationProcess) {
-		super( new MutableAttributeMappingList( 5 ) );
-
-		this.embeddableJtd = inverseMappingType.getJavaType();
-		this.representationStrategy = inverseMappingType.getRepresentationStrategy();
-		this.valueMapping = valueMapping;
-		this.discriminatorMapping = null;
-		this.concreteEmbeddableBySubclass = null;
-		this.concreteEmbeddableByDiscriminator = null;
-		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
-		this.aggregateMapping = null;
-		this.aggregateMappingRequiresColumnWriter = false;
-		this.preferSelectAggregateMapping = false;
-		this.preferBindAggregateMapping = false;
-		this.selectableMappings = selectableMappings;
-		creationProcess.registerInitializationCallback(
-				"EmbeddableMappingType(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
-				() -> inverseInitializeCallback(
-						declaringTableGroupProducer,
-						selectableMappings,
-						inverseMappingType,
-						creationProcess,
-						this,
-						attributeMappings
-				)
-		);
-	}
-
-	public EmbeddableMappingType createInverseMappingType(
-			EmbeddedAttributeMapping valueMapping,
-			TableGroupProducer declaringTableGroupProducer,
-			SelectableMappings selectableMappings,
-			MappingModelCreationProcess creationProcess) {
-		return new EmbeddableMappingTypeImpl(
-				valueMapping,
-				declaringTableGroupProducer,
-				selectableMappings,
-				this,
-				creationProcess
-		);
-	}
-
 	private boolean finishInitialization(
 			Component bootDescriptor,
 			CompositeType compositeType,
@@ -433,8 +474,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 //		);
 // todo (6.0) - get this ^^ to work, or drop the comment
 
-		final TypeConfiguration typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
-		final JdbcServices jdbcServices = creationProcess.getCreationContext().getJdbcServices();
+		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
+		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
+		final JdbcServices jdbcServices = creationContext.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
@@ -447,12 +489,32 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		// Reset the attribute mappings that were added in previous attempts
 		attributeMappings.clear();
 
+
 		for ( final Property bootPropertyDescriptor : bootDescriptor.getProperties() ) {
 			final AttributeMapping attributeMapping;
 
 			final Type subtype = subtypes[attributeIndex];
 			final Value value = bootPropertyDescriptor.getValue();
+			final OnExecutionGenerator onExecutionGenerator;
+			if ( onExecutionCompositeGenerator != null ) {
+				onExecutionGenerator = (OnExecutionGenerator) onExecutionCompositeGenerator
+						.getGenerator( attributeIndex );
+			}
+			else {
+				onExecutionGenerator = null;
+			}
+
 			if ( subtype instanceof BasicType ) {
+				final boolean insertable;
+				final boolean updateable;
+				if ( generatedWithNoParameter( onExecutionGenerator ) ) {
+					insertable = false;
+					updateable = false;
+				}
+				else {
+					insertable = insertability[columnPosition];
+					updateable = updateability[columnPosition];
+				}
 				final BasicValue basicValue = (BasicValue) value;
 				final Selectable selectable = dependantValue != null ?
 						dependantValue.getColumns().get( dependantColumnIndex + columnPosition ) :
@@ -463,7 +525,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					if ( selectable.isFormula() ) {
 						columnExpression = selectable.getTemplate(
 								dialect,
-								creationProcess.getCreationContext().getTypeConfiguration(),
+								creationContext.getTypeConfiguration(),
 								creationProcess.getSqmFunctionRegistry()
 						);
 					}
@@ -501,7 +563,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					precision = column.getPrecision();
 					scale = column.getScale();
 					temporalPrecision = column.getTemporalPrecision();
-					isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
+					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 					nullable = bootPropertyDescriptor.isOptional() && column.isNullable() ;
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
 					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
@@ -537,8 +599,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						temporalPrecision,
 						isLob,
 						nullable,
-						insertability[columnPosition],
-						updateability[columnPosition],
+						insertable,
+						updateable,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
@@ -552,11 +614,19 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 				final PropertyAccess propertyAccess = representationStrategy.resolvePropertyAccess( bootPropertyDescriptor );
 				final boolean nullable = bootValueMapping.isNullable();
-				final boolean insertable = insertability[columnPosition];
-				final boolean updateable = updateability[columnPosition];
 				final boolean includeInOptimisticLocking = bootPropertyDescriptor.isOptimisticLocked();
 				final CascadeStyle cascadeStyle = compositeType.getCascadeStyle( attributeIndex );
+				final boolean insertable;
+				final boolean updateable;
 
+				if ( generatedWithNoParameter( onExecutionGenerator ) ) {
+					insertable = false;
+					updateable = false;
+				}
+				else {
+					insertable = insertability[columnPosition];
+					updateable = updateability[columnPosition];
+				}
 				SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
 						propertyAccess,
 						getMutabilityPlan( updateable ),
@@ -585,7 +655,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 			else if ( subtype instanceof CompositeType ) {
 				final CompositeType subCompositeType = (CompositeType) subtype;
-				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getMetadata() );
+				final int columnSpan = subCompositeType.getColumnSpan( creationContext.getMetadata() );
 				final String subTableExpression;
 				final String[] subRootTableKeyColumnNames;
 				if ( rootTableKeyColumnNames == null ) {
@@ -1139,4 +1209,15 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	public boolean shouldBindAggregateMapping() {
 		return preferBindAggregateMapping;
 	}
+
+	public OnExecutionCompositeGenerator getOnExecutionCompositeGenerator() {
+		return onExecutionCompositeGenerator;
+	}
+
+	private static boolean generatedWithNoParameter(Generator generator) {
+		return generator != null
+				&& generator.generatedOnExecution()
+				&& !( (OnExecutionGenerator) generator ).writePropertyValue();
+	}
+
 }

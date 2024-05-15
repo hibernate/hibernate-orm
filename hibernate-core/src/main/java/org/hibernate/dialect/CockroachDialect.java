@@ -861,7 +861,7 @@ public class CockroachDialect extends Dialect {
 				case SECOND:
 				case NANOSECOND:
 				case NATIVE:
-					return "round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")";
+					return "round(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + ")::int";
 				default:
 					throw new SemanticException( "Unrecognized field: " + unit );
 			}

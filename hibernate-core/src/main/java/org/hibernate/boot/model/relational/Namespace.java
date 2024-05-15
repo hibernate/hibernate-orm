@@ -34,6 +34,7 @@ import org.hibernate.mapping.UserDefinedArrayType;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
@@ -183,14 +184,17 @@ public class Namespace {
 			final UserDefinedType udt = entry.getValue();
 			if ( udt instanceof UserDefinedObjectType ) {
 				for ( Column udtColumn : ( (UserDefinedObjectType) udt ).getColumns() ) {
-					final JdbcType jdbcType = ( (BasicType<?>) udtColumn.getValue().getType() ).getJdbcType();
-					if ( jdbcType instanceof SqlTypedJdbcType ) {
-						dependencies.add( Identifier.toIdentifier( ( (SqlTypedJdbcType) jdbcType ).getSqlTypeName() ) );
-					}
-					else if ( jdbcType instanceof ArrayJdbcType ) {
-						final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
-						if ( elementJdbcType instanceof SqlTypedJdbcType ) {
-							dependencies.add( Identifier.toIdentifier( ( (SqlTypedJdbcType) elementJdbcType ).getSqlTypeName() ) );
+					final Type udtColumnType = udtColumn.getValue().getType();
+					if ( udtColumnType instanceof BasicType<?> ) {
+						final JdbcType jdbcType = ( (BasicType<?>) udtColumnType ).getJdbcType();
+						if ( jdbcType instanceof SqlTypedJdbcType ) {
+							dependencies.add( Identifier.toIdentifier( ( (SqlTypedJdbcType) jdbcType ).getSqlTypeName() ) );
+						}
+						else if ( jdbcType instanceof ArrayJdbcType ) {
+							final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
+							if ( elementJdbcType instanceof SqlTypedJdbcType ) {
+								dependencies.add( Identifier.toIdentifier( ( (SqlTypedJdbcType) elementJdbcType ).getSqlTypeName() ) );
+							}
 						}
 					}
 				}

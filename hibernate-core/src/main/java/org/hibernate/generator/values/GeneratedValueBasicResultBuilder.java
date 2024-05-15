@@ -94,7 +94,10 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				modelPart.getJdbcMapping()
+				modelPart.getJdbcMapping(),
+				navigablePath,
+				false,
+				false
 		);
 	}
 

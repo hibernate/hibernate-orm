@@ -87,6 +87,8 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 
 	Nature getNature();
 
+	PluralAttributeMapping getCollectionAttribute();
+
 	@Override
 	default String getPartName() {
 		return getNature().getName();

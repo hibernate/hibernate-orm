@@ -18,6 +18,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -69,7 +70,10 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				( (BasicType<?>) sqlSelection.getExpressionType() )
+				(BasicType<?>) sqlSelection.getExpressionType(),
+				null,
+				false,
+				false
 		);
 	}
 

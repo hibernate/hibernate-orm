@@ -384,8 +384,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				sqlSelection.getValuesArrayPosition(),
 				null,
 				selectableMapping.getJdbcMapping(),
+				navigablePath,
 				// if the expression type is different that the expected type coerce the value
-				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != javaType
+				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != javaType,
+				!sqlSelection.isVirtual()
 		);
 	}
 

@@ -44,7 +44,7 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		if ( value == null ) {
 			return null;
 		}
-		if ( Character.class.isAssignableFrom( type ) ) {
+		if ( Character.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( String.class.isAssignableFrom( type ) ) {

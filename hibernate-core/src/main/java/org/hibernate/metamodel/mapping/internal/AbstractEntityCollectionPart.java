@@ -121,6 +121,11 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	}
 
 	@Override
+	public PluralAttributeMapping getCollectionAttribute() {
+		return collectionDescriptor.getAttributeMapping();
+	}
+
+	@Override
 	public String getFetchableName() {
 		return nature.getName();
 	}

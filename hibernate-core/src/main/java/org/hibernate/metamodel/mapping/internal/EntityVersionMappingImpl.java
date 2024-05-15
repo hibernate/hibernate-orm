@@ -263,7 +263,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -279,7 +280,9 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				versionBasicType,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

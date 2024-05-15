@@ -73,7 +73,7 @@ public class JsonHelper {
 		final Object[] values = embeddableMappingType.getValues( domainValue );
 		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < values.length; i++ ) {
-			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, numberOfAttributes, i );
+			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
 			if ( attributeMapping instanceof SelectableMapping ) {
 				final String name = ( (SelectableMapping) attributeMapping ).getSelectableName();
 				appender.append( separator );

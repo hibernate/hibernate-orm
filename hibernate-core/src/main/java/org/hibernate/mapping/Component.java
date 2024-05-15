@@ -24,6 +24,7 @@ import org.hibernate.Remove;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -93,7 +94,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	private AggregateColumn aggregateColumn;
 	private AggregateColumn parentAggregateColumn;
-	private String structName;
+	private QualifiedName structName;
 	private String[] structColumnNames;
 	private transient Class<?> componentClass;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
@@ -307,11 +308,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.parentAggregateColumn = parentAggregateColumn;
 	}
 
-	public String getStructName() {
+	public QualifiedName getStructName() {
 		return structName;
 	}
 
-	public void setStructName(String structName) {
+	public void setStructName(QualifiedName structName) {
 		this.structName = structName;
 	}
 

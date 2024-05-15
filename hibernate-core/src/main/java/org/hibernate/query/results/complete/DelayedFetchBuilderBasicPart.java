@@ -19,6 +19,7 @@ import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
@@ -69,7 +70,9 @@ public class DelayedFetchBuilderBasicPart
 				null,
 				FetchTiming.DELAYED,
 				isEnhancedForLazyLoading,
-				domainResultCreationState
+				domainResultCreationState,
+				false,
+				false
 		);
 	}
 

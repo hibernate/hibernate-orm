@@ -69,6 +69,8 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
+		//noinspection unchecked
+		final ValueBinder<Object> elementBinder = getElementJdbcType().getBinder( ( (BasicPluralJavaType<Object>) javaTypeDescriptor ).getElementJavaType() );
 		return new BasicBinder<>( javaTypeDescriptor, this ) {
 			private String typeName(WrapperOptions options) {
 				return ( upperTypeName == null
@@ -105,7 +107,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 
 			@Override
 			public java.sql.Array getBindValue(X value, WrapperOptions options) throws SQLException {
-				final Object[] objects = OracleArrayJdbcType.this.getArray( this, value, options );
+				final Object[] objects = ( (OracleArrayJdbcType) getJdbcType() ).getArray( this, elementBinder, value, options );
 				final String arrayTypeName = typeName( options );
 
 				final OracleConnection oracleConnection = options.getSession()

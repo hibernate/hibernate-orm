@@ -28,6 +28,7 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -371,6 +372,14 @@ public class EmbeddableBinder {
 			returnedClassOrElement = context.getBootstrapContext().getReflectionManager()
 					.toXClass( compositeUserType.embeddable() );
 		}
+		AggregateComponentBinder.processAggregate(
+				component,
+				propertyHolder,
+				inferredData,
+				returnedClassOrElement,
+				columns,
+				context
+		);
 
 		final XClass annotatedClass = inferredData.getPropertyClass();
 		final List<PropertyData> classElements =
@@ -447,14 +456,6 @@ public class EmbeddableBinder {
 			processCompositeUserType( component, compositeUserType );
 		}
 
-		AggregateComponentBinder.processAggregate(
-				component,
-				propertyHolder,
-				inferredData,
-				returnedClassOrElement,
-				columns,
-				context
-		);
 		return component;
 	}
 
@@ -563,6 +564,7 @@ public class EmbeddableBinder {
 		columns.setBuildingContext( context );
 		discriminatorColumn.setParent( columns );
 		final BasicValue discriminatorColumnBinding = new BasicValue( context, component.getTable() );
+		discriminatorColumnBinding.setAggregateColumn( component.getAggregateColumn() );
 		component.setDiscriminator( discriminatorColumnBinding );
 		discriminatorColumn.linkWithValue( discriminatorColumnBinding );
 		discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
@@ -857,6 +859,10 @@ public class EmbeddableBinder {
 		final Constructor<?> constructor = resolveInstantiator( embeddableClass, context );
 		if ( constructor != null ) {
 			component.setInstantiator( constructor, constructor.getAnnotation( Instantiator.class ).value() );
+		}
+		if ( propertyHolder.isComponent() ) {
+			final ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
+			component.setParentAggregateColumn( componentPropertyHolder.getAggregateColumn() );
 		}
 		return component;
 	}

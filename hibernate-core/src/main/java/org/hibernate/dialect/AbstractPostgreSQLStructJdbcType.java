@@ -24,13 +24,11 @@ import java.util.ArrayList;
 import java.util.TimeZone;
 
 import org.hibernate.internal.util.CharSequenceHelper;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.BasicPluralType;
@@ -1008,7 +1006,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			final int size = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
 			int count = 0;
 			for ( int i = 0; i < size; i++ ) {
-				final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, numberOfAttributeMappings, orderMapping[i] );
+				final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, orderMapping[i] );
 				final MappingType mappedType = modelPart.getMappedType();
 				if ( mappedType instanceof EmbeddableMappingType ) {
 					final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
@@ -1178,7 +1176,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 		return rawJdbcValue.toString();
 	}
 
-	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
+	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
 			return null;
 		}
@@ -1187,86 +1185,62 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 		return sb.toString();
 	}
 
-	private void serializeStructTo(PostgreSQLAppender appender, Object value, WrapperOptions options) {
-		serializeValuesTo( appender, options, embeddableMappingType, value, '(' );
+	private void serializeStructTo(PostgreSQLAppender appender, Object value, WrapperOptions options) throws SQLException {
+		serializeDomainValueTo( appender, options, value, '(' );
 		appender.append( ')' );
 	}
 
-	private void serializeValuesTo(
+	private void serializeDomainValueTo(
 			PostgreSQLAppender appender,
 			WrapperOptions options,
-			EmbeddableMappingType embeddableMappingType,
 			Object domainValue,
-			char separator) {
-		final Object[] array = embeddableMappingType.getValues( domainValue );
-		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
-		for ( int i = 0; i < array.length; i++ ) {
-			final ValuedModelPart attributeMapping;
-			final Object attributeValue;
-			if ( orderMapping == null ) {
-				attributeMapping = getEmbeddedPart( embeddableMappingType, numberOfAttributes, i );
-				attributeValue = array[i];
-			}
-			else {
-				attributeMapping = getEmbeddedPart( embeddableMappingType, numberOfAttributes, orderMapping[i] );
-				attributeValue = array[orderMapping[i]];
-			}
-			if ( attributeMapping instanceof BasicValuedMapping ) {
-				appender.append( separator );
-				separator = ',';
-				if ( attributeValue == null ) {
-					continue;
-				}
-				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) attributeMapping ).getJdbcMapping();
-				serializeBasicTo( appender, options, jdbcMapping, attributeValue );
-			}
-			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
-				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
-				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
-				if ( aggregateMapping == null ) {
-					serializeValuesTo(
-							appender,
-							options,
-							mappingType,
-							attributeValue,
-							separator
-					);
-					separator = ',';
-				}
-				else {
-					appender.append( separator );
-					separator = ',';
-					if ( attributeValue == null ) {
-						continue;
-					}
-					appender.quoteStart();
-					( (AbstractPostgreSQLStructJdbcType) aggregateMapping.getJdbcMapping().getJdbcType() ).serializeStructTo(
-							appender,
-							attributeValue,
-							options
-					);
-					appender.quoteEnd();
-				}
-			}
-			else {
-				throw new UnsupportedOperationException( "Unsupported attribute mapping: " + attributeMapping );
-			}
-		}
+			char separator) throws SQLException {
+		serializeJdbcValuesTo(
+				appender,
+				options,
+				StructHelper.getJdbcValues( embeddableMappingType, orderMapping, domainValue, options ),
+				separator
+		);
 	}
 
-	private void serializeBasicTo(
+	private void serializeJdbcValuesTo(
 			PostgreSQLAppender appender,
 			WrapperOptions options,
-			JdbcMapping jdbcMapping,
-			Object value) {
-		serializeConvertedBasicTo( appender, options, jdbcMapping, jdbcMapping.convertToRelationalValue( value ) );
+			Object[] jdbcValues,
+			char separator) throws SQLException {
+		for ( int i = 0; i < jdbcValues.length; i++ ) {
+			appender.append( separator );
+			separator = ',';
+			final Object jdbcValue = jdbcValues[i];
+			if ( jdbcValue == null ) {
+				continue;
+			}
+			final SelectableMapping selectableMapping = orderMapping == null ?
+					embeddableMappingType.getJdbcValueSelectable( i ) :
+					embeddableMappingType.getJdbcValueSelectable( orderMapping[i] );
+			final JdbcMapping jdbcMapping = selectableMapping.getJdbcMapping();
+			if ( jdbcMapping.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
+				appender.quoteStart();
+				( (AbstractPostgreSQLStructJdbcType) jdbcMapping.getJdbcType() ).serializeJdbcValuesTo(
+						appender,
+						options,
+						(Object[]) jdbcValue,
+						'('
+				);
+				appender.append( ')' );
+				appender.quoteEnd();
+			}
+			else {
+				serializeConvertedBasicTo( appender, options, jdbcMapping, jdbcValue );
+			}
+		}
 	}
 
 	private void serializeConvertedBasicTo(
 			PostgreSQLAppender appender,
 			WrapperOptions options,
 			JdbcMapping jdbcMapping,
-			Object subValue) {
+			Object subValue) throws SQLException {
 		//noinspection unchecked
 		final JavaType<Object> jdbcJavaType = (JavaType<Object>) jdbcMapping.getJdbcJavaType();
 		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
@@ -1291,14 +1265,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			case SqlTypes.DECIMAL:
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DURATION:
-				jdbcJavaType.appendEncodedString(
-						appender,
-						jdbcJavaType.unwrap(
-								subValue,
-								jdbcJavaType.getJavaTypeClass(),
-								options
-						)
-				);
+				appender.append( subValue.toString() );
 				break;
 			case SqlTypes.CHAR:
 			case SqlTypes.NCHAR:
@@ -1316,14 +1283,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			case SqlTypes.ENUM:
 			case SqlTypes.NAMED_ENUM:
 				appender.quoteStart();
-				jdbcJavaType.appendEncodedString(
-						appender,
-						jdbcJavaType.unwrap(
-								subValue,
-								jdbcJavaType.getJavaTypeClass(),
-								options
-						)
-				);
+				appender.append( (String) subValue );
 				appender.quoteEnd();
 				break;
 			case SqlTypes.DATE:
@@ -1393,9 +1353,8 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			case SqlTypes.STRUCT:
 				if ( subValue != null ) {
 					final AbstractPostgreSQLStructJdbcType structJdbcType = (AbstractPostgreSQLStructJdbcType) jdbcMapping.getJdbcType();
-					final EmbeddableMappingType subEmbeddableMappingType = structJdbcType.getEmbeddableMappingType();
 					appender.quoteStart();
-					structJdbcType.serializeValuesTo( appender, options, subEmbeddableMappingType, subValue, '(' );
+					structJdbcType.serializeJdbcValuesTo( appender, options, (Object[]) subValue, '(' );
 					appender.append( ')' );
 					appender.quoteEnd();
 				}
@@ -1427,9 +1386,8 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			else {
 				attributeIndex = orderMapping[i];
 			}
-			final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, numberOfAttributeMappings, attributeIndex );
 			jdbcIndex += injectAttributeValue(
-					modelPart,
+					getEmbeddedPart( embeddableMappingType, attributeIndex ),
 					attributeValues,
 					attributeIndex,
 					rawJdbcValues,
@@ -1565,6 +1523,10 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 		return options == null || options.getJdbcTimeZone() == null
 				? TimeZone.getDefault()
 				: options.getJdbcTimeZone();
+	}
+
+	protected <X> Object getBindValue(X value, WrapperOptions options) throws SQLException {
+		return StructHelper.getJdbcValues( embeddableMappingType, orderMapping, value, options );
 	}
 
 	private static class PostgreSQLAppender extends StringBuilderSqlAppender {

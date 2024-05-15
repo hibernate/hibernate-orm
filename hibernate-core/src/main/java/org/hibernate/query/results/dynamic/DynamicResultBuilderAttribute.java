@@ -14,7 +14,6 @@ import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -103,7 +102,10 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
-				attributeMapping.getJdbcMapping()
+				attributeMapping.getJdbcMapping(),
+				null,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

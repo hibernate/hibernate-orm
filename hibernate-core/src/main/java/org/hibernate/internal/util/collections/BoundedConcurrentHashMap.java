@@ -225,9 +225,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public boolean equals(Object o) {
-			if (!(o instanceof HashEntry)) {
-				return false;
-			}
 			// HashEntry is internal class, never leaks out of CHM, hence slight optimization
 			if ( this == o ) {
 				return true;
@@ -487,9 +484,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public boolean equals(Object o) {
-			if (!(o instanceof LIRSHashEntry)) {
-				return false;
-			}
 			// HashEntry is internal class, never leaks out of CHM, hence slight optimization
 			if ( this == o ) {
 				return true;

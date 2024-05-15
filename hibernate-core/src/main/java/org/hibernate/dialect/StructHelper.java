@@ -14,12 +14,18 @@ import java.sql.SQLException;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -39,12 +45,14 @@ public class StructHelper {
 		final StructAttributeValues attributeValues = new StructAttributeValues( numberOfAttributeMappings, rawJdbcValues );
 		int jdbcIndex = 0;
 		for ( int i = 0; i < size; i++ ) {
-			final ValuedModelPart valuedModelPart = getEmbeddedPart(
-					embeddableMappingType,
-					numberOfAttributeMappings,
-					i
+			jdbcIndex += injectAttributeValue(
+					getEmbeddedPart( embeddableMappingType, i ),
+					attributeValues,
+					i,
+					rawJdbcValues,
+					jdbcIndex,
+					options
 			);
-			jdbcIndex += injectAttributeValue( valuedModelPart, attributeValues, i, rawJdbcValues, jdbcIndex, options );
 		}
 		return attributeValues;
 	}
@@ -104,26 +112,58 @@ public class StructHelper {
 		else {
 			jdbcValues = values;
 		}
-		int jdbcIndex = 0;
+		injectJdbcValues(
+				embeddableMappingType,
+				values,
+				jdbcValues,
+				0,
+				options
+		);
+		if ( orderMapping != null ) {
+			final Object[] originalJdbcValues = jdbcValues.clone();
+			for ( int i = 0; i < orderMapping.length; i++ ) {
+				jdbcValues[i] = originalJdbcValues[orderMapping[i]];
+			}
+		}
+		return jdbcValues;
+	}
+
+	private static int injectJdbcValues(
+			EmbeddableMappingType embeddableMappingType,
+			Object domainValue,
+			Object[] jdbcValues,
+			int jdbcIndex,
+			WrapperOptions options) throws SQLException {
+		return injectJdbcValues(
+				embeddableMappingType,
+				embeddableMappingType.getValues( domainValue ),
+				jdbcValues,
+				jdbcIndex,
+				options
+		);
+	}
+
+	private static int injectJdbcValues(
+			EmbeddableMappingType embeddableMappingType,
+			Object[] values,
+			Object[] jdbcValues,
+			int jdbcIndex,
+			WrapperOptions options) throws SQLException {
+		final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
+		final int valueCount = jdbcValueCount + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
+		int offset = 0;
 		for ( int i = 0; i < values.length; i++ ) {
-			final int attributeIndex;
-			if ( orderMapping == null ) {
-				attributeIndex = i;
-			}
-			else {
-				attributeIndex = orderMapping[i];
-			}
-			jdbcIndex += injectJdbcValue(
-					getEmbeddedPart( embeddableMappingType, jdbcValueCount, attributeIndex ),
+			offset += injectJdbcValue(
+					getEmbeddedPart( embeddableMappingType, i ),
 					values,
-					attributeIndex,
+					i,
 					jdbcValues,
-					jdbcIndex,
+					jdbcIndex + offset,
 					options
 			);
 		}
-		assert jdbcIndex == valueCount;
-		return jdbcValues;
+		assert offset == valueCount;
+		return offset;
 	}
 
 	public static Object instantiate(
@@ -142,13 +182,10 @@ public class StructHelper {
 		return instantiator.instantiate( attributeValues, sessionFactory );
 	}
 
-	public static ValuedModelPart getEmbeddedPart(
-			EmbeddableMappingType embeddableMappingType,
-			int numberOfAttributes,
-			int position) {
-		return position == numberOfAttributes ?
-				embeddableMappingType.getDiscriminatorMapping() :
-				embeddableMappingType.getAttributeMapping( position );
+	public static ValuedModelPart getEmbeddedPart(EmbeddableMappingType embeddableMappingType, int position) {
+		return position == embeddableMappingType.getNumberOfAttributeMappings()
+				? embeddableMappingType.getDiscriminatorMapping()
+				: embeddableMappingType.getAttributeMapping( position );
 	}
 
 	private static int injectJdbcValue(
@@ -158,19 +195,64 @@ public class StructHelper {
 			Object[] jdbcValues,
 			int jdbcIndex,
 			WrapperOptions options) throws SQLException {
-		final MappingType mappedType = attributeMapping.getMappedType();
 		final int jdbcValueCount;
-		if ( mappedType instanceof EmbeddableMappingType ) {
-			final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
-			if ( embeddableMappingType.getAggregateMapping() != null ) {
-				final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) embeddableMappingType.getAggregateMapping()
-						.getJdbcMapping()
-						.getJdbcType();
+		if ( attributeMapping instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+			if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+				return 0;
+			}
+			final ForeignKeyDescriptor foreignKeyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+			final ValuedModelPart keyPart = foreignKeyDescriptor.getKeyPart();
+			final Object foreignKeyValue = foreignKeyDescriptor.getAssociationKeyFromSide(
+					attributeValues[attributeIndex],
+					ForeignKeyDescriptor.Nature.TARGET,
+					options.getSession()
+			);
+			if ( keyPart instanceof BasicValuedMapping ) {
 				jdbcValueCount = 1;
-				jdbcValues[jdbcIndex] = aggregateJdbcType.createJdbcValue(
-						attributeValues[attributeIndex],
+				jdbcValues[jdbcIndex] = foreignKeyValue;
+			}
+			else if ( keyPart instanceof EmbeddableValuedModelPart ) {
+				final EmbeddableMappingType mappingType = ( (EmbeddableValuedModelPart) keyPart ).getEmbeddableTypeDescriptor();
+				jdbcValueCount = injectJdbcValues(
+						mappingType,
+						foreignKeyValue,
+						jdbcValues,
+						jdbcIndex,
 						options
 				);
+			}
+			else {
+				throw new UnsupportedOperationException( "Unsupported foreign key part: " + keyPart );
+			}
+		}
+		else if ( attributeMapping instanceof PluralAttributeMapping ) {
+			return 0;
+		}
+		else if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping ) {
+			jdbcValueCount = attributeMapping.decompose(
+					attributeValues[attributeIndex],
+					jdbcIndex,
+					jdbcValues,
+					options,
+					(valueIndex, objects, wrapperOptions, value, jdbcValueMapping) -> {
+						objects[valueIndex] = value;
+					},
+					options.getSession()
+			);
+		}
+		else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) attributeMapping;
+			final EmbeddableMappingType embeddableMappingType = embeddableValuedModelPart.getMappedType();
+			if ( embeddableMappingType.getAggregateMapping() != null ) {
+				jdbcValueCount = 1;
+				jdbcValues[jdbcIndex] = embeddableMappingType.getAggregateMapping()
+						.getJdbcMapping()
+						.getJdbcValueBinder()
+						.getBindValue(
+								attributeValues[attributeIndex],
+								options
+						);
 			}
 			else {
 				jdbcValueCount = embeddableMappingType.getJdbcValueCount() + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
@@ -180,7 +262,7 @@ public class StructHelper {
 				int offset = 0;
 				for ( int i = 0; i < numberOfValues; i++ ) {
 					offset += injectJdbcValue(
-							getEmbeddedPart( embeddableMappingType, numberOfAttributeMappings, i ),
+							getEmbeddedPart( embeddableMappingType, i ),
 							subValues,
 							i,
 							jdbcValues,
@@ -251,23 +333,27 @@ public class StructHelper {
 			int[] inverseMapping,
 			Object[] sourceJdbcValues,
 			Object[] targetJdbcValues) {
-		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
-		int targetJdbcOffset = 0;
-		for ( int i = 0; i < numberOfAttributes + ( embeddableMappingType.isPolymorphic() ? 1 : 0 ); i++ ) {
-			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, numberOfAttributes, i );
-			final MappingType mappedType = attributeMapping.getMappedType();
-			final int jdbcValueCount = getJdbcValueCount( mappedType );
-
-			final int attributeIndex = inverseMapping[i];
-			int sourceJdbcIndex = 0;
-			for ( int j = 0; j < attributeIndex; j++ ) {
-				sourceJdbcIndex += getJdbcValueCount( embeddableMappingType.getAttributeMapping( j ).getMappedType() );
-			}
-
-			for ( int j = 0; j < jdbcValueCount; j++ ) {
-				targetJdbcValues[targetJdbcOffset++] = sourceJdbcValues[sourceJdbcIndex + j];
-			}
+		for ( int i = 0; i < inverseMapping.length; i++ ) {
+			targetJdbcValues[i] = sourceJdbcValues[inverseMapping[i]];
 		}
+
+//		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
+//		int targetJdbcOffset = 0;
+//		for ( int i = 0; i < numberOfAttributes + ( embeddableMappingType.isPolymorphic() ? 1 : 0 ); i++ ) {
+//			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
+//			final MappingType mappedType = attributeMapping.getMappedType();
+//			final int jdbcValueCount = getJdbcValueCount( mappedType );
+//
+//			final int attributeIndex = inverseMapping[i];
+//			int sourceJdbcIndex = 0;
+//			for ( int j = 0; j < attributeIndex; j++ ) {
+//				sourceJdbcIndex += getJdbcValueCount( embeddableMappingType.getAttributeMapping( j ).getMappedType() );
+//			}
+//
+//			for ( int j = 0; j < jdbcValueCount; j++ ) {
+//				targetJdbcValues[targetJdbcOffset++] = sourceJdbcValues[sourceJdbcIndex + j];
+//			}
+//		}
 	}
 
 	public static int getJdbcValueCount(MappingType mappedType) {

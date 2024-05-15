@@ -138,7 +138,7 @@ public interface PluralAttributeMapping
 			TableGroup parentTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new BasicResult( 0, null, getJavaType() );
+		return new BasicResult( 0, null, getJavaType(), null, null, false, false );
 	}
 
 	String getSeparateCollectionTable();

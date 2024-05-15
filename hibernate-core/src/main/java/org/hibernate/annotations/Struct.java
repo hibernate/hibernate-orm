@@ -47,6 +47,16 @@ public @interface Struct {
 	 */
 	String name();
 
+	/** (Optional) The catalog of the UDT.
+	 * <p> Defaults to the default catalog.
+	 */
+	String catalog() default "";
+
+	/** (Optional) The schema of the UDT.
+	 * <p> Defaults to the default schema for user.
+	 */
+	String schema() default "";
+
 	/**
 	 * The ordered set of attributes of the UDT, as they appear physically in the DDL.
 	 * It is important to specify the attributes in the same order for JDBC interactions to work correctly.

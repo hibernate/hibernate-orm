@@ -14,6 +14,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -265,7 +266,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		// if a property is set already the core cannot support that
 		if ( columns != null ) {
 			final Table table = columns.getTable();
-			if ( !table.equals( component.getTable() ) ) {
+			if ( !table.equals( getTable() ) ) {
 				if ( component.getPropertySpan() == 0 ) {
 					component.setTable( table );
 				}
@@ -299,6 +300,11 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	@Override
 	public String getEntityOwnerClassName() {
 		return component.getOwner().getClassName();
+	}
+
+	public AggregateColumn getAggregateColumn() {
+		final AggregateColumn aggregateColumn = component.getAggregateColumn();
+		return aggregateColumn != null ? aggregateColumn : component.getParentAggregateColumn();
 	}
 
 	@Override

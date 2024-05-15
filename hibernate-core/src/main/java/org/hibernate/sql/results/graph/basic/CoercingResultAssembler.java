@@ -21,8 +21,9 @@ public class CoercingResultAssembler<J> extends BasicResultAssembler<J> {
 	public CoercingResultAssembler(
 			int valuesArrayPosition,
 			JavaType<J> assembledJavaType,
-			BasicValueConverter<J, ?> valueConverter) {
-		super( valuesArrayPosition, assembledJavaType, valueConverter );
+			BasicValueConverter<J, ?> valueConverter,
+			boolean nestedInAggregateComponent) {
+		super( valuesArrayPosition, assembledJavaType, valueConverter, nestedInAggregateComponent );
 	}
 
 	/**
@@ -31,7 +32,7 @@ public class CoercingResultAssembler<J> extends BasicResultAssembler<J> {
 	@Override
 	public Object extractRawValue(RowProcessingState rowProcessingState) {
 		return assembledJavaType.coerce(
-				rowProcessingState.getJdbcValue( valuesArrayPosition ),
+				super.extractRawValue( rowProcessingState ),
 				rowProcessingState.getSession()
 		);
 	}

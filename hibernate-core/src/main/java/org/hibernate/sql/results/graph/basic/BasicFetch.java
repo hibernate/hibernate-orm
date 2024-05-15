@@ -44,28 +44,8 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			NavigablePath fetchablePath,
 			BasicValuedModelPart valuedMapping,
 			FetchTiming fetchTiming,
-			DomainResultCreationState creationState) {
-		//noinspection unchecked
-		this(
-				valuesArrayPosition,
-				fetchParent,
-				fetchablePath,
-				valuedMapping,
-				(BasicValueConverter<T, ?>) valuedMapping.getJdbcMapping().getValueConverter(),
-				fetchTiming,
-				true,
-				creationState
-		);
-	}
-
-	public BasicFetch(
-			int valuesArrayPosition,
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			BasicValuedModelPart valuedMapping,
-			FetchTiming fetchTiming,
 			DomainResultCreationState creationState,
-			boolean coerceResultType) {
+			boolean unwrapRowProcessingState) {
 		//noinspection unchecked
 		this(
 				valuesArrayPosition,
@@ -76,49 +56,8 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 				fetchTiming,
 				true,
 				creationState,
-				coerceResultType
-		);
-	}
-
-	public BasicFetch(
-			int valuesArrayPosition,
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			BasicValuedModelPart valuedMapping,
-			BasicValueConverter<T, ?> valueConverter,
-			FetchTiming fetchTiming,
-			DomainResultCreationState creationState) {
-		this(
-				valuesArrayPosition,
-				fetchParent,
-				fetchablePath,
-				valuedMapping,
-				valueConverter,
-				fetchTiming,
-				true,
-				creationState
-		);
-	}
-
-	public BasicFetch(
-			int valuesArrayPosition,
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			BasicValuedModelPart valuedMapping,
-			BasicValueConverter<T, ?> valueConverter,
-			FetchTiming fetchTiming,
-			boolean canBasicPartFetchBeDelayed,
-			DomainResultCreationState creationState) {
-		this(
-				valuesArrayPosition,
-				fetchParent,
-				fetchablePath,
-				valuedMapping,
-				valueConverter,
-				fetchTiming,
-				canBasicPartFetchBeDelayed,
-				creationState,
-				false
+				false,
+				unwrapRowProcessingState
 		);
 	}
 
@@ -131,7 +70,8 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			FetchTiming fetchTiming,
 			boolean canBasicPartFetchBeDelayed,
 			DomainResultCreationState creationState,
-			boolean coerceResultType) {
+			boolean coerceResultType,
+			boolean unwrapRowProcessingState) {
 		this.navigablePath = fetchablePath;
 
 		this.fetchParent = fetchParent;
@@ -149,10 +89,10 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 		}
 		else {
 			if (coerceResultType) {
-				this.assembler = new CoercingResultAssembler<>( valuesArrayPosition, javaType, valueConverter );
+				this.assembler = new CoercingResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState );
 			}
 			else {
-				this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter );
+				this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState );
 			}
 		}
 	}

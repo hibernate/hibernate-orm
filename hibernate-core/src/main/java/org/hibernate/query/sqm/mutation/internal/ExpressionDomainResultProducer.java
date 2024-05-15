@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 
 /**
  * A wrapper around a basic {@link Expression} that produces a {@link BasicResult} as domain result.
@@ -33,7 +34,9 @@ public class ExpressionDomainResultProducer implements DomainResultProducer<Obje
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				expression.getExpressionType().getSingleJdbcMapping(),
-				null
+				null,
+				false,
+				false
 		);
 	}
 

@@ -47,7 +47,7 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 		if ( value == null ) {
 			return null;
 		}
-		if ( Byte.class.isAssignableFrom( type ) ) {
+		if ( Byte.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Short.class.isAssignableFrom( type ) ) {

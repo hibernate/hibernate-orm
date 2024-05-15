@@ -108,7 +108,10 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping.getMappedJavaType(),
-				converter
+				converter,
+				null,
+				false,
+				false
 		);
 	}
 

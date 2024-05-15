@@ -49,6 +49,11 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 		return jdbcValue == null ? null : jdbcValue[position];
 	}
 
+	@Override
+	public RowProcessingState unwrap() {
+		return processingState;
+	}
+
 	// -- delegate the rest
 
 	@Override

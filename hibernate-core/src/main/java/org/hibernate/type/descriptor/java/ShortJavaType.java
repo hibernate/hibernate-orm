@@ -57,7 +57,7 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 		if ( value == null ) {
 			return null;
 		}
-		if ( Short.class.isAssignableFrom( type ) ) {
+		if ( Short.class.isAssignableFrom( type ) || type == Object.class ) {
 			return (X) value;
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {

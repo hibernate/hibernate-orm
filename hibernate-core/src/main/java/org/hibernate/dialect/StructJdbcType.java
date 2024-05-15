@@ -13,10 +13,16 @@ import java.sql.SQLException;
 import java.sql.Struct;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
@@ -144,9 +150,12 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 
 	@Override
 	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
-		final Object[] attributes = ( (Struct) rawJdbcValue ).getAttributes();
-		wrapRawJdbcValues( embeddableMappingType, orderMapping, inverseOrderMapping, attributes, 0, options );
-		return attributes;
+		final Object[] jdbcValues = ( (Struct) rawJdbcValue ).getAttributes();
+		if ( orderMapping != null ) {
+			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, jdbcValues.clone(), jdbcValues );
+		}
+		wrapRawJdbcValues( embeddableMappingType, jdbcValues, 0, options );
+		return jdbcValues;
 	}
 
 	@Override
@@ -198,18 +207,21 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 					return null;
 				}
 				final Struct struct = (Struct) object;
-				final Object[] values = struct.getAttributes();
+				final Object[] jdbcValues = struct.getAttributes();
 				final boolean jdbcRepresentation = getJavaType().getJavaTypeClass() == Object[].class;
 				if ( jdbcRepresentation ) {
-					wrapRawJdbcValues( embeddableMappingType, orderMapping, inverseOrderMapping, values, 0, options );
+					if ( orderMapping != null ) {
+						StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, jdbcValues.clone(), jdbcValues );
+					}
+					wrapRawJdbcValues( embeddableMappingType, jdbcValues, 0, options );
 					//noinspection unchecked
-					return (X) values;
+					return (X) jdbcValues;
 				}
 				assert embeddableMappingType != null && embeddableMappingType.getJavaType() == getJavaType();
 				final StructAttributeValues attributeValues = getAttributeValues(
 						embeddableMappingType,
 						orderMapping,
-						values,
+						jdbcValues,
 						options
 				);
 				//noinspection unchecked
@@ -240,9 +252,8 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 			else {
 				attributeIndex = orderMapping[i];
 			}
-			final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, numberOfAttributeMappings, attributeIndex );
 			jdbcIndex += injectAttributeValue(
-					modelPart,
+					getEmbeddedPart( embeddableMappingType, attributeIndex ),
 					attributeValues,
 					attributeIndex,
 					rawJdbcValues,
@@ -381,115 +392,148 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 
 	private int wrapRawJdbcValues(
 			EmbeddableMappingType embeddableMappingType,
-			int[] orderMapping,
-			int[] inverseOrderMapping,
 			Object[] jdbcValues,
 			int jdbcIndex,
 			WrapperOptions options) throws SQLException {
-		final Object[] targetJdbcValues;
-		if ( orderMapping == null ) {
-			targetJdbcValues = jdbcValues;
-		}
-		else {
-			targetJdbcValues = jdbcValues.clone();
-		}
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 ); i++ ) {
-			final ValuedModelPart attributeMapping;
-			if ( orderMapping == null ) {
-				attributeMapping = getEmbeddedPart( embeddableMappingType, numberOfAttributeMappings, i );
+			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
+			if ( attributeMapping instanceof ToOneAttributeMapping ) {
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+				if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+					continue;
+				}
+				final ForeignKeyDescriptor foreignKeyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+				final ValuedModelPart keyPart = foreignKeyDescriptor.getKeyPart();
+				if ( keyPart instanceof BasicValuedMapping ) {
+					wrapRawJdbcValue( keyPart.getSingleJdbcMapping(), jdbcValues, jdbcIndex, options );
+					jdbcIndex++;
+				}
+				else if ( keyPart instanceof EmbeddableValuedModelPart ) {
+					final EmbeddableMappingType mappingType = ( (EmbeddableValuedModelPart) keyPart ).getEmbeddableTypeDescriptor();
+					jdbcIndex = wrapRawJdbcValues(
+							mappingType,
+							jdbcValues,
+							jdbcIndex,
+							options
+					);
+				}
+				else {
+					throw new UnsupportedOperationException( "Unsupported foreign key part: " + keyPart );
+				}
 			}
-			else {
-				attributeMapping = getEmbeddedPart( embeddableMappingType, numberOfAttributeMappings, orderMapping[i] );
+			else if ( attributeMapping instanceof PluralAttributeMapping ) {
+				continue;
 			}
-			final MappingType mappedType = attributeMapping.getMappedType();
-
-			if ( mappedType instanceof EmbeddableMappingType ) {
-				final EmbeddableMappingType embeddableType = (EmbeddableMappingType) mappedType;
+			else if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping ) {
+				final DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping = (DiscriminatedAssociationAttributeMapping) attributeMapping;
+				wrapRawJdbcValue(
+						discriminatedAssociationAttributeMapping.getDiscriminatorPart().getSingleJdbcMapping(),
+						jdbcValues,
+						jdbcIndex,
+						options
+				);
+				jdbcIndex++;
+				wrapRawJdbcValue(
+						discriminatedAssociationAttributeMapping.getKeyPart().getSingleJdbcMapping(),
+						jdbcValues,
+						jdbcIndex,
+						options
+				);
+				jdbcIndex++;
+			}
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
+				final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) attributeMapping;
+				final EmbeddableMappingType embeddableType = embeddableValuedModelPart.getMappedType();
 				if ( embeddableType.getAggregateMapping() != null ) {
 					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) embeddableType.getAggregateMapping()
 							.getJdbcMapping()
 							.getJdbcType();
-					final Object rawJdbcValue = targetJdbcValues[jdbcIndex];
-					targetJdbcValues[jdbcIndex] = aggregateJdbcType.extractJdbcValues( rawJdbcValue, options );
+					final Object rawJdbcValue = jdbcValues[jdbcIndex];
+					jdbcValues[jdbcIndex] = aggregateJdbcType.extractJdbcValues( rawJdbcValue, options );
 					jdbcIndex++;
 				}
 				else {
-					jdbcIndex = wrapRawJdbcValues( embeddableType, null, null, targetJdbcValues, jdbcIndex, options );
+					jdbcIndex = wrapRawJdbcValues( embeddableType, jdbcValues, jdbcIndex, options );
 				}
 			}
 			else {
 				assert attributeMapping.getJdbcTypeCount() == 1;
-				final Object rawJdbcValue = targetJdbcValues[jdbcIndex];
-				if ( rawJdbcValue != null ) {
-					final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
-					switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
-						case SqlTypes.TIME_WITH_TIMEZONE:
-						case SqlTypes.TIME_UTC:
-						case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-						case SqlTypes.TIMESTAMP_UTC:
-							// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
-							targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType()
-									.wrap( transformRawJdbcValue( rawJdbcValue, options ), options );
-							break;
-						case SqlTypes.ARRAY:
-							final BasicType<?> elementType = ( (BasicPluralType<?, ?>) jdbcMapping ).getElementType();
-							final JdbcType elementJdbcType = elementType.getJdbcType();
-							final Object[] array;
-							final Object[] newArray;
-							switch ( elementJdbcType.getDefaultSqlTypeCode() ) {
-								case SqlTypes.TIME_WITH_TIMEZONE:
-								case SqlTypes.TIME_UTC:
-								case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-								case SqlTypes.TIMESTAMP_UTC:
-									// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
-									array = (Object[]) ((java.sql.Array) rawJdbcValue).getArray();
-									newArray = new Object[array.length];
-									for ( int j = 0; j < array.length; j++ ) {
-										newArray[j] = elementType.getJdbcJavaType().wrap(
-												transformRawJdbcValue( array[j], options ),
-												options
-										);
-									}
-									targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
-									break;
-								case SqlTypes.STRUCT:
-								case SqlTypes.JSON:
-								case SqlTypes.SQLXML:
-									array = (Object[]) ( (java.sql.Array) rawJdbcValue ).getArray();
-									newArray = new Object[array.length];
-									final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) elementJdbcType;
-									final EmbeddableMappingType subEmbeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
-									for ( int j = 0; j < array.length; j++ ) {
-										final StructAttributeValues subValues = StructHelper.getAttributeValues(
-												subEmbeddableMappingType,
-												aggregateJdbcType.extractJdbcValues(
-														array[j],
-														options
-												),
-												options
-										);
-										newArray[j] = instantiate( subEmbeddableMappingType, subValues, options.getSessionFactory() );
-									}
-									targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
-									break;
-								default:
-									targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
-									break;
-							}
-							break;
-						default:
-							targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
-							break;
-					}
-				}
+				wrapRawJdbcValue( attributeMapping.getSingleJdbcMapping(), jdbcValues, jdbcIndex, options );
 				jdbcIndex++;
 			}
 		}
-		if ( orderMapping != null ) {
-			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, targetJdbcValues, jdbcValues );
-		}
 		return jdbcIndex;
+	}
+
+	private void wrapRawJdbcValue(
+			JdbcMapping jdbcMapping,
+			Object[] jdbcValues,
+			int jdbcIndex,
+			WrapperOptions options) throws SQLException {
+		final Object rawJdbcValue = jdbcValues[jdbcIndex];
+		if ( rawJdbcValue == null ) {
+			return;
+		}
+		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+			case SqlTypes.TIME_WITH_TIMEZONE:
+			case SqlTypes.TIME_UTC:
+			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+			case SqlTypes.TIMESTAMP_UTC:
+				// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
+				jdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType()
+						.wrap( transformRawJdbcValue( rawJdbcValue, options ), options );
+				break;
+			case SqlTypes.ARRAY:
+				final BasicType<?> elementType = ( (BasicPluralType<?, ?>) jdbcMapping ).getElementType();
+				final JdbcType elementJdbcType = elementType.getJdbcType();
+				final Object[] array;
+				final Object[] newArray;
+				switch ( elementJdbcType.getDefaultSqlTypeCode() ) {
+					case SqlTypes.TIME_WITH_TIMEZONE:
+					case SqlTypes.TIME_UTC:
+					case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+					case SqlTypes.TIMESTAMP_UTC:
+						// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
+						array = (Object[]) ((java.sql.Array) rawJdbcValue ).getArray();
+						newArray = new Object[array.length];
+						for ( int j = 0; j < array.length; j++ ) {
+							newArray[j] = elementType.getJdbcJavaType().wrap(
+									transformRawJdbcValue( array[j], options ),
+									options
+							);
+						}
+						jdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
+						break;
+					case SqlTypes.STRUCT:
+					case SqlTypes.JSON:
+					case SqlTypes.SQLXML:
+						array = (Object[]) ( (java.sql.Array) rawJdbcValue ).getArray();
+						newArray = new Object[array.length];
+						final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) elementJdbcType;
+						final EmbeddableMappingType subEmbeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+						for ( int j = 0; j < array.length; j++ ) {
+							final StructAttributeValues subValues = StructHelper.getAttributeValues(
+									subEmbeddableMappingType,
+									aggregateJdbcType.extractJdbcValues(
+											array[j],
+											options
+									),
+									options
+							);
+							newArray[j] = instantiate( subEmbeddableMappingType, subValues, options.getSessionFactory() );
+						}
+						jdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( newArray, options );
+						break;
+					default:
+						jdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
+						break;
+				}
+				break;
+			default:
+				jdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
+				break;
+		}
 	}
 
 	protected Object transformRawJdbcValue(Object rawJdbcValue, WrapperOptions options) {

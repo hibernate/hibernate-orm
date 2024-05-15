@@ -20,18 +20,21 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@JiraKey( "HHH-15831" )
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructAggregate.class)
-public class StructComponentCollectionErrorTest {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+public class StructComponentAssociationErrorTest {
 
 	@Test
-	@JiraKey( "HHH-15831" )
-	public void testError1() {
+	public void testOneToOneMappedBy() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			new MetadataSources( ssr )
@@ -41,7 +44,7 @@ public class StructComponentCollectionErrorTest {
 			Assertions.fail( "Expected a failure" );
 		}
 		catch (MappingException ex) {
-			assertThat( ex.getMessage(), containsString( "author.favoriteBook" ) );
+			assertThat( ex.getMessage(), containsString( "authors.favoriteBook" ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -56,19 +59,21 @@ public class StructComponentCollectionErrorTest {
 		@GeneratedValue
 		private Long id;
 		private String title;
-		private Person1 author;
+		private Person1[] authors;
+		@OneToOne(fetch = FetchType.LAZY)
+		private Book1 favoredBook;
 	}
 
 	@Embeddable
 	@Struct(name = "person_type")
 	public static class Person1 {
 		private String name;
-		@ManyToOne(fetch = FetchType.LAZY)
+		@OneToOne(mappedBy = "favoredBook", fetch = FetchType.LAZY)
 		private Book1 favoriteBook;
 	}
+
 	@Test
-	@JiraKey( "HHH-15831" )
-	public void testError2() {
+	public void testOneToManyMappedBy() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			new MetadataSources( ssr )
@@ -78,7 +83,7 @@ public class StructComponentCollectionErrorTest {
 			Assertions.fail( "Expected a failure" );
 		}
 		catch (MappingException ex) {
-			assertThat( ex.getMessage(), containsString( "author.bookCollection" ) );
+			assertThat( ex.getMessage(), containsString( "authors.bookCollection" ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -93,15 +98,54 @@ public class StructComponentCollectionErrorTest {
 		@GeneratedValue
 		private Long id;
 		private String title;
-		private Person2 author;
+		private Person2[] authors;
+		@ManyToOne(fetch = FetchType.LAZY)
+		private Book2 mainBook;
 	}
 
 	@Embeddable
 	@Struct(name = "person_type")
 	public static class Person2 {
 		private String name;
-		@OneToMany
+		@OneToMany(mappedBy = "mainBook")
 		private List<Book2> bookCollection;
+	}
+
+	@Test
+	public void testOneToMany() {
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
+		try {
+			new MetadataSources( ssr )
+					.addAnnotatedClass( Book3.class )
+					.getMetadataBuilder()
+					.build();
+			Assertions.fail( "Expected a failure" );
+		}
+		catch (MappingException ex) {
+			assertThat( ex.getMessage(), containsString( "authors.bookCollection" ) );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+
+	@Entity(name = "Book")
+	public static class Book3 {
+
+		@Id
+		@GeneratedValue
+		private Long id;
+		private String title;
+		private Person3[] authors;
+	}
+
+	@Embeddable
+	@Struct(name = "person_type")
+	public static class Person3 {
+		private String name;
+		@OneToMany
+		private List<Book3> bookCollection;
 	}
 
 }

@@ -74,7 +74,8 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 							resolveNavigablePath( attribute ),
 							attribute,
 							FetchTiming.IMMEDIATE,
-							creationState
+							creationState,
+							!sqlSelection.isVirtual()
 					)
 			);
 		}

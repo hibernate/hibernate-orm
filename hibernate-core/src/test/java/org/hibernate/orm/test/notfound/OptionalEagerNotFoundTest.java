@@ -500,7 +500,7 @@ public class OptionalEagerNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@Fetch(FetchMode.JOIN)
@@ -531,7 +531,7 @@ public class OptionalEagerNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@Fetch(FetchMode.SELECT)
@@ -562,7 +562,7 @@ public class OptionalEagerNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
@@ -593,7 +593,7 @@ public class OptionalEagerNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))

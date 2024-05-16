@@ -490,7 +490,7 @@ public class OptionalLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
@@ -519,7 +519,7 @@ public class OptionalLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
@@ -549,7 +549,7 @@ public class OptionalLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
@@ -578,7 +578,7 @@ public class OptionalLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
@@ -608,7 +608,7 @@ public class OptionalLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
@@ -637,7 +637,7 @@ public class OptionalLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
@@ -667,7 +667,7 @@ public class OptionalLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
@@ -696,7 +696,7 @@ public class OptionalLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))

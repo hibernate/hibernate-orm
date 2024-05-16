@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -21,7 +22,7 @@ public class Dependent {
 
 	//@JoinColumn(name="FK") // id attribute mapped by join column default
 	@MapsId("empPK") // maps empPK attribute of embedded id
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.PERSIST)
 	@JoinColumn(nullable=false)
 	Employee emp;
 

@@ -82,8 +82,7 @@ public class ToOneBinder {
 			MetadataBuildingContext context,
 			MemberDetails property,
 			AnnotatedJoinColumns joinColumns,
-			PropertyBinder propertyBinder,
-			boolean forcePersist) {
+			PropertyBinder propertyBinder) {
 		final AnnotationUsage<ManyToOne> manyToOne = property.getAnnotationUsage( ManyToOne.class );
 
 		//check validity
@@ -109,7 +108,7 @@ public class ToOneBinder {
 		final AnnotationUsage<OnDelete> onDelete = property.getAnnotationUsage( OnDelete.class );
 		final AnnotationUsage<JoinTable> joinTable = propertyHolder.getJoinTable( property );
 		bindManyToOne(
-				getCascadeStrategy( manyToOne.getList( "cascade" ), hibernateCascade, false, forcePersist, context ),
+				getCascadeStrategy( manyToOne.getList( "cascade" ), hibernateCascade, false, context ),
 				joinColumns,
 				joinTable,
 				!isMandatory( manyToOne.getBoolean( "optional" ), property, notFoundAction ),
@@ -219,7 +218,7 @@ public class ToOneBinder {
 			joinColumns.setMapsId( mapsId.getString( "value" ) );
 		}
 
-		boolean hasSpecjManyToOne = handleSpecjSyntax( joinColumns, inferredData, context, property );
+		final boolean hasSpecjManyToOne = handleSpecjSyntax( joinColumns, inferredData, context, property );
 		value.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
@@ -454,8 +453,7 @@ public class ToOneBinder {
 			MetadataBuildingContext context,
 			MemberDetails property,
 			AnnotatedJoinColumns joinColumns,
-			PropertyBinder propertyBinder,
-			boolean forcePersist) {
+			PropertyBinder propertyBinder) {
 		final AnnotationUsage<OneToOne> oneToOne = property.getAnnotationUsage( OneToOne.class );
 
 		//check validity
@@ -486,7 +484,7 @@ public class ToOneBinder {
 		final AnnotationUsage<OnDelete> onDelete = property.getAnnotationUsage( OnDelete.class );
 		final AnnotationUsage<JoinTable> joinTable = propertyHolder.getJoinTable( property );
 		bindOneToOne(
-				getCascadeStrategy( oneToOne.getList( "cascade" ), hibernateCascade, oneToOne.getBoolean( "orphanRemoval" ), forcePersist, context ),
+				getCascadeStrategy( oneToOne.getList( "cascade" ), hibernateCascade, oneToOne.getBoolean( "orphanRemoval" ), context ),
 				joinColumns,
 				joinTable,
 				!isMandatory( oneToOne.getBoolean( "optional" ), property, notFoundAction ),

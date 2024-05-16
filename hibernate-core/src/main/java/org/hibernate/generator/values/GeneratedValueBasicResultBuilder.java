@@ -103,19 +103,12 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 	}
 
 	private static int columnIndex(JdbcValuesMetadata jdbcResultsMetadata, BasicValuedModelPart modelPart) {
-		try {
-			return jdbcPositionToValuesArrayPosition( jdbcResultsMetadata.resolveColumnPosition(
-					getActualGeneratedModelPart( modelPart ).getSelectionExpression()
-			) );
+		if ( modelPart.isEntityIdentifierMapping() ) {
+			// Default to the first position for entity identifiers
+			return 0;
 		}
-		catch (Exception e) {
-			if ( modelPart.isEntityIdentifierMapping() ) {
-				// Default to the first position for entity identifiers
-				return 0;
-			}
-			else {
-				throw e;
-			}
-		}
+		return jdbcPositionToValuesArrayPosition( jdbcResultsMetadata.resolveColumnPosition(
+				getActualGeneratedModelPart( modelPart ).getSelectionExpression()
+		) );
 	}
 }

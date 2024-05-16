@@ -7,6 +7,8 @@
 package org.hibernate.orm.test.id;
 
 import java.io.Serializable;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
@@ -78,7 +80,7 @@ public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTest
 		private long id;
 
 		@Id
-		@ManyToOne
+		@ManyToOne(cascade = CascadeType.PERSIST)
 		private ReferencedEntity referencedEntity;
 
 		public ReferencedEntity getReferencedEntity() {

@@ -853,8 +853,7 @@ public class PropertyBinder {
 					context,
 					property,
 					columnsBuilder.getJoinColumns(),
-					propertyBinder,
-					isForcePersist( property )
+					propertyBinder
 			);
 		}
 		else if ( isOneToOne( property ) ) {
@@ -866,8 +865,7 @@ public class PropertyBinder {
 					context,
 					property,
 					columnsBuilder.getJoinColumns(),
-					propertyBinder,
-					isForcePersist( property )
+					propertyBinder
 			);
 		}
 		else if ( isAny( property ) ) {
@@ -879,8 +877,7 @@ public class PropertyBinder {
 					isIdentifierMapper,
 					context,
 					property,
-					columnsBuilder.getJoinColumns(),
-					isForcePersist( property )
+					columnsBuilder.getJoinColumns()
 			);
 		}
 		else if ( isCollection( property ) ) {
@@ -942,11 +939,6 @@ public class PropertyBinder {
 			|| property.hasAnnotationUsage( ElementCollection.class )
 			|| property.hasAnnotationUsage( ManyToAny.class );
 }
-
-	private static boolean isForcePersist(MemberDetails property) {
-		return property.hasAnnotationUsage( MapsId.class )
-			|| property.hasAnnotationUsage( Id.class );
-	}
 
 	private static void bindVersionProperty(
 			PropertyHolder propertyHolder,

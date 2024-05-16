@@ -366,10 +366,6 @@ public abstract class CollectionBinder {
 		collectionBinder.bind();
 	}
 
-	private static TypeDetails determineElementType(PropertyData inferredData) {
-		return inferredData.getClassOrElementType();
-	}
-
 	private static NotFoundAction notFoundAction(
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -511,7 +507,6 @@ public abstract class CollectionBinder {
 					oneToManyAnn.getList( "cascade" ),
 					hibernateCascade,
 					oneToManyAnn.getBoolean( "orphanRemoval" ),
-					false,
 					context
 			) );
 			collectionBinder.setOneToMany( true );
@@ -534,7 +529,6 @@ public abstract class CollectionBinder {
 					manyToManyAnn.getList( "cascade" ),
 					hibernateCascade,
 					false,
-					false,
 					context
 			) );
 			collectionBinder.setOneToMany( false );
@@ -545,7 +539,6 @@ public abstract class CollectionBinder {
 			collectionBinder.setCascadeStrategy( getCascadeStrategy(
 					null,
 					hibernateCascade,
-					false,
 					false,
 					context
 			) );

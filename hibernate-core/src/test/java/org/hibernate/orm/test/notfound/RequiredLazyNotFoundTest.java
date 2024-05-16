@@ -319,7 +319,7 @@ public class RequiredLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(optional = false, fetch = FetchType.LAZY)
+		@OneToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
@@ -348,7 +348,7 @@ public class RequiredLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(optional = false, fetch = FetchType.LAZY)
+		@OneToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
@@ -377,7 +377,7 @@ public class RequiredLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(optional = false, fetch = FetchType.LAZY)
+		@OneToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
@@ -406,7 +406,7 @@ public class RequiredLazyNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne(optional = false, fetch = FetchType.LAZY)
+		@OneToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;

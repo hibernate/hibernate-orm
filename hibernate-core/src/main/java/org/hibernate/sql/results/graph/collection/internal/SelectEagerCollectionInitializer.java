@@ -6,13 +6,15 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.InitializerParent;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -21,6 +23,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class SelectEagerCollectionInitializer extends AbstractCollectionInitializer {
 
+	/**
+	 * @deprecated Use {@link #SelectEagerCollectionInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, DomainResult, AssemblerCreationState)}  instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public SelectEagerCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
@@ -30,22 +36,39 @@ public class SelectEagerCollectionInitializer extends AbstractCollectionInitiali
 		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResult, false, creationState );
 	}
 
+	public SelectEagerCollectionInitializer(
+			NavigablePath fetchedPath,
+			PluralAttributeMapping fetchedMapping,
+			InitializerParent parent,
+			@Nullable DomainResult<?> collectionKeyResult,
+			AssemblerCreationState creationState) {
+		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, creationState );
+	}
+
 	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
+	public void resolveInstance() {
 		resolveInstance( rowProcessingState, true );
 	}
 
 	@Override
-	public void initializeInstance(RowProcessingState rowProcessingState) {
+	public void resolveInstance(@Nullable Object instance) {
+		resolveInstance( instance, rowProcessingState, true );
 	}
 
 	@Override
-	public void finishUpRow(RowProcessingState rowProcessingState) {
-		super.finishUpRow( rowProcessingState );
-		// Chances are pretty low that we can reuse the collection key,
-		// so set it to null in order to avoid an additional equals collection key comparison
-		collectionKey = null;
-		collectionInstance = null;
+	public void initializeInstanceFromParent(Object parentInstance) {
+		final Object instance = getInitializedPart().getValue( parentInstance );
+		if ( collectionAttributeMapping.getCollectionDescriptor()
+				.getCollectionSemantics()
+				.getCollectionClassification() == CollectionClassification.ARRAY ) {
+			collectionInstance = rowProcessingState.getSession().getPersistenceContextInternal()
+					.getCollectionHolder( instance );
+		}
+		else {
+			collectionInstance = (PersistentCollection<?>) instance;
+		}
+		state = State.INITIALIZED;
+		collectionInstance.forceInitialization();
 	}
 
 	@Override

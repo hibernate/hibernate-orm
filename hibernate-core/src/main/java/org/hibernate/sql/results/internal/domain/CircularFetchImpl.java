@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.internal.domain;
 
+import java.util.function.BiConsumer;
+
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -19,6 +21,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.internal.AbstractNonJoinedEntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
@@ -92,17 +95,24 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 	public DomainResultAssembler<?> createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
+		return createAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler<?> createAssembler(
+			InitializerParent parent,
+			AssemblerCreationState creationState) {
 		return new CircularFetchAssembler(
 				getResultJavaType(),
-				creationState.resolveInitializer( this, parentAccess, this ).asEntityInitializer()
+				creationState.resolveInitializer( this, parent, this ).asEntityInitializer()
 		);
 	}
 
 	@Override
-	public EntityInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public EntityInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
 		if ( timing == FetchTiming.IMMEDIATE ) {
 			return buildEntitySelectFetchInitializer(
-					parentAccess,
+					parent,
 					getFetchedMapping(),
 					getFetchedMapping().getEntityMappingType().getEntityPersister(),
 					getKeyResult(),
@@ -113,18 +123,22 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 		}
 		else {
 			return buildEntityDelayedFetchInitializer(
-					parentAccess,
+					parent,
 					getNavigablePath(),
 					getFetchedMapping(),
 					isSelectByUniqueKey(),
-					getKeyResult().createResultAssembler( parentAccess, creationState ),
+					getKeyResult().createResultAssembler( parent, creationState ),
 					getDiscriminatorFetch() != null
-							? (BasicResultAssembler<?>) getDiscriminatorFetch().createResultAssembler( parentAccess, creationState )
+							? (BasicResultAssembler<?>) getDiscriminatorFetch().createResultAssembler( parent, creationState )
 							: null
 			);
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #buildEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, EntityPersister, DomainResult, NavigablePath, boolean, AssemblerCreationState)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	protected EntityInitializer buildEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
 			ToOneAttributeMapping fetchable,
@@ -133,8 +147,8 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 			NavigablePath navigablePath,
 			boolean selectByUniqueKey,
 			AssemblerCreationState creationState) {
-		return EntitySelectFetchInitializerBuilder.createInitializer(
-				parentAccess,
+		return buildEntitySelectFetchInitializer(
+				(InitializerParent) parentAccess,
 				fetchable,
 				entityPersister,
 				keyResult,
@@ -144,6 +158,29 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 		);
 	}
 
+	protected EntityInitializer buildEntitySelectFetchInitializer(
+			InitializerParent parent,
+			ToOneAttributeMapping fetchable,
+			EntityPersister entityPersister,
+			DomainResult<?> keyResult,
+			NavigablePath navigablePath,
+			boolean selectByUniqueKey,
+			AssemblerCreationState creationState) {
+		return EntitySelectFetchInitializerBuilder.createInitializer(
+				parent,
+				fetchable,
+				entityPersister,
+				keyResult,
+				navigablePath,
+				selectByUniqueKey,
+				creationState
+		);
+	}
+
+	/**
+	 * @deprecated Use {@link #buildEntityDelayedFetchInitializer(InitializerParent, NavigablePath, ToOneAttributeMapping, boolean, DomainResultAssembler, BasicResultAssembler)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	protected EntityInitializer buildEntityDelayedFetchInitializer(
 			FetchParentAccess parentAccess,
 			NavigablePath referencedPath,
@@ -151,8 +188,25 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 			boolean selectByUniqueKey,
 			DomainResultAssembler<?> resultAssembler,
 			BasicResultAssembler<?> discriminatorAssembler) {
+		return buildEntityDelayedFetchInitializer(
+				(InitializerParent) parentAccess,
+				referencedPath,
+				fetchable,
+				selectByUniqueKey,
+				resultAssembler,
+				discriminatorAssembler
+		);
+	}
+
+	protected EntityInitializer buildEntityDelayedFetchInitializer(
+			InitializerParent parent,
+			NavigablePath referencedPath,
+			ToOneAttributeMapping fetchable,
+			boolean selectByUniqueKey,
+			DomainResultAssembler<?> resultAssembler,
+			BasicResultAssembler<?> discriminatorAssembler) {
 		return new EntityDelayedFetchInitializer(
-				parentAccess,
+				parent,
 				referencedPath,
 				fetchable,
 				selectByUniqueKey,
@@ -173,13 +227,20 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 
 		@Override
 		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-			initializer.resolveInstance( rowProcessingState );
+			initializer.resolveInstance();
 			return initializer.getInitializedInstance();
 		}
 
 		@Override
 		public @Nullable Initializer getInitializer() {
 			return initializer;
+		}
+
+		@Override
+		public <X> void forEachResultAssembler(BiConsumer<Initializer, X> consumer, X arg) {
+			if ( initializer.isResultInitializer() ) {
+				consumer.accept( initializer, arg );
+			}
 		}
 
 		@Override

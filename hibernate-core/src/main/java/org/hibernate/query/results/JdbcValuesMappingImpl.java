@@ -20,8 +20,8 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.jdbc.internal.StandardJdbcValuesMapping;
 
@@ -78,12 +78,12 @@ public class JdbcValuesMappingImpl extends StandardJdbcValuesMapping {
 				@Override
 				public <P extends FetchParent> Initializer resolveInitializer(
 						P resultGraphNode,
-						FetchParentAccess parentAccess,
+						InitializerParent parent,
 						InitializerProducer<P> producer) {
 					return creationState.resolveInitializer(
 							resultGraphNode,
-							parentAccess,
-							(node, parent, state) -> producer.createInitializer( node, parent, this )
+							parent,
+							(node, p, state) -> producer.createInitializer( node, p, this )
 					);
 				}
 

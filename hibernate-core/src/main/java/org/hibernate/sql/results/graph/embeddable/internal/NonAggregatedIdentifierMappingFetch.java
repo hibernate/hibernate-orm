@@ -12,7 +12,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 
 public class NonAggregatedIdentifierMappingFetch extends EmbeddableFetchImpl {
@@ -31,9 +31,7 @@ public class NonAggregatedIdentifierMappingFetch extends EmbeddableFetchImpl {
 	}
 
 	@Override
-	public EmbeddableInitializer createInitializer(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return new NonAggregatedIdentifierMappingFetchInitializer( parentAccess, this, creationState );
+	public EmbeddableInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+		return new NonAggregatedIdentifierMappingInitializer( this, parent, creationState, false );
 	}
 }

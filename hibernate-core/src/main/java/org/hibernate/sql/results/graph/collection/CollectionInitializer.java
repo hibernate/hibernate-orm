@@ -42,6 +42,7 @@ public interface CollectionInitializer extends FetchParentAccess {
 		return true;
 	}
 
+	@Deprecated(forRemoval = true)
 	@Nullable CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState);
 
 	@Override

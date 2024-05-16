@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -23,6 +23,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -38,6 +39,10 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 
 	private final int indexBase;
 
+	/**
+	 * @deprecated Use {@link #ArrayInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch, Fetch)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public ArrayInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping arrayDescriptor,
@@ -49,10 +54,35 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			Fetch elementFetch,
 			boolean isResultInitializer,
 			AssemblerCreationState creationState) {
+		this(
+				navigablePath,
+				arrayDescriptor,
+				(InitializerParent) parentAccess,
+				lockMode,
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer,
+				creationState,
+				listIndexFetch,
+				elementFetch
+		);
+	}
+
+	public ArrayInitializer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping arrayDescriptor,
+			InitializerParent parent,
+			LockMode lockMode,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState,
+			Fetch listIndexFetch,
+			Fetch elementFetch) {
 		super(
 				navigablePath,
 				arrayDescriptor,
-				parentAccess,
+				parent,
 				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
@@ -60,8 +90,8 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 				creationState
 		);
 		//noinspection unchecked
-		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
-		this.elementAssembler = elementFetch.createAssembler( this, creationState );
+		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( (InitializerParent) this, creationState );
+		this.elementAssembler = elementFetch.createAssembler( (InitializerParent) this, creationState );
 		this.indexBase = getCollectionAttributeMapping().getIndexMetadata().getListIndexBase();
 	}
 
@@ -71,9 +101,12 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
-		consumer.accept( listIndexAssembler );
-		consumer.accept( elementAssembler );
+	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
+		super.forEachSubInitializer( consumer, arg );
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			consumer.accept( initializer, arg );
+		}
 	}
 
 	@Override
@@ -110,10 +143,12 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	public void initializeInstanceFromParent(Object parentInstance, RowProcessingState rowProcessingState) {
+	public void initializeInstanceFromParent(Object parentInstance) {
 		final Object[] array = (Object[]) getInitializedPart().getValue( parentInstance );
 		assert array != null;
-		collectionInstance = new PersistentArrayHolder<>( rowProcessingState.getSession(), array );
+		collectionInstance = rowProcessingState.getSession()
+				.getPersistenceContextInternal()
+				.getCollectionHolder( array );
 		state = State.INITIALIZED;
 		initializeSubInstancesFromParent( rowProcessingState );
 	}
@@ -124,9 +159,30 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 		if ( initializer != null ) {
 			final Iterator iter = getCollectionInstance().elements();
 			while ( iter.hasNext() ) {
-				initializer.initializeInstanceFromParent( iter.next(), rowProcessingState );
+				initializer.initializeInstanceFromParent( iter.next() );
 			}
 		}
+	}
+
+	@Override
+	protected void resolveInstanceSubInitializers(RowProcessingState rowProcessingState) {
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final Iterator iter = getCollectionInstance().elements();
+			while ( iter.hasNext() ) {
+				initializer.resolveInstance( iter.next() );
+			}
+		}
+	}
+
+	@Override
+	public DomainResultAssembler<?> getIndexAssembler() {
+		return listIndexAssembler;
+	}
+
+	@Override
+	public DomainResultAssembler<?> getElementAssembler() {
+		return elementAssembler;
 	}
 
 	@Override

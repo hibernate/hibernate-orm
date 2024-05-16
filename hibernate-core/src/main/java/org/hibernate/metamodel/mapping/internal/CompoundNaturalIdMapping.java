@@ -47,6 +47,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -572,6 +573,13 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		public DomainResultAssembler<Object[]> createResultAssembler(
 				FetchParentAccess parentAccess,
 				AssemblerCreationState creationState) {
+			return createResultAssembler( (InitializerParent) parentAccess, creationState );
+		}
+
+		@Override
+		public DomainResultAssembler<Object[]> createResultAssembler(
+				InitializerParent parent,
+				AssemblerCreationState creationState) {
 			return new AssemblerImpl(
 					fetches,
 					navigablePath,
@@ -591,7 +599,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		// FetchParent
 
 		@Override
-		public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		public Initializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
 			throw new UnsupportedOperationException( "Compound natural id mappings should not use an initializer" );
 		}
 
@@ -647,7 +655,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			this.subAssemblers = new DomainResultAssembler[fetches.size()];
 			int i = 0;
 			for ( Fetch fetch : fetches ) {
-				subAssemblers[i++] = fetch.createAssembler( null, creationState );
+				subAssemblers[i++] = fetch.createAssembler( (InitializerParent) null, creationState );
 			}
 		}
 
@@ -666,6 +674,18 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		public void resolveState(RowProcessingState rowProcessingState) {
 			for ( DomainResultAssembler<?> subAssembler : subAssemblers ) {
 				subAssembler.resolveState( rowProcessingState );
+			}
+		}
+
+		@Override
+		public <X> void forEachResultAssembler(BiConsumer<Initializer, X> consumer, X arg) {
+			for ( DomainResultAssembler<?> subAssembler : subAssemblers ) {
+				final Initializer initializer = subAssembler.getInitializer();
+				// In case of natural id mapping selection every initializer is a "result initializer",
+				// regardless of what Initializer#isResultInitializer reports
+				if ( initializer != null ) {
+					consumer.accept( initializer, arg );
+				}
 			}
 		}
 

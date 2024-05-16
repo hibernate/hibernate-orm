@@ -167,10 +167,10 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
    		assertTrue( Hibernate.isInitialized( result ) );
    		assertTrue( Hibernate.isInitialized( result.bar ) );
-        assertTrue( Hibernate.isInitialized( result.bar.foos) );
+        assertTrue( Hibernate.isInitialized( result.bar.getFoos()) );
    		assertTrue( Hibernate.isInitialized( result.baz ) );
    		// sanity check -- ensure the only bi-directional fetch was the one identified by the graph
-        assertFalse( Hibernate.isInitialized( result.baz.foos) );
+        assertFalse( Hibernate.isInitialized( result.baz.getFoos()) );
 
    		em.getTransaction().commit();
    		em.close();
@@ -510,6 +510,10 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
         @OneToMany(mappedBy = "bar")
         public Set<Foo> foos = new HashSet<Foo>();
+
+		public Set<Foo> getFoos() {
+			return foos;
+		}
 	}
 
 	@Entity(name = "Baz")
@@ -523,6 +527,9 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         @OneToMany(mappedBy = "baz")
         public Set<Foo> foos = new HashSet<Foo>();
 
+		public Set<Foo> getFoos() {
+			return foos;
+		}
 	}
 
 	@Entity(name = "Book")

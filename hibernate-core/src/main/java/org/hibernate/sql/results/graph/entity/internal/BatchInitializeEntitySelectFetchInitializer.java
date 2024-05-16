@@ -18,6 +18,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -28,14 +29,32 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 
 	private final Set<EntityKey> toBatchLoad = new HashSet<>();
 
-
+	/**
+	 * @deprecated Use {@link #BatchInitializeEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public BatchInitializeEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
 			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler<?> identifierAssembler) {
-		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
+		this(
+				(InitializerParent) parentAccess,
+				referencedModelPart,
+				fetchedNavigable,
+				concreteDescriptor,
+				identifierAssembler
+		);
+	}
+
+	public BatchInitializeEntitySelectFetchInitializer(
+			InitializerParent parent,
+			ToOneAttributeMapping referencedModelPart,
+			NavigablePath fetchedNavigable,
+			EntityPersister concreteDescriptor,
+			DomainResultAssembler<?> identifierAssembler) {
+		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
 	}
 
 	@Override
@@ -44,25 +63,16 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 	}
 
 	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state != State.KEY_RESOLVED ) {
-			return;
-		}
-		state = State.INITIALIZED;
-		initializedEntityInstance = getExistingInitializedInstance( rowProcessingState );
-		if ( initializedEntityInstance == null ) {
-			// need to add the key to the batch queue only when the entity has not been already loaded or
-			// there isn't another initializer that is loading it
-			registerToBatchFetchQueue( rowProcessingState );
-			// Force creating a proxy
-			initializedEntityInstance = rowProcessingState.getSession().internalLoad(
-					entityKey.getEntityName(),
-					entityKey.getIdentifier(),
-					false,
-					false
-			);
-			toBatchLoad.add( entityKey );
-		}
+	protected void registerToBatchFetchQueue(RowProcessingState rowProcessingState) {
+		super.registerToBatchFetchQueue( rowProcessingState );
+		// Force creating a proxy
+		initializedEntityInstance = rowProcessingState.getSession().internalLoad(
+				entityKey.getEntityName(),
+				entityKey.getIdentifier(),
+				false,
+				false
+		);
+		toBatchLoad.add( entityKey );
 	}
 
 	@Override
@@ -71,8 +81,9 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 	}
 
 	@Override
-	public void endLoading(ExecutionContext context) {
-		final SharedSessionContractImplementor session = context.getSession();
+	public void endLoading(ExecutionContext executionContext) {
+		super.endLoading( executionContext );
+		final SharedSessionContractImplementor session = executionContext.getSession();
 		for ( EntityKey key : toBatchLoad ) {
 			loadInstance( key, referencedModelPart, session );
 		}

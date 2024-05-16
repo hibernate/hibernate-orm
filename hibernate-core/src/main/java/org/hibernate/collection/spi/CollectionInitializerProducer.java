@@ -14,6 +14,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
 /**
@@ -41,7 +42,7 @@ public interface CollectionInitializerProducer {
 	 * @param collectionValueKeyAssembler allows creation of a
 	 *        {@link org.hibernate.sql.results.graph.DomainResult} for
 	 *        either side of the collection foreign key
-	 * @deprecated Use {@link #produceInitializer(NavigablePath, PluralAttributeMapping, FetchParentAccess, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState)} instead
+	 * @deprecated Use {@link #produceInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState)} instead
 	 */
 	@Deprecated(forRemoval = true)
 	CollectionInitializer produceInitializer(
@@ -56,7 +57,7 @@ public interface CollectionInitializerProducer {
 	default CollectionInitializer produceInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attribute,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
@@ -67,30 +68,30 @@ public interface CollectionInitializerProducer {
 		if ( collectionKeyResult == null ) {
 			collectionKeyAssembler = null;
 			collectionValueKeyAssembler = collectionValueKeyResult.createResultAssembler(
-					null,
+					(InitializerParent) null,
 					creationState
 			);
 		}
 		else if ( collectionKeyResult == collectionValueKeyResult ) {
 			collectionKeyAssembler = collectionValueKeyAssembler = collectionKeyResult.createResultAssembler(
-					null,
+					(InitializerParent) null,
 					creationState
 			);
 		}
 		else {
 			collectionKeyAssembler = collectionKeyResult.createResultAssembler(
-					null,
+					(InitializerParent) null,
 					creationState
 			);
 			collectionValueKeyAssembler = collectionValueKeyResult.createResultAssembler(
-					null,
+					(InitializerParent) null,
 					creationState
 			);
 		}
 		return produceInitializer(
 				navigablePath,
 				attribute,
-				parentAccess,
+				(FetchParentAccess) parent,
 				lockMode,
 				collectionKeyAssembler,
 				collectionValueKeyAssembler,

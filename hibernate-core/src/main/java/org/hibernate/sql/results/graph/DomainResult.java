@@ -30,8 +30,19 @@ public interface DomainResult<J> extends DomainResultGraphNode {
 
 	/**
 	 * Create an assembler (and any initializers) for this result.
+	 * @deprecated Use {@link #createResultAssembler(InitializerParent, AssemblerCreationState)} instead.
 	 */
+	@Deprecated(forRemoval = true)
 	DomainResultAssembler<J> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState);
+
+	/**
+	 * Create an assembler (and any initializers) for this result.
+	 */
+	default DomainResultAssembler<J> createResultAssembler(
+			InitializerParent parent,
+			AssemblerCreationState creationState) {
+		return createResultAssembler( (FetchParentAccess) parent, creationState );
+	}
 }

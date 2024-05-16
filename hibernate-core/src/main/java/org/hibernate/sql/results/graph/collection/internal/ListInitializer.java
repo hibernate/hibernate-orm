@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -22,6 +22,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -39,6 +40,10 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 
 	private final int listIndexBase;
 
+	/**
+	 * @deprecated Use {@link #ListInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch, Fetch)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public ListInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
@@ -50,10 +55,33 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 			Fetch elementFetch,
 			boolean isResultInitializer,
 			AssemblerCreationState creationState) {
+		this(
+				navigablePath,
+				attributeMapping,
+				(InitializerParent) parentAccess,
+				lockMode,
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer, creationState, listIndexFetch,
+				elementFetch
+		);
+	}
+
+	public ListInitializer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attributeMapping,
+			InitializerParent parent,
+			LockMode lockMode,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState,
+			Fetch listIndexFetch,
+			Fetch elementFetch) {
 		super(
 				navigablePath,
 				attributeMapping,
-				parentAccess,
+				parent,
 				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
@@ -61,8 +89,8 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 				creationState
 		);
 		//noinspection unchecked
-		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
-		this.elementAssembler = elementFetch.createAssembler( this, creationState );
+		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( (InitializerParent) this, creationState );
+		this.elementAssembler = elementFetch.createAssembler( (InitializerParent) this, creationState );
 		this.listIndexBase = attributeMapping.getIndexMetadata().getListIndexBase();
 	}
 
@@ -72,9 +100,12 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
-		consumer.accept( listIndexAssembler );
-		consumer.accept( elementAssembler );
+	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
+		super.forEachSubInitializer( consumer, arg );
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			consumer.accept( initializer, arg );
+		}
 	}
 
 	@Override
@@ -117,9 +148,31 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 			final PersistentList<?> list = getCollectionInstance();
 			assert list != null;
 			for ( Object element : list ) {
-				initializer.initializeInstanceFromParent( element, rowProcessingState );
+				initializer.initializeInstanceFromParent( element );
 			}
 		}
+	}
+
+	@Override
+	protected void resolveInstanceSubInitializers(RowProcessingState rowProcessingState) {
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final PersistentList<?> list = getCollectionInstance();
+			assert list != null;
+			for ( Object element : list ) {
+				initializer.resolveInstance( element );
+			}
+		}
+	}
+
+	@Override
+	public DomainResultAssembler<?> getIndexAssembler() {
+		return listIndexAssembler;
+	}
+
+	@Override
+	public DomainResultAssembler<?> getElementAssembler() {
+		return elementAssembler;
 	}
 
 	@Override

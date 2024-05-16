@@ -6,12 +6,15 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.function.BiConsumer;
 
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.spi.NavigablePath;
@@ -52,16 +55,39 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		return getDiscriminatorMapping() != null;
 	}
 
+	interface ConcreteEmbeddableType {
+
+		EmbeddableInstantiator getInstantiator();
+
+		int getSubclassId();
+
+		/**
+		 * Returns {@code true} if the provided embeddable class contains the
+		 * specified attribute mapping, {@code false} otherwise.
+		 * @implNote This method always returns {@code true} for non-polymorphic embeddable types
+		 *
+		 * @param attributeMapping the attribute to check
+		 */
+		boolean declaresAttribute(AttributeMapping attributeMapping);
+
+		boolean declaresAttribute(int attributeIndex);
+
+		Object getDiscriminatorValue();
+	}
+
+	default ConcreteEmbeddableType findSubtypeByDiscriminator(Object discriminatorValue) {
+		return null;
+	}
+
+	default ConcreteEmbeddableType findSubtypeBySubclass(String subclassName) {
+		return null;
+	}
+
 	/**
-	 * Returns {@code true} if the provided embeddable class contains the
-	 * specified attribute mapping, {@code false} otherwise.
-	 * @implNote This method always returns {@code true} for non-polymorphic embeddable types
-	 *
-	 * @param embeddableClassName the embeddable subclass in which the attribute must be declared
-	 * @param attributeMapping the attribute to check
+	 * Returns the concrete embeddable subtypes or an empty collection if {@link #isPolymorphic()} is {@code false}.
 	 */
-	default boolean declaresAttribute(String embeddableClassName, AttributeMapping attributeMapping) {
-		return true;
+	default Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
+		return Collections.emptySet();
 	}
 
 	default SelectableMapping getAggregateMapping() {

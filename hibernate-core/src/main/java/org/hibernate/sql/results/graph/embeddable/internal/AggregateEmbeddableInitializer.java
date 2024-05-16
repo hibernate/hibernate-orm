@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -29,10 +30,10 @@ public interface AggregateEmbeddableInitializer extends EmbeddableInitializer {
 	}
 
 	static int[] determineAggregateValuesArrayPositions(
-			FetchParentAccess fetchParentAccess,
+			InitializerParent parent,
 			SqlSelection structSelection) {
-		if ( fetchParentAccess instanceof AggregateEmbeddableInitializer ) {
-			final int[] parentAggregateValuesArrayPositions = ( (AggregateEmbeddableInitializer) fetchParentAccess ).getAggregateValuesArrayPositions();
+		if ( parent instanceof AggregateEmbeddableInitializer ) {
+			final int[] parentAggregateValuesArrayPositions = ( (AggregateEmbeddableInitializer) parent ).getAggregateValuesArrayPositions();
 			final int[] aggregateValuesArrayPositions = new int[parentAggregateValuesArrayPositions.length + 1];
 			System.arraycopy(
 					parentAggregateValuesArrayPositions,
@@ -44,9 +45,8 @@ public interface AggregateEmbeddableInitializer extends EmbeddableInitializer {
 			aggregateValuesArrayPositions[aggregateValuesArrayPositions.length - 1] = structSelection.getValuesArrayPosition();
 			return aggregateValuesArrayPositions;
 		}
-		else if ( fetchParentAccess instanceof EmbeddableInitializer ) {
-			final FetchParentAccess parentFetchParentAccess = fetchParentAccess.getFetchParentAccess();
-			return determineAggregateValuesArrayPositions( parentFetchParentAccess, structSelection );
+		else if ( parent instanceof EmbeddableInitializer ) {
+			return determineAggregateValuesArrayPositions( parent.getParent(), structSelection );
 		}
 		return new int[] { structSelection.getValuesArrayPosition() };
 	}

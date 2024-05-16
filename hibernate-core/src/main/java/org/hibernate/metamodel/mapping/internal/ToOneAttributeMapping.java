@@ -95,6 +95,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
@@ -1854,6 +1855,13 @@ public class ToOneAttributeMapping
 		@Override
 		public DomainResultAssembler createResultAssembler(
 				FetchParentAccess parentAccess,
+				AssemblerCreationState creationState) {
+			return createResultAssembler( (InitializerParent) parentAccess, creationState );
+		}
+
+		@Override
+		public DomainResultAssembler createResultAssembler(
+				InitializerParent parent,
 				AssemblerCreationState creationState) {
 			return resultAssembler;
 		}

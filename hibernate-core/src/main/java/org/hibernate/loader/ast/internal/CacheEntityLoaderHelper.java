@@ -356,6 +356,7 @@ public class CacheEntityLoaderHelper {
 		final StatefulPersistenceContext statefulPersistenceContext = (StatefulPersistenceContext) session.getPersistenceContext();
 
 		if ( ( isManagedEntity( entity ) ) ) {
+			statefulPersistenceContext.addEntity( entityKey, entity );
 			statefulPersistenceContext.addReferenceEntry(
 					entity,
 					Status.READ_ONLY

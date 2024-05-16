@@ -14,10 +14,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.query.sqm.sql.internal.InstantiationException;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -101,5 +103,12 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			beanInjection.getBeanInjector().inject( result, assembled );
 		}
 		return result;
+	}
+
+	@Override
+	public <X> void forEachResultAssembler(BiConsumer<Initializer, X> consumer, X arg) {
+		for ( BeanInjection beanInjection : beanInjections ) {
+			beanInjection.getValueAssembler().forEachResultAssembler( consumer, arg );
+		}
 	}
 }

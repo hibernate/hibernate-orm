@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentBag;
@@ -23,6 +23,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -39,6 +40,10 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 	private final DomainResultAssembler<?> elementAssembler;
 	private final DomainResultAssembler<?> collectionIdAssembler;
 
+	/**
+	 * @deprecated Use {@link #BagInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch, Fetch)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public BagInitializer(
 			PluralAttributeMapping bagDescriptor,
 			FetchParentAccess parentAccess,
@@ -50,20 +55,45 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 			@Nullable Fetch collectionIdFetch,
 			boolean isResultInitializer,
 			AssemblerCreationState creationState) {
+		this(
+				navigablePath,
+				bagDescriptor,
+				(InitializerParent) parentAccess,
+				lockMode,
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer,
+				creationState,
+				elementFetch,
+				collectionIdFetch
+		);
+	}
+
+	public BagInitializer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping bagDescriptor,
+			InitializerParent parent,
+			LockMode lockMode,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState,
+			Fetch elementFetch,
+			@Nullable Fetch collectionIdFetch) {
 		super(
 				navigablePath,
 				bagDescriptor,
-				parentAccess,
+				parent,
 				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
 				isResultInitializer,
 				creationState
 		);
-		this.elementAssembler = elementFetch.createAssembler( this, creationState );
+		this.elementAssembler = elementFetch.createAssembler( (InitializerParent) this, creationState );
 		this.collectionIdAssembler = collectionIdFetch == null
 				? null
-				: collectionIdFetch.createAssembler( this, creationState );
+				: collectionIdFetch.createAssembler( (InitializerParent) this, creationState );
 	}
 
 	@Override
@@ -72,8 +102,12 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
-		consumer.accept( elementAssembler );
+	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
+		super.forEachSubInitializer( consumer, arg );
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			consumer.accept( initializer, arg );
+		}
 	}
 
 	@Override
@@ -111,15 +145,44 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 			assert persistentCollection != null;
 			if ( persistentCollection instanceof PersistentBag<?> ) {
 				for ( Object element : ( (PersistentBag<?>) persistentCollection ) ) {
-					initializer.initializeInstanceFromParent( element, rowProcessingState );
+					initializer.initializeInstanceFromParent( element );
 				}
 			}
 			else {
 				for ( Object element : ( (PersistentIdentifierBag<?>) persistentCollection ) ) {
-					initializer.initializeInstanceFromParent( element, rowProcessingState );
+					initializer.initializeInstanceFromParent( element );
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void resolveInstanceSubInitializers(RowProcessingState rowProcessingState) {
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final PersistentCollection<?> persistentCollection = getCollectionInstance();
+			assert persistentCollection != null;
+			if ( persistentCollection instanceof PersistentBag<?> ) {
+				for ( Object element : ( (PersistentBag<?>) persistentCollection ) ) {
+					initializer.resolveInstance( element );
+				}
+			}
+			else {
+				for ( Object element : ( (PersistentIdentifierBag<?>) persistentCollection ) ) {
+					initializer.resolveInstance( element );
+				}
+			}
+		}
+	}
+
+	@Override
+	public DomainResultAssembler<?> getIndexAssembler() {
+		return null;
+	}
+
+	@Override
+	public DomainResultAssembler<?> getElementAssembler() {
+		return elementAssembler;
 	}
 
 	@Override

@@ -31,7 +31,7 @@ public class SingleResultConsumer<T> implements ResultsConsumer<T, T> {
 			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<T> rowReader) {
-		rowReader.getInitializersList().startLoading( rowProcessingState );
+		rowReader.startLoading( rowProcessingState );
 		rowProcessingState.next();
 		final T result = rowReader.readRow( rowProcessingState, processingOptions );
 		rowProcessingState.finishRowProcessing( true );

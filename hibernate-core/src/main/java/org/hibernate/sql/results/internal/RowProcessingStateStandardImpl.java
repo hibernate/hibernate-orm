@@ -10,13 +10,11 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
@@ -25,16 +23,12 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 /**
  * Standard RowProcessingState implementation
  */
 public class RowProcessingStateStandardImpl extends BaseExecutionContext implements RowProcessingState {
 
 	private final JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState;
-
-	private final InitializersList initializers;
 
 	private final RowReader<?> rowReader;
 	private final JdbcValues jdbcValues;
@@ -50,7 +44,6 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 		this.executionContext = executionContext;
 		this.rowReader = rowReader;
 		this.jdbcValues = jdbcValues;
-		this.initializers = rowReader.getInitializersList();
 	}
 
 	@Override
@@ -207,15 +200,6 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	@Override
 	public boolean hasQueryExecutionToBeAddedToStatistics() {
 		return executionContext.hasQueryExecutionToBeAddedToStatistics();
-	}
-
-	@Override
-	public Initializer resolveInitializer(@Nullable NavigablePath path) {
-		return this.initializers.resolveInitializer( path );
-	}
-
-	public boolean hasCollectionInitializers() {
-		return this.initializers.hasCollectionInitializers();
 	}
 
 	@Override

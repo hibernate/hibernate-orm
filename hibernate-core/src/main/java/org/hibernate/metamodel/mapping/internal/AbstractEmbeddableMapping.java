@@ -7,8 +7,10 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.MappingException;
@@ -47,6 +49,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -68,12 +71,38 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Base support for EmbeddableMappingType implementations
  */
-public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType {
+public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType,
+		EmbeddableMappingType.ConcreteEmbeddableType {
 	final protected MutableAttributeMappingList attributeMappings;
 	protected SelectableMappings selectableMappings;
 
 	public AbstractEmbeddableMapping(MutableAttributeMappingList attributeMappings) {
 		this.attributeMappings = attributeMappings;
+	}
+
+	@Override
+	public EmbeddableInstantiator getInstantiator() {
+		return getRepresentationStrategy().getInstantiator();
+	}
+
+	@Override
+	public int getSubclassId() {
+		return 0;
+	}
+
+	@Override
+	public boolean declaresAttribute(AttributeMapping attributeMapping) {
+		return true;
+	}
+
+	@Override
+	public boolean declaresAttribute(int attributeIndex) {
+		return true;
+	}
+
+	@Override
+	public Object getDiscriminatorValue() {
+		return null;
 	}
 
 	@Override

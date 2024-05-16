@@ -18,48 +18,58 @@ import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.type.Type;
 
 public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
+	protected final AttributeMapping[] parentAttributes;
+	protected final Setter referencedModelPartSetter;
+	protected final Type referencedModelPartType;
+
 	private Map<EntityKey, List<ParentInfo>> toBatchLoad;
 
+	/**
+	 * @deprecated Use {@link #BatchEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public BatchEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
 			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler<?> identifierAssembler) {
-		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
+		this(
+				(InitializerParent) parentAccess,
+				referencedModelPart,
+				fetchedNavigable,
+				concreteDescriptor,
+				identifierAssembler
+		);
 	}
 
-	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state != State.KEY_RESOLVED ) {
-			return;
-		}
-		state = State.INITIALIZED;
-
-		initializedEntityInstance = getExistingInitializedInstance( rowProcessingState );
-		if ( initializedEntityInstance == null ) {
-			// need to add the key to the batch queue only when the entity has not been already loaded or
-			// there isn't another initializer that is loading it
-			registerToBatchFetchQueue( rowProcessingState );
-		}
+	public BatchEntitySelectFetchInitializer(
+			InitializerParent parentAccess,
+			ToOneAttributeMapping referencedModelPart,
+			NavigablePath fetchedNavigable,
+			EntityPersister concreteDescriptor,
+			DomainResultAssembler<?> identifierAssembler) {
+		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
+		this.parentAttributes = getParentEntityAttributes( referencedModelPart.getAttributeName() );
+		this.referencedModelPartSetter = referencedModelPart.getPropertyAccess().getSetter();
+		this.referencedModelPartType = owningEntityInitializer.getEntityDescriptor().getPropertyType( referencedModelPart.getAttributeName() );
 	}
 
 	@Override
 	protected void registerResolutionListener() {
-		parentAccess.registerResolutionListener( parentInstance -> {
-			final AttributeMapping parentAttribute = getParentEntityAttribute( referencedModelPart.getAttributeName() );
-			if ( parentAttribute != null && !firstEntityInitializer.isEntityInitialized() ) {
-				getParentInfos().add( new ParentInfo( parentInstance, parentAttribute.getStateArrayPosition() ) );
-			}
-		} );
+		final AttributeMapping parentAttribute;
+		if ( !owningEntityInitializer.isEntityInitialized() && ( parentAttribute = parentAttributes[owningEntityInitializer.getConcreteDescriptor().getSubclassId()] ) != null ) {
+			getParentInfos().add( new ParentInfo( owningEntityInitializer.getTargetInstance(), parentAttribute.getStateArrayPosition() ) );
+		}
 	}
 
 	private List<ParentInfo> getParentInfos() {
@@ -85,55 +95,28 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	}
 
 	@Override
-	public void endLoading(ExecutionContext context) {
+	public void endLoading(ExecutionContext executionContext) {
+		super.endLoading( executionContext );
 		if ( toBatchLoad != null ) {
 			toBatchLoad.forEach(
 					(entityKey, parentInfos) -> {
-						final SharedSessionContractImplementor session = context.getSession();
+						final SharedSessionContractImplementor session = executionContext.getSession();
 						final Object instance = loadInstance( entityKey, referencedModelPart, session );
 						for ( ParentInfo parentInfo : parentInfos ) {
 							final Object parentInstance = parentInfo.parentInstance;
-							setInstance(
-									firstEntityInitializer,
-									referencedModelPart,
-									referencedModelPart.getPartName(),
-									parentInfo.propertyIndex,
-									session,
-									instance,
-									parentInstance,
-									session.getPersistenceContext().getEntry( parentInstance )
-							);
+							final EntityEntry entry = session.getPersistenceContext().getEntry( parentInstance );
+							referencedModelPartSetter.set( parentInstance, instance );
+							final Object[] loadedState = entry.getLoadedState();
+							if ( loadedState != null ) {
+								loadedState[parentInfo.propertyIndex] = referencedModelPartType.deepCopy(
+										instance,
+										session.getFactory()
+								);
+							}
 						}
 					}
 			);
 			toBatchLoad.clear();
-		}
-	}
-
-	protected static void setInstance(
-			EntityInitializer entityInitializer,
-			ToOneAttributeMapping referencedModelPart,
-			String propertyName,
-			int propertyIndex,
-			SharedSessionContractImplementor session,
-			Object instance,
-			Object parentInstance,
-			EntityEntry entry) {
-		referencedModelPart.getPropertyAccess().getSetter().set( parentInstance, instance );
-		updateParentEntityLoadedState( entityInitializer, propertyName, propertyIndex, session, instance, entry );
-	}
-
-	private static void updateParentEntityLoadedState(
-			EntityInitializer entityInitializer,
-			String propertyName,
-			int propertyIndex,
-			SharedSessionContractImplementor session,
-			Object instance,
-			EntityEntry entry) {
-		final Object[] loadedState = entry.getLoadedState();
-		if ( loadedState != null ) {
-			loadedState[propertyIndex] = entityInitializer.getEntityDescriptor().getPropertyType( propertyName )
-					.deepCopy( instance, session.getFactory() );
 		}
 	}
 

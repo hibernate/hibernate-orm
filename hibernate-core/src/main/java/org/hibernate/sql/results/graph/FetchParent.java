@@ -102,7 +102,7 @@ public interface FetchParent extends DomainResultGraphNode {
 		}
 	}
 
-	Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState);
+	Initializer createInitializer(InitializerParent parent, AssemblerCreationState creationState);
 
 	default FetchParent getRoot() {
 		if ( this instanceof Fetch ) {

@@ -15,6 +15,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -62,23 +63,23 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 	public CollectionInitializer produceInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attribute,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
 			AssemblerCreationState creationState) {
 		return new BagInitializer(
-				bagDescriptor,
-				parentAccess,
 				navigablePath,
+				bagDescriptor,
+				parent,
 				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
-				elementFetch,
-				collectionIdFetch,
 				isResultInitializer,
-				creationState
+				creationState,
+				elementFetch,
+				collectionIdFetch
 		);
 	}
 }

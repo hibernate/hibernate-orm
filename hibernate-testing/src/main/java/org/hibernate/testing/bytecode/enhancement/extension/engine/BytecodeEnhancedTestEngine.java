@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.ClassOrderer;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -61,6 +62,13 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
+		// Make sure this runs first
+		try {
+			BaseUnitTestCase.checkClearSchema();
+		}
+		catch (Throwable e) {
+			throw new RuntimeException( e );
+		}
 		JupiterConfiguration configuration = new CachingJupiterConfiguration(
 				new DefaultJupiterConfiguration( discoveryRequest.getConfigurationParameters() ) );
 		JupiterEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor( uniqueId, configuration );

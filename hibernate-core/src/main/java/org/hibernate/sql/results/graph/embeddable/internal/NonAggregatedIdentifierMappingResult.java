@@ -10,8 +10,8 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 
 public class NonAggregatedIdentifierMappingResult<T> extends EmbeddableResultImpl<T> {
 	public NonAggregatedIdentifierMappingResult(
@@ -25,12 +25,8 @@ public class NonAggregatedIdentifierMappingResult<T> extends EmbeddableResultImp
 	@Override
 	public Initializer createInitializer(
 			EmbeddableResultImpl<T> resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return new NonAggregatedIdentifierMappingResultInitializer(
-				resultGraphNode,
-				parentAccess,
-				creationState
-		);
+		return new NonAggregatedIdentifierMappingInitializer( resultGraphNode, parent, creationState, true );
 	}
 }

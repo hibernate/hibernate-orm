@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentSet;
@@ -21,6 +21,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -33,6 +34,10 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 
 	private final DomainResultAssembler<?> elementAssembler;
 
+	/**
+	 * @deprecated Use {@link #SetInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public SetInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping setDescriptor,
@@ -43,17 +48,40 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 			Fetch elementFetch,
 			boolean isResultInitializer,
 			AssemblerCreationState creationState) {
+		this(
+				navigablePath,
+				setDescriptor,
+				(InitializerParent) parentAccess,
+				lockMode,
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer,
+				creationState,
+				elementFetch
+		);
+	}
+
+	public SetInitializer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping setDescriptor,
+			InitializerParent parent,
+			LockMode lockMode,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState,
+			Fetch elementFetch) {
 		super(
 				navigablePath,
 				setDescriptor,
-				parentAccess,
+				parent,
 				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
 				isResultInitializer,
 				creationState
 		);
-		this.elementAssembler = elementFetch.createAssembler( this, creationState );
+		this.elementAssembler = elementFetch.createAssembler( (InitializerParent) this, creationState );
 	}
 
 	@Override
@@ -62,8 +90,12 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
-		consumer.accept( elementAssembler );
+	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
+		super.forEachSubInitializer( consumer, arg );
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			consumer.accept( initializer, arg );
+		}
 	}
 
 	@Override
@@ -91,9 +123,31 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 			final PersistentSet<?> set = getCollectionInstance();
 			assert set != null;
 			for ( Object element : set ) {
-				initializer.initializeInstanceFromParent( element, rowProcessingState );
+				initializer.initializeInstanceFromParent( element );
 			}
 		}
+	}
+
+	@Override
+	protected void resolveInstanceSubInitializers(RowProcessingState rowProcessingState) {
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final PersistentSet<?> set = getCollectionInstance();
+			assert set != null;
+			for ( Object element : set ) {
+				initializer.resolveInstance( element );
+			}
+		}
+	}
+
+	@Override
+	public DomainResultAssembler<?> getIndexAssembler() {
+		return null;
+	}
+
+	@Override
+	public DomainResultAssembler<?> getElementAssembler() {
+		return elementAssembler;
 	}
 
 	@Override

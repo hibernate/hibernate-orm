@@ -1948,4 +1948,9 @@ public abstract class AbstractHANADialect extends Dialect {
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		return getVersion().isSameOrAfter(2, 0, 3);
+	}
 }

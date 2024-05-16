@@ -15,6 +15,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
 /**
@@ -47,7 +48,7 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 	public CollectionInitializer produceInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attribute,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
@@ -56,13 +57,13 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 		return new SetInitializer(
 				navigablePath,
 				setDescriptor,
-				parentAccess,
+				parent,
 				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
-				elementFetch,
 				isResultInitializer,
-				creationState
+				creationState,
+				elementFetch
 		);
 	}
 }

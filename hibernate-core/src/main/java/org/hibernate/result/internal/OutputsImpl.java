@@ -244,7 +244,7 @@ public class OutputsImpl implements Outputs {
 						jdbcValues
 				);
 
-				rowReader.getInitializersList().startLoading( rowProcessingState );
+				rowReader.startLoading( rowProcessingState );
 
 				while ( rowProcessingState.next() ) {
 					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );

@@ -6,28 +6,27 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
-import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -37,13 +36,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractCollectionInitializer implements CollectionInitializer {
-	private final NavigablePath collectionPath;
-	private final FetchParentAccess owningParent;
-	private final EntityMappingType ownedModelPartDeclaringType;
+public abstract class AbstractCollectionInitializer extends AbstractInitializer implements CollectionInitializer {
+	protected final NavigablePath collectionPath;
 	protected final PluralAttributeMapping collectionAttributeMapping;
 	protected final boolean isResultInitializer;
-	protected final @Nullable FetchParentAccess parentAccess;
+	protected final @Nullable InitializerParent parent;
+	protected final @Nullable EntityInitializer owningEntityInitializer;
 
 	/**
 	 * refers to the collection's container value - which collection-key?
@@ -51,87 +49,127 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 	protected final @Nullable DomainResultAssembler<?> collectionKeyResultAssembler;
 
 	protected @Nullable PersistentCollection<?> collectionInstance;
+	protected @Nullable Object collectionKeyValue;
 	protected @Nullable CollectionKey collectionKey;
 
-	protected boolean parentShallowCached;
-
-	// per-row state
-	protected State state = State.UNINITIALIZED;
+	/**
+	 * @deprecated Use {@link #AbstractCollectionInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, DomainResult, boolean, AssemblerCreationState)} instead.
+	 */
+	@Deprecated(forRemoval = true)
+	protected AbstractCollectionInitializer(
+			NavigablePath collectionPath,
+			PluralAttributeMapping collectionAttributeMapping,
+			FetchParentAccess parent,
+			@Nullable DomainResult<?> collectionKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState) {
+		this(
+				collectionPath,
+				collectionAttributeMapping,
+				(InitializerParent) parent,
+				collectionKeyResult,
+				isResultInitializer,
+				creationState
+		);
+	}
 
 	protected AbstractCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			boolean isResultInitializer,
 			AssemblerCreationState creationState) {
 		this.collectionPath = collectionPath;
-		this.owningParent = FetchParentAccess.determineOwningParent( parentAccess );
-		this.ownedModelPartDeclaringType = FetchParentAccess.determineOwnedModelPartDeclaringType( collectionAttributeMapping, parentAccess, owningParent );
 		this.collectionAttributeMapping = collectionAttributeMapping;
 		this.isResultInitializer = isResultInitializer;
-		this.parentAccess = parentAccess;
+		this.parent = parent;
+		this.owningEntityInitializer = Initializer.findOwningEntityInitializer( parent );
 		this.collectionKeyResultAssembler = collectionKeyResult == null
 				? null
-				: collectionKeyResult.createResultAssembler( this, creationState );
+				: collectionKeyResult.createResultAssembler( (InitializerParent) this, creationState );
 	}
 
 	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
+	public void resolveKey() {
 		if ( state != State.UNINITIALIZED ) {
 			// already resolved
 			return;
 		}
-
-		final CollectionKey oldKey = collectionKey;
-		final PersistentCollection<?> oldCollectionInstance = collectionInstance;
-		collectionKey = null;
-		collectionInstance = null;
-		state = State.MISSING;
-		if ( parentShallowCached || shouldSkipInitializer( rowProcessingState ) ) {
-			return;
-		}
-
-		// A null collection key result assembler means that we can use the parent key
-		final Object collectionKeyValue;
-		if ( collectionKeyResultAssembler == null ) {
-			assert parentAccess != null;
-			collectionKeyValue = parentAccess.getParentKey();
-		}
-		else {
+		state = State.KEY_RESOLVED;
+		collectionKeyValue = null;
+		if ( collectionKeyResultAssembler != null ) {
+			final Initializer initializer = collectionKeyResultAssembler.getInitializer();
+			if ( initializer != null ) {
+				initializer.resolveKey();
+				if ( initializer.getState() == State.MISSING ) {
+					setMissing();
+				}
+				return;
+			}
 			collectionKeyValue = collectionKeyResultAssembler.assemble( rowProcessingState );
-		}
-
-		if ( collectionKeyValue != null ) {
-			final CollectionPersister persister = collectionAttributeMapping.getCollectionDescriptor();
-			// Try to reuse the previous collection key and collection if possible
-			if ( oldKey != null && persister.getKeyType().isEqual( oldKey.getKey(), collectionKeyValue ) ) {
-				collectionKey = oldKey;
-				collectionInstance = oldCollectionInstance;
-				state = oldCollectionInstance == null ? State.MISSING : State.RESOLVED;
-			}
-			else {
-				collectionKey = new CollectionKey( persister, collectionKeyValue );
-				state = State.KEY_RESOLVED;
-			}
-
-			if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
-				CollectionLoadingLogger.COLL_LOAD_LOGGER.debugf(
-						"(%s) Current row collection key : %s",
-						this.getClass().getSimpleName(),
-						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() )
-				);
+			if ( collectionKeyValue == null ) {
+				setMissing();
 			}
 		}
 	}
 
+	protected void setMissing() {
+		state = State.MISSING;
+		collectionKey = null;
+		collectionKeyValue = null;
+		collectionInstance = null;
+	}
+
+	protected void resolveCollectionKey(RowProcessingState rowProcessingState, boolean checkPreviousRow) {
+		final CollectionKey oldKey = collectionKey;
+		final PersistentCollection<?> oldCollectionInstance = collectionInstance;
+		collectionKey = null;
+		collectionInstance = null;
+
+		if ( collectionKeyValue == null ) {
+			if ( collectionKeyResultAssembler == null ) {
+				assert owningEntityInitializer != null;
+				collectionKeyValue = owningEntityInitializer.getEntityIdentifier();
+			}
+			else {
+				collectionKeyValue = collectionKeyResultAssembler.assemble( rowProcessingState );
+			}
+			if ( collectionKeyValue == null ) {
+				state = State.MISSING;
+				collectionKey = null;
+				collectionInstance = null;
+				return;
+			}
+		}
+		final CollectionPersister persister = collectionAttributeMapping.getCollectionDescriptor();
+		// Try to reuse the previous collection key and collection if possible
+		if ( checkPreviousRow && oldKey != null && persister.getKeyType().isEqual(
+				oldKey.getKey(),
+				collectionKeyValue
+		) ) {
+			collectionKey = oldKey;
+			collectionInstance = oldCollectionInstance;
+			state = oldCollectionInstance == null ? State.MISSING : State.RESOLVED;
+		}
+		else {
+			collectionKey = new CollectionKey( persister, collectionKeyValue );
+			state = State.KEY_RESOLVED;
+		}
+	}
+
 	protected void resolveInstance(RowProcessingState rowProcessingState, boolean isEager) {
+		if ( state != State.KEY_RESOLVED ) {
+			// already resolved
+			return;
+		}
+
+		resolveCollectionKey( rowProcessingState, false );
 		if ( state == State.KEY_RESOLVED ) {
-			assert parentAccess != null;
+			assert parent != null;
 			// We can avoid processing further if the parent is already initialized,
 			// as the value produced by this initializer will never be used anyway.
-			final EntityInitializer entityInitializer = parentAccess.findFirstEntityInitializer();
-			if ( entityInitializer != null && entityInitializer.isEntityInitialized() ) {
+			if ( owningEntityInitializer != null && owningEntityInitializer.isEntityInitialized() ) {
 				// It doesn't matter if it's eager or lazy, the collection object can not be referred to,
 				// so it doesn't make sense to create or initialize it
 				state = State.MISSING;
@@ -141,7 +179,6 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
-			final FetchParentAccess fetchParentAccess = parentAccess.findFirstEntityDescriptorAccess();
 
 			final LoadingCollectionEntry loadingEntry = persistenceContext.getLoadContexts()
 					.findLoadingCollectionEntry( collectionKey );
@@ -149,9 +186,8 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			if ( loadingEntry != null ) {
 				collectionInstance = loadingEntry.getCollectionInstance();
 				if ( collectionInstance.getOwner() == null ) {
-					fetchParentAccess.registerResolutionListener(
-							owner -> collectionInstance.setOwner( owner )
-					);
+					assert owningEntityInitializer.getTargetInstance() != null;
+					collectionInstance.setOwner( owningEntityInitializer.getTargetInstance() );
 				}
 				return;
 			}
@@ -161,9 +197,8 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			if ( existing != null ) {
 				collectionInstance = existing;
 				if ( collectionInstance.getOwner() == null ) {
-					fetchParentAccess.registerResolutionListener(
-							owner -> collectionInstance.setOwner( owner )
-					);
+					assert owningEntityInitializer.getTargetInstance() != null;
+					collectionInstance.setOwner( owningEntityInitializer.getTargetInstance() );
 				}
 				return;
 			}
@@ -178,9 +213,8 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 					session
 			);
 
-			fetchParentAccess.registerResolutionListener(
-					owner -> collectionInstance.setOwner( owner )
-			);
+			assert owningEntityInitializer.getTargetInstance() != null;
+			collectionInstance.setOwner( owningEntityInitializer.getTargetInstance() );
 
 			persistenceContext.addUninitializedCollection(
 					collectionDescriptor,
@@ -194,6 +228,47 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 			if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ARRAY ) {
 				session.getPersistenceContext().addCollectionHolder( collectionInstance );
+			}
+		}
+	}
+	public void resolveInstance(Object instance, RowProcessingState rowProcessingState, boolean isEager) {
+		if ( instance == null ) {
+			setMissing();
+		}
+		else {
+			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
+			final PersistentCollection<?> persistentCollection;
+			if ( collectionAttributeMapping.getCollectionDescriptor()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.ARRAY ) {
+				persistentCollection = persistenceContext.getCollectionHolder( instance );
+			}
+			else {
+				persistentCollection = (PersistentCollection<?>) instance;
+			}
+			// resolving the collection key seems unnecessary
+//			collectionKeyValue = persistentCollection.getKey();
+//			resolveCollectionKey( rowProcessingState, false );
+			collectionInstance = persistentCollection;
+			state = State.RESOLVED;
+			if ( isEager && !collectionInstance.wasInitialized() ) {
+				persistenceContext.addNonLazyCollection( collectionInstance );
+			}
+			if ( collectionKeyResultAssembler != null
+					&& !rowProcessingState.isQueryCacheHit()
+					&& rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
+				collectionKeyResultAssembler.resolveState( rowProcessingState );
+			}
+		}
+	}
+
+	@Override
+	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
+		if ( collectionKeyResultAssembler != null ) {
+			final Initializer initializer = collectionKeyResultAssembler.getInitializer();
+			if ( initializer != null ) {
+				consumer.accept( initializer, arg );
 			}
 		}
 	}
@@ -219,31 +294,16 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 	@Override
 	public @Nullable FetchParentAccess getFetchParentAccess() {
-		return parentAccess;
+		return (FetchParentAccess) parent;
 	}
 
 	@Override
-	public @Nullable FetchParentAccess getOwningParent() {
-		return owningParent;
-	}
-
-	@Override
-	public @Nullable EntityMappingType getOwnedModelPartDeclaringType() {
-		return ownedModelPartDeclaringType;
-	}
-
-	@Override
-	public @Nullable FetchParentAccess findFirstEntityDescriptorAccess() {
-		return parentAccess == null ? null : parentAccess.findFirstEntityDescriptorAccess();
+	public @Nullable InitializerParent getParent() {
+		return parent;
 	}
 
 	@Override
 	public Object getParentKey() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void registerResolutionListener(Consumer<Object> resolvedParentConsumer) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -260,30 +320,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 	@Override
 	public @Nullable CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState) {
-		resolveKey( rowProcessingState );
+		resolveInstance();
 		return collectionKey;
-	}
-
-	@Override
-	public void finishUpRow(RowProcessingState rowProcessingState) {
-		state = State.UNINITIALIZED;
-	}
-
-	@Override
-	public void markShallowCached() {
-		parentShallowCached = true;
-	}
-
-	@Override
-	public void endLoading(ExecutionContext executionContext) {
-		parentShallowCached = false;
-	}
-
-	protected enum State {
-		UNINITIALIZED,
-		MISSING,
-		KEY_RESOLVED,
-		RESOLVED,
-		INITIALIZED
 	}
 }

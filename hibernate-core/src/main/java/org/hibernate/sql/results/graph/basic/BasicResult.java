@@ -10,6 +10,7 @@ import java.util.BitSet;
 
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -151,6 +152,13 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	@Override
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return createResultAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler<T> createResultAssembler(
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
 		return assembler;
 	}

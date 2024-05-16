@@ -19,6 +19,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -95,22 +96,25 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
+	public DomainResultAssembler createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		return createAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler createAssembler(InitializerParent parent, AssemblerCreationState creationState) {
 		return new CircularBiDirectionalFetchAssembler(
 				getResultJavaType(),
-				keyResult == null ? null : keyResult.createResultAssembler( parentAccess, creationState ),
-				resolveCircularInitializer( parentAccess )
+				keyResult == null ? null : keyResult.createResultAssembler( parent, creationState ),
+				resolveCircularInitializer( parent )
 		);
 	}
 
-	private EntityInitializer resolveCircularInitializer(FetchParentAccess parentAccess) {
-		while (parentAccess != null && getReferencedPath().isParent( parentAccess.getNavigablePath() ) ) {
-			parentAccess = parentAccess.getFetchParentAccess();
+	private EntityInitializer resolveCircularInitializer(InitializerParent parent) {
+		while (parent != null && getReferencedPath().isParent( parent.getNavigablePath() ) ) {
+			parent = parent.getParent();
 		}
-		assert parentAccess instanceof EntityInitializer && parentAccess.getNavigablePath().equals( getReferencedPath() );
-		return parentAccess.asEntityInitializer();
+		assert parent instanceof EntityInitializer && parent.getNavigablePath().equals( getReferencedPath() );
+		return parent.asEntityInitializer();
 	}
 
 	private static class CircularBiDirectionalFetchAssembler implements DomainResultAssembler<Object> {
@@ -136,8 +140,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 					return null;
 				}
 			}
-			initializer.resolveKey( rowProcessingState );
-			initializer.resolveInstance( rowProcessingState );
+			initializer.resolveInstance();
 			final Object initializedInstance = initializer.getInitializedInstance();
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( initializedInstance );
 			if ( lazyInitializer != null ) {
@@ -146,7 +149,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 					return initializedInstance;
 				}
 				else {
-					initializer.initializeInstance( rowProcessingState );
+					initializer.initializeInstance();
 					return lazyInitializer.getImplementation();
 				}
 			}

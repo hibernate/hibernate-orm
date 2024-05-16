@@ -206,7 +206,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcValues
 		);
 
-		rowReader.getInitializersList().startLoading( rowProcessingState );
+		rowReader.startLoading( rowProcessingState );
 
 		final T result = resultsConsumer.consume(
 				jdbcValues,

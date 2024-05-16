@@ -10,6 +10,7 @@ import java.util.BitSet;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -190,12 +191,26 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
+		return createAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler<T> createAssembler(
+			InitializerParent parent,
+			AssemblerCreationState creationState) {
 		return assembler;
 	}
 
 	@Override
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return createResultAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler<T> createResultAssembler(
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
 		return assembler;
 	}

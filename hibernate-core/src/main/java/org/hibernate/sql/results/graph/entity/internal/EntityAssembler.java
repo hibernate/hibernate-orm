@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import java.util.function.BiConsumer;
+
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
@@ -36,12 +38,19 @@ public class EntityAssembler implements DomainResultAssembler {
 		// Ensure that the instance really is initialized
 		// This is important for key-many-to-ones that are part of a collection key fk,
 		// as the instance is needed for resolveKey before initializing the instance in RowReader
-		initializer.resolveInstance( rowProcessingState );
+		initializer.resolveInstance();
 		return initializer.getEntityInstance();
 	}
 
 	@Override
 	public EntityInitializer getInitializer() {
 		return initializer;
+	}
+
+	@Override
+	public void forEachResultAssembler(BiConsumer consumer, Object arg) {
+		if ( initializer.isResultInitializer() ) {
+			consumer.accept( initializer, arg );
+		}
 	}
 }

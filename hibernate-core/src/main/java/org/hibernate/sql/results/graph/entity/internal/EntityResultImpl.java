@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.LockMode;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -18,6 +19,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResult;
@@ -81,29 +83,39 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode
 	public DomainResultAssembler createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
+		return createResultAssembler( (InitializerParent) parentAccess, creationState );
+	}
+
+	@Override
+	public DomainResultAssembler createResultAssembler(
+			InitializerParent parent,
+			AssemblerCreationState creationState) {
 		return new EntityAssembler(
 				this.getResultJavaType(),
-				creationState.resolveInitializer( this, parentAccess, this ).asEntityInitializer()
+				creationState.resolveInitializer( this, parent, this ).asEntityInitializer()
 		);
 	}
 
 	@Override
 	public Initializer createInitializer(
 			EntityResultImpl resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return resultGraphNode.createInitializer( parentAccess, creationState );
+		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		return new EntityResultInitializer(
+	public Initializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+		return new EntityInitializerImpl(
 				this,
-				getNavigablePath(),
 				getLockMode( creationState ),
 				getIdentifierFetch(),
 				getDiscriminatorFetch(),
+				null,
 				getRowIdResult(),
+				NotFoundAction.EXCEPTION,
+				null,
+				true,
 				creationState
 		);
 	}

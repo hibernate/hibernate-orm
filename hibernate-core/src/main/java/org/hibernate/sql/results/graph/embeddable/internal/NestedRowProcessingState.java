@@ -12,16 +12,12 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NestedRowProcessingState extends BaseExecutionContext implements RowProcessingState {
 	private final AggregateEmbeddableInitializer aggregateEmbeddableInitializer;
@@ -83,11 +79,6 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	@Override
 	public void finishRowProcessing(boolean wasAdded) {
 		processingState.finishRowProcessing( wasAdded );
-	}
-
-	@Override
-	public Initializer resolveInitializer(@Nullable NavigablePath path) {
-		return processingState.resolveInitializer( path );
 	}
 
 	@Override

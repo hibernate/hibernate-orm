@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentMap;
@@ -22,6 +22,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -40,6 +41,10 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	private final DomainResultAssembler<?> mapKeyAssembler;
 	private final DomainResultAssembler<?> mapValueAssembler;
 
+	/**
+	 * @deprecated Use {@link #MapInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch, Fetch)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public MapInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
@@ -51,18 +56,43 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 			Fetch mapValueFetch,
 			boolean isResultInitializer,
 			AssemblerCreationState creationState) {
+		this(
+				navigablePath,
+				attributeMapping,
+				(InitializerParent) parentAccess,
+				lockMode,
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer,
+				creationState,
+				mapKeyFetch,
+				mapValueFetch
+		);
+	}
+
+	public MapInitializer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attributeMapping,
+			InitializerParent parent,
+			LockMode lockMode,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState,
+			Fetch mapKeyFetch,
+			Fetch mapValueFetch) {
 		super(
 				navigablePath,
 				attributeMapping,
-				parentAccess,
+				parent,
 				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
 				isResultInitializer,
 				creationState
 		);
-		this.mapKeyAssembler = mapKeyFetch.createAssembler( this, creationState );
-		this.mapValueAssembler = mapValueFetch.createAssembler( this, creationState );
+		this.mapKeyAssembler = mapKeyFetch.createAssembler( (InitializerParent) this, creationState );
+		this.mapValueAssembler = mapValueFetch.createAssembler( (InitializerParent) this, creationState );
 	}
 
 	@Override
@@ -71,9 +101,16 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
-		consumer.accept( mapKeyAssembler );
-		consumer.accept( mapValueAssembler );
+	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
+		super.forEachSubInitializer( consumer, arg );
+		final Initializer keyInitializer = mapKeyAssembler.getInitializer();
+		if ( keyInitializer != null ) {
+			consumer.accept( keyInitializer, arg );
+		}
+		final Initializer valueInitializer = mapValueAssembler.getInitializer();
+		if ( valueInitializer != null ) {
+			consumer.accept( valueInitializer, arg );
+		}
 	}
 
 	@Override
@@ -108,13 +145,41 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 			assert map != null;
 			for ( Map.Entry<?, ?> entry : map.entrySet() ) {
 				if ( keyInitializer != null ) {
-					keyInitializer.initializeInstanceFromParent( entry.getKey(), rowProcessingState );
+					keyInitializer.initializeInstanceFromParent( entry.getKey() );
 				}
 				if ( valueInitializer != null ) {
-					valueInitializer.initializeInstanceFromParent( entry.getValue(), rowProcessingState );
+					valueInitializer.initializeInstanceFromParent( entry.getValue() );
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void resolveInstanceSubInitializers(RowProcessingState rowProcessingState) {
+		final Initializer keyInitializer = mapKeyAssembler.getInitializer();
+		final Initializer valueInitializer = mapValueAssembler.getInitializer();
+		if ( keyInitializer != null || valueInitializer != null ) {
+			final PersistentMap<?, ?> map = getCollectionInstance();
+			assert map != null;
+			for ( Map.Entry<?, ?> entry : map.entrySet() ) {
+				if ( keyInitializer != null ) {
+					keyInitializer.resolveInstance( entry.getKey() );
+				}
+				if ( valueInitializer != null ) {
+					valueInitializer.resolveInstance( entry.getValue() );
+				}
+			}
+		}
+	}
+
+	@Override
+	public DomainResultAssembler<?> getIndexAssembler() {
+		return mapKeyAssembler;
+	}
+
+	@Override
+	public DomainResultAssembler<?> getElementAssembler() {
+		return mapValueAssembler;
 	}
 
 	@Override

@@ -13,7 +13,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -53,9 +53,9 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 	}
 
 	@Override
-	public EntityInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public EntityInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
 		return EntitySelectFetchInitializerBuilder.createInitializer(
-				parentAccess,
+				parent,
 				getFetchedMapping(),
 				getReferencedMappingContainer().getEntityPersister(),
 				getKeyResult(),

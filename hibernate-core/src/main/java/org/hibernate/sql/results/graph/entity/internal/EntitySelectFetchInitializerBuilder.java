@@ -17,6 +17,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
@@ -34,61 +35,79 @@ public class EntitySelectFetchInitializerBuilder {
 			NavigablePath navigablePath,
 			boolean selectByUniqueKey,
 			AssemblerCreationState creationState) {
+		return createInitializer(
+				(InitializerParent) parentAccess,
+				fetchedAttribute,
+				entityPersister,
+				keyResult,
+				navigablePath,
+				selectByUniqueKey,
+				creationState
+		);
+	}
+	public static EntityInitializer createInitializer(
+			InitializerParent parent,
+			ToOneAttributeMapping fetchedAttribute,
+			EntityPersister entityPersister,
+			DomainResult<?> keyResult,
+			NavigablePath navigablePath,
+			boolean selectByUniqueKey,
+			AssemblerCreationState creationState) {
 		if ( selectByUniqueKey ) {
 			return new EntitySelectFetchByUniqueKeyInitializer(
-					parentAccess,
+					parent,
 					fetchedAttribute,
 					navigablePath,
 					entityPersister,
-					keyResult.createResultAssembler( parentAccess, creationState )
+					keyResult.createResultAssembler( parent, creationState )
 			);
 		}
-		if ( parentAccess.findFirstEntityInitializer() == null ) {
-			// Batch initializers require parentAccess.findFirstEntityInitializer() != null
+		if ( !parent.isEntityInitializer() && parent.findOwningEntityInitializer() == null ) {
+			// Batch initializers require an owning parent initializer
 			return new EntitySelectFetchInitializer(
-					parentAccess,
+					parent,
 					fetchedAttribute,
 					navigablePath,
 					entityPersister,
-					keyResult.createResultAssembler( parentAccess, creationState )
+					keyResult.createResultAssembler( parent, creationState )
 			);
 		}
-		final BatchMode batchMode = determineBatchMode( entityPersister, parentAccess, creationState );
+		final BatchMode batchMode = determineBatchMode( entityPersister, parent, creationState );
 		switch ( batchMode ) {
 			case NONE:
 				return new EntitySelectFetchInitializer(
-						parentAccess,
+						parent,
 						fetchedAttribute,
 						navigablePath,
 						entityPersister,
-						keyResult.createResultAssembler( parentAccess, creationState )
+						keyResult.createResultAssembler( parent, creationState )
 				);
 			case BATCH_LOAD:
-				if ( parentAccess.isEmbeddableInitializer() ) {
+				if ( parent.isEmbeddableInitializer() ) {
 					return new BatchEntityInsideEmbeddableSelectFetchInitializer(
-							parentAccess,
+							parent,
 							fetchedAttribute,
 							navigablePath,
 							entityPersister,
-							keyResult.createResultAssembler( parentAccess, creationState )
+							keyResult.createResultAssembler( parent, creationState )
 					);
 				}
 				else {
 					return new BatchEntitySelectFetchInitializer(
-							parentAccess,
+							parent,
 							fetchedAttribute,
 							navigablePath,
 							entityPersister,
-							keyResult.createResultAssembler( parentAccess, creationState )
+							keyResult.createResultAssembler( parent, creationState )
 					);
 				}
 			case BATCH_INITIALIZE:
 				return new BatchInitializeEntitySelectFetchInitializer(
-						parentAccess,
+						parent,
 						fetchedAttribute,
 						navigablePath,
 						entityPersister,
-						keyResult.createResultAssembler( parentAccess, creationState )
+						keyResult.createResultAssembler( parent, creationState )
 				);
 		}
 		throw new IllegalStateException( "Should be unreachable" );
@@ -96,7 +115,7 @@ public class EntitySelectFetchInitializerBuilder {
 
 	private static BatchMode determineBatchMode(
 			EntityPersister entityPersister,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState) {
 		if ( creationState.isScrollResult()
 				|| !creationState.getExecutionContext()
@@ -111,8 +130,8 @@ public class EntitySelectFetchInitializerBuilder {
 			}
 			return NONE;
 		}
-		while ( parentAccess.isEmbeddableInitializer() ) {
-			final EmbeddableInitializer embeddableInitializer = parentAccess.asEmbeddableInitializer();
+		while ( parent.isEmbeddableInitializer() ) {
+			final EmbeddableInitializer embeddableInitializer = parent.asEmbeddableInitializer();
 			final EmbeddableValuedModelPart initializedPart = embeddableInitializer.getInitializedPart();
 			// For entity identifier mappings we can't batch load,
 			// because the entity identifier needs the instance in the resolveKey phase,
@@ -126,14 +145,14 @@ public class EntitySelectFetchInitializerBuilder {
 								instanceof StandardEmbeddableInstantiator ) ) {
 				return entityPersister.hasSubclasses() ? NONE : BATCH_INITIALIZE;
 			}
-			parentAccess = parentAccess.getFetchParentAccess();
-			if ( parentAccess == null ) {
+			parent = parent.getParent();
+			if ( parent == null ) {
 				break;
 			}
 		}
-		if ( parentAccess != null ) {
-			assert parentAccess.getInitializedPart() instanceof EntityValuedModelPart;
-			final EntityPersister parentPersister = parentAccess.asEntityInitializer().getEntityDescriptor();
+		if ( parent != null ) {
+			assert parent.getInitializedPart() instanceof EntityValuedModelPart;
+			final EntityPersister parentPersister = parent.asEntityInitializer().getEntityDescriptor();
 			final EntityDataAccess cacheAccess = parentPersister.getCacheAccessStrategy();
 			if ( cacheAccess != null ) {
 				// Do batch initialization instead of batch loading if the parent entity is cacheable

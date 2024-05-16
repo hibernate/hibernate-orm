@@ -12,8 +12,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -66,5 +68,12 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 		}
 
 		return result;
+	}
+
+	@Override
+	public <X> void forEachResultAssembler(BiConsumer<Initializer, X> consumer, X arg) {
+		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+			argumentReader.forEachResultAssembler( consumer, arg );
+		}
 	}
 }

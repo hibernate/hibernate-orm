@@ -302,7 +302,7 @@ public class RefreshTest {
 	public static class RealmAttributeEntity {
 
 		@Id
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@JoinColumn(name = "REALM_ID")
 		protected RealmEntity realm;
 

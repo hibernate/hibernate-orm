@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.persistence.CascadeType;
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.SpecHints;
 
@@ -204,7 +205,7 @@ public class IdClassEntityGraphTest {
 	public static class Child {
 
 		@Id
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@JoinColumn(name = "parent_id")
 		private Parent parent;
 

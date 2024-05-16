@@ -273,4 +273,9 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		emulateValuesTableReferenceColumnAliasing( tableReference );
 	}
+
+	@Override
+	protected String getSkipLocked() {
+		return "ignore locked";
+	}
 }

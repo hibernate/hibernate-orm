@@ -106,6 +106,15 @@ class Book {
 ----
 
 
+[[auto-cascade-persist]]
+== Cascading persistence for `@Id` and `@MapsId` fields
+
+Previously Hibernate automatically enabled `cascade=PERSIST` for association fields annotated `@Id` or `@MapsId`.
+This was undocumented and unexpected behavior, and arguably against the intent of the Persistence specification.
+
+Existing code which relies on this behavior should be modified by addition of explicit `cascade=PERSIST` to the association field.
+
+
 [[enum-checks]]
 == Enums and Check Constraints
 

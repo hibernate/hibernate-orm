@@ -41,8 +41,7 @@ public class AnyBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
 			MemberDetails property,
-			AnnotatedJoinColumns joinColumns,
-			boolean forcePersist) {
+			AnnotatedJoinColumns joinColumns) {
 
 		//check validity
 		if (  property.hasAnnotationUsage( Columns.class ) ) {
@@ -66,7 +65,7 @@ public class AnyBinder {
 			}
 		}
 		bindAny(
-				getCascadeStrategy( null, hibernateCascade, false, forcePersist, context ),
+				getCascadeStrategy( null, hibernateCascade, false, context ),
 				//@Any has no cascade attribute
 				joinColumns,
 				onDeleteAnn == null ? null : onDeleteAnn.getEnum( "action" ),

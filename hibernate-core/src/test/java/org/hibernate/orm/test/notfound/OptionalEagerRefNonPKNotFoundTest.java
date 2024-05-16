@@ -707,7 +707,7 @@ public class OptionalEagerRefNonPKNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@Fetch(FetchMode.JOIN)
 		@JoinColumn(
@@ -741,7 +741,7 @@ public class OptionalEagerRefNonPKNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@Fetch(FetchMode.JOIN)
@@ -776,7 +776,7 @@ public class OptionalEagerRefNonPKNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@Fetch(FetchMode.SELECT)
 		@JoinColumn(
@@ -810,7 +810,7 @@ public class OptionalEagerRefNonPKNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@Fetch(FetchMode.SELECT)
@@ -845,7 +845,7 @@ public class OptionalEagerRefNonPKNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(
 				name = "cityName",
@@ -879,7 +879,7 @@ public class OptionalEagerRefNonPKNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(
@@ -914,7 +914,7 @@ public class OptionalEagerRefNonPKNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@JoinColumn(
 				name = "cityName",
@@ -948,7 +948,7 @@ public class OptionalEagerRefNonPKNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(

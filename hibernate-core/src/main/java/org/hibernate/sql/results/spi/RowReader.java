@@ -8,12 +8,15 @@ package org.hibernate.sql.results.spi;
 
 import java.util.List;
 
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.internal.InitializersList;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Coordinates the process of reading a single result values row
@@ -49,10 +52,15 @@ public interface RowReader<R> {
 	 * The initializers associated with this reader.
 	 *
 	 * @see org.hibernate.sql.results.graph.DomainResult
-	 * @deprecated use {@link #getInitializersList()}
+	 * @deprecated Not needed anymore
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	List<Initializer> getInitializers();
+
+	/**
+	 * Called before reading the first row.
+	 */
+	void startLoading(RowProcessingState processingState);
 
 	/**
 	 * The actual coordination of reading a row
@@ -68,7 +76,13 @@ public interface RowReader<R> {
 	 * The initializers associated with this reader.
 	 *
 	 * @see org.hibernate.sql.results.graph.DomainResult
+	 * @deprecated Not needed anymore. Also, was exposing internal type
 	 */
+	@Deprecated(forRemoval = true)
 	InitializersList getInitializersList();
+
+	@Nullable EntityKey resolveSingleResultEntityKey(RowProcessingState rowProcessingState);
+
+	boolean hasCollectionInitializers();
 
 }

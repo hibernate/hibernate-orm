@@ -178,10 +178,13 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			PersistenceContext persistenceContext) {
 		if ( object != null ) {
 			final EmbeddableMappingType descriptor = attributeMapping.getEmbeddableTypeDescriptor();
+			final EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType = descriptor.findSubtypeBySubclass(
+					object.getClass().getName()
+			);
 			final AttributeMappingsList attributeMappings = descriptor.getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attribute = attributeMappings.get( i );
-				if ( descriptor.declaresAttribute( object.getClass().getName(), attributeMapping ) ) {
+				if ( concreteEmbeddableType.declaresAttribute( attribute ) ) {
 					if ( attribute.isPluralAttributeMapping() ) {
 						addCollectionKey(
 								attribute.asPluralAttributeMapping(),

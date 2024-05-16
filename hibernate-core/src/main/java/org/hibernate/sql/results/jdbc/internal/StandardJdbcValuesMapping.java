@@ -13,6 +13,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 
 /**
@@ -50,7 +51,8 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < domainResults.size(); i++ ) {
-			final DomainResultAssembler<?> resultAssembler = domainResults.get( i ).createResultAssembler( null, creationState );
+			final DomainResultAssembler<?> resultAssembler = domainResults.get( i )
+					.createResultAssembler( (InitializerParent) null, creationState );
 
 			assemblers.add( resultAssembler );
 		}

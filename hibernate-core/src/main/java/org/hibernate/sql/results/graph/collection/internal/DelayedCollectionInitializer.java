@@ -12,13 +12,17 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.InitializerParent;
 
 /**
  * @author Steve Ebersole
  */
 public class DelayedCollectionInitializer extends AbstractCollectionInitializer {
 
+	/**
+	 * @deprecated Use {@link #DelayedCollectionInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, DomainResult, AssemblerCreationState)}  instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public DelayedCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
@@ -28,22 +32,23 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResult, false, creationState );
 	}
 
+	public DelayedCollectionInitializer(
+			NavigablePath fetchedPath,
+			PluralAttributeMapping fetchedMapping,
+			InitializerParent parent,
+			DomainResult<?> collectionKeyResult,
+			AssemblerCreationState creationState) {
+		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, creationState );
+	}
+
 	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
+	public void resolveInstance() {
 		resolveInstance( rowProcessingState, false );
 	}
 
 	@Override
-	public void initializeInstance(RowProcessingState rowProcessingState) {
-	}
-
-	@Override
-	public void finishUpRow(RowProcessingState rowProcessingState) {
-		super.finishUpRow( rowProcessingState );
-		// Chances are pretty low that we can reuse the collection key,
-		// so set it to null in order to avoid an additional equals collection key comparison
-		collectionKey = null;
-		collectionInstance = null;
+	public void resolveInstance(Object instance) {
+		resolveInstance( instance, rowProcessingState, false );
 	}
 
 	@Override

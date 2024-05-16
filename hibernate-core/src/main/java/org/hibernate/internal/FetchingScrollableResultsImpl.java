@@ -25,8 +25,6 @@ import org.hibernate.sql.results.spi.RowReader;
  * @author Steve Ebersole
  */
 public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
-	private final EntityInitializer resultInitializer;
-
 	private R currentRow;
 
 	private int currentPosition;
@@ -50,15 +48,8 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				persistenceContext
 		);
 
-		resultInitializer = extractResultInitializer( rowReader );
-
 		this.maxPosition = jdbcValuesSourceProcessingState.getQueryOptions().getEffectiveLimit().getMaxRows();
 		beforeFirst = true;
-	}
-
-	private static <R> EntityInitializer extractResultInitializer(RowReader<R> rowReader) {
-		Initializer initializer = rowReader.getInitializers().get( rowReader.getInitializers().size() - 1 );
-		return initializer.asEntityInitializer(); //might return null when it's not an EntityInitializer (intentional)
 	}
 
 	@Override
@@ -332,7 +323,6 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				if ( rowProcessingState.next() ) {
 					final EntityKey entityKey2 = getEntityKey();
 					if ( !entityKey.equals( entityKey2 ) ) {
-						resultInitializer.finishUpRow( rowProcessingState );
 						resultProcessed = true;
 						last = false;
 					}
@@ -364,9 +354,6 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	}
 
 	private EntityKey getEntityKey() {
-		resultInitializer.resolveKey( getRowProcessingState() );
-		final EntityKey entityKey = resultInitializer.getEntityKey();
-		resultInitializer.finishUpRow( getRowProcessingState() );
-		return entityKey;
+		return getRowReader().resolveSingleResultEntityKey( getRowProcessingState() );
 	}
 }

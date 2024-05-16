@@ -9,12 +9,12 @@ package org.hibernate.sql.results.graph;
 /**
  * Producer for {@link Initializer} based on a {@link FetchParent}.
  *
- * @see AssemblerCreationState#resolveInitializer(FetchParent, FetchParentAccess, InitializerProducer)
+ * @see AssemblerCreationState#resolveInitializer(FetchParent, InitializerParent, InitializerProducer)
  * @since 6.5
  */
 public interface InitializerProducer<P extends FetchParent> {
 	Initializer createInitializer(
 			P resultGraphNode,
-			FetchParentAccess parentAccess,
+			InitializerParent parent,
 			AssemblerCreationState creationState);
 }

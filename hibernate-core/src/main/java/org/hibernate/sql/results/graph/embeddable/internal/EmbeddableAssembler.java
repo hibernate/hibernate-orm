@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import java.util.function.BiConsumer;
+
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
@@ -29,9 +31,7 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		initializer.resolveKey( rowProcessingState );
-		initializer.resolveInstance( rowProcessingState );
-		initializer.initializeInstance( rowProcessingState );
+		initializer.resolveInstance();
 		return initializer.getCompositeInstance();
 	}
 
@@ -45,5 +45,12 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	@Override
 	public EmbeddableInitializer getInitializer() {
 		return initializer;
+	}
+
+	@Override
+	public void forEachResultAssembler(BiConsumer consumer, Object arg) {
+		if ( initializer.isResultInitializer() ) {
+			consumer.accept( initializer, arg );
+		}
 	}
 }

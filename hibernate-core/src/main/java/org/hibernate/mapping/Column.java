@@ -70,6 +70,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private boolean quoted;
 	private boolean explicit;
 	int uniqueInteger;
+	private boolean identity;
 	private String comment;
 	private String defaultValue;
 	private String generatedAs;
@@ -141,6 +142,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	public void setExplicit(boolean explicit) {
 		this.explicit = explicit;
+	}
+
+	public boolean isIdentity() {
+		return identity;
+	}
+
+	public void setIdentity(boolean identity) {
+		this.identity = identity;
 	}
 
 	private static boolean isQuoted(String name) {

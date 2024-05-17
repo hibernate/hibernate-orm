@@ -69,29 +69,7 @@ public interface IdentifierGeneratorFactory extends Service {
 	 * @return The appropriate generator instance.
 	 *
 	 * @deprecated use {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
-	 * instead
 	 */
 	@Deprecated(since = "6.0")
 	Generator createIdentifierGenerator(String strategy, Type type, Properties parameters);
-
-	/**
-	 * Retrieve the class that will be used as the {@link IdentifierGenerator} for the given strategy.
-	 *
-	 * @param strategy The strategy
-	 * @return The generator class.
-	 *
-	 * @deprecated with no replacement.  See
-	 * {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
-	 */
-	@Deprecated(since = "6.0")
-	Class<? extends Generator> getIdentifierGeneratorClass(String strategy);
-
-	/**
-	 * Get the dialect.
-	 * @deprecated should be removed
-	 *
-	 * @return the dialect
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	Dialect getDialect();
 }

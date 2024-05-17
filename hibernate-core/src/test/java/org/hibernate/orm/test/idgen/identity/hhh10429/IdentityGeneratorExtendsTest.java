@@ -43,7 +43,7 @@ public class IdentityGeneratorExtendsTest {
 		final PersistentClass entityBinding = domainModel.getEntityBinding( EntityBean.class.getName() );
 		final KeyValue identifier = entityBinding.getIdentifier();
 
-		assertTrue( identifier.isIdentityColumn( domainModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(), dialect ) );
+		assertTrue( identifier.getColumns().get(0).isIdentity() );
 	}
 
 	@Entity(name = "EntityBean")

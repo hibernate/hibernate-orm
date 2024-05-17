@@ -186,6 +186,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	private static final Boolean USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE = Boolean.FALSE;
 	private static final Boolean TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE = Boolean.FALSE;
+	private static final String SQL_IGNORE_LOCKED = " ignore locked";
 
 	private final int maxLobPrefetchSize;
 
@@ -1952,5 +1953,16 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public boolean supportsSkipLocked() {
 		return getVersion().isSameOrAfter(2, 0, 3);
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString() {
+		return supportsSkipLocked() ? getForUpdateString() + SQL_IGNORE_LOCKED : getForUpdateString();
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString(String aliases) {
+		return supportsSkipLocked() ?
+				getForUpdateString(aliases) + SQL_IGNORE_LOCKED : getForUpdateString(aliases);
 	}
 }

@@ -8,7 +8,6 @@ package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.CheckConstraint;
@@ -173,7 +172,7 @@ class ColumnDefinitions {
 			Table table,
 			Metadata metadata,
 			Dialect dialect) {
-		if ( isIdentityColumn( column, table, metadata, dialect) ) {
+		if ( isIdentityColumn( column, table, dialect) ) {
 			// to support dialects that have their own identity data type
 			if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
 				definition.append( ' ' ).append( column.getSqlType( metadata ) );
@@ -213,9 +212,9 @@ class ColumnDefinitions {
 		}
 	}
 
-	private static boolean isIdentityColumn(Column column, Table table, Metadata metadata, Dialect dialect) {
+	private static boolean isIdentityColumn(Column column, Table table, Dialect dialect) {
 		// Try to find out the name of the primary key in case the dialect needs it to create an identity
-		return isPrimaryKeyIdentity( table, metadata, dialect )
+		return isPrimaryKeyIdentity( table )
 			&& column.getQuotedName( dialect ).equals( getPrimaryKeyColumnName( table, dialect ) );
 	}
 
@@ -225,20 +224,11 @@ class ColumnDefinitions {
 				: null;
 	}
 
-	private static boolean isPrimaryKeyIdentity(Table table, Metadata metadata, Dialect dialect) {
-		// TODO: this is the much better form moving forward as we move to metamodel
-		//return hasPrimaryKey
-		//				&& table.getPrimaryKey().getColumnSpan() == 1
-		//				&& table.getPrimaryKey().getColumn( 0 ).isIdentity();
-		MetadataImplementor metadataImplementor = (MetadataImplementor) metadata;
+	private static boolean isPrimaryKeyIdentity(Table table) {
 		return table.hasPrimaryKey()
-			&& table.getIdentifierValue() != null
-			&& table.getIdentifierValue()
-					.isIdentityColumn(
-							metadataImplementor.getMetadataBuildingOptions()
-									.getIdentifierGeneratorFactory(),
-							dialect
-					);
+			&& table.getPrimaryKey().getColumnSpan() == 1
+			&& table.getPrimaryKey().getColumn( 0 ).isIdentity();
+
 	}
 
 	private static String normalize(String typeName) {

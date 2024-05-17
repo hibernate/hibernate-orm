@@ -680,10 +680,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
 				new StandardGenerationContextLocator( rootClass.getEntityName() );
-		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator(
-				locator,
-				getType()
-		);
+		final CompositeNestedGeneratedValueGenerator generator =
+				new CompositeNestedGeneratedValueGenerator( locator, getType() );
 
 		final List<Property> properties = getProperties();
 		for ( int i = 0; i < properties.size(); i++ ) {

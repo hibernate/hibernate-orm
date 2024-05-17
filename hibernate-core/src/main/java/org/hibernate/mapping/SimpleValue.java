@@ -39,7 +39,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
@@ -378,18 +377,6 @@ public abstract class SimpleValue implements KeyValue {
 		getTable().createUniqueKey( getConstraintColumns(), context );
 	}
 
-	/**
-	 * Returns the cached {@link IdentifierGenerator}, or null if
-	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)}
-	 * was never completed.
-	 *
-	 * @deprecated not used and no longer supported.
-	 */
-	@Deprecated(since = "6.0")
-	public IdentifierGenerator getIdentifierGenerator() {
-		return (IdentifierGenerator) generator;
-	}
-
 	@Internal
 	public void setCustomIdGeneratorCreator(IdentifierGeneratorCreator customIdGeneratorCreator) {
 		this.customIdGeneratorCreator = customIdGeneratorCreator;
@@ -415,10 +402,26 @@ public abstract class SimpleValue implements KeyValue {
 			}
 			else {
 				generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
+				if ( generator instanceof IdentityGenerator ) {
+					setColumnToIdentity();
+				}
 			}
 		}
 
 		return generator;
+	}
+
+	private void setColumnToIdentity() {
+		if ( getColumnSpan() != 1 ) {
+			throw new MappingException( "Identity generation requires exactly one column" );
+		}
+		final Selectable column = getColumn(0);
+		if ( column instanceof Column ) {
+			( (Column) column).setIdentity( true );
+		}
+		else {
+			throw new MappingException( "Identity generation requires a column" );
+		}
 	}
 
 	public boolean isUpdateable() {
@@ -448,14 +451,6 @@ public abstract class SimpleValue implements KeyValue {
 	 */
 	public void setIdentifierGeneratorStrategy(String identifierGeneratorStrategy) {
 		this.identifierGeneratorStrategy = identifierGeneratorStrategy;
-	}
-
-	@Deprecated
-	@Override
-	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
-		return IdentityGenerator.class.isAssignableFrom(
-				identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy )
-		);
 	}
 
 	public Map<String, Object> getIdentifierGeneratorParameters() {

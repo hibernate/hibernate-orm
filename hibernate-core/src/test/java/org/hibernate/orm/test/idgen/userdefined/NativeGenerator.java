@@ -14,7 +14,6 @@ import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -33,8 +32,9 @@ public class NativeGenerator
     public NativeGenerator(NativeId nativeId, Member member, CustomIdGeneratorCreationContext creationContext) {
         factory = creationContext.getIdentifierGeneratorFactory();
 		strategy = creationContext.getDatabase().getDialect().getNativeIdentifierGeneratorStrategy();
-		SimpleValue value = (SimpleValue) creationContext.getProperty().getValue();
-        value.setIdentifierGeneratorStrategy(strategy);
+        if ( "identity".equals(strategy) ) {
+            creationContext.getProperty().getValue().getColumns().get(0).setIdentity(true);
+        }
     }
 
     @Override

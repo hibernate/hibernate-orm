@@ -48,7 +48,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 	private final SqmCreationState creationState;
 
-	private StringBuilder pathSoFar = new StringBuilder();
+	private final StringBuilder pathSoFar = new StringBuilder();
 	private SemanticPathPart currentPart;
 
 	public BasicDotIdentifierConsumer(SqmCreationState creationState) {
@@ -94,9 +94,8 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 
 	@Override
 	public void consumeTreat(String entityName, boolean isTerminal) {
-		final EntityDomainType<?> entityDomainType = creationState.getCreationContext().getJpaMetamodel()
-				.entity( entityName );
-		currentPart = ( (SqmPath) currentPart ).treatAs( entityDomainType );
+		final SqmPath<?> path = (SqmPath<?>) currentPart;
+		currentPart = path.treatAs( creationState.getCreationContext().getJpaMetamodel().entity( entityName ) );
 	}
 
 	protected void reset() {
@@ -184,7 +183,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( importableName != null ) {
 				final EntityDomainType<?> entityDomainType = jpaMetamodel.entity( importableName );
 				if ( entityDomainType != null ) {
-					return new SqmLiteralEntityType( entityDomainType, nodeBuilder );
+					return new SqmLiteralEntityType<>( entityDomainType, nodeBuilder );
 				}
 			}
 
@@ -222,14 +221,10 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 									.classForName( prefix );
 					if ( namedClass != null ) {
 						final Field referencedField = namedClass.getDeclaredField( terminal );
-						if ( referencedField != null ) {
-							final JavaType<?> fieldJtd =
-									jpaMetamodel
-											.getTypeConfiguration()
-											.getJavaTypeRegistry()
-											.getDescriptor( referencedField.getType() );
-							return new SqmFieldLiteral( referencedField, fieldJtd, nodeBuilder);
-						}
+						final JavaType<?> fieldJtd =
+								jpaMetamodel.getTypeConfiguration().getJavaTypeRegistry()
+										.getDescriptor( referencedField.getType() );
+						return new SqmFieldLiteral<>( referencedField, fieldJtd, nodeBuilder);
 					}
 				}
 				catch (Exception ignore) {

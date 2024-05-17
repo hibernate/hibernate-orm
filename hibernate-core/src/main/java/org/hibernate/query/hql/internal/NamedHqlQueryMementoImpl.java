@@ -22,11 +22,8 @@ import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
-import org.jboss.logging.Logger;
-
 /**
  * Definition of a named query, defined in the mapping metadata.
- *
  * Additionally, as of JPA 2.1, named query definition can also come
  * from a compiled query.
  *
@@ -34,8 +31,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implements NamedSqmQueryMemento, Serializable {
-	private static final Logger log = Logger.getLogger( NamedHqlQueryMementoImpl.class );
-
 	private final String hqlString;
 
 	private final Integer firstResult;

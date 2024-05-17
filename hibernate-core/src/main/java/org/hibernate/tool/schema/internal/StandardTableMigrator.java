@@ -96,7 +96,7 @@ public class StandardTableMigrator implements TableMigrator {
 					final String alterColumn = dialect.getAlterColumnTypeString(
 							column.getQuotedName( dialect ),
 							column.getSqlType(metadata),
-							getColumnDefinition( column, table, metadata, dialect )
+							getColumnDefinition( column, metadata, dialect )
 					);
 					results.add( alterTable + alterColumn );
 				}

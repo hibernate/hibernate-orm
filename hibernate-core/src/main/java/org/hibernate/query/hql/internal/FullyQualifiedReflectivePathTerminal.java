@@ -6,13 +6,13 @@
  */
 package org.hibernate.query.hql.internal;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -43,10 +43,10 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 public class FullyQualifiedReflectivePathTerminal
 		extends FullyQualifiedReflectivePath
 		implements SqmExpression {
-	private final SqmExpressible expressibleType;
+	private final @Nullable SqmExpressible<?> expressibleType;
 	private final SqmCreationState creationState;
 
-	private final Function<SemanticQueryWalker,?> handler;
+	private final Function<SemanticQueryWalker<?>,?> handler;
 
 	public FullyQualifiedReflectivePathTerminal(
 			FullyQualifiedReflectivePathSource pathSource,
@@ -66,8 +66,7 @@ public class FullyQualifiedReflectivePathTerminal
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
-	private Function<SemanticQueryWalker, ?> resolveTerminalSemantic() {
+	private Function<SemanticQueryWalker<?>, ?> resolveTerminalSemantic() {
 		return semanticQueryWalker -> {
 			final SqmCreationContext creationContext = creationState.getCreationContext();
 			final ClassLoaderService cls =
@@ -138,7 +137,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpressible getNodeType() {
+	public @Nullable SqmExpressible<?> getNodeType() {
 		return expressibleType;
 	}
 
@@ -148,8 +147,8 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public JavaType getJavaTypeDescriptor() {
-		return expressibleType.getExpressibleJavaType();
+	public JavaType<?> getJavaTypeDescriptor() {
+		return expressibleType == null ? null : expressibleType.getExpressibleJavaType();
 	}
 
 
@@ -200,7 +199,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpression as(Class type) {
+	public SqmExpression<?> as(Class type) {
 		return null;
 	}
 
@@ -265,7 +264,7 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public JpaSelection alias(String name) {
+	public JpaSelection<?> alias(String name) {
 		return null;
 	}
 

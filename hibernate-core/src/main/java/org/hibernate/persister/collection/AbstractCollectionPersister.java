@@ -52,6 +52,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -605,8 +606,8 @@ public abstract class AbstractCollectionPersister
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}
-		if ( generator instanceof IdentifierGenerator ) {
-			( (IdentifierGenerator) generator ).initialize( context.getSqlStringGenerationContext() );
+		if ( generator instanceof Configurable ) {
+			( (Configurable) generator ).initialize( context.getSqlStringGenerationContext() );
 		}
 		return (BeforeExecutionGenerator) generator;
 	}

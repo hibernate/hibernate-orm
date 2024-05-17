@@ -6,14 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;

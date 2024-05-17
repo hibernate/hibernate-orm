@@ -276,6 +276,6 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected String getSkipLocked() {
-		return "ignore locked";
+		return " ignore locked";
 	}
 }

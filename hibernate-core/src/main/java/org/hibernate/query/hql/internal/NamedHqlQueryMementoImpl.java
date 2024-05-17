@@ -26,7 +26,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Definition of a named query, defined in the mapping metadata.
- *
  * Additionally, as of JPA 2.1, named query definition can also come
  * from a compiled query.
  *

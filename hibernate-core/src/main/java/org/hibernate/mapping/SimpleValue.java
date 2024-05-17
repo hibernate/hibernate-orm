@@ -405,19 +405,20 @@ public abstract class SimpleValue implements KeyValue {
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
-		if ( generator != null ) {
-			return generator;
+		getTable().setIdentifierValue( this );
+
+		if ( generator == null ) {
+			if ( customIdGeneratorCreator != null ) {
+				generator = customIdGeneratorCreator.createGenerator(
+						new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
+				);
+			}
+			else {
+				generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
+			}
 		}
-		else if ( customIdGeneratorCreator != null ) {
-			generator = customIdGeneratorCreator.createGenerator(
-					new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
-			);
-			return generator;
-		}
-		else {
-			generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
-			return generator;
-		}
+
+		return generator;
 	}
 
 	public boolean isUpdateable() {
@@ -1134,5 +1135,22 @@ public abstract class SimpleValue implements KeyValue {
 		public Property getProperty() {
 			return rootClass.getIdentifierProperty();
 		}
+
+		// we could add these if it helps integrate old infrastructure
+//		@Override
+//		public Properties getParameters() {
+//			final Value value = getProperty().getValue();
+//			if ( !value.isSimpleValue() ) {
+//				throw new IllegalStateException( "not a simple-valued property" );
+//			}
+//			final Dialect dialect = getDatabase().getDialect();
+//			return collectParameters( (SimpleValue) value, dialect, defaultCatalog, defaultSchema, rootClass );
+//		}
+//
+//		@Override
+//		public SqlStringGenerationContext getSqlStringGenerationContext() {
+//			final Database database = getDatabase();
+//			return fromExplicit( database.getJdbcEnvironment(), database, defaultCatalog, defaultSchema );
+//		}
 	}
 }

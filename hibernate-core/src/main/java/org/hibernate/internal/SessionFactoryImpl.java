@@ -68,6 +68,7 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
@@ -466,8 +467,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 							jdbcServices.getJdbcEnvironment().getDialect(),
 							(RootClass) model
 					);
-					if ( generator instanceof IdentifierGenerator ) {
-						final IdentifierGenerator identifierGenerator = (IdentifierGenerator) generator;
+					if ( generator instanceof Configurable ) {
+						final Configurable identifierGenerator = (Configurable) generator;
 						identifierGenerator.initialize( sqlStringGenerationContext );
 					}
 					if ( generator.allowAssignedIdentifiers() ) {

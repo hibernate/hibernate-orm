@@ -15,4 +15,8 @@ import org.hibernate.generator.GeneratorCreationContext;
 public interface CustomIdGeneratorCreationContext extends GeneratorCreationContext {
 	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
 	RootClass getRootClass();
+
+	// we could add these if it helps integrate old infrastructure
+//	Properties getParameters();
+//	SqlStringGenerationContext getSqlStringGenerationContext();
 }

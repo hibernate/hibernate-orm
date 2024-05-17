@@ -38,7 +38,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.IdentifierGeneratorCreator;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;

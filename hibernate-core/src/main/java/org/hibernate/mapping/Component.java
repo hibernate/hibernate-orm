@@ -34,8 +34,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -784,8 +784,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public void initialize(SqlStringGenerationContext context) {
-			if ( subgenerator instanceof IdentifierGenerator ) {
-				( (IdentifierGenerator) subgenerator).initialize( context );
+			if ( subgenerator instanceof Configurable) {
+				( (Configurable) subgenerator).initialize( context );
 			}
 		}
 	}

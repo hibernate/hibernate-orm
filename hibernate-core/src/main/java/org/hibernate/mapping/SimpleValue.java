@@ -392,8 +392,6 @@ public abstract class SimpleValue implements KeyValue {
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
-		getTable().setIdentifierValue( this );
-
 		if ( generator == null ) {
 			if ( customIdGeneratorCreator != null ) {
 				generator = customIdGeneratorCreator.createGenerator(
@@ -407,7 +405,6 @@ public abstract class SimpleValue implements KeyValue {
 				}
 			}
 		}
-
 		return generator;
 	}
 

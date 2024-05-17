@@ -180,11 +180,6 @@ public class ExportableColumn extends Column {
 		public boolean isColumnUpdateable(int index) {
 			return true;
 		}
-
-		@Override
-		public MetadataBuildingContext getBuildingContext() {
-			return table.getIdentifierValue().getBuildingContext();
-		}
 	}
 
 }

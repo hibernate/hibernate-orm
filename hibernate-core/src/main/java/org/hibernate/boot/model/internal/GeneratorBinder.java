@@ -76,15 +76,13 @@ public class GeneratorBinder {
 			Map<String, IdentifierGeneratorDefinition> localGenerators) {
 		LOG.debugf( "#makeIdGenerator(%s, %s, %s, %s, ...)", id, idAttributeMember, generatorType, generatorName );
 
-		final Table table = id.getTable();
-		table.setIdentifierValue( id );
 		//generator settings
 		id.setIdentifierGeneratorStrategy( generatorType );
 
 		final Map<String,Object> parameters = new HashMap<>();
 
 		//always settable
-		parameters.put( PersistentIdentifierGenerator.TABLE, table.getName() );
+		parameters.put( PersistentIdentifierGenerator.TABLE, id.getTable().getName() );
 
 		if ( id.getColumnSpan() == 1 ) {
 			parameters.put( PersistentIdentifierGenerator.PK, id.getColumns().get(0).getName() );

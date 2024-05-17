@@ -42,7 +42,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.IdentifierGeneratorCreator;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 
 import org.jboss.logging.Logger;

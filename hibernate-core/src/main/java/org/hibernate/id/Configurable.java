@@ -15,7 +15,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
- * An {@link IdentifierGenerator} that supports "configuration".
+ * A {@link org.hibernate.generator.Generator} that supports "configuration".
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -33,10 +33,12 @@ public interface Configurable {
 	 * {@link org.hibernate.boot.model.relational.ExportableProducer#registerExportables(Database)},
 	 *
 	 * @param type The id property type descriptor
-	 * @param params param values, keyed by parameter name
+	 * @param parameters param values, keyed by parameter name
 	 * @param serviceRegistry Access to service that may be needed.
+	 *
+	 * @throws MappingException when there's something wrong with the given parameters
 	 */
-	void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException;
+	void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException;
 
 	/**
 	 * Initializes this instance, pre-generating SQL if necessary.

@@ -50,5 +50,5 @@ public interface PostInsertIdentifierGenerator extends OnExecutionGenerator, Con
 	 * Noop default implementation. May be overridden by subtypes.
 	 */
 	@Override
-	default void configure(Type type, Properties params, ServiceRegistry serviceRegistry) {}
+	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {}
 }

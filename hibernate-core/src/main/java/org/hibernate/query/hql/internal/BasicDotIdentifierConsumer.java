@@ -76,7 +76,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			reset();
 		}
 
-		if ( pathSoFar.length() != 0 ) {
+		if ( !pathSoFar.isEmpty() ) {
 			pathSoFar.append( '.' );
 		}
 		pathSoFar.append( identifier );

@@ -28,7 +28,7 @@ import org.hibernate.type.Type;
  */
 public class ExportableColumn extends Column {
 
-	public ExportableColumn(Database database, Table table, String name, BasicType type) {
+	public ExportableColumn(Database database, Table table, String name, BasicType<?> type) {
 		this(
 				database,
 				table,
@@ -44,7 +44,7 @@ public class ExportableColumn extends Column {
 			Database database,
 			Table table,
 			String name,
-			BasicType type,
+			BasicType<?> type,
 			String dbTypeDeclaration) {
 		super( name );
 		setValue( new ValueImpl( this, table, type, database ) );
@@ -54,10 +54,10 @@ public class ExportableColumn extends Column {
 	public static class ValueImpl implements Value {
 		private final ExportableColumn column;
 		private final Table table;
-		private final BasicType type;
+		private final BasicType<?> type;
 		private final Database database;
 
-		public ValueImpl(ExportableColumn column, Table table, BasicType type, Database database) {
+		public ValueImpl(ExportableColumn column, Table table, BasicType<?> type, Database database) {
 			this.column = column;
 			this.table = table;
 			this.type = type;

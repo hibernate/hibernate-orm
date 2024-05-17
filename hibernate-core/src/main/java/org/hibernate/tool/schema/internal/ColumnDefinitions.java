@@ -86,9 +86,9 @@ class ColumnDefinitions {
 	}
 
 
-	static String getColumnDefinition(Column column, Table table, Metadata metadata, Dialect dialect) {
+	static String getColumnDefinition(Column column, Metadata metadata, Dialect dialect) {
 		StringBuilder definition = new StringBuilder();
-		appendColumnDefinition( definition, column, table, metadata, dialect );
+		appendColumnDefinition( definition, column, metadata, dialect );
 		appendComment( definition, column, dialect );
 		return definition.toString();
 	}
@@ -101,7 +101,7 @@ class ColumnDefinitions {
 			Dialect dialect,
 			SqlStringGenerationContext context) {
 		statement.append( column.getQuotedName( dialect ) );
-		appendColumnDefinition( statement, column, table, metadata, dialect );
+		appendColumnDefinition( statement, column, metadata, dialect );
 		appendComment( statement, column, dialect );
 		appendConstraints( statement, column, table, dialect, context );
 	}
@@ -169,10 +169,9 @@ class ColumnDefinitions {
 	private static void appendColumnDefinition(
 			StringBuilder definition,
 			Column column,
-			Table table,
 			Metadata metadata,
 			Dialect dialect) {
-		if ( isIdentityColumn( column, table, dialect) ) {
+		if ( column.isIdentity() ) {
 			// to support dialects that have their own identity data type
 			if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
 				definition.append( ' ' ).append( column.getSqlType( metadata ) );
@@ -210,24 +209,6 @@ class ColumnDefinitions {
 				definition.append( " not null" );
 			}
 		}
-	}
-
-	private static boolean isIdentityColumn(Column column, Table table, Dialect dialect) {
-		// Try to find out the name of the primary key in case the dialect needs it to create an identity
-		return isPrimaryKeyIdentity( table )
-			&& column.getQuotedName( dialect ).equals( getPrimaryKeyColumnName( table, dialect ) );
-	}
-
-	private static String getPrimaryKeyColumnName(Table table, Dialect dialect) {
-		return table.hasPrimaryKey()
-				? table.getPrimaryKey().getColumns().get(0).getQuotedName( dialect )
-				: null;
-	}
-
-	private static boolean isPrimaryKeyIdentity(Table table) {
-		return table.hasPrimaryKey()
-			&& table.getPrimaryKey().getColumnSpan() == 1
-			&& table.getPrimaryKey().getColumn( 0 ).isIdentity();
 	}
 
 	private static String normalize(String typeName) {

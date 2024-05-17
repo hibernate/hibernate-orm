@@ -228,7 +228,6 @@ class ColumnDefinitions {
 		return table.hasPrimaryKey()
 			&& table.getPrimaryKey().getColumnSpan() == 1
 			&& table.getPrimaryKey().getColumn( 0 ).isIdentity();
-
 	}
 
 	private static String normalize(String typeName) {

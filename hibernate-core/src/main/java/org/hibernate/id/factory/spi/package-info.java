@@ -7,5 +7,8 @@
 
 /**
  * Contains an SPI for id generator factories.
+ *
+ * @deprecated Use new {@link org.hibernate.generator.Generator} infrastructure
  */
+@Deprecated(since = "7.0")
 package org.hibernate.id.factory.spi;

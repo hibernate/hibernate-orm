@@ -29,13 +29,10 @@ public interface KeyValue extends Value {
 	
 	boolean isUpdateable();
 
-	Generator createGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass);
+	Generator createGenerator(Dialect dialect, RootClass rootClass);
 
 	/**
-	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 * @deprecated Use {@link #createGenerator(Dialect, RootClass)} instead.
 	 *             No longer used except in legacy tests.
 	 *
 	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
@@ -48,12 +45,12 @@ public interface KeyValue extends Value {
 			String defaultCatalog,
 			String defaultSchema,
 			RootClass rootClass) {
-		final Generator generator = createGenerator( identifierGeneratorFactory, dialect, rootClass );
+		final Generator generator = createGenerator( dialect, rootClass );
 		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 
 	/**
-	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 * @deprecated Use {@link #createGenerator(Dialect, RootClass)} instead.
 	 *             No longer used except in legacy tests.
 	 *
 	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
@@ -64,7 +61,7 @@ public interface KeyValue extends Value {
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) {
-		final Generator generator = createGenerator( identifierGeneratorFactory, dialect, rootClass );
+		final Generator generator = createGenerator( dialect, rootClass );
 		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 }

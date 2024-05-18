@@ -10,8 +10,9 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.Configurable;
+import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.service.ServiceRegistry;
@@ -24,16 +25,20 @@ import java.util.Properties;
 public class NativeGenerator
         implements OnExecutionGenerator, BeforeExecutionGenerator, Configurable, ExportableProducer {
 
-    private final IdentifierGeneratorFactory factory;
-    private final String strategy;
-
-    private Generator generator;
+    private final Generator generator;
 
     public NativeGenerator(NativeId nativeId, Member member, CustomIdGeneratorCreationContext creationContext) {
-        factory = creationContext.getIdentifierGeneratorFactory();
-		strategy = creationContext.getDatabase().getDialect().getNativeIdentifierGeneratorStrategy();
-        if ( "identity".equals(strategy) ) {
-            creationContext.getProperty().getValue().getColumns().get(0).setIdentity(true);
+		final String strategy = creationContext.getDatabase().getDialect().getNativeIdentifierGeneratorStrategy();
+        switch (strategy) {
+            case "sequence":
+                generator = new SequenceStyleGenerator();
+                break;
+            case "identity":
+                creationContext.getProperty().getValue().getColumns().get(0).setIdentity(true);
+                generator = new IdentityGenerator();
+                break;
+            default:
+                throw new IllegalArgumentException();
         }
     }
 
@@ -49,22 +54,9 @@ public class NativeGenerator
 
     @Override
     public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {
-        generator = factory.createIdentifierGenerator(strategy, type, parameters);
-        //TODO: should use this instead of the deprecated method, but see HHH-18135
-//        GenerationType generationType;
-//        switch (strategy) {
-//            case "identity":
-//                generationType = GenerationType.IDENTITY;
-//                break;
-//            case "sequence":
-//                generationType = GenerationType.SEQUENCE;
-//                break;
-//            default:
-//                throw new AssertionFailure("unrecognized strategy");
-//        }
-//        generator =
-//                factory.createIdentifierGenerator( generationType, strategy, strategy, type.getJavaTypeDescriptor(),
-//                        parameters, (a, b) -> null );
+        if ( generator instanceof Configurable ) {
+            ((Configurable) generator).configure( type, parameters, serviceRegistry );
+        }
     }
 
     @Override

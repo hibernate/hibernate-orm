@@ -73,7 +73,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.StringHelper;
@@ -288,7 +287,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		try {
 			integrate( bootMetamodel, bootstrapContext, integratorObserver );
 
-			identifierGenerators = createGenerators( jdbcServices, sqlStringGenerationContext, bootMetamodel, bootstrapContext );
+			identifierGenerators = createGenerators( jdbcServices, sqlStringGenerationContext, bootMetamodel );
 			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
 
@@ -463,26 +462,22 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private static Map<String, Generator> createGenerators(
 			JdbcServices jdbcServices,
 			SqlStringGenerationContext sqlStringGenerationContext,
-			MetadataImplementor bootMetamodel,
-			BootstrapContext bootstrapContext) {
+			MetadataImplementor bootMetamodel) {
+		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
 		final Map<String, Generator> generators = new HashMap<>();
-		bootMetamodel.getEntityBindings().stream()
-				.filter( model -> !model.isInherited() )
-				.forEach( model -> {
-					final Generator generator = model.getIdentifier().createGenerator(
-							bootstrapContext.getIdentifierGeneratorFactory(),
-							jdbcServices.getJdbcEnvironment().getDialect(),
-							(RootClass) model
-					);
-					if ( generator instanceof Configurable ) {
-						final Configurable identifierGenerator = (Configurable) generator;
-						identifierGenerator.initialize( sqlStringGenerationContext );
-					}
-					if ( generator.allowAssignedIdentifiers() ) {
-						( (SimpleValue) model.getIdentifier() ).setNullValue( "undefined" );
-					}
-					generators.put( model.getEntityName(), generator );
-				} );
+		for ( PersistentClass model : bootMetamodel.getEntityBindings() ) {
+			if ( !model.isInherited() ) {
+				final Generator generator = model.getIdentifier().createGenerator( dialect, (RootClass) model );
+				if (generator instanceof Configurable) {
+					final Configurable identifierGenerator = (Configurable) generator;
+					identifierGenerator.initialize( sqlStringGenerationContext );
+				}
+				if ( generator.allowAssignedIdentifiers() ) {
+					( (SimpleValue) model.getIdentifier() ).setNullValue( "undefined" );
+				}
+				generators.put( model.getEntityName(), generator );
+			}
+		}
 		return generators;
 	}
 
@@ -773,10 +768,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
 		return sqlStringGenerationContext;
-	}
-
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return null;
 	}
 
 	@Override @Deprecated

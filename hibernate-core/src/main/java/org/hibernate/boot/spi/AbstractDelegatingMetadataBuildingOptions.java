@@ -53,7 +53,7 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 		return delegate.getMappingDefaults();
 	}
 
-	@Override
+	@Override @Deprecated
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return delegate.getIdentifierGeneratorFactory();
 	}

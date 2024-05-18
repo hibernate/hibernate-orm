@@ -40,7 +40,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentityGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -391,14 +390,11 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
-	public Generator createGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) throws MappingException {
+	public Generator createGenerator(Dialect dialect, RootClass rootClass) throws MappingException {
 		if ( generator == null ) {
 			if ( customIdGeneratorCreator != null ) {
 				generator = customIdGeneratorCreator.createGenerator(
-						new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
+						new IdGeneratorCreationContext( null, null, rootClass )
 				);
 			}
 			else {
@@ -1104,21 +1100,14 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	private class IdGeneratorCreationContext implements CustomIdGeneratorCreationContext {
-		private final IdentifierGeneratorFactory identifierGeneratorFactory;
 		private final String defaultCatalog;
 		private final String defaultSchema;
 		private final RootClass rootClass;
 
-		public IdGeneratorCreationContext(IdentifierGeneratorFactory identifierGeneratorFactory, String defaultCatalog, String defaultSchema, RootClass rootClass) {
-			this.identifierGeneratorFactory = identifierGeneratorFactory;
+		public IdGeneratorCreationContext(String defaultCatalog, String defaultSchema, RootClass rootClass) {
 			this.defaultCatalog = defaultCatalog;
 			this.defaultSchema = defaultSchema;
 			this.rootClass = rootClass;
-		}
-
-		@Override
-		public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-			return identifierGeneratorFactory;
 		}
 
 		@Override

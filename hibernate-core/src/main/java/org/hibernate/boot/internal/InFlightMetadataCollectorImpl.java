@@ -2261,11 +2261,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		//		It was done this way in the old code too, so no "regression" here; but
 		//		it could be done better
 		try {
-			final Generator generator = identifierValueBinding.createGenerator(
-					bootstrapContext.getIdentifierGeneratorFactory(),
-					dialect,
-					entityBinding
-			);
+			final Generator generator = identifierValueBinding.createGenerator( dialect, entityBinding );
 
 			if ( generator instanceof ExportableProducer ) {
 				( (ExportableProducer) generator ).registerExportables( getDatabase() );

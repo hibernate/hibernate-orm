@@ -57,7 +57,10 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * declared using {@link org.hibernate.annotations.GenericGenerator}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use new {@link Generator} infrastructure
  */
+@Deprecated(since = "7.0")
 public class StandardIdentifierGeneratorFactory
 		implements IdentifierGeneratorFactory, BeanContainer.LifecycleOptions, Serializable {
 

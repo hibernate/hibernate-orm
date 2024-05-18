@@ -36,7 +36,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -658,27 +657,17 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public Generator createGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) throws MappingException {
+	public Generator createGenerator(Dialect dialect, RootClass rootClass) throws MappingException {
 		if ( builtIdentifierGenerator == null ) {
-			builtIdentifierGenerator = buildIdentifierGenerator(
-					identifierGeneratorFactory,
-					dialect,
-					rootClass
-			);
+			builtIdentifierGenerator = buildIdentifierGenerator( dialect, rootClass );
 		}
 		return builtIdentifierGenerator;
 	}
 
-	private Generator buildIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) throws MappingException {
+	private Generator buildIdentifierGenerator( Dialect dialect, RootClass rootClass) throws MappingException {
 		final boolean hasCustomGenerator = ! DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
 		if ( hasCustomGenerator ) {
-			return super.createGenerator( identifierGeneratorFactory, dialect, rootClass );
+			return super.createGenerator( dialect, rootClass );
 		}
 
 		final Class<?> entityClass = rootClass.getMappedClass();
@@ -713,7 +702,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 					// skip any 'assigned' generators, they would have been handled by
 					// the StandardGenerationContextLocator
 					generator.addGeneratedValuePlan( new ValueGenerationPlan(
-							value.createGenerator( identifierGeneratorFactory, dialect, rootClass ),
+							value.createGenerator( dialect, rootClass ),
 							getType().isMutable() ? injector( property, attributeDeclarer ) : null,
 							i
 					) );

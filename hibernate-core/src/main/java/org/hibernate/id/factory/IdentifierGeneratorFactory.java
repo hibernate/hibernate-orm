@@ -44,8 +44,11 @@ import jakarta.persistence.GenerationType;
  * {@link org.hibernate.annotations.IdGeneratorType @IdGeneratorType} meta-annotation.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use new {@link Generator} infrastructure
  */
 @Incubating //this API is currently in flux
+@Deprecated(since = "7.0")
 public interface IdentifierGeneratorFactory extends Service {
 	/**
 	 * Create an {@link IdentifierGenerator} based on the given details.

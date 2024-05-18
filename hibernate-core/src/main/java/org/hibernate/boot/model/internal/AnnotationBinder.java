@@ -58,6 +58,8 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
 import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildIdGenerator;
+import static org.hibernate.boot.model.internal.GeneratorBinder.buildSequenceIdGenerator;
+import static org.hibernate.boot.model.internal.GeneratorBinder.buildTableIdGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -155,16 +157,16 @@ public final class AnnotationBinder {
 	}
 
 	private static void handleIdGenerators(ClassDetails packageInfoClassDetails, MetadataBuildingContext context) {
-		packageInfoClassDetails.forEachAnnotationUsage( SequenceGenerator.class, (usage) -> {
-			IdentifierGeneratorDefinition idGen = buildIdGenerator( usage, context );
+		packageInfoClassDetails.forEachAnnotationUsage( SequenceGenerator.class, usage -> {
+			IdentifierGeneratorDefinition idGen = buildSequenceIdGenerator( usage );
 			context.getMetadataCollector().addIdentifierGenerator( idGen );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Add sequence generator with name: {0}", idGen.getName() );
 			}
 		} );
 
-		packageInfoClassDetails.forEachAnnotationUsage( TableGenerator.class, (usage) -> {
-			IdentifierGeneratorDefinition idGen = buildIdGenerator( usage, context );
+		packageInfoClassDetails.forEachAnnotationUsage( TableGenerator.class, usage -> {
+			IdentifierGeneratorDefinition idGen = buildTableIdGenerator( usage );
 			context.getMetadataCollector().addIdentifierGenerator( idGen );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Add table generator with name: {0}", idGen.getName() );
@@ -173,13 +175,13 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindGenericGenerators(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
-		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, (usage) -> {
+		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, usage -> {
 			bindGenericGenerator( usage, context );
 		} );
 	}
 
 	private static void bindGenericGenerator(AnnotationUsage<GenericGenerator> def, MetadataBuildingContext context) {
-		context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( def, context ) );
+		context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( def ) );
 	}
 
 	public static void bindQueries(AnnotationTarget annotationTarget, MetadataBuildingContext context) {

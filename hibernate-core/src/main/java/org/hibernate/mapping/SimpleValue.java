@@ -66,7 +66,7 @@ import jakarta.persistence.AttributeConverter;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
-import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.createLegacyIdentifierGenerator;
+import static org.hibernate.boot.model.internal.GeneratorBinder.createLegacyIdentifierGenerator;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 
 /**
@@ -398,7 +398,7 @@ public abstract class SimpleValue implements KeyValue {
 				);
 			}
 			else {
-				generator = createLegacyIdentifierGenerator(this, dialect, null, null, rootClass );
+				generator = createLegacyIdentifierGenerator( this, dialect, null, null, rootClass );
 				if ( generator instanceof IdentityGenerator ) {
 					setColumnToIdentity();
 				}

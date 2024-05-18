@@ -362,8 +362,8 @@ public class GeneratorBinder {
 		final Class<? extends Annotation> annotationType = annotation.getAnnotationType();
 		final IdGeneratorType idGeneratorType = annotationType.getAnnotation( IdGeneratorType.class );
 		assert idGeneratorType != null;
+		final Class<? extends Generator> generatorClass = idGeneratorType.value();
 		return creationContext -> {
-			final Class<? extends Generator> generatorClass = idGeneratorType.value();
 			checkGeneratorClass( generatorClass );
 			final Generator generator = instantiateGenerator(
 					annotation,

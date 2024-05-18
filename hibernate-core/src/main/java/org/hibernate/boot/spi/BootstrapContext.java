@@ -75,6 +75,7 @@ public interface BootstrapContext {
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
+	@Deprecated(since="7.0", forRemoval = true)
 	default IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return getMetadataBuildingOptions().getIdentifierGeneratorFactory();
 	}

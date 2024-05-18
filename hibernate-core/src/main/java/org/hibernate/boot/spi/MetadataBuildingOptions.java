@@ -50,7 +50,10 @@ public interface MetadataBuildingOptions {
 	 * The service implementing {@link IdentifierGeneratorFactory}.
 	 * <p>
 	 * @implNote Almost always a {@link org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory}.
+	 *
+	 * @deprecated Use new {@link org.hibernate.generator.Generator} infrastructure
 	 */
+	@Deprecated(since="7.0", forRemoval = true)
 	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
 
 	/**

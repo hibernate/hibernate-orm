@@ -7,13 +7,11 @@
 package org.hibernate.id.factory.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.mapping.RootClass;
 
 @Incubating
 public interface CustomIdGeneratorCreationContext extends GeneratorCreationContext {
-	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
 	RootClass getRootClass();
 
 	// we could add these if it helps integrate old infrastructure

@@ -14,5 +14,8 @@
  * It is used when id generators are identified by stringly-typed names.
  *
  * @see org.hibernate.id.factory.IdentifierGeneratorFactory
+ *
+ * @deprecated Use new {@link org.hibernate.generator.Generator} infrastructure
  */
+@Deprecated(since = "7.0")
 package org.hibernate.id.factory;

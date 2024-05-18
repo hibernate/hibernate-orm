@@ -402,7 +402,7 @@ public abstract class SimpleValue implements KeyValue {
 				);
 			}
 			else {
-				generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
+				generator = createLegacyIdentifierGenerator(this, dialect, null, null, rootClass );
 				if ( generator instanceof IdentityGenerator ) {
 					setColumnToIdentity();
 				}
@@ -872,7 +872,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean isColumnInsertable(int index) {
-		if ( insertability.size() > 0 ) {
+		if ( !insertability.isEmpty() ) {
 			return insertability.get( index );
 		}
 		return false;
@@ -880,7 +880,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean isColumnUpdateable(int index) {
-		if ( updatability.size() > 0 ) {
+		if ( !updatability.isEmpty() ) {
 			return updatability.get( index );
 		}
 		return false;

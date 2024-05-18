@@ -6,39 +6,110 @@
  */
 package org.hibernate.id.factory.internal;
 
+import org.hibernate.InstantiationException;
+import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.id.Assigned;
+import org.hibernate.id.Configurable;
+import org.hibernate.id.ForeignGenerator;
+import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IdentityGenerator;
+import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.SelectGenerator;
+import org.hibernate.id.UUIDGenerator;
+import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.generator.Generator;
 
+import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.Properties;
+
+import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 public class IdentifierGeneratorUtil {
 
 	public static Generator createLegacyIdentifierGenerator(
 			SimpleValue simpleValue,
-			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			String defaultCatalog,
 			String defaultSchema,
 			RootClass rootClass) {
-		return identifierGeneratorFactory.createIdentifierGenerator(
-				simpleValue.getIdentifierGeneratorStrategy(),
-				simpleValue.getType(),
-				collectParameters( simpleValue, dialect, defaultCatalog, defaultSchema, rootClass )
-		);
+		final Class<? extends Generator> generatorClass = generatorClass( simpleValue );
+		final Constructor<? extends Generator> defaultConstructor = getDefaultConstructor( generatorClass );
+		if ( defaultConstructor == null ) {
+			throw new InstantiationException( "No default constructor for id generator class", generatorClass );
+		}
+		final Generator identifierGenerator;
+		try {
+			identifierGenerator = defaultConstructor.newInstance();
+		}
+		catch (Exception e) {
+			throw new InstantiationException( "Could not instantiate id generator", generatorClass, e );
+		}
+		if ( identifierGenerator instanceof Configurable ) {
+			final Properties parameters = collectParameters( simpleValue, dialect, defaultCatalog, defaultSchema, rootClass );
+			final Configurable configurable = (Configurable) identifierGenerator;
+			configurable.configure( simpleValue.getType(), parameters, simpleValue.getServiceRegistry() );
+		}
+		return identifierGenerator;
+	}
+
+	private static Class<? extends Generator> generatorClass(SimpleValue simpleValue) {
+		String strategy = simpleValue.getIdentifierGeneratorStrategy();
+		if ( "native".equals(strategy) ) {
+			strategy =
+					simpleValue.getMetadata().getDatabase().getDialect()
+							.getNativeIdentifierGeneratorStrategy();
+		}
+		switch (strategy) {
+			case "assigned":
+				return Assigned.class;
+			case "enhanced-sequence":
+			case "sequence":
+				return SequenceStyleGenerator.class;
+			case "enhanced-table":
+			case "table":
+				return TableGenerator.class;
+			case "identity":
+				return IdentityGenerator.class;
+			case "increment":
+				return IncrementGenerator.class;
+			case "foreign":
+				return ForeignGenerator.class;
+			case "uuid":
+			case "uuid.hex":
+				return UUIDHexGenerator.class;
+			case "uuid2":
+				return UUIDGenerator.class;
+			case "select":
+				return SelectGenerator.class;
+			case "guid":
+				return GUIDGenerator.class;
+		}
+		final Class<? extends Generator> clazz =
+				simpleValue.getServiceRegistry().requireService( ClassLoaderService.class )
+						.classForName( strategy );
+		if ( !Generator.class.isAssignableFrom( clazz ) ) {
+			// in principle, this shouldn't happen, since @GenericGenerator
+			// constrains the type to subtypes of Generator
+			throw new MappingException( clazz.getName() + " does not implement 'Generator'" );
+		}
+		return clazz;
 	}
 
 	public static Properties collectParameters(

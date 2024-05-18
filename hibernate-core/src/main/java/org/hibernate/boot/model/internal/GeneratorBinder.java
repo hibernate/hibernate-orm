@@ -7,13 +7,14 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.GenericGenerator;
@@ -22,22 +23,43 @@ import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.boot.internal.GenerationStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.Assigned;
 import org.hibernate.id.Configurable;
+import org.hibernate.id.ForeignGenerator;
+import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IdentityGenerator;
+import org.hibernate.id.IncrementGenerator;
+import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.SelectGenerator;
+import org.hibernate.id.UUIDGenerator;
+import org.hibernate.id.UUIDHexGenerator;
+import org.hibernate.id.enhanced.LegacyNamingStrategy;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.IdentifierGeneratorCreator;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
@@ -58,12 +80,185 @@ import jakarta.persistence.Version;
 import static org.hibernate.boot.model.internal.AnnotationHelper.extractParameterMap;
 import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
-import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.collectParameters;
+import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 public class GeneratorBinder {
 
 	private static final Logger LOG = CoreLogging.logger( BinderHelper.class );
+
+	public static Generator createLegacyIdentifierGenerator(
+			SimpleValue simpleValue,
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema,
+			RootClass rootClass) {
+		final Class<? extends Generator> generatorClass = generatorClass( simpleValue );
+		final Constructor<? extends Generator> defaultConstructor = getDefaultConstructor( generatorClass );
+		if ( defaultConstructor == null ) {
+			throw new org.hibernate.InstantiationException( "No default constructor for id generator class", generatorClass );
+		}
+		final Generator identifierGenerator;
+		try {
+			identifierGenerator = defaultConstructor.newInstance();
+		}
+		catch (Exception e) {
+			throw new org.hibernate.InstantiationException( "Could not instantiate id generator", generatorClass, e );
+		}
+		if ( identifierGenerator instanceof Configurable ) {
+			final Properties parameters = collectParameters( simpleValue, dialect, defaultCatalog, defaultSchema, rootClass );
+			final Configurable configurable = (Configurable) identifierGenerator;
+			configurable.configure( simpleValue.getType(), parameters, simpleValue.getServiceRegistry() );
+		}
+		return identifierGenerator;
+	}
+
+	private static Class<? extends Generator> generatorClass(SimpleValue simpleValue) {
+		String strategy = simpleValue.getIdentifierGeneratorStrategy();
+		if ( "native".equals(strategy) ) {
+			strategy =
+					simpleValue.getMetadata().getDatabase().getDialect()
+							.getNativeIdentifierGeneratorStrategy();
+		}
+		switch (strategy) {
+			case "assigned":
+				return Assigned.class;
+			case "enhanced-sequence":
+			case "sequence":
+				return SequenceStyleGenerator.class;
+			case "enhanced-table":
+			case "table":
+				return org.hibernate.id.enhanced.TableGenerator.class;
+			case "identity":
+				return IdentityGenerator.class;
+			case "increment":
+				return IncrementGenerator.class;
+			case "foreign":
+				return ForeignGenerator.class;
+			case "uuid":
+			case "uuid.hex":
+				return UUIDHexGenerator.class;
+			case "uuid2":
+				return UUIDGenerator.class;
+			case "select":
+				return SelectGenerator.class;
+			case "guid":
+				return GUIDGenerator.class;
+		}
+		final Class<? extends Generator> clazz =
+				simpleValue.getServiceRegistry().requireService( ClassLoaderService.class )
+						.classForName( strategy );
+		if ( !Generator.class.isAssignableFrom( clazz ) ) {
+			// in principle, this shouldn't happen, since @GenericGenerator
+			// constrains the type to subtypes of Generator
+			throw new MappingException( clazz.getName() + " does not implement 'Generator'" );
+		}
+		return clazz;
+	}
+
+	public static Properties collectParameters(
+			SimpleValue simpleValue,
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema,
+			RootClass rootClass) {
+		final ConfigurationService configService =
+				simpleValue.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+						.requireService( ConfigurationService.class );
+
+		final Properties params = new Properties();
+
+		// This is for backwards compatibility only;
+		// when this method is called by Hibernate ORM, defaultSchema and defaultCatalog are always
+		// null, and defaults are handled later.
+		if ( defaultSchema != null ) {
+			params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema);
+		}
+
+		if ( defaultCatalog != null ) {
+			params.setProperty( PersistentIdentifierGenerator.CATALOG, defaultCatalog);
+		}
+
+		// default initial value and allocation size per-JPA defaults
+		params.setProperty( OptimizableGenerator.INITIAL_PARAM,
+				String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
+
+		params.setProperty( OptimizableGenerator.INCREMENT_PARAM,
+				String.valueOf( defaultIncrement( configService ) ) );
+		//init the table here instead of earlier, so that we can get a quoted table name
+		//TODO: would it be better to simply pass the qualified table name, instead of
+		//	  splitting it up into schema/catalog/table names
+		final String tableName = simpleValue.getTable().getQuotedName( dialect );
+		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
+
+		//pass the column name (a generated id almost always has a single column)
+		final Column column = (Column) simpleValue.getSelectables().get(0);
+		final String columnName = column.getQuotedName( dialect );
+		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
+
+		//pass the entity-name, if not a collection-id
+		if ( rootClass != null ) {
+			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
+			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
+			// The table name is not really a good default for subselect entities,
+			// so use the JPA entity name which is short
+			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE,
+					simpleValue.getTable().isSubselect()
+							? rootClass.getJpaEntityName()
+							: simpleValue.getTable().getName() );
+
+			params.setProperty( PersistentIdentifierGenerator.TABLES,
+					identityTablesString( dialect, rootClass ) );
+		}
+		else {
+			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
+			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, tableName );
+		}
+
+		if ( simpleValue.getIdentifierGeneratorParameters() != null ) {
+			params.putAll( simpleValue.getIdentifierGeneratorParameters() );
+		}
+
+		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
+
+		params.put( IdentifierGenerator.CONTRIBUTOR_NAME,
+				simpleValue.getBuildingContext().getCurrentContributorName() );
+
+		final Map<String, Object> settings = configService.getSettings();
+		if ( settings.containsKey( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) ) {
+			params.put( AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
+					settings.get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) );
+		}
+
+		return params;
+	}
+
+	private static String identityTablesString(Dialect dialect, RootClass rootClass) {
+		final StringBuilder tables = new StringBuilder();
+		for ( Table table : rootClass.getIdentityTables() ) {
+			tables.append( table.getQuotedName( dialect ) );
+			if ( tables.length()>0 ) {
+				tables.append( ", " );
+			}
+		}
+		return tables.toString();
+	}
+
+	private static int defaultIncrement(ConfigurationService configService) {
+		final String idNamingStrategy =
+				configService.getSetting( AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
+						StandardConverters.STRING, null );
+		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
+				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
+				|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
+				|| SingleNamingStrategy.class.getName().equals( idNamingStrategy ) ) {
+			return 1;
+		}
+		else {
+			return OptimizableGenerator.DEFAULT_INCREMENT_SIZE;
+		}
+	}
 
 	/**
 	 * Apply an id generation strategy and parameters to the
@@ -79,8 +274,6 @@ public class GeneratorBinder {
 		LOG.debugf( "#makeIdGenerator(%s, %s, %s, %s, ...)", id, idAttributeMember, generatorType, generatorName );
 
 		//generator settings
-		id.setIdentifierGeneratorStrategy( generatorType );
-
 		final Map<String,Object> parameters = new HashMap<>();
 
 		//always settable
@@ -95,12 +288,8 @@ public class GeneratorBinder {
 
 		if ( !generatorName.isEmpty() ) {
 			//we have a named generator
-			final IdentifierGeneratorDefinition definition = makeIdentifierGeneratorDefinition(
-					generatorName,
-					idAttributeMember,
-					localGenerators,
-					buildingContext
-			);
+			final IdentifierGeneratorDefinition definition =
+					makeIdentifierGeneratorDefinition( generatorName, idAttributeMember, localGenerators, buildingContext );
 			if ( definition == null ) {
 				throw new AnnotationException( "No id generator was declared with the name '" + generatorName
 						+ "' specified by '@GeneratedValue'"
@@ -109,21 +298,20 @@ public class GeneratorBinder {
 			//This is quite vague in the spec but a generator could override the generator choice
 			final String identifierGeneratorStrategy = definition.getStrategy();
 			//yuk! this is a hack not to override 'AUTO' even if generator is set
-			final boolean avoidOverriding = identifierGeneratorStrategy.equals( "identity" )
+			final boolean avoidOverriding =
+					identifierGeneratorStrategy.equals( "identity" )
 					|| identifierGeneratorStrategy.equals( "seqhilo" );
 			if ( generatorType == null || !avoidOverriding ) {
-				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
-				if ( DEFAULT_ID_GEN_STRATEGY.equals( identifierGeneratorStrategy ) ) {
-					id.setNullValue( "undefined" );
-				}
+				generatorType = identifierGeneratorStrategy;
 			}
 			//checkIfMatchingGenerator(definition, generatorType, generatorName);
 			parameters.putAll( definition.getParameters() );
 		}
+		id.setIdentifierGeneratorStrategy( generatorType );
+		id.setIdentifierGeneratorParameters( parameters );
 		if ( DEFAULT_ID_GEN_STRATEGY.equals( generatorType ) ) {
 			id.setNullValue( "undefined" );
 		}
-		id.setIdentifierGeneratorParameters( parameters );
 	}
 
 	/**
@@ -191,23 +379,20 @@ public class GeneratorBinder {
 		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
 		final Map<String, IdentifierGeneratorDefinition> generators = new HashMap<>();
 
-		annotatedElement.forEachAnnotationUsage( TableGenerator.class, (usage) -> {
-			IdentifierGeneratorDefinition idGenerator = buildIdGenerator( usage, context );
-			generators.put(
-					idGenerator.getName(),
-					idGenerator
-			);
-			metadataCollector.addIdentifierGenerator( idGenerator );
-		} );
-
-		annotatedElement.forEachAnnotationUsage( SequenceGenerator.class, (usage) -> {
-			IdentifierGeneratorDefinition idGenerator = buildIdGenerator( usage, context );
+		annotatedElement.forEachAnnotationUsage( TableGenerator.class, usage -> {
+			IdentifierGeneratorDefinition idGenerator = buildTableIdGenerator( usage );
 			generators.put( idGenerator.getName(), idGenerator );
 			metadataCollector.addIdentifierGenerator( idGenerator );
 		} );
 
-		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, (usage) -> {
-			final IdentifierGeneratorDefinition idGenerator = buildIdGenerator( usage, context );
+		annotatedElement.forEachAnnotationUsage( SequenceGenerator.class, usage -> {
+			IdentifierGeneratorDefinition idGenerator = buildSequenceIdGenerator( usage );
+			generators.put( idGenerator.getName(), idGenerator );
+			metadataCollector.addIdentifierGenerator( idGenerator );
+		} );
+
+		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, usage -> {
+			final IdentifierGeneratorDefinition idGenerator = buildIdGenerator( usage );
 			generators.put( idGenerator.getName(), idGenerator );
 			metadataCollector.addIdentifierGenerator( idGenerator );
 		} );
@@ -252,50 +437,50 @@ public class GeneratorBinder {
 		);
 	}
 
-	static IdentifierGeneratorDefinition buildIdGenerator(
-			AnnotationUsage<?> generatorAnnotation,
-			MetadataBuildingContext context) {
+	static IdentifierGeneratorDefinition buildIdGenerator(AnnotationUsage<GenericGenerator> generatorAnnotation) {
 		if ( generatorAnnotation == null ) {
 			return null;
 		}
 
 		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-		if ( TableGenerator.class.isAssignableFrom( generatorAnnotation.getAnnotationType() ) ) {
-			//noinspection unchecked
-			GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretTableGenerator(
-					(AnnotationUsage<TableGenerator>) generatorAnnotation,
-					definitionBuilder
-			);
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Add table generator with name: {0}", definitionBuilder.getName() );
-			}
+		definitionBuilder.setName( generatorAnnotation.getString( "name" ) );
+		final Class<? extends Generator> generatorClass =
+				generatorAnnotation.getClassDetails( "type" ).toJavaClass();
+		final String strategy = generatorClass.equals(Generator.class)
+				? generatorAnnotation.getString( "strategy" )
+				: generatorClass.getName();
+		definitionBuilder.setStrategy( strategy );
+		definitionBuilder.addParams( extractParameterMap( generatorAnnotation.getList( "parameters" ) ) );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Add generic generator with name: {0}", definitionBuilder.getName() );
 		}
-		else if ( SequenceGenerator.class.isAssignableFrom( generatorAnnotation.getAnnotationType() )   ) {
-			//noinspection unchecked
-			GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretSequenceGenerator(
-					(AnnotationUsage<SequenceGenerator>) generatorAnnotation,
-					definitionBuilder
-			);
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Add sequence generator with name: {0}", definitionBuilder.getName() );
-			}
+		return definitionBuilder.build();
+	}
+
+	static IdentifierGeneratorDefinition buildTableIdGenerator(AnnotationUsage<TableGenerator> generatorAnnotation) {
+		if ( generatorAnnotation == null ) {
+			return null;
 		}
-		else if ( GenericGenerator.class.isAssignableFrom( generatorAnnotation.getAnnotationType() )  ) {
-			//noinspection unchecked
-			final AnnotationUsage<GenericGenerator> genericGenerator = (AnnotationUsage<GenericGenerator>) generatorAnnotation;
-			definitionBuilder.setName( genericGenerator.getString( "name" ) );
-			final Class<? extends Generator> generatorClass = genericGenerator.getClassDetails( "type" ).toJavaClass();
-			final String strategy = generatorClass.equals(Generator.class)
-					? genericGenerator.getString( "strategy" )
-					: generatorClass.getName();
-			definitionBuilder.setStrategy( strategy );
-			definitionBuilder.addParams( extractParameterMap( genericGenerator.getList( "parameters" ) ) );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Add generic generator with name: {0}", definitionBuilder.getName() );
-			}
+
+		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
+		GenerationStrategyInterpreter.STRATEGY_INTERPRETER
+				.interpretTableGenerator( generatorAnnotation, definitionBuilder );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Add table generator with name: {0}", definitionBuilder.getName() );
 		}
-		else {
-			throw new AssertionFailure( "Unknown Generator annotation: " + generatorAnnotation );
+		return definitionBuilder.build();
+	}
+
+	static IdentifierGeneratorDefinition buildSequenceIdGenerator(AnnotationUsage<SequenceGenerator> generatorAnnotation) {
+		if ( generatorAnnotation == null ) {
+			return null;
+		}
+
+		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
+		GenerationStrategyInterpreter.STRATEGY_INTERPRETER
+				.interpretSequenceGenerator( generatorAnnotation, definitionBuilder );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Add sequence generator with name: {0}", definitionBuilder.getName() );
 		}
 		return definitionBuilder.build();
 	}
@@ -513,13 +698,14 @@ public class GeneratorBinder {
 	private static void callConfigure(GeneratorCreationContext creationContext, Generator generator) {
 		if ( generator instanceof Configurable ) {
 			final Value value = creationContext.getProperty().getValue();
-			( (Configurable) generator ).configure( value.getType(), collectParameters(
+			Properties parameters = collectParameters(
 					(SimpleValue) value,
 					creationContext.getDatabase().getDialect(),
 					creationContext.getDefaultCatalog(),
 					creationContext.getDefaultSchema(),
 					creationContext.getPersistentClass().getRootClass()
-			), creationContext.getServiceRegistry() );
+			);
+			( (Configurable) generator ).configure( value.getType(), parameters, creationContext.getServiceRegistry() );
 		}
 	}
 
@@ -570,5 +756,44 @@ public class GeneratorBinder {
 		foreignGeneratorBuilder.setStrategy( "foreign" );
 		foreignGeneratorBuilder.addParam( "property", mapsIdProperty.getPropertyName() );
 		return foreignGeneratorBuilder.build();
+	}
+
+	public static void makeIdentifier(
+			final MappingDocument sourceDocument,
+			IdentifierGeneratorDefinition generator,
+			String unsavedValue,
+			SimpleValue identifierValue,
+			MetadataBuildingContext buildingContext) {
+		if ( generator != null ) {
+			final Map<String,Object> params = new HashMap<>();
+
+			// see if the specified generator name matches a registered <identifier-generator/>
+			String generatorName = generator.getStrategy();
+			final IdentifierGeneratorDefinition generatorDef =
+					sourceDocument.getMetadataCollector().getIdentifierGenerator( generatorName );
+			if ( generatorDef != null ) {
+				generatorName = generatorDef.getStrategy();
+				params.putAll( generatorDef.getParameters() );
+			}
+
+			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
+			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
+					buildingContext.getObjectNameNormalizer() );
+
+			params.putAll( generator.getParameters() );
+
+			identifierValue.setIdentifierGeneratorStrategy( generatorName );
+			identifierValue.setIdentifierGeneratorParameters( params );
+		}
+
+		if ( isNotEmpty( unsavedValue ) ) {
+			identifierValue.setNullValue( unsavedValue );
+		}
+		else if ( DEFAULT_ID_GEN_STRATEGY.equals( identifierValue.getIdentifierGeneratorStrategy() ) ) {
+			identifierValue.setNullValue( "undefined" );
+		}
+		else {
+			identifierValue.setNullValue( null );
+		}
 	}
 }

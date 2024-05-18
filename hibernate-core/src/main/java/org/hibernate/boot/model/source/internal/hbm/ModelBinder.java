@@ -41,7 +41,6 @@ import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
-import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
@@ -108,7 +107,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.generator.internal.GeneratedGeneration;
 import org.hibernate.generator.internal.SourceGeneration;
-import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -162,6 +160,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
+import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdentifier;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.source.internal.hbm.Helper.reflectedPropertyClass;
 import static org.hibernate.cfg.AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS;
@@ -169,7 +168,6 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
-import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 /**
  * Responsible for coordinating the binding of all information inside entity tags ({@code <class/>}, etc).
@@ -182,7 +180,6 @@ public class ModelBinder {
 	private final MetadataBuildingContext metadataBuildingContext;
 
 	private final Database database;
-	private final ObjectNameNormalizer objectNameNormalizer;
 	private final ImplicitNamingStrategy implicitNamingStrategy;
 	private final RelationalObjectBinder relationalObjectBinder;
 
@@ -194,12 +191,6 @@ public class ModelBinder {
 		this.metadataBuildingContext = context;
 
 		this.database = context.getMetadataCollector().getDatabase();
-		this.objectNameNormalizer = new ObjectNameNormalizer() {
-			@Override
-			protected MetadataBuildingContext getBuildingContext() {
-				return context;
-			}
-		};
 		this.implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 		this.relationalObjectBinder = new RelationalObjectBinder( context );
 	}
@@ -752,45 +743,9 @@ public class ModelBinder {
 				sourceDocument,
 				idSource.getIdentifierGeneratorDescriptor(),
 				idSource.getUnsavedValue(),
-				idValue
+				idValue,
+				metadataBuildingContext
 		);
-	}
-
-	private void makeIdentifier(
-			final MappingDocument sourceDocument,
-			IdentifierGeneratorDefinition generator,
-			String unsavedValue,
-			SimpleValue identifierValue) {
-		if ( generator != null ) {
-			final Map<String,Object> params = new HashMap<>();
-
-			// see if the specified generator name matches a registered <identifier-generator/>
-			String generatorName = generator.getStrategy();
-			final IdentifierGeneratorDefinition generatorDef = sourceDocument.getMetadataCollector()
-					.getIdentifierGenerator( generatorName );
-			if ( generatorDef != null ) {
-				generatorName = generatorDef.getStrategy();
-				params.putAll( generatorDef.getParameters() );
-			}
-			identifierValue.setIdentifierGeneratorStrategy( generatorName );
-
-			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
-			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer );
-
-			params.putAll( generator.getParameters() );
-
-			identifierValue.setIdentifierGeneratorParameters( params );
-		}
-
-		if ( isNotEmpty( unsavedValue ) ) {
-			identifierValue.setNullValue( unsavedValue );
-		}
-		else if ( DEFAULT_ID_GEN_STRATEGY.equals( identifierValue.getIdentifierGeneratorStrategy() ) ) {
-			identifierValue.setNullValue( "undefined" );
-		}
-		else {
-			identifierValue.setNullValue( null );
-		}
 	}
 
 	private void bindAggregatedCompositeEntityIdentifier(
@@ -949,7 +904,8 @@ public class ModelBinder {
 				sourceDocument,
 				identifierSource.getIdentifierGeneratorDescriptor(),
 				null,
-				cid
+				cid,
+				metadataBuildingContext
 		);
 	}
 
@@ -3348,7 +3304,8 @@ public class ModelBinder {
 						mappingDocument,
 						new IdentifierGeneratorDefinition( idSource.getGeneratorName(), idSource.getParameters() ),
 						null,
-						idBinding
+						idBinding,
+						metadataBuildingContext
 				);
 			}
 		}

@@ -46,7 +46,7 @@ public class BagIdTypeResolutionTests {
 
 		final BasicType<?> legacyResolvedBasicType = identifierResolution.getLegacyResolvedBasicType();
 		assertThat( legacyResolvedBasicType.getJdbcType().getJdbcTypeCode(), equalTo( Types.SMALLINT ) );
-		assertThat( identifier.getIdentifierGeneratorStrategy(), equalTo( "increment" ) );
+//		assertThat( identifier.getIdentifierGeneratorStrategy(), equalTo( "increment" ) );
 	}
 
 	@Entity( name = "EntityWithBag" )

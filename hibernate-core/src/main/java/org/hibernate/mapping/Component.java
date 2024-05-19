@@ -665,12 +665,38 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	private Generator buildIdentifierGenerator( Dialect dialect, RootClass rootClass) throws MappingException {
-		final boolean hasCustomGenerator = ! DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
-		if ( hasCustomGenerator ) {
+		if ( !getCustomIdGeneratorCreator().isAssigned() ) {
 			return super.createGenerator( dialect, rootClass );
 		}
 
 		final Class<?> entityClass = rootClass.getMappedClass();
+		final Class<?> attributeDeclarer = getAttributeDeclarer( rootClass, entityClass );
+
+		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
+				new StandardGenerationContextLocator( rootClass.getEntityName() );
+		final CompositeNestedGeneratedValueGenerator generator =
+				new CompositeNestedGeneratedValueGenerator( locator, getType() );
+
+		final List<Property> properties = getProperties();
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final Property property = properties.get( i );
+			if ( property.getValue().isSimpleValue() ) {
+				final SimpleValue value = (SimpleValue) property.getValue();
+				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
+					// skip any 'assigned' generators, they would have been handled by
+					// the StandardGenerationContextLocator
+					generator.addGeneratedValuePlan( new ValueGenerationPlan(
+							value.createGenerator( dialect, rootClass ),
+							getType().isMutable() ? injector( property, attributeDeclarer ) : null,
+							i
+					) );
+				}
+			}
+		}
+		return generator;
+	}
+
+	private Class<?> getAttributeDeclarer(RootClass rootClass, Class<?> entityClass) {
 		final Class<?> attributeDeclarer; // what class is the declarer of the composite pk attributes
 		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
 		//		various scenarios for which we need to account here
@@ -686,30 +712,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			// we have the "straight up" embedded (again the Hibernate term) component identifier
 			attributeDeclarer = entityClass;
 		}
-
-		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
-				new StandardGenerationContextLocator( rootClass.getEntityName() );
-		final CompositeNestedGeneratedValueGenerator generator =
-				new CompositeNestedGeneratedValueGenerator( locator, getType() );
-
-		final List<Property> properties = getProperties();
-		for ( int i = 0; i < properties.size(); i++ ) {
-			final Property property = properties.get( i );
-			if ( property.getValue().isSimpleValue() ) {
-				final SimpleValue value = (SimpleValue) property.getValue();
-
-				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
-					// skip any 'assigned' generators, they would have been handled by
-					// the StandardGenerationContextLocator
-					generator.addGeneratedValuePlan( new ValueGenerationPlan(
-							value.createGenerator( dialect, rootClass ),
-							getType().isMutable() ? injector( property, attributeDeclarer ) : null,
-							i
-					) );
-				}
-			}
-		}
-		return generator;
+		return attributeDeclarer;
 	}
 
 	private Setter injector(Property property, Class<?> attributeDeclarer) {

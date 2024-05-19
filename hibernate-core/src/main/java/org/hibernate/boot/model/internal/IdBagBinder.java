@@ -131,8 +131,6 @@ public class IdBagBinder extends BagBinder {
 			generatorName = namedGenerator;
 		}
 
-		id.setIdentifierGeneratorStrategy( generatorType );
-
 		if ( buildingContext.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
 			SecondPass secondPass = new IdGeneratorResolverSecondPass(
 					id,

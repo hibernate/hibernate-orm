@@ -29,6 +29,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
@@ -380,22 +381,21 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 * @return The table name to use.
 	 */
 	protected QualifiedName determineGeneratorTableName(Properties params, JdbcEnvironment jdbcEnvironment, ServiceRegistry serviceRegistry) {
+		final IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
+
+		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, params ) );
+		final Identifier schema = identifierHelper.toIdentifier( getString( SCHEMA, params ) );
+
 		final String explicitTableName = getString( TABLE_PARAM, params );
 		if ( StringHelper.isNotEmpty( explicitTableName ) ) {
 			if ( explicitTableName.contains( "." ) ) {
 				return QualifiedNameParser.INSTANCE.parse( explicitTableName );
 			}
 			else {
-				final Identifier catalog = jdbcEnvironment.getIdentifierHelper().toIdentifier(
-						getString( CATALOG, params )
-				);
-				final Identifier schema = jdbcEnvironment.getIdentifierHelper().toIdentifier(
-						getString( SCHEMA, params )
-				);
 				return new QualifiedNameParser.NameParts(
 						catalog,
 						schema,
-						jdbcEnvironment.getIdentifierHelper().toIdentifier( explicitTableName )
+						identifierHelper.toIdentifier( explicitTableName )
 				);
 			}
 		}
@@ -426,14 +426,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				namingStrategySetting
 		);
 
-		final Identifier catalog = jdbcEnvironment.getIdentifierHelper().toIdentifier(
-				getString( CATALOG, params )
-		);
-		final Identifier schema = jdbcEnvironment.getIdentifierHelper().toIdentifier(
-				getString( SCHEMA, params )
-		);
-
-		return namingStrategy.determineTableName(  catalog, schema, params, serviceRegistry );
+		return namingStrategy.determineTableName( catalog, schema, params, serviceRegistry );
 	}
 
 	/**

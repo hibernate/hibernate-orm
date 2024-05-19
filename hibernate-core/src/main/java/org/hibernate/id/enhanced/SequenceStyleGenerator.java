@@ -24,6 +24,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
@@ -325,19 +326,12 @@ public class SequenceStyleGenerator
 			Dialect dialect,
 			JdbcEnvironment jdbcEnv,
 			ServiceRegistry serviceRegistry) {
-		final Identifier catalog = jdbcEnv.getIdentifierHelper().toIdentifier(
-				getString( CATALOG, params )
-		);
-		final Identifier schema =  jdbcEnv.getIdentifierHelper().toIdentifier(
-				getString( SCHEMA, params )
-		);
+		final IdentifierHelper identifierHelper = jdbcEnv.getIdentifierHelper();
 
-		final String sequenceName = getString(
-				SEQUENCE_PARAM,
-				params,
-				() -> getString( ALT_SEQUENCE_PARAM, params )
-		);
+		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, params ) );
+		final Identifier schema =  identifierHelper.toIdentifier( getString( SCHEMA, params ) );
 
+		final String sequenceName = getString( SEQUENCE_PARAM, params, () -> getString( ALT_SEQUENCE_PARAM, params ) );
 		if ( StringHelper.isNotEmpty( sequenceName ) ) {
 			// we have an explicit name, use it
 			if ( sequenceName.contains( "." ) ) {
@@ -347,7 +341,7 @@ public class SequenceStyleGenerator
 				return new QualifiedNameParser.NameParts(
 						catalog,
 						schema,
-						jdbcEnv.getIdentifierHelper().toIdentifier( sequenceName )
+						identifierHelper.toIdentifier( sequenceName )
 				);
 			}
 		}

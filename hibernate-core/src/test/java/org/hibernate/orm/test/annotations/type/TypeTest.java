@@ -19,7 +19,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public class TypeTest extends BaseCoreFunctionalTestCase {
 	@Test
-	public void testIdWithMulticolumns() throws Exception {
+	public void testIdWithMulticolumns() {
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -35,8 +35,6 @@ public class TypeTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				Dvd.class
-		};
+		return new Class[]{ Dvd.class };
 	}
 }

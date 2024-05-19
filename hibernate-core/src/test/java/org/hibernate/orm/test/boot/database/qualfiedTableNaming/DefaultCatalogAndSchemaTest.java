@@ -693,7 +693,6 @@ public class DefaultCatalogAndSchemaTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private String generateScriptFromSessionFactory(String action) {
 		ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
 		Map<String, Object> settings = new HashMap<>(

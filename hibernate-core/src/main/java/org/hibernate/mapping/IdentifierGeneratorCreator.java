@@ -14,4 +14,7 @@ import org.hibernate.generator.Generator;
 @FunctionalInterface
 public interface IdentifierGeneratorCreator {
 	Generator createGenerator(CustomIdGeneratorCreationContext context);
+	default boolean isAssigned() {
+		return false;
+	}
 }

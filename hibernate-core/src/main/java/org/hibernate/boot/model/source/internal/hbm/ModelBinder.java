@@ -160,7 +160,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
-import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdentifier;
+import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.source.internal.hbm.Helper.reflectedPropertyClass;
 import static org.hibernate.cfg.AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS;
@@ -739,13 +739,15 @@ public class ModelBinder {
 			rootEntityDescriptor.setDeclaredIdentifierProperty( prop );
 		}
 
-		makeIdentifier(
+		makeIdGenerator(
 				sourceDocument,
 				idSource.getIdentifierGeneratorDescriptor(),
-				idSource.getUnsavedValue(),
 				idValue,
 				metadataBuildingContext
 		);
+		if ( isNotEmpty( idSource.getUnsavedValue() ) ) {
+			idValue.setNullValue( idSource.getUnsavedValue() );
+		}
 	}
 
 	private void bindAggregatedCompositeEntityIdentifier(
@@ -900,10 +902,9 @@ public class ModelBinder {
 			rootEntityDescriptor.setDeclaredIdentifierProperty( prop );
 		}
 
-		makeIdentifier(
+		makeIdGenerator(
 				sourceDocument,
 				identifierSource.getIdentifierGeneratorDescriptor(),
-				null,
 				cid,
 				metadataBuildingContext
 		);
@@ -3300,10 +3301,9 @@ public class ModelBinder {
 
 				idBagBinding.setIdentifier( idBinding );
 
-				makeIdentifier(
+				makeIdGenerator(
 						mappingDocument,
 						new IdentifierGeneratorDefinition( idSource.getGeneratorName(), idSource.getParameters() ),
-						null,
 						idBinding,
 						metadataBuildingContext
 				);

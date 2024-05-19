@@ -7,7 +7,6 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.id.ForeignGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -87,18 +87,16 @@ import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
-import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.prepareActualProperty;
 import static org.hibernate.boot.model.internal.CollectionBinder.bindCollection;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createCompositeBinder;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createEmbeddable;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbedded;
-import static org.hibernate.boot.model.internal.GeneratorBinder.createForeignGenerator;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGenerator;
+import static org.hibernate.boot.model.internal.GeneratorBinder.createLegacyIdentifierGenerator;
 import static org.hibernate.boot.model.internal.GeneratorBinder.generatorCreator;
 import static org.hibernate.boot.model.internal.GeneratorBinder.identifierGeneratorCreator;
-import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
@@ -1142,7 +1140,7 @@ public class PropertyBinder {
 		if ( isOverridden ) {
 			handleGeneratorsForOverriddenId(
 					propertyHolder,
-					classGenerators,
+//					classGenerators,
 					context,
 					property,
 					propertyBinder
@@ -1173,7 +1171,7 @@ public class PropertyBinder {
 
 	private static void handleGeneratorsForOverriddenId(
 			PropertyHolder propertyHolder,
-			Map<String, IdentifierGeneratorDefinition> classGenerators,
+//			Map<String, IdentifierGeneratorDefinition> classGenerators,
 			MetadataBuildingContext context,
 			MemberDetails property,
 			PropertyBinder propertyBinder) {
@@ -1183,30 +1181,17 @@ public class PropertyBinder {
 				property.resolveAttributeName(),
 				context
 		);
-		final IdentifierGeneratorDefinition foreignGenerator = createForeignGenerator( mapsIdProperty );
-		if ( isGlobalGeneratorNameGlobal( context ) ) {
-			context.getMetadataCollector()
-					.addSecondPass( new IdGeneratorResolverSecondPass(
-							(SimpleValue) propertyBinder.getValue(),
-							property,
-							foreignGenerator.getStrategy(),
-							foreignGenerator.getName(),
-							context,
-							foreignGenerator
-					) );
-		}
-		else {
-			final Map<String, IdentifierGeneratorDefinition> generators = new HashMap<>( classGenerators );
-			generators.put( foreignGenerator.getName(), foreignGenerator );
-			makeIdGenerator(
-					(SimpleValue) propertyBinder.getValue(),
-					property,
-					foreignGenerator.getStrategy(),
-					foreignGenerator.getName(),
-					context,
-					generators
-			);
-		}
+		final SimpleValue idValue = (SimpleValue) propertyBinder.getValue();
+		final RootClass rootClass = propertyHolder.getPersistentClass().getRootClass();
+		final String propertyName = mapsIdProperty.getPropertyName();
+		idValue.setCustomIdGeneratorCreator( creationContext ->
+				createLegacyIdentifierGenerator( "foreign",
+						idValue,
+						creationContext.getDatabase().getDialect(),
+						rootClass,
+						Map.of( ForeignGenerator.PROPERTY, propertyName )
+				)
+		);
 	}
 
 	private static void createBasicBinder(

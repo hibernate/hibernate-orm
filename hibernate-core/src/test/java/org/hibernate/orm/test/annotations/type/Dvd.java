@@ -25,7 +25,7 @@ public class Dvd {
 
 	@EmbeddedId
 	@GeneratedValue(generator = "custom-id")
-	@GenericGenerator(name = "custom-id", strategy = "org.hibernate.orm.test.annotations.type.MyOidGenerator")
+	@GenericGenerator(name = "custom-id", type = MyOidGenerator.class)
 	@AttributeOverride(name = "aHigh", column = @Column(name = "high"))
 	@AttributeOverride(name = "aMiddle", column = @Column(name = "middle"))
 	@AttributeOverride(name = "aLow", column = @Column(name = "low"))

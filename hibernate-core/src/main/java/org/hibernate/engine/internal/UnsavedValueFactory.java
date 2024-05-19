@@ -54,20 +54,19 @@ public class UnsavedValueFactory {
 				return IdentifierValue.NULL;
 			}
 		}
-		else if ( "null".equals( unsavedValue ) ) {
-			return IdentifierValue.NULL;
-		}
-		else if ( "undefined".equals( unsavedValue ) ) {
-			return IdentifierValue.UNDEFINED;
-		}
-		else if ( "none".equals( unsavedValue ) ) {
-			return IdentifierValue.NONE;
-		}
-		else if ( "any".equals( unsavedValue ) ) {
-			return IdentifierValue.ANY;
-		}
 		else {
-			return new IdentifierValue( idJtd.fromString( unsavedValue ) );
+			switch (unsavedValue) {
+				case "null":
+					return IdentifierValue.NULL;
+				case "undefined":
+					return IdentifierValue.UNDEFINED;
+				case "none":
+					return IdentifierValue.NONE;
+				case "any":
+					return IdentifierValue.ANY;
+				default:
+					return new IdentifierValue( idJtd.fromString( unsavedValue ) );
+			}
 		}
 	}
 

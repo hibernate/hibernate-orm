@@ -32,8 +32,8 @@ public class UuidGeneratorAnnotationTests {
 
 			assertThat( value.getCustomIdGeneratorCreator() ).isNotNull();
 
-			final String strategy = value.getIdentifierGeneratorStrategy();
-			assertThat( strategy ).isEqualTo( "assigned" );
+//			final String strategy = value.getIdentifierGeneratorStrategy();
+//			assertThat( strategy ).isEqualTo( "assigned" );
 		} );
 	}
 

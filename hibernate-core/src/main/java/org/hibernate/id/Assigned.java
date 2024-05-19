@@ -26,6 +26,11 @@ import org.hibernate.type.Type;
 public class Assigned implements IdentifierGenerator, StandardGenerator {
 	private String entityName;
 
+	@Override
+	public boolean allowAssignedIdentifiers() {
+		return true;
+	}
+
 	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
 		//TODO: cache the persister, this shows up in yourkit
 		final Object id = session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );

@@ -26,6 +26,8 @@ import jakarta.persistence.TableGenerator;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.boot.internal.GenerationStrategyInterpreter.STRATEGY_INTERPRETER;
+import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyStringAttributeIfSpecified;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -123,7 +125,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 				);
 			}
 			case AUTO: {
-				final String strategyName = GenerationStrategyInterpreter.STRATEGY_INTERPRETER.determineGeneratorName(
+				final String strategyName = STRATEGY_INTERPRETER.determineGeneratorName(
 						generationType,
 						new GenerationStrategyInterpreter.GeneratorNameDeterminationContext() {
 							@Override
@@ -153,15 +155,15 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		final Builder builder = new Builder();
 		final MutableAnnotationUsage<TableGenerator> tableGeneratorUsage = TABLE_GENERATOR.createUsage( null );
 		tableGeneratorUsage.setAttributeValue( "name", name );
-		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretTableGenerator( tableGeneratorUsage, builder );
+		STRATEGY_INTERPRETER.interpretTableGenerator( tableGeneratorUsage, builder );
 		return builder.build();
 	}
 
 	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		final MutableAnnotationUsage<SequenceGenerator> sequenceGeneratorUsage = JpaAnnotations.SEQUENCE_GENERATOR.createUsage( null );
+		final MutableAnnotationUsage<SequenceGenerator> sequenceGeneratorUsage = SEQUENCE_GENERATOR.createUsage( null );
 		applyStringAttributeIfSpecified( "name", name, sequenceGeneratorUsage );
-		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretSequenceGenerator( sequenceGeneratorUsage, builder );
+		STRATEGY_INTERPRETER.interpretSequenceGenerator( sequenceGeneratorUsage, builder );
 		return builder.build();
 	}
 

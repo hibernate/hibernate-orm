@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.generator.Generator;
 
 /**
@@ -39,28 +38,7 @@ public interface KeyValue extends Value {
 	 *         of {@link IdentifierGenerator}.
 	 */
 	@Deprecated(since="6.2", forRemoval = true)
-	default IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			String defaultCatalog,
-			String defaultSchema,
-			RootClass rootClass) {
-		final Generator generator = createGenerator( dialect, rootClass );
-		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
-	}
-
-	/**
-	 * @deprecated Use {@link #createGenerator(Dialect, RootClass)} instead.
-	 *             No longer used except in legacy tests.
-	 *
-	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
-	 *         of {@link IdentifierGenerator}.
-	 */
-	@Deprecated(since="6.2", forRemoval = true)
-	default IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) {
+	default IdentifierGenerator createIdentifierGenerator(Dialect dialect, RootClass rootClass) {
 		final Generator generator = createGenerator( dialect, rootClass );
 		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}

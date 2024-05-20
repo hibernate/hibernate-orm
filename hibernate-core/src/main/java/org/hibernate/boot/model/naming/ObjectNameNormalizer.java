@@ -15,8 +15,12 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public abstract class ObjectNameNormalizer {
-	private Database database;
+public class ObjectNameNormalizer {
+	private final MetadataBuildingContext context;
+
+	public ObjectNameNormalizer(MetadataBuildingContext context) {
+		this.context = context;
+	}
 
 	/**
 	 * Normalizes the quoting of identifiers.
@@ -35,17 +39,11 @@ public abstract class ObjectNameNormalizer {
 	}
 
 	protected Database database() {
-		if ( database == null ) {
-			database = getBuildingContext().getMetadataCollector().getDatabase();
-		}
-		return database;
+		return getBuildingContext().getMetadataCollector().getDatabase();
 	}
 
 	public Identifier normalizeIdentifierQuoting(Identifier identifier) {
-		return getBuildingContext().getMetadataCollector()
-				.getDatabase()
-				.getJdbcEnvironment()
-				.getIdentifierHelper()
+		return database().getJdbcEnvironment().getIdentifierHelper()
 				.normalizeQuoting( identifier );
 	}
 
@@ -74,20 +72,10 @@ public abstract class ObjectNameNormalizer {
 	 * @return The logical name
 	 */
 	public Identifier determineLogicalName(String explicitName, NamingStrategyHelper namingStrategyHelper) {
-		Identifier logicalName;
-		if ( StringHelper.isEmpty( explicitName ) ) {
-			logicalName = namingStrategyHelper.determineImplicitName( getBuildingContext() );
-		}
-		else {
-			logicalName = namingStrategyHelper.handleExplicitName( explicitName, getBuildingContext() );
-		}
-		logicalName = getBuildingContext().getMetadataCollector()
-				.getDatabase()
-				.getJdbcEnvironment()
-				.getIdentifierHelper()
-				.normalizeQuoting( logicalName );
-
-		return logicalName;
+		final Identifier logicalName = StringHelper.isEmpty( explicitName )
+				? namingStrategyHelper.determineImplicitName( getBuildingContext() )
+				: namingStrategyHelper.handleExplicitName( explicitName, getBuildingContext() );
+		return database().getJdbcEnvironment().getIdentifierHelper().normalizeQuoting( logicalName );
 	}
 
 	/**
@@ -116,5 +104,7 @@ public abstract class ObjectNameNormalizer {
 	 *
 	 * @return The current building context
 	 */
-	protected abstract MetadataBuildingContext getBuildingContext();
+	protected MetadataBuildingContext getBuildingContext() {
+		return context;
+	}
 }

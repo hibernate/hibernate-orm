@@ -90,8 +90,7 @@ public class IncrementGenerator implements IdentifierGenerator, StandardGenerato
 		returnClass = type.getReturnedClass();
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
-		final ObjectNameNormalizer normalizer =
-				(ObjectNameNormalizer) parameters.get( IDENTIFIER_NORMALIZER );
+		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) parameters.get( IDENTIFIER_NORMALIZER );
 
 		column = parameters.getProperty( COLUMN );
 		if ( column == null ) {
@@ -101,12 +100,8 @@ public class IncrementGenerator implements IdentifierGenerator, StandardGenerato
 
 		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 
-		final String schema = normalizer.toDatabaseIdentifierText(
-				parameters.getProperty( SCHEMA )
-		);
-		final String catalog = normalizer.toDatabaseIdentifierText(
-				parameters.getProperty( CATALOG )
-		);
+		final String schema = normalizer.toDatabaseIdentifierText( parameters.getProperty( SCHEMA ) );
+		final String catalog = normalizer.toDatabaseIdentifierText( parameters.getProperty( CATALOG ) );
 
 		String tableList = parameters.getProperty( TABLES );
 		if ( tableList == null ) {

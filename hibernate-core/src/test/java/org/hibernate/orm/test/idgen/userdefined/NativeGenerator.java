@@ -13,7 +13,7 @@ import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
+import org.hibernate.generator.CustomIdGeneratorCreationContext;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;

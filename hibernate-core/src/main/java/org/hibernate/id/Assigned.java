@@ -11,7 +11,6 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -23,7 +22,7 @@ import org.hibernate.type.Type;
  *
  * @implNote This also implements the {@code assigned} generation type in {@code hbm.xml} mappings.
  */
-public class Assigned implements IdentifierGenerator, StandardGenerator {
+public class Assigned implements IdentifierGenerator {
 	private String entityName;
 
 	@Override

@@ -16,7 +16,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.type.CompositeType;
 
@@ -52,7 +51,7 @@ import org.hibernate.type.CompositeType;
  */
 @Internal
 public class CompositeNestedGeneratedValueGenerator
-		implements IdentifierGenerator, StandardGenerator, IdentifierGeneratorAggregator, Serializable {
+		implements IdentifierGenerator, IdentifierGeneratorAggregator, Serializable {
 	/**
 	 * Contract for declaring how to locate the context for sub-value injection.
 	 */

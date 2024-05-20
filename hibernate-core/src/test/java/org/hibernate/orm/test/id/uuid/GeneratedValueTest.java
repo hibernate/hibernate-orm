@@ -56,10 +56,7 @@ public class GeneratedValueTest {
 			PersistentClass entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );
 			assertEquals( UUID.class, entityBinding.getIdentifier().getType().getReturnedClass() );
 			IdentifierGenerator generator = entityBinding.getIdentifier().createIdentifierGenerator(
-					metadata.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					metadata.getDatabase().getDialect(),
-					null,
-					null,
 					(RootClass) entityBinding
 			);
 			assertTyping( UUIDGenerator.class, generator );

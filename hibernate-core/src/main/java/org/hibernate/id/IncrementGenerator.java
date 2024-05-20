@@ -22,7 +22,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
@@ -50,7 +49,7 @@ import static org.hibernate.internal.util.StringHelper.split;
  *
  * @implNote This also implements the {@code increment} generation type in {@code hbm.xml} mappings.
  */
-public class IncrementGenerator implements IdentifierGenerator, StandardGenerator {
+public class IncrementGenerator implements IdentifierGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
 	/**

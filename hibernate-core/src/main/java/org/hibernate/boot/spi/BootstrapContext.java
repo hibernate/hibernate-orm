@@ -19,7 +19,6 @@ import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -74,11 +73,6 @@ public interface BootstrapContext {
 	 * Options specific to building the {@linkplain Metadata boot metamodel}
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
-
-	@Deprecated(since="7.0", forRemoval = true)
-	default IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return getMetadataBuildingOptions().getIdentifierGeneratorFactory();
-	}
 
 	/**
 	 * Whether the bootstrap was initiated from JPA bootstrapping.

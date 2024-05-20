@@ -12,7 +12,6 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -26,7 +25,7 @@ import org.hibernate.internal.CoreMessageLogger;
  * @deprecated use {@link org.hibernate.id.uuid.UuidGenerator}
  */
 @Deprecated(since = "6.0")
-public class GUIDGenerator implements IdentifierGenerator, StandardGenerator {
+public class GUIDGenerator implements IdentifierGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 
 	private static boolean WARNED;

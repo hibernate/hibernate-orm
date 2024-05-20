@@ -44,8 +44,6 @@ import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -772,11 +770,6 @@ public abstract class MockSessionFactory
 	@Override
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
 		throw new UnsupportedOperationException("operation not supported");
-	}
-
-	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return new StandardIdentifierGeneratorFactory(serviceRegistry, true);
 	}
 
 	@Override

@@ -11,7 +11,6 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
@@ -36,7 +35,7 @@ import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
  * @deprecated This remains around as an implementation detail of {@code hbm.xml} mappings.
  */
 @Deprecated(since = "6", forRemoval = true)
-public class ForeignGenerator implements IdentifierGenerator, StandardGenerator {
+public class ForeignGenerator implements IdentifierGenerator {
 	private static final CoreMessageLogger LOG = messageLogger( ForeignGenerator.class );
 
 	/**

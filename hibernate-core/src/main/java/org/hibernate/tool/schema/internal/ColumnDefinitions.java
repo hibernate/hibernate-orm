@@ -47,30 +47,37 @@ class ColumnDefinitions {
 	}
 
 	static boolean hasMatchingLength(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
-		int sqlType = columnInformation.getTypeCode();
-		if ( isStringType( sqlType ) ) {
-			final int actualLength = columnInformation.getColumnSize();
-			final Size size = column.getColumnSize( dialect, metadata );
-			final Long requiredLength = size.getLength();
-			return requiredLength == null
-				|| requiredLength == actualLength;
-		}
-		else if ( isNumericOrDecimal( sqlType ) ) {
-			// Postgres, H2, SQL Server, and MySQL agree on the following:
-			final int actualPrecision = columnInformation.getColumnSize();
-			final int actualScale = columnInformation.getDecimalDigits();
-			final Size size = column.getColumnSize( dialect, metadata );
-			final Integer requiredPrecision = size.getPrecision();
-			final Integer requiredScale = size.getScale();
-			return requiredPrecision == null
-				|| requiredScale == null
-				|| requiredScale == actualScale && requiredPrecision == actualPrecision;
-		}
-		// I would really love this to be able to change the binary
-		// precision of a float/double type, but there simply doesn't
-		// seem to be any good way to implement it
-		else {
+		if ( !column.getSqlType( metadata ).contains("(") ) {
+			// the DDL type does not explicitly specify a length,
+			// and so we do not require an exact match
 			return true;
+		}
+		else {
+			int sqlType = columnInformation.getTypeCode();
+			if ( isStringType( sqlType ) ) {
+				final int actualLength = columnInformation.getColumnSize();
+				final Size size = column.getColumnSize( dialect, metadata );
+				final Long requiredLength = size.getLength();
+				return requiredLength == null
+					|| requiredLength == actualLength;
+			}
+			else if ( isNumericOrDecimal( sqlType ) ) {
+				// Postgres, H2, SQL Server, and MySQL agree on the following:
+				final int actualPrecision = columnInformation.getColumnSize();
+				final int actualScale = columnInformation.getDecimalDigits();
+				final Size size = column.getColumnSize( dialect, metadata );
+				final Integer requiredPrecision = size.getPrecision();
+				final Integer requiredScale = size.getScale();
+				return requiredPrecision == null
+					|| requiredScale == null
+					|| requiredScale == actualScale && requiredPrecision == actualPrecision;
+			}
+			// I would really love this to be able to change the binary
+			// precision of a float/double type, but there simply doesn't
+			// seem to be any good way to implement it
+			else {
+				return true;
+			}
 		}
 	}
 
@@ -216,8 +223,8 @@ class ColumnDefinitions {
 			return null;
 		}
 		else {
-			final String lowerCaseTypName = typeName.toLowerCase(Locale.ROOT);
-			switch (lowerCaseTypName) {
+			final String lowercaseTypeName = typeName.toLowerCase(Locale.ROOT);
+			switch (lowercaseTypeName) {
 				case "int":
 					return "integer";
 				case "character":
@@ -233,7 +240,7 @@ class ColumnDefinitions {
 				case "interval second":
 					return "interval";
 				default:
-					return lowerCaseTypName;
+					return lowercaseTypeName;
 			}
 		}
 	}

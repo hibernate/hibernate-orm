@@ -7,7 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.Internal;
-import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
+import org.hibernate.generator.CustomIdGeneratorCreationContext;
 import org.hibernate.generator.Generator;
 
 @Internal

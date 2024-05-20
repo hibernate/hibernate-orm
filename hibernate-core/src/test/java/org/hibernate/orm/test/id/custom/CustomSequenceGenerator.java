@@ -16,7 +16,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
+import org.hibernate.generator.CustomIdGeneratorCreationContext;
 
 /**
  * An example custom generator.

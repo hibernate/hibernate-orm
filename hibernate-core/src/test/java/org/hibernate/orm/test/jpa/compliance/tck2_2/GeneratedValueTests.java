@@ -14,7 +14,6 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -58,10 +57,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
 					(RootClass) entityMapping
 			);
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
@@ -86,10 +82,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
 					(RootClass) entityMapping
 			);
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
@@ -117,10 +110,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
 					(RootClass) entityMapping
 			);
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
@@ -150,10 +140,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 			final PersistentClass entityMapping = bootModel.getEntityBinding(
 					ExplicitSequenceGeneratorImplicitNameEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
 					(RootClass) entityMapping
 			);
 			Database database = bootModel.getDatabase();
@@ -196,10 +183,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitTableGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
 					(RootClass) entityMapping
 			);
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
@@ -222,10 +206,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorImplicitNameEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
 					(RootClass) entityMapping
 			);
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
@@ -248,10 +229,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
 					(RootClass) entityMapping
 			);
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
@@ -276,10 +254,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitIncrementGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
 					(RootClass) entityMapping
 			);
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
@@ -296,10 +271,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitIncrementGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
-					null,
-					null,
 					(RootClass) entityMapping
 			);
 			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );

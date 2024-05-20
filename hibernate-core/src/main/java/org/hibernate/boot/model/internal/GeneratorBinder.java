@@ -51,7 +51,7 @@ import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
-import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
+import org.hibernate.generator.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.GeneratorCreator;

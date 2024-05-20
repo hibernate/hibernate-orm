@@ -23,7 +23,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
@@ -50,15 +49,10 @@ public class CustomNamingStrategyTests {
 	@Test
 	public void testIt(DomainModelScope domainModelScope, ServiceRegistryScope serviceRegistryScope) {
 		domainModelScope.withHierarchy( TheEntity.class, (entityDescriptor) -> {
-			final IdentifierGeneratorFactory identifierGeneratorFactory = domainModelScope.getDomainModel()
-					.getMetadataBuildingOptions()
-					.getIdentifierGeneratorFactory();
-
 			final JdbcServices jdbcServices = serviceRegistryScope.getRegistry().getService( JdbcServices.class );
 			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 
 			final SequenceStyleGenerator generator = (SequenceStyleGenerator) entityDescriptor.getIdentifier().createIdentifierGenerator(
-					identifierGeneratorFactory,
 					jdbcEnvironment.getDialect(),
 					entityDescriptor
 			);

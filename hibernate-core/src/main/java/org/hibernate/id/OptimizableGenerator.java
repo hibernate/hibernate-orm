@@ -9,12 +9,11 @@ package org.hibernate.id;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
-import org.hibernate.id.factory.spi.StandardGenerator;
 
 /**
  * Commonality between sequence-based and table-based generators
  */
-public interface OptimizableGenerator extends IdentifierGenerator, StandardGenerator, ExportableProducer {
+public interface OptimizableGenerator extends IdentifierGenerator, ExportableProducer {
 	/**
 	 * If an explicit sequence/table name is not configured,
 	 */

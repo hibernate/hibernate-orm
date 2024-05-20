@@ -6,34 +6,6 @@
  */
 package org.hibernate.orm.test.idgen.enhanced.auto;
 
-import java.sql.Types;
-import java.util.Collection;
-import java.util.UUID;
-
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.CollectionIdJdbcTypeCode;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.IncrementGenerator;
-import org.hibernate.id.UUIDGenerator;
-import org.hibernate.id.enhanced.DatabaseStructure;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
-import org.hibernate.mapping.IdentifierBag;
-import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-
-import org.hibernate.testing.orm.junit.FailureExpectedExtension;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -43,6 +15,29 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IncrementGenerator;
+import org.hibernate.id.UUIDGenerator;
+import org.hibernate.id.enhanced.DatabaseStructure;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.mapping.IdentifierBag;
+import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.testing.orm.junit.FailureExpectedExtension;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.sql.Types;
+import java.util.Collection;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -62,15 +57,10 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity2.class )
 					.buildMetadata();
 
-			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
-
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity1.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			final SequenceStyleGenerator entityIdGenerator = (SequenceStyleGenerator) idMapping.createIdentifierGenerator(
-					generatorFactory,
 					new H2Dialect(),
-					"",
-					"",
 					entityBinding.getRootClass()
 			);
 
@@ -91,15 +81,10 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity2.class )
 					.buildMetadata();
 
-			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
-
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity2.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			final SequenceStyleGenerator idGenerator = (SequenceStyleGenerator) idMapping.createIdentifierGenerator(
-					generatorFactory,
 					new H2Dialect(),
-					"",
-					"",
 					entityBinding.getRootClass()
 			);
 
@@ -119,8 +104,6 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity2.class )
 					.buildMetadata();
 
-			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
-
 			final PersistentClass entity1Binding = metadata.getEntityBinding( Entity1.class.getName() );
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -130,10 +113,7 @@ public class AutoGenerationTypeTests {
 			final IdentifierBag idBagMapping = (IdentifierBag) theTwos.getValue();
 			final KeyValue collectionIdMapping = idBagMapping.getIdentifier();
 			final SequenceStyleGenerator collectionIdGenerator = (SequenceStyleGenerator) collectionIdMapping.createIdentifierGenerator(
-					generatorFactory,
 					new H2Dialect(),
-					"",
-					"",
 					null
 			);
 
@@ -151,15 +131,10 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity4.class )
 					.buildMetadata();
 
-			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
-
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity4.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			final IdentifierGenerator idGenerator = idMapping.createIdentifierGenerator(
-					generatorFactory,
 					new H2Dialect(),
-					"",
-					"",
 					entityBinding.getRootClass()
 			);
 
@@ -174,15 +149,10 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity3.class )
 					.buildMetadata();
 
-			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
-
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity3.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			final IdentifierGenerator idGenerator = idMapping.createIdentifierGenerator(
-					generatorFactory,
 					new H2Dialect(),
-					"",
-					"",
 					entityBinding.getRootClass()
 			);
 

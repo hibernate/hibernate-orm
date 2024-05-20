@@ -22,6 +22,9 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 public class LocalTemporaryTableStrategy {
 
 	public static final String SHORT_NAME = "local_temporary";
+	/**
+	 * For H2 dialect avoid setting the drop strategy to true because H2 forces a commit when dropping a temporary table
+	 */
 	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.local_temporary.drop_tables";
 
 	private final TemporaryTable temporaryTable;

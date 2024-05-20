@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
+import org.hibernate.generator.CustomIdGeneratorCreationContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;

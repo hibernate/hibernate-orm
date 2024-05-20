@@ -14,7 +14,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -41,7 +40,7 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
  * {@link org.hibernate.annotations.UuidGenerator} instead
  */
 @Deprecated(since = "6.0")
-public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
+public class UUIDGenerator implements IdentifierGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";

@@ -10,7 +10,6 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.id.insert.BasicSelectingDelegate;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
@@ -40,7 +39,7 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCu
  * @implNote This also implements the {@code identity} generation type in {@code hbm.xml} mappings.
  */
 public class IdentityGenerator
-		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 
 	@Override
 	public boolean referenceColumnsInSql(Dialect dialect) {

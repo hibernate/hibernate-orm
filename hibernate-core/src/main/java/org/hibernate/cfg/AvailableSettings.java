@@ -221,14 +221,4 @@ public interface AvailableSettings
 	@Deprecated(since = "6.2", forRemoval = true)
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String FLUSH_MODE = "org.hibernate.flushMode";
-
-	/**
-	 * Specifies a class which implements {@link org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider},
-	 * and has a constructor with no parameters.
-	 *
-	 * @deprecated use {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration} instead
-	 */
-	@Deprecated(since = "6.0")
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.identifier_generator_strategy_provider";
 }

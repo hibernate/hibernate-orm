@@ -381,7 +381,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		if ( repository ) {
 			final List<ExecutableElement> methodsOfClass =
-					methodsIn( context.getElementUtils().getAllMembers(element) );
+					methodsIn( context.getAllMembers(element) );
 			for ( ExecutableElement method: methodsOfClass ) {
 				if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
 					queryMethods.add( method );
@@ -1004,7 +1004,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			final AnnotationValue annotationVal =
 					castNonNull(getAnnotationValue(annotation, "mappedBy"));
-			for ( Element member : context.getElementUtils().getAllMembers(assocTypeElement) ) {
+			for ( Element member : context.getAllMembers(assocTypeElement) ) {
 				if ( propertyName(this, member).contentEquals(mappedBy) ) {
 					validateBackRef(memberOfClass, annotation, assocTypeElement, member, annotationVal);
 					return;
@@ -2127,7 +2127,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private @Nullable Element memberMatchingPath(TypeElement entityType, StringTokenizer tokens) {
 		final AccessType accessType = getAccessType(entityType);
 		final String nextToken = tokens.nextToken();
-		for ( Element member : context.getElementUtils().getAllMembers(entityType) ) {
+		for ( Element member : context.getAllMembers(entityType) ) {
 			if ( isIdRef(nextToken) && hasAnnotation( member, ID) ) {
 				return member;
 			}

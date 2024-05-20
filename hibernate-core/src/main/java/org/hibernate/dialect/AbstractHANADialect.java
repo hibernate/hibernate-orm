@@ -1952,7 +1952,8 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion().isSameOrAfter(2, 0, 3);
+		// HANA supports IGNORE LOCKED since HANA 2.0 SPS3 (2.0.030)
+		return getVersion().isSameOrAfter(2, 0, 30);
 	}
 
 	@Override
@@ -1964,5 +1965,10 @@ public abstract class AbstractHANADialect extends Dialect {
 	public String getForUpdateSkipLockedString(String aliases) {
 		return supportsSkipLocked() ?
 				getForUpdateString(aliases) + SQL_IGNORE_LOCKED : getForUpdateString(aliases);
+	}
+
+	@Override
+	public String getForUpdateString(LockMode lockMode) {
+		return super.getForUpdateString(lockMode);
 	}
 }

@@ -48,12 +48,7 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 		this.auditEntityNameRegistry = new AuditEntityNameRegister();
 		this.auditEntityConfigurationRegistry = new AuditEntityConfigurationRegistry();
 
-		this.objectNameNormalizer = new ObjectNameNormalizer() {
-			@Override
-			protected MetadataBuildingContext getBuildingContext() {
-				return EnversMetadataBuildingContextImpl.this;
-			}
-		};
+		this.objectNameNormalizer = new ObjectNameNormalizer(this);
 	}
 
 	@Override

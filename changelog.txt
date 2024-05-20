@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.5.2.Final (May 20, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32306
+
+** Bug
+    * [HHH-18112] - Some dialects use the wrong default version
+
+** Improvement
+    * [HHH-18026] - Prevent dialects not supporting arbitrary values retrieval in `getGeneratedKeys()` from logging a SQL exception
+
+
 Changes in 6.5.1.Final (May 13, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

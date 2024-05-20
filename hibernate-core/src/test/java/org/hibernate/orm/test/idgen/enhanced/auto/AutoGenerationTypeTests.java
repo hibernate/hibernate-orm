@@ -20,7 +20,9 @@ import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.UUIDGenerator;
@@ -59,10 +61,9 @@ public class AutoGenerationTypeTests {
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity1.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
-			final SequenceStyleGenerator entityIdGenerator = (SequenceStyleGenerator) idMapping.createIdentifierGenerator(
-					new H2Dialect(),
-					entityBinding.getRootClass()
-			);
+			Dialect dialect = new H2Dialect();
+			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass());
+			final SequenceStyleGenerator entityIdGenerator = (SequenceStyleGenerator) (generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null);
 
 			final DatabaseStructure database1Structure = entityIdGenerator.getDatabaseStructure();
 
@@ -83,10 +84,9 @@ public class AutoGenerationTypeTests {
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity2.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
-			final SequenceStyleGenerator idGenerator = (SequenceStyleGenerator) idMapping.createIdentifierGenerator(
-					new H2Dialect(),
-					entityBinding.getRootClass()
-			);
+			Dialect dialect = new H2Dialect();
+			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass());
+			final SequenceStyleGenerator idGenerator = (SequenceStyleGenerator) (generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null);
 
 			final DatabaseStructure database2Structure = idGenerator.getDatabaseStructure();
 
@@ -112,10 +112,9 @@ public class AutoGenerationTypeTests {
 			final Property theTwos = entity1Binding.getProperty( "theTwos" );
 			final IdentifierBag idBagMapping = (IdentifierBag) theTwos.getValue();
 			final KeyValue collectionIdMapping = idBagMapping.getIdentifier();
-			final SequenceStyleGenerator collectionIdGenerator = (SequenceStyleGenerator) collectionIdMapping.createIdentifierGenerator(
-					new H2Dialect(),
-					null
-			);
+			Dialect dialect = new H2Dialect();
+			final Generator generator = collectionIdMapping.createGenerator( dialect, null);
+			final SequenceStyleGenerator collectionIdGenerator = (SequenceStyleGenerator) (generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null);
 
 			final DatabaseStructure idBagIdGeneratorDbStructure = collectionIdGenerator.getDatabaseStructure();
 
@@ -133,10 +132,9 @@ public class AutoGenerationTypeTests {
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity4.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
-			final IdentifierGenerator idGenerator = idMapping.createIdentifierGenerator(
-					new H2Dialect(),
-					entityBinding.getRootClass()
-			);
+			Dialect dialect = new H2Dialect();
+			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass());
+			final IdentifierGenerator idGenerator = generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 
 			assertThat( idGenerator, instanceOf( UUIDGenerator.class ) );
 		}
@@ -151,10 +149,9 @@ public class AutoGenerationTypeTests {
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity3.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
-			final IdentifierGenerator idGenerator = idMapping.createIdentifierGenerator(
-					new H2Dialect(),
-					entityBinding.getRootClass()
-			);
+			Dialect dialect = new H2Dialect();
+			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass());
+			final IdentifierGenerator idGenerator = generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 
 			assertThat( idGenerator, instanceOf( IncrementGenerator.class ) );
 		}

@@ -20,12 +20,14 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.ServiceRegistry;
 
@@ -159,7 +161,9 @@ public class SequenceNamingStrategyTest {
 	}
 
 	private IdentifierGenerator extractGenerator(PersistentClass entityBinding) {
-		return entityBinding.getIdentifier().createIdentifierGenerator(null, null );
+		KeyValue keyValue = entityBinding.getIdentifier();
+		final Generator generator = keyValue.createGenerator(null, null);
+		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 
 	@Entity(name = "TestEntity")

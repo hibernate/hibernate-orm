@@ -55,7 +55,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * the property to be generated when any SQL statement to {@code insert} or
  * {@code update} the entity is executed.
  * <p>
- * Every generator annotation type has an {@link Generator} implementation
+ * Every generator annotation type has a {@link Generator} implementation
  * which is responsible for generating values. It must be either:
  * <ul>
  * <li>a {@link BeforeExecutionGenerator}, for values that are generated in

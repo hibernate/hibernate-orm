@@ -36,12 +36,7 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 		this.options = options;
 		this.mappingDefaults = mappingDefaults;
 		this.metadataCollector = metadataCollector;
-		this.objectNameNormalizer = new ObjectNameNormalizer() {
-			@Override
-			protected MetadataBuildingContext getBuildingContext() {
-				return MetadataBuildingContextRootImpl.this;
-			}
-		};
+		this.objectNameNormalizer = new ObjectNameNormalizer(this);
 		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
 	}
 

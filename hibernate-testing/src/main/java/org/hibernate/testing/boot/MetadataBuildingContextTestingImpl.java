@@ -17,7 +17,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 
@@ -41,12 +40,7 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 				new PersistenceUnitMetadataImpl()
 		);
 		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingOptions );
-		objectNameNormalizer = new ObjectNameNormalizer() {
-			@Override
-			protected MetadataBuildingContext getBuildingContext() {
-				return MetadataBuildingContextTestingImpl.this;
-			}
-		};
+		objectNameNormalizer = new ObjectNameNormalizer(this);
 		typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
 		bootstrapContext.getTypeConfiguration().scope( this );
 	}

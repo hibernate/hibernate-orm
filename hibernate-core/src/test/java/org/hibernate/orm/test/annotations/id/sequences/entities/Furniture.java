@@ -23,12 +23,7 @@ public class Furniture {
 
 	@Id
 	@GeneratedValue(generator = "hibseq")
-	@GenericGenerator(name = "hibseq", strategy = "seqhilo",
-			parameters = {
-			@Parameter(name = "max_lo", value = "5"),
-			@Parameter(name = "sequence", value = "heybabyhey")
-					}
-	)
+	@GenericGenerator(name = "hibseq", strategy = "increment")
 	public Integer getId() {
 		return id;
 	}

@@ -68,6 +68,8 @@ import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.GeneratedValue;
@@ -83,40 +85,55 @@ import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNa
 import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
+/**
+ * Responsible for configuring and instantiating {@link Generator}s.
+ *
+ * @author Gavin King
+ */
 public class GeneratorBinder {
 
 	private static final Logger LOG = CoreLogging.logger( BinderHelper.class );
 
+	/**
+	 * Create an id generator for the given named {@code strategy} using the
+	 * "old" (pre-Hibernate 6) approach.
+	 */
 	public static Generator createLegacyIdentifierGenerator(
 			String strategy,
-			SimpleValue simpleValue,
+			SimpleValue idValue,
 			Dialect dialect,
 			RootClass rootClass,
 			Map<String, Object> configuration) {
-		final Class<? extends Generator> generatorClass = generatorClass( strategy, simpleValue );
-		final Constructor<? extends Generator> defaultConstructor = getDefaultConstructor( generatorClass );
-		if ( defaultConstructor == null ) {
-			throw new org.hibernate.InstantiationException( "No default constructor for id generator class", generatorClass );
-		}
-		final Generator identifierGenerator;
-		try {
-			identifierGenerator = defaultConstructor.newInstance();
-		}
-		catch (Exception e) {
-			throw new org.hibernate.InstantiationException( "Could not instantiate id generator", generatorClass, e );
-		}
+		final Generator identifierGenerator = instantiateGenerator( generatorClass( strategy, idValue ) );
 		if ( identifierGenerator instanceof Configurable ) {
-			final Properties parameters = collectParameters( simpleValue, dialect, rootClass, configuration );
 			final Configurable configurable = (Configurable) identifierGenerator;
-			configurable.configure( simpleValue.getType(), parameters, simpleValue.getServiceRegistry() );
+			configurable.configure( idValue.getType(),
+					collectParameters( idValue, dialect, rootClass, configuration ),
+					idValue.getServiceRegistry() );
 		}
 		return identifierGenerator;
 	}
 
-	private static Class<? extends Generator> generatorClass(String strategy, SimpleValue simpleValue) {
+	private static Generator instantiateGenerator(Class<? extends Generator> generatorClass) {
+		final Constructor<? extends Generator> defaultConstructor = getDefaultConstructor( generatorClass );
+		if ( defaultConstructor == null ) {
+			throw new org.hibernate.InstantiationException( "No default constructor for id generator class", generatorClass);
+		}
+		try {
+			return defaultConstructor.newInstance();
+		}
+		catch (Exception e) {
+			throw new org.hibernate.InstantiationException( "Could not instantiate id generator", generatorClass, e );
+		}
+	}
+
+	/**
+	 * Interpret an "old" generator strategy name as a {@link Generator} class.
+	 */
+	private static Class<? extends Generator> generatorClass(String strategy, SimpleValue idValue) {
 		if ( "native".equals(strategy) ) {
 			strategy =
-					simpleValue.getMetadata().getDatabase().getDialect()
+					idValue.getMetadata().getDatabase().getDialect()
 							.getNativeIdentifierGeneratorStrategy();
 		}
 		switch (strategy) {
@@ -145,7 +162,7 @@ public class GeneratorBinder {
 				return GUIDGenerator.class;
 		}
 		final Class<? extends Generator> clazz =
-				simpleValue.getServiceRegistry().requireService( ClassLoaderService.class )
+				idValue.getServiceRegistry().requireService( ClassLoaderService.class )
 						.classForName( strategy );
 		if ( !Generator.class.isAssignableFrom( clazz ) ) {
 			// in principle, this shouldn't happen, since @GenericGenerator
@@ -155,6 +172,10 @@ public class GeneratorBinder {
 		return clazz;
 	}
 
+	/**
+	 * Collect the parameters which should be passed to
+	 * {@link Configurable#configure(Type, Properties, ServiceRegistry)}.
+	 */
 	public static Properties collectParameters(
 			SimpleValue simpleValue,
 			Dialect dialect,
@@ -279,16 +300,12 @@ public class GeneratorBinder {
 						+ " (define a named generator using '@SequenceGenerator', '@TableGenerator', or '@GenericGenerator')" );
 			}
 			//This is quite vague in the spec but a generator could override the generator choice
-			//yuk! this is a hack not to override 'AUTO' even if generator is set
-			final boolean avoidOverriding =
-					definition.getStrategy().equals( "identity" )
-					|| definition.getStrategy().equals( "seqhilo" );
-			if ( generatorType == null || !avoidOverriding ) {
-				generatorStrategy = definition.getStrategy();
-			}
-			else {
-				generatorStrategy = generatorType;
-			}
+			generatorStrategy =
+					generatorType == null
+						//yuk! this is a hack not to override 'AUTO' even if generator is set
+						|| !definition.getStrategy().equals( "identity" )
+							? definition.getStrategy()
+							: generatorType;
 			//checkIfMatchingGenerator(definition, generatorType, generatorName);
 			parameters.putAll( definition.getParameters() );
 		}
@@ -642,7 +659,7 @@ public class GeneratorBinder {
 				}
 			}
 		}
-		catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException e ) {
+		catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
 			throw new HibernateException(
 					"Could not instantiate generator of type '" + generatorClass.getName() + "'",
 					e

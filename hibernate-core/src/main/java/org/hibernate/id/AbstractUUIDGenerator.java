@@ -8,7 +8,6 @@ package org.hibernate.id;
 
 import java.net.InetAddress;
 
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.util.BytesHelper;
 
 /**
@@ -22,7 +21,7 @@ import org.hibernate.internal.util.BytesHelper;
  * @deprecated since {@link UUIDHexGenerator} is deprecated
  */
 @Deprecated(since = "6")
-public abstract class AbstractUUIDGenerator implements IdentifierGenerator, StandardGenerator {
+public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 
 	private static final int IP;
 	static {

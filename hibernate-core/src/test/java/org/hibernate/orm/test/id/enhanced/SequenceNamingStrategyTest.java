@@ -159,7 +159,7 @@ public class SequenceNamingStrategyTest {
 	}
 
 	private IdentifierGenerator extractGenerator(PersistentClass entityBinding) {
-		return entityBinding.getIdentifier().createIdentifierGenerator( null, null, null );
+		return entityBinding.getIdentifier().createIdentifierGenerator(null, null );
 	}
 
 	@Entity(name = "TestEntity")

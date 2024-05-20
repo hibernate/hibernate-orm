@@ -64,7 +64,6 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -577,7 +576,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
-		private final IdentifierGeneratorFactory identifierGeneratorFactory;
 		private final TimeZoneStorageType defaultTimezoneStorage;
 		private final WrapperArrayHandling wrapperArrayHandling;
 
@@ -607,7 +605,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
-			this.identifierGeneratorFactory = serviceRegistry.getService( IdentifierGeneratorFactory.class );
 
 			final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
@@ -771,11 +768,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public MappingDefaults getMappingDefaults() {
 			return mappingDefaults;
-		}
-
-		@Override @Deprecated
-		public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-			return identifierGeneratorFactory;
 		}
 
 		@Override

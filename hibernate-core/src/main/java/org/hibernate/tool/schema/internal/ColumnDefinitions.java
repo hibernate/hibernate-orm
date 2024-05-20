@@ -239,6 +239,10 @@ class ColumnDefinitions {
 					return "blob";
 				case "interval second":
 					return "interval";
+				case "double precision":
+					return "double";
+				// todo: normalize DECIMAL to NUMERIC?
+				//       normalize REAL to FLOAT?
 				default:
 					return lowercaseTypeName;
 			}

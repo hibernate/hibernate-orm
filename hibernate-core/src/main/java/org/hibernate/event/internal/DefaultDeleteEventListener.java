@@ -278,6 +278,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		// Bean Validation adds a PRE_DELETE listener
 		// and Envers adds a POST_DELETE listener
 		return fss.eventListenerGroup_PRE_DELETE.count() > 0
+			|| fss.eventListenerGroup_POST_COMMIT_DELETE.count() > 0
 			|| fss.eventListenerGroup_POST_DELETE.count() > 1
 			|| fss.eventListenerGroup_POST_DELETE.count() == 1
 				&& !(fss.eventListenerGroup_POST_DELETE.listeners().iterator().next()

@@ -18,7 +18,6 @@ import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.WrapperArrayHandling;
@@ -47,16 +46,6 @@ public interface MetadataBuildingOptions {
 	MappingDefaults getMappingDefaults();
 
 	/**
-	 * The service implementing {@link IdentifierGeneratorFactory}.
-	 * <p>
-	 * @implNote Almost always a {@link org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory}.
-	 *
-	 * @deprecated Use new {@link org.hibernate.generator.Generator} infrastructure
-	 */
-	@Deprecated(since="7.0", forRemoval = true)
-	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
-
-	/**
 	 * @return the {@link TimeZoneStorageStrategy} determined by the global configuration
 	 *         property and the {@linkplain #getTimeZoneSupport() time zone support} of
 	 *         the configured {@link org.hibernate.dialect.Dialect}
@@ -80,6 +69,10 @@ public interface MetadataBuildingOptions {
 	 */
 	WrapperArrayHandling getWrapperArrayHandling();
 
+	/**
+	 * @deprecated no longer called
+	 */
+	@Deprecated(since="7.0", forRemoval = true)
 	default ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
 		// for now always return the standard one
 		return ManagedTypeRepresentationResolverStandard.INSTANCE;

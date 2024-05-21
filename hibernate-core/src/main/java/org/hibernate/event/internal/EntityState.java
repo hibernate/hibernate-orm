@@ -16,6 +16,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 
+import static org.hibernate.event.internal.EventUtil.getLoggableName;
+
 public enum EntityState {
 	PERSISTENT, TRANSIENT, DETACHED, DELETED;
 
@@ -44,13 +46,13 @@ public enum EntityState {
 			if ( entry.getStatus() != Status.DELETED ) {
 				// do nothing for persistent instances
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Persistent instance of: {0}", EventUtil.getLoggableName( entityName, entity ) );
+					LOG.tracev( "Persistent instance of: {0}", getLoggableName( entityName, entity ) );
 				}
 				return PERSISTENT;
 			}
 			// ie. e.status==DELETED
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Deleted instance of: {0}", EventUtil.getLoggableName( entityName, entity ) );
+				LOG.tracev( "Deleted instance of: {0}", getLoggableName( entityName, entity ) );
 			}
 			return DELETED;
 		}
@@ -61,12 +63,12 @@ public enum EntityState {
 
 		if ( ForeignKeys.isTransient( entityName, entity, assumedUnsaved, source ) ) {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Transient instance of: {0}", EventUtil.getLoggableName( entityName, entity ) );
+				LOG.tracev( "Transient instance of: {0}", getLoggableName( entityName, entity ) );
 			}
 			return TRANSIENT;
 		}
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Detached instance of: {0}", EventUtil.getLoggableName( entityName, entity ) );
+			LOG.tracev( "Detached instance of: {0}", getLoggableName( entityName, entity ) );
 		}
 
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();

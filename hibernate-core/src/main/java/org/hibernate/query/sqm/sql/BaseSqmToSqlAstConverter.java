@@ -1362,9 +1362,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		Expression discriminatorExpression = null;
 		BasicEntityIdentifierMapping identifierMapping = null;
 		// We use the id property name to null the identifier generator variable if the target paths contain the id
-		final String identifierPropertyName;
 		Generator identifierGenerator = entityDescriptor.getGenerator();
-		identifierPropertyName = identifierGenerator != null ? entityDescriptor.getIdentifierPropertyName() : null;
+		final String identifierPropertyName = identifierGenerator != null ? entityDescriptor.getIdentifierPropertyName() : null;
 		final String versionAttributeName;
 		boolean needsVersionInsert;
 		if ( entityDescriptor.isVersioned() ) {

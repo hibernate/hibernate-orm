@@ -557,7 +557,6 @@ public class SequenceStyleGenerator
 
 	private String determineContributor(Properties params) {
 		final String contributor = params.getProperty( IdentifierGenerator.CONTRIBUTOR_NAME );
-
 		return contributor == null ? "orm" : contributor;
 	}
 

@@ -555,7 +555,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				getFactory().getJdbcServices()
 				.getSqlStatementLogger();
 		final SessionEventListenerManager statsCollector = session.getEventListenerManager();
-
 		return optimizer.generate(
 				new AccessCallback() {
 					@Override
@@ -570,7 +569,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 								true
 						);
 					}
-
 					@Override
 					public String getTenantIdentifier() {
 						return session.getTenantIdentifier();

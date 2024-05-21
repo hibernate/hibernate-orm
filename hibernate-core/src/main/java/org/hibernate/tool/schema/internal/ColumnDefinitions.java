@@ -27,7 +27,7 @@ import static org.hibernate.type.SqlTypes.isStringType;
 class ColumnDefinitions {
 
 	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
-		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode(metadata), columnInformation.getTypeCode() )
+		final boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
 				|| normalize( stripArgs( column.getSqlType( metadata ) ) ).equals( normalize( columnInformation.getTypeName() ) );
 		if ( typesMatch ) {
 			return true;
@@ -42,7 +42,7 @@ class ColumnDefinitions {
 					columnInformation.getDecimalDigits(),
 					metadata.getDatabase().getTypeConfiguration().getJdbcTypeRegistry()
 			);
-			return dialect.equivalentTypes( column.getSqlTypeCode(metadata), jdbcType.getDefaultSqlTypeCode() );
+			return dialect.equivalentTypes( column.getSqlTypeCode( metadata ), jdbcType.getDefaultSqlTypeCode() );
 		}
 	}
 

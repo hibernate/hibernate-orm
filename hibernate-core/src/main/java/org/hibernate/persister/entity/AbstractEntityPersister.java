@@ -4133,12 +4133,13 @@ public abstract class AbstractEntityPersister
 			if ( isUnsaved != null ) {
 				if ( isUnsaved ) {
 					final PersistenceContext persistenceContext;
-					if ( version == null && ( persistenceContext = session.getPersistenceContext() ).hasLoadContext()
-							&& !persistenceContext.getLoadContexts().isLoadingFinished() ) {
+					if ( version == null
+							&& ( persistenceContext = session.getPersistenceContext() ).hasLoadContext()
+									&& !persistenceContext.getLoadContexts().isLoadingFinished() ) {
 						// check if we're currently loading this entity instance, the version
 						// will be null but the entity cannot be considered transient
-						final EntityHolder holder = persistenceContext
-								.getEntityHolder( new EntityKey( id, this ) );
+						final EntityHolder holder =
+								persistenceContext.getEntityHolder( new EntityKey( id, this ) );
 						if ( holder != null && holder.isEventuallyInitialized() && holder.getEntity() == entity ) {
 							return false;
 						}
@@ -4148,7 +4149,8 @@ public abstract class AbstractEntityPersister
 						final Boolean unsaved = identifierMapping.getUnsavedStrategy().isUnsaved( id );
 						if ( unsaved != null && !unsaved ) {
 							throw new PropertyValueException(
-									"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
+									"Detached entity with generated id '" + id
+											+ "' has an uninitialized version value '" + version + "'",
 									getEntityName(),
 									getVersionColumnName()
 							);

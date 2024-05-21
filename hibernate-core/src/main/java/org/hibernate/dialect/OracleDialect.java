@@ -1048,7 +1048,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return OracleSequenceSupport.INSTANCE;
+		return OracleSequenceSupport.getInstance(this);
 	}
 
 	@Override

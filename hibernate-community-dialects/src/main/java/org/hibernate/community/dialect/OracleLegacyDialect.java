@@ -155,6 +155,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * @author Loïc Lefèvre
  */
 public class OracleLegacyDialect extends Dialect {
 
@@ -182,6 +183,7 @@ public class OracleLegacyDialect extends Dialect {
 			: new LegacyOracleLimitHandler( getVersion() );
 	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final SequenceSupport oracleSequenceSupport = OracleSequenceSupport.getInstance(this);
 
 	public OracleLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -993,7 +995,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return OracleSequenceSupport.getInstance(this);
+		return oracleSequenceSupport;
 	}
 
 	@Override

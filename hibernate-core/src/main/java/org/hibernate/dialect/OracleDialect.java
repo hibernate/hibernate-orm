@@ -177,6 +177,7 @@ public class OracleDialect extends Dialect {
 
 	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final SequenceSupport oracleSequenceSupport = OracleSequenceSupport.getInstance(this);
 
 	// Is it an Autonomous Database Cloud Service?
 	protected final boolean autonomous;
@@ -1048,7 +1049,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return OracleSequenceSupport.getInstance(this);
+		return oracleSequenceSupport;
 	}
 
 	@Override

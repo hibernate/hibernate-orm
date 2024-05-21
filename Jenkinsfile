@@ -259,7 +259,8 @@ void ciBuild(buildEnv, String args) {
 			withCredentials([string(credentialsId: 'ge.hibernate.org-access-key-pr',
 					variable: 'DEVELOCITY_ACCESS_KEY')]) {
 				withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
-					sh './gradlew buildScanPublishPrevious'
+					// Don't fail a build if publishing fails
+					sh './gradlew buildScanPublishPrevious || true'
 				}
 			}
 		})

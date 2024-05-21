@@ -98,6 +98,8 @@ jobs:
         run: ./ci/build-github.sh
         shell: bash
       - name: Publish Develocity build scan for previous build
+        # Don't fail a build if publishing fails
+        continue-on-error: true
         if: "${{ !cancelled() && github.event_name == 'pull_request_target' && github.repository == 'hibernate/hibernate-orm' }}"
         run: |
           ./gradlew buildScanPublishPrevious

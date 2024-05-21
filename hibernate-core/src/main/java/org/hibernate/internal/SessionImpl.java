@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
@@ -43,7 +44,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
@@ -64,7 +64,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.spi.EventManager;
@@ -126,6 +125,7 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -2061,7 +2061,7 @@ public class SessionImpl
 		// SharedSessionBuilder
 
 
-		@Override
+		@Override @Deprecated
 		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
 			// todo : is this always true?  Or just in the case of sharing JDBC resources?
 			throw new SessionException( "Cannot redefine tenant identifier on child session" );
@@ -2147,6 +2147,48 @@ public class SessionImpl
 		@Override
 		public SharedSessionBuilderImpl autoClose() {
 			autoClose( session.autoClose );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl jdbcTimeZone(TimeZone timeZone) {
+			super.jdbcTimeZone(timeZone);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl clearEventListeners() {
+			super.clearEventListeners();
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl flushMode(FlushMode flushMode) {
+			super.flushMode(flushMode);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl autoClear(boolean autoClear) {
+			super.autoClear(autoClear);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl statementInspector(StatementInspector statementInspector) {
+			super.statementInspector(statementInspector);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+			super.connectionHandlingMode(connectionHandlingMode);
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl eventListeners(SessionEventListener... listeners) {
+			super.eventListeners(listeners);
 			return this;
 		}
 

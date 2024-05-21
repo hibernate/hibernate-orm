@@ -51,8 +51,6 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
  *     using {@link org.hibernate.annotations.GenericGenerator#parameters()}.
  * </ul>
  * <p>
- * Instances of {@code IdentifierGenerator} are usually created and configured
- * by the {@link org.hibernate.id.factory.IdentifierGeneratorFactory} service.
  * It's not usually correct to use an {@code IdentifierGenerator} with the
  * {@link org.hibernate.annotations.IdGeneratorType} meta-annotation.
  *
@@ -150,7 +148,7 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	 *
 	 * @deprecated this method is no longer called
 	 */
-	@Deprecated(since="6.2")
+	@Deprecated(since="6.2", forRemoval = true)
 	default boolean supportsJdbcBatchInserts() {
 		return true;
 	}

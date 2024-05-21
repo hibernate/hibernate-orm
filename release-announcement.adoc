@@ -200,3 +200,11 @@ create table TestEntity (
 ----
 
 For more detailed information please refer to the link:{user-guide-url}#embeddable-inheritance[Embeddable inheritance] user guide chapter.
+
+[[oracle-vector]]
+== Oracle Vector support
+
+Oracle engineers contributed the support for vector data types and functions to the `hibernate-vector` module
+to use with Oracle database version 23.4 and newer.
+
+For further information about vectors, consult the link:https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle documentation].

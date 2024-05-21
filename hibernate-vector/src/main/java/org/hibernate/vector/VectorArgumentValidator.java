@@ -25,13 +25,6 @@ public class VectorArgumentValidator implements ArgumentsValidator {
 
 	public static final ArgumentsValidator INSTANCE = new VectorArgumentValidator();
 
-	private static final int[] availableVectorCodes = {
-			SqlTypes.VECTOR,
-			SqlTypes.VECTOR_INT8,
-			SqlTypes.VECTOR_FLOAT32,
-			SqlTypes.VECTOR_FLOAT64
-	};
-
 	@Override
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,

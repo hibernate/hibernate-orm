@@ -6,10 +6,6 @@
  */
 package org.hibernate.vector;
 
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.dialect.Dialect;
@@ -19,8 +15,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicArrayType;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -32,13 +26,11 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 public class OracleVectorTypeContributor implements TypeContributor {
 
-
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		final Dialect dialect = serviceRegistry.requireService( JdbcServices.class )
-				.getDialect();
+		final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
 
-		if ( dialect instanceof OracleDialect && dialect.getVersion().isSameOrAfter( 23 ) ) {
+		if ( dialect instanceof OracleDialect && dialect.getVersion().isSameOrAfter( 23, 4 ) ) {
 			final TypeConfiguration typeConfiguration = typeContributions.getTypeConfiguration();
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 			final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();

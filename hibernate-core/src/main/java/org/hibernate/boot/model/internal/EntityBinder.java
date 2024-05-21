@@ -493,7 +493,7 @@ public class EntityBinder {
 			else {
 				final boolean ignoreIdAnnotations = isIgnoreIdAnnotations();
 				setIgnoreIdAnnotations( true );
-				bindIdClass(
+				final Component idClassComponent = bindIdClass(
 						inferredData,
 						baseInferredData,
 						propertyHolder,
@@ -512,6 +512,9 @@ public class EntityBinder {
 						propertyAccessor,
 						true
 				);
+				if ( idClassComponent.isSimpleRecord() ) {
+					mapper.setSimpleRecord( true );
+				}
 				setIgnoreIdAnnotations( ignoreIdAnnotations );
 				for ( Property property : mapper.getProperties() ) {
 					idPropertiesIfIdClass.add( property.getName() );
@@ -654,7 +657,7 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindIdClass(
+	private Component bindIdClass(
 			PropertyData inferredData,
 			PropertyData baseInferredData,
 			PropertyHolder propertyHolder,
@@ -705,6 +708,8 @@ public class EntityBinder {
 		rootClass.setEmbeddedIdentifier( inferredData.getPropertyClass() == null );
 
 		propertyHolder.setInIdClass( null );
+
+		return id;
 	}
 
 	private static void handleIdGenerator(PropertyData inferredData, MetadataBuildingContext buildingContext, Component id) {

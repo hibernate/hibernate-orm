@@ -1591,6 +1591,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@link Types#VARBINARY BINARY} and
 	 * {@link Types#LONGVARBINARY LONGVARBINARY} as the same type, since
 	 * Hibernate doesn't really differentiate these types.
+	 * <p>
+	 * On the other hand, integral types are not treated as equivalent,
+	 * instead, {@link #isCompatibleIntegralType(int, int)} is responsible
+	 * for determining if the types are compatible.
 	 *
 	 * @param typeCode1 the first column type info
 	 * @param typeCode2 the second column type info
@@ -1600,14 +1604,37 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		return typeCode1==typeCode2
 			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
-//			|| isIntegral(typeCode1) && isIntegral(typeCode2)
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
 			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2)
+			|| isCompatibleIntegralType(typeCode1, typeCode2)
 			// HHH-17908: Since the runtime can cope with enum on the DDL side,
 			// but varchar on the ORM expectation side, let's treat the types as equivalent
-			|| isEnumType( typeCode1 ) && isVarcharType( typeCode2 )
+			|| isEnumType(typeCode1) && isVarcharType(typeCode2)
 			|| sameColumnType(typeCode1, typeCode2);
+	}
+
+	/**
+	 * Tolerate storing {@code short} in {@code INTEGER} or {@code BIGINT}
+	 * or {@code int} in {@code BIGINT} for the purposes of schema validation
+	 * and migration.
+	 */
+	private boolean isCompatibleIntegralType(int typeCode1, int typeCode2) {
+		switch (typeCode1) {
+			case TINYINT:
+				return typeCode2 == TINYINT
+					|| typeCode2 == SMALLINT
+					|| typeCode2 == INTEGER
+					|| typeCode2 == BIGINT;
+			case SMALLINT:
+				return typeCode2 == SMALLINT
+					|| typeCode2 == INTEGER
+					|| typeCode2 == BIGINT;
+			case INTEGER:
+				return typeCode2 == INTEGER
+					|| typeCode2 == BIGINT;
+		}
+		return false;
 	}
 
 	private boolean sameColumnType(int typeCode1, int typeCode2) {

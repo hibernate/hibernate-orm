@@ -33,6 +33,7 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingType;
 
 /**
  * Base implementation of {@link SchemaValidator}.
@@ -163,7 +164,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect) {
-		if ( !ColumnDefinitions.hasMatchingType( column, columnInformation, metadata, dialect ) ) {
+		if ( !hasMatchingType( column, columnInformation, metadata, dialect ) ) {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: wrong column type encountered in column [%s] in " +

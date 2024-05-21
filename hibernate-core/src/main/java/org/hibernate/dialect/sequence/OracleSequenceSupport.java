@@ -7,6 +7,7 @@
 package org.hibernate.dialect.sequence;
 
 import org.hibernate.MappingException;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -18,25 +19,34 @@ import org.hibernate.dialect.Dialect;
  * @see <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/CREATE-SEQUENCE.html">Oracle Database Documentation</a>
  */
 public final class OracleSequenceSupport extends NextvalSequenceSupport {
+	/**
+	 * @deprecated Construct instance based on version instead.
+	 */
+	@Deprecated(forRemoval = true)
+	public static final SequenceSupport INSTANCE = new OracleSequenceSupport( true, false );
 
 	public static SequenceSupport getInstance(final Dialect dialect) {
-		return new OracleSequenceSupport(dialect);
+		return new OracleSequenceSupport(dialect.getVersion());
 	}
 
-	private final boolean requiresFromDUAL;
+	private final boolean requiresFromDual;
 	private final boolean supportsIfExists;
 
 	// TODO: HHH-18144 - Support Oracle sequence optional KEEP for Application Continuity
 	// TODO: HHH-18143 - Support Oracle scalable sequences for RAC
 
-	public OracleSequenceSupport(final Dialect dialect) {
-		requiresFromDUAL = dialect.getVersion().isBefore(23);
-		supportsIfExists = dialect.getVersion().isSameOrAfter(23);
+	public OracleSequenceSupport(final DatabaseVersion version) {
+		this( version.isBefore( 23 ), version.isSameOrAfter( 23 ) );
+	}
+
+	OracleSequenceSupport(boolean requiresFromDual, boolean supportsIfExists) {
+		this.requiresFromDual = requiresFromDual;
+		this.supportsIfExists = supportsIfExists;
 	}
 
 	@Override
 	public String getFromDual() {
-		return requiresFromDUAL ? " from dual" : "";
+		return requiresFromDual ? " from dual" : "";
 	}
 
 	@Override

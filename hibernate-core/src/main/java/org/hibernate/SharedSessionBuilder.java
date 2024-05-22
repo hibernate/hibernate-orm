@@ -16,6 +16,8 @@ import java.util.TimeZone;
  * Specialized {@link SessionBuilder} with access to stuff from another session.
  *
  * @author Steve Ebersole
+ *
+ * @see Session#sessionWithOptions()
  */
 public interface SharedSessionBuilder extends SessionBuilder {
 

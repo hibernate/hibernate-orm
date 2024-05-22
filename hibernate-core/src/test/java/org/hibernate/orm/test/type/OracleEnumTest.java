@@ -29,11 +29,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @SessionFactory
-@DomainModel(annotatedClasses = {OracleEnumTest.Timeslot.class, OracleEnumTest.Activity.class})
+@DomainModel(annotatedClasses = {OracleEnumTest.Timeslot.class, OracleEnumTest.Activity.class,OracleEnumTest.Weather.class, OracleEnumTest.Sky.class})
 @RequiresDialect(value = OracleDialect.class, majorVersion = 23)
 public class OracleEnumTest {
 
-	@Test public void test(SessionFactoryScope scope) {
+	@Test public void testNamedEnum(SessionFactoryScope scope) {
 		Timeslot timeslot = new Timeslot();
 		Activity activity = new Activity();
 		activity.activityType = ActivityType.Play;
@@ -43,15 +43,26 @@ public class OracleEnumTest {
 		assertEquals( ts.activity.activityType, ActivityType.Play );
 	}
 
+	@Test public void testOrdinalEnum(SessionFactoryScope scope) {
+		Weather weather = new Weather();
+		Sky sky = new Sky();
+		sky.skyType = SkyType.Sunny;
+		weather.sky = sky;
+		scope.inTransaction( s -> s.persist( weather ) );
+		Weather w = scope.fromTransaction( s-> s.createQuery("from Weather where sky.skyType = Sunny", Weather.class ).getSingleResult() );
+		assertEquals( w.sky.skyType, SkyType.Sunny );
+	}
+
 	@Test public void testSchema(SessionFactoryScope scope) {
 		scope.inSession( s -> {
 			s.doWork(
 					c -> {
 						try(Statement stmt = c.createStatement()) {
-							try(ResultSet typeInfo = stmt.executeQuery("select name, decode(instr(data_display,'WHEN '''),0,'NUMBER','VARCHAR') from user_domains where type='ENUMERATED'")) {
+							try(ResultSet typeInfo = stmt.executeQuery("select name, decode(instr(data_display,'WHEN '''),0,'NUMBER','VARCHAR2') from user_domains where type='ENUMERATED'")) {
 								while (typeInfo.next()) {
 									String name = typeInfo.getString(1);
-									if (name.equalsIgnoreCase("ActivityType")) {
+									String baseType = typeInfo.getString(2);
+									if (name.equalsIgnoreCase("ActivityType") && baseType.equals("VARCHAR2")) {
 										return;
 									}
 								}
@@ -67,7 +78,7 @@ public class OracleEnumTest {
 						ResultSet tableInfo = c.getMetaData().getColumns(null, null, "ACTIVITY", "ACTIVITYTYPE" );
 						while ( tableInfo.next() ) {
 							String type = tableInfo.getString(6);
-							assertEquals( "NUMBER", type );
+							assertEquals( "VARCHAR2", type );
 							return;
 						}
 						fail("named enum column not exported");
@@ -96,5 +107,25 @@ public class OracleEnumTest {
 
 		@ManyToOne(cascade = CascadeType.PERSIST)
 		Activity activity;
+	}
+
+	public enum SkyType {Sunny, Cloudy}
+	@Entity(name = "Sky")
+	public static class Sky {
+
+		@Id
+		@JdbcTypeCode(SqlTypes.NAMED_ORDINAL_ENUM)
+		SkyType skyType;
+	}
+
+	@Entity(name = "Weather")
+	public static class Weather {
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@Column(name = "id")
+		private int id;
+
+		@ManyToOne(cascade = CascadeType.PERSIST)
+		Sky sky;
 	}
 }

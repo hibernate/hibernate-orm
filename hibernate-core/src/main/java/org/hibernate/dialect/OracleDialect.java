@@ -96,6 +96,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -785,6 +786,7 @@ public class OracleDialect extends Dialect {
 
 		if(getVersion().isSameOrAfter(23)) {
 			ddlTypeRegistry.addDescriptor(new NamedNativeEnumDdlTypeImpl(this));
+			ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 		}
 	}
 
@@ -983,7 +985,8 @@ public class OracleDialect extends Dialect {
 
 		if(getVersion().isSameOrAfter(23)) {
 			final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-			jdbcTypeRegistry.addDescriptor(new OracleEnumJdbcType());
+			jdbcTypeRegistry.addDescriptor(OracleEnumJdbcType.INSTANCE);
+			jdbcTypeRegistry.addDescriptor(OracleOrdinalEnumJdbcType.INSTANCE);
 		}
 	}
 

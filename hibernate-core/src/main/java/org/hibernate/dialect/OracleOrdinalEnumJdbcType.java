@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import jakarta.persistence.EnumType;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.engine.jdbc.Size;
@@ -16,8 +17,6 @@ import org.hibernate.type.descriptor.converter.internal.EnumHelper;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -29,51 +28,36 @@ import java.sql.Types;
 import java.util.Arrays;
 
 import static java.util.Collections.emptySet;
-import static org.hibernate.type.SqlTypes.NAMED_ENUM;
+import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
 
 /**
  * Represents a named {@code enum} type on Oracle 23ai+.
  * <p>
  * Hibernate does <em>not</em> automatically use this for enums
- * mapped as {@link jakarta.persistence.EnumType#STRING}, and
+ * mapped as {@link EnumType#ORDINAL}, and
  * instead this type must be explicitly requested using:
  * <pre>
- * &#64;JdbcTypeCode(SqlTypes.NAMED_ENUM)
+ * &#64;JdbcTypeCode(SqlTypes.NAMED_ORDINAL_ENUM)
  * </pre>
  *
- * @see org.hibernate.type.SqlTypes#NAMED_ENUM
+ * @see org.hibernate.type.SqlTypes#NAMED_ORDINAL_ENUM
  * @see OracleDialect#getEnumTypeDeclaration(String, String[])
  * @see OracleDialect#getCreateEnumTypeCommand(String, String[])
  *
  * @author Loïc Lefèvre
  */
-public class OracleEnumJdbcType implements JdbcType {
+public class OracleOrdinalEnumJdbcType extends OracleEnumJdbcType {
 
-	public static final OracleEnumJdbcType INSTANCE = new OracleEnumJdbcType();
+	public static final OracleOrdinalEnumJdbcType INSTANCE = new OracleOrdinalEnumJdbcType();
 
 	@Override
 	public int getJdbcTypeCode() {
-		return Types.VARCHAR;
+		return Types.INTEGER;
 	}
 
 	@Override
 	public int getDefaultSqlTypeCode() {
-		return NAMED_ENUM;
-	}
-
-	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		return (appender, value, dialect, wrapperOptions) -> appender.appendSql( dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) javaType.getJavaType() )+"." + ((Enum<?>) value).name() );
-	}
-
-	@Override
-	public String getFriendlyName() {
-		return "ENUM";
-	}
-
-	@Override
-	public String toString() {
-		return "EnumTypeDescriptor";
+		return NAMED_ORDINAL_ENUM;
 	}
 
 	@Override
@@ -92,13 +76,13 @@ public class OracleEnumJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				st.setString( index, ((Enum<?>) value).name() );
+				st.setInt( index, ((Enum<?>) value).ordinal()+1 );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setString( name, ((Enum<?>) value).name() );
+				st.setInt( name, ((Enum<?>) value).ordinal()+1 );
 			}
 		};
 	}
@@ -108,17 +92,23 @@ public class OracleEnumJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaType().wrap( rs.getString( paramIndex ), options );
+				final int value = rs.getInt( paramIndex );
+				if(rs.wasNull()) {
+					return getJavaType().wrap(null, options);
+				}
+				else {
+					return getJavaType().wrap(value - 1, options);
+				}
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaType().wrap( statement.getString( index ), options );
+				return getJavaType().wrap( statement.getInt( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return getJavaType().wrap( statement.getString( name ), options );
+				return getJavaType().wrap( statement.getInt( name ), options );
 			}
 		};
 	}
@@ -129,7 +119,7 @@ public class OracleEnumJdbcType implements JdbcType {
 			Size columnSize,
 			Database database,
 			JdbcTypeIndicators context) {
-		addAuxiliaryDatabaseObjects( javaType, database, true );
+		addAuxiliaryDatabaseObjects( javaType, database, false );
 	}
 
 	@Override
@@ -138,7 +128,7 @@ public class OracleEnumJdbcType implements JdbcType {
 			Size columnSize,
 			Database database,
 			TypeConfiguration typeConfiguration) {
-		addAuxiliaryDatabaseObjects( javaType, database, true );
+		addAuxiliaryDatabaseObjects( javaType, database, false );
 	}
 
 	private void addAuxiliaryDatabaseObjects(
@@ -152,7 +142,7 @@ public class OracleEnumJdbcType implements JdbcType {
 		if ( sortEnumValues ) {
 			Arrays.sort( enumeratedValues );
 		}
-		final String[] create = getCreateEnumTypeCommand(
+		final String[] create = dialect.getCreateEnumTypeCommand(
 				javaType.getJavaTypeClass().getSimpleName(),
 				enumeratedValues
 		);
@@ -169,26 +159,5 @@ public class OracleEnumJdbcType implements JdbcType {
 					)
 			);
 		}
-	}
-
-	/**
-	 * Used to generate the CREATE DDL command for Data Use Case Domain based on VARCHAR2 values.
-	 *
-	 * @param name
-	 * @param values
-	 * @return the DDL command to create that enum
-	 */
-	public String[] getCreateEnumTypeCommand(String name, String[] values) {
-		final StringBuilder domain = new StringBuilder();
-		domain.append( "create domain " )
-				.append( name )
-				.append( " as enum (" );
-		String separator = "";
-		for ( String value : values ) {
-			domain.append( separator ).append( value ).append("='").append(value).append("'");
-			separator = ", ";
-		}
-		domain.append( ')' );
-		return new String[] { domain.toString() };
 	}
 }

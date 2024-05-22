@@ -102,10 +102,12 @@ public class OracleEnumJdbcType implements JdbcType {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				final int value = rs.getInt( paramIndex );
-				if(rs.wasNull())
-					return getJavaType().wrap( null, options );
-				else
-					return getJavaType().wrap( value-1, options );
+				if(rs.wasNull()) {
+					return getJavaType().wrap(null, options);
+				}
+				else {
+					return getJavaType().wrap(value - 1, options);
+				}
 			}
 
 			@Override

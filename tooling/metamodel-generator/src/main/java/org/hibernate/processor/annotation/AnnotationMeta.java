@@ -71,10 +71,10 @@ public abstract class AnnotationMeta implements Metamodel {
 			final AnnotationValue value = getAnnotationValue( mirror, "value" );
 			if ( value != null ) {
 				@SuppressWarnings("unchecked")
-				final List<? extends AnnotationMirror> values =
-						(List<? extends AnnotationMirror>) value.getValue();
-				for ( AnnotationMirror annotationMirror : values ) {
-					handleNamedQuery( annotationMirror, checkHql );
+				final List<? extends AnnotationValue> annotationValues =
+						(List<? extends AnnotationValue>) value.getValue();
+				for ( AnnotationValue annotationValue : annotationValues ) {
+					handleNamedQuery( (AnnotationMirror) annotationValue.getValue(), checkHql );
 				}
 			}
 		}
@@ -134,10 +134,10 @@ public abstract class AnnotationMeta implements Metamodel {
 			final AnnotationValue value = getAnnotationValue( mirror, "value" );
 			if ( value != null ) {
 				@SuppressWarnings("unchecked")
-				final List<? extends AnnotationMirror> values =
-						(List<? extends AnnotationMirror>) value.getValue();
-				for ( AnnotationMirror annotationMirror : values ) {
-					addAuxiliaryMembersForMirror( annotationMirror, prefix );
+				final List<? extends AnnotationValue> annotationValues =
+						(List<? extends AnnotationValue>) value.getValue();
+				for ( AnnotationValue annotationValue : annotationValues ) {
+					addAuxiliaryMembersForMirror( (AnnotationMirror) annotationValue.getValue(), prefix );
 				}
 			}
 		}

@@ -8,6 +8,7 @@ package org.hibernate.orm.test.cache.polymorphism;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.ConcreteProxy;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -18,6 +19,7 @@ import jakarta.persistence.Id;
  */
 @Entity
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@ConcreteProxy
 public class Cacheable {
 	private Long id;
 	private String name;

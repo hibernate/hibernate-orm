@@ -2050,11 +2050,22 @@ public class SessionImpl
 			implements SharedSessionBuilder, SharedSessionCreationOptions {
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
+		private boolean tenantIdChanged;
 
 		private SharedSessionBuilderImpl(SessionImpl session) {
 			super( (SessionFactoryImpl) session.getFactory() );
 			this.session = session;
 			super.tenantIdentifier( session.getTenantIdentifierValue() );
+		}
+
+		@Override
+		public SessionImpl openSession() {
+			if ( session.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
+				if ( tenantIdChanged && shareTransactionContext ) {
+					throw new SessionException( "Cannot redefine the tenant identifier on a child session if the connection is reused" );
+				}
+			}
+			return super.openSession();
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2063,14 +2074,16 @@ public class SessionImpl
 
 		@Override @Deprecated
 		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
-			// todo : is this always true?  Or just in the case of sharing JDBC resources?
-			throw new SessionException( "Cannot redefine tenant identifier on child session" );
+			super.tenantIdentifier( tenantIdentifier );
+			tenantIdChanged = true;
+			return this;
 		}
 
 		@Override
 		public SharedSessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
-			// todo : is this always true?  Or just in the case of sharing JDBC resources?
-			throw new SessionException( "Cannot redefine tenant identifier on child session" );
+			super.tenantIdentifier( tenantIdentifier );
+			tenantIdChanged = true;
+			return this;
 		}
 
 		@Override

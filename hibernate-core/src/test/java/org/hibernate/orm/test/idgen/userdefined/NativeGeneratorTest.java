@@ -17,5 +17,6 @@ public class NativeGeneratorTest {
 	public static class NativeEntity {
 		@Id @NativeId
 		long id;
+		String data;
 	}
 }

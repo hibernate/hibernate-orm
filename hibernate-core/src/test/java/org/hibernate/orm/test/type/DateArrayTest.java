@@ -10,7 +10,6 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -115,7 +114,6 @@ public class DateArrayTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "Seems that comparing date[] through JDBC is buggy. ERROR: operator does not exist: timestamp without time zone[] = date[]")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {

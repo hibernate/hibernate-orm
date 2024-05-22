@@ -28,6 +28,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -596,9 +597,11 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = OracleDialect.class, jiraKey = "HHH-18033", comment = "Doesn't support semicolon as ending of statement")
-	@SkipForDialect(value = SybaseDialect.class, jiraKey = "HHH-18033", comment = "Doesn't support semicolon as ending of statement")
-	@SkipForDialect(value = DerbyDialect.class, jiraKey = "HHH-18033", comment = "Doesn't support semicolon as ending of statement")
+	@JiraKey("HHH-18033")
+	@SkipForDialect(value = OracleDialect.class, comment = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(value = DB2Dialect.class, comment = "Doesn't support semicolon as ending of statement")
 	public void testNativeQueryContainsQuotedSemicolonAndEndsWithSemicolonWithLimit() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

@@ -167,10 +167,10 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		);
 		assertNotNull( reader.getAnnotation( Inheritance.class ) );
 		assertEquals(
-				"inheritance strategy not overriden", InheritanceType.JOINED,
+				"inheritance strategy not overridden", InheritanceType.JOINED,
 				reader.getAnnotation( Inheritance.class ).strategy()
 		);
-		assertNotNull( "NamedQuery not overriden", reader.getAnnotation( NamedQueries.class ) );
+		assertNotNull( "NamedQuery not overridden", reader.getAnnotation( NamedQueries.class ) );
 		assertEquals( "No deduplication", 3, reader.getAnnotation( NamedQueries.class ).value().length );
 		assertEquals(
 				"deduplication kept the Java version", 1,
@@ -179,7 +179,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals(
 				"org.hibernate.timeout", reader.getAnnotation( NamedQueries.class ).value()[1].hints()[0].name()
 		);
-		assertNotNull( "NamedNativeQuery not overriden", reader.getAnnotation( NamedNativeQueries.class ) );
+		assertNotNull( "NamedNativeQuery not overridden", reader.getAnnotation( NamedNativeQueries.class ) );
 		assertEquals( "No deduplication", 3, reader.getAnnotation( NamedNativeQueries.class ).value().length );
 		assertEquals(
 				"deduplication kept the Java version", 1,

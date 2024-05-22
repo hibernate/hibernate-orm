@@ -157,7 +157,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			em.persist( as );
 			em.flush();
 			assertEquals( 1, IncrementListener.getIncrement(), "Failure in default listeners" );
-			assertEquals( 1, OtherIncrementListener.getIncrement(), "Failure in XML overriden listeners" );
+			assertEquals( 1, OtherIncrementListener.getIncrement(), "Failure in XML overridden listeners" );
 
 			Mouse mouse = new Mouse();
 			mouse.setName( "mickey" );

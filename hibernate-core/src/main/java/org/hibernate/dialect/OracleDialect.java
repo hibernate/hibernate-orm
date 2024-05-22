@@ -95,6 +95,7 @@ import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -781,6 +782,10 @@ public class OracleDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
 		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this, false ) );
+
+		if(getVersion().isSameOrAfter(23)) {
+			ddlTypeRegistry.addDescriptor(new NamedNativeEnumDdlTypeImpl(this));
+		}
 	}
 
 	@Override
@@ -975,6 +980,11 @@ public class OracleDialect extends Dialect {
 								.getDescriptor( Object.class )
 						)
 		);
+
+		if(getVersion().isSameOrAfter(23)) {
+			final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+			jdbcTypeRegistry.addDescriptor(new OracleEnumJdbcType());
+		}
 	}
 
 	@Override
@@ -1637,5 +1647,30 @@ public class OracleDialect extends Dialect {
 
 	public int getDriverMinorVersion() {
 		return driverMinorVersion;
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		return getVersion().isSameOrAfter(23) ? name : super.getEnumTypeDeclaration(name, values);
+	}
+
+	@Override
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		final StringBuilder domain = new StringBuilder();
+		domain.append( "create domain " )
+				.append( name )
+				.append( " as enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			domain.append( separator ).append( value );
+			separator = ", ";
+		}
+		domain.append( ')' );
+		return new String[] { domain.toString() };
+	}
+
+	@Override
+	public String[] getDropEnumTypeCommand(String name) {
+		return new String[] { "drop domain if exists " + name + " force" };
 	}
 }

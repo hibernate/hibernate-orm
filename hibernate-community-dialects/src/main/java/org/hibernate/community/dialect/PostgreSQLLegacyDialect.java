@@ -87,6 +87,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -260,6 +262,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 			}
 		}
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -1382,6 +1386,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 			}
 
+			jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 				// HHH-9562 / HHH-14358
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );

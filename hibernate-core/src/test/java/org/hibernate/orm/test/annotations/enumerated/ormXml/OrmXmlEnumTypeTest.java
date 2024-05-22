@@ -48,7 +48,7 @@ public class OrmXmlEnumTypeTest extends BaseUnitTestCase {
 			BasicTypeImpl<?> enumMapping = ExtraAssertions.assertTyping( BasicTypeImpl.class, bindingPropertyType );
 			assertEquals(
 					jdbcTypeRegistry.getDescriptor( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ? ENUM : VARCHAR ),
-					jdbcTypeRegistry.getDescriptor( enumMapping.getJdbcType().getJdbcTypeCode() )
+					jdbcTypeRegistry.getDescriptor( enumMapping.getJdbcType().getDefaultSqlTypeCode() )
 			);
 		}
 		finally {

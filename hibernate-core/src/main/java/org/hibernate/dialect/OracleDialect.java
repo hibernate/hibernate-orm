@@ -95,6 +95,8 @@ import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -167,7 +169,7 @@ public class OracleDialect extends Dialect {
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private static final String yqmSelect =
-		"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
+			"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
 
 	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
@@ -716,10 +718,10 @@ public class OracleDialect extends Dialect {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
 				if ( getVersion().isSameOrAfter( 23 ) ) {
-						return super.columnType( sqlTypeCode );
+					return super.columnType( sqlTypeCode );
 				}
 				else {
-						return "number(1,0)";
+					return "number(1,0)";
 				}
 			case TINYINT:
 				return "number(3,0)";
@@ -746,8 +748,8 @@ public class OracleDialect extends Dialect {
 				return "date";
 			case TIME:
 				return "timestamp($p)";
-				// the only difference between date and timestamp
-				// on Oracle is that date has no fractional seconds
+			// the only difference between date and timestamp
+			// on Oracle is that date has no fractional seconds
 			case TIME_WITH_TIMEZONE:
 				return "timestamp($p) with time zone";
 
@@ -781,6 +783,11 @@ public class OracleDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
 		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this, false ) );
+
+		if(getVersion().isSameOrAfter(23)) {
+			ddlTypeRegistry.addDescriptor(new NamedNativeEnumDdlTypeImpl(this));
+			ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
+		}
 	}
 
 	@Override
@@ -973,8 +980,14 @@ public class OracleDialect extends Dialect {
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
-						)
+				)
 		);
+
+		if(getVersion().isSameOrAfter(23)) {
+			final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+			jdbcTypeRegistry.addDescriptor(OracleEnumJdbcType.INSTANCE);
+			jdbcTypeRegistry.addDescriptor(OracleOrdinalEnumJdbcType.INSTANCE);
+		}
 	}
 
 	@Override
@@ -1256,10 +1269,10 @@ public class OracleDialect extends Dialect {
 		}
 
 		return DISTINCT_KEYWORD_PATTERN.matcher( sql ).find()
-			|| GROUP_BY_KEYWORD_PATTERN.matcher( sql ).find()
-			|| UNION_KEYWORD_PATTERN.matcher( sql ).find()
-			|| ORDER_BY_KEYWORD_PATTERN.matcher( sql ).find() && queryOptions.hasLimit()
-			|| queryOptions.hasLimit() && queryOptions.getLimit().getFirstRow() != null;
+				|| GROUP_BY_KEYWORD_PATTERN.matcher( sql ).find()
+				|| UNION_KEYWORD_PATTERN.matcher( sql ).find()
+				|| ORDER_BY_KEYWORD_PATTERN.matcher( sql ).find() && queryOptions.hasLimit()
+				|| queryOptions.hasLimit() && queryOptions.getLimit().getFirstRow() != null;
 	}
 
 	@Override
@@ -1637,5 +1650,30 @@ public class OracleDialect extends Dialect {
 
 	public int getDriverMinorVersion() {
 		return driverMinorVersion;
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		return getVersion().isSameOrAfter(23) ? name : super.getEnumTypeDeclaration(name, values);
+	}
+
+	@Override
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		final StringBuilder domain = new StringBuilder();
+		domain.append( "create domain " )
+				.append( name )
+				.append( " as enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			domain.append( separator ).append( value );
+			separator = ", ";
+		}
+		domain.append( ')' );
+		return new String[] { domain.toString() };
+	}
+
+	@Override
+	public String[] getDropEnumTypeCommand(String name) {
+		return new String[] { "drop domain if exists " + name + " force" };
 	}
 }

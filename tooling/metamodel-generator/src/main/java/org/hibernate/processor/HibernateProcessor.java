@@ -203,38 +203,39 @@ public class HibernateProcessor extends AbstractProcessor {
 		PackageElement quarkusReactivePanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.reactive.panache" );
-		if ( quarkusReactivePanachePackage != null
-				&& quarkusOrmPanachePackage != null ) {
+
+		if ( packagePresent(quarkusReactivePanachePackage)
+				&& packagePresent(quarkusOrmPanachePackage) ) {
 			context.logMessage(
 					Diagnostic.Kind.WARNING,
 					"Both Quarkus Hibernate ORM and Hibernate Reactive with Panache detected: this is not supported, so will proceed as if none were there"
 			);
 			quarkusOrmPanachePackage = quarkusReactivePanachePackage = null;
 		}
-		
-		context.setAddInjectAnnotation( jakartaInjectPackage != null );
-		context.setAddNonnullAnnotation( jakartaAnnotationPackage != null );
-		context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
-		context.setAddDependentAnnotation( jakartaContextPackage != null );
-		context.setAddTransactionScopedAnnotation( jakartaTransactionsPackage != null );
-		context.setQuarkusInjection( quarkusOrmPackage != null );
-		context.setUsesQuarkusOrm( quarkusOrmPanachePackage != null );
-		context.setUsesQuarkusReactive( quarkusReactivePanachePackage != null );
+
+		context.setAddInjectAnnotation( packagePresent(jakartaInjectPackage) );
+		context.setAddNonnullAnnotation( packagePresent(jakartaAnnotationPackage) );
+		context.setAddGeneratedAnnotation( packagePresent(jakartaAnnotationPackage) );
+		context.setAddDependentAnnotation( packagePresent(jakartaContextPackage) );
+		context.setAddTransactionScopedAnnotation( packagePresent(jakartaTransactionsPackage) );
+		context.setQuarkusInjection( packagePresent(quarkusOrmPackage) );
+		context.setUsesQuarkusOrm( packagePresent(quarkusOrmPanachePackage) );
+		context.setUsesQuarkusReactive( packagePresent(quarkusReactivePanachePackage) );
 
 		final Map<String, String> options = environment.getOptions();
 
-		boolean suppressJakartaData = parseBoolean( options.get( SUPPRESS_JAKARTA_DATA_METAMODEL ) );
+		final boolean suppressJakartaData = parseBoolean( options.get( SUPPRESS_JAKARTA_DATA_METAMODEL ) );
 
-		context.setGenerateJakartaDataStaticMetamodel( !suppressJakartaData && jakartaDataPackage != null );
+		context.setGenerateJakartaDataStaticMetamodel( !suppressJakartaData && packagePresent(jakartaDataPackage) );
 
-		String setting = options.get( ADD_GENERATED_ANNOTATION );
+		final String setting = options.get( ADD_GENERATED_ANNOTATION );
 		if ( setting != null ) {
 			context.setAddGeneratedAnnotation( parseBoolean( setting ) );
 		}
 
 		context.setAddGenerationDate( parseBoolean( options.get( ADD_GENERATION_DATE ) ) );
 
-		String suppressedWarnings = options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION );
+		final String suppressedWarnings = options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION );
 		if ( suppressedWarnings != null ) {
 			if ( parseBoolean(suppressedWarnings) ) {
 				// legacy behavior from HHH-12068
@@ -249,6 +250,12 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setExclude( options.getOrDefault( EXCLUDE, "" ) );
 
 		return parseBoolean( options.get( FULLY_ANNOTATION_CONFIGURED_OPTION ) );
+	}
+
+	private static boolean packagePresent(@Nullable PackageElement pack) {
+		return pack != null
+			//HHH-18019 ejc always returns a non-null PackageElement
+			&& !pack.getEnclosedElements().isEmpty();
 	}
 
 	@Override

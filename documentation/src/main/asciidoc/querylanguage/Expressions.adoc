@@ -543,8 +543,8 @@ The following special functions make it possible to discover or narrow expressio
 |===
 | Special function | Purpose | Signature | JPA standard
 
-| `type()` | The (concrete) entity type | `type(e)` | ✔
-| `treat()` | Narrow an entity type | `treat(e as Entity)` | ✔
+| `type()` | The (concrete) entity or embeddable type | `type(e)` | ✔
+| `treat()` | Narrow an entity or embeddable type | `treat(e as Entity)` | ✔
 | `cast()` | Narrow a basic type | `cast(x as Type)` | ✖
 | `str()` | Cast to a string | `str(x)` | ✖
 |===
@@ -555,7 +555,7 @@ Let's see what these functions do.
 [discrete]
 ===== Evaluating an entity type
 
-The function `type()`, applied to an identification variable or entity-valued path expression, evaluates to the concrete type, that is, the Java `Class`, of the referenced entity.
+The function `type()`, applied to an identification variable or to an entity-valued or embeddable-valued path expression, evaluates to the concrete type, that is, the Java `Class`, of the referenced entity or embeddable.
 This is mainly useful when dealing with entity inheritance hierarchies.
 
 [[entity-type-exp-example]]
@@ -571,7 +571,7 @@ where type(payment) = CreditCardPayment
 ===== Narrowing an entity type
 
 The function `treat()` may be used to narrow the type of an identification variable.
-This is useful when dealing with entity inheritance hierarchies.
+This is useful when dealing with entity or embeddable inheritance hierarchies.
 
 [[treat-example]]
 [source, hql]

@@ -21,6 +21,7 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.internal.AnyMappingSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -35,7 +36,6 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -43,6 +43,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * Helper for dealing with Hibernate's "mapping model" while processing an SQM which is defined
@@ -180,17 +181,21 @@ public class SqmMappingModelHelper {
 
 		if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
 			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath;
-			final EntityDomainType<?> treatTargetType = treatedPath.getTreatTarget();
-			return domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
+			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
+			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
+				final EntityDomainType<?> treatTargetType = (EntityDomainType<?>) treatTarget;
+				return domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
+			}
 		}
 
 		// see if the LHS is treated
 		if ( sqmPath.getLhs() instanceof SqmTreatedPath<?, ?> ) {
 			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath.getLhs();
-			final EntityDomainType<?> treatTargetType = treatedPath.getTreatTarget();
-			final EntityPersister container = domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
-
-			return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
+			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
+			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
+				final EntityPersister container = domainModel.findEntityDescriptor( treatTarget.getTypeName() );
+				return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
+			}
 		}
 
 		// Plural path parts are not joined and thus also have no table group
@@ -253,9 +258,15 @@ public class SqmMappingModelHelper {
 			SqmPath<?> sqmPath,
 			SqmToSqlAstConverter converter) {
 		final SqmPath<?> parentPath = sqmPath.getLhs();
-		if ( parentPath instanceof SqmTreatedPath ) {
+		if ( parentPath instanceof SqmTreatedPath<?, ?> ) {
 			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) parentPath;
-			return resolveEntityPersister( treatedPath.getTreatTarget(), converter.getCreationContext().getSessionFactory() );
+			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
+			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
+				return resolveEntityPersister(
+						( (EntityDomainType<?>) treatTarget ),
+						converter.getCreationContext().getSessionFactory()
+				);
+			}
 		}
 
 		return null;

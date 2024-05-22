@@ -490,8 +490,18 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
+	public <X> ManagedDomainType<X> managedType(String typeName) {
+		return jpaMetamodel.managedType( typeName );
+	}
+
+	@Override
 	public <X> EntityDomainType<X> entity(String entityName) {
 		return jpaMetamodel.entity( entityName );
+	}
+
+	@Override
+	public <X> EmbeddableDomainType<X> embeddable(String embeddableName) {
+		return jpaMetamodel.embeddable( embeddableName );
 	}
 
 	@Override

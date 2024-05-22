@@ -27,8 +27,8 @@ public class DiscriminatorTypeImpl<O> extends ConvertedBasicTypeImpl<O> implemen
 			BasicType<?> underlyingJdbcMapping,
 			DiscriminatorConverter<O,?> discriminatorValueConverter) {
 		super(
-				discriminatorValueConverter.getNavigableRole().getFullPath(),
-				"Discriminator type " + discriminatorValueConverter.getNavigableRole().getFullPath(),
+				discriminatorValueConverter.getDiscriminatorName(),
+				"Discriminator type " + discriminatorValueConverter.getDiscriminatorName(),
 				underlyingJdbcMapping.getJdbcType(),
 				discriminatorValueConverter
 		);

@@ -126,9 +126,9 @@ public class IntegralTimestampaddFunction
 		final JdbcType jdbcType = magnitude.getExpressionType().getSingleJdbcMapping().getJdbcType();
 		if ( jdbcType.isFloat() ) {
 			// We need to multiply the magnitude by the conversion factor and cast to int
-			// Use second by default and nanosecond if we encounter fractional seconds
+			// Use SECOND by default and NATIVE if we encounter fractional seconds
 			return field.getUnit() == TemporalUnit.SECOND
-					? TemporalUnit.NANOSECOND
+					? TemporalUnit.NATIVE
 					: TemporalUnit.SECOND;
 		}
 		else {

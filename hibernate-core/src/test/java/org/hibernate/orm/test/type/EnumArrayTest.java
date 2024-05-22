@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.type;
 
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -99,7 +98,6 @@ public class EnumArrayTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "When length 0 byte array is inserted, Altibase returns with null")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {

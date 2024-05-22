@@ -1156,14 +1156,14 @@ public abstract class AbstractHANADialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 				if ( temporalType == TemporalType.TIME ) {
-					return "cast(add_nano100('1970-01-01 '||(?3),?2/100) as time)";
+					return "cast(add_nano100(cast('1970-01-01 '||(?3) as timestamp),?2/100) as time)";
 				}
 				else {
 					return "add_nano100(?3,?2/100)";
 				}
 			case NATIVE:
 				if ( temporalType == TemporalType.TIME ) {
-					return "cast(add_nano100('1970-01-01 '||(?3),?2) as time)";
+					return "cast(add_nano100(cast('1970-01-01 '||(?3) as timestamp),?2) as time)";
 				}
 				else {
 					return "add_nano100(?3,?2)";
@@ -1173,9 +1173,24 @@ public abstract class AbstractHANADialect extends Dialect {
 			case WEEK:
 				return "add_days(?3,7*?2)";
 			case MINUTE:
-				return "add_seconds(?3,60*?2)";
+				if ( temporalType == TemporalType.TIME ) {
+					return "cast(add_seconds(cast('1970-01-01 '||(?3) as timestamp),60*?2) as time)";
+				}
+				else {
+					return "add_seconds(?3,60*?2)";
+				}
 			case HOUR:
-				return "add_seconds(?3,3600*?2)";
+				if ( temporalType == TemporalType.TIME ) {
+					return "cast(add_seconds(cast('1970-01-01 '||(?3) as timestamp),3600*?2) as time)";
+				}
+				else {
+					return "add_seconds(?3,3600*?2)";
+				}
+			case SECOND:
+				if ( temporalType == TemporalType.TIME ) {
+					return "cast(add_seconds(cast('1970-01-01 '||(?3) as timestamp),?2) as time)";
+				}
+				// Fall through on purpose
 			default:
 				return "add_?1s(?3,?2)";
 		}

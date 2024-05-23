@@ -10,15 +10,11 @@ import java.lang.annotation.Annotation;
 import java.util.function.Consumer;
 
 import org.hibernate.annotations.*;
-import org.hibernate.boot.internal.Abstract;
 import org.hibernate.boot.internal.AnyKeyType;
-import org.hibernate.boot.internal.CollectionClassification;
-import org.hibernate.boot.internal.Extends;
-import org.hibernate.boot.internal.Target;
-import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
+import org.hibernate.boot.models.annotations.internal.*;
+import org.hibernate.boot.models.internal.OrmAnnotationHelper;
+import org.hibernate.models.internal.OrmAnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptor;
-
-import static org.hibernate.models.internal.AnnotationHelper.createOrmDescriptor;
 
 /**
  * Details about Hibernate annotations.
@@ -33,186 +29,657 @@ import static org.hibernate.models.internal.AnnotationHelper.createOrmDescriptor
  */
 @SuppressWarnings({ "deprecation", "removal", "unused" })
 public interface HibernateAnnotations {
-	AnnotationDescriptor<Any> ANY = createOrmDescriptor( Any.class );
-	AnnotationDescriptor<AnyDiscriminator> ANY_DISCRIMINATOR = createOrmDescriptor( AnyDiscriminator.class );
-	AnnotationDescriptor<AnyDiscriminatorValues> ANY_DISCRIMINATOR_VALUES = createOrmDescriptor( AnyDiscriminatorValues.class );
-	AnnotationDescriptor<AnyDiscriminatorValue> ANY_DISCRIMINATOR_VALUE = createOrmDescriptor( AnyDiscriminatorValue.class, ANY_DISCRIMINATOR_VALUES );
-	AnnotationDescriptor<AnyKeyJavaClass> ANY_KEY_JAVA_CLASS = createOrmDescriptor( AnyKeyJavaClass.class );
-	AnnotationDescriptor<AnyKeyJavaType> ANY_KEY_JAVA_TYPE = createOrmDescriptor( AnyKeyJavaType.class );
-	AnnotationDescriptor<AnyKeyJdbcType> ANY_KEY_JDBC_TYPE = createOrmDescriptor( AnyKeyJdbcType.class );
-	AnnotationDescriptor<AnyKeyJdbcTypeCode> ANY_KEY_JDBC_TYPE_CODE = createOrmDescriptor( AnyKeyJdbcTypeCode.class );
-	AnnotationDescriptor<AttributeAccessor> ATTRIBUTE_ACCESSOR = createOrmDescriptor( AttributeAccessor.class );
-	AnnotationDescriptor<AttributeBinderType> ATTRIBUTE_BINDER_TYPE = createOrmDescriptor( AttributeBinderType.class );
-	AnnotationDescriptor<Bag> BAG = createOrmDescriptor( Bag.class );
-	AnnotationDescriptor<BatchSize> BATCH_SIZE = createOrmDescriptor( BatchSize.class );
-	AnnotationDescriptor<Cache> CACHE = createOrmDescriptor( Cache.class );
-	AnnotationDescriptor<Cascade> CASCADE = createOrmDescriptor( Cascade.class );
-	AnnotationDescriptor<Checks> CHECKS = createOrmDescriptor( Checks.class );
-	AnnotationDescriptor<Check> CHECK = createOrmDescriptor( Check.class, CHECKS );
-	AnnotationDescriptor<CollectionId> COLLECTION_ID = createOrmDescriptor( CollectionId.class );
-	AnnotationDescriptor<CollectionIdJavaType> COLLECTION_ID_JAVA_TYPE = createOrmDescriptor( CollectionIdJavaType.class );
-	AnnotationDescriptor<CollectionIdJdbcType> COLLECTION_ID_JDBC_TYPE = createOrmDescriptor( CollectionIdJdbcType.class );
-	AnnotationDescriptor<CollectionIdJdbcTypeCode> COLLECTION_ID_JDBC_TYPE_CODE = createOrmDescriptor( CollectionIdJdbcTypeCode.class );
-	AnnotationDescriptor<CollectionIdMutability> COLLECTION_ID_MUTABILITY = createOrmDescriptor( CollectionIdMutability.class );
-	AnnotationDescriptor<CollectionIdType> COLLECTION_ID_TYPE = createOrmDescriptor( CollectionIdType.class );
-	AnnotationDescriptor<CollectionType> COLLECTION_TYPE = createOrmDescriptor( CollectionType.class );
-	AnnotationDescriptor<CollectionTypeRegistrations> COLLECTION_TYPE_REGS = createOrmDescriptor( CollectionTypeRegistrations.class );
-	AnnotationDescriptor<CollectionTypeRegistration> COLLECTION_TYPE_REG = createOrmDescriptor( CollectionTypeRegistration.class, COLLECTION_TYPE_REGS );
-	AnnotationDescriptor<ColumnDefault> COLUMN_DEFAULT = createOrmDescriptor( ColumnDefault.class );
-	AnnotationDescriptor<ColumnTransformers> COLUMN_TRANSFORMERS = createOrmDescriptor( ColumnTransformers.class );
-	AnnotationDescriptor<ColumnTransformer> COLUMN_TRANSFORMER = createOrmDescriptor( ColumnTransformer.class, COLUMN_TRANSFORMERS );
-	AnnotationDescriptor<Comment> COMMENT = createOrmDescriptor( Comment.class );
-	AnnotationDescriptor<CompositeType> COMPOSITE_TYPE = createOrmDescriptor( CompositeType.class );
-	AnnotationDescriptor<CompositeTypeRegistrations> COMPOSITE_TYPE_REGS = createOrmDescriptor( CompositeTypeRegistrations.class );
-	AnnotationDescriptor<CompositeTypeRegistration> COMPOSITE_TYPE_REG = createOrmDescriptor( CompositeTypeRegistration.class, COMPOSITE_TYPE_REGS );
-	AnnotationDescriptor<ConverterRegistrations> CONVERTER_REGS = createOrmDescriptor( ConverterRegistrations.class );
-	AnnotationDescriptor<ConverterRegistration> CONVERTER_REG = createOrmDescriptor( ConverterRegistration.class, CONVERTER_REGS );
-	AnnotationDescriptor<CreationTimestamp> CREATION_TIMESTAMP = createOrmDescriptor( CreationTimestamp.class );
-	AnnotationDescriptor<CurrentTimestamp> CURRENT_TIMESTAMP = createOrmDescriptor( CurrentTimestamp.class );
-	AnnotationDescriptor<DiscriminatorFormula> DISCRIMINATOR_FORMULA = createOrmDescriptor( DiscriminatorFormula.class );
-	AnnotationDescriptor<DiscriminatorOptions> DISCRIMINATOR_OPTIONS = createOrmDescriptor( DiscriminatorOptions.class );
-	AnnotationDescriptor<DynamicInsert> DYNAMIC_INSERT = createOrmDescriptor( DynamicInsert.class );
-	AnnotationDescriptor<DynamicUpdate> DYNAMIC_UPDATE = createOrmDescriptor( DynamicUpdate.class );
-	AnnotationDescriptor<EmbeddableInstantiator> EMBEDDABLE_INSTANTIATOR = createOrmDescriptor( EmbeddableInstantiator.class );
-	AnnotationDescriptor<EmbeddableInstantiatorRegistrations> EMBEDDABLE_INSTANTIATOR_REGS = createOrmDescriptor( EmbeddableInstantiatorRegistrations.class );
-	AnnotationDescriptor<EmbeddableInstantiatorRegistration> EMBEDDABLE_INSTANTIATOR_REG = createOrmDescriptor( EmbeddableInstantiatorRegistration.class, EMBEDDABLE_INSTANTIATOR_REGS );
-	AnnotationDescriptor<Fetch> FETCH = createOrmDescriptor( Fetch.class );
-	AnnotationDescriptor<FetchProfiles> FETCH_PROFILES = createOrmDescriptor( FetchProfiles.class );
-	AnnotationDescriptor<FetchProfile> FETCH_PROFILE = createOrmDescriptor( FetchProfile.class, FETCH_PROFILES );
-	AnnotationDescriptor<Filters> FILTERS = createOrmDescriptor( Filters.class );
-	AnnotationDescriptor<Filter> FILTER = createOrmDescriptor( Filter.class, FILTERS );
-	AnnotationDescriptor<FilterDefs> FILTER_DEFS = createOrmDescriptor( FilterDefs.class );
-	AnnotationDescriptor<FilterDef> FILTER_DEF = createOrmDescriptor( FilterDef.class, FILTER_DEFS );
-	AnnotationDescriptor<FilterJoinTables> FILTER_JOIN_TABLES = createOrmDescriptor( FilterJoinTables.class );
-	AnnotationDescriptor<FilterJoinTable> FILTER_JOIN_TABLE = createOrmDescriptor( FilterJoinTable.class, FILTER_JOIN_TABLES );
-	AnnotationDescriptor<ForeignKey> FOREIGN_KEY = createOrmDescriptor( ForeignKey.class );
-	AnnotationDescriptor<Formula> FORMULA = createOrmDescriptor( Formula.class );
-	AnnotationDescriptor<Generated> GENERATED = createOrmDescriptor( Generated.class );
-	AnnotationDescriptor<GeneratedColumn> GENERATED_COLUMN = createOrmDescriptor( GeneratedColumn.class );
-	AnnotationDescriptor<GeneratorType> GENERATOR_TYPE = createOrmDescriptor( GeneratorType.class );
-	AnnotationDescriptor<GenericGenerators> GENERIC_GENERATORS = createOrmDescriptor( GenericGenerators.class );
-	AnnotationDescriptor<GenericGenerator> GENERIC_GENERATOR = createOrmDescriptor( GenericGenerator.class, GENERIC_GENERATORS );
-	AnnotationDescriptor<IdGeneratorType> ID_GENERATOR_TYPE = createOrmDescriptor( IdGeneratorType.class );
-	AnnotationDescriptor<Immutable> IMMUTABLE = createOrmDescriptor( Immutable.class );
-	AnnotationDescriptor<Imported> IMPORTED = createOrmDescriptor( Imported.class );
-	AnnotationDescriptor<Index> INDEX = createOrmDescriptor( Index.class );
-	AnnotationDescriptor<IndexColumn> INDEX_COLUMN = createOrmDescriptor( IndexColumn.class );
-	AnnotationDescriptor<Instantiator> INSTANTIATOR = createOrmDescriptor( Instantiator.class );
-	AnnotationDescriptor<JavaType> JAVA_TYPE = createOrmDescriptor( JavaType.class );
-	AnnotationDescriptor<JavaTypeRegistrations> JAVA_TYPE_REGS = createOrmDescriptor( JavaTypeRegistrations.class );
-	AnnotationDescriptor<JavaTypeRegistration> JAVA_TYPE_REG = createOrmDescriptor( JavaTypeRegistration.class, JAVA_TYPE_REGS );
-	AnnotationDescriptor<JdbcType> JDBC_TYPE = createOrmDescriptor( JdbcType.class );
-	AnnotationDescriptor<JdbcTypeCode> JDBC_TYPE_CODE = createOrmDescriptor( JdbcTypeCode.class );
-	AnnotationDescriptor<JdbcTypeRegistrations> JDBC_TYPE_REGS = createOrmDescriptor( JdbcTypeRegistrations.class );
-	AnnotationDescriptor<JdbcTypeRegistration> JDBC_TYPE_REG = createOrmDescriptor( JdbcTypeRegistration.class, JDBC_TYPE_REGS );
-	AnnotationDescriptor<JoinColumnsOrFormulas> JOIN_COLUMNS_OR_FORMULAS = createOrmDescriptor( JoinColumnsOrFormulas.class );
-	AnnotationDescriptor<JoinColumnOrFormula> JOIN_COLUMN_OR_FORMULA = createOrmDescriptor( JoinColumnOrFormula.class, JOIN_COLUMNS_OR_FORMULAS );
-	AnnotationDescriptor<JoinFormula> JOIN_FORMULA = createOrmDescriptor( JoinFormula.class );
-	AnnotationDescriptor<LazyCollection> LAZY_COLLECTION = createOrmDescriptor( LazyCollection.class );
-	AnnotationDescriptor<LazyGroup> LAZY_GROUP = createOrmDescriptor( LazyGroup.class );
-	AnnotationDescriptor<LazyToOne> LAZY_TO_ONE = createOrmDescriptor( LazyToOne.class );
-	AnnotationDescriptor<ListIndexBase> LIST_INDEX_BASE = createOrmDescriptor( ListIndexBase.class );
-	AnnotationDescriptor<ListIndexJavaType> LIST_INDEX_JAVA_TYPE = createOrmDescriptor( ListIndexJavaType.class );
-	AnnotationDescriptor<ListIndexJdbcType> LIST_INDEX_JDBC_TYPE = createOrmDescriptor( ListIndexJdbcType.class );
-	AnnotationDescriptor<ListIndexJdbcTypeCode> LIST_INDEX_JDBC_TYPE_CODE = createOrmDescriptor( ListIndexJdbcTypeCode.class );
-	AnnotationDescriptor<Loader> LOADER = createOrmDescriptor( Loader.class );
-	AnnotationDescriptor<ManyToAny> MANY_TO_ANY = createOrmDescriptor( ManyToAny.class );
-	AnnotationDescriptor<MapKeyCompositeType> MAP_KEY_COMPOSITE_TYPE = createOrmDescriptor( MapKeyCompositeType.class );
-	AnnotationDescriptor<MapKeyJavaType> MAP_KEY_JAVA_TYPE = createOrmDescriptor( MapKeyJavaType.class );
-	AnnotationDescriptor<MapKeyJdbcType> MAP_KEY_JDBC_TYPE = createOrmDescriptor( MapKeyJdbcType.class );
-	AnnotationDescriptor<MapKeyJdbcTypeCode> MAP_KEY_JDBC_TYPE_CODE = createOrmDescriptor( MapKeyJdbcTypeCode.class );
-	AnnotationDescriptor<MapKeyMutability> MAP_KEY_MUTABILITY = createOrmDescriptor( MapKeyMutability.class );
-	AnnotationDescriptor<MapKeyType> MAP_KEY_TYPE = createOrmDescriptor( MapKeyType.class );
-	AnnotationDescriptor<Mutability> MUTABILITY = createOrmDescriptor( Mutability.class );
-	AnnotationDescriptor<NamedNativeQueries> NAMED_NATIVE_QUERIES = createOrmDescriptor( NamedNativeQueries.class );
-	AnnotationDescriptor<NamedNativeQuery> NAMED_NATIVE_QUERY = createOrmDescriptor( NamedNativeQuery.class, NAMED_NATIVE_QUERIES );
-	AnnotationDescriptor<NamedQueries> NAMED_QUERIES = createOrmDescriptor( NamedQueries.class );
-	AnnotationDescriptor<NamedQuery> NAMED_QUERY = createOrmDescriptor( NamedQuery.class, NAMED_QUERIES );
-	AnnotationDescriptor<Nationalized> NATIONALIZED = createOrmDescriptor( Nationalized.class );
-	AnnotationDescriptor<NaturalId> NATURAL_ID = createOrmDescriptor( NaturalId.class );
-	AnnotationDescriptor<NaturalIdCache> NATURAL_ID_CACHE = createOrmDescriptor( NaturalIdCache.class );
-	AnnotationDescriptor<NotFound> NOT_FOUND = createOrmDescriptor( NotFound.class );
-	AnnotationDescriptor<OnDelete> ON_DELETE = createOrmDescriptor( OnDelete.class );
-	AnnotationDescriptor<OptimisticLock> OPTIMISTIC_LOCK = createOrmDescriptor( OptimisticLock.class );
-	AnnotationDescriptor<OptimisticLocking> OPTIMISTIC_LOCKING = createOrmDescriptor( OptimisticLocking.class );
-	AnnotationDescriptor<OrderBy> ORDER_BY = createOrmDescriptor( OrderBy.class );
-	AnnotationDescriptor<ParamDef> PARAM_DEF = createOrmDescriptor( ParamDef.class );
-	AnnotationDescriptor<Parameter> PARAMETER = createOrmDescriptor( Parameter.class );
-	AnnotationDescriptor<Parent> PARENT = createOrmDescriptor( Parent.class );
-	AnnotationDescriptor<PartitionKey> PARTITION_KEY = createOrmDescriptor( PartitionKey.class );
-	AnnotationDescriptor<Polymorphism> POLYMORPHISM = createOrmDescriptor( Polymorphism.class );
-	AnnotationDescriptor<Proxy> PROXY = createOrmDescriptor( Proxy.class );
-	AnnotationDescriptor<RowId> ROW_ID = createOrmDescriptor( RowId.class );
-	AnnotationDescriptor<SecondaryRows> SECONDARY_ROWS = createOrmDescriptor( SecondaryRows.class );
-	AnnotationDescriptor<SecondaryRow> SECONDARY_ROW = createOrmDescriptor( SecondaryRow.class, SECONDARY_ROWS );
-	AnnotationDescriptor<SelectBeforeUpdate> SELECT_BEFORE_UPDATE = createOrmDescriptor( SelectBeforeUpdate.class );
-	AnnotationDescriptor<SortComparator> SORT_COMPARATOR = createOrmDescriptor( SortComparator.class );
-	AnnotationDescriptor<SortNatural> SORT_NATURAL = createOrmDescriptor( SortNatural.class );
-	AnnotationDescriptor<Source> SOURCE = createOrmDescriptor( Source.class );
-	AnnotationDescriptor<SQLDeletes> SQL_DELETES = createOrmDescriptor( SQLDeletes.class );
-	AnnotationDescriptor<SQLDelete> SQL_DELETE = createOrmDescriptor( SQLDelete.class, SQL_DELETES );
-	AnnotationDescriptor<SQLDeleteAll> SQL_DELETE_ALL = createOrmDescriptor( SQLDeleteAll.class );
-	AnnotationDescriptor<SqlFragmentAlias> SQL_FRAGMENT_ALIAS = createOrmDescriptor( SqlFragmentAlias.class );
-	AnnotationDescriptor<SQLInserts> SQL_INSERTS = createOrmDescriptor( SQLInserts.class );
-	AnnotationDescriptor<SQLInsert> SQL_INSERT = createOrmDescriptor( SQLInsert.class, SQL_INSERTS );
-	AnnotationDescriptor<SQLRestriction> SQL_RESTRICTION = createOrmDescriptor( SQLRestriction.class, SQL_INSERTS );
-	AnnotationDescriptor<SQLJoinTableRestriction> SQL_RESTRICTION_JOIN_TABLE = createOrmDescriptor( SQLJoinTableRestriction.class, SQL_INSERTS );
-	AnnotationDescriptor<SQLUpdates> SQL_UPDATES = createOrmDescriptor( SQLUpdates.class );
-	AnnotationDescriptor<SQLUpdate> SQL_UPDATE = createOrmDescriptor( SQLUpdate.class, SQL_UPDATES );
-	AnnotationDescriptor<Struct> STRUCT = createOrmDescriptor( Struct.class );
-	AnnotationDescriptor<Subselect> SUBSELECT = createOrmDescriptor( Subselect.class );
-	AnnotationDescriptor<Synchronize> SYNCHRONIZE = createOrmDescriptor( Synchronize.class );
-	AnnotationDescriptor<Tables> TABLES = createOrmDescriptor( Tables.class );
-	AnnotationDescriptor<Table> TABLE = createOrmDescriptor( Table.class, TABLES );
-	AnnotationDescriptor<TenantId> TENANT_ID = createOrmDescriptor( TenantId.class );
-	AnnotationDescriptor<TimeZoneColumn> TZ_COLUMN = createOrmDescriptor( TimeZoneColumn.class );
-	AnnotationDescriptor<TimeZoneStorage> TZ_STORAGE = createOrmDescriptor( TimeZoneStorage.class );
-	AnnotationDescriptor<Type> TYPE = createOrmDescriptor( Type.class );
-	AnnotationDescriptor<TypeBinderType> TYPE_BINDER_TYPE = createOrmDescriptor( TypeBinderType.class );
-	AnnotationDescriptor<TypeRegistrations> TYPE_REGS = createOrmDescriptor( TypeRegistrations.class );
-	AnnotationDescriptor<TypeRegistration> TYPE_REG = createOrmDescriptor( TypeRegistration.class, TYPE_REGS );
-	AnnotationDescriptor<UpdateTimestamp> UPDATE_TIMESTAMP = createOrmDescriptor( UpdateTimestamp.class );
-	AnnotationDescriptor<UuidGenerator> UUID_GENERATOR = createOrmDescriptor( UuidGenerator.class );
-	AnnotationDescriptor<ValueGenerationType> VALUE_GENERATION_TYPE = createOrmDescriptor( ValueGenerationType.class );
-	AnnotationDescriptor<Where> WHERE = createOrmDescriptor( Where.class );
-	AnnotationDescriptor<WhereJoinTable> WHERE_JOIN_TABLE = createOrmDescriptor( WhereJoinTable.class );
-
-	AnnotationDescriptor<Abstract> ABSTRACT = createOrmDescriptor( Abstract.class );
-	AnnotationDescriptor<AnyKeyType> ANY_KEY_TYPE = createOrmDescriptor( AnyKeyType.class );
-	AnnotationDescriptor<CollectionClassification> COLLECTION_CLASSIFICATION = createOrmDescriptor( CollectionClassification.class );
-	AnnotationDescriptor<Extends> EXTENDS = createOrmDescriptor( Extends.class );
-	AnnotationDescriptor<Target> TARGET = createOrmDescriptor( Target.class );
-
-	AnnotationDescriptor<DialectOverride.Checks> DIALECT_OVERRIDE_CHECKS = createOrmDescriptor( DialectOverride.Checks.class );
-	AnnotationDescriptor<DialectOverride.Check> DIALECT_OVERRIDE_CHECK = createOrmDescriptor( DialectOverride.Check.class, DIALECT_OVERRIDE_CHECKS );
-	AnnotationDescriptor<DialectOverride.OrderBys> DIALECT_OVERRIDE_ORDER_BYS = createOrmDescriptor( DialectOverride.OrderBys.class );
-	AnnotationDescriptor<DialectOverride.OrderBy> DIALECT_OVERRIDE_ORDER_BY = createOrmDescriptor( DialectOverride.OrderBy.class, DIALECT_OVERRIDE_ORDER_BYS );
-	AnnotationDescriptor<DialectOverride.ColumnDefaults> DIALECT_OVERRIDE_COLUMN_DEFAULTS = createOrmDescriptor( DialectOverride.ColumnDefaults.class );
-	AnnotationDescriptor<DialectOverride.ColumnDefault> DIALECT_OVERRIDE_COLUMN_DEFAULT = createOrmDescriptor( DialectOverride.ColumnDefault.class, DIALECT_OVERRIDE_COLUMN_DEFAULTS );
-	AnnotationDescriptor<DialectOverride.GeneratedColumns> DIALECT_OVERRIDE_GENERATED_COLUMNS = createOrmDescriptor( DialectOverride.GeneratedColumns.class );
-	AnnotationDescriptor<DialectOverride.GeneratedColumn> DIALECT_OVERRIDE_GENERATED_COLUMN = createOrmDescriptor( DialectOverride.GeneratedColumn.class, DIALECT_OVERRIDE_GENERATED_COLUMNS );
-	AnnotationDescriptor<DialectOverride.DiscriminatorFormulas> DIALECT_OVERRIDE_DISCRIMINATOR_FORMULAS = createOrmDescriptor( DialectOverride.DiscriminatorFormulas.class );
-	AnnotationDescriptor<DialectOverride.DiscriminatorFormula> DIALECT_OVERRIDE_DISCRIMINATOR_FORMULA = createOrmDescriptor( DialectOverride.DiscriminatorFormula.class, DIALECT_OVERRIDE_DISCRIMINATOR_FORMULAS );
-	AnnotationDescriptor<DialectOverride.Formulas> DIALECT_OVERRIDE_FORMULAS = createOrmDescriptor( DialectOverride.Formulas.class );
-	AnnotationDescriptor<DialectOverride.Formula> DIALECT_OVERRIDE_FORMULA = createOrmDescriptor( DialectOverride.Formula.class, DIALECT_OVERRIDE_FORMULAS );
-	AnnotationDescriptor<DialectOverride.JoinFormulas> DIALECT_OVERRIDE_JOIN_FORMULAS = createOrmDescriptor( DialectOverride.JoinFormulas.class );
-	AnnotationDescriptor<DialectOverride.JoinFormula> DIALECT_OVERRIDE_JOIN_FORMULA = createOrmDescriptor( DialectOverride.JoinFormula.class, DIALECT_OVERRIDE_JOIN_FORMULAS );
-	AnnotationDescriptor<DialectOverride.Wheres> DIALECT_OVERRIDE_WHERES = createOrmDescriptor( DialectOverride.Wheres.class );
-	AnnotationDescriptor<DialectOverride.Where> DIALECT_OVERRIDE_WHERE = createOrmDescriptor( DialectOverride.Where.class, DIALECT_OVERRIDE_WHERES );
-	AnnotationDescriptor<DialectOverride.FilterOverrides> DIALECT_OVERRIDE_FILTER_OVERRIDES = createOrmDescriptor( DialectOverride.FilterOverrides.class );
-	AnnotationDescriptor<DialectOverride.Filters> DIALECT_OVERRIDE_FILTERS = createOrmDescriptor( DialectOverride.Filters.class, DIALECT_OVERRIDE_FILTER_OVERRIDES );
-	AnnotationDescriptor<DialectOverride.FilterDefOverrides> DIALECT_OVERRIDE_FILTER_DEF_OVERRIDES = createOrmDescriptor( DialectOverride.FilterDefOverrides.class );
-	AnnotationDescriptor<DialectOverride.FilterDefs> DIALECT_OVERRIDE_FILTER_DEFS = createOrmDescriptor( DialectOverride.FilterDefs.class, DIALECT_OVERRIDE_FILTER_DEF_OVERRIDES );
-	AnnotationDescriptor<DialectOverride.Version> DIALECT_OVERRIDE_VERSION = createOrmDescriptor( DialectOverride.Version.class );
-
-	AnnotationDescriptor<DialectOverride.SQLInserts> DIALECT_OVERRIDE_SQL_INSERTS = createOrmDescriptor( DialectOverride.SQLInserts.class );
-	AnnotationDescriptor<DialectOverride.SQLInsert> DIALECT_OVERRIDE_SQL_INSERT = createOrmDescriptor( DialectOverride.SQLInsert.class, DIALECT_OVERRIDE_SQL_INSERTS );
-	AnnotationDescriptor<DialectOverride.SQLUpdates> DIALECT_OVERRIDE_SQL_UPDATES = createOrmDescriptor( DialectOverride.SQLUpdates.class );
-	AnnotationDescriptor<DialectOverride.SQLUpdate> DIALECT_OVERRIDE_SQL_UPDATE = createOrmDescriptor( DialectOverride.SQLUpdate.class, DIALECT_OVERRIDE_SQL_UPDATES );
-	AnnotationDescriptor<DialectOverride.SQLDeletes> DIALECT_OVERRIDE_SQL_DELETES = createOrmDescriptor( DialectOverride.SQLDeletes.class );
-	AnnotationDescriptor<DialectOverride.SQLDelete> DIALECT_OVERRIDE_SQL_DELETE = createOrmDescriptor( DialectOverride.SQLDelete.class, DIALECT_OVERRIDE_SQL_DELETES );
-	AnnotationDescriptor<DialectOverride.SQLDeleteAlls> DIALECT_OVERRIDE_SQL_DELETE_ALLS = createOrmDescriptor( DialectOverride.SQLDeleteAlls.class );
-	AnnotationDescriptor<DialectOverride.SQLDeleteAll> DIALECT_OVERRIDE_SQL_DELETE_ALL = createOrmDescriptor( DialectOverride.SQLDeleteAll.class, DIALECT_OVERRIDE_SQL_DELETE_ALLS );
+	OrmAnnotationDescriptor<Any,AnyAnnotation> ANY = new OrmAnnotationDescriptor<>(
+			Any.class,
+			AnyAnnotation.class
+	);
+	OrmAnnotationDescriptor<AnyDiscriminator,AnyDiscriminatorAnnotation> ANY_DISCRIMINATOR = new OrmAnnotationDescriptor<>(
+			AnyDiscriminator.class,
+			AnyDiscriminatorAnnotation.class
+	);
+	OrmAnnotationDescriptor<AnyDiscriminatorValues,AnyDiscriminatorValuesAnnotation> ANY_DISCRIMINATOR_VALUES = new OrmAnnotationDescriptor<>(
+			AnyDiscriminatorValues.class,
+			AnyDiscriminatorValuesAnnotation.class
+	);
+	OrmAnnotationDescriptor<AnyDiscriminatorValue,AnyDiscriminatorValueAnnotation> ANY_DISCRIMINATOR_VALUE = new OrmAnnotationDescriptor<>(
+			AnyDiscriminatorValue.class,
+			AnyDiscriminatorValueAnnotation.class,
+			ANY_DISCRIMINATOR_VALUES
+	);
+	OrmAnnotationDescriptor<AnyKeyJavaClass,AnyKeyJavaClassAnnotation> ANY_KEY_JAVA_CLASS = new OrmAnnotationDescriptor<>(
+			AnyKeyJavaClass.class,
+			AnyKeyJavaClassAnnotation.class
+	);
+	OrmAnnotationDescriptor<AnyKeyJavaType,AnyKeyJavaTypeAnnotation> ANY_KEY_JAVA_TYPE = new OrmAnnotationDescriptor<>(
+			AnyKeyJavaType.class,
+			AnyKeyJavaTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<AnyKeyJdbcType,AnyKeyJdbcTypeAnnotation> ANY_KEY_JDBC_TYPE = new OrmAnnotationDescriptor<>(
+			AnyKeyJdbcType.class,
+			AnyKeyJdbcTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<AnyKeyJdbcTypeCode,AnyKeyJdbcTypeCodeAnnotation> ANY_KEY_JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+			AnyKeyJdbcTypeCode.class,
+			AnyKeyJdbcTypeCodeAnnotation.class
+	);
+	OrmAnnotationDescriptor<AnyKeyType, AnyKeTypeAnnotation> ANY_KEY_TYPE = new OrmAnnotationDescriptor<>(
+			AnyKeyType.class,
+			AnyKeTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<Array,ArrayAnnotation> ARRAY = new OrmAnnotationDescriptor<>(
+			Array.class,
+			ArrayAnnotation.class
+	);
+	SpecializedAnnotationDescriptor<AttributeAccessor,AttributeAccessorAnnotation> ATTRIBUTE_ACCESSOR = new SpecializedAnnotationDescriptor<>(
+			AttributeAccessor.class,
+			AttributeAccessorAnnotation.class
+	);
+	OrmAnnotationDescriptor<AttributeBinderType,AttributeBinderTypeAnnotation> ATTRIBUTE_BINDER_TYPE = new OrmAnnotationDescriptor<>(
+			AttributeBinderType.class,
+			AttributeBinderTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<Bag,BagAnnotation> BAG = new OrmAnnotationDescriptor<>(
+			Bag.class,
+			BagAnnotation.class
+	);
+	SpecializedAnnotationDescriptor<BatchSize,BatchSizeAnnotation> BATCH_SIZE = new SpecializedAnnotationDescriptor<>(
+			BatchSize.class,
+			BatchSizeAnnotation.class
+	);
+	OrmAnnotationDescriptor<Cache,CacheAnnotation> CACHE = new OrmAnnotationDescriptor<>(
+			Cache.class,
+			CacheAnnotation.class
+	);
+	OrmAnnotationDescriptor<Cascade,CascadeAnnotation> CASCADE = new OrmAnnotationDescriptor<>(
+			Cascade.class,
+			CascadeAnnotation.class
+	);
+	OrmAnnotationDescriptor<Checks,ChecksAnnotation> CHECKS = new OrmAnnotationDescriptor<>(
+			Checks.class,
+			ChecksAnnotation.class
+	);
+	OrmAnnotationDescriptor<Check,CheckAnnotation> CHECK = new OrmAnnotationDescriptor<>(
+			Check.class,
+			CheckAnnotation.class,
+			CHECKS
+	);
+	SpecializedAnnotationDescriptor<Collate,CollateAnnotation> COLLATE = new SpecializedAnnotationDescriptor<>(
+			Collate.class,
+			CollateAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionId,CollectionIdAnnotation> COLLECTION_ID = new OrmAnnotationDescriptor<>(
+			CollectionId.class,
+			CollectionIdAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionIdJavaType,CollectionIdJavaTypeAnnotation> COLLECTION_ID_JAVA_TYPE = new OrmAnnotationDescriptor<>(
+			CollectionIdJavaType.class,
+			CollectionIdJavaTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionIdJdbcType,CollectionIdJdbcTypeAnnotation> COLLECTION_ID_JDBC_TYPE = new OrmAnnotationDescriptor<>(
+			CollectionIdJdbcType.class,
+			CollectionIdJdbcTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionIdJdbcTypeCode,CollectionIdJdbcTypeCodeAnnotation> COLLECTION_ID_JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+			CollectionIdJdbcTypeCode.class,
+			CollectionIdJdbcTypeCodeAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionIdMutability,CollectionIdMutabilityAnnotation> COLLECTION_ID_MUTABILITY = new OrmAnnotationDescriptor<>(
+			CollectionIdMutability.class,
+			CollectionIdMutabilityAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionIdType,CollectionIdTypeAnnotation> COLLECTION_ID_TYPE = new OrmAnnotationDescriptor<>(
+			CollectionIdType.class,
+			CollectionIdTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionType,CollectionTypeAnnotation> COLLECTION_TYPE = new OrmAnnotationDescriptor<>(
+			CollectionType.class,
+			CollectionTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionTypeRegistrations,CollectionTypeRegistrationsAnnotation> COLLECTION_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+			CollectionTypeRegistrations.class,
+			CollectionTypeRegistrationsAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionTypeRegistration,CollectionTypeRegistrationAnnotation> COLLECTION_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+			CollectionTypeRegistration.class,
+			CollectionTypeRegistrationAnnotation.class,
+			COLLECTION_TYPE_REGISTRATIONS
+	);
+	OrmAnnotationDescriptor<ColumnDefault,ColumnDefaultAnnotation> COLUMN_DEFAULT = new OrmAnnotationDescriptor<>(
+			ColumnDefault.class,
+			ColumnDefaultAnnotation.class
+	);
+	OrmAnnotationDescriptor<Columns,ColumnsAnnotation> COLUMNS = new OrmAnnotationDescriptor<>(
+			Columns.class,
+			ColumnsAnnotation.class
+	);
+	OrmAnnotationDescriptor<ColumnTransformers,ColumnTransformersAnnotation> COLUMN_TRANSFORMERS = new OrmAnnotationDescriptor<>(
+			ColumnTransformers.class,
+			ColumnTransformersAnnotation.class
+	);
+	OrmAnnotationDescriptor<ColumnTransformer,ColumnTransformerAnnotation> COLUMN_TRANSFORMER = new OrmAnnotationDescriptor<>(
+			ColumnTransformer.class,
+			ColumnTransformerAnnotation.class,
+			COLUMN_TRANSFORMERS
+	);
+	SpecializedAnnotationDescriptor<Comments,CommentsAnnotation> COMMENTS = new SpecializedAnnotationDescriptor<>(
+			Comments.class,
+			CommentsAnnotation.class
+	);
+	SpecializedAnnotationDescriptor<Comment,CommentAnnotation> COMMENT = new SpecializedAnnotationDescriptor<>(
+			Comment.class,
+			CommentAnnotation.class,
+			COMMENTS
+	);
+	OrmAnnotationDescriptor<CompositeType,CompositeTypeAnnotation> COMPOSITE_TYPE = new OrmAnnotationDescriptor<>(
+			CompositeType.class,
+			CompositeTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<CompositeTypeRegistrations,CompositeTypeRegistrationsAnnotation> COMPOSITE_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+			CompositeTypeRegistrations.class,
+			CompositeTypeRegistrationsAnnotation.class
+	);
+	OrmAnnotationDescriptor<CompositeTypeRegistration,CompositeTypeRegistrationAnnotation> COMPOSITE_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+			CompositeTypeRegistration.class,
+			CompositeTypeRegistrationAnnotation.class,
+			COMPOSITE_TYPE_REGISTRATIONS
+	);
+	OrmAnnotationDescriptor<ConcreteProxy,ConcreteProxyAnnotation> CONCRETE_PROXY = new OrmAnnotationDescriptor<>(
+			ConcreteProxy.class,
+			ConcreteProxyAnnotation.class
+	);
+	OrmAnnotationDescriptor<ConverterRegistrations,ConverterRegistrationsAnnotation> CONVERTER_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+			ConverterRegistrations.class,
+			ConverterRegistrationsAnnotation.class
+	);
+	OrmAnnotationDescriptor<ConverterRegistration,ConverterRegistrationAnnotation> CONVERTER_REGISTRATION = new OrmAnnotationDescriptor<>(
+			ConverterRegistration.class,
+			ConverterRegistrationAnnotation.class,
+			CONVERTER_REGISTRATIONS
+	);
+	OrmAnnotationDescriptor<CreationTimestamp,CreationTimestampAnnotation> CREATION_TIMESTAMP = new OrmAnnotationDescriptor<>(
+			CreationTimestamp.class,
+			CreationTimestampAnnotation.class
+	);
+	OrmAnnotationDescriptor<CurrentTimestamp,CurrentTimestampAnnotation> CURRENT_TIMESTAMP = new OrmAnnotationDescriptor<>(
+			CurrentTimestamp.class,
+			CurrentTimestampAnnotation.class
+	);
+	OrmAnnotationDescriptor<DiscriminatorFormula,DiscriminatorFormulaAnnotation> DISCRIMINATOR_FORMULA = new OrmAnnotationDescriptor<>(
+			DiscriminatorFormula.class,
+			DiscriminatorFormulaAnnotation.class
+	);
+	SpecializedAnnotationDescriptor<DiscriminatorOptions,DiscriminatorOptionsAnnotation> DISCRIMINATOR_OPTIONS = new SpecializedAnnotationDescriptor<>(
+			DiscriminatorOptions.class,
+			DiscriminatorOptionsAnnotation.class
+	);
+	OrmAnnotationDescriptor<DynamicInsert,DynamicInsertAnnotation> DYNAMIC_INSERT = new OrmAnnotationDescriptor<>(
+			DynamicInsert.class,
+			DynamicInsertAnnotation.class
+	);
+	OrmAnnotationDescriptor<DynamicUpdate,DynamicUpdateAnnotation> DYNAMIC_UPDATE = new OrmAnnotationDescriptor<>(
+			DynamicUpdate.class,
+			DynamicUpdateAnnotation.class
+	);
+	OrmAnnotationDescriptor<EmbeddableInstantiator,EmbeddableInstantiatorAnnotation> EMBEDDABLE_INSTANTIATOR = new OrmAnnotationDescriptor<>(
+			EmbeddableInstantiator.class,
+			EmbeddableInstantiatorAnnotation.class
+	);
+	OrmAnnotationDescriptor<EmbeddableInstantiatorRegistrations,EmbeddableInstantiatorRegistrationsAnnotation> EMBEDDABLE_INSTANTIATOR_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+			EmbeddableInstantiatorRegistrations.class,
+			EmbeddableInstantiatorRegistrationsAnnotation.class
+	);
+	OrmAnnotationDescriptor<EmbeddableInstantiatorRegistration,EmbeddableInstantiatorRegistrationAnnotation> EMBEDDABLE_INSTANTIATOR_REGISTRATION = new OrmAnnotationDescriptor<>(
+			EmbeddableInstantiatorRegistration.class,
+			EmbeddableInstantiatorRegistrationAnnotation.class,
+			EMBEDDABLE_INSTANTIATOR_REGISTRATIONS
+	);
+	OrmAnnotationDescriptor<Fetch,FetchAnnotation> FETCH = new OrmAnnotationDescriptor<>(
+			Fetch.class,
+			FetchAnnotation.class
+	);
+	OrmAnnotationDescriptor<FetchProfiles,FetchProfilesAnnotation> FETCH_PROFILES = new OrmAnnotationDescriptor<>(
+			FetchProfiles.class,
+			FetchProfilesAnnotation.class
+	);
+	OrmAnnotationDescriptor<FetchProfile,FetchProfileAnnotation> FETCH_PROFILE = new OrmAnnotationDescriptor<>(
+			FetchProfile.class,
+			FetchProfileAnnotation.class,
+			FETCH_PROFILES
+	);
+	OrmAnnotationDescriptor<Filters,FiltersAnnotation> FILTERS = new OrmAnnotationDescriptor<>(
+			Filters.class,
+			FiltersAnnotation.class
+	);
+	OrmAnnotationDescriptor<Filter,FilterAnnotation> FILTER = new OrmAnnotationDescriptor<>(
+			Filter.class,
+			FilterAnnotation.class,
+			FILTERS
+	);
+	OrmAnnotationDescriptor<FilterDefs,FilterDefsAnnotation> FILTER_DEFS = new OrmAnnotationDescriptor<>(
+			FilterDefs.class,
+			FilterDefsAnnotation.class
+	);
+	OrmAnnotationDescriptor<FilterDef,FilterDefAnnotation> FILTER_DEF = new OrmAnnotationDescriptor<>(
+			FilterDef.class,
+			FilterDefAnnotation.class,
+			FILTER_DEFS
+	);
+	OrmAnnotationDescriptor<FilterJoinTables,FilterJoinTablesAnnotation> FILTER_JOIN_TABLES = new OrmAnnotationDescriptor<>(
+			FilterJoinTables.class,
+			FilterJoinTablesAnnotation.class
+	);
+	OrmAnnotationDescriptor<FilterJoinTable,FilterJoinTableAnnotation> FILTER_JOIN_TABLE = new OrmAnnotationDescriptor<>(
+			FilterJoinTable.class,
+			FilterJoinTableAnnotation.class,
+			FILTER_JOIN_TABLES
+	);
+	OrmAnnotationDescriptor<ForeignKey, ForeignKeyAnnotation> FOREIGN_KEY = new OrmAnnotationDescriptor<>(
+			ForeignKey.class,
+			ForeignKeyAnnotation.class
+	);
+	OrmAnnotationDescriptor<Formula,FormulaAnnotation> FORMULA = new OrmAnnotationDescriptor<>(
+			Formula.class,
+			FormulaAnnotation.class
+	);
+	OrmAnnotationDescriptor<FractionalSeconds,FractionalSecondsAnnotation> FRACTIONAL_SECONDS = new OrmAnnotationDescriptor<>(
+			FractionalSeconds.class,
+			FractionalSecondsAnnotation.class
+	);
+	OrmAnnotationDescriptor<Generated,GeneratedAnnotation> GENERATED = new OrmAnnotationDescriptor<>(
+			Generated.class,
+			GeneratedAnnotation.class
+	);
+	OrmAnnotationDescriptor<GeneratedColumn,GeneratedColumnAnnotation> GENERATED_COLUMN = new OrmAnnotationDescriptor<>(
+			GeneratedColumn.class,
+			GeneratedColumnAnnotation.class
+	);
+	OrmAnnotationDescriptor<GeneratorType,GeneratorTypeAnnotation> GENERATOR_TYPE = new OrmAnnotationDescriptor<>(
+			GeneratorType.class,
+			GeneratorTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<GenericGenerators,GenericGeneratorsAnnotation> GENERIC_GENERATORS = new OrmAnnotationDescriptor<>(
+			GenericGenerators.class,
+			GenericGeneratorsAnnotation.class
+	);
+	OrmAnnotationDescriptor<GenericGenerator,GenericGeneratorAnnotation> GENERIC_GENERATOR = new OrmAnnotationDescriptor<>(
+			GenericGenerator.class,
+			GenericGeneratorAnnotation.class,
+			GENERIC_GENERATORS
+	);
+	OrmAnnotationDescriptor<HQLSelect,HQLSelectAnnotation> HQL_SELECT = new OrmAnnotationDescriptor<>(
+			HQLSelect.class,
+			HQLSelectAnnotation.class
+	);
+	OrmAnnotationDescriptor<IdGeneratorType,IdGeneratorTypeAnnotation> ID_GENERATOR_TYPE = new OrmAnnotationDescriptor<>(
+			IdGeneratorType.class,
+			IdGeneratorTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<Immutable,ImmutableAnnotation> IMMUTABLE = new OrmAnnotationDescriptor<>(
+			Immutable.class,
+			ImmutableAnnotation.class
+	);
+	OrmAnnotationDescriptor<Imported,ImportedAnnotation> IMPORTED = new OrmAnnotationDescriptor<>(
+			Imported.class,
+			ImportedAnnotation.class
+	);
+	OrmAnnotationDescriptor<Index, IndexAnnotation> INDEX = new OrmAnnotationDescriptor<>(
+			Index.class,
+			IndexAnnotation.class
+	);
+	OrmAnnotationDescriptor<IndexColumn,IndexColumnAnnotation> INDEX_COLUMN = new OrmAnnotationDescriptor<>(
+			IndexColumn.class,
+			IndexColumnAnnotation.class
+	);
+	OrmAnnotationDescriptor<Instantiator,InstantiatorAnnotation> INSTANTIATOR = new OrmAnnotationDescriptor<>(
+			Instantiator.class,
+			InstantiatorAnnotation.class
+	);
+	OrmAnnotationDescriptor<JavaType,JavaTypeAnnotation> JAVA_TYPE = new OrmAnnotationDescriptor<>(
+			JavaType.class,
+			JavaTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<JavaTypeRegistrations,JavaTypeRegistrationsAnnotation> JAVA_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+			JavaTypeRegistrations.class,
+			JavaTypeRegistrationsAnnotation.class
+	);
+	OrmAnnotationDescriptor<JavaTypeRegistration,JavaTypeRegistrationAnnotation> JAVA_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+			JavaTypeRegistration.class,
+			JavaTypeRegistrationAnnotation.class,
+			JAVA_TYPE_REGISTRATIONS
+	);
+	OrmAnnotationDescriptor<JdbcType,JdbcTypeAnnotation> JDBC_TYPE = new OrmAnnotationDescriptor<>(
+			JdbcType.class,
+			JdbcTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<JdbcTypeCode,JdbcTypeCodeAnnotation> JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+			JdbcTypeCode.class,
+			JdbcTypeCodeAnnotation.class
+	);
+	OrmAnnotationDescriptor<JdbcTypeRegistrations,JdbcTypeRegistrationsAnnotation> JDBC_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+			JdbcTypeRegistrations.class,
+			JdbcTypeRegistrationsAnnotation.class
+	);
+	OrmAnnotationDescriptor<JdbcTypeRegistration,JdbcTypeRegistrationAnnotation> JDBC_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+			JdbcTypeRegistration.class,
+			JdbcTypeRegistrationAnnotation.class,
+			JDBC_TYPE_REGISTRATIONS
+	);
+	OrmAnnotationDescriptor<JoinColumnsOrFormulas, JoinColumnsOrFormulasAnnotation> JOIN_COLUMNS_OR_FORMULAS = new OrmAnnotationDescriptor<>(
+			JoinColumnsOrFormulas.class,
+			JoinColumnsOrFormulasAnnotation.class
+	);
+	OrmAnnotationDescriptor<JoinColumnOrFormula, JoinColumnOrFormulaAnnotation> JOIN_COLUMN_OR_FORMULA = new OrmAnnotationDescriptor<>(
+			JoinColumnOrFormula.class,
+			JoinColumnOrFormulaAnnotation.class,
+			JOIN_COLUMNS_OR_FORMULAS
+	);
+	OrmAnnotationDescriptor<JoinFormula, JoinFormulaAnnotation> JOIN_FORMULA = new OrmAnnotationDescriptor<>(
+			JoinFormula.class,
+			JoinFormulaAnnotation.class
+	);
+	OrmAnnotationDescriptor<LazyCollection, LazyCollectionAnnotation> LAZY_COLLECTION = new OrmAnnotationDescriptor<>(
+			LazyCollection.class,
+			LazyCollectionAnnotation.class
+	);
+	OrmAnnotationDescriptor<LazyGroup, LazyGroupAnnotation> LAZY_GROUP = new OrmAnnotationDescriptor<>(
+			LazyGroup.class,
+			LazyGroupAnnotation.class
+	);
+	OrmAnnotationDescriptor<LazyToOne, LazyToOneAnnotation> LAZY_TO_ONE = new OrmAnnotationDescriptor<>(
+			LazyToOne.class,
+			LazyToOneAnnotation.class
+	);
+	OrmAnnotationDescriptor<ListIndexBase, ListIndexBaseAnnotation> LIST_INDEX_BASE = new OrmAnnotationDescriptor<>(
+			ListIndexBase.class,
+			ListIndexBaseAnnotation.class
+	);
+	OrmAnnotationDescriptor<ListIndexJavaType, ListIndexJavaTypeAnnotation> LIST_INDEX_JAVA_TYPE = new OrmAnnotationDescriptor<>(
+			ListIndexJavaType.class,
+			ListIndexJavaTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<ListIndexJdbcType, ListIndexJdbcTypeAnnotation> LIST_INDEX_JDBC_TYPE = new OrmAnnotationDescriptor<>(
+			ListIndexJdbcType.class,
+			ListIndexJdbcTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<ListIndexJdbcTypeCode, ListIndexJdbcTypeCodeAnnotation> LIST_INDEX_JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+			ListIndexJdbcTypeCode.class,
+			ListIndexJdbcTypeCodeAnnotation.class
+	);
+	OrmAnnotationDescriptor<Loader, LoaderAnnotation> LOADER = new OrmAnnotationDescriptor<>(
+			Loader.class,
+			LoaderAnnotation.class
+	);
+	OrmAnnotationDescriptor<ManyToAny, ManyToAnyAnnotation> MANY_TO_ANY = new OrmAnnotationDescriptor<>(
+			ManyToAny.class,
+			ManyToAnyAnnotation.class
+	);
+	OrmAnnotationDescriptor<MapKeyCompositeType, MapKeyCompositeTypeAnnotation> MAP_KEY_COMPOSITE_TYPE = new OrmAnnotationDescriptor<>(
+			MapKeyCompositeType.class,
+			MapKeyCompositeTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<MapKeyJavaType, MapKeyJavaTypeAnnotation> MAP_KEY_JAVA_TYPE = new OrmAnnotationDescriptor<>(
+			MapKeyJavaType.class,
+			MapKeyJavaTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<MapKeyJdbcType, MapKeyJdbcTypeAnnotation> MAP_KEY_JDBC_TYPE = new OrmAnnotationDescriptor<>(
+			MapKeyJdbcType.class,
+			MapKeyJdbcTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<MapKeyJdbcTypeCode, MapKeyJdbcTypeCodeAnnotation> MAP_KEY_JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+			MapKeyJdbcTypeCode.class,
+			MapKeyJdbcTypeCodeAnnotation.class
+	);
+	OrmAnnotationDescriptor<MapKeyMutability, MapKeyMutabilityAnnotation> MAP_KEY_MUTABILITY = new OrmAnnotationDescriptor<>(
+			MapKeyMutability.class,
+			MapKeyMutabilityAnnotation.class
+	);
+	OrmAnnotationDescriptor<MapKeyType, MapKeyTypeAnnotation> MAP_KEY_TYPE = new OrmAnnotationDescriptor<>(
+			MapKeyType.class,
+			MapKeyTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<Mutability, MutabilityAnnotation> MUTABILITY = new OrmAnnotationDescriptor<>(
+			Mutability.class,
+			MutabilityAnnotation.class
+	);
+	OrmAnnotationDescriptor<NamedNativeQueries, NamedNativeQueriesAnnotation> NAMED_NATIVE_QUERIES = new OrmAnnotationDescriptor<>(
+			NamedNativeQueries.class,
+			NamedNativeQueriesAnnotation.class
+	);
+	OrmAnnotationDescriptor<NamedNativeQuery, NamedNativeQueryAnnotation> NAMED_NATIVE_QUERY = new OrmAnnotationDescriptor<>(
+			NamedNativeQuery.class,
+			NamedNativeQueryAnnotation.class,
+			NAMED_NATIVE_QUERIES
+	);
+	OrmAnnotationDescriptor<NamedQueries, NamedQueriesAnnotation> NAMED_QUERIES = new OrmAnnotationDescriptor<>(
+			NamedQueries.class,
+			NamedQueriesAnnotation.class
+	);
+	OrmAnnotationDescriptor<NamedQuery, NamedQueryAnnotation> NAMED_QUERY = new OrmAnnotationDescriptor<>(
+			NamedQuery.class,
+			NamedQueryAnnotation.class,
+			NAMED_QUERIES
+	);
+	OrmAnnotationDescriptor<Nationalized, NationalizedAnnotation> NATIONALIZED = new OrmAnnotationDescriptor<>(
+			Nationalized.class,
+			NationalizedAnnotation.class
+	);
+	OrmAnnotationDescriptor<NaturalId, NaturalIdAnnotation> NATURAL_ID = new OrmAnnotationDescriptor<>(
+			NaturalId.class,
+			NaturalIdAnnotation.class
+	);
+	OrmAnnotationDescriptor<NaturalIdCache, NaturalIdCacheAnnotation> NATURAL_ID_CACHE = new OrmAnnotationDescriptor<>(
+			NaturalIdCache.class,
+			NaturalIdCacheAnnotation.class
+	);
+	OrmAnnotationDescriptor<NotFound, NotFoundAnnotation> NOT_FOUND = new OrmAnnotationDescriptor<>(
+			NotFound.class,
+			NotFoundAnnotation.class
+	);
+	OrmAnnotationDescriptor<OnDelete,OnDeleteAnnotation> ON_DELETE = new OrmAnnotationDescriptor<>(
+			OnDelete.class,
+			OnDeleteAnnotation.class
+	);
+	OrmAnnotationDescriptor<OptimisticLock,OptimisticLockAnnotation> OPTIMISTIC_LOCK = new OrmAnnotationDescriptor<>(
+			OptimisticLock.class,
+			OptimisticLockAnnotation.class
+	);
+	OrmAnnotationDescriptor<OptimisticLocking,OptimisticLockingAnnotation> OPTIMISTIC_LOCKING = new OrmAnnotationDescriptor<>(
+			OptimisticLocking.class,
+			OptimisticLockingAnnotation.class
+	);
+	OrmAnnotationDescriptor<OrderBy,OrderByAnnotation> ORDER_BY = new OrmAnnotationDescriptor<>(
+			OrderBy.class,
+			OrderByAnnotation.class
+	);
+	OrmAnnotationDescriptor<ParamDef,ParamDefAnnotation> PARAM_DEF = new OrmAnnotationDescriptor<>(
+			ParamDef.class,
+			ParamDefAnnotation.class
+	);
+	OrmAnnotationDescriptor<Parameter,ParameterAnnotation> PARAMETER = new OrmAnnotationDescriptor<>(
+			Parameter.class,
+			ParameterAnnotation.class
+	);
+	OrmAnnotationDescriptor<Parent,ParentAnnotation> PARENT = new OrmAnnotationDescriptor<>(
+			Parent.class,
+			ParentAnnotation.class
+	);
+	OrmAnnotationDescriptor<PartitionKey,PartitionKeyAnnotation> PARTITION_KEY = new OrmAnnotationDescriptor<>(
+			PartitionKey.class,
+			PartitionKeyAnnotation.class
+	);
+	OrmAnnotationDescriptor<Polymorphism,PolymorphismAnnotation> POLYMORPHISM = new OrmAnnotationDescriptor<>(
+			Polymorphism.class,
+			PolymorphismAnnotation.class
+	);
+	OrmAnnotationDescriptor<Proxy,ProxyAnnotation> PROXY = new OrmAnnotationDescriptor<>(
+			Proxy.class,
+			ProxyAnnotation.class
+	);
+	OrmAnnotationDescriptor<QueryCacheLayout,QueryCacheLayoutAnnotation> QUERY_CACHE_LAYOUT = new OrmAnnotationDescriptor<>(
+			QueryCacheLayout.class,
+			QueryCacheLayoutAnnotation.class
+	);
+	OrmAnnotationDescriptor<RowId,RowIdAnnotation> ROW_ID = new OrmAnnotationDescriptor<>(
+			RowId.class,
+			RowIdAnnotation.class
+	);
+	OrmAnnotationDescriptor<SecondaryRows,SecondaryRowsAnnotation> SECONDARY_ROWS = new OrmAnnotationDescriptor<>(
+			SecondaryRows.class,
+			SecondaryRowsAnnotation.class
+	);
+	OrmAnnotationDescriptor<SecondaryRow,SecondaryRowAnnotation> SECONDARY_ROW = new OrmAnnotationDescriptor<>(
+			SecondaryRow.class,
+			SecondaryRowAnnotation.class
+	);
+	OrmAnnotationDescriptor<SelectBeforeUpdate,SelectBeforeUpdateAnnotation> SELECT_BEFORE_UPDATE = new OrmAnnotationDescriptor<>(
+			SelectBeforeUpdate.class,
+			SelectBeforeUpdateAnnotation.class
+	);
+	OrmAnnotationDescriptor<SoftDelete,SoftDeleteAnnotation> SOFT_DELETE = new OrmAnnotationDescriptor<>(
+			SoftDelete.class,
+			SoftDeleteAnnotation.class
+	);
+	OrmAnnotationDescriptor<SortComparator,SortComparatorAnnotation> SORT_COMPARATOR = new OrmAnnotationDescriptor<>(
+			SortComparator.class,
+			SortComparatorAnnotation.class
+	);
+	OrmAnnotationDescriptor<SortNatural,SortNaturalAnnotation> SORT_NATURAL = new OrmAnnotationDescriptor<>(
+			SortNatural.class,
+			SortNaturalAnnotation.class
+	);
+	OrmAnnotationDescriptor<Source,SourceAnnotation> SOURCE = new OrmAnnotationDescriptor<>(
+			Source.class,
+			SourceAnnotation.class
+	);
+	OrmAnnotationDescriptor<SQLDeletes,SQLDeletesAnnotation> SQL_DELETES = new OrmAnnotationDescriptor<>(
+			SQLDeletes.class,
+			SQLDeletesAnnotation.class
+	);
+	OrmAnnotationDescriptor<SQLDelete,SQLDeleteAnnotation> SQL_DELETE = new OrmAnnotationDescriptor<>(
+			SQLDelete.class,
+			SQLDeleteAnnotation.class,
+			SQL_DELETES
+	);
+	OrmAnnotationDescriptor<SQLDeleteAll,SQLDeleteAllAnnotation> SQL_DELETE_ALL = new OrmAnnotationDescriptor<>(
+			SQLDeleteAll.class,
+			SQLDeleteAllAnnotation.class
+	);
+	OrmAnnotationDescriptor<SqlFragmentAlias,SqlFragmentAliasAnnotation> SQL_FRAGMENT_ALIAS = new OrmAnnotationDescriptor<>(
+			SqlFragmentAlias.class,
+			SqlFragmentAliasAnnotation.class
+	);
+	OrmAnnotationDescriptor<SQLInserts,SQLInsertsAnnotation> SQL_INSERTS = new OrmAnnotationDescriptor<>(
+			SQLInserts.class,
+			SQLInsertsAnnotation.class
+	);
+	OrmAnnotationDescriptor<SQLInsert,SQLInsertAnnotation> SQL_INSERT = new OrmAnnotationDescriptor<>(
+			SQLInsert.class,
+			SQLInsertAnnotation.class,
+			SQL_INSERTS
+	);
+	OrmAnnotationDescriptor<SQLOrder,SQLOrderAnnotation> SQL_ORDER = new OrmAnnotationDescriptor<>(
+			SQLOrder.class,
+			SQLOrderAnnotation.class
+	);
+	OrmAnnotationDescriptor<SQLRestriction,SQLRestrictionAnnotation> SQL_RESTRICTION = new OrmAnnotationDescriptor<>(
+			SQLRestriction.class,
+			SQLRestrictionAnnotation.class
+	);
+	OrmAnnotationDescriptor<SQLSelect,SQLSelectAnnotation> SQL_SELECT = new OrmAnnotationDescriptor<>(
+			SQLSelect.class,
+			SQLSelectAnnotation.class
+	);
+	OrmAnnotationDescriptor<SQLJoinTableRestriction,SQLJoinTableRestrictionAnnotation> SQL_JOIN_TABLE_RESTRICTION = new OrmAnnotationDescriptor<>(
+			SQLJoinTableRestriction.class,
+			SQLJoinTableRestrictionAnnotation.class
+	);
+	OrmAnnotationDescriptor<SQLUpdates,SQLUpdatesAnnotation> SQL_UPDATES = new OrmAnnotationDescriptor<>(
+			SQLUpdates.class,
+			SQLUpdatesAnnotation.class
+	);
+	OrmAnnotationDescriptor<SQLUpdate,SQLUpdateAnnotation> SQL_UPDATE = new OrmAnnotationDescriptor<>(
+			SQLUpdate.class,
+			SQLUpdateAnnotation.class,
+			SQL_UPDATES
+	);
+	OrmAnnotationDescriptor<Struct,StructAnnotation> STRUCT = new OrmAnnotationDescriptor<>(
+			Struct.class,
+			StructAnnotation.class
+	);
+	OrmAnnotationDescriptor<Subselect,SubselectAnnotation> SUBSELECT = new OrmAnnotationDescriptor<>(
+			Subselect.class,
+			SubselectAnnotation.class
+	);
+	OrmAnnotationDescriptor<Synchronize,SynchronizeAnnotation> SYNCHRONIZE = new OrmAnnotationDescriptor<>(
+			Synchronize.class,
+			SynchronizeAnnotation.class
+	);
+	OrmAnnotationDescriptor<Tables,TablesAnnotation> TABLES = new OrmAnnotationDescriptor<>(
+			Tables.class,
+			TablesAnnotation.class
+	);
+	OrmAnnotationDescriptor<Table, TableAnnotation> TABLE = new OrmAnnotationDescriptor<>(
+			Table.class,
+			TableAnnotation.class,
+			TABLES
+	);
+	OrmAnnotationDescriptor<Target,TargetLegacyAnnotation> TARGET_LEGACY = new OrmAnnotationDescriptor<>(
+			Target.class,
+			TargetLegacyAnnotation.class
+	);
+	SpecializedAnnotationDescriptor<TenantId,TenantIdAnnotation> TENANT_ID = new SpecializedAnnotationDescriptor<>(
+			TenantId.class,
+			TenantIdAnnotation.class
+	);
+	OrmAnnotationDescriptor<TimeZoneColumn,TimeZoneColumnAnnotation> TIME_ZONE_COLUMN = new OrmAnnotationDescriptor<>(
+			TimeZoneColumn.class,
+			TimeZoneColumnAnnotation.class
+	);
+	OrmAnnotationDescriptor<TimeZoneStorage,TimeZoneStorageAnnotation> TIME_ZONE_STORAGE = new OrmAnnotationDescriptor<>(
+			TimeZoneStorage.class,
+			TimeZoneStorageAnnotation.class
+	);
+	OrmAnnotationDescriptor<Type,TypeAnnotation> TYPE = new OrmAnnotationDescriptor<>(
+			Type.class,
+			TypeAnnotation.class
+	);
+	SpecializedAnnotationDescriptor<TypeBinderType,TypeBinderTypeAnnotation> TYPE_BINDER_TYPE = new SpecializedAnnotationDescriptor<>(
+			TypeBinderType.class,
+			TypeBinderTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<TypeRegistrations,TypeRegistrationsAnnotation> TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+			TypeRegistrations.class,
+			TypeRegistrationsAnnotation.class
+	);
+	OrmAnnotationDescriptor<TypeRegistration,TypeRegistrationAnnotation> TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+			TypeRegistration.class,
+			TypeRegistrationAnnotation.class,
+			TYPE_REGISTRATIONS
+	);
+	OrmAnnotationDescriptor<UpdateTimestamp,UpdateTimestampAnnotation> UPDATE_TIMESTAMP = new OrmAnnotationDescriptor<>(
+			UpdateTimestamp.class,
+			UpdateTimestampAnnotation.class
+	);
+	OrmAnnotationDescriptor<UuidGenerator,UuidGeneratorAnnotation> UUID_GENERATOR = new OrmAnnotationDescriptor<>(
+			UuidGenerator.class,
+			UuidGeneratorAnnotation.class
+	);
+	OrmAnnotationDescriptor<ValueGenerationType,ValueGenerationTypeAnnotation> VALUE_GENERATION_TYPE = new OrmAnnotationDescriptor<>(
+			ValueGenerationType.class,
+			ValueGenerationTypeAnnotation.class
+	);
+	OrmAnnotationDescriptor<View,ViewAnnotation> VIEW = new OrmAnnotationDescriptor<>(
+			View.class,
+			ViewAnnotation.class
+	);
+	OrmAnnotationDescriptor<Where,WhereAnnotation> WHERE = new OrmAnnotationDescriptor<>(
+			Where.class,
+			WhereAnnotation.class
+	);
+	OrmAnnotationDescriptor<WhereJoinTable,WhereJoinTableAnnotation> WHERE_JOIN_TABLE = new OrmAnnotationDescriptor<>(
+			WhereJoinTable.class,
+			WhereJoinTableAnnotation.class
+	);
 
 	static void forEachAnnotation(Consumer<AnnotationDescriptor<? extends Annotation>> consumer) {
 		OrmAnnotationHelper.forEachOrmAnnotation( HibernateAnnotations.class, consumer );

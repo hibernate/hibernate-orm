@@ -27,14 +27,15 @@ import org.hibernate.annotations.TypeRegistration;
 import org.hibernate.boot.internal.GenerationStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
-import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -45,11 +46,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 
@@ -58,8 +55,6 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
 import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildIdGenerator;
-import static org.hibernate.boot.model.internal.GeneratorBinder.buildSequenceIdGenerator;
-import static org.hibernate.boot.model.internal.GeneratorBinder.buildTableIdGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -157,16 +152,18 @@ public final class AnnotationBinder {
 	}
 
 	private static void handleIdGenerators(ClassDetails packageInfoClassDetails, MetadataBuildingContext context) {
-		packageInfoClassDetails.forEachAnnotationUsage( SequenceGenerator.class, usage -> {
-			IdentifierGeneratorDefinition idGen = buildSequenceIdGenerator( usage );
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+
+		packageInfoClassDetails.forEachAnnotationUsage( SequenceGenerator.class, sourceModelContext, (usage) -> {
+			IdentifierGeneratorDefinition idGen = buildIdGenerator( usage, context );
 			context.getMetadataCollector().addIdentifierGenerator( idGen );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Add sequence generator with name: {0}", idGen.getName() );
 			}
 		} );
 
-		packageInfoClassDetails.forEachAnnotationUsage( TableGenerator.class, usage -> {
-			IdentifierGeneratorDefinition idGen = buildTableIdGenerator( usage );
+		packageInfoClassDetails.forEachAnnotationUsage( TableGenerator.class, sourceModelContext, (usage) -> {
+			IdentifierGeneratorDefinition idGen = buildIdGenerator( usage, context );
 			context.getMetadataCollector().addIdentifierGenerator( idGen );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Add table generator with name: {0}", idGen.getName() );
@@ -175,13 +172,15 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindGenericGenerators(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
-		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, usage -> {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+
+		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, sourceModelContext, (usage) -> {
 			bindGenericGenerator( usage, context );
 		} );
 	}
 
-	private static void bindGenericGenerator(AnnotationUsage<GenericGenerator> def, MetadataBuildingContext context) {
-		context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( def ) );
+	private static void bindGenericGenerator(GenericGenerator def, MetadataBuildingContext context) {
+		context.getMetadataCollector().addIdentifierGenerator( buildIdGenerator( def, context ) );
 	}
 
 	public static void bindQueries(AnnotationTarget annotationTarget, MetadataBuildingContext context) {
@@ -190,41 +189,47 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindNamedHibernateQueries(AnnotationTarget annotationTarget, MetadataBuildingContext context) {
-		annotationTarget.forEachAnnotationUsage( org.hibernate.annotations.NamedQuery.class, (usage) -> QueryBinder.bindQuery(
-				usage,
-				context
-		) );
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 
-		annotationTarget.forEachAnnotationUsage( org.hibernate.annotations.NamedNativeQuery.class, (usage) -> QueryBinder.bindNativeQuery(
-				usage,
-				context
-		) );
+		annotationTarget.forEachRepeatedAnnotationUsages(
+				HibernateAnnotations.NAMED_QUERY,
+				sourceModelContext,
+				(usage) -> QueryBinder.bindQuery( usage, context )
+		);
+
+		annotationTarget.forEachRepeatedAnnotationUsages(
+				HibernateAnnotations.NAMED_NATIVE_QUERY,
+				sourceModelContext,
+				(usage) -> QueryBinder.bindNativeQuery( usage, context )
+		);
 	}
 
 	private static void bindNamedJpaQueries(AnnotationTarget annotationTarget, MetadataBuildingContext context) {
-		annotationTarget.forEachAnnotationUsage( SqlResultSetMapping.class, (usage) -> QueryBinder.bindSqlResultSetMapping(
-				usage,
-				context,
-				false
-		) );
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 
-		annotationTarget.forEachAnnotationUsage( NamedQuery.class, (usage) -> QueryBinder.bindQuery(
-				usage,
-				context,
-				false
-		) );
+		annotationTarget.forEachRepeatedAnnotationUsages(
+				JpaAnnotations.SQL_RESULT_SET_MAPPING,
+				sourceModelContext,
+				(usage) -> QueryBinder.bindSqlResultSetMapping( usage, context,false )
+		);
 
-		annotationTarget.forEachAnnotationUsage( NamedNativeQuery.class, (usage) -> QueryBinder.bindNativeQuery(
-				usage,
-				context,
-				false
-		) );
+		annotationTarget.forEachRepeatedAnnotationUsages(
+				JpaAnnotations.NAMED_QUERY,
+				sourceModelContext,
+				(usage) -> QueryBinder.bindQuery( usage, context, false )
+		);
 
-		annotationTarget.forEachAnnotationUsage( NamedStoredProcedureQuery.class, (usage) -> QueryBinder.bindNamedStoredProcedureQuery(
-				usage,
-				context,
-				false
-		) );
+		annotationTarget.forEachRepeatedAnnotationUsages(
+				JpaAnnotations.NAMED_NATIVE_QUERY,
+				sourceModelContext,
+				(usage) -> QueryBinder.bindNativeQuery( usage, context, false )
+		);
+
+		annotationTarget.forEachRepeatedAnnotationUsages(
+				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
+				sourceModelContext,
+				(usage) -> QueryBinder.bindNamedStoredProcedureQuery( usage, context, false )
+		);
 	}
 
 	/**
@@ -259,26 +264,26 @@ public final class AnnotationBinder {
 	}
 
 	private static void handleImport(ClassDetails annotatedClass, MetadataBuildingContext context) {
-		if ( annotatedClass.hasAnnotationUsage( Imported.class ) ) {
+		if ( annotatedClass.hasDirectAnnotationUsage( Imported.class ) ) {
 			final String qualifiedName = annotatedClass.getName();
 			final String name = unqualify( qualifiedName );
-			final String rename = annotatedClass.getAnnotationUsage( Imported.class ).getString( "rename" );
+			final String rename = annotatedClass.getDirectAnnotationUsage( Imported.class ).rename();
 			context.getMetadataCollector().addImport( rename.isEmpty() ? name : rename, qualifiedName );
 		}
 	}
 
 	private static void detectMappedSuperclassProblems(ClassDetails annotatedClass) {
-		if ( annotatedClass.hasAnnotationUsage( MappedSuperclass.class ) ) {
+		if ( annotatedClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 			//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
-			if ( annotatedClass.hasAnnotationUsage( Entity.class ) ) {
+			if ( annotatedClass.hasDirectAnnotationUsage( Entity.class ) ) {
 				throw new AnnotationException( "Type '" + annotatedClass.getName()
 						+ "' is annotated both '@Entity' and '@MappedSuperclass'" );
 			}
-			if ( annotatedClass.hasAnnotationUsage( Table.class ) ) {
+			if ( annotatedClass.hasDirectAnnotationUsage( Table.class ) ) {
 				throw new AnnotationException( "Mapped superclass '" + annotatedClass.getName()
 						+ "' may not specify a '@Table'" );
 			}
-			if ( annotatedClass.hasAnnotationUsage( Inheritance.class ) ) {
+			if ( annotatedClass.hasDirectAnnotationUsage( Inheritance.class ) ) {
 				throw new AnnotationException( "Mapped superclass '" + annotatedClass.getName()
 						+ "' may not specify an '@Inheritance' mapping strategy" );
 			}
@@ -292,15 +297,16 @@ public final class AnnotationBinder {
 				.getServiceRegistry()
 				.getService( ManagedBeanRegistry.class );
 
-		annotatedElement.forEachAnnotationUsage( JavaTypeRegistration.class, (usage) -> {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		annotatedElement.forEachAnnotationUsage( JavaTypeRegistration.class, sourceModelContext, (usage) -> {
 			handleJavaTypeRegistration( context, managedBeanRegistry, usage );
 		} );
 
-		annotatedElement.forEachAnnotationUsage( JdbcTypeRegistration.class, (usage) -> {
+		annotatedElement.forEachAnnotationUsage( JdbcTypeRegistration.class, sourceModelContext, (usage) -> {
 			handleJdbcTypeRegistration( context, managedBeanRegistry, usage );
 		} );
 
-		annotatedElement.forEachAnnotationUsage( CollectionTypeRegistration.class, (usage) -> {
+		annotatedElement.forEachAnnotationUsage( CollectionTypeRegistration.class, sourceModelContext, (usage) -> {
 			context.getMetadataCollector().addCollectionTypeRegistration( usage );
 		} );
 	}
@@ -308,12 +314,12 @@ public final class AnnotationBinder {
 	private static void handleJdbcTypeRegistration(
 			MetadataBuildingContext context,
 			ManagedBeanRegistry managedBeanRegistry,
-			AnnotationUsage<JdbcTypeRegistration> annotation) {
-		final Class<? extends JdbcType> jdbcTypeClass = annotation.getClassDetails( "value" ).toJavaClass();
+			JdbcTypeRegistration annotation) {
+		final Class<? extends JdbcType> jdbcTypeClass = annotation.value();
 		final JdbcType jdbcType = !context.getBuildingOptions().isAllowExtensionsInCdi()
 				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass )
 				: managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
-		final Integer registrationCode = annotation.getInteger( "registrationCode" );
+		final int registrationCode = annotation.registrationCode();
 		final int typeCode = registrationCode == Integer.MIN_VALUE
 				? jdbcType.getDefaultSqlTypeCode()
 				: registrationCode;
@@ -323,13 +329,13 @@ public final class AnnotationBinder {
 	private static void handleJavaTypeRegistration(
 			MetadataBuildingContext context,
 			ManagedBeanRegistry managedBeanRegistry,
-			AnnotationUsage<JavaTypeRegistration> annotation) {
-		final Class<? extends BasicJavaType<?>> javaTypeClass = annotation.getClassDetails( "descriptorClass" ).toJavaClass();
+			JavaTypeRegistration annotation) {
+		final Class<? extends BasicJavaType<?>> javaTypeClass = annotation.descriptorClass();
 		final BasicJavaType<?> javaType = !context.getBuildingOptions().isAllowExtensionsInCdi()
 				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass )
 				: managedBeanRegistry.getBean( javaTypeClass ).getBeanInstance();
 		context.getMetadataCollector().addJavaTypeRegistration(
-				annotation.getClassDetails( "javaType" ).toJavaClass(),
+				annotation.javaType(),
 				javaType
 		);
 	}
@@ -337,24 +343,27 @@ public final class AnnotationBinder {
 	private static void bindEmbeddableInstantiatorRegistrations(
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
-		annotatedElement.forEachAnnotationUsage( EmbeddableInstantiatorRegistration.class, (usage) -> {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		annotatedElement.forEachAnnotationUsage( EmbeddableInstantiatorRegistration.class, sourceModelContext, (usage) -> {
 			handleEmbeddableInstantiatorRegistration( context, usage );
 		} );
 	}
 
 	private static void handleEmbeddableInstantiatorRegistration(
 			MetadataBuildingContext context,
-			AnnotationUsage<EmbeddableInstantiatorRegistration> annotation) {
+			EmbeddableInstantiatorRegistration annotation) {
 		context.getMetadataCollector().registerEmbeddableInstantiator(
-				annotation.getClassDetails( "embeddableClass" ).toJavaClass(),
-				annotation.getClassDetails( "instantiator" ).toJavaClass()
+				annotation.embeddableClass(),
+				annotation.instantiator()
 		);
 	}
 
 	private static void bindCompositeUserTypeRegistrations(
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
-		annotatedElement.forEachAnnotationUsage( CompositeTypeRegistration.class, (usage) -> {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+
+		annotatedElement.forEachAnnotationUsage( CompositeTypeRegistration.class, sourceModelContext, (usage) -> {
 			handleCompositeUserTypeRegistration( context, usage );
 		} );
 	}
@@ -362,44 +371,46 @@ public final class AnnotationBinder {
 	private static void bindUserTypeRegistrations(
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
-		annotatedElement.forEachAnnotationUsage( TypeRegistration.class, (usage) -> {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		annotatedElement.forEachAnnotationUsage( TypeRegistration.class, sourceModelContext, (usage) -> {
 			handleUserTypeRegistration( context, usage );
 		} );
 	}
 
 	private static void handleUserTypeRegistration(
 			MetadataBuildingContext context,
-			AnnotationUsage<TypeRegistration> compositeTypeRegistration) {
+			TypeRegistration compositeTypeRegistration) {
 		// TODO: check that the two classes agree, i.e. that
 		//       the user type knows how to handle the type
 		context.getMetadataCollector().registerUserType(
-				compositeTypeRegistration.getClassDetails( "basicClass" ).toJavaClass(),
-				compositeTypeRegistration.getClassDetails( "userType" ).toJavaClass()
+				compositeTypeRegistration.basicClass(),
+				compositeTypeRegistration.userType()
 		);
 	}
 
 	private static void handleCompositeUserTypeRegistration(
 			MetadataBuildingContext context,
-			AnnotationUsage<CompositeTypeRegistration> compositeTypeRegistration) {
+			CompositeTypeRegistration compositeTypeRegistration) {
 		// TODO: check that the two classes agree, i.e. that
 		//       the user type knows how to handle the type
 		context.getMetadataCollector().registerCompositeUserType(
-				compositeTypeRegistration.getClassDetails( "embeddableClass" ).toJavaClass(),
-				compositeTypeRegistration.getClassDetails( "userType" ).toJavaClass()
+				compositeTypeRegistration.embeddableClass(),
+				compositeTypeRegistration.userType()
 		);
 	}
 
 	private static void bindConverterRegistrations(AnnotationTarget container, MetadataBuildingContext context) {
-		container.forEachAnnotationUsage( ConverterRegistration.class, (usage) -> {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		container.forEachAnnotationUsage( ConverterRegistration.class, sourceModelContext, (usage) -> {
 			handleConverterRegistration( usage, context );
 		} );
 	}
 
-	private static void handleConverterRegistration(AnnotationUsage<ConverterRegistration> registration, MetadataBuildingContext context) {
+	private static void handleConverterRegistration(ConverterRegistration registration, MetadataBuildingContext context) {
 		context.getMetadataCollector().getConverterRegistry().addRegisteredConversion( new RegisteredConversion(
-				registration.getClassDetails( "domainType" ).toJavaClass(),
-				registration.getClassDetails( "converter" ).toJavaClass(),
-				registration.getBoolean( "autoApply" ),
+				registration.domainType(),
+				registration.converter(),
+				registration.autoApply(),
 				context
 		) );
 	}
@@ -419,18 +430,19 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindFetchProfiles(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
-		annotatedElement.forEachAnnotationUsage( FetchProfile.class, (usage) -> {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		annotatedElement.forEachAnnotationUsage( FetchProfile.class, sourceModelContext, (usage) -> {
 			bindFetchProfile( usage, context );
 		} );
 	}
 
-	private static void bindFetchProfile(AnnotationUsage<FetchProfile> fetchProfile, MetadataBuildingContext context) {
-		final String name = fetchProfile.getString( "name" );
+	private static void bindFetchProfile(FetchProfile fetchProfile, MetadataBuildingContext context) {
+		final String name = fetchProfile.name();
 		if ( reuseOrCreateFetchProfile( context, name ) ) {
-			final List<AnnotationUsage<FetchOverride>> fetchOverrides = fetchProfile.getList( "fetchOverrides" );
-			for ( AnnotationUsage<FetchOverride> fetchOverride : fetchOverrides ) {
-				final FetchType type = fetchOverride.getEnum( "fetch" );
-				final FetchMode mode = fetchOverride.getEnum( "mode" );
+			final FetchOverride[] fetchOverrides = fetchProfile.fetchOverrides();
+			for ( FetchOverride fetchOverride : fetchOverrides ) {
+				final FetchType type = fetchOverride.fetch();
+				final FetchMode mode = fetchOverride.mode();
 				if ( type == FetchType.LAZY && mode == FetchMode.JOIN ) {
 					throw new AnnotationException(
 							"Fetch profile '" + name
@@ -476,7 +488,7 @@ public final class AnnotationBinder {
 			final InheritanceState superclassState = getSuperclassInheritanceState( clazz, inheritanceStatePerClass );
 			final InheritanceState state = new InheritanceState( clazz, inheritanceStatePerClass, buildingContext );
 			final AnnotatedClassType classType = buildingContext.getMetadataCollector().getClassType( clazz );
-			if ( classType == EMBEDDABLE && !clazz.hasAnnotationUsage( Imported.class ) ) {
+			if ( classType == EMBEDDABLE && !clazz.hasDirectAnnotationUsage( Imported.class ) ) {
 				final String className = clazz.getName();
 				buildingContext.getMetadataCollector().addImport( unqualify( className ), className );
 			}

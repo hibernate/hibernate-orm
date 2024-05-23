@@ -30,7 +30,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
-import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
@@ -48,7 +48,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.SourceModelBuildingContext;
@@ -357,7 +356,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void registerUserType(Class<?> embeddableType, Class<? extends UserType<?>> userType);
 	Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType);
 
-	void addCollectionTypeRegistration(AnnotationUsage<CollectionTypeRegistration> registrationAnnotation);
+	void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation);
 	void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor);
 	CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification);
 

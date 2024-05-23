@@ -6,20 +6,15 @@
  */
 package org.hibernate.orm.test.boot.models.xml.dynamic;
 
-import java.util.List;
-import java.util.Set;
-
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +23,7 @@ import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedSubgraph;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 
 public class NamedEntityGraphTest {
 	@Test
@@ -41,95 +36,74 @@ public class NamedEntityGraphTest {
 					serviceRegistry,
 					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 			);
-			final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 					managedResources,
+					false,
+					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 					bootstrapContext
 			);
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 
-			final Set<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies();
-			assertThat( entityHierarchies ).hasSize( 2 );
+			{
+				final ClassDetails employeeClassDetails = classDetailsRegistry.getClassDetails( "Employee" );
+				final NamedEntityGraph namedEntityGraph = employeeClassDetails.getAnnotationUsage( NamedEntityGraph.class, sourceModelBuildingContext );
+				assertThat( namedEntityGraph ).isNotNull();
 
-			entityHierarchies.forEach(
-					entityHierarchy -> {
-						final EntityTypeMetadata root = entityHierarchy.getRoot();
-						final String entityName = root.getEntityName();
+				assertThat( namedEntityGraph.name() ).isEqualTo( "employee" );
+				assertThat( namedEntityGraph.includeAllAttributes() ).isTrue();
 
-						final AnnotationUsage<NamedEntityGraph> namedEntityGraphAnnotationUsage = root.getClassDetails()
-								.getAnnotationUsage( NamedEntityGraph.class );
+				final NamedAttributeNode[] attributeNodes = namedEntityGraph.attributeNodes();
+				assertThat( attributeNodes ).hasSize( 2 );
 
-						if ( entityName.equals( "Address" ) ) {
-							assertThat( namedEntityGraphAnnotationUsage ).isNull();
-						}
-						else {
-							assertThat( namedEntityGraphAnnotationUsage ).isNotNull();
+				final NamedAttributeNode firstAttributeNode = attributeNodes[0];
+				checkAttributeNode( firstAttributeNode, "name", "", "" );
 
-							final String graphName = namedEntityGraphAnnotationUsage.getAttributeValue( "name" );
-							assertThat( graphName ).isEqualTo( "employee" );
-
-							final boolean includeAllAttributes = namedEntityGraphAnnotationUsage.getAttributeValue(
-									"includeAllAttributes" );
-							assertThat( includeAllAttributes ).isTrue();
-
-							List<AnnotationUsage<NamedAttributeNode>> namedAttributeNodeUsage = namedEntityGraphAnnotationUsage
-									.getAttributeValue( "attributeNodes" );
-							assertThat( namedAttributeNodeUsage ).size().isEqualTo( 2 );
-
-							// check NamedEntityGraph attributeNodes
-
-							AnnotationUsage<NamedAttributeNode> firstAttributeNode = namedAttributeNodeUsage.get( 0 );
-							checkAttributeNode( firstAttributeNode, "name", "", "" );
-
-							AnnotationUsage<NamedAttributeNode> secondAttributeNode = namedAttributeNodeUsage.get( 1 );
-							checkAttributeNode( secondAttributeNode, "address", "employee.address", "" );
-
-							// check NamedEntityGraph subgraphs
-							final List<AnnotationUsage<NamedSubgraph>> subgraphUsages = namedEntityGraphAnnotationUsage
-									.getAttributeValue( "subgraphs" );
-							assertThat( subgraphUsages ).size().isEqualTo( 2 );
-
-							AnnotationUsage<NamedSubgraph> firstSubgraph = subgraphUsages.get( 0 );
-							assertThat( firstSubgraph.getString( "name" ) ).isEqualTo( "first.subgraph" );
-							assertThat( firstSubgraph.<ClassDetails>getAttributeValue( "type" ).getName() )
-									.isEqualTo( void.class.getName() );
-
-							// check first NamedSubgraph attributeNodes
-
-							namedAttributeNodeUsage = firstSubgraph.getAttributeValue( "attributeNodes" );
-							assertThat( namedAttributeNodeUsage ).size().isEqualTo( 1 );
-
-							checkAttributeNode( namedAttributeNodeUsage.get( 0 ), "city", "", "" );
-
-							AnnotationUsage<NamedSubgraph> secondSubgraph = subgraphUsages.get( 1 );
-							assertThat( secondSubgraph.getString( "name" ) ).isEqualTo( "second.subgraph" );
-							assertThat( secondSubgraph.<ClassDetails>getAttributeValue( "type" ).getName() )
-									.isEqualTo( String.class.getName() );
-
-							namedAttributeNodeUsage = secondSubgraph.getAttributeValue( "attributeNodes" );
-							assertThat( namedAttributeNodeUsage ).size().isEqualTo( 3 );
-
-							// check second NamedSubgraph attributeNodes
-							checkAttributeNode( namedAttributeNodeUsage.get( 0 ), "city", "sub1", "" );
-							checkAttributeNode( namedAttributeNodeUsage.get( 1 ), "name", "sub", "" );
-							checkAttributeNode( namedAttributeNodeUsage.get( 2 ), "surname", "", "" );
+				final NamedAttributeNode secondAttributeNode = attributeNodes[1];
+				checkAttributeNode( secondAttributeNode, "address", "employee.address", "" );
 
 
-							final List<AnnotationUsage<NamedSubgraph>> subClassSubgraphUsages = namedEntityGraphAnnotationUsage
-									.getAttributeValue( "subclassSubgraphs" );
-							assertThat( subClassSubgraphUsages ).size().isEqualTo( 0 );
+				final NamedSubgraph[] subgraphs = namedEntityGraph.subgraphs();
+				assertThat( subgraphs ).hasSize( 2 );
 
-						}
-					}
-			);
+				final NamedSubgraph firstSubgraph = subgraphs[0];
+				assertThat( firstSubgraph.name() ).isEqualTo( "first.subgraph" );
+				assertThat( firstSubgraph.type() ).isEqualTo( void.class );
+
+				final NamedAttributeNode[] firstSubgraphAttributeNodes = firstSubgraph.attributeNodes();
+				assertThat( firstSubgraphAttributeNodes ).hasSize( 1 );
+				checkAttributeNode( firstSubgraphAttributeNodes[0], "city", "", "" );
+
+				final NamedSubgraph secondSubgraph = subgraphs[1];
+				assertThat( secondSubgraph.name() ).isEqualTo( "second.subgraph" );
+				assertThat( secondSubgraph.type() ).isEqualTo( String.class );
+
+				final NamedAttributeNode[] secondSubgraphAttributeNodes = secondSubgraph.attributeNodes();
+				assertThat( secondSubgraphAttributeNodes ).hasSize( 3 );
+
+				checkAttributeNode( secondSubgraphAttributeNodes[0], "city", "sub1", "" );
+				checkAttributeNode( secondSubgraphAttributeNodes[1], "name", "sub", "" );
+				checkAttributeNode( secondSubgraphAttributeNodes[2], "surname", "", "" );
+
+
+				final NamedSubgraph[] subClassSubgraphUsages = namedEntityGraph.subclassSubgraphs();
+				assertThat( subClassSubgraphUsages ).isEmpty();
+			}
+
+			{
+				final ClassDetails addressClassDetails = classDetailsRegistry.getClassDetails( "Address" );
+				final NamedEntityGraph namedEntityGraph = addressClassDetails.getDirectAnnotationUsage( NamedEntityGraph.class );
+				assertThat( namedEntityGraph ).isNull();
+			}
 		}
 	}
 
 	private static void checkAttributeNode(
-			AnnotationUsage<NamedAttributeNode> firstAttributeNode,
+			NamedAttributeNode firstAttributeNode,
 			String expectedValueName,
 			String expectedSubgraph,
 			String expectedKeySubgraph) {
-		assertThat( firstAttributeNode.getString( "value" ) ).isEqualTo( expectedValueName );
-		assertThat( firstAttributeNode.getString( "subgraph" ) ).isEqualTo( expectedSubgraph );
-		assertThat( firstAttributeNode.getString( "keySubgraph" ) ).isEqualTo( expectedKeySubgraph );
+		assertThat( firstAttributeNode.value() ).isEqualTo( expectedValueName );
+		assertThat( firstAttributeNode.subgraph() ).isEqualTo( expectedSubgraph );
+		assertThat( firstAttributeNode.keySubgraph() ).isEqualTo( expectedKeySubgraph );
 	}
 }

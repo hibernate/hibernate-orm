@@ -13,6 +13,7 @@ apply plugin: 'org.hibernate.matrix-test'
 dependencies {
     api project( ':hibernate-core' )
 
+    implementation libs.hibernateModels
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb
     implementation libs.jandex

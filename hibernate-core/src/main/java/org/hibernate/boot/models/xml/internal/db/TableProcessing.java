@@ -6,25 +6,17 @@
  */
 package org.hibernate.boot.models.xml.internal.db;
 
-import java.util.List;
-
-import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
+import org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MutableAnnotationTarget;
-import org.hibernate.models.spi.MutableAnnotationUsage;
-
-import jakarta.persistence.JoinTable;
 
 /**
  * @author Steve Ebersole
  */
 public class TableProcessing {
-	public static MutableAnnotationUsage<JoinTable> transformJoinTable(
+	public static JoinTableJpaAnnotation transformJoinTable(
 			JaxbJoinTableImpl jaxbJoinTable,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
@@ -32,51 +24,12 @@ public class TableProcessing {
 			return null;
 		}
 
-		final MutableAnnotationUsage<JoinTable> joinTableUsage = target.applyAnnotationUsage(
+		final JoinTableJpaAnnotation joinTableUsage = (JoinTableJpaAnnotation) target.applyAnnotationUsage(
 				JpaAnnotations.JOIN_TABLE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		applyJoinTable( jaxbJoinTable, joinTableUsage, target, xmlDocumentContext );
+		joinTableUsage.apply( jaxbJoinTable, xmlDocumentContext );
 		return joinTableUsage;
 	}
 
-	private static void applyJoinTable(
-			JaxbJoinTableImpl jaxbJoinTable,
-			MutableAnnotationUsage<JoinTable> joinTableUsage,
-			AnnotationTarget annotationTarget,
-			XmlDocumentContext xmlDocumentContext) {
-
-		XmlAnnotationHelper.applyOptionalAttribute( joinTableUsage, "name", jaxbJoinTable.getName() );
-		XmlAnnotationHelper.applyTableAttributes( jaxbJoinTable, annotationTarget, joinTableUsage, JpaAnnotations.JOIN_TABLE, xmlDocumentContext );
-
-		final List<JaxbJoinColumnImpl> joinColumns = jaxbJoinTable.getJoinColumn();
-		if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
-			joinTableUsage.setAttributeValue( "joinColumns", JoinColumnProcessing.transformJoinColumnList(
-					joinColumns,
-					annotationTarget,
-					xmlDocumentContext
-			) );
-		}
-		final List<JaxbJoinColumnImpl> inverseJoinColumns = jaxbJoinTable.getInverseJoinColumn();
-		if ( CollectionHelper.isNotEmpty( inverseJoinColumns ) ) {
-			joinTableUsage.setAttributeValue( "inverseJoinColumns", JoinColumnProcessing.transformJoinColumnList(
-					inverseJoinColumns,
-					annotationTarget,
-					xmlDocumentContext
-			) );
-		}
-
-		if ( jaxbJoinTable.getForeignKey() != null ) {
-			joinTableUsage.setAttributeValue(
-					"foreignKey",
-					ForeignKeyProcessing.createNestedForeignKeyAnnotation( jaxbJoinTable.getForeignKey(), annotationTarget, xmlDocumentContext )
-			);
-		}
-		if ( jaxbJoinTable.getInverseForeignKey() != null ) {
-			joinTableUsage.setAttributeValue(
-					"inverseForeignKey",
-					ForeignKeyProcessing.createNestedForeignKeyAnnotation( jaxbJoinTable.getInverseForeignKey(), annotationTarget, xmlDocumentContext )
-			);
-		}
-	}
 }

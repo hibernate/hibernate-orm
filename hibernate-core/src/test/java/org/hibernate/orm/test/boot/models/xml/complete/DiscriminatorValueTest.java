@@ -6,20 +6,17 @@
  */
 package org.hibernate.orm.test.boot.models.xml.complete;
 
-import java.util.Set;
-
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +25,7 @@ import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 
 public class DiscriminatorValueTest {
 	@Test
@@ -41,90 +38,64 @@ public class DiscriminatorValueTest {
 					serviceRegistry,
 					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 			);
-			final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 					managedResources,
+					false,
+					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 					bootstrapContext
 			);
 
-			final Set<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies();
-			assertThat( entityHierarchies ).hasSize( 3 );
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 
-			for ( EntityHierarchy entityHierarchy : entityHierarchies ) {
-				final EntityTypeMetadata root = entityHierarchy.getRoot();
+			{
+				final ClassDetails rootClassDetails = classDetailsRegistry.getClassDetails( Root.class.getName() );
+				assertThat( rootClassDetails.hasDirectAnnotationUsage( DiscriminatorValue.class ) ).isFalse();
+				assertThat( rootClassDetails.hasDirectAnnotationUsage( DiscriminatorFormula.class ) ).isFalse();
 
-				final String entityName = root.getClassDetails().getName();
-				if ( entityName.equals( "org.hibernate.orm.test.boot.models.xml.complete.Root" ) ) {
+				final DiscriminatorColumn discriminatorColumn = rootClassDetails.getDirectAnnotationUsage(
+						DiscriminatorColumn.class );
+				assertThat( discriminatorColumn ).isNotNull();
+				assertThat( discriminatorColumn.name() ).isEqualTo( "TYPE_COLUMN" );
+				assertThat( discriminatorColumn.discriminatorType() ).isEqualTo( DiscriminatorType.INTEGER );
 
-					final AnnotationUsage<DiscriminatorValue> rootDiscriminatorValueAnnotationUsage = root.getClassDetails()
-							.getAnnotationUsage( DiscriminatorValue.class );
-					assertThat( rootDiscriminatorValueAnnotationUsage ).isNull();
+				final ClassDetails subClassDetails = classDetailsRegistry.getClassDetails( Sub.class.getName() );
+				assertThat( subClassDetails.hasDirectAnnotationUsage( DiscriminatorColumn.class ) ).isFalse();
+				assertThat( subClassDetails.hasDirectAnnotationUsage( DiscriminatorFormula.class ) ).isFalse();
 
-					final AnnotationUsage<DiscriminatorColumn> discriminatorColumnAnnotationUsage = root.getClassDetails()
-							.getAnnotationUsage( DiscriminatorColumn.class );
-
-					assertThat( discriminatorColumnAnnotationUsage ).isNotNull();
-
-					final String discriminatorColumName = discriminatorColumnAnnotationUsage.getString( "name" );
-					assertThat( discriminatorColumName ).isEqualTo( "TYPE_COLUMN" );
-
-					final DiscriminatorType discriminatorColumnType = discriminatorColumnAnnotationUsage
-							.getEnum( "discriminatorType" );
-					assertThat( discriminatorColumnType ).isEqualTo( DiscriminatorType.INTEGER );
-
-					final Iterable<IdentifiableTypeMetadata> subTypes = root.getSubTypes();
-					assertThat( subTypes ).hasSize( 1 );
-
-					final IdentifiableTypeMetadata subType = subTypes.iterator().next();
-					final AnnotationUsage<DiscriminatorValue> subTypeDiscriminatorValueAnnotationUsage = subType.getClassDetails()
-							.getAnnotationUsage( DiscriminatorValue.class );
-					assertThat( subTypeDiscriminatorValueAnnotationUsage ).isNotNull();
-					String discriminatorValue = subTypeDiscriminatorValueAnnotationUsage.getString( "value" );
-					assertThat( discriminatorValue ).isEqualTo( "R" );
-
-					final AnnotationUsage<DiscriminatorFormula> discriminatorFortmulaAnnotationUsage = root.getClassDetails()
-							.getAnnotationUsage( DiscriminatorFormula.class );
-					assertThat( discriminatorFortmulaAnnotationUsage ).isNull();
-				}
-				else if ( entityName.equals( "org.hibernate.orm.test.boot.models.xml.complete.SimplePerson" ) ) {
-					final AnnotationUsage<DiscriminatorValue> rootDiscriminatorValueAnnotationUsage = root.getClassDetails()
-							.getAnnotationUsage( DiscriminatorValue.class );
-					assertThat( rootDiscriminatorValueAnnotationUsage ).isNull();
-
-					final AnnotationUsage<DiscriminatorColumn> discriminatorColumnAnnotationUsage = root.getClassDetails()
-							.getAnnotationUsage( DiscriminatorColumn.class );
-					assertThat( discriminatorColumnAnnotationUsage ).isNotNull();
-
-					final String discriminatorColumName = discriminatorColumnAnnotationUsage.getString( "name" );
-					assertThat( discriminatorColumName ).isEqualTo( "DTYPE" );
-
-					final DiscriminatorType discriminatorColumnType = discriminatorColumnAnnotationUsage
-							.getEnum( "discriminatorType" );
-					assertThat( discriminatorColumnType ).isEqualTo( DiscriminatorType.STRING );
-
-					final AnnotationUsage<DiscriminatorFormula> discriminatorFortmulaAnnotationUsage = root.getClassDetails()
-							.getAnnotationUsage( DiscriminatorFormula.class );
-					assertThat( discriminatorFortmulaAnnotationUsage ).isNull();
-				}
-				else {
-					assertThat( entityName ).isEqualTo( "org.hibernate.orm.test.boot.models.xml.SimpleEntity" );
-
-					final AnnotationUsage<DiscriminatorValue> rootDiscriminatorValueAnnotationUsage = root.getClassDetails()
-							.getAnnotationUsage( DiscriminatorValue.class );
-					assertThat( rootDiscriminatorValueAnnotationUsage ).isNull();
-
-					final AnnotationUsage<DiscriminatorColumn> discriminatorColumnAnnotationUsage = root.getClassDetails()
-							.getAnnotationUsage( DiscriminatorColumn.class );
-					assertThat( discriminatorColumnAnnotationUsage ).isNull();
-
-					final AnnotationUsage<DiscriminatorFormula> discriminatorFortmulaAnnotationUsage = root.getClassDetails()
-							.getAnnotationUsage( DiscriminatorFormula.class );
-					assertThat( discriminatorFortmulaAnnotationUsage ).isNotNull();
-
-					final String formula = discriminatorFortmulaAnnotationUsage.getString( "value" );
-					assertThat( formula ).isEqualTo( "CASE WHEN VALUE1 IS NOT NULL THEN 1 WHEN VALUE2 IS NOT NULL THEN 2 END" );
-				}
+				final DiscriminatorValue discriminatorValue = subClassDetails.getDirectAnnotationUsage(
+						DiscriminatorValue.class );
+				assertThat( discriminatorValue.value() ).isEqualTo( "R" );
 			}
 
+			{
+				final ClassDetails simplePersonClassDetails = classDetailsRegistry.getClassDetails( SimplePerson.class.getName() );
+				assertThat( simplePersonClassDetails.hasDirectAnnotationUsage( DiscriminatorValue.class ) ).isFalse();
+				assertThat( simplePersonClassDetails.hasDirectAnnotationUsage( DiscriminatorFormula.class ) ).isFalse();
+				final DiscriminatorColumn discriminatorColumn = simplePersonClassDetails.getDirectAnnotationUsage(
+						DiscriminatorColumn.class );
+				assertThat( discriminatorColumn ).isNotNull();
+				assertThat( discriminatorColumn.name() ).isEqualTo( "DTYPE" );
+				assertThat( discriminatorColumn.discriminatorType() ).isEqualTo( DiscriminatorType.STRING );
+			}
+
+			{
+				final ClassDetails simpleEntityClassDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
+
+				final DiscriminatorValue discriminatorValue = simpleEntityClassDetails.getDirectAnnotationUsage(
+						DiscriminatorValue.class );
+				assertThat( discriminatorValue ).isNull();
+
+				final DiscriminatorColumn discriminatorColumn = simpleEntityClassDetails.getDirectAnnotationUsage(
+						DiscriminatorColumn.class );
+				assertThat( discriminatorColumn ).isNull();
+
+				final DiscriminatorFormula discriminatorFormula = simpleEntityClassDetails.getDirectAnnotationUsage(
+						DiscriminatorFormula.class );
+				assertThat( discriminatorFormula ).isNotNull();
+				assertThat( discriminatorFormula.value() ).isEqualTo(
+						"CASE WHEN VALUE1 IS NOT NULL THEN 1 WHEN VALUE2 IS NOT NULL THEN 2 END" );
+				assertThat( discriminatorFormula.discriminatorType() ).isEqualTo( DiscriminatorType.STRING );
+			}
 		}
 	}
 }

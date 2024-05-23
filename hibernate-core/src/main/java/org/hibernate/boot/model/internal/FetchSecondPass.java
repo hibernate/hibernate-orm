@@ -15,7 +15,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.models.spi.AnnotationUsage;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
@@ -24,13 +23,13 @@ import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
  * @author Gavin King
  */
 public class FetchSecondPass implements SecondPass {
-	private final AnnotationUsage<FetchProfileOverride> fetch;
+	private final FetchProfileOverride fetch;
 	private final PropertyHolder propertyHolder;
 	private final String propertyName;
 	private final MetadataBuildingContext buildingContext;
 
 	public FetchSecondPass(
-			AnnotationUsage<FetchProfileOverride> fetch,
+			FetchProfileOverride fetch,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
@@ -42,7 +41,7 @@ public class FetchSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		final String profileName = fetch.getString( "profile" );
+		final String profileName = fetch.profile();
 		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( profileName );
 		if ( profile == null ) {
 			throw new AnnotationException(
@@ -55,8 +54,8 @@ public class FetchSecondPass implements SecondPass {
 			profile.addFetch( new FetchProfile.Fetch(
 					propertyHolder.getEntityName(),
 					propertyName,
-					fetch.getEnum( "mode" ),
-					fetch.getEnum( "fetch" )
+					fetch.mode(),
+					fetch.fetch()
 			) );
 		}
 		// otherwise, it's a fetch profile defined in XML, and it overrides

@@ -61,9 +61,9 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
-import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
-import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
-import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
+import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
+import org.hibernate.boot.models.internal.ModelsHelper;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
@@ -106,7 +106,6 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.internal.SourceModelBuildingContextImpl;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -232,7 +231,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		return new SourceModelBuildingContextImpl(
 				classLoading,
 				bootstrapContext.getJandexView(),
-				ManagedResourcesProcessor::preFillRegistries
+				ModelsHelper::preFillRegistries
 		);
 	}
 
@@ -547,9 +546,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
 
 	@Override
-	public void addCollectionTypeRegistration(AnnotationUsage<CollectionTypeRegistration> registrationAnnotation) {
+	public void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation) {
 		addCollectionTypeRegistration(
-				registrationAnnotation.getEnum( "classification" ),
+				registrationAnnotation.classification(),
 				toDescriptor( registrationAnnotation )
 		);
 	}
@@ -571,21 +570,21 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		return collectionTypeRegistrations.get( classification );
 	}
 
-	private CollectionTypeRegistrationDescriptor toDescriptor(AnnotationUsage<CollectionTypeRegistration> registrationAnnotation) {
+	private CollectionTypeRegistrationDescriptor toDescriptor(CollectionTypeRegistration registrationAnnotation) {
 		return new CollectionTypeRegistrationDescriptor(
-				registrationAnnotation.getClassDetails( "type" ).toJavaClass(),
-				extractParameters( registrationAnnotation.getList( "parameters" ) )
+				registrationAnnotation.type(),
+				extractParameters( registrationAnnotation.parameters() )
 		);
 	}
 
-	private Map<String,String> extractParameters(List<AnnotationUsage<Parameter>> annotationUsages) {
+	private Map<String,String> extractParameters(Parameter[] annotationUsages) {
 		if ( CollectionHelper.isEmpty( annotationUsages ) ) {
 			return null;
 		}
 
-		final Map<String,String> result = mapOfSize( annotationUsages.size() );
-		for ( AnnotationUsage<Parameter> parameter : annotationUsages ) {
-			result.put( parameter.getString( "name" ), parameter.getString( "value" ) );
+		final Map<String,String> result = mapOfSize( annotationUsages.length );
+		for ( Parameter parameter : annotationUsages ) {
+			result.put( parameter.name(), parameter.value() );
 		}
 		return result;
 	}
@@ -1323,16 +1322,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	private static AnnotatedClassType getAnnotatedClassType2(ClassDetails classDetails) {
-		if ( classDetails.hasAnnotationUsage( Entity.class ) ) {
+		if ( classDetails.hasDirectAnnotationUsage( Entity.class ) ) {
 			return AnnotatedClassType.ENTITY;
 		}
-		else if ( classDetails.hasAnnotationUsage( Embeddable.class ) ) {
+		else if ( classDetails.hasDirectAnnotationUsage( Embeddable.class ) ) {
 			return AnnotatedClassType.EMBEDDABLE;
 		}
-		else if ( classDetails.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
+		else if ( classDetails.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
 			return AnnotatedClassType.MAPPED_SUPERCLASS;
 		}
-		else if ( classDetails.hasAnnotationUsage( Imported.class ) ) {
+		else if ( classDetails.hasDirectAnnotationUsage( Imported.class ) ) {
 			return AnnotatedClassType.IMPORTED;
 		}
 		else {
@@ -1389,7 +1388,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 				k -> new HashMap<>()
 		);
 		map.put(
-				property.getAttributeMember().getAnnotationUsage( MapsId.class ).getString( "value" ),
+				property.getAttributeMember().getDirectAnnotationUsage( MapsId.class ).value(),
 				property
 		);
 	}

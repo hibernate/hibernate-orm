@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.categorize.spi.JpaEventListener;
+import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
 import org.hibernate.models.spi.ClassDetails;

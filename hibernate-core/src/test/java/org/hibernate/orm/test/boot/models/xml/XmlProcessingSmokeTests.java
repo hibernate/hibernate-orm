@@ -9,21 +9,26 @@ package org.hibernate.orm.test.boot.models.xml;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
-import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
-import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
-import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
+import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
+import org.hibernate.boot.models.spi.FilterDefRegistration;
+import org.hibernate.boot.models.xml.internal.XmlDocumentContextImpl;
 import org.hibernate.boot.models.xml.internal.XmlDocumentImpl;
 import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.models.internal.StringTypeDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 import org.hibernate.orm.test.boot.models.XmlHelper;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.AccessType.FIELD;
@@ -118,7 +123,8 @@ public class XmlProcessingSmokeTests {
 	}
 
 	@Test
-	void testSimpleGlobalXmlProcessing() {
+	@ServiceRegistry
+	void testSimpleGlobalXmlProcessing(ServiceRegistryScope scope) {
 		final SourceModelBuildingContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
 		final XmlPreProcessingResultImpl collectedXmlResources = new XmlPreProcessingResultImpl();
 
@@ -131,7 +137,18 @@ public class XmlProcessingSmokeTests {
 				null,
 				buildingContext
 		);
-		collectedXmlResources.getDocuments().forEach( collector::apply );
+		collectedXmlResources.getDocuments().forEach( jaxbEntityMappings -> {
+			final XmlDocumentContextImpl xmlDocumentContext = new XmlDocumentContextImpl(
+					XmlDocumentImpl.consume( jaxbEntityMappings, collectedXmlResources.getPersistenceUnitMetadata() ),
+					new RootMappingDefaults(
+							new MetadataBuilderImpl.MappingDefaultsImpl( scope.getRegistry() ),
+							collectedXmlResources.getPersistenceUnitMetadata()
+					),
+					buildingContext,
+					new BootstrapContextImpl()
+			);
+			collector.apply( jaxbEntityMappings, xmlDocumentContext );
+		} );
 
 		final GlobalRegistrationsImpl globalRegistrations = collector.getGlobalRegistrations();
 		assertThat( globalRegistrations.getJavaTypeRegistrations() ).hasSize( 1 );
@@ -147,8 +164,8 @@ public class XmlProcessingSmokeTests {
 				.isEqualTo( MyUserType.class.getName() );
 
 		assertThat( globalRegistrations.getConverterRegistrations() ).hasSize( 1 );
-		assertThat( globalRegistrations.getConverterRegistrations().get(0).getConverterType().getClassName() )
-				.isEqualTo( org.hibernate.type.YesNoConverter.class.getName() );
+		assertThat( globalRegistrations.getConverterRegistrations().get(0).getConverterType() )
+				.isEqualTo( org.hibernate.type.YesNoConverter.class );
 
 		validateFilterDefs( globalRegistrations.getFilterDefRegistrations() );
 	}

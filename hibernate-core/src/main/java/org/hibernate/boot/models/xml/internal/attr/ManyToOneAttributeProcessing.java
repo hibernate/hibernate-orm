@@ -6,30 +6,28 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.XmlAnnotations;
+import org.hibernate.boot.models.annotations.internal.ManyToOneJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
 
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyNotFound;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptionality;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -49,13 +47,19 @@ public class ManyToOneAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<ManyToOne> manyToOneAnn = applyManyToOne(
+		final ManyToOneJpaAnnotation manyToOneAnn = applyManyToOne(
 				memberDetails,
 				jaxbManyToOne,
 				xmlDocumentContext
 		);
 
-		CommonAttributeProcessing.applyAttributeBasics( jaxbManyToOne, memberDetails, manyToOneAnn, accessType, xmlDocumentContext );
+		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAttributeAccessor( jaxbManyToOne, memberDetails, xmlDocumentContext );
+		applyFetching( jaxbManyToOne, memberDetails, manyToOneAnn, xmlDocumentContext );
+		applyOptionality( jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
+		applyOptimisticLock( jaxbManyToOne, memberDetails, xmlDocumentContext );
+
+		// todo (7.0) : cascades?
 
 		TableProcessing.transformJoinTable( jaxbManyToOne.getJoinTable(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyJoinColumns( jaxbManyToOne.getJoinColumns(), memberDetails, xmlDocumentContext );
@@ -68,28 +72,20 @@ public class ManyToOneAttributeProcessing {
 		return memberDetails;
 	}
 
-	private static MutableAnnotationUsage<ManyToOne> applyManyToOne(
+	private static ManyToOneJpaAnnotation applyManyToOne(
 			MutableMemberDetails memberDetails,
 			JaxbManyToOneImpl jaxbManyToOne,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<ManyToOne> manyToOneUsage = memberDetails.applyAnnotationUsage(
+		final ManyToOneJpaAnnotation manyToOneUsage = (ManyToOneJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.MANY_TO_ONE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-
-		XmlAnnotationHelper.applyOptionalAttribute( manyToOneUsage, "fetch", jaxbManyToOne.getFetch() );
 
 		if ( jaxbManyToOne.isId() == Boolean.TRUE ) {
 			memberDetails.applyAnnotationUsage( JpaAnnotations.ID, xmlDocumentContext.getModelBuildingContext() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbManyToOne.getMapsId() ) ) {
-			final MutableAnnotationUsage<MapsId> mapsIdUsage = memberDetails.applyAnnotationUsage(
-					JpaAnnotations.MAPS_ID,
-					xmlDocumentContext.getModelBuildingContext()
-			);
-			mapsIdUsage.setAttributeValue( "value", jaxbManyToOne.getMapsId() );
-		}
+		CommonAttributeProcessing.applyMapsId( jaxbManyToOne.getMapsId(), memberDetails, xmlDocumentContext );
 
 		return manyToOneUsage;
 	}
@@ -98,35 +94,29 @@ public class ManyToOneAttributeProcessing {
 	private static void applyOnDelete(
 			MutableMemberDetails memberDetails,
 			JaxbManyToOneImpl jaxbManyToOne,
-			MutableAnnotationUsage<ManyToOne> manyToOneAnn,
+			ManyToOneJpaAnnotation manyToOneAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		final OnDeleteAction action = jaxbManyToOne.getOnDelete();
-		if ( action == null ) {
-			return;
-		}
-
-		final MutableAnnotationUsage<OnDelete> notFoundAnn = memberDetails.applyAnnotationUsage(
-				HibernateAnnotations.ON_DELETE,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-		notFoundAnn.setAttributeValue( "action", action );
+		CommonAttributeProcessing.applyOnDelete( jaxbManyToOne.getOnDelete(), memberDetails, xmlDocumentContext );
 	}
 
 	@SuppressWarnings("unused")
 	private static void applyTarget(
 			MutableMemberDetails memberDetails,
 			JaxbManyToOneImpl jaxbManyToOne,
-			MutableAnnotationUsage<ManyToOne> manyToOneAnn,
+			ManyToOneJpaAnnotation manyToOneAnn,
 			XmlDocumentContext xmlDocumentContext) {
+		// todo (7.0) : we need a distinction here between hbm.xml target and orm.xml target-entity
+		//		- for orm.xml target-entity we should apply the package name, if one
+		//		- for hbm.xml target we should not since it could refer to a dynamic mapping
 		final String targetEntityName = jaxbManyToOne.getTargetEntity();
 		if ( StringHelper.isEmpty( targetEntityName ) ) {
 			return;
 		}
 
-		final MutableAnnotationUsage<Target> targetAnn = memberDetails.applyAnnotationUsage(
-				HibernateAnnotations.TARGET,
+		final TargetXmlAnnotation targetAnn = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
+				XmlAnnotations.TARGET,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		targetAnn.setAttributeValue( "value", determineTargetName( targetEntityName, xmlDocumentContext ) );
+		targetAnn.value( xmlDocumentContext.resolveClassName( targetEntityName ) );
 	}
 }

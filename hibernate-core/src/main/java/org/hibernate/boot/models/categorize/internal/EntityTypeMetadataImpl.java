@@ -25,15 +25,15 @@ import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.model.naming.EntityNaming;
-import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
+import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 
 import jakarta.persistence.AccessType;
@@ -41,6 +41,7 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
+import static org.hibernate.boot.models.categorize.internal.CategorizationHelper.toClassDetails;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -89,7 +90,7 @@ public class EntityTypeMetadataImpl
 		// 		`ClassDetails#getName` already handles this all for us
 		this.entityName = getClassDetails().getName();
 
-		final AnnotationUsage<Entity> entityAnnotation = classDetails.getAnnotationUsage( JpaAnnotations.ENTITY );
+		final Entity entityAnnotation = classDetails.getDirectAnnotationUsage( Entity.class );
 		this.jpaEntityName = determineJpaEntityName( entityAnnotation, entityName );
 
 		final LifecycleCallbackCollector lifecycleCallbackCollector = new LifecycleCallbackCollector( classDetails, modelContext );
@@ -109,13 +110,12 @@ public class EntityTypeMetadataImpl
 		this.customDeleteMap = extractCustomSql( classDetails, SQLDelete.class );
 
 		//noinspection deprecation
-		final AnnotationUsage<Proxy> proxyAnnotation = classDetails.getAnnotationUsage( Proxy.class );
+		final Proxy proxyAnnotation = classDetails.getDirectAnnotationUsage( Proxy.class );
 		if ( proxyAnnotation != null ) {
-			final Boolean lazyValue = proxyAnnotation.getAttributeValue( "lazy" );
-			this.isLazy = lazyValue == null || lazyValue;
+			this.isLazy = proxyAnnotation.lazy();
 
 			if ( this.isLazy ) {
-				final ClassDetails proxyClassDetails = proxyAnnotation.getAttributeValue( "proxyClass" );
+				final ClassDetails proxyClassDetails = toClassDetails( proxyAnnotation.proxyClass(), modelContext.getClassDetailsRegistry() );
 				if ( proxyClassDetails != null ) {
 					this.proxy = proxyClassDetails.getName();
 				}
@@ -133,9 +133,9 @@ public class EntityTypeMetadataImpl
 			this.proxy = getEntityName();
 		}
 
-		final AnnotationUsage<DiscriminatorValue> discriminatorValueAnn = classDetails.getAnnotationUsage( DiscriminatorValue.class );
+		final DiscriminatorValue discriminatorValueAnn = classDetails.getDirectAnnotationUsage( DiscriminatorValue.class );
 		if ( discriminatorValueAnn != null ) {
-			this.discriminatorMatchValue = discriminatorValueAnn.getAttributeValue( "value" );
+			this.discriminatorMatchValue = discriminatorValueAnn.value();
 		}
 		else {
 			this.discriminatorMatchValue = null;
@@ -160,7 +160,7 @@ public class EntityTypeMetadataImpl
 		// 		`ClassDetails#getName` already handles this all for us
 		this.entityName = getClassDetails().getName();
 
-		final AnnotationUsage<Entity> entityAnnotation = classDetails.getAnnotationUsage( JpaAnnotations.ENTITY );
+		final Entity entityAnnotation = classDetails.getDirectAnnotationUsage( Entity.class );
 		this.jpaEntityName = determineJpaEntityName( entityAnnotation, entityName );
 
 		final LifecycleCallbackCollector lifecycleCallbackCollector = new LifecycleCallbackCollector( classDetails, modelContext );
@@ -180,13 +180,12 @@ public class EntityTypeMetadataImpl
 		this.customDeleteMap = extractCustomSql( classDetails, SQLDelete.class );
 
 		//noinspection deprecation
-		final AnnotationUsage<Proxy> proxyAnnotation = classDetails.getAnnotationUsage( Proxy.class );
+		final Proxy proxyAnnotation = classDetails.getDirectAnnotationUsage( Proxy.class );
 		if ( proxyAnnotation != null ) {
-			final Boolean lazyValue = proxyAnnotation.getAttributeValue( "lazy" );
-			this.isLazy = lazyValue == null || lazyValue;
+			this.isLazy = proxyAnnotation.lazy();
 
 			if ( this.isLazy ) {
-				final ClassDetails proxyClassDetails = proxyAnnotation.getAttributeValue( "proxyClass" );
+				final ClassDetails proxyClassDetails = toClassDetails( proxyAnnotation.proxyClass(), modelContext.getClassDetailsRegistry() );
 				if ( proxyClassDetails != null ) {
 					this.proxy = proxyClassDetails.getName();
 				}
@@ -204,9 +203,9 @@ public class EntityTypeMetadataImpl
 			this.proxy = getEntityName();
 		}
 
-		final AnnotationUsage<DiscriminatorValue> discriminatorValueAnn = classDetails.getAnnotationUsage( DiscriminatorValue.class );
+		final DiscriminatorValue discriminatorValueAnn = classDetails.getDirectAnnotationUsage( DiscriminatorValue.class );
 		if ( discriminatorValueAnn != null ) {
-			this.discriminatorMatchValue = discriminatorValueAnn.getAttributeValue( "value" );
+			this.discriminatorMatchValue = discriminatorValueAnn.value();
 		}
 		else {
 			this.discriminatorMatchValue = null;
@@ -308,8 +307,8 @@ public class EntityTypeMetadataImpl
 	}
 
 
-	private String determineJpaEntityName(AnnotationUsage<Entity> entityAnnotation, String entityName) {
-		final String name = entityAnnotation.getAttributeValue( "name" );
+	private String determineJpaEntityName(Entity entityAnnotation, String entityName) {
+		final String name = entityAnnotation.name();
 		if ( isNotEmpty( name ) ) {
 			return name;
 		}
@@ -317,14 +316,14 @@ public class EntityTypeMetadataImpl
 	}
 
 	private boolean determineMutability(ClassDetails classDetails, ModelCategorizationContext modelContext) {
-		final AnnotationUsage<Immutable> immutableAnn = classDetails.getAnnotationUsage( Immutable.class );
+		final Immutable immutableAnn = classDetails.getDirectAnnotationUsage( Immutable.class );
 		return immutableAnn == null;
 	}
 
 	private boolean determineCacheability(
 			ClassDetails classDetails,
 			ModelCategorizationContext modelContext) {
-		final AnnotationUsage<Cacheable> cacheableAnn = classDetails.getAnnotationUsage( Cacheable.class );
+		final Cacheable cacheableAnn = classDetails.getDirectAnnotationUsage( Cacheable.class );
 		switch ( modelContext.getSharedCacheMode() ) {
 			case NONE: {
 				return false;
@@ -335,7 +334,7 @@ public class EntityTypeMetadataImpl
 			case DISABLE_SELECTIVE: {
 				// Disable caching for all `@Cacheable(false)`, enabled otherwise (including no annotation)
 				//noinspection RedundantIfStatement
-				if ( cacheableAnn == null || cacheableAnn.getBoolean( "value" ) ) {
+				if ( cacheableAnn == null || cacheableAnn.value() ) {
 					// not disabled
 					return true;
 				}
@@ -350,7 +349,7 @@ public class EntityTypeMetadataImpl
 
 				// Enable caching for all `@Cacheable(true)`, disable otherwise (including no annotation)
 				//noinspection RedundantIfStatement
-				if ( cacheableAnn != null && cacheableAnn.getBoolean( "value" ) ) {
+				if ( cacheableAnn != null && cacheableAnn.value() ) {
 					// enable, there was an explicit `@Cacheable(true)`
 					return true;
 				}
@@ -367,17 +366,18 @@ public class EntityTypeMetadataImpl
 	 * or {@link org.hibernate.annotations.SQLDeleteAll} annotations
 	 */
 	public static <A extends Annotation> Map<String,CustomSql> extractCustomSql(ClassDetails classDetails, Class<A> annotationType) {
-		final List<AnnotationUsage<A>> annotationUsages = classDetails.getRepeatedAnnotationUsages(	annotationType );
+		final A[] annotationUsages = classDetails.getRepeatedAnnotationUsages( annotationType, null );
 		if ( CollectionHelper.isEmpty( annotationUsages ) ) {
 			return Collections.emptyMap();
 		}
 
 		final Map<String, CustomSql> result = new HashMap<>();
-		annotationUsages.forEach( (customSqlAnnotation) -> {
-			final String sql = customSqlAnnotation.getAttributeValue( "sql" );
-			final boolean isCallable = customSqlAnnotation.getAttributeValue( "callable" );
+		ArrayHelper.forEach( annotationUsages, (customSqlAnnotation) -> {
+			final CustomSqlDetails customSqlDetails = (CustomSqlDetails) customSqlAnnotation;
+			final String sql = customSqlDetails.sql();
+			final boolean isCallable = customSqlDetails.callable();
 
-			final ResultCheckStyle checkValue = customSqlAnnotation.getAttributeValue( "check" );
+			final ResultCheckStyle checkValue = customSqlDetails.check();
 			final ExecuteUpdateResultCheckStyle checkStyle;
 			if ( checkValue == null ) {
 				checkStyle = isCallable
@@ -389,7 +389,7 @@ public class EntityTypeMetadataImpl
 			}
 
 			result.put(
-					customSqlAnnotation.getString( "table" ),
+					customSqlDetails.table(),
 					new CustomSql( sql, isCallable, checkStyle )
 			);
 		} );
@@ -397,44 +397,44 @@ public class EntityTypeMetadataImpl
 	}
 
 	private String[] determineSynchronizedTableNames() {
-		final AnnotationUsage<Synchronize> synchronizeAnnotation = getClassDetails().getAnnotationUsage( Synchronize.class );
+		final Synchronize synchronizeAnnotation = getClassDetails().getDirectAnnotationUsage( Synchronize.class );
 		if ( synchronizeAnnotation != null ) {
-			return synchronizeAnnotation.<String>getList( "value" ).toArray( new String[0] );
+			return synchronizeAnnotation.value();
 		}
 		return EMPTY_STRINGS;
 	}
 
 	private int determineBatchSize() {
-		final AnnotationUsage<BatchSize> batchSizeAnnotation = getClassDetails().getAnnotationUsage( BatchSize.class );
+		final BatchSize batchSizeAnnotation = getClassDetails().getDirectAnnotationUsage( BatchSize.class );
 		if ( batchSizeAnnotation != null ) {
-			return batchSizeAnnotation.getAttributeValue( "size" );
+			return batchSizeAnnotation.size();
 		}
 		return -1;
 	}
 
 	private boolean decodeSelectBeforeUpdate() {
 		//noinspection deprecation
-		final AnnotationUsage<SelectBeforeUpdate> selectBeforeUpdateAnnotation = getClassDetails().getAnnotationUsage( SelectBeforeUpdate.class );
+		final SelectBeforeUpdate selectBeforeUpdateAnnotation = getClassDetails().getDirectAnnotationUsage( SelectBeforeUpdate.class );
 		if ( selectBeforeUpdateAnnotation == null ) {
 			return false;
 		}
-		return selectBeforeUpdateAnnotation.getBoolean( "value" );
+		return selectBeforeUpdateAnnotation.value();
 	}
 
 	private boolean decodeDynamicInsert() {
-		final AnnotationUsage<DynamicInsert> dynamicInsertAnnotation = getClassDetails().getAnnotationUsage( DynamicInsert.class );
+		final DynamicInsert dynamicInsertAnnotation = getClassDetails().getDirectAnnotationUsage( DynamicInsert.class );
 		if ( dynamicInsertAnnotation == null ) {
 			return false;
 		}
 
-		return dynamicInsertAnnotation.getBoolean( "value" );
+		return dynamicInsertAnnotation.value();
 	}
 
 	private boolean decodeDynamicUpdate() {
-		final AnnotationUsage<DynamicUpdate> dynamicUpdateAnnotation = getClassDetails().getAnnotationUsage( DynamicUpdate.class );
+		final DynamicUpdate dynamicUpdateAnnotation = getClassDetails().getDirectAnnotationUsage( DynamicUpdate.class );
 		if ( dynamicUpdateAnnotation == null ) {
 			return false;
 		}
-		return dynamicUpdateAnnotation.getBoolean( "value" );
+		return dynamicUpdateAnnotation.value();
 	}
 }

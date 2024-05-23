@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.models.xml.internal;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
@@ -14,23 +13,23 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedAttributeNodeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedEntityGraphImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedSubgraphImpl;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.NamedAttributeNodeJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedEntityGraphJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedEntityGraphsJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedSubgraphJpaAnnotation;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
-import jakarta.persistence.NamedEntityGraphs;
 import jakarta.persistence.NamedSubgraph;
 
 import static org.hibernate.boot.models.JpaAnnotations.NAMED_ATTRIBUTE_NODE;
-import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyStringAttributeIfSpecified;
-import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.applyAttributeIfSpecified;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.boot.models.JpaAnnotations.NAMED_SUBGRAPH;
 
 /**
  * Processing for JPA entity graphs from XML
@@ -48,121 +47,127 @@ public class EntityGraphProcessing {
 		}
 
 		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
-		final MutableAnnotationUsage<NamedEntityGraphs> entityGraphsUsage = classDetails.replaceAnnotationUsage(
+		final NamedEntityGraphsJpaAnnotation entityGraphsUsage = (NamedEntityGraphsJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.NAMED_ENTITY_GRAPH,
 				JpaAnnotations.NAMED_ENTITY_GRAPHS,
 				modelBuildingContext
 		);
 
-		final ArrayList<Object> entityGraphList = arrayList( jaxbEntityGraphs.size() );
-		entityGraphsUsage.setAttributeValue( "value", entityGraphList );
+		final NamedEntityGraph[] graphs = new NamedEntityGraph[jaxbEntityGraphs.size()];
+		entityGraphsUsage.value( graphs );
 
-		for ( JaxbNamedEntityGraphImpl namedEntityGraph : jaxbEntityGraphs ) {
-			final AnnotationUsage<NamedEntityGraph> graphUsage = extractGraph( namedEntityGraph, classDetails, modelBuildingContext, xmlDocumentContext );
-			entityGraphList.add( graphUsage );
+		for ( int i = 0; i < jaxbEntityGraphs.size(); i++ ) {
+			graphs[i] = extractGraph( jaxbEntityGraphs.get( i ), classDetails, modelBuildingContext, xmlDocumentContext );
 		}
 	}
 
-	private static AnnotationUsage<NamedEntityGraph> extractGraph(
+	private static NamedEntityGraph extractGraph(
 			JaxbNamedEntityGraphImpl jaxbEntityGraph,
 			ClassDetails classDetails,
 			SourceModelBuildingContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<NamedEntityGraph> graphUsage = JpaAnnotations.NAMED_ENTITY_GRAPH.createUsage( modelBuildingContext );
+		final NamedEntityGraphJpaAnnotation graphUsage = JpaAnnotations.NAMED_ENTITY_GRAPH.createUsage( modelBuildingContext );
 
-		applyStringAttributeIfSpecified( "name", jaxbEntityGraph.getName(), graphUsage );
-		applyAttributeIfSpecified( "includeAllAttributes", jaxbEntityGraph.isIncludeAllAttributes(), graphUsage );
+		if ( StringHelper.isNotEmpty( jaxbEntityGraph.getName() ) ) {
+			graphUsage.name( jaxbEntityGraph.getName() );
+		}
+
+		if ( jaxbEntityGraph.isIncludeAllAttributes() != null ) {
+			graphUsage.includeAllAttributes( jaxbEntityGraph.isIncludeAllAttributes() );
+		}
 
 		if ( CollectionHelper.isNotEmpty( jaxbEntityGraph.getNamedAttributeNode() ) ) {
-			final List<MutableAnnotationUsage<NamedAttributeNode>> attributeNodeList = extractAttributeNodes(
+			graphUsage.attributeNodes( extractAttributeNodes(
 					jaxbEntityGraph.getNamedAttributeNode(),
 					classDetails,
 					modelBuildingContext,
 					xmlDocumentContext
-			);
-			graphUsage.setAttributeValue( "attributeNodes", attributeNodeList );
+			) );
 		}
 
 		if ( CollectionHelper.isNotEmpty( jaxbEntityGraph.getSubgraph() ) ) {
-			final List<MutableAnnotationUsage<NamedSubgraph>> subgraphList = extractSubgraphNodes(
+			graphUsage.subgraphs( extractSubgraphNodes(
 					jaxbEntityGraph.getSubgraph(),
 					classDetails,
 					modelBuildingContext,
 					xmlDocumentContext
-			);
-			graphUsage.setAttributeValue( "subgraphs", subgraphList );
+			) );
 		}
 
 		if ( CollectionHelper.isNotEmpty( jaxbEntityGraph.getSubclassSubgraph() ) ) {
-			final List<MutableAnnotationUsage<NamedSubgraph>> subgraphList = extractSubgraphNodes(
+			graphUsage.subclassSubgraphs( extractSubgraphNodes(
 					jaxbEntityGraph.getSubclassSubgraph(),
 					classDetails,
 					modelBuildingContext,
 					xmlDocumentContext
-			);
-			graphUsage.setAttributeValue( "subclassSubgraphs", subgraphList );
+			) );
 		}
 
 		return graphUsage;
 	}
 
-	private static List<MutableAnnotationUsage<NamedAttributeNode>> extractAttributeNodes(
+	private static NamedAttributeNode[] extractAttributeNodes(
 			List<JaxbNamedAttributeNodeImpl> jaxbAttributeNodes,
 			ClassDetails classDetails,
 			SourceModelBuildingContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
 		assert CollectionHelper.isNotEmpty( jaxbAttributeNodes );
 
-		final ArrayList<MutableAnnotationUsage<NamedAttributeNode>> attributeNodeList = arrayList( jaxbAttributeNodes.size() );
-		for ( JaxbNamedAttributeNodeImpl jaxbAttributeNode : jaxbAttributeNodes ) {
-			final MutableAnnotationUsage<NamedAttributeNode> namedAttributeNodeAnn = NAMED_ATTRIBUTE_NODE.createUsage( modelBuildingContext );
-			attributeNodeList.add( namedAttributeNodeAnn );
+		final NamedAttributeNode[] attributeNodes = new NamedAttributeNode[jaxbAttributeNodes.size()];
+		for ( int i = 0; i < jaxbAttributeNodes.size(); i++ ) {
+			final NamedAttributeNodeJpaAnnotation namedAttributeNodeAnn = NAMED_ATTRIBUTE_NODE.createUsage( modelBuildingContext );
+			attributeNodes[i] = namedAttributeNodeAnn;
 
-			namedAttributeNodeAnn.setAttributeValue( "value", jaxbAttributeNode.getName() );
-			applyStringAttributeIfSpecified( "subgraph", jaxbAttributeNode.getSubgraph(), namedAttributeNodeAnn );
-			applyStringAttributeIfSpecified( "keySubgraph", jaxbAttributeNode.getKeySubgraph(), namedAttributeNodeAnn );
+			final JaxbNamedAttributeNodeImpl jaxbAttributeNode = jaxbAttributeNodes.get( i );
+			namedAttributeNodeAnn.value( jaxbAttributeNode.getName() );
+
+			if ( StringHelper.isNotEmpty( jaxbAttributeNode.getSubgraph() ) ) {
+				namedAttributeNodeAnn.subgraph( jaxbAttributeNode.getSubgraph() );
+			}
+			if ( StringHelper.isNotEmpty( jaxbAttributeNode.getKeySubgraph() ) ) {
+				namedAttributeNodeAnn.keySubgraph( jaxbAttributeNode.getKeySubgraph() );
+			}
 		}
 
-		return attributeNodeList;
+		return attributeNodes;
 	}
 
-	private static List<MutableAnnotationUsage<NamedSubgraph>> extractSubgraphNodes(
+	private static NamedSubgraph[] extractSubgraphNodes(
 			List<JaxbNamedSubgraphImpl> jaxbSubgraphs,
 			ClassDetails classDetails,
 			SourceModelBuildingContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
 		assert CollectionHelper.isNotEmpty( jaxbSubgraphs );
 
-		final List<MutableAnnotationUsage<NamedSubgraph>> subgraphAnnotations = arrayList( jaxbSubgraphs.size() );
-		for ( JaxbNamedSubgraphImpl jaxbSubgraph : jaxbSubgraphs ) {
-			final MutableAnnotationUsage<NamedSubgraph> namedSubGraphUsage = JpaAnnotations.NAMED_SUB_GRAPH.createUsage( modelBuildingContext );
-			subgraphAnnotations.add( namedSubGraphUsage );
+		final NamedSubgraph[] subgraphs = new NamedSubgraph[jaxbSubgraphs.size()];
+		for ( int i = 0; i < jaxbSubgraphs.size(); i++ ) {
+			final NamedSubgraphJpaAnnotation namedSubGraphUsage = NAMED_SUBGRAPH.createUsage( modelBuildingContext );
+			subgraphs[i] = namedSubGraphUsage;
 
-			namedSubGraphUsage.setAttributeValue( "name", jaxbSubgraph.getName() );
+			final JaxbNamedSubgraphImpl jaxbSubgraph = jaxbSubgraphs.get( i );
+			namedSubGraphUsage.name( jaxbSubgraph.getName() );
 
-			final ClassDetails typeDetails;
+			Class<?> type;
 			if ( jaxbSubgraph.getClazz() == null ) {
-				typeDetails = ClassDetails.VOID_CLASS_DETAILS;
+				type = void.class;
 			}
 			else {
-				typeDetails = xmlDocumentContext.resolveJavaType( jaxbSubgraph.getClazz() );
+				final ClassDetails typeDetails = xmlDocumentContext.resolveJavaType( jaxbSubgraph.getClazz() );
+				type = typeDetails.toJavaClass();
 			}
-			namedSubGraphUsage.setAttributeValue( "type", typeDetails );
+			namedSubGraphUsage.type( type );
 
 			if ( CollectionHelper.isNotEmpty( jaxbSubgraph.getNamedAttributeNode() ) ) {
-				namedSubGraphUsage.setAttributeValue(
-						"attributeNodes",
-						extractAttributeNodes(
-								jaxbSubgraph.getNamedAttributeNode(),
-								classDetails,
-								modelBuildingContext,
-								xmlDocumentContext
-						)
-				);
+				namedSubGraphUsage.attributeNodes( extractAttributeNodes(
+						jaxbSubgraph.getNamedAttributeNode(),
+						classDetails,
+						modelBuildingContext,
+						xmlDocumentContext
+				) );
 			}
 		}
 
-		return subgraphAnnotations;
+		return subgraphs;
 	}
 
 }

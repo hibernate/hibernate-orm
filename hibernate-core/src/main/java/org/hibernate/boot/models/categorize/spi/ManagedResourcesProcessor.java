@@ -13,16 +13,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.Internal;
-import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.ModelCategorizationLogging;
 import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
-import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
-import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
+import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
-import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
@@ -33,17 +32,12 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.models.internal.SourceModelBuildingContextImpl;
-import org.hibernate.models.internal.jandex.JandexClassDetails;
 import org.hibernate.models.internal.jandex.JandexIndexerHelper;
-import org.hibernate.models.internal.jdk.JdkBuilders;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
-import org.hibernate.models.spi.RegistryPrimer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
@@ -112,7 +106,7 @@ public class ManagedResourcesProcessor {
 		final SourceModelBuildingContextImpl sourceModelBuildingContext = new SourceModelBuildingContextImpl(
 				classLoading,
 				jandexIndex,
-				ManagedResourcesProcessor::preFillRegistries
+				ModelsHelper::preFillRegistries
 		);
 
 
@@ -259,42 +253,6 @@ public class ManagedResourcesProcessor {
 		}
 
 		return CompositeIndex.create( suppliedJandexIndex, jandexIndexer.complete() );
-	}
-
-	public static void preFillRegistries(RegistryPrimer.Contributions contributions, SourceModelBuildingContext buildingContext) {
-		OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
-
-		buildingContext.getAnnotationDescriptorRegistry().getDescriptor( TenantId.class );
-
-		final IndexView jandexIndex = buildingContext.getJandexIndex();
-		if ( jandexIndex == null ) {
-			return;
-		}
-
-		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
-		final AnnotationDescriptorRegistry annotationDescriptorRegistry = buildingContext.getAnnotationDescriptorRegistry();
-
-		for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
-			final String className = knownClass.name().toString();
-
-			if ( knownClass.isAnnotation() ) {
-				// it is always safe to load the annotation classes - we will never be enhancing them
-				//noinspection rawtypes
-				final Class annotationClass = buildingContext
-						.getClassLoading()
-						.classForName( className );
-				//noinspection unchecked
-				annotationDescriptorRegistry.resolveDescriptor(
-						annotationClass,
-						(t) -> JdkBuilders.buildAnnotationDescriptor( annotationClass, buildingContext.getAnnotationDescriptorRegistry() )
-				);
-			}
-
-			classDetailsRegistry.resolveClassDetails(
-					className,
-					(name) -> new JandexClassDetails( knownClass, buildingContext )
-			);
-		}
 	}
 
 	/**

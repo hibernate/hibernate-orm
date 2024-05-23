@@ -11,10 +11,8 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 
 import org.hibernate.annotations.TimeZoneStorage;
-import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -78,7 +76,7 @@ public class TimeZoneStorageHelper {
 	}
 
 	static boolean useColumnForTimeZoneStorage(AnnotationTarget element, MetadataBuildingContext context) {
-		final AnnotationUsage<TimeZoneStorage> timeZoneStorage = element.getAnnotationUsage( TimeZoneStorage.class );
+		final TimeZoneStorage timeZoneStorage = element.getDirectAnnotationUsage( TimeZoneStorage.class );
 		if ( timeZoneStorage == null ) {
 			if ( element instanceof MemberDetails attributeMember ) {
 				return isTemporalWithTimeZoneClass( attributeMember.getType().getName() )
@@ -90,7 +88,7 @@ public class TimeZoneStorageHelper {
 			}
 		}
 		else {
-			return switch ( timeZoneStorage.getEnum( "value", TimeZoneStorageType.class ) ) {
+			return switch ( timeZoneStorage.value() ) {
 				case COLUMN -> true;
 				// if the db has native support for timezones, we use that, not a column
 				case AUTO -> context.getBuildingOptions().getTimeZoneSupport() != NATIVE;

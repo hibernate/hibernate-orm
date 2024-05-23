@@ -33,10 +33,8 @@ import org.hibernate.annotations.Type;
 import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.models.AccessTypePlacementException;
 import org.hibernate.boot.models.AnnotationPlacementException;
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -130,13 +128,13 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			return;
 		}
 
-		final AnnotationUsage<Access> access = memberDetails.getAnnotationUsage( JpaAnnotations.ACCESS );
+		final Access access = memberDetails.getDirectAnnotationUsage( Access.class );
 		if ( access == null  ) {
 			checkForMisplacedAnnotations( classDetails, memberDetails, classLevelAccessType );
 			return;
 		}
 
-		final AccessType attributeAccessType = access.getAttributeValue( "value" );
+		final AccessType attributeAccessType = access.value();
 		validateAttributeLevelAccess( memberDetails, attributeAccessType, classDetails );
 
 		memberConsumer.accept( memberDetails.resolveAttributeName(), memberDetails );
@@ -199,39 +197,39 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 
 	private <M extends MemberDetails> boolean containsMappingAnnotations(M memberDetails) {
 		// todo (jpa32) : better way to do this?
-		return memberDetails.hasAnnotationUsage( Id.class )
-				|| memberDetails.hasAnnotationUsage( EmbeddedId.class )
-				|| memberDetails.hasAnnotationUsage( Version.class )
-				|| memberDetails.hasAnnotationUsage( Basic.class )
-				|| memberDetails.hasAnnotationUsage( Embedded.class )
-				|| memberDetails.hasAnnotationUsage( ManyToOne.class )
-				|| memberDetails.hasAnnotationUsage( OneToOne.class )
-				|| memberDetails.hasAnnotationUsage( ElementCollection.class )
-				|| memberDetails.hasAnnotationUsage( ManyToMany.class )
-				|| memberDetails.hasAnnotationUsage( OneToMany.class )
-				|| memberDetails.hasAnnotationUsage( Any.class )
-				|| memberDetails.hasAnnotationUsage( ManyToAny.class )
-				|| memberDetails.hasAnnotationUsage( AnyKeyJavaClass.class )
-				|| memberDetails.hasAnnotationUsage( AnyKeyJavaType.class )
-				|| memberDetails.hasAnnotationUsage( AnyKeyJdbcType.class )
-				|| memberDetails.hasAnnotationUsage( AnyKeyJdbcTypeCode.class )
-				|| memberDetails.hasAnnotationUsage( AnyKeyType.class )
-				|| memberDetails.hasAnnotationUsage( AnyDiscriminator.class )
-				|| memberDetails.hasAnnotationUsage( AnyDiscriminatorValue.class )
-				|| memberDetails.hasAnnotationUsage( AnyDiscriminatorValues.class )
-				|| memberDetails.hasAnnotationUsage( Column.class )
-				|| memberDetails.hasAnnotationUsage( Enumerated.class )
-				|| memberDetails.hasAnnotationUsage( Lob.class )
-				|| memberDetails.hasAnnotationUsage( Temporal.class )
-				|| memberDetails.hasAnnotationUsage( Nationalized.class )
-				|| memberDetails.hasAnnotationUsage( TenantId.class )
-				|| memberDetails.hasAnnotationUsage( Generated.class )
-				|| memberDetails.hasAnnotationUsage( TimeZoneColumn.class )
-				|| memberDetails.hasAnnotationUsage( TimeZoneStorage.class )
-				|| memberDetails.hasAnnotationUsage( Type.class )
-				|| memberDetails.hasAnnotationUsage( JavaType.class )
-				|| memberDetails.hasAnnotationUsage( JdbcType.class )
-				|| memberDetails.hasAnnotationUsage( JdbcTypeCode.class );
+		return memberDetails.hasDirectAnnotationUsage( Id.class )
+				|| memberDetails.hasDirectAnnotationUsage( EmbeddedId.class )
+				|| memberDetails.hasDirectAnnotationUsage( Version.class )
+				|| memberDetails.hasDirectAnnotationUsage( Basic.class )
+				|| memberDetails.hasDirectAnnotationUsage( Embedded.class )
+				|| memberDetails.hasDirectAnnotationUsage( ManyToOne.class )
+				|| memberDetails.hasDirectAnnotationUsage( OneToOne.class )
+				|| memberDetails.hasDirectAnnotationUsage( ElementCollection.class )
+				|| memberDetails.hasDirectAnnotationUsage( ManyToMany.class )
+				|| memberDetails.hasDirectAnnotationUsage( OneToMany.class )
+				|| memberDetails.hasDirectAnnotationUsage( Any.class )
+				|| memberDetails.hasDirectAnnotationUsage( ManyToAny.class )
+				|| memberDetails.hasDirectAnnotationUsage( AnyKeyJavaClass.class )
+				|| memberDetails.hasDirectAnnotationUsage( AnyKeyJavaType.class )
+				|| memberDetails.hasDirectAnnotationUsage( AnyKeyJdbcType.class )
+				|| memberDetails.hasDirectAnnotationUsage( AnyKeyJdbcTypeCode.class )
+				|| memberDetails.hasDirectAnnotationUsage( AnyKeyType.class )
+				|| memberDetails.hasDirectAnnotationUsage( AnyDiscriminator.class )
+				|| memberDetails.hasDirectAnnotationUsage( AnyDiscriminatorValue.class )
+				|| memberDetails.hasDirectAnnotationUsage( AnyDiscriminatorValues.class )
+				|| memberDetails.hasDirectAnnotationUsage( Column.class )
+				|| memberDetails.hasDirectAnnotationUsage( Enumerated.class )
+				|| memberDetails.hasDirectAnnotationUsage( Lob.class )
+				|| memberDetails.hasDirectAnnotationUsage( Temporal.class )
+				|| memberDetails.hasDirectAnnotationUsage( Nationalized.class )
+				|| memberDetails.hasDirectAnnotationUsage( TenantId.class )
+				|| memberDetails.hasDirectAnnotationUsage( Generated.class )
+				|| memberDetails.hasDirectAnnotationUsage( TimeZoneColumn.class )
+				|| memberDetails.hasDirectAnnotationUsage( TimeZoneStorage.class )
+				|| memberDetails.hasDirectAnnotationUsage( Type.class )
+				|| memberDetails.hasDirectAnnotationUsage( JavaType.class )
+				|| memberDetails.hasDirectAnnotationUsage( JdbcType.class )
+				|| memberDetails.hasDirectAnnotationUsage( JdbcTypeCode.class );
 	}
 
 	private void validateAttributeLevelAccess(

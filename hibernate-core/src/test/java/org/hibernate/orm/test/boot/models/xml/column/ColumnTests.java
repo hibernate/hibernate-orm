@@ -9,13 +9,11 @@ package org.hibernate.orm.test.boot.models.xml.column;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -24,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Column;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 
 /**
  * @author Steve Ebersole
@@ -41,26 +39,25 @@ public class ColumnTests {
 				serviceRegistry,
 				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 		);
-		final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+
+		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 				managedResources,
+				false,
+				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 				bootstrapContext
 		);
 
-		assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
+		final ClassDetails anEntityDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( AnEntity.class.getName() );
 
-		final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
-		final EntityTypeMetadata root = hierarchy.getRoot();
-		assertThat( root.getClassDetails().getClassName() ).isEqualTo( AnEntity.class.getName() );
-		assertThat( root.getNumberOfAttributes() ).isEqualTo( 2 );
-		final FieldDetails nameField = root.getClassDetails().findFieldByName( "name" );
+		final FieldDetails nameField = anEntityDetails.findFieldByName( "name" );
 		assertThat( nameField ).isNotNull();
-		final AnnotationUsage<Column> annotationUsage = nameField.getAnnotationUsage( Column.class );
-		assertThat( annotationUsage.getString( "name" ) ).isEqualTo( "nombre" );
-		assertThat( annotationUsage.getInteger( "length" ) ).isEqualTo( 256 );
-		assertThat( annotationUsage.getString( "comment" ) ).isEqualTo( "The name column" );
-		assertThat( annotationUsage.getString( "table" ) ).isEqualTo( "tbl" );
-		assertThat( annotationUsage.getString( "options" ) ).isEqualTo( "the options" );
-		assertThat( annotationUsage.getList( "check" ) ).isNotEmpty();
+		final Column annotationUsage = nameField.getDirectAnnotationUsage( Column.class );
+		assertThat( annotationUsage.name() ).isEqualTo( "nombre" );
+		assertThat( annotationUsage.length() ).isEqualTo( 256 );
+		assertThat( annotationUsage.comment() ).isEqualTo( "The name column" );
+		assertThat( annotationUsage.table() ).isEqualTo( "tbl" );
+		assertThat( annotationUsage.options() ).isEqualTo( "the options" );
+		assertThat( annotationUsage.check() ).isNotEmpty();
 	}
 
 	@Test
@@ -74,22 +71,20 @@ public class ColumnTests {
 				serviceRegistry,
 				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 		);
-		final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+
+		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 				managedResources,
+				false,
+				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 				bootstrapContext
 		);
 
-		assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
+		final ClassDetails anEntityDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( AnEntity.class.getName() );
 
-		final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
-		final EntityTypeMetadata root = hierarchy.getRoot();
-		assertThat( root.getClassDetails().getClassName() ).isEqualTo( AnEntity.class.getName() );
-
-		assertThat( root.getNumberOfAttributes() ).isEqualTo( 2 );
-		final FieldDetails nameField = root.getClassDetails().findFieldByName( "name" );
+		final FieldDetails nameField = anEntityDetails.findFieldByName( "name" );
 		assertThat( nameField ).isNotNull();
-		final AnnotationUsage<Column> columnAnn = nameField.getAnnotationUsage( Column.class );
+		final Column columnAnn = nameField.getDirectAnnotationUsage( Column.class );
 		assertThat( columnAnn ).isNotNull();
-		assertThat( columnAnn.getString( "name" ) ).isEqualTo( "nombre" );
+		assertThat( columnAnn.name() ).isEqualTo( "nombre" );
 	}
 }

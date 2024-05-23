@@ -6,13 +6,11 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -32,10 +30,8 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.Convert;
 import jakarta.persistence.JoinTable;
@@ -104,14 +100,14 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		// collect superclass info first
 		collectAttributeConversionInfo( infoMap, entityClassDetails.getSuperClass() );
 
-		final boolean canContainConvert = entityClassDetails.hasAnnotationUsage( jakarta.persistence.Entity.class )
-				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class )
-				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.Embeddable.class );
+		final boolean canContainConvert = entityClassDetails.hasAnnotationUsage( jakarta.persistence.Entity.class, getSourceModelContext() )
+				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, getSourceModelContext() )
+				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.Embeddable.class, getSourceModelContext() );
 		if ( ! canContainConvert ) {
 			return;
 		}
 
-		entityClassDetails.forEachAnnotationUsage( Convert.class, (usage) -> {
+		entityClassDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 			final AttributeConversionInfo info = new AttributeConversionInfo( usage, entityClassDetails );
 			if ( isEmpty( info.getAttributeName() ) ) {
 				throw new IllegalStateException( "@Convert placed on @Entity/@MappedSuperclass must define attributeName" );
@@ -131,7 +127,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			return;
 		}
 
-		property.forEachAnnotationUsage( Convert.class, (usage) -> {
+		property.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 			final AttributeConversionInfo info = new AttributeConversionInfo( usage, property );
 			if ( isEmpty( info.getAttributeName() ) ) {
 				attributeConversionInfoMap.put( propertyName, info );
@@ -192,19 +188,19 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public Join addJoin(AnnotationUsage<JoinTable> joinTableAnn, boolean noDelayInPkColumnCreation) {
+	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
 		final Join join = entityBinder.addJoinTable( joinTableAnn, this, noDelayInPkColumnCreation );
 		joins = entityBinder.getSecondaryTables();
 		return join;
 	}
 
 	@Override
-	public Join addJoin(AnnotationUsage<JoinTable> joinTable, Table table, boolean noDelayInPkColumnCreation) {
+	public Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation) {
 		final Join join = entityBinder.createJoin(
 				this,
 				noDelayInPkColumnCreation,
 				false,
-				joinTable.getList( "joinColumns" ),
+				joinTable.joinColumns(),
 				table.getQualifiedTableName(),
 				table
 		);

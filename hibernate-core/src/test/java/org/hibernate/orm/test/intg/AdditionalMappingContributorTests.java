@@ -13,6 +13,7 @@ import java.util.List;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -23,7 +24,6 @@ import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
@@ -330,11 +330,11 @@ public class AdditionalMappingContributorTests {
 								modelBuildingContext
 						);
 
-						final MutableAnnotationUsage<Entity> entityUsage = jdkClassDetails.applyAnnotationUsage(
+						final EntityJpaAnnotation entityUsage = (EntityJpaAnnotation) jdkClassDetails.applyAnnotationUsage(
 								JpaAnnotations.ENTITY,
 								modelBuildingContext
 						);
-						entityUsage.setAttributeValue( "name", "___Entity5___" );
+						entityUsage.name( "___Entity5___" );
 
 						final MutableMemberDetails idField = (MutableMemberDetails) jdkClassDetails.findFieldByName( "id" );
 						idField.applyAnnotationUsage( JpaAnnotations.ID, modelBuildingContext );
@@ -370,11 +370,11 @@ public class AdditionalMappingContributorTests {
 						assertThat( modelBuildingContext ).isSameAs( buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
 
 						final DynamicClassDetails classDetails = new DynamicClassDetails( "Entity6", modelBuildingContext );
-						final MutableAnnotationUsage<Entity> entityUsage = classDetails.applyAnnotationUsage(
+						final EntityJpaAnnotation entityUsage = (EntityJpaAnnotation) classDetails.applyAnnotationUsage(
 								JpaAnnotations.ENTITY,
 								modelBuildingContext
 						);
-						entityUsage.setAttributeValue( "name", "Entity6" );
+						entityUsage.name( "Entity6" );
 
 						final DynamicFieldDetails idMember = classDetails.applyAttribute(
 								"id",

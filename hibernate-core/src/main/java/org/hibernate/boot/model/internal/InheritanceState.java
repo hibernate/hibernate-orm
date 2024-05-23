@@ -15,7 +15,6 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
@@ -70,14 +69,14 @@ public class InheritanceState {
 	}
 
 	private void extractInheritanceType(ClassDetails classDetails) {
-		final AnnotationUsage<Inheritance> inheritanceAnn = classDetails.getAnnotationUsage( Inheritance.class );
-		final AnnotationUsage<MappedSuperclass> mappedSuperAnn = classDetails.getAnnotationUsage( MappedSuperclass.class );
+		final Inheritance inheritanceAnn = classDetails.getDirectAnnotationUsage( Inheritance.class );
+		final MappedSuperclass mappedSuperAnn = classDetails.getDirectAnnotationUsage( MappedSuperclass.class );
 		if ( mappedSuperAnn != null ) {
 			setEmbeddableSuperclass( true );
-			setType( inheritanceAnn == null ? null : inheritanceAnn.getEnum( "strategy", InheritanceType.class ) );
+			setType( inheritanceAnn == null ? null : inheritanceAnn.strategy() );
 		}
 		else {
-			setType( inheritanceAnn == null ? SINGLE_TABLE : inheritanceAnn.getEnum( "strategy", InheritanceType.class ) );
+			setType( inheritanceAnn == null ? SINGLE_TABLE : inheritanceAnn.strategy() );
 		}
 	}
 
@@ -171,7 +170,7 @@ public class InheritanceState {
 		if ( !evenIfSubclass && hasParents() ) {
 			return null;
 		}
-		else if ( classDetails.hasAnnotationUsage( IdClass.class ) ) {
+		else if ( classDetails.hasDirectAnnotationUsage( IdClass.class ) ) {
 			return classDetails;
 		}
 		else {
@@ -194,7 +193,7 @@ public class InheritanceState {
 			else {
 				final ElementsToProcess process = getElementsToProcess();
 				for ( PropertyData property : process.getElements() ) {
-					if ( property.getAttributeMember().hasAnnotationUsage( EmbeddedId.class ) ) {
+					if ( property.getAttributeMember().hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 						hasIdClassOrEmbeddedId = true;
 						break;
 					}
@@ -248,9 +247,9 @@ public class InheritanceState {
 	private AccessType determineDefaultAccessType() {
 		for ( ClassDetails candidate = classDetails; candidate != null; candidate = candidate.getSuperClass() ) {
 			if ( ( candidate.getSuperClass() == null || Object.class.getName().equals( candidate.getSuperClass().getName() ) )
-					&& ( candidate.hasAnnotationUsage( Entity.class ) || candidate.hasAnnotationUsage( MappedSuperclass.class ) )
-					&& candidate.hasAnnotationUsage( Access.class ) ) {
-				return AccessType.getAccessStrategy( candidate.getAnnotationUsage( Access.class ).getEnum( "value" ) );
+					&& ( candidate.hasDirectAnnotationUsage( Entity.class ) || candidate.hasDirectAnnotationUsage( MappedSuperclass.class ) )
+					&& candidate.hasDirectAnnotationUsage( Access.class ) ) {
+				return AccessType.getAccessStrategy( candidate.getDirectAnnotationUsage( Access.class ).value() );
 			}
 		}
 		// Guess from identifier.
@@ -259,19 +258,19 @@ public class InheritanceState {
 		for ( ClassDetails candidate = classDetails;
 				candidate != null && !Object.class.getName().equals( candidate.getName() );
 				candidate = candidate.getSuperClass() ) {
-			if ( candidate.hasAnnotationUsage( Entity.class ) || candidate.hasAnnotationUsage( MappedSuperclass.class ) ) {
+			if ( candidate.hasDirectAnnotationUsage( Entity.class ) || candidate.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 				for ( MethodDetails method : candidate.getMethods() ) {
 					if ( method.getMethodKind() != MethodDetails.MethodKind.GETTER ) {
 						continue;
 					}
 
-					if ( method.hasAnnotationUsage( Id.class ) || method.hasAnnotationUsage( EmbeddedId.class ) ) {
+					if ( method.hasDirectAnnotationUsage( Id.class ) || method.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 						return AccessType.PROPERTY;
 					}
 				}
 
 				for ( FieldDetails field : candidate.getFields() ) {
-					if ( field.hasAnnotationUsage( Id.class ) || field.hasAnnotationUsage( EmbeddedId.class ) ) {
+					if ( field.hasDirectAnnotationUsage( Id.class ) || field.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 						return AccessType.FIELD;
 					}
 				}

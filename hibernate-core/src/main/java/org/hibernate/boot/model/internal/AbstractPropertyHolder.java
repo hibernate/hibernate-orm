@@ -22,16 +22,15 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.internal.AnnotationUsageHelper;
+import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
@@ -64,16 +63,16 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	private Boolean isInIdClass;
 
-	private Map<String, List<AnnotationUsage<Column>>> holderColumnOverride;
-	private Map<String, List<AnnotationUsage<Column>>> currentPropertyColumnOverride;
-	private Map<String, AnnotationUsage<ColumnTransformer>> holderColumnTransformerOverride;
-	private Map<String, AnnotationUsage<ColumnTransformer>> currentPropertyColumnTransformerOverride;
-	private Map<String, List<AnnotationUsage<JoinColumn>>> holderJoinColumnOverride;
-	private Map<String, List<AnnotationUsage<JoinColumn>>> currentPropertyJoinColumnOverride;
-	private Map<String, AnnotationUsage<JoinTable>> holderJoinTableOverride;
-	private Map<String, AnnotationUsage<JoinTable>> currentPropertyJoinTableOverride;
-	private Map<String, AnnotationUsage<ForeignKey>> holderForeignKeyOverride;
-	private Map<String, AnnotationUsage<ForeignKey>> currentPropertyForeignKeyOverride;
+	private Map<String, Column[]> holderColumnOverride;
+	private Map<String, Column[]> currentPropertyColumnOverride;
+	private Map<String, ColumnTransformer> holderColumnTransformerOverride;
+	private Map<String, ColumnTransformer> currentPropertyColumnTransformerOverride;
+	private Map<String, JoinColumn[]> holderJoinColumnOverride;
+	private Map<String, JoinColumn[]> currentPropertyJoinColumnOverride;
+	private Map<String, JoinTable> holderJoinTableOverride;
+	private Map<String, JoinTable> currentPropertyJoinTableOverride;
+	private Map<String, ForeignKey> holderForeignKeyOverride;
+	private Map<String, ForeignKey> currentPropertyForeignKeyOverride;
 
 	AbstractPropertyHolder(
 			String path,
@@ -181,6 +180,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return context;
 	}
 
+	protected SourceModelBuildingContext getSourceModelContext() {
+		return getContext().getMetadataCollector().getSourceModelBuildingContext();
+	}
+
 	/**
 	 * Set the property to be processed.  property can be null
 	 *
@@ -202,22 +205,22 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				this.currentPropertyColumnOverride = null;
 			}
 
-			this.currentPropertyColumnTransformerOverride = buildColumnTransformerOverride( attributeMember );
+			this.currentPropertyColumnTransformerOverride = buildColumnTransformerOverride( attributeMember, context );
 			if ( this.currentPropertyColumnTransformerOverride.isEmpty() ) {
 				this.currentPropertyColumnTransformerOverride = null;
 			}
 
-			this.currentPropertyJoinColumnOverride = buildJoinColumnOverride( attributeMember, getPath() );
+			this.currentPropertyJoinColumnOverride = buildJoinColumnOverride( attributeMember, getPath(), context );
 			if ( this.currentPropertyJoinColumnOverride.isEmpty() ) {
 				this.currentPropertyJoinColumnOverride = null;
 			}
 
-			this.currentPropertyJoinTableOverride = buildJoinTableOverride( attributeMember, getPath() );
+			this.currentPropertyJoinTableOverride = buildJoinTableOverride( attributeMember, getPath(), context );
 			if ( this.currentPropertyJoinTableOverride.isEmpty() ) {
 				this.currentPropertyJoinTableOverride = null;
 			}
 
-			this.currentPropertyForeignKeyOverride = buildForeignKeyOverride( attributeMember, getPath() );
+			this.currentPropertyForeignKeyOverride = buildForeignKeyOverride( attributeMember, getPath(), context );
 			if ( this.currentPropertyForeignKeyOverride.isEmpty() ) {
 				this.currentPropertyForeignKeyOverride = null;
 			}
@@ -231,8 +234,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	@Override
-	public List<AnnotationUsage<Column>> getOverriddenColumn(String propertyName) {
-		final List<AnnotationUsage<Column>> result = getExactOverriddenColumn( propertyName );
+	public Column[] getOverriddenColumn(String propertyName) {
+		final Column[] result = getExactOverriddenColumn( propertyName );
 		if ( result == null ) {
 			if ( propertyName.contains( ".collection&&element." ) ) {
 				//support for non map collections where no prefix is needed
@@ -244,8 +247,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	@Override
-	public AnnotationUsage<ColumnTransformer> getOverriddenColumnTransformer(String logicalColumnName) {
-		AnnotationUsage<ColumnTransformer> result = null;
+	public ColumnTransformer getOverriddenColumnTransformer(String logicalColumnName) {
+		ColumnTransformer result = null;
 		if ( parent != null ) {
 			result = parent.getOverriddenColumnTransformer( logicalColumnName );
 		}
@@ -265,8 +268,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * Get column overriding, property first, then parent, then holder
 	 * find the overridden rules from the exact property name.
 	 */
-	private List<AnnotationUsage<Column>> getExactOverriddenColumn(String propertyName) {
-		List<AnnotationUsage<Column>> result = null;
+	private Column[] getExactOverriddenColumn(String propertyName) {
+		Column[] result = null;
 		if ( parent != null ) {
 			result = parent.getExactOverriddenColumn( propertyName );
 		}
@@ -289,8 +292,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	@Override
-	public List<AnnotationUsage<JoinColumn>> getOverriddenJoinColumn(String propertyName) {
-		final List<AnnotationUsage<JoinColumn>> result = getExactOverriddenJoinColumn( propertyName );
+	public JoinColumn[] getOverriddenJoinColumn(String propertyName) {
+		final JoinColumn[] result = getExactOverriddenJoinColumn( propertyName );
 		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
@@ -302,8 +305,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	/**
 	 * Get column overriding, property first, then parent, then holder
 	 */
-	private List<AnnotationUsage<JoinColumn>> getExactOverriddenJoinColumn(String propertyName) {
-		List<AnnotationUsage<JoinColumn>> result = null;
+	private JoinColumn[] getExactOverriddenJoinColumn(String propertyName) {
+		JoinColumn[] result = null;
 		if ( parent != null ) {
 			result = parent.getExactOverriddenJoinColumn( propertyName );
 		}
@@ -320,8 +323,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	@Override
-	public AnnotationUsage<ForeignKey> getOverriddenForeignKey(String propertyName) {
-		final AnnotationUsage<ForeignKey> result = getExactOverriddenForeignKey( propertyName );
+	public ForeignKey getOverriddenForeignKey(String propertyName) {
+		final ForeignKey result = getExactOverriddenForeignKey( propertyName );
 		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
@@ -330,8 +333,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return result;
 	}
 
-	private AnnotationUsage<ForeignKey> getExactOverriddenForeignKey(String propertyName) {
-		AnnotationUsage<ForeignKey> result = null;
+	private ForeignKey getExactOverriddenForeignKey(String propertyName) {
+		ForeignKey result = null;
 		if ( parent != null ) {
 			result = parent.getExactOverriddenForeignKey( propertyName );
 		}
@@ -351,11 +354,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	@Override
-	public AnnotationUsage<JoinTable> getJoinTable(MemberDetails attributeMember) {
+	public JoinTable getJoinTable(MemberDetails attributeMember) {
 		final String propertyName = qualify( getPath(), attributeMember.getName() );
-		final AnnotationUsage<JoinTable> result = getOverriddenJoinTable( propertyName );
+		final JoinTable result = getOverriddenJoinTable( propertyName );
 		if ( result == null ) {
-			return attributeMember.getAnnotationUsage( JoinTable.class );
+			return attributeMember.getDirectAnnotationUsage( JoinTable.class );
 		}
 		return result;
 	}
@@ -366,8 +369,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
-	public AnnotationUsage<JoinTable> getOverriddenJoinTable(String propertyName) {
-		final AnnotationUsage<JoinTable> result = getExactOverriddenJoinTable( propertyName );
+	public JoinTable getOverriddenJoinTable(String propertyName) {
+		final JoinTable result = getExactOverriddenJoinTable( propertyName );
 		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
@@ -379,8 +382,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	/**
 	 * Get column overriding, property first, then parent, then holder
 	 */
-	private AnnotationUsage<JoinTable> getExactOverriddenJoinTable(String propertyName) {
-		AnnotationUsage<JoinTable> override = null;
+	private JoinTable getExactOverriddenJoinTable(String propertyName) {
+		JoinTable override = null;
 		if ( parent != null ) {
 			override = parent.getExactOverriddenJoinTable( propertyName );
 		}
@@ -395,21 +398,21 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	private void buildHierarchyColumnOverride(ClassDetails element) {
 		ClassDetails current = element;
-		Map<String, List<AnnotationUsage<Column>>> columnOverride = new HashMap<>();
-		Map<String, AnnotationUsage<ColumnTransformer>> columnTransformerOverride = new HashMap<>();
-		Map<String, List<AnnotationUsage<JoinColumn>>> joinColumnOverride = new HashMap<>();
-		Map<String, AnnotationUsage<JoinTable>> joinTableOverride = new HashMap<>();
-		Map<String, AnnotationUsage<ForeignKey>> foreignKeyOverride = new HashMap<>();
+		Map<String, Column[]> columnOverride = new HashMap<>();
+		Map<String, ColumnTransformer> columnTransformerOverride = new HashMap<>();
+		Map<String, JoinColumn[]> joinColumnOverride = new HashMap<>();
+		Map<String, JoinTable> joinTableOverride = new HashMap<>();
+		Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
 		while ( current != null && !ClassDetails.OBJECT_CLASS_DETAILS.equals( current ) ) {
-			if ( current.hasAnnotationUsage( Entity.class )
-					|| current.hasAnnotationUsage( MappedSuperclass.class )
-					|| current.hasAnnotationUsage( Embeddable.class ) ) {
+			if ( current.hasDirectAnnotationUsage( Entity.class )
+					|| current.hasDirectAnnotationUsage( MappedSuperclass.class )
+					|| current.hasDirectAnnotationUsage( Embeddable.class ) ) {
 				//FIXME is embeddable override?
-				Map<String, List<AnnotationUsage<Column>>> currentOverride = buildColumnOverride( current, getPath(), context );
-				Map<String, AnnotationUsage<ColumnTransformer>> currentTransformerOverride = buildColumnTransformerOverride( current );
-				Map<String, List<AnnotationUsage<JoinColumn>>> currentJoinOverride = buildJoinColumnOverride( current, getPath() );
-				Map<String, AnnotationUsage<JoinTable>> currentJoinTableOverride = buildJoinTableOverride( current, getPath() );
-				Map<String, AnnotationUsage<ForeignKey>> currentForeignKeyOverride = buildForeignKeyOverride( current, getPath() );
+				Map<String, Column[]> currentOverride = buildColumnOverride( current, getPath(), context );
+				Map<String, ColumnTransformer> currentTransformerOverride = buildColumnTransformerOverride( current, context );
+				Map<String, JoinColumn[]> currentJoinOverride = buildJoinColumnOverride( current, getPath(), context );
+				Map<String, JoinTable> currentJoinTableOverride = buildJoinTableOverride( current, getPath(), context );
+				Map<String, ForeignKey> currentForeignKeyOverride = buildForeignKeyOverride( current, getPath(), context );
 				currentOverride.putAll( columnOverride ); //subclasses have precedence over superclasses
 				currentTransformerOverride.putAll( columnTransformerOverride ); //subclasses have precedence over superclasses
 				currentJoinOverride.putAll( joinColumnOverride ); //subclasses have precedence over superclasses
@@ -431,20 +434,23 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		holderForeignKeyOverride = !foreignKeyOverride.isEmpty() ? foreignKeyOverride : null;
 	}
 
-	private static Map<String, List<AnnotationUsage<Column>>> buildColumnOverride(
+	private static Map<String, Column[]> buildColumnOverride(
 			AnnotationTarget element,
 			String path,
 			MetadataBuildingContext context) {
-		final Map<String, List<AnnotationUsage<Column>>> columnOverrideMap = new HashMap<>();
+		final Map<String,Column[]> result = new HashMap<>();
 		if ( element == null ) {
-			return columnOverrideMap;
+			return result;
 		}
 
-		final List<AnnotationUsage<AttributeOverride>> overrides = element.getRepeatedAnnotationUsages( AttributeOverride.class );
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final Map<String, List<Column>> columnOverrideMap = new HashMap<>();
+
+		final AttributeOverride[] overrides = element.getRepeatedAnnotationUsages( AttributeOverride.class, sourceModelContext );
 		if ( CollectionHelper.isNotEmpty( overrides ) ) {
-			for ( AnnotationUsage<AttributeOverride> depAttr : overrides ) {
-				final String qualifiedName = StringHelper.qualify( path, depAttr.getString( "name" ) );
-				final AnnotationUsage<Column> column = depAttr.getNestedUsage( "column" );
+			for ( AttributeOverride depAttr : overrides ) {
+				final String qualifiedName = StringHelper.qualify( path, depAttr.name() );
+				final Column column = depAttr.column();
 
 				if ( columnOverrideMap.containsKey( qualifiedName ) ) {
 					// already an entry, just add to that List
@@ -452,14 +458,14 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				}
 				else {
 					// not yet an entry, create the list and add
-					final List<AnnotationUsage<Column>> list = new ArrayList<>();
+					final List<Column> list = new ArrayList<>();
 					list.add( column );
 					columnOverrideMap.put( qualifiedName, list );
 				}
 			}
 		}
 		else if ( useColumnForTimeZoneStorage( element, context ) ) {
-			final AnnotationUsage<Column> column = createTemporalColumn( element, path, context );
+			final Column column = createTemporalColumn( element, path, context );
 			if ( isOffsetTimeClass( element ) ) {
 				columnOverrideMap.put(
 						path + "." + OffsetTimeCompositeUserType.LOCAL_TIME_NAME,
@@ -472,55 +478,60 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 						List.of( column )
 				);
 			}
-			final AnnotationUsage<Column> offsetColumn = createTimeZoneColumn( element, column, context );
+			final Column offsetColumn = createTimeZoneColumn( element, column, context );
 			columnOverrideMap.put(
 					path + "." + AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME,
 					List.of( offsetColumn )
 			);
 		}
-		return columnOverrideMap;
+
+		columnOverrideMap.forEach( (name, columns) -> {
+			result.put( name, columns.toArray(new Column[0]) );
+		} );
+		return result;
 	}
 
-	private static AnnotationUsage<Column> createTimeZoneColumn(
+	private static Column createTimeZoneColumn(
 			AnnotationTarget element,
-			AnnotationUsage<Column> column,
+			Column column,
 			MetadataBuildingContext context) {
-		final AnnotationUsage<TimeZoneColumn> timeZoneColumn = element.getAnnotationUsage( TimeZoneColumn.class );
-		final MutableAnnotationUsage<Column> created = JpaAnnotations.COLUMN.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
+		final TimeZoneColumn timeZoneColumn = element.getDirectAnnotationUsage( TimeZoneColumn.class );
+		final ColumnJpaAnnotation created = JpaAnnotations.COLUMN.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
 		final String columnName = timeZoneColumn != null
-				? timeZoneColumn.getString( "name" )
-				: column.getString( "name" ) + "_tz";
-		created.setAttributeValue(  "name", columnName );
-
-		AnnotationUsageHelper.applyAttributeIfSpecified( "nullable", column.getBoolean( "nullable" ), created );
-
-		final AnnotationUsage<?> source = timeZoneColumn != null
-				? timeZoneColumn
-				: column;
-		AnnotationUsageHelper.applyAttributeIfSpecified( "table", source.getString( "table" ), created );
-		AnnotationUsageHelper.applyAttributeIfSpecified( "insertable", source.getAttributeValue( "insertable" ), created );
-		AnnotationUsageHelper.applyAttributeIfSpecified( "updatable", source.getAttributeValue( "updatable" ), created );
+				? timeZoneColumn.name()
+				: column.name() + "_tz";
+		created.name( columnName );
+		created.nullable( column.nullable() );
 
 		if ( timeZoneColumn != null ) {
-			AnnotationUsageHelper.applyStringAttributeIfSpecified( "columnDefinition", timeZoneColumn.getAttributeValue( "columnDefinition" ), created );
+			created.table( timeZoneColumn.table() );
+			created.insertable( timeZoneColumn.insertable() );
+			created.updatable( timeZoneColumn.updatable() );
+			created.columnDefinition( timeZoneColumn.columnDefinition() );
+		}
+		else {
+			created.table( column.table() );
+			created.insertable( column.insertable() );
+			created.updatable( column.updatable() );
+			created.columnDefinition( column.columnDefinition() );
 		}
 
 		return created;
 	}
 
-	private static AnnotationUsage<Column> createTemporalColumn(
+	private static Column createTemporalColumn(
 			AnnotationTarget element,
 			String path,
 			MetadataBuildingContext context) {
 		int precision;
 		int secondPrecision;
-		final AnnotationUsage<Column> annotatedColumn = element.getAnnotationUsage( Column.class );
+		final Column annotatedColumn = element.getDirectAnnotationUsage( Column.class );
 		if ( annotatedColumn != null ) {
-			if ( StringHelper.isNotEmpty( annotatedColumn.getString( "name" ) ) ) {
+			if ( StringHelper.isNotEmpty( annotatedColumn.name() ) ) {
 				return annotatedColumn;
 			}
-			precision = annotatedColumn.getInteger( "precision" );
-			secondPrecision = annotatedColumn.getInteger( "secondPrecision" );
+			precision = annotatedColumn.precision();
+			secondPrecision = annotatedColumn.secondPrecision();
 		}
 		else {
 			precision = 0;
@@ -551,67 +562,68 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				)
 		);
 
-		final MutableAnnotationUsage<Column> usage = JpaAnnotations.COLUMN.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
-		AnnotationUsageHelper.applyStringAttributeIfSpecified( "name", implicitName.getText(), usage );
-		usage.setAttributeValue( "precision", precision );
-		usage.setAttributeValue( "secondPrecision", secondPrecision );
-		return usage;
+		final ColumnJpaAnnotation created = JpaAnnotations.COLUMN.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
+		if ( StringHelper.isNotEmpty( implicitName.getText() ) ) {
+			created.name( implicitName.getText() );
+		}
+		created.precision( precision );
+		created.secondPrecision( secondPrecision );
+		return created;
 	}
 
-	private static Map<String, AnnotationUsage<ColumnTransformer>> buildColumnTransformerOverride(AnnotationTarget element) {
-		final Map<String, AnnotationUsage<ColumnTransformer>> columnOverride = new HashMap<>();
+	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(AnnotationTarget element, MetadataBuildingContext context) {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final Map<String, ColumnTransformer> columnOverride = new HashMap<>();
 		if ( element != null ) {
-			element.forEachAnnotationUsage( ColumnTransformer.class, (usage) -> {
-				columnOverride.put( usage.getString( "forColumn" ), usage );
+			element.forEachAnnotationUsage( ColumnTransformer.class, sourceModelContext, (usage) -> {
+				columnOverride.put( usage.forColumn(), usage );
 			} );
 		}
 		return columnOverride;
 	}
 
-	private static Map<String, List<AnnotationUsage<JoinColumn>>> buildJoinColumnOverride(AnnotationTarget element, String path) {
-		final Map<String, List<AnnotationUsage<JoinColumn>>> columnOverride = new HashMap<>();
+	private static Map<String, JoinColumn[]> buildJoinColumnOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
+		final Map<String, JoinColumn[]> columnOverride = new HashMap<>();
 		if ( element != null ) {
-			final List<AnnotationUsage<AssociationOverride>> overrides = buildAssociationOverrides( element, path );
-			for ( AnnotationUsage<AssociationOverride> override : overrides ) {
+			final AssociationOverride[] overrides = buildAssociationOverrides( element, path, context );
+			for ( AssociationOverride override : overrides ) {
 				columnOverride.put(
-						qualify( path, override.getString( "name" ) ),
-						override.getList( "joinColumns" )
+						qualify( path, override.name() ),
+						override.joinColumns()
 				);
 			}
 		}
 		return columnOverride;
 	}
 
-	private static Map<String, AnnotationUsage<ForeignKey>> buildForeignKeyOverride(AnnotationTarget element, String path) {
-		final Map<String, AnnotationUsage<ForeignKey>> foreignKeyOverride = new HashMap<>();
+	private static Map<String, ForeignKey> buildForeignKeyOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
+		final Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
 		if ( element != null ) {
-			final List<AnnotationUsage<AssociationOverride>> overrides = buildAssociationOverrides( element, path );
-			for ( AnnotationUsage<AssociationOverride> override : overrides ) {
+			final AssociationOverride[] overrides = buildAssociationOverrides( element, path, context );
+			for ( AssociationOverride override : overrides ) {
 				foreignKeyOverride.put(
-						qualify( path, override.getString( "name" ) ),
-						override.getNestedUsage( "foreignKey" )
+						qualify( path, override.name() ),
+						override.foreignKey()
 				);
 			}
 		}
 		return foreignKeyOverride;
 	}
 
-	private static List<AnnotationUsage<AssociationOverride>> buildAssociationOverrides(AnnotationTarget element, String path) {
-		final List<AnnotationUsage<AssociationOverride>> overrides = new ArrayList<>();
-		element.forEachAnnotationUsage( AssociationOverride.class, overrides::add );
-		return overrides;
+	private static AssociationOverride[] buildAssociationOverrides(AnnotationTarget element, String path, MetadataBuildingContext context) {
+		return element.getRepeatedAnnotationUsages( AssociationOverride.class, context.getMetadataCollector().getSourceModelBuildingContext() );
 	}
 
-	private static Map<String, AnnotationUsage<JoinTable>> buildJoinTableOverride(AnnotationTarget element, String path) {
-		final Map<String, AnnotationUsage<JoinTable>> result = new HashMap<>();
+	private static Map<String, JoinTable> buildJoinTableOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
+		final Map<String, JoinTable> result = new HashMap<>();
 		if ( element != null ) {
-			final List<AnnotationUsage<AssociationOverride>> overrides = buildAssociationOverrides( element, path );
-			for ( AnnotationUsage<AssociationOverride> override : overrides ) {
-				final List<AnnotationUsage<JoinColumn>> joinColumns = override.getList( "joinColumns" );
+			final AssociationOverride[] overrides = buildAssociationOverrides( element, path, context );
+			for ( AssociationOverride override : overrides ) {
+				final JoinColumn[] joinColumns = override.joinColumns();
 				if ( CollectionHelper.isEmpty( joinColumns ) ) {
 					result.put(
-							qualify( path, override.getString( "name" ) ),
-							override.getNestedUsage( "joinTable" )
+							qualify( path, override.name() ),
+							override.joinTable()
 					);
 				}
 			}

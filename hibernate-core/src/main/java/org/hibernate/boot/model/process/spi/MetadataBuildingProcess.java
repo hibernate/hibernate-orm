@@ -50,8 +50,8 @@ import org.hibernate.boot.model.source.internal.hbm.HbmMetadataSourceProcessorIm
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
-import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
-import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
+import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -551,7 +551,7 @@ public class MetadataBuildingProcess {
 				//noinspection unchecked
 				annotationDescriptorRegistry.resolveDescriptor(
 						annotationClass,
-						(t) -> JdkBuilders.buildAnnotationDescriptor( annotationClass, buildingContext.getAnnotationDescriptorRegistry() )
+						(t) -> JdkBuilders.buildAnnotationDescriptor( annotationClass, buildingContext )
 				);
 			}
 

@@ -9,28 +9,47 @@ package org.hibernate.boot.models.categorize.internal;
 import java.util.EnumSet;
 
 import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.AnyKeyJavaType;
+import org.hibernate.annotations.AnyKeyJdbcType;
+import org.hibernate.annotations.AnyKeyJdbcTypeCode;
+import org.hibernate.annotations.CompositeType;
+import org.hibernate.annotations.EmbeddableInstantiator;
+import org.hibernate.annotations.JavaType;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.annotations.TimeZoneColumn;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.Type;
 import org.hibernate.boot.models.HibernateAnnotations;
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.MultipleAttributeNaturesException;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.Version;
 
 import static org.hibernate.boot.models.categorize.ModelCategorizationLogging.MODEL_CATEGORIZATION_LOGGER;
 import static org.hibernate.boot.models.categorize.spi.AttributeMetadata.AttributeNature.BASIC;
@@ -44,12 +63,16 @@ import static org.hibernate.boot.models.categorize.spi.AttributeMetadata.Attribu
  * @author Steve Ebersole
  */
 public class CategorizationHelper {
+	public static ClassDetails toClassDetails(Class<?> clazz, ClassDetailsRegistry classDetailsRegistry) {
+		return classDetailsRegistry.resolveClassDetails( clazz.getName() );
+	}
+
 	public static boolean isMappedSuperclass(ClassDetails classDetails) {
-		return classDetails.getAnnotationUsage( JpaAnnotations.MAPPED_SUPERCLASS ) != null;
+		return classDetails.hasDirectAnnotationUsage( MappedSuperclass.class );
 	}
 
 	public static boolean isEntity(ClassDetails classDetails) {
-		return classDetails.getAnnotationUsage( JpaAnnotations.ENTITY ) != null;
+		return classDetails.getDirectAnnotationUsage( Entity.class ) != null;
 	}
 
 	public static boolean isIdentifiable(ClassDetails classDetails) {
@@ -57,9 +80,9 @@ public class CategorizationHelper {
 	}
 
 	public static ClassAttributeAccessType determineAccessType(ClassDetails classDetails, AccessType implicitAccessType) {
-		final AnnotationUsage<Access> annotation = classDetails.getAnnotationUsage( JpaAnnotations.ACCESS );
+		final Access annotation = classDetails.getDirectAnnotationUsage( Access.class );
 		if ( annotation != null ) {
-			final AccessType explicitValue = annotation.getAttributeValue( "value" );
+			final AccessType explicitValue = annotation.value();
 			assert explicitValue != null;
 			return explicitValue == AccessType.FIELD
 					? ClassAttributeAccessType.EXPLICIT_FIELD
@@ -82,16 +105,16 @@ public class CategorizationHelper {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// first, look for explicit nature annotations
 
-		final AnnotationUsage<Any> any = backingMember.getAnnotationUsage( HibernateAnnotations.ANY );
-		final AnnotationUsage<Basic> basic = backingMember.getAnnotationUsage( JpaAnnotations.BASIC );
-		final AnnotationUsage<ElementCollection> elementCollection = backingMember.getAnnotationUsage( JpaAnnotations.ELEMENT_COLLECTION );
-		final AnnotationUsage<Embedded> embedded = backingMember.getAnnotationUsage( JpaAnnotations.EMBEDDED );
-		final AnnotationUsage<EmbeddedId> embeddedId = backingMember.getAnnotationUsage( JpaAnnotations.EMBEDDED_ID );
-		final AnnotationUsage<ManyToAny> manyToAny = backingMember.getAnnotationUsage( HibernateAnnotations.MANY_TO_ANY );
-		final AnnotationUsage<ManyToMany> manyToMany = backingMember.getAnnotationUsage( JpaAnnotations.MANY_TO_MANY );
-		final AnnotationUsage<ManyToOne> manyToOne = backingMember.getAnnotationUsage( JpaAnnotations.MANY_TO_ONE );
-		final AnnotationUsage<OneToMany> oneToMany = backingMember.getAnnotationUsage( JpaAnnotations.ONE_TO_MANY );
-		final AnnotationUsage<OneToOne> oneToOne = backingMember.getAnnotationUsage( JpaAnnotations.ONE_TO_ONE );
+		final Any any = backingMember.getDirectAnnotationUsage( Any.class );
+		final Basic basic = backingMember.getDirectAnnotationUsage( Basic.class );
+		final ElementCollection elementCollection = backingMember.getDirectAnnotationUsage( ElementCollection.class );
+		final Embedded embedded = backingMember.getDirectAnnotationUsage( Embedded.class );
+		final EmbeddedId embeddedId = backingMember.getDirectAnnotationUsage( EmbeddedId.class );
+		final ManyToAny manyToAny = backingMember.getDirectAnnotationUsage( ManyToAny.class );
+		final ManyToMany manyToMany = backingMember.getDirectAnnotationUsage( ManyToMany.class );
+		final ManyToOne manyToOne = backingMember.getDirectAnnotationUsage( ManyToOne.class );
+		final OneToMany oneToMany = backingMember.getDirectAnnotationUsage( OneToMany.class );
+		final OneToOne oneToOne = backingMember.getDirectAnnotationUsage( OneToOne.class );
 
 		if ( basic != null ) {
 			natures.add( AttributeMetadata.AttributeNature.BASIC );
@@ -99,7 +122,7 @@ public class CategorizationHelper {
 
 		if ( embedded != null
 				|| embeddedId != null
-				|| ( backingMember.getType() != null && backingMember.getType().determineRawClass().getAnnotationUsage( JpaAnnotations.EMBEDDABLE ) != null ) ) {
+				|| ( backingMember.getType() != null && backingMember.getType().determineRawClass().hasDirectAnnotationUsage( Embeddable.class ) ) ) {
 			natures.add( EMBEDDED );
 		}
 
@@ -134,30 +157,30 @@ public class CategorizationHelper {
 				|| elementCollection != null
 				|| manyToAny != null;
 
-		final boolean implicitlyBasic = backingMember.getAnnotationUsage( JpaAnnotations.TEMPORAL ) != null
-				|| backingMember.getAnnotationUsage( JpaAnnotations.LOB ) != null
-				|| backingMember.getAnnotationUsage( JpaAnnotations.ENUMERATED ) != null
-				|| backingMember.getAnnotationUsage( JpaAnnotations.VERSION ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.GENERATED ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.NATIONALIZED ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.TZ_COLUMN ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.TZ_STORAGE ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.TYPE ) != null
-				|| backingMember.getAnnotationUsage( TenantId.class ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.JAVA_TYPE ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.JDBC_TYPE_CODE ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.JDBC_TYPE ) != null;
+		final boolean implicitlyBasic = backingMember.hasDirectAnnotationUsage( Temporal.class )
+				|| backingMember.hasDirectAnnotationUsage( Lob.class )
+				|| backingMember.hasDirectAnnotationUsage( Enumerated.class )
+				|| backingMember.hasDirectAnnotationUsage( Version.class )
+				|| backingMember.hasDirectAnnotationUsage( HibernateAnnotations.GENERATED.getAnnotationType() )
+				|| backingMember.hasDirectAnnotationUsage( Nationalized.class )
+				|| backingMember.hasDirectAnnotationUsage( TimeZoneColumn.class )
+				|| backingMember.hasDirectAnnotationUsage( TimeZoneStorage.class )
+				|| backingMember.hasDirectAnnotationUsage( Type.class )
+				|| backingMember.hasDirectAnnotationUsage( TenantId.class )
+				|| backingMember.hasDirectAnnotationUsage( JavaType.class )
+				|| backingMember.hasDirectAnnotationUsage( JdbcType.class )
+				|| backingMember.hasDirectAnnotationUsage( JdbcTypeCode.class );
 
-		final boolean implicitlyEmbedded = backingMember.getAnnotationUsage( HibernateAnnotations.EMBEDDABLE_INSTANTIATOR ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.COMPOSITE_TYPE ) != null;
+		final boolean implicitlyEmbedded = backingMember.hasDirectAnnotationUsage( EmbeddableInstantiator.class )
+				|| backingMember.hasDirectAnnotationUsage( CompositeType.class );
 
-		final boolean implicitlyAny = backingMember.getAnnotationUsage( HibernateAnnotations.ANY_DISCRIMINATOR ) != null
-				|| CollectionHelper.isNotEmpty( backingMember.getRepeatedAnnotationUsages( HibernateAnnotations.ANY_DISCRIMINATOR_VALUE ) )
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.ANY_DISCRIMINATOR_VALUES ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.ANY_KEY_JAVA_TYPE ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.ANY_KEY_JAVA_CLASS ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.ANY_KEY_JDBC_TYPE ) != null
-				|| backingMember.getAnnotationUsage( HibernateAnnotations.ANY_KEY_JDBC_TYPE_CODE ) != null;
+		final boolean implicitlyAny = backingMember.hasDirectAnnotationUsage( AnyDiscriminator.class )
+//				|| CollectionHelper.isNotEmpty( backingMember.getRepeatedAnnotationUsages( HibernateAnnotations.ANY_DISCRIMINATOR_VALUE ) )
+//				|| backingMember.hasDirectAnnotationUsage( HibernateAnnotations.ANY_DISCRIMINATOR_VALUES )
+				|| backingMember.hasDirectAnnotationUsage( AnyKeyJavaType.class )
+				|| backingMember.hasDirectAnnotationUsage( AnyKeyJavaClass.class )
+				|| backingMember.hasDirectAnnotationUsage( AnyKeyJdbcType.class )
+				|| backingMember.hasDirectAnnotationUsage( AnyKeyJdbcTypeCode.class );
 
 		if ( !plural ) {
 			// first implicit basic nature

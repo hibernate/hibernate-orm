@@ -9,6 +9,7 @@ package org.hibernate.boot.models.categorize.spi;
 import java.util.List;
 
 import org.hibernate.boot.models.categorize.internal.StandardPersistentAttributeMemberResolver;
+import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 

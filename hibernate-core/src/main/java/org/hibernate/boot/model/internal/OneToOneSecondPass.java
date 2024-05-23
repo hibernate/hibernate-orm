@@ -26,8 +26,6 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SortableValue;
-import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.ForeignKeyDirection;
 
@@ -105,7 +103,7 @@ public class OneToOneSecondPass implements SecondPass {
 
 		value.setConstrained( !optional );
 		value.setForeignKeyType( getForeignKeyDirection() );
-		bindForeignKeyNameAndDefinition( value, property, property.getAnnotationUsage( ForeignKey.class ), buildingContext );
+		bindForeignKeyNameAndDefinition( value, property, property.getDirectAnnotationUsage( ForeignKey.class ), buildingContext );
 
 		final PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
@@ -116,9 +114,9 @@ public class OneToOneSecondPass implements SecondPass {
 		binder.setBuildingContext( buildingContext );
 		binder.setHolder( propertyHolder );
 
-		final AnnotationUsage<LazyGroup> lazyGroupAnnotation = property.getAnnotationUsage( LazyGroup.class );
+		final LazyGroup lazyGroupAnnotation = property.getDirectAnnotationUsage( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {
-			binder.setLazyGroup( lazyGroupAnnotation.getString( "value" ) );
+			binder.setLazyGroup( lazyGroupAnnotation.value() );
 		}
 
 		final Property result = binder.makeProperty();

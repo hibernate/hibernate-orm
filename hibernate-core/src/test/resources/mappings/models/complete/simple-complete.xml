@@ -7,10 +7,10 @@
   -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 version="3.2">
+                 version="7.0">
     <entity class="org.hibernate.orm.test.boot.models.xml.SimpleEntity" metadata-complete="true" access="FIELD">
         <sql-restriction>name is not null</sql-restriction>
-        <sql-insert callable="true" result-check="COUNT" table="SimpleEntity">insert into SimpleEntity(name) values(?)</sql-insert>
+        <sql-insert callable="true" result-check="COUNT" table="SimpleEntity">insertSimpleEntity(?)</sql-insert>
         <filter name="name_filter">
             <condition>{t}.name = :name</condition>
             <aliases alias="t" table="SimpleEntity" entity="org.hibernate.orm.test.boot.models.xml.SimpleEntity"/>

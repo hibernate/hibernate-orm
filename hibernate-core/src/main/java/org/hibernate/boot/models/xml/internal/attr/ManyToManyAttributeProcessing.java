@@ -8,18 +8,23 @@ package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.XmlAnnotations;
+import org.hibernate.boot.models.annotations.internal.ManyToManyJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
-import jakarta.persistence.ManyToMany;
 
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
+import static org.hibernate.boot.models.xml.internal.attr.CommonPluralAttributeProcessing.applyPluralAttributeStructure;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -40,18 +45,21 @@ public class ManyToManyAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<ManyToMany> manyToManyAnn = applyManyToMany(
+		final ManyToManyJpaAnnotation manyToManyAnn = applyManyToMany(
 				jaxbManyToMany,
 				memberDetails,
 				xmlDocumentContext
 		);
 
-		applyTargetEntity( jaxbManyToMany, manyToManyAnn, xmlDocumentContext );
+		applyTarget( jaxbManyToMany, xmlDocumentContext, memberDetails );
 
 		XmlAnnotationHelper.applyCascading( jaxbManyToMany.getCascade(), memberDetails, xmlDocumentContext );
 
-		CommonAttributeProcessing.applyAttributeBasics( jaxbManyToMany, memberDetails, manyToManyAnn, accessType, xmlDocumentContext );
-		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbManyToMany, memberDetails, xmlDocumentContext );
+		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAttributeAccessor( jaxbManyToMany, memberDetails, xmlDocumentContext );
+		applyFetching( jaxbManyToMany, memberDetails, manyToManyAnn, xmlDocumentContext );
+
+		applyPluralAttributeStructure( jaxbManyToMany, memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyAttributeOverrides(
 				jaxbManyToMany.getMapKeyAttributeOverrides(),
@@ -71,35 +79,36 @@ public class ManyToManyAttributeProcessing {
 		return memberDetails;
 	}
 
-	private static MutableAnnotationUsage<ManyToMany> applyManyToMany(
+	private static void applyTarget(
+			JaxbManyToManyImpl jaxbManyToMany,
+			XmlDocumentContext xmlDocumentContext,
+			MutableMemberDetails memberDetails) {
+		// todo (7.0) : we need a distinction here between hbm.xml target and orm.xml target-entity
+		//		- for orm.xml target-entity we should apply the package name, if one
+		//		- for hbm.xml target we should not since it could refer to a dynamic mapping
+		if ( StringHelper.isEmpty( jaxbManyToMany.getTargetEntity() ) ) {
+			return;
+		}
+		final TargetXmlAnnotation targetAnn = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
+				XmlAnnotations.TARGET,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		targetAnn.value( xmlDocumentContext.resolveClassName( jaxbManyToMany.getTargetEntity() ) );
+	}
+
+	private static ManyToManyJpaAnnotation applyManyToMany(
 			JaxbManyToManyImpl jaxbManyToMany,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<ManyToMany> manyToManyAnn = memberDetails.applyAnnotationUsage(
+		final ManyToManyJpaAnnotation manyToManyAnn = (ManyToManyJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.MANY_TO_MANY,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		if ( jaxbManyToMany != null ) {
-			XmlAnnotationHelper.applyOptionalAttribute( manyToManyAnn, "fetch", jaxbManyToMany.getFetch() );
-			XmlAnnotationHelper.applyOptionalAttribute( manyToManyAnn, "mappedBy", jaxbManyToMany.getMappedBy() );
-		}
+		CommonAttributeProcessing.applyFetching( jaxbManyToMany, memberDetails, manyToManyAnn, xmlDocumentContext );
+		CommonAttributeProcessing.applyMappedBy( jaxbManyToMany.getMappedBy(), manyToManyAnn, xmlDocumentContext );
 
 		return manyToManyAnn;
 	}
 
-	private static void applyTargetEntity(
-			JaxbManyToManyImpl jaxbManyToMany,
-			MutableAnnotationUsage<ManyToMany> manyToManyAnn,
-			XmlDocumentContext xmlDocumentContext) {
-		final String targetEntity = jaxbManyToMany.getTargetEntity();
-		if ( StringHelper.isNotEmpty( targetEntity ) ) {
-			manyToManyAnn.setAttributeValue(
-					"targetEntity",
-					xmlDocumentContext.getModelBuildingContext()
-							.getClassDetailsRegistry()
-							.resolveClassDetails( xmlDocumentContext.resolveClassName( targetEntity ) )
-			);
-		}
-	}
 }

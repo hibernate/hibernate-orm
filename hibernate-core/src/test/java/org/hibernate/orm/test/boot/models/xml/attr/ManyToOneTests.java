@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.boot.models.xml.attr;
 
-import java.util.List;
-
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
@@ -21,13 +19,12 @@ import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -40,7 +37,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 
 /**
  * @author Steve Ebersole
@@ -59,47 +56,46 @@ public class ManyToOneTests {
 				serviceRegistry,
 				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 		);
-		final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+
+		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 				managedResources,
+				false,
+				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 				bootstrapContext
 		);
 
-		assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
 
-		final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
-		final EntityTypeMetadata root = hierarchy.getRoot();
-
-		final FieldDetails parentField = root.getClassDetails().findFieldByName( "parent" );
-		final AnnotationUsage<ManyToOne> manyToOneAnn = parentField.getAnnotationUsage( ManyToOne.class );
+		final FieldDetails parentField = classDetails.findFieldByName( "parent" );
+		final ManyToOne manyToOneAnn = parentField.getDirectAnnotationUsage( ManyToOne.class );
 		assertThat( manyToOneAnn ).isNotNull();
-		final AnnotationUsage<JoinColumn> joinColumnAnn = parentField.getAnnotationUsage( JoinColumn.class );
+		final JoinColumn joinColumnAnn = parentField.getAnnotationUsage( JoinColumn.class, sourceModelBuildingContext );
 		assertThat( joinColumnAnn ).isNotNull();
-		assertThat( joinColumnAnn.getString( "name" ) ).isEqualTo( "parent_fk" );
+		assertThat( joinColumnAnn.name() ).isEqualTo( "parent_fk" );
 
-		assertThat( parentField.getAnnotationUsage( JoinColumn.class ) ).isNotNull();
-
-		final AnnotationUsage<NotFound> notFoundAnn = parentField.getAnnotationUsage( NotFound.class );
+		final NotFound notFoundAnn = parentField.getDirectAnnotationUsage( NotFound.class );
 		assertThat( notFoundAnn ).isNotNull();
-		assertThat( notFoundAnn.<NotFoundAction>getEnum( "action" ) ).isEqualTo( NotFoundAction.IGNORE );
+		assertThat( notFoundAnn.action() ).isEqualTo( NotFoundAction.IGNORE );
 
-		final AnnotationUsage<OnDelete> onDeleteAnn = parentField.getAnnotationUsage( OnDelete.class );
+		final OnDelete onDeleteAnn = parentField.getDirectAnnotationUsage( OnDelete.class );
 		assertThat( onDeleteAnn ).isNotNull();
-		assertThat( onDeleteAnn.<OnDeleteAction>getEnum( "action" ) ).isEqualTo( OnDeleteAction.CASCADE );
+		assertThat( onDeleteAnn.action() ).isEqualTo( OnDeleteAction.CASCADE );
 
-		final AnnotationUsage<Fetch> fetchAnn = parentField.getAnnotationUsage( Fetch.class );
+		final Fetch fetchAnn = parentField.getDirectAnnotationUsage( Fetch.class );
 		assertThat( fetchAnn ).isNotNull();
-		assertThat( fetchAnn.<FetchMode>getEnum( "value" ) ).isEqualTo( FetchMode.SELECT );
+		assertThat( fetchAnn.value() ).isEqualTo( FetchMode.SELECT );
 
-		final AnnotationUsage<OptimisticLock> optLockAnn = parentField.getAnnotationUsage( OptimisticLock.class );
+		final OptimisticLock optLockAnn = parentField.getDirectAnnotationUsage( OptimisticLock.class );
 		assertThat( optLockAnn ).isNotNull();
-		assertThat( optLockAnn.getBoolean( "excluded" ) ).isTrue();
+		assertThat( optLockAnn.excluded() ).isTrue();
 
-		final AnnotationUsage<Target> targetAnn = parentField.getAnnotationUsage( Target.class );
+		final Target targetAnn = parentField.getDirectAnnotationUsage( Target.class );
 		assertThat( targetAnn ).isNotNull();
-		assertThat( targetAnn.getString( "value" ) ).isEqualTo( "org.hibernate.orm.test.boot.models.xml.attr.ManyToOneTests$SimpleEntity" );
+		assertThat( targetAnn.value() ).isEqualTo( "org.hibernate.orm.test.boot.models.xml.attr.ManyToOneTests$SimpleEntity" );
 
-		final AnnotationUsage<Cascade> cascadeAnn = parentField.getAnnotationUsage( Cascade.class );
-		final List<CascadeType> cascadeTypes = cascadeAnn.getList( "value" );
+		final Cascade cascadeAnn = parentField.getDirectAnnotationUsage( Cascade.class );
+		final CascadeType[] cascadeTypes = cascadeAnn.value();
 		assertThat( cascadeTypes ).isNotEmpty();
 		assertThat( cascadeTypes ).containsOnly( CascadeType.ALL );
 	}

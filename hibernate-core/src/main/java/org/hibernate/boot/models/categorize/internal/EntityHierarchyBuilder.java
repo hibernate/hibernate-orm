@@ -10,13 +10,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
@@ -24,6 +22,9 @@ import org.hibernate.models.spi.MethodDetails;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * Builds {@link EntityHierarchy} references from
@@ -121,9 +122,9 @@ public class EntityHierarchyBuilder {
 	private AccessType resolveDefaultAccessTypeFromClassAnnotation(ClassDetails rootEntityType) {
 		ClassDetails current = rootEntityType;
 		while ( current != null ) {
-			final AnnotationUsage<Access> accessAnnotation = current.getAnnotationUsage( JpaAnnotations.ACCESS );
+			final Access accessAnnotation = current.getDirectAnnotationUsage( Access.class );
 			if ( accessAnnotation != null ) {
-				return accessAnnotation.getAttributeValue( "value" );
+				return accessAnnotation.value();
 			}
 
 			current = current.getSuperClass();
@@ -161,9 +162,9 @@ public class EntityHierarchyBuilder {
 		final List<MethodDetails> methods = current.getMethods();
 		for ( int i = 0; i < methods.size(); i++ ) {
 			final MethodDetails methodDetails = methods.get( i );
-			if ( methodDetails.getAnnotationUsage( JpaAnnotations.ID ) != null
-					|| methodDetails.getAnnotationUsage( JpaAnnotations.EMBEDDED_ID ) != null ) {
-				if ( methodDetails.getAnnotationUsage( Access.class ) == null ) {
+			if ( methodDetails.hasDirectAnnotationUsage( Id.class )
+					|| methodDetails.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+				if ( methodDetails.getDirectAnnotationUsage( Access.class ) == null ) {
 					return methodDetails;
 				}
 			}
@@ -172,9 +173,9 @@ public class EntityHierarchyBuilder {
 		final List<FieldDetails> fields = current.getFields();
 		for ( int i = 0; i < fields.size(); i++ ) {
 			final FieldDetails fieldDetails = fields.get( i );
-			if ( fieldDetails.getAnnotationUsage( JpaAnnotations.ID ) != null
-					|| fieldDetails.getAnnotationUsage( JpaAnnotations.EMBEDDED_ID ) != null ) {
-				if ( fieldDetails.getAnnotationUsage( Access.class ) == null ) {
+			if ( fieldDetails.hasDirectAnnotationUsage( Id.class )
+					|| fieldDetails.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+				if ( fieldDetails.getDirectAnnotationUsage( Access.class ) == null ) {
 					return fieldDetails;
 				}
 			}
@@ -191,7 +192,7 @@ public class EntityHierarchyBuilder {
 		final Set<ClassDetails> collectedTypes = new HashSet<>();
 
 		classDetailsRegistry.forEachClassDetails( (managedType) -> {
-			if ( managedType.getAnnotationUsage( JpaAnnotations.ENTITY ) != null
+			if ( managedType.getDirectAnnotationUsage( Entity.class ) != null
 					&& isRoot( managedType ) ) {
 				collectedTypes.add( managedType );
 			}
@@ -213,7 +214,7 @@ public class EntityHierarchyBuilder {
 
 		ClassDetails current = classInfo.getSuperClass();
 		while (  current != null ) {
-			if ( current.getAnnotationUsage( JpaAnnotations.ENTITY ) != null && !current.isAbstract() ) {
+			if ( current.getDirectAnnotationUsage( Entity.class ) != null && !current.isAbstract() ) {
 				// a non-abstract super type has `@Entity` -> classInfo cannot be a root entity
 				return false;
 			}

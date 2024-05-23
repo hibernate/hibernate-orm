@@ -8,16 +8,18 @@ package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
-import jakarta.persistence.Basic;
+import jakarta.persistence.FetchType;
 
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -38,9 +40,12 @@ public class BasicIdAttributeProcessing {
 		);
 
 		memberDetails.applyAnnotationUsage( JpaAnnotations.ID, xmlDocumentContext.getModelBuildingContext() );
-		final MutableAnnotationUsage<Basic> basicAnn = memberDetails.applyAnnotationUsage( JpaAnnotations.BASIC, xmlDocumentContext.getModelBuildingContext() );
+		final BasicJpaAnnotation basicAnn = (BasicJpaAnnotation) memberDetails.applyAnnotationUsage( JpaAnnotations.BASIC, xmlDocumentContext.getModelBuildingContext() );
+		basicAnn.fetch( FetchType.EAGER );
+		basicAnn.optional( false );
 
-		CommonAttributeProcessing.applyAttributeBasics( jaxbId, memberDetails, basicAnn, accessType, xmlDocumentContext );
+		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAttributeAccessor( jaxbId, memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyColumn( jaxbId.getColumn(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyBasicTypeComposition( jaxbId, memberDetails, xmlDocumentContext );

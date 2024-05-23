@@ -15,6 +15,7 @@ import java.util.Map;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -22,8 +23,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoEntityStandard;
 import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;
@@ -71,24 +70,24 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	//			(`org.hibernate.query.results.ResultBuilder`) as part of the
 	//			memento for its resolution
 
-	public static SqlResultSetMappingDescriptor from(AnnotationUsage<SqlResultSetMapping> mappingAnnotation, String name) {
-		final List<AnnotationUsage<EntityResult>> entityResults = mappingAnnotation.getList( "entities" );
-		final List<AnnotationUsage<ConstructorResult>> constructorResults = mappingAnnotation.getList( "classes" );
-		final List<AnnotationUsage<ColumnResult>> columnResults = mappingAnnotation.getList( "columns" );
+	public static SqlResultSetMappingDescriptor from(SqlResultSetMapping mappingAnnotation, String name) {
+		final EntityResult[] entityResults = mappingAnnotation.entities();
+		final ConstructorResult[] constructorResults = mappingAnnotation.classes();
+		final ColumnResult[] columnResults = mappingAnnotation.columns();
 
 		final List<ResultDescriptor> resultDescriptors = arrayList(
-				entityResults.size() + columnResults.size() + columnResults.size()
+				entityResults.length + columnResults.length + columnResults.length
 		);
 
-		for ( final AnnotationUsage<EntityResult> entityResult : entityResults ) {
+		for ( final EntityResult entityResult : entityResults ) {
 			resultDescriptors.add( new EntityResultDescriptor( entityResult ) );
 		}
 
-		for ( final AnnotationUsage<ConstructorResult> constructorResult : constructorResults ) {
+		for ( final ConstructorResult constructorResult : constructorResults ) {
 			resultDescriptors.add( new ConstructorResultDescriptor( constructorResult, mappingAnnotation ) );
 		}
 
-		for ( final AnnotationUsage<ColumnResult> columnResult : columnResults ) {
+		for ( final ColumnResult columnResult : columnResults ) {
 			resultDescriptors.add(
 					new JpaColumnResultDescriptor( columnResult, mappingAnnotation )
 			);
@@ -97,8 +96,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		return new SqlResultSetMappingDescriptor( name, resultDescriptors );
 	}
 
-	public static SqlResultSetMappingDescriptor from(AnnotationUsage<SqlResultSetMapping> mappingAnnotation) {
-		return from( mappingAnnotation, mappingAnnotation.getString( "name" ) );
+	public static SqlResultSetMappingDescriptor from(SqlResultSetMapping mappingAnnotation) {
+		return from( mappingAnnotation, mappingAnnotation.name() );
 	}
 
 	private final String mappingName;
@@ -130,21 +129,21 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	 * @see jakarta.persistence.ColumnResult
 	 */
 	private static class JpaColumnResultDescriptor implements ResultDescriptor {
-		private final AnnotationUsage<ColumnResult> columnResult;
+		private final ColumnResult columnResult;
 		private final String mappingName;
 
 		public JpaColumnResultDescriptor(
-				AnnotationUsage<ColumnResult> columnResult,
-				AnnotationUsage<SqlResultSetMapping> mappingAnnotation) {
+				ColumnResult columnResult,
+				SqlResultSetMapping mappingAnnotation) {
 			this.columnResult = columnResult;
-			this.mappingName = mappingAnnotation.getString( "name" );
+			this.mappingName = mappingAnnotation.name();
 		}
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
 			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
 					"Generating ScalarResultMappingMemento for JPA ColumnResult(%s) for ResultSet mapping `%s`",
-					columnResult.getString( "name" ),
+					columnResult.name(),
 					mappingName
 			);
 
@@ -174,24 +173,24 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		private final List<ArgumentDescriptor> argumentResultDescriptors;
 
 		public ConstructorResultDescriptor(
-				AnnotationUsage<ConstructorResult> constructorResult,
-				AnnotationUsage<SqlResultSetMapping> mappingAnnotation) {
-			this.mappingName = mappingAnnotation.getString( "name" );
-			this.targetJavaType = constructorResult.getClassDetails( "targetClass" ).toJavaClass();
+				ConstructorResult constructorResult,
+				SqlResultSetMapping mappingAnnotation) {
+			this.mappingName = mappingAnnotation.name();
+			this.targetJavaType = constructorResult.targetClass();
 
 			argumentResultDescriptors = interpretArguments( constructorResult, mappingAnnotation );
 		}
 
 		private static List<ArgumentDescriptor> interpretArguments(
-				AnnotationUsage<ConstructorResult> constructorResult,
-				AnnotationUsage<SqlResultSetMapping> mappingAnnotation) {
-			final List<AnnotationUsage<ColumnResult>> columnResults = constructorResult.getList( "columns" );
-			if ( columnResults.isEmpty() ) {
+				ConstructorResult constructorResult,
+				SqlResultSetMapping mappingAnnotation) {
+			final ColumnResult[] columnResults = constructorResult.columns();
+			if ( ArrayHelper.isEmpty( columnResults ) ) {
 				throw new IllegalArgumentException( "ConstructorResult did not define any ColumnResults" );
 			}
 
-			final List<ArgumentDescriptor> argumentResultDescriptors = arrayList( columnResults.size() );
-			for ( AnnotationUsage<ColumnResult> columnResult : columnResults ) {
+			final List<ArgumentDescriptor> argumentResultDescriptors = arrayList( columnResults.length );
+			for ( ColumnResult columnResult : columnResults ) {
 				final JpaColumnResultDescriptor argumentResultDescriptor = new JpaColumnResultDescriptor(
 						columnResult,
 						mappingAnnotation
@@ -234,25 +233,24 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		private final Map<String, AttributeFetchDescriptor> explicitFetchMappings;
 
-		public EntityResultDescriptor(AnnotationUsage<EntityResult> entityResult) {
-			final ClassDetails classDetails = entityResult.getClassDetails( "entityClass" );
-			this.entityName = classDetails.getName();
+		public EntityResultDescriptor(EntityResult entityResult) {
+			this.entityName = entityResult.entityClass().getName();
 			this.navigablePath = new NavigablePath( entityName );
 
-			this.discriminatorColumn = entityResult.getString( "discriminatorColumn" );
+			this.discriminatorColumn = entityResult.discriminatorColumn();
 
 			this.explicitFetchMappings = extractFetchMappings( navigablePath, entityResult );
 		}
 
 		private static Map<String, AttributeFetchDescriptor> extractFetchMappings(
 				NavigablePath navigablePath,
-				AnnotationUsage<EntityResult> entityResult) {
-			final List<AnnotationUsage<FieldResult>> fields = entityResult.getList( "fields" );
-			final Map<String, AttributeFetchDescriptor> explicitFetchMappings = mapOfSize( fields.size() );
+				EntityResult entityResult) {
+			final FieldResult[] fields = entityResult.fields();
+			final Map<String, AttributeFetchDescriptor> explicitFetchMappings = mapOfSize( fields.length );
 
-			for ( int i = 0; i < fields.size(); i++ ) {
-				final AnnotationUsage<FieldResult> fieldResult = fields.get( i );
-				final String fieldName = fieldResult.getString("name" );
+			for ( int i = 0; i < fields.length; i++ ) {
+				final FieldResult fieldResult = fields[i];
+				final String fieldName = fieldResult.name();
 				final AttributeFetchDescriptor existing = explicitFetchMappings.get( fieldName );
 				if ( existing != null ) {
 					existing.addColumn( fieldResult );
@@ -326,18 +324,6 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 		}
 
-		private static AttributeFetchDescriptor from(
-				NavigablePath entityPath,
-				String entityName,
-				AnnotationUsage<FieldResult> fieldResult) {
-			return new AttributeFetchDescriptor(
-					entityPath,
-					entityName,
-					fieldResult.getString( "name" ),
-					fieldResult.getString( "column" )
-			);
-		}
-
 		private final NavigablePath navigablePath;
 
 		private final String entityName;
@@ -372,25 +358,6 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			}
 
 			columnNames.add( fieldResult.column() );
-		}
-
-		private void addColumn(AnnotationUsage<FieldResult> fieldResult) {
-			final String name = fieldResult.getString( "name" );
-			final String column = fieldResult.getString( "column" );
-
-			if ( ! propertyPath.equals( name ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								Locale.ROOT,
-								"Passed FieldResult [%s, %s] does not match AttributeFetchMapping [%s]",
-								name,
-								column,
-								propertyPath
-						)
-				);
-			}
-
-			columnNames.add( column );
 		}
 
 		@Override

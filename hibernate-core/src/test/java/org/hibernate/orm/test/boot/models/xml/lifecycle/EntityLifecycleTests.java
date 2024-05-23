@@ -12,15 +12,14 @@ import java.util.stream.Collectors;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
-import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MethodDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +33,7 @@ import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 
 /**
  * @author Marco Belladelli
@@ -50,22 +49,19 @@ public class EntityLifecycleTests {
 					serviceRegistry,
 					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 			);
-			final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 					managedResources,
+					false,
+					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 					bootstrapContext
 			);
-
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityTypeMetadata rootEntity = categorizedDomainModel.getEntityHierarchies()
-					.iterator()
-					.next()
-					.getRoot();
-			final ClassDetails classDetails = rootEntity.getClassDetails();
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+			final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
 			assertThat( classDetails.getName() ).isEqualTo( SimpleEntity.class.getName() );
 
 			// lifecycle callback methods
 			getMethodDetails( classDetails, "prePersist" ).forEach( method -> {
-				final AnnotationUsage<PrePersist> prePersist = method.getAnnotationUsage( PrePersist.class );
+				final PrePersist prePersist = method.getDirectAnnotationUsage( PrePersist.class );
 				if ( !method.getArgumentTypes().isEmpty() ) {
 					assertThat( prePersist ).isNull();
 				}
@@ -73,18 +69,19 @@ public class EntityLifecycleTests {
 					assertThat( prePersist ).isNotNull();
 				}
 			} );
-			assertThat( getMethodDetails( classDetails, "preRemove" ).get( 0 ).getAnnotationUsage( PreRemove.class ) ).isNotNull();
-			assertThat( getMethodDetails( classDetails, "preUpdate" ).get( 0 ).getAnnotationUsage( PreUpdate.class ) ).isNotNull();
+			assertThat( getMethodDetails( classDetails, "preRemove" ).get( 0 ).getDirectAnnotationUsage( PreRemove.class ) ).isNotNull();
+			assertThat( getMethodDetails( classDetails, "preUpdate" ).get( 0 ).getDirectAnnotationUsage( PreUpdate.class ) ).isNotNull();
 
 			// entity listeners
-			final AnnotationUsage<EntityListeners> entityListenersAnn = classDetails.getAnnotationUsage( EntityListeners.class );
+			final EntityListeners entityListenersAnn = classDetails.getDirectAnnotationUsage( EntityListeners.class );
 			assertThat( entityListenersAnn ).isNotNull();
-			final List<ClassDetails> entityListeners = entityListenersAnn.getAttributeValue( "value" );
+			final Class<?>[] entityListeners = entityListenersAnn.value();
 			assertThat( entityListeners ).hasSize( 1 );
-			final ClassDetails listener = entityListeners.get( 0 );
+			final Class<?> listener = entityListeners[0];
 			assertThat( listener.getName() ).isEqualTo( SimpleEntityListener.class.getName() );
-			getMethodDetails( classDetails, "postPersist" ).forEach( method -> {
-				final AnnotationUsage<PostPersist> prePersist = method.getAnnotationUsage( PostPersist.class );
+			final ClassDetails listenerClassDetails = classDetailsRegistry.getClassDetails( listener.getName() );
+			getMethodDetails( listenerClassDetails, "postPersist" ).forEach( method -> {
+				final PostPersist prePersist = method.getDirectAnnotationUsage( PostPersist.class );
 				if ( method.getArgumentTypes().size() != 1 ) {
 					assertThat( prePersist ).isNull();
 				}
@@ -92,9 +89,9 @@ public class EntityLifecycleTests {
 					assertThat( prePersist ).isNotNull();
 				}
 			} );
-			assertThat( getMethodDetails( listener, "postRemove" ).get( 0 ).getAnnotationUsage( PostRemove.class ) ).isNotNull();
-			assertThat( getMethodDetails( listener, "postUpdate" ).get( 0 ).getAnnotationUsage( PostUpdate.class ) ).isNotNull();
-			assertThat( getMethodDetails( listener, "postLoad" ).get( 0 ).getAnnotationUsage( PostLoad.class ) ).isNotNull();
+			assertThat( getMethodDetails( listenerClassDetails, "postRemove" ).get( 0 ).getDirectAnnotationUsage( PostRemove.class ) ).isNotNull();
+			assertThat( getMethodDetails( listenerClassDetails, "postUpdate" ).get( 0 ).getDirectAnnotationUsage( PostUpdate.class ) ).isNotNull();
+			assertThat( getMethodDetails( listenerClassDetails, "postLoad" ).get( 0 ).getDirectAnnotationUsage( PostLoad.class ) ).isNotNull();
 		}
 	}
 

@@ -9,10 +9,9 @@ package org.hibernate.boot.models.xml.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.CacheMode;
-import org.hibernate.annotations.NamedNativeQueries;
+import org.hibernate.FlushMode;
+import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedNativeQuery;
-import org.hibernate.annotations.NamedQueries;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConstructorResultImpl;
@@ -21,21 +20,33 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFieldResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryBase;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHint;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbStoredProcedureParameterImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbSynchronizedTableImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.internal.AnnotationUsageHelper;
+import org.hibernate.boot.models.annotations.internal.ColumnResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ConstructorResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FieldResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueriesAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueriesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueryAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueriesAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueriesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueryAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedStoredProcedureQueriesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedStoredProcedureQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.QueryHintJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.StoredProcedureParameterJpaAnnotation;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
@@ -43,14 +54,11 @@ import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
-import jakarta.persistence.NamedStoredProcedureQueries;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.StoredProcedureParameter;
 
-import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyAttributeIfSpecified;
-import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyStringAttributeIfSpecified;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.boot.models.JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
@@ -68,110 +76,75 @@ public class QueryProcessing {
 		}
 
 		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
-		List<MutableAnnotationUsage<NamedQuery>> namedHqlQueryList = null;
-		List<MutableAnnotationUsage<jakarta.persistence.NamedQuery>> namedJpqlQueryList = null;
-		
+		List<NamedQueryAnnotation> namedHqlQueryList = null;
+		List<NamedQueryJpaAnnotation> namedJpqlQueryList = null;
+
 		for ( int i = 0; i < jaxbEntity.getNamedQueries().size(); i++ ) {
 			final JaxbNamedQueryImpl jaxbNamedQuery = jaxbEntity.getNamedQueries().get( i );
 
 			if ( CollectionHelper.isNotEmpty( jaxbNamedQuery.getHints() ) ) {
 				// treat this as a Jakarta Persistence named-query
 				if ( namedJpqlQueryList == null ) {
-					final MutableAnnotationUsage<jakarta.persistence.NamedQueries> namedJpqlQueriesUsage = classDetails.replaceAnnotationUsage(
-							JpaAnnotations.NAMED_QUERY,
-							JpaAnnotations.NAMED_QUERIES,
-							modelBuildingContext
-					);
-					classDetails.addAnnotationUsage( namedJpqlQueriesUsage );
-
 					namedJpqlQueryList = new ArrayList<>();
-					namedJpqlQueriesUsage.setAttributeValue( "value", namedJpqlQueryList );
 				}
-				applyNamedJpqlQuery( jaxbNamedQuery, classDetails, namedJpqlQueryList, modelBuildingContext );
+				final NamedQueryJpaAnnotation namedJpqlQuery = JpaAnnotations.NAMED_QUERY.createUsage( modelBuildingContext );
+				namedJpqlQueryList.add( namedJpqlQuery );
+				namedJpqlQuery.apply( jaxbNamedQuery, xmlDocumentContext );
 			}
 			else {
 				// treat this as a named HQL query
 				if ( namedHqlQueryList == null ) {
-					final MutableAnnotationUsage<NamedQueries> namedHqlQueriesUsage = classDetails.replaceAnnotationUsage(
-							HibernateAnnotations.NAMED_QUERY,
-							HibernateAnnotations.NAMED_QUERIES,
-							modelBuildingContext
-					);
-					classDetails.addAnnotationUsage( namedHqlQueriesUsage );
-
 					namedHqlQueryList = new ArrayList<>();
-					namedHqlQueriesUsage.setAttributeValue( "value", namedHqlQueryList );
 				}
-				applyNamedHqlQuery( jaxbNamedQuery, classDetails, namedHqlQueryList, modelBuildingContext );
+				final NamedQueryAnnotation namedQuery = HibernateAnnotations.NAMED_QUERY.createUsage( xmlDocumentContext.getModelBuildingContext() );
+				namedHqlQueryList.add( namedQuery );
+				namedQuery.apply( jaxbNamedQuery, xmlDocumentContext );
 			}
+		}
+
+		if ( namedJpqlQueryList != null ) {
+			final NamedQueriesJpaAnnotation namedJpqlQueries = (NamedQueriesJpaAnnotation) classDetails.replaceAnnotationUsage(
+					JpaAnnotations.NAMED_QUERY,
+					JpaAnnotations.NAMED_QUERIES,
+					modelBuildingContext
+			);
+			namedJpqlQueries.value( namedJpqlQueryList.toArray( jakarta.persistence.NamedQuery[]::new ) );
+		}
+		if ( namedHqlQueryList != null ) {
+			final NamedQueriesAnnotation namedQueries = (NamedQueriesAnnotation) classDetails.replaceAnnotationUsage(
+					HibernateAnnotations.NAMED_QUERY,
+					HibernateAnnotations.NAMED_QUERIES,
+					modelBuildingContext
+			);
+			namedQueries.value( namedHqlQueryList.toArray( NamedQuery[]::new ) );
 		}
 	}
 
-	public static void applyNamedHqlQuery(
-			JaxbNamedQueryImpl jaxbNamedQuery,
-			MutableClassDetails classDetails,
-			List<MutableAnnotationUsage<NamedQuery>> namedQueryList,
-			SourceModelBuildingContext modelBuildingContext) {
-		final MutableAnnotationUsage<NamedQuery> namedQueryUsage = HibernateAnnotations.NAMED_QUERY.createUsage( modelBuildingContext );
-		namedQueryList.add( namedQueryUsage );
-
-		namedQueryUsage.setAttributeValue( "name", jaxbNamedQuery.getName() );
-		namedQueryUsage.setAttributeValue( "query", jaxbNamedQuery.getQuery() );
-
-		AnnotationUsageHelper.applyAttributeIfSpecified( "comment", jaxbNamedQuery.getComment(), namedQueryUsage );
-
-		AnnotationUsageHelper.applyAttributeIfSpecified( "readOnly", jaxbNamedQuery.isReadOnly(), namedQueryUsage );
-		AnnotationUsageHelper.applyAttributeIfSpecified( "flushMode", jaxbNamedQuery.getFlushMode(), namedQueryUsage );
-		if ( jaxbNamedQuery.isCacheable() == Boolean.TRUE ) {
-			namedQueryUsage.setAttributeValue( "cacheable", true );
-			AnnotationUsageHelper.applyAttributeIfSpecified( "cacheRegion", jaxbNamedQuery.getCacheRegion(), namedQueryUsage );
-			AnnotationUsageHelper.applyAttributeIfSpecified( "cacheMode", jaxbNamedQuery.getCacheMode(), namedQueryUsage );
-
-			final CacheMode cacheMode = jaxbNamedQuery.getCacheMode();
-			if ( cacheMode != null && cacheMode != CacheMode.IGNORE ) {
-				if ( cacheMode == CacheMode.GET ) {
-					applyAttributeIfSpecified( "cacheRegion", cacheMode, namedQueryUsage );
-					applyAttributeIfSpecified( "cacheRegion", cacheMode, namedQueryUsage );
-				}
-				AnnotationUsageHelper.applyAttributeIfSpecified( "cacheRegion", cacheMode, namedQueryUsage );
-				AnnotationUsageHelper.applyAttributeIfSpecified( "cacheRegion", cacheMode, namedQueryUsage );
-			}
-		}
-		AnnotationUsageHelper.applyAttributeIfSpecified( "fetchSize", jaxbNamedQuery.getFetchSize(), namedQueryUsage );
-		AnnotationUsageHelper.applyAttributeIfSpecified( "timeout", jaxbNamedQuery.getTimeout(), namedQueryUsage );
-
-		AnnotationUsageHelper.applyAttributeIfSpecified( "timeout", jaxbNamedQuery.getTimeout(), namedQueryUsage );
+	public static FlushModeType interpretFlushMode(FlushMode flushMode) {
+		return switch ( flushMode ) {
+			case AUTO -> FlushModeType.AUTO;
+			case ALWAYS -> FlushModeType.ALWAYS;
+			case COMMIT -> FlushModeType.COMMIT;
+			case MANUAL -> FlushModeType.MANUAL;
+		};
 	}
 
-	private static void applyNamedJpqlQuery(
-			JaxbNamedQueryImpl jaxbNamedQuery,
-			ClassDetails classDetails,
-			List<MutableAnnotationUsage<jakarta.persistence.NamedQuery>> namedQueryList,
-			SourceModelBuildingContext modelBuildingContext) {
-		final MutableAnnotationUsage<jakarta.persistence.NamedQuery> namedQueryUsage = JpaAnnotations.NAMED_QUERY.createUsage( modelBuildingContext );
-		namedQueryList.add( namedQueryUsage );
-
-		namedQueryUsage.setAttributeValue( "name", jaxbNamedQuery.getName() );
-		namedQueryUsage.setAttributeValue( "query", jaxbNamedQuery.getQuery() );
-
-		applyQueryHints( jaxbNamedQuery, classDetails, namedQueryUsage, modelBuildingContext );
-	}
-
-	private static void applyQueryHints(
-			JaxbNamedQueryBase jaxbNamedQuery,
-			ClassDetails classDetails,
-			MutableAnnotationUsage<?> namedQueryUsage, 
-			SourceModelBuildingContext modelBuildingContext) {
-		if ( CollectionHelper.isNotEmpty( jaxbNamedQuery.getHints() ) ) {
-			final ArrayList<AnnotationUsage<QueryHint>> hints = CollectionHelper.arrayList( jaxbNamedQuery.getHints().size() );
-			namedQueryUsage.setAttributeValue( "hints", hints );
-
-			for ( JaxbQueryHint jaxbHint : jaxbNamedQuery.getHints() ) {
-				final MutableAnnotationUsage<QueryHint> queryHintUsage = JpaAnnotations.QUERY_HINT.createUsage( modelBuildingContext );
-				queryHintUsage.setAttributeValue( "name", jaxbHint.getName() );
-				queryHintUsage.setAttributeValue( "value", jaxbHint.getValue() );
-			}
+	public static final QueryHint[] NO_HINTS = new QueryHint[0];
+	public static QueryHint[] collectQueryHints(List<JaxbQueryHintImpl> jaxbHints, XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( jaxbHints ) ) {
+			return NO_HINTS;
 		}
+
+		final QueryHint[] hints = new QueryHint[jaxbHints.size()];
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		for ( int i = 0; i < jaxbHints.size(); i++ ) {
+			final QueryHintJpaAnnotation queryHintUsage = JpaAnnotations.QUERY_HINT.createUsage( modelBuildingContext );
+			hints[i] = queryHintUsage;
+			final JaxbQueryHint jaxbHint = jaxbHints.get(i);
+			queryHintUsage.name( jaxbHint.getName() );
+			queryHintUsage.value( jaxbHint.getValue() );
+		}
+		return hints;
 	}
 
 	public static void applyNamedNativeQueries(
@@ -183,10 +156,9 @@ public class QueryProcessing {
 			return;
 		}
 
-
 		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
-		List<MutableAnnotationUsage<NamedNativeQuery>> namedHibernateQueryList = null;
-		List<MutableAnnotationUsage<jakarta.persistence.NamedNativeQuery>> namedJpaQueryList = null;
+		List<NamedNativeQueryAnnotation> namedQueryList = null;
+		List<NamedNativeQueryJpaAnnotation> namedJpaQueryList = null;
 		
 		for ( int i = 0; i < jaxbEntity.getNamedNativeQueries().size(); i++ ) {
 			final JaxbNamedNativeQueryImpl jaxbNamedQuery = jaxbEntity.getNamedNativeQueries().get( i );
@@ -194,35 +166,38 @@ public class QueryProcessing {
 			if ( needsJpaNativeQuery( jaxbNamedQuery ) ) {
 				// @jakarta.persistence.NamedNativeQuery
 				if ( namedJpaQueryList == null ) {
-					final MutableAnnotationUsage<jakarta.persistence.NamedNativeQueries> namedQueriesUsage = classDetails.replaceAnnotationUsage(
-							JpaAnnotations.NAMED_NATIVE_QUERY,
-							JpaAnnotations.NAMED_NATIVE_QUERIES,
-							modelBuildingContext
-					);
-					classDetails.addAnnotationUsage( namedQueriesUsage );
-
 					namedJpaQueryList = new ArrayList<>();
-					namedQueriesUsage.setAttributeValue( "value", namedQueriesUsage );
 				}
-
-				applyJpaNativeQuery( jaxbNamedQuery, classDetails, namedJpaQueryList, modelBuildingContext, xmlDocumentContext );
+				final NamedNativeQueryJpaAnnotation namedQuery = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage( modelBuildingContext );
+				namedJpaQueryList.add( namedQuery );
+				namedQuery.apply( jaxbNamedQuery, xmlDocumentContext );
 			}
 			else {
 				// @org.hibernate.annotations.NamedNativeQuery
-				if ( namedHibernateQueryList == null ) {
-					final MutableAnnotationUsage<NamedNativeQueries> namedQueriesUsage = classDetails.replaceAnnotationUsage(
-							HibernateAnnotations.NAMED_NATIVE_QUERY,
-							HibernateAnnotations.NAMED_NATIVE_QUERIES,
-							modelBuildingContext
-					);
-					classDetails.addAnnotationUsage( namedQueriesUsage );
-
-					namedHibernateQueryList = new ArrayList<>();
-					namedQueriesUsage.setAttributeValue( "value", namedHibernateQueryList );
+				if ( namedQueryList == null ) {
+					namedQueryList = new ArrayList<>();
 				}
-
-				applyHibernateNativeQuery( jaxbNamedQuery, classDetails, namedHibernateQueryList, modelBuildingContext, xmlDocumentContext );
+				final NamedNativeQueryAnnotation namedQuery = HibernateAnnotations.NAMED_NATIVE_QUERY.createUsage( modelBuildingContext );
+				namedQueryList.add( namedQuery );
+				namedQuery.apply( jaxbNamedQuery, xmlDocumentContext );
 			}
+		}
+
+		if ( namedJpaQueryList != null ) {
+			final NamedNativeQueriesJpaAnnotation namedQueriesUsage = (NamedNativeQueriesJpaAnnotation) classDetails.replaceAnnotationUsage(
+					JpaAnnotations.NAMED_NATIVE_QUERY,
+					JpaAnnotations.NAMED_NATIVE_QUERIES,
+					modelBuildingContext
+			);
+			namedQueriesUsage.value( namedJpaQueryList.toArray( jakarta.persistence.NamedNativeQuery[]::new ) );
+		}
+		if ( namedQueryList != null ) {
+			final NamedNativeQueriesAnnotation namedQueriesUsage = (NamedNativeQueriesAnnotation) classDetails.replaceAnnotationUsage(
+					HibernateAnnotations.NAMED_NATIVE_QUERY,
+					HibernateAnnotations.NAMED_NATIVE_QUERIES,
+					modelBuildingContext
+			);
+			namedQueriesUsage.value( namedQueryList.toArray(NamedNativeQuery[]::new ) );
 		}
 	}
 
@@ -233,290 +208,177 @@ public class QueryProcessing {
 				|| CollectionHelper.isNotEmpty( jaxbNamedQuery.getEntityResult() );
 	}
 
-	private static void applyJpaNativeQuery(
-			JaxbNamedNativeQueryImpl jaxbNamedQuery,
-			MutableClassDetails classDetails,
-			List<MutableAnnotationUsage<jakarta.persistence.NamedNativeQuery>> namedQueryUsageList,
-			SourceModelBuildingContext modelBuildingContext,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<jakarta.persistence.NamedNativeQuery> namedQueryUsage = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage( modelBuildingContext );
-		namedQueryUsageList.add( namedQueryUsage );
 
-		namedQueryUsage.setAttributeValue( "name", jaxbNamedQuery.getName() );
-		namedQueryUsage.setAttributeValue( "query", jaxbNamedQuery.getQuery() );
-		applyQueryHints( jaxbNamedQuery, classDetails, namedQueryUsage, modelBuildingContext );
-
-		applyResultClassAndSynchronizations( jaxbNamedQuery, namedQueryUsage, modelBuildingContext, xmlDocumentContext );
-		applyResultSetMappings( jaxbNamedQuery, namedQueryUsage, xmlDocumentContext );
-		applyResults( jaxbNamedQuery, namedQueryUsage, classDetails, modelBuildingContext, xmlDocumentContext );
-	}
-
-	private static void applyResultClassAndSynchronizations(
-			JaxbNamedNativeQueryImpl jaxbNamedQuery,
-			MutableAnnotationUsage<?> namedQueryUsage,
-			SourceModelBuildingContext modelBuildingContext,
-			XmlDocumentContext xmlDocumentContext) {
-		final List<String> syncSpaces = new ArrayList<>();
-
-		if ( jaxbNamedQuery.getResultClass() != null ) {
-			final String resultClassName = xmlDocumentContext.resolveClassName( jaxbNamedQuery.getResultClass() );
-			syncSpaces.add( resultClassName );
-			namedQueryUsage.setAttributeValue(
-					"resultClass",
-					modelBuildingContext.getClassDetailsRegistry().getClassDetails( resultClassName )
-			);
-		}
-
-		for ( JaxbSynchronizedTableImpl synchronization : jaxbNamedQuery.getSynchronizations() ) {
-			syncSpaces.add( synchronization.getTable() );
-		}
-
-		if ( CollectionHelper.isNotEmpty( syncSpaces ) ) {
-			namedQueryUsage.setAttributeValue( "querySpaces", syncSpaces );
-		}
-	}
-
-	private static void applyResultSetMappings(
-			JaxbNamedNativeQueryImpl jaxbNamedQuery,
-			MutableAnnotationUsage<?> namedQueryUsage,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( isEmpty( jaxbNamedQuery.getResultSetMapping() ) ) {
-			return;
-		}
-
-		namedQueryUsage.setAttributeValue( "resultSetMapping", jaxbNamedQuery.getResultSetMapping() );
-	}
-
-	private static void applyResults(
-			JaxbNamedNativeQueryImpl jaxbNamedQuery,
-			MutableAnnotationUsage<jakarta.persistence.NamedNativeQuery> namedQueryUsage,
-			AnnotationTarget annotationTarget,
-			SourceModelBuildingContext modelBuildingContext,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isNotEmpty( jaxbNamedQuery.getColumnResult() ) ) {
-			final ArrayList<MutableAnnotationUsage<ColumnResult>> columnResultList = extractColumnResults(
-					jaxbNamedQuery.getColumnResult(),
-					annotationTarget,
-					modelBuildingContext,
-					xmlDocumentContext
-			);
-			namedQueryUsage.setAttributeValue( "columns", columnResultList );
-		}
-
-		if ( CollectionHelper.isNotEmpty( jaxbNamedQuery.getConstructorResult() ) ) {
-			final ArrayList<MutableAnnotationUsage<ConstructorResult>> constructorResultList = extractConstructorResults(
-					jaxbNamedQuery.getConstructorResult(),
-					annotationTarget,
-					modelBuildingContext,
-					xmlDocumentContext
-			);
-			namedQueryUsage.setAttributeValue( "classes", constructorResultList );
-		}
-
-		if ( CollectionHelper.isNotEmpty( jaxbNamedQuery.getEntityResult() ) ) {
-			final ArrayList<MutableAnnotationUsage<EntityResult>> entityResultList = extractEntityResults(
-					jaxbNamedQuery.getEntityResult(),
-					annotationTarget,
-					modelBuildingContext,
-					xmlDocumentContext
-			);
-			namedQueryUsage.setAttributeValue( "entities", entityResultList );
-		}
-	}
-
-	private static ArrayList<MutableAnnotationUsage<ColumnResult>> extractColumnResults(
+	private static final ColumnResult[] NO_COLUMN_RESULTS = new ColumnResult[0];
+	public static ColumnResult[] extractColumnResults(
 			List<JaxbColumnResultImpl> jaxbColumnResultList,
-			AnnotationTarget annotationTarget,
-			SourceModelBuildingContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
-		assert CollectionHelper.isNotEmpty( jaxbColumnResultList );
+		if ( CollectionHelper.isEmpty( jaxbColumnResultList ) ) {
+			return NO_COLUMN_RESULTS;
+		}
 
-		final ArrayList<MutableAnnotationUsage<ColumnResult>> columnResultList = CollectionHelper.arrayList( jaxbColumnResultList.size() );
-		for ( JaxbColumnResultImpl jaxbColumnResult : jaxbColumnResultList ) {
-			final MutableAnnotationUsage<ColumnResult> columnResultUsage = JpaAnnotations.COLUMN_RESULT.createUsage( modelBuildingContext );
-			columnResultList.add( columnResultUsage );
-			columnResultUsage.setAttributeValue( "name", jaxbColumnResult.getName() );
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ColumnResult[] columnResults = new ColumnResult[jaxbColumnResultList.size()];
+		for ( int i = 0; i < jaxbColumnResultList.size(); i++ ) {
+			final ColumnResultJpaAnnotation columnResult = JpaAnnotations.COLUMN_RESULT.createUsage( modelBuildingContext );
+			columnResults[i] = columnResult;
+
+			final JaxbColumnResultImpl jaxbColumnResult = jaxbColumnResultList.get( i );
+			columnResult.name( jaxbColumnResult.getName() );
 			if ( isNotEmpty( jaxbColumnResult.getClazz() ) ) {
-				columnResultUsage.setAttributeValue( "type", xmlDocumentContext.resolveJavaType( jaxbColumnResult.getClazz() ) );
+				columnResult.type( xmlDocumentContext.resolveJavaType( jaxbColumnResult.getClazz() ).toJavaClass() );
 			}
 		}
-		return columnResultList;
+		return columnResults;
 	}
 
-	private static ArrayList<MutableAnnotationUsage<ConstructorResult>> extractConstructorResults(
+	private final static ConstructorResult[] NO_CONSTRUCTOR_RESULTS = new ConstructorResult[0];
+	public static ConstructorResult[] extractConstructorResults(
 			List<JaxbConstructorResultImpl> jaxbConstructorResultList,
-			AnnotationTarget annotationTarget,
-			SourceModelBuildingContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
-		assert CollectionHelper.isNotEmpty( jaxbConstructorResultList );
+		if ( CollectionHelper.isEmpty( jaxbConstructorResultList ) ) {
+			return NO_CONSTRUCTOR_RESULTS;
+		}
 
-		final ArrayList<MutableAnnotationUsage<ConstructorResult>> constructorResultList = CollectionHelper.arrayList( jaxbConstructorResultList.size() );
-		for ( JaxbConstructorResultImpl jaxbConstructorResult : jaxbConstructorResultList ) {
-			final MutableAnnotationUsage<ConstructorResult> constructorResultUsage = JpaAnnotations.CONSTRUCTOR_RESULT.createUsage( modelBuildingContext );
-			constructorResultList.add( constructorResultUsage );
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ConstructorResult[] constructorResults = new ConstructorResult[jaxbConstructorResultList.size()];
+		for ( int i = 0; i < jaxbConstructorResultList.size(); i++ ) {
+			final ConstructorResultJpaAnnotation constructorResult = JpaAnnotations.CONSTRUCTOR_RESULT.createUsage( modelBuildingContext );
+			constructorResults[i] = constructorResult;
 
-			constructorResultUsage.setAttributeValue( "targetClass", xmlDocumentContext.resolveJavaType( jaxbConstructorResult.getTargetClass() ) );
-
+			final JaxbConstructorResultImpl jaxbConstructorResult = jaxbConstructorResultList.get( i );
+			constructorResult.targetClass( xmlDocumentContext.resolveJavaType( jaxbConstructorResult.getTargetClass() ).toJavaClass() );
 			if ( CollectionHelper.isNotEmpty( jaxbConstructorResult.getColumns() ) ) {
-				final ArrayList<MutableAnnotationUsage<ColumnResult>> columnResultList = extractColumnResults(
+				final ColumnResult[] columnResults = extractColumnResults(
 						jaxbConstructorResult.getColumns(),
-						annotationTarget,
-						modelBuildingContext,
 						xmlDocumentContext
 				);
-				constructorResultUsage.setAttributeValue( "columns", columnResultList );
+				if ( columnResults != null ) {
+					constructorResult.columns( columnResults );
+				}
 			}
 		}
-		return constructorResultList;
+		return constructorResults;
 	}
 
-	private static ArrayList<MutableAnnotationUsage<EntityResult>> extractEntityResults(
+	private static final EntityResult[] NO_ENTITY_RESULTS = new EntityResult[0];
+	public static EntityResult[] extractEntityResults(
 			List<JaxbEntityResultImpl> jaxbEntityResults,
-			AnnotationTarget annotationTarget,
-			SourceModelBuildingContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
-		assert CollectionHelper.isNotEmpty( jaxbEntityResults );
+		if ( CollectionHelper.isEmpty( jaxbEntityResults ) ) {
+			return NO_ENTITY_RESULTS;
+		}
 
-		final ArrayList<MutableAnnotationUsage<EntityResult>> entityResultList = CollectionHelper.arrayList( jaxbEntityResults.size() );
-		for ( JaxbEntityResultImpl jaxbEntityResult : jaxbEntityResults ) {
-			final MutableAnnotationUsage<EntityResult> entityResultUsage = JpaAnnotations.ENTITY_RESULT.createUsage( modelBuildingContext );
-			entityResultList.add( entityResultUsage );
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final EntityResult[] entityResults = new EntityResult[jaxbEntityResults.size()];
+		for ( int i = 0; i < jaxbEntityResults.size(); i++ ) {
+			final EntityResultJpaAnnotation entityResult = JpaAnnotations.ENTITY_RESULT.createUsage( modelBuildingContext );
+			entityResults[i] = entityResult;
 
-			entityResultUsage.setAttributeValue( "entityClass", xmlDocumentContext.resolveJavaType( jaxbEntityResult.getEntityClass() ) );
-			applyAttributeIfSpecified( "lockMode", jaxbEntityResult.getLockMode(), entityResultUsage );
-			applyStringAttributeIfSpecified( "discriminatorColumn", jaxbEntityResult.getDiscriminatorColumn(), entityResultUsage );
+			final JaxbEntityResultImpl jaxbEntityResult = jaxbEntityResults.get( i );
+			entityResult.entityClass( xmlDocumentContext.resolveJavaType( jaxbEntityResult.getEntityClass() ).toJavaClass() );
+			if ( StringHelper.isNotEmpty( jaxbEntityResult.getDiscriminatorColumn() ) ) {
+				entityResult.discriminatorColumn( jaxbEntityResult.getDiscriminatorColumn() );
+			}
+			if ( jaxbEntityResult.getLockMode() != null ) {
+				entityResult.lockMode( jaxbEntityResult.getLockMode() );
+			}
 
-			if ( CollectionHelper.isNotEmpty( jaxbEntityResult.getFieldResult() ) ) {
-				final ArrayList<MutableAnnotationUsage<FieldResult>> fieldResultList = extractFieldResults(
-						jaxbEntityResult.getFieldResult(),
-						annotationTarget,
-						modelBuildingContext,
-						xmlDocumentContext
-				);
-				entityResultUsage.setAttributeValue( "fields", fieldResultList );
+			final FieldResult[] fieldResults = extractFieldResults(
+					jaxbEntityResult.getFieldResult(),
+					xmlDocumentContext
+			);
+			if ( fieldResults != null ) {
+				entityResult.fields( fieldResults );
 			}
 		}
-
-		return entityResultList;
+		return entityResults;
 	}
 
-	private static ArrayList<MutableAnnotationUsage<FieldResult>> extractFieldResults(
+	private static FieldResult[] extractFieldResults(
 			List<JaxbFieldResultImpl> jaxbFieldResults,
-			AnnotationTarget annotationTarget,
-			SourceModelBuildingContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
-		assert CollectionHelper.isNotEmpty( jaxbFieldResults );
-
-		final ArrayList<MutableAnnotationUsage<FieldResult>> fieldResultList = CollectionHelper.arrayList( jaxbFieldResults.size() );
-		for ( JaxbFieldResultImpl jaxbFieldResult : jaxbFieldResults ) {
-			final MutableAnnotationUsage<FieldResult> fieldResultUsage = JpaAnnotations.FIELD_RESULT.createUsage( modelBuildingContext );
-			fieldResultList.add( fieldResultUsage );
-
-			fieldResultUsage.setAttributeValue( "name", jaxbFieldResult.getName() );
-			fieldResultUsage.setAttributeValue( "column", jaxbFieldResult.getColumn() );
+		if ( CollectionHelper.isEmpty( jaxbFieldResults ) ) {
+			return null;
 		}
 
-		return fieldResultList;
-	}
+		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final FieldResult[] fieldResults = new FieldResult[jaxbFieldResults.size()];
+		for ( int i = 0; i < jaxbFieldResults.size(); i++ ) {
+			final FieldResultJpaAnnotation fieldResult = JpaAnnotations.FIELD_RESULT.createUsage( modelBuildingContext );
+			fieldResults[i] = fieldResult;
 
-	private static void applyHibernateNativeQuery(
-			JaxbNamedNativeQueryImpl jaxbNamedQuery,
-			MutableClassDetails classDetails,
-			List<MutableAnnotationUsage<NamedNativeQuery>> namedQueryUsageList,
-			SourceModelBuildingContext modelBuildingContext,
-			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<NamedNativeQuery> namedQueryUsage = HibernateAnnotations.NAMED_NATIVE_QUERY.createUsage( modelBuildingContext );
-		namedQueryUsageList.add( namedQueryUsage );
-
-		namedQueryUsage.setAttributeValue( "name", jaxbNamedQuery.getName() );
-		namedQueryUsage.setAttributeValue( "query", jaxbNamedQuery.getQuery() );
-
-		applyResultClassAndSynchronizations( jaxbNamedQuery, namedQueryUsage, modelBuildingContext, xmlDocumentContext );
-		applyResultSetMappings( jaxbNamedQuery, namedQueryUsage, xmlDocumentContext );
+			final JaxbFieldResultImpl jaxbFieldResult = jaxbFieldResults.get( i );
+			fieldResult.name( jaxbFieldResult.getName() );
+			fieldResult.column( jaxbFieldResult.getColumn() );
+		}
+		return fieldResults;
 	}
 
 	public static void applyNamedProcedureQueries(
 			JaxbEntityImpl jaxbEntity,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbEntity.getNamedStoredProcedureQueries() ) ) {
+		final List<JaxbNamedStoredProcedureQueryImpl> jaxbQueries = jaxbEntity.getNamedStoredProcedureQueries();
+		if ( CollectionHelper.isEmpty( jaxbQueries ) ) {
 			return;
 		}
 
 		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
-		final MutableAnnotationUsage<NamedStoredProcedureQueries> namedQueriesUsage = classDetails.replaceAnnotationUsage(
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
+		final NamedStoredProcedureQueriesJpaAnnotation namedQueriesUsage = (NamedStoredProcedureQueriesJpaAnnotation) classDetails.replaceAnnotationUsage(
+				NAMED_STORED_PROCEDURE_QUERY,
 				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERIES,
 				modelBuildingContext
 		);
-		final List<AnnotationUsage<NamedStoredProcedureQuery>> namedQueryList = CollectionHelper.arrayList( jaxbEntity.getNamedStoredProcedureQueries().size() );
-		namedQueriesUsage.setAttributeValue( "value", namedQueryList );
 
-		for ( JaxbNamedStoredProcedureQueryImpl jaxbQuery : jaxbEntity.getNamedStoredProcedureQueries() ) {
-			final MutableAnnotationUsage<NamedStoredProcedureQuery> namedQueryUsage = JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY.createUsage( modelBuildingContext );
-			namedQueryList.add( namedQueryUsage );
+		final NamedStoredProcedureQuery[] namedQueries = new NamedStoredProcedureQuery[jaxbQueries.size()];
+		namedQueriesUsage.value( namedQueries );
 
-			namedQueryUsage.setAttributeValue( "name", jaxbQuery.getName() );
-			namedQueryUsage.setAttributeValue( "procedureName", jaxbQuery.getProcedureName() );
+		for ( int i = 0; i < jaxbQueries.size(); i++ ) {
+			final NamedStoredProcedureQueryJpaAnnotation namedQuery = NAMED_STORED_PROCEDURE_QUERY.createUsage( modelBuildingContext );
+			namedQueries[i] = namedQuery;
 
-			applyQueryHints( jaxbQuery, classDetails, namedQueryUsage, modelBuildingContext );
-			applyQueryParameters( jaxbQuery, classDetails, namedQueryUsage, xmlDocumentContext );
-			applyResultSetMappings( jaxbQuery, namedQueryUsage, xmlDocumentContext );
-			applyResultClasses( jaxbQuery, namedQueryUsage, xmlDocumentContext );
+			final JaxbNamedStoredProcedureQueryImpl jaxbQuery = jaxbQueries.get( i );
+			namedQuery.apply( jaxbQuery, xmlDocumentContext );
 		}
 	}
 
-	private static void applyQueryParameters(
-			JaxbNamedStoredProcedureQueryImpl jaxbQuery,
-			MutableClassDetails classDetails,
-			MutableAnnotationUsage<NamedStoredProcedureQuery> queryUsage,
+	private static final StoredProcedureParameter[] NO_PARAMS = new StoredProcedureParameter[0];
+	public static StoredProcedureParameter[] collectParameters(
+			List<JaxbStoredProcedureParameterImpl> jaxbParameters,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbQuery.getProcedureParameters() ) ) {
-			return;
+		if ( CollectionHelper.isEmpty( jaxbParameters ) ) {
+			return NO_PARAMS;
 		}
 
 		final SourceModelBuildingContext sourceModelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final StoredProcedureParameter[] result = new StoredProcedureParameter[jaxbParameters.size()];
+		for ( int i = 0; i < jaxbParameters.size(); i++ ) {
+			final StoredProcedureParameterJpaAnnotation param = JpaAnnotations.STORED_PROCEDURE_PARAMETER.createUsage( sourceModelBuildingContext );
+			result[i] = param;
 
-		final ArrayList<AnnotationUsage<StoredProcedureParameter>> parameterList = CollectionHelper.arrayList( jaxbQuery.getProcedureParameters().size() );
-		queryUsage.setAttributeValue( "parameters", parameterList );
-
-		for ( JaxbStoredProcedureParameterImpl jaxbParameter : jaxbQuery.getProcedureParameters() ) {
-			final MutableAnnotationUsage<StoredProcedureParameter> parameterUsage = JpaAnnotations.STORED_PROCEDURE_PARAMETER.createUsage( sourceModelBuildingContext );
-			parameterList.add( parameterUsage );
-
-			applyStringAttributeIfSpecified( "name", jaxbParameter.getName(), parameterUsage );
-			applyAttributeIfSpecified( "mode", jaxbParameter.getMode(), parameterUsage );
-
-			parameterUsage.setAttributeValue( "type", xmlDocumentContext.resolveJavaType( jaxbParameter.getClazz() ) );
+			final JaxbStoredProcedureParameterImpl jaxbParam = jaxbParameters.get( i );
+			param.apply( jaxbParam, xmlDocumentContext );
 		}
+		return result;
 	}
 
-	private static void applyResultSetMappings(
-			JaxbNamedStoredProcedureQueryImpl jaxbQuery,
-			MutableAnnotationUsage<NamedStoredProcedureQuery> namedQueryUsage,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbQuery.getResultSetMappings() ) ) {
-			return;
+	private static final Class<?>[] NO_CLASSES = new Class[0];
+	public static Class<?>[] collectResultClasses(List<String> resultClasses, XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( resultClasses ) ) {
+			return NO_CLASSES;
 		}
-
-		namedQueryUsage.setAttributeValue( "resultSetMappings", jaxbQuery.getResultSetMappings() );
+		final Class<?>[] result = new Class<?>[resultClasses.size()];
+		for ( int i = 0; i < resultClasses.size(); i++ ) {
+			result[i] = xmlDocumentContext.resolveJavaType( resultClasses.get( i ) ).toJavaClass();
+		}
+		return result;
 	}
 
-	private static void applyResultClasses(
-			JaxbNamedStoredProcedureQueryImpl jaxbQuery,
-			MutableAnnotationUsage<NamedStoredProcedureQuery> namedQueryUsage,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbQuery.getResultClasses() ) ) {
-			return;
+	public static String[] collectResultMappings(List<String> resultClasses, XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( resultClasses ) ) {
+			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
-
-		final ArrayList<ClassDetails> resultClasses = CollectionHelper.arrayList( jaxbQuery.getResultClasses().size() );
-		namedQueryUsage.setAttributeValue( "resultClasses", resultClasses );
-
-		for ( String resultClass : jaxbQuery.getResultClasses() ) {
-			final MutableClassDetails resultClassDetails = xmlDocumentContext.resolveJavaType( resultClass );
-			resultClasses.add( resultClassDetails );
-		}
+		return resultClasses.toArray( String[]::new );
 	}
-
 }

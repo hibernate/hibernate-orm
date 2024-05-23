@@ -12,7 +12,6 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.ModelsException;
-import org.hibernate.models.spi.AnnotationUsage;
 
 /**
  * Models the caching options for an entity, natural-id, or collection.
@@ -26,7 +25,7 @@ public class CacheRegion {
 	private boolean cacheLazyProperties;
 
 	public CacheRegion(
-			AnnotationUsage<Cache> cacheAnnotation,
+			Cache cacheAnnotation,
 			AccessType implicitCacheAccessType,
 			String implicitRegionName) {
 		if ( cacheAnnotation == null ) {
@@ -35,20 +34,17 @@ public class CacheRegion {
 			cacheLazyProperties = true;
 		}
 		else {
-			final String explicitRegionName = cacheAnnotation.getString( "region" );
+			final String explicitRegionName = cacheAnnotation.region();
 			regionName = StringHelper.isEmpty( explicitRegionName ) ? implicitRegionName : explicitRegionName;
 
-			accessType = interpretAccessStrategy( cacheAnnotation.getAttributeValue( "usage" ) );
+			accessType = interpretAccessStrategy( cacheAnnotation.usage() );
 
-			final Boolean explicitIncludeLazy = cacheAnnotation.getBoolean( "includeLazy" );
-			if ( explicitIncludeLazy != null ) {
-				cacheLazyProperties = explicitIncludeLazy;
-			}
-			else {
-				final String include = cacheAnnotation.getAttributeValue( "include" );
-				assert "all".equals( include ) || "non-lazy".equals( include );
-				cacheLazyProperties = include.equals( "all" );
-			}
+			// default for includeLazy is true
+			// default for include is "all"
+			final boolean includeLazy = cacheAnnotation.includeLazy();
+			final String include = cacheAnnotation.include();
+			assert "all".equals( include ) || "non-lazy".equals( include );
+			cacheLazyProperties = includeLazy && include.equals( "all" ) ;
 		}
 	}
 

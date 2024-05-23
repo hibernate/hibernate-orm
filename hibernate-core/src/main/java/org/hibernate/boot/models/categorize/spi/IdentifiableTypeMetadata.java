@@ -9,6 +9,8 @@ package org.hibernate.boot.models.categorize.spi;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.boot.models.spi.JpaEventListener;
+
 /**
  * Metadata about an {@linkplain jakarta.persistence.metamodel.IdentifiableType identifiable type}
  *

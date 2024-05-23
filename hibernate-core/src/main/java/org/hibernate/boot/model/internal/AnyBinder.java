@@ -20,7 +20,6 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.Property;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
@@ -44,7 +43,7 @@ public class AnyBinder {
 			AnnotatedJoinColumns joinColumns) {
 
 		//check validity
-		if (  property.hasAnnotationUsage( Columns.class ) ) {
+		if ( property.hasDirectAnnotationUsage( Columns.class ) ) {
 			throw new AnnotationException(
 					String.format(
 							Locale.ROOT,
@@ -55,9 +54,9 @@ public class AnyBinder {
 			);
 		}
 
-		final AnnotationUsage<Cascade> hibernateCascade = property.getAnnotationUsage( Cascade.class );
-		final AnnotationUsage<OnDelete> onDeleteAnn = property.getAnnotationUsage( OnDelete.class );
-		final AnnotationUsage<JoinTable> assocTable = propertyHolder.getJoinTable( property );
+		final Cascade hibernateCascade = property.getDirectAnnotationUsage( Cascade.class );
+		final OnDelete onDeleteAnn = property.getDirectAnnotationUsage( OnDelete.class );
+		final JoinTable assocTable = propertyHolder.getJoinTable( property );
 		if ( assocTable != null ) {
 			final Join join = propertyHolder.addJoin( assocTable, false );
 			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
@@ -68,7 +67,7 @@ public class AnyBinder {
 				getCascadeStrategy( null, hibernateCascade, false, context ),
 				//@Any has no cascade attribute
 				joinColumns,
-				onDeleteAnn == null ? null : onDeleteAnn.getEnum( "action" ),
+				onDeleteAnn == null ? null : onDeleteAnn.action(),
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -89,15 +88,15 @@ public class AnyBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context) {
 		final MemberDetails property = inferredData.getAttributeMember();
-		final AnnotationUsage<org.hibernate.annotations.Any> any = property.getAnnotationUsage( org.hibernate.annotations.Any.class );
+		final org.hibernate.annotations.Any any = property.getDirectAnnotationUsage( org.hibernate.annotations.Any.class );
 		if ( any == null ) {
 			throw new AssertionFailure( "Missing @Any annotation: " + getPath( propertyHolder, inferredData ) );
 		}
 
-		final boolean lazy = any.getEnum( "fetch" ) == FetchType.LAZY;
-		final boolean optional = any.getBoolean( "optional" );
+		final boolean lazy = any.fetch() == FetchType.LAZY;
+		final boolean optional = any.optional();
 		final Any value = BinderHelper.buildAnyValue(
-				property.getAnnotationUsage( Column.class ),
+				property.getDirectAnnotationUsage( Column.class ),
 				getOverridableAnnotation( property, Formula.class, context ),
 				columns,
 				inferredData,

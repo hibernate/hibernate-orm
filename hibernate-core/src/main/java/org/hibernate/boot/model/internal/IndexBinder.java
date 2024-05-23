@@ -20,14 +20,12 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.models.spi.AnnotationUsage;
 
 import jakarta.persistence.UniqueConstraint;
 
@@ -115,8 +113,8 @@ class IndexBinder {
 		return new Column( physicalName );
 	}
 
-	private Selectable[] selectables(Table table, String name, List<String> columnNames) {
-		final int size = columnNames.size();
+	private Selectable[] selectables(Table table, String name, String[] columnNames) {
+		final int size = columnNames.length;
 		if ( size == 0 ) {
 			throw new AnnotationException( "Index"
 					+ ( isEmpty( name ) ? "" : " '" + name + "'" )
@@ -124,7 +122,7 @@ class IndexBinder {
 		}
 		final Selectable[] columns = new Selectable[size];
 		for ( int index = 0; index < size; index++ ) {
-			final String columnName = columnNames.get( index );
+			final String columnName = columnNames[index];
 			if ( isEmpty( columnName ) ) {
 				throw new AnnotationException( "Index"
 						+ ( isEmpty( name ) ? "" : " '" + name + "'" )
@@ -135,8 +133,8 @@ class IndexBinder {
 		return columns;
 	}
 
-	private Column[] columns(Table table, String name, final List<String> columnNames) {
-		final int size = columnNames.size();
+	private Column[] columns(Table table, String name, final String[] columnNames) {
+		final int size = columnNames.length;
 		if ( size == 0 ) {
 			throw new AnnotationException( "Unique constraint"
 					+ ( isEmpty( name ) ? "" : " '" + name + "'" )
@@ -144,7 +142,7 @@ class IndexBinder {
 		}
 		final Column[] columns = new Column[size];
 		for ( int index = 0; index < size; index++ ) {
-			final String columnName = columnNames.get( index );
+			final String columnName = columnNames[index];
 			if ( isEmpty( columnName ) ) {
 				throw new AnnotationException( "Unique constraint"
 						+ ( isEmpty( name ) ? "" : " '" + name + "'" )
@@ -159,7 +157,7 @@ class IndexBinder {
 			Table table,
 			String originalKeyName,
 			boolean nameExplicit,
-			List<String> columnNames,
+			String[] columnNames,
 			String[] orderings,
 			boolean unique,
 			Selectable[] columns) {
@@ -190,9 +188,9 @@ class IndexBinder {
 		}
 	}
 
-	void bindIndexes(Table table, List<AnnotationUsage<jakarta.persistence.Index>> indexes) {
-		for ( AnnotationUsage<jakarta.persistence.Index> index : indexes ) {
-			final StringTokenizer tokenizer = new StringTokenizer( index.getString( "columnList" ), "," );
+	void bindIndexes(Table table, jakarta.persistence.Index[] indexes) {
+		for ( jakarta.persistence.Index index : indexes ) {
+			final StringTokenizer tokenizer = new StringTokenizer( index.columnList(), "," );
 			final List<String> parsed = new ArrayList<>();
 			while ( tokenizer.hasMoreElements() ) {
 				final String trimmed = tokenizer.nextToken().trim();
@@ -200,11 +198,11 @@ class IndexBinder {
 					parsed.add( trimmed ) ;
 				}
 			}
-			final List<String> columnExpressions = CollectionHelper.populatedArrayList( parsed.size(), null );
+			final String[] columnExpressions = new String[parsed.size()];
 			final String[] ordering = new String[parsed.size()];
 			initializeColumns( columnExpressions, ordering, parsed );
-			final String name = index.getString( "name" );
-			final boolean unique = index.getBoolean( "unique" );
+			final String name = index.name();
+			final boolean unique = index.unique();
 			createIndexOrUniqueKey(
 					table,
 					name,
@@ -217,10 +215,10 @@ class IndexBinder {
 		}
 	}
 
-	void bindUniqueConstraints(Table table, List<AnnotationUsage<UniqueConstraint>> constraints) {
-		for ( AnnotationUsage<UniqueConstraint> constraint : constraints ) {
-			final String name = constraint.getString( "name" );
-			final List<String> columnNames = constraint.getList( "columnNames" );
+	void bindUniqueConstraints(Table table, UniqueConstraint[] constraints) {
+		for ( UniqueConstraint constraint : constraints ) {
+			final String name = constraint.name();
+			final String[] columnNames = constraint.columnNames();
 			createIndexOrUniqueKey(
 					table,
 					name,
@@ -233,20 +231,20 @@ class IndexBinder {
 		}
 	}
 
-	private void initializeColumns(List<String> columns, String[] ordering, List<String> list) {
+	private void initializeColumns(String[] columns, String[] ordering, List<String> list) {
 		for ( int i = 0, size = list.size(); i < size; i++ ) {
 			final String description = list.get( i );
 			final String tmp = description.toLowerCase(Locale.ROOT);
 			if ( tmp.endsWith( " desc" ) ) {
-				columns.set( i, description.substring( 0, description.length() - 5 ) );
+				columns[i] = description.substring( 0, description.length() - 5 );
 				ordering[i] = "desc";
 			}
 			else if ( tmp.endsWith( " asc" ) ) {
-				columns.set( i, description.substring( 0, description.length() - 4 ) );
+				columns[i] = description.substring( 0, description.length() - 4 );
 				ordering[i] = "asc";
 			}
 			else {
-				columns.set( i, description );
+				columns[i] = description;
 				ordering[i] = null;
 			}
 		}
@@ -255,10 +253,10 @@ class IndexBinder {
 	private class IndexOrUniqueKeyNameSource implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
 		private final MetadataBuildingContext buildingContext;
 		private final Table table;
-		private final List<String> columnNames;
+		private final String[] columnNames;
 		private final String originalKeyName;
 
-		public IndexOrUniqueKeyNameSource(MetadataBuildingContext buildingContext, Table table, List<String> columnNames, String originalKeyName) {
+		public IndexOrUniqueKeyNameSource(MetadataBuildingContext buildingContext, Table table, String[] columnNames, String originalKeyName) {
 			this.buildingContext = buildingContext;
 			this.table = table;
 			this.columnNames = columnNames;
@@ -292,12 +290,12 @@ class IndexBinder {
 		}
 	}
 
-	private List<Identifier> toIdentifiers(List<String> names) {
+	private List<Identifier> toIdentifiers(String[] names) {
 		if ( names == null ) {
 			return emptyList();
 		}
 
-		final List<Identifier> columnNames = arrayList( names.size() );
+		final List<Identifier> columnNames = arrayList( names.length );
 		for ( String name : names ) {
 			columnNames.add( getDatabase().toIdentifier( name ) );
 		}

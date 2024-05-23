@@ -6,19 +6,21 @@
  */
 package org.hibernate.orm.test.boot.models.xml.override;
 
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.BootstrapContextImpl;
+import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
-import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
+import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
+import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -26,47 +28,42 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
 
 /**
  * @author Steve Ebersole
  */
 public class SimpleOverrideXmlTests {
 	@Test
-	void testSimpleCompleteEntity() {
+	@ServiceRegistry
+	void testSimpleCompleteEntity(ServiceRegistryScope scope) {
+		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
 
-		final AdditionalManagedResourcesImpl.Builder managedResourcesBuilder = new AdditionalManagedResourcesImpl.Builder();
-		managedResourcesBuilder.addXmlMappings( "mappings/models/override/simple-override.xml" );
-		final ManagedResources managedResources = managedResourcesBuilder.build();
+		final MetadataSources metadataSources = new MetadataSources().addResource( "mappings/models/override/simple-override.xml" );
+		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( serviceRegistry, options );
+		options.setBootstrapContext( bootstrapContext );
 
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
-			final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
-					serviceRegistry,
-					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
-			);
-			final CategorizedDomainModel categorizedDomainModel = processManagedResources(
-					managedResources,
-					bootstrapContext
-			);
+		final ManagedResources managedResources = MetadataBuildingProcess.prepare( metadataSources, bootstrapContext );
+		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
+		final DomainModelSource domainModelSource = MetadataBuildingProcess.processManagedResources(
+				managedResources,
+				metadataCollector,
+				bootstrapContext,
+				new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry )
+		);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
+		final ClassDetailsRegistry classDetailsRegistry = domainModelSource.getClassDetailsRegistry();
 
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
-			final EntityTypeMetadata root = hierarchy.getRoot();
-			assertThat( root.getClassDetails().getClassName() ).isEqualTo( SimpleEntity.class.getName() );
-			assertThat( root.getNumberOfAttributes() ).isEqualTo( 2 );
+		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
 
-			final AttributeMetadata idAttribute = root.findAttribute( "id" );
-			assertThat( idAttribute.getNature() ).isEqualTo( AttributeMetadata.AttributeNature.BASIC );
-			assertThat( idAttribute.getMember().getAnnotationUsage( Id.class ) ).isNotNull();
+		final FieldDetails idField = classDetails.findFieldByName( "id" );
+		assertThat( idField.getDirectAnnotationUsage( Id.class ) ).isNotNull();
 
-			final AttributeMetadata nameAttribute = root.findAttribute( "name" );
-			assertThat( nameAttribute.getNature() ).isEqualTo( AttributeMetadata.AttributeNature.BASIC );
-			assertThat( nameAttribute.getMember().getAnnotationUsage( Basic.class ) ).isNotNull();
-			final AnnotationUsage<Column> nameColumnAnn = nameAttribute.getMember().getAnnotationUsage( Column.class );
-			assertThat( nameColumnAnn ).isNotNull();
-			assertThat( nameColumnAnn.<String>getAttributeValue( "name" ) ).isEqualTo( "description" );
-			assertThat( nameColumnAnn.<String>getAttributeValue( "columnDefinition" ) ).isEqualTo( "nvarchar(512)" );
-		}
+		final FieldDetails nameField = classDetails.findFieldByName( "name" );
+		assertThat( nameField.getDirectAnnotationUsage( Basic.class ) ).isNotNull();
+		final Column nameColumnAnn = nameField.getDirectAnnotationUsage( Column.class );
+		assertThat( nameColumnAnn ).isNotNull();
+		assertThat( nameColumnAnn.name() ).isEqualTo( "description" );
+		assertThat( nameColumnAnn.columnDefinition() ).isEqualTo( "nvarchar(512)" );
 	}
 }

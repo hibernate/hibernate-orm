@@ -8,7 +8,6 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
-import java.util.List;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -16,7 +15,6 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -41,11 +39,11 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  * @author Steve Ebersole
  */
 public class AnnotationHelper {
-	public static HashMap<String, String> extractParameterMap(List<AnnotationUsage<Parameter>> parameters) {
-		final HashMap<String,String> paramMap = mapOfSize( parameters.size() );
-		parameters.forEach( (usage) -> {
-			paramMap.put( usage.getString( "name" ), usage.getString( "value" ) );
-		} );
+	public static HashMap<String, String> extractParameterMap(Parameter[] parameters) {
+		final HashMap<String,String> paramMap = mapOfSize( parameters.length );
+		for ( int i = 0; i < parameters.length; i++ ) {
+			paramMap.put( parameters[i].name(), parameters[i].value() );
+		}
 		return paramMap;
 	}
 

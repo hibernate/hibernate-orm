@@ -9,13 +9,13 @@
 === Overview
 
 The Hibernate ORM Vector module contains support for mathematical vector types and functions.
-This is useful for AI/ML topics like vector similarity search.
-The module comes with support for a special `vector` data type that essentially represents an array of floats.
+This is useful for AI/ML topics like vector similarity search and Retrieval-Augmented Generation (RAG).
+The module comes with support for a special `vector` data type that essentially represents an array of bytes, floats, or doubles.
 
-So far, only the PostgreSQL extension `pgvector` is supported, but in theory,
+So far, both the PostgreSQL extension `pgvector` and the Oracle database 23ai+ `AI Vector Search` feature are supported, but in theory,
 the vector specific functions could be implemented to work with every database that supports arrays.
 
-For further details, refer to the https://github.com/pgvector/pgvector#querying[pgvector documentation].
+For further details, refer to the https://github.com/pgvector/pgvector#querying[pgvector documentation] or the https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[AI Vector Search documentation].
 
 [[vector-module-setup]]
 === Setup
@@ -44,6 +44,15 @@ so no further configuration is necessary to make the features available.
 
 Annotate a persistent attribute with `@JdbcTypeCode(SqlTypes.VECTOR)` and specify the vector length with `@Array(length = ...)`.
 
+[WARNING]
+====
+As Oracle AI Vector Search supports different types of elements (to ensure better performance and compatibility with embedding models), you can also use:
+
+- `@JdbcTypeCode(SqlTypes.VECTOR_INT8)` for `byte[]`
+- `@JdbcTypeCode(SqlTypes.VECTOR_FLOAT32)` for `float[]`
+- `@JdbcTypeCode(SqlTypes.VECTOR_FLOAT64)` for `double[]`.
+====
+
 [[vector-module-usage-example]]
 ====
 [source, JAVA, indent=0]
@@ -63,18 +72,30 @@ Expressions of the vector type can be used with various vector functions.
 |===
 | Function | Purpose
 
-| `cosine_distance()` | Computes the https://en.wikipedia.org/wiki/Cosine_similarity[cosine distance] between two vectors. Maps to the `<``=``>` operator
-| `euclidean_distance()` | Computes the https://en.wikipedia.org/wiki/Euclidean_distance[euclidean distance] between two vectors. Maps to the `<``-``>` operator
+| `cosine_distance()` | Computes the https://en.wikipedia.org/wiki/Cosine_similarity[cosine distance] between two vectors. Maps to the `<``=``>` operator for `pgvector` and maps to the `vector_distance(v1, v2, COSINE)` function for `Oracle AI Vector Search`.
+
+| `euclidean_distance()` | Computes the https://en.wikipedia.org/wiki/Euclidean_distance[euclidean distance] between two vectors. Maps to the `<``-``>` operator for `pgvector` and maps to the
+`vector_distance(v1, v2, EUCLIDEAN)` function for `Oracle AI Vector Search`.
+
 | `l2_distance()` | Alias for `euclidean_distance()`
-| `taxicab_distance()` | Computes the https://en.wikipedia.org/wiki/Taxicab_geometry[taxicab distance] between two vectors
+
+| `taxicab_distance()` | Computes the https://en.wikipedia.org/wiki/Taxicab_geometry[taxicab distance] between two vectors. Maps to `vector_distance(v1, v2, MANHATTAN)` function for `Oracle AI Vector Search`.
+
 | `l1_distance()` | Alias for `taxicab_distance()`
+
+| `hamming_distance()` | Computes the https://en.wikipedia.org/wiki/Hamming_distance[hamming distance] between two vectors. Maps to `vector_distance(v1, v2, HAMMING)` function for `Oracle AI Vector Search`.
+
 | `inner_product()` | Computes the https://en.wikipedia.org/wiki/Inner_product_space[inner product] between two vectors
-| `negative_inner_product()` | Computes the negative inner product. Maps to the `<``#``>` operator
+
+| `negative_inner_product()` | Computes the negative inner product. Maps to the `<``#``>` operator for `pgvector` and maps to the
+`vector_distance(v1, v2, DOT)` function for `Oracle AI Vector Search`.
+
 | `vector_dims()` | Determines the dimensions of a vector
+
 | `vector_norm()` | Computes the https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] of a vector
 |===
 
-In addition to these special vector functions, it is also possible to use vectors with the following builtin operators
+In addition to these special vector functions, it is also possible to use vectors with the following builtin `pgvector` operators:
 
 `<vector1> + <vector2> = <vector3>`:: Element-wise addition of vectors.
 `<vector1> - <vector2> = <vector3>`:: Element-wise subtraction of vectors.

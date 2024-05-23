@@ -170,7 +170,7 @@ If your mapping has a discriminator you must use `<return-discriminator>` to spe
 Hibernate provides support for queries via stored procedures and functions.
 Most of the following documentation is equivalent for both.
 The stored procedure/function must return a resultset as the first out-parameter to be able to work with Hibernate.
-An example of such a stored function in Oracle 9 and higher is as follows:
+An example of such a stored function in Oracle 19c and higher is as follows:
 
 [source,xml]
 ----

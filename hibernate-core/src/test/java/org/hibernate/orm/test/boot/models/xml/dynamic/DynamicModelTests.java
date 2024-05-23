@@ -23,15 +23,13 @@ import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +44,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 
 /**
  * @author Steve Ebersole
@@ -62,25 +60,27 @@ public class DynamicModelTests {
 					serviceRegistry,
 					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 			);
-			final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 					managedResources,
+					false,
+					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 					bootstrapContext
 			);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
-			final EntityTypeMetadata rootEntity = hierarchy.getRoot();
-			assertThat( rootEntity.getClassDetails().getClassName() ).isNull();
-			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( "SimpleEntity" );
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 
-			final FieldDetails idField = rootEntity.getClassDetails().findFieldByName( "id" );
+			final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "SimpleEntity" );
+			assertThat( classDetails.getClassName() ).isNull();
+			assertThat( classDetails.getName() ).isEqualTo( "SimpleEntity" );
+
+			final FieldDetails idField = classDetails.findFieldByName( "id" );
 			assertThat( idField.getType().determineRawClass().getClassName() ).isEqualTo( Integer.class.getName() );
 
-			final FieldDetails nameField = rootEntity.getClassDetails().findFieldByName( "name" );
+			final FieldDetails nameField = classDetails.findFieldByName( "name" );
 			assertThat( nameField.getType().determineRawClass().getClassName() ).isEqualTo( String.class.getName() );
-			assertThat( nameField.getAnnotationUsage( JavaType.class ) ).isNotNull();
+			assertThat( nameField.getDirectAnnotationUsage( JavaType.class ) ).isNotNull();
 
-			final FieldDetails qtyField = rootEntity.getClassDetails().findFieldByName( "quantity" );
+			final FieldDetails qtyField = classDetails.findFieldByName( "quantity" );
 			assertThat( qtyField.getType().determineRawClass().getClassName() ).isEqualTo( int.class.getName() );
 		}
 	}
@@ -95,52 +95,55 @@ public class DynamicModelTests {
 					serviceRegistry,
 					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 			);
-			final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 					managedResources,
+					false,
+					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 					bootstrapContext
 			);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
-			final EntityTypeMetadata rootEntity = hierarchy.getRoot();
-			assertThat( rootEntity.getClassDetails().getClassName() ).isNull();
-			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( "Contact" );
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 
-			final FieldDetails idField = rootEntity.getClassDetails().findFieldByName( "id" );
+			final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "Contact" );
+			assertThat( classDetails.getClassName() ).isNull();
+			assertThat( classDetails.getName() ).isEqualTo( "Contact" );
+
+			final FieldDetails idField = classDetails.findFieldByName( "id" );
 			assertThat( idField.getType().determineRawClass().getClassName() ).isEqualTo( Integer.class.getName() );
 
-			final FieldDetails nameField = rootEntity.getClassDetails().findFieldByName( "name" );
+			final FieldDetails nameField = classDetails.findFieldByName( "name" );
 			assertThat( nameField.getType().determineRawClass().getClassName() ).isNull();
 			assertThat( nameField.getType().getName() ).isEqualTo( "Name" );
-			assertThat( nameField.getAnnotationUsage( Target.class ) ).isNotNull();
-			assertThat( nameField.getAnnotationUsage( Target.class ).getString( "value" ) ).isEqualTo( "Name" );
+			assertThat( nameField.getDirectAnnotationUsage( Target.class ) ).isNotNull();
+			assertThat( nameField.getDirectAnnotationUsage( Target.class ).value() ).isEqualTo( "Name" );
 
 			assertThat( nameField.getType().determineRawClass().getFields() ).hasSize( 2 );
 
-			final FieldDetails labels = rootEntity.getClassDetails().findFieldByName( "labels" );
+			final FieldDetails labels = classDetails.findFieldByName( "labels" );
 			assertThat( labels.getType().determineRawClass().getClassName() ).isEqualTo( Set.class.getName() );
-			final AnnotationUsage<ElementCollection> elementCollection = labels.getAnnotationUsage( ElementCollection.class );
+			final ElementCollection elementCollection = labels.getDirectAnnotationUsage( ElementCollection.class );
+			assertThat( elementCollection.targetClass() ).isEqualTo( void.class );
+			final Target targetUsage = labels.getDirectAnnotationUsage( Target.class );
+			assertThat( targetUsage.value() ).isEqualTo( "string" );
 
-			assertThat( elementCollection.getClassDetails( "targetClass" ) ).isEqualTo( ClassDetails.VOID_CLASS_DETAILS );
-			final AnnotationUsage<Target> targetUsage = labels.getAnnotationUsage( Target.class );
-			assertThat( targetUsage.getString( "value" ) ).isEqualTo( "string" );
+			final CollectionClassification collectionClassification = labels.getDirectAnnotationUsage( CollectionClassification.class );
+			assertThat( collectionClassification.value() ).isEqualTo( LimitedCollectionClassification.SET );
 
-			final AnnotationUsage<CollectionClassification> collectionClassification = labels.getAnnotationUsage( CollectionClassification.class );
-			assertThat( collectionClassification.<LimitedCollectionClassification>getAttributeValue( "value" ) ).isEqualTo( LimitedCollectionClassification.SET );
+			assertThat( labels.getDirectAnnotationUsage( SortNatural.class ) ).isNotNull();
 
-			assertThat( labels.getAnnotationUsage( SortNatural.class ) ).isNotNull();
+			final CollectionTable collectionTable = labels.getDirectAnnotationUsage( CollectionTable.class );
+			assertThat( collectionTable.name() ).isEqualTo( "labels" );
 
-			final AnnotationUsage<CollectionTable> collectionTable = labels.getAnnotationUsage( CollectionTable.class );
-			assertThat( collectionTable.<String>getAttributeValue( "name" ) ).isEqualTo( "labels" );
-
-			final List<AnnotationUsage<JoinColumn>> joinColumns = collectionTable.getList( "joinColumns" );
+			final JoinColumn[] joinColumns = collectionTable.joinColumns();
 			assertThat( joinColumns ).hasSize( 1 );
-			assertThat( joinColumns.get( 0 ).<String>getAttributeValue( "name" ) ).isEqualTo( "contact_fk" );
+			assertThat( joinColumns[0].name() ).isEqualTo( "contact_fk" );
 		}
 	}
 
 	@Test
 	void testIdClass() {
+		// todo (7.0) : how is this dynamic?
+
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-id-class.xml" )
 				.build();
@@ -149,25 +152,26 @@ public class DynamicModelTests {
 					serviceRegistry,
 					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 			);
-			final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 					managedResources,
+					false,
+					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 					bootstrapContext
 			);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
-			final EntityTypeMetadata rootEntity = hierarchy.getRoot();
-			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( Employee.class.getName() );
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+			final ClassDetails classDetails = classDetailsRegistry.getClassDetails( Employee.class.getName() );
 
-			final AnnotationUsage<IdClass> idClass = rootEntity.getClassDetails().getAnnotationUsage( IdClass.class );
+			final IdClass idClass = classDetails.getDirectAnnotationUsage( IdClass.class );
 			assertThat( idClass ).isNotNull();
-			assertThat( idClass.<ClassDetails>getAttributeValue( "value" )
-								.getName() ).isEqualTo( EmployeePK.class.getName() );
+			assertThat( idClass.value().getName() ).isEqualTo( EmployeePK.class.getName() );
 		}
 	}
 
 	@Test
 	void testOneToMany() {
+		// todo (7.0) : how is this dynamic?
+
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-plurals.xml" )
 				.build();
@@ -176,35 +180,35 @@ public class DynamicModelTests {
 					serviceRegistry,
 					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 			);
-			final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 					managedResources,
+					false,
+					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 					bootstrapContext
 			);
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
-			final EntityTypeMetadata rootEntity = categorizedDomainModel.getEntityHierarchies().iterator().next().getRoot();
-			assertThat( rootEntity.getClassDetails().getName() ).isEqualTo( Employee.class.getName() );
+			final ClassDetails classDetails = classDetailsRegistry.getClassDetails( Employee.class.getName() );
+			assertThat( classDetails.getName() ).isEqualTo( Employee.class.getName() );
 
-			final FieldDetails oneToMany = rootEntity.getClassDetails().findFieldByName( "oneToMany" );
+			final FieldDetails oneToMany = classDetails.findFieldByName( "oneToMany" );
 			assertThat( oneToMany.getType().determineRawClass().getClassName() ).isEqualTo( List.class.getName() );
-			final AnnotationUsage<OneToMany> oneToManyAnn = oneToMany.getAnnotationUsage( OneToMany.class );
-			assertThat( oneToManyAnn.<FetchType>getAttributeValue( "fetch" ) ).isEqualTo( FetchType.EAGER );
-			assertThat( oneToMany.getAnnotationUsage( NotFound.class )
-								.<NotFoundAction>getAttributeValue( "action" ) ).isEqualTo( NotFoundAction.IGNORE );
-			assertThat( oneToMany.getAnnotationUsage( OnDelete.class )
-								.<OnDeleteAction>getAttributeValue( "action" ) ).isEqualTo( OnDeleteAction.CASCADE );
-			final AnnotationUsage<JoinColumn> joinColumn = oneToMany.getAnnotationUsage( JoinColumn.class );
-			assertThat( joinColumn.<String>getAttributeValue( "name" ) ).isEqualTo( "employee_id" );
-			assertThat( joinColumn.<Boolean>getAttributeValue( "insertable" ) ).isEqualTo( Boolean.FALSE );
-			assertThat( joinColumn.<Boolean>getAttributeValue( "updatable" ) ).isEqualTo( Boolean.FALSE );
-			final AnnotationUsage<ForeignKey> foreignKey = joinColumn.getAttributeValue( "foreignKey" );
-			assertThat( foreignKey.<String>getAttributeValue( "name" ) ).isEqualTo( "employee_fk" );
-			assertThat( foreignKey.<ConstraintMode>getAttributeValue( "value" ) ).isEqualTo( ConstraintMode.NO_CONSTRAINT );
-			final List<AnnotationUsage<CheckConstraint>> checkConstraints = joinColumn.getList( "check" );
+			final OneToMany oneToManyAnn = oneToMany.getDirectAnnotationUsage( OneToMany.class );
+			assertThat( oneToManyAnn.fetch() ).isEqualTo( FetchType.EAGER );
+			assertThat( oneToMany.getDirectAnnotationUsage( NotFound.class ).action() ).isEqualTo( NotFoundAction.IGNORE );
+			assertThat( oneToMany.getDirectAnnotationUsage( OnDelete.class ).action() ).isEqualTo( OnDeleteAction.CASCADE );
+			final JoinColumn joinColumn = oneToMany.getAnnotationUsage( JoinColumn.class, sourceModelBuildingContext );
+			assertThat( joinColumn.name() ).isEqualTo( "employee_id" );
+			assertThat( joinColumn.insertable() ).isEqualTo( Boolean.FALSE );
+			assertThat( joinColumn.updatable() ).isEqualTo( Boolean.FALSE );
+			final ForeignKey foreignKey = joinColumn.foreignKey();
+			assertThat( foreignKey.name() ).isEqualTo( "employee_fk" );
+			assertThat( foreignKey.value() ).isEqualTo( ConstraintMode.NO_CONSTRAINT );
+			final CheckConstraint[] checkConstraints = joinColumn.check();
 			assertThat( checkConstraints ).hasSize( 1 );
-			assertThat( checkConstraints.get( 0 ).<String>getAttributeValue( "name" ) ).isEqualTo( "employee_id_nn" );
-			assertThat( checkConstraints.get( 0 ).<String>getAttributeValue( "constraint" ) ).isEqualTo( "employee_id is not null" );
-			assertThat( oneToMany.getAnnotationUsage( Cascade.class ).getList( "value" ) )
+			assertThat( checkConstraints[0].name() ).isEqualTo( "employee_id_nn" );
+			assertThat( checkConstraints[0].constraint() ).isEqualTo( "employee_id is not null" );
+			assertThat( oneToMany.getDirectAnnotationUsage( Cascade.class ).value() )
 					.contains( CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.LOCK );
 		}
 	}

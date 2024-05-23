@@ -46,6 +46,9 @@ dependencies {
     compileOnly libs.jacksonXml
     compileOnly dbLibs.postgresql
 
+//    annotationProcessor project( ":annotation-descriptor-generator" )
+    compileOnly project( ":annotation-descriptor-generator" )
+
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
     testImplementation testLibs.shrinkwrapApi
@@ -204,6 +207,22 @@ task testJar(type: Jar, dependsOn: testClasses) {
 
 artifacts {
     tests testJar
+}
+
+tasks.register( "generateAnnotationClasses", JavaCompile ) {
+    description = "Generate concrete classes for Hibernate and JPA annotations"
+
+    source = sourceSets.main.allJava
+    include "org/hibernate/annotations/*"
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.main.compileClasspath
+    options.annotationProcessorPath = sourceSets.main.compileClasspath
+    options.compilerArgs = [
+            "-proc:only",
+            "-processor",
+            "org.hibernate.orm.build.annotations.ClassGeneratorProcessor"
+    ]
+
+    destinationDirectory.set( project.layout.buildDirectory.dir( "generated/sources/annotations/" ) )
 }
 
 task generateEnversStaticMetamodel(

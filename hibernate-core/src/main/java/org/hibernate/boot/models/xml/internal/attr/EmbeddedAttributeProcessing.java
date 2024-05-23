@@ -6,23 +6,24 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.XmlAnnotations;
+import org.hibernate.boot.models.annotations.internal.EmbeddedJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 
 import jakarta.persistence.AccessType;
-import jakarta.persistence.Embedded;
 
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.determineTargetName;
-import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeBasics;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -41,20 +42,23 @@ public class EmbeddedAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<Embedded> embeddedAnn = memberDetails.applyAnnotationUsage(
+		final EmbeddedJpaAnnotation embeddedAnn = (EmbeddedJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.EMBEDDED,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
 		if ( StringHelper.isNotEmpty( jaxbEmbedded.getTarget() ) ) {
-			final MutableAnnotationUsage<Target> targetAnn = memberDetails.applyAnnotationUsage(
-					HibernateAnnotations.TARGET,
+			final TargetXmlAnnotation targetAnn = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
+					XmlAnnotations.TARGET,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			targetAnn.setAttributeValue( "value", determineTargetName( jaxbEmbedded.getTarget(), xmlDocumentContext ) );
+			targetAnn.value( determineTargetName( jaxbEmbedded.getTarget(), xmlDocumentContext ) );
 		}
 
-		applyAttributeBasics( jaxbEmbedded, memberDetails, embeddedAnn, accessType, xmlDocumentContext );
+		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAttributeAccessor( jaxbEmbedded, memberDetails, xmlDocumentContext );
+		applyOptimisticLock( jaxbEmbedded, memberDetails, xmlDocumentContext );
+
 		XmlAnnotationHelper.applyAttributeOverrides( jaxbEmbedded.getAttributeOverrides(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyAssociationOverrides( jaxbEmbedded.getAssociationOverrides(), memberDetails, xmlDocumentContext );
 

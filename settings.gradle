@@ -40,6 +40,8 @@ dependencyResolutionManagement {
 			}
 		}
 
+        mavenLocal()
+
         //Allow loading additional dependencies from a local path;
         //useful to load JDBC drivers which can not be distributed in public.
         if (System.env['ADDITIONAL_REPO'] != null) {
@@ -70,7 +72,7 @@ dependencyResolutionManagement {
             def byteBuddyVersion = version "byteBuddy", "1.14.15"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.8.2"
-            def hibernateModelsVersion = version "hibernateModels", "0.8.3"
+            def hibernateModelsVersion = version "hibernateModels", "0.8.4"
             def jandexVersion = version "jandex", "3.1.2"
 			def hcannVersion = version "hcann", "7.0.1.Final"
             def jacksonVersion = version "jackson", "2.17.0"
@@ -329,6 +331,8 @@ include 'hibernate-integrationtest-java-modules'
 
 include 'documentation'
 include 'release'
+
+include 'annotation-descriptor-generator'
 
 // Not all JDK implementations support JFR
 if ( "OpenJDK Runtime Environment".equals( System.getProperty( "java.runtime.name" ) ) ) {

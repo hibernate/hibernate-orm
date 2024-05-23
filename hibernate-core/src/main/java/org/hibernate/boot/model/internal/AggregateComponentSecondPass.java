@@ -35,7 +35,6 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableHelper;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.sql.Template;
 import org.hibernate.type.SqlTypes;
@@ -95,9 +94,9 @@ public class AggregateComponentSecondPass implements SecondPass {
 					structName.getSchemaName()
 			);
 			final UserDefinedObjectType udt = new UserDefinedObjectType( "orm", namespace, structName.getObjectName() );
-			final AnnotationUsage<Comment> comment = returnedClassOrElement.getAnnotationUsage( Comment.class );
+			final Comment comment = returnedClassOrElement.getDirectAnnotationUsage( Comment.class );
 			if ( comment != null ) {
-				udt.setComment( comment.getString( "value" ) );
+				udt.setComment( comment.value() );
 			}
 			for ( org.hibernate.mapping.Column aggregatedColumn : aggregatedColumns ) {
 				udt.addColumn( aggregatedColumn );

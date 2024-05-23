@@ -7,16 +7,13 @@
 package org.hibernate.boot.models.xml.internal;
 
 import java.beans.Introspector;
-import java.lang.annotation.Annotation;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.models.MemberResolutionException;
-import org.hibernate.boot.models.internal.AnnotationUsageHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
@@ -104,20 +101,5 @@ public class XmlProcessingHelper {
 		}
 
 		return null;
-	}
-
-
-	public static <A extends Annotation> void applyAttributeIfSpecified(
-			String attributeName,
-			String value,
-			MutableAnnotationUsage<A> annotationUsage) {
-		AnnotationUsageHelper.applyStringAttributeIfSpecified( attributeName, value, annotationUsage );
-	}
-
-	public static <A extends Annotation> void applyAttributeIfSpecified(
-			String attributeName,
-			Object value,
-			MutableAnnotationUsage<A> annotationUsage) {
-		AnnotationUsageHelper.applyAttributeIfSpecified( attributeName, value, annotationUsage );
 	}
 }

@@ -10,10 +10,7 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.function.Supplier;
 
-import org.hibernate.annotations.AttributeAccessor;
-import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.internal.Extends;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCachingImpl;
@@ -29,6 +26,12 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTenantIdImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.XmlAnnotations;
+import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AttributeAccessorAnnotation;
+import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.CacheableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ExtendsXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicIdAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
@@ -43,12 +46,10 @@ import org.hibernate.models.internal.ModelsClassLogging;
 import org.hibernate.models.internal.RenderingCollectorImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
@@ -57,7 +58,6 @@ import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
-import jakarta.persistence.Cacheable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 
@@ -485,12 +485,12 @@ public class ManagedTypeProcessor {
 			MutableMemberDetails memberDetails,
 			JaxbPersistentAttribute jaxbAttribute,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<AttributeAccessor> annotationUsage = memberDetails.applyAnnotationUsage(
+		final AttributeAccessorAnnotation annotationUsage = (AttributeAccessorAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.ATTRIBUTE_ACCESSOR,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 		// todo (7.0) : this is the old String-based, deprecated form
-		annotationUsage.setAttributeValue( "value", BuiltInPropertyAccessStrategies.MAP.getExternalName() );
+		annotationUsage.value( BuiltInPropertyAccessStrategies.MAP.getExternalName() );
 	}
 
 	private static void processEntityMetadata(
@@ -506,12 +506,12 @@ public class ManagedTypeProcessor {
 		applyCaching( jaxbEntity, classDetails, xmlDocumentContext );
 
 		if ( jaxbEntity.isAbstract() != null ) {
-			classDetails.applyAnnotationUsage( HibernateAnnotations.ABSTRACT, xmlDocumentContext.getModelBuildingContext() );
+			classDetails.applyAnnotationUsage( XmlAnnotations.ABSTRACT, xmlDocumentContext.getModelBuildingContext() );
 		}
 
 		if ( isNotEmpty( jaxbEntity.getExtends() ) ) {
-			final MutableAnnotationUsage<Extends> extendsAnn = HibernateAnnotations.EXTENDS.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			extendsAnn.setAttributeValue( "superType", jaxbEntity.getExtends() );
+			final ExtendsXmlAnnotation extendsAnn = XmlAnnotations.EXTENDS.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			extendsAnn.superType( jaxbEntity.getExtends() );
 		}
 
 		XmlAnnotationHelper.applyTable( jaxbEntity.getTable(), classDetails, xmlDocumentContext );
@@ -591,10 +591,16 @@ public class ManagedTypeProcessor {
 		);
 
 		XmlAnnotationHelper.applyPrimaryKeyJoinColumns(
-				jaxbEntity, classDetails, xmlDocumentContext
+				jaxbEntity,
+				classDetails,
+				xmlDocumentContext
 		);
 
-		XmlAnnotationHelper.applyTableGenerator( jaxbEntity.getTableGenerators(), classDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyTableGenerator(
+				jaxbEntity.getTableGenerators(),
+				classDetails,
+				xmlDocumentContext
+		);
 
 		XmlAnnotationHelper.applySequenceGenerator(
 				jaxbEntity.getSequenceGenerators(),
@@ -611,7 +617,7 @@ public class ManagedTypeProcessor {
 		}
 
 		final RenderingCollectorImpl renderingCollector = new RenderingCollectorImpl();
-		classDetails.render( renderingCollector );
+		classDetails.render( renderingCollector, xmlDocumentContext.getModelBuildingContext() );
 		XML_PROCESS_LOGGER.debugf( "Class annotations from XML for %s:\n%s", classDetails.getName(), renderingCollector.toString() );
 	}
 
@@ -619,8 +625,8 @@ public class ManagedTypeProcessor {
 			AccessType accessType,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<Access> annotationUsage = target.applyAnnotationUsage( JpaAnnotations.ACCESS, xmlDocumentContext.getModelBuildingContext() );
-		annotationUsage.setAttributeValue( "value", accessType );
+		final AccessJpaAnnotation annotationUsage = (AccessJpaAnnotation) target.applyAnnotationUsage( JpaAnnotations.ACCESS, xmlDocumentContext.getModelBuildingContext() );
+		annotationUsage.value( accessType );
 		target.addAnnotationUsage( annotationUsage );
 	}
 
@@ -629,28 +635,30 @@ public class ManagedTypeProcessor {
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbEntity.isCacheable() != null ) {
-			final MutableAnnotationUsage<Cacheable> cacheableUsage = classDetails.applyAnnotationUsage(
+			final CacheableJpaAnnotation cacheableUsage = (CacheableJpaAnnotation) classDetails.applyAnnotationUsage(
 					JpaAnnotations.CACHEABLE,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 
-			cacheableUsage.setAttributeValue( "value", jaxbEntity.isCacheable() );
+			cacheableUsage.value( jaxbEntity.isCacheable() );
 			classDetails.addAnnotationUsage( cacheableUsage );
 		}
 
 		final JaxbCachingImpl jaxbCaching = jaxbEntity.getCaching();
 		if ( jaxbCaching != null ) {
-			final MutableAnnotationUsage<Cache> cacheUsage = classDetails.applyAnnotationUsage(
+			final CacheAnnotation cacheUsage = (CacheAnnotation) classDetails.replaceAnnotationUsage(
 					HibernateAnnotations.CACHE,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			classDetails.addAnnotationUsage( cacheUsage );
-			XmlProcessingHelper.applyAttributeIfSpecified( "region", jaxbCaching.getRegion(), cacheUsage );
-			XmlProcessingHelper.applyAttributeIfSpecified(
-					"usage",
-					convertCacheAccessType( jaxbCaching.getAccess() ),
-					cacheUsage
-			);
+			if ( StringHelper.isNotEmpty( jaxbCaching.getRegion() ) ) {
+				cacheUsage.region( jaxbCaching.getRegion() );
+			}
+			if ( jaxbCaching.getAccess() != null ) {
+				final CacheConcurrencyStrategy strategy = convertCacheAccessType( jaxbCaching.getAccess() );
+				if ( strategy != null ) {
+					cacheUsage.usage( strategy );
+				}
+			}
 		}
 	}
 
@@ -736,9 +744,9 @@ public class ManagedTypeProcessor {
 	}
 
 	private static AccessType determineAccessTypeFromClassAnnotations(ClassDetails classDetails) {
-		final AnnotationUsage<Access> accessUsage = classDetails.getAnnotationUsage( Access.class );
+		final Access accessUsage = classDetails.getDirectAnnotationUsage( Access.class );
 		if ( accessUsage != null ) {
-			return accessUsage.getAttributeValue( "value" );
+			return accessUsage.value();
 		}
 
 		return null;
@@ -746,15 +754,15 @@ public class ManagedTypeProcessor {
 
 	private static AccessType determineAccessTypeFromClassMembers(ClassDetails classDetails) {
 		for ( FieldDetails field : classDetails.getFields() ) {
-			if ( field.getAnnotationUsage( Id.class ) != null
-					|| field.getAnnotationUsage( EmbeddedId.class ) != null ) {
+			if ( field.hasDirectAnnotationUsage( Id.class )
+					|| field.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 				return AccessType.FIELD;
 			}
 		}
 
 		for ( MethodDetails method : classDetails.getMethods() ) {
-			if ( method.getAnnotationUsage( Id.class ) != null
-					|| method.getAnnotationUsage( EmbeddedId.class ) != null ) {
+			if ( method.hasDirectAnnotationUsage( Id.class )
+					|| method.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 				assert method.getMethodKind() == MethodDetails.MethodKind.GETTER;
 				return AccessType.PROPERTY;
 			}
@@ -848,11 +856,11 @@ public class ManagedTypeProcessor {
 				xmlDocumentContext.getEffectiveDefaults().getDefaultPropertyAccessType()
 		);
 		if ( classAccessType != null ) {
-			final MutableAnnotationUsage<Access> accessUsage = classDetails.applyAnnotationUsage(
+			final AccessJpaAnnotation accessUsage = (AccessJpaAnnotation) classDetails.applyAnnotationUsage(
 					JpaAnnotations.ACCESS,
 					modelBuildingContext
 			);
-			accessUsage.setAttributeValue( "value", classAccessType );
+			accessUsage.value( classAccessType );
 		}
 
 		final JaxbAttributesContainerImpl attributes = jaxbMappedSuperclass.getAttributes();
@@ -951,11 +959,11 @@ public class ManagedTypeProcessor {
 		classDetails.applyAnnotationUsage( JpaAnnotations.EMBEDDABLE, xmlDocumentContext.getModelBuildingContext() );
 
 		if ( classAccessType != null ) {
-			final MutableAnnotationUsage<Access> accessUsage = classDetails.applyAnnotationUsage(
+			final AccessJpaAnnotation accessUsage = (AccessJpaAnnotation) classDetails.applyAnnotationUsage(
 					JpaAnnotations.ACCESS,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			accessUsage.setAttributeValue( "value", classAccessType );
+			accessUsage.value( classAccessType );
 		}
 
 		if ( jaxbEmbeddable.getAttributes() != null ) {

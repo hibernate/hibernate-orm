@@ -493,6 +493,14 @@ public final class CollectionHelper {
 		return combined;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static List combineUntyped(List list1, List list2) {
+		final ArrayList combined = arrayList( list1.size() + list2.size() );
+		combined.addAll( list1 );
+		combined.addAll( list2 );
+		return combined;
+	}
+
 	public static <O> List<O> combine(List<O>... lists) {
 		final ArrayList<O> combined = new ArrayList<>();
 		for ( int i = 0; i < lists.length; i++ ) {

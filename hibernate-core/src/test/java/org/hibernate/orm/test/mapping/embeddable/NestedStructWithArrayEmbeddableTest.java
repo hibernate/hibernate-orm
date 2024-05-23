@@ -25,11 +25,8 @@ import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Struct;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -52,7 +49,6 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.ParameterMode;
 import jakarta.persistence.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -325,9 +321,9 @@ public class NestedStructWithArrayEmbeddableTest {
 					)
 							.setParameter( "theInt", struct.getTheInt() )
 							.setParameter( "theDouble", struct.getTheDouble() )
-							.setParameter( "theBoolean", struct.isTheBoolean() )
-							.setParameter( "theNumericBoolean", struct.isTheNumericBoolean() )
-							.setParameter( "theStringBoolean", struct.isTheStringBoolean() )
+							.setParameter( "theBoolean", struct.getTheBoolean() )
+							.setParameter( "theNumericBoolean", struct.getTheNumericBoolean() )
+							.setParameter( "theStringBoolean", struct.getTheStringBoolean() )
 							.setParameter( "theString", struct.getTheString() )
 							.setParameter( "theInteger", struct.getTheInteger() )
 							.setParameter( "theUrl", struct.getTheUrl() )

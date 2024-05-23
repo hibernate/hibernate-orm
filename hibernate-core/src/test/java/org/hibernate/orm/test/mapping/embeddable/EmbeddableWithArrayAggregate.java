@@ -8,8 +8,6 @@ package org.hibernate.orm.test.mapping.embeddable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -26,8 +24,6 @@ import java.util.UUID;
 
 import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.engine.jdbc.BlobProxy;
-import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.YesNoConverter;
@@ -283,7 +279,7 @@ public class EmbeddableWithArrayAggregate {
 	}
 
 	@JdbcTypeCode(SqlTypes.ARRAY)
-	public Boolean[] isTheBoolean() {
+	public Boolean[] getTheBoolean() {
 		return theBoolean;
 	}
 
@@ -293,7 +289,7 @@ public class EmbeddableWithArrayAggregate {
 
 	@Convert(converter = NumericBooleanConverter.class)
 	@JdbcTypeCode(SqlTypes.ARRAY)
-	public Boolean[] isTheNumericBoolean() {
+	public Boolean[] getTheNumericBoolean() {
 		return theNumericBoolean;
 	}
 
@@ -303,7 +299,7 @@ public class EmbeddableWithArrayAggregate {
 
 	@Convert(converter = YesNoConverter.class)
 	@JdbcTypeCode(SqlTypes.ARRAY)
-	public Boolean[] isTheStringBoolean() {
+	public Boolean[] getTheStringBoolean() {
 		return theStringBoolean;
 	}
 

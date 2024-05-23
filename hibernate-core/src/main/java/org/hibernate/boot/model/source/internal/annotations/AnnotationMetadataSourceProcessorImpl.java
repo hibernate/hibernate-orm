@@ -13,9 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
-import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
@@ -24,7 +22,7 @@ import org.hibernate.boot.model.internal.InheritanceState;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
-import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
+import org.hibernate.boot.models.spi.FilterDefRegistration;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -35,10 +33,6 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
-
-import static org.hibernate.boot.jaxb.SourceType.OTHER;
-import static org.hibernate.models.spi.ClassDetails.VOID_CLASS_DETAILS;
-import static org.hibernate.models.spi.ClassDetails.VOID_OBJECT_CLASS_DETAILS;
 
 /**
  * @author Steve Ebersole
@@ -75,15 +69,16 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		final ConverterRegistry converterRegistry = rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();
 		domainModelSource.getConversionRegistrations().forEach( (registration) -> {
 			final Class<?> domainType;
-			if ( registration.getExplicitDomainType() == VOID_CLASS_DETAILS || registration.getExplicitDomainType() == VOID_OBJECT_CLASS_DETAILS ) {
+			if ( registration.getExplicitDomainType() == void.class
+					|| registration.getExplicitDomainType() == Void.class ) {
 				domainType = void.class;
 			}
 			else {
-				domainType = classLoaderService.classForName( registration.getExplicitDomainType().getClassName() );
+				domainType = registration.getExplicitDomainType();
 			}
 			converterRegistry.addRegisteredConversion( new RegisteredConversion(
 					domainType,
-					classLoaderService.classForName( registration.getConverterType().getClassName() ),
+					registration.getConverterType(),
 					registration.isAutoApply(),
 					rootMetadataBuildingContext
 			) );
@@ -234,7 +229,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		List<XClass> clazzHierarchy = new ArrayList<>();
 
 		for ( ClassDetails clazz : classes ) {
-			if ( clazz.hasAnnotationUsage( MappedSuperclass.class ) ) {
+			if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 				if ( debug ) {
 					log.debugf(
 							"Skipping explicit MappedSuperclass %s, the class will be discovered analyzing the implementing class",
@@ -253,8 +248,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				ClassDetails superClass = clazz.getSuperClass();
 				while ( superClass != null
 						&& !Object.class.getName().equals( superClass.getName() ) ) {
-					if ( superClass.hasAnnotationUsage( Entity.class )
-							|| superClass.hasAnnotationUsage( MappedSuperclass.class ) ) {
+					if ( superClass.hasDirectAnnotationUsage( Entity.class )
+							|| superClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 						if ( orderedClasses.contains( superClass ) ) {
 							break;
 						}

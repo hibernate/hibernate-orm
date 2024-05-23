@@ -8,6 +8,7 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -35,6 +36,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
@@ -51,10 +53,10 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeDetailsHelper;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -746,8 +748,8 @@ public class BinderHelper {
 	}
 
 	public static Any buildAnyValue(
-			AnnotationUsage<jakarta.persistence.Column> discriminatorColumn,
-			AnnotationUsage<Formula> discriminatorFormula,
+			jakarta.persistence.Column discriminatorColumn,
+			Formula discriminatorFormula,
 			AnnotatedJoinColumns keyColumns,
 			PropertyData inferredData,
 			OnDeleteAction onDeleteAction,
@@ -802,9 +804,10 @@ public class BinderHelper {
 		processAnyDiscriminatorValues(
 				inferredData.getAttributeMember(),
 				valueMapping -> discriminatorValueMappings.put(
-						discriminatorJavaType.wrap( valueMapping.getString( "discriminator" ), null ),
-						valueMapping.getClassDetails( "entity" ).toJavaClass()
-				)
+						discriminatorJavaType.wrap( valueMapping.discriminator(), null ),
+						valueMapping.entity()
+				),
+				context.getMetadataCollector().getSourceModelBuildingContext()
 		);
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
 
@@ -829,15 +832,16 @@ public class BinderHelper {
 
 	private static void processAnyDiscriminatorValues(
 			MemberDetails property,
-			Consumer<AnnotationUsage<AnyDiscriminatorValue>> consumer) {
-		final AnnotationUsage<AnyDiscriminatorValues> valuesAnn = property.locateAnnotationUsage( AnyDiscriminatorValues.class );
+			Consumer<AnyDiscriminatorValue> consumer,
+			SourceModelBuildingContext sourceModelContext) {
+		final AnyDiscriminatorValues valuesAnn = property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
 		if ( valuesAnn != null ) {
-			final List<AnnotationUsage<AnyDiscriminatorValue>> nestedList = valuesAnn.getList( "value" );
-			nestedList.forEach( consumer );
+			final AnyDiscriminatorValue[] nestedList = valuesAnn.value();
+			ArrayHelper.forEach( nestedList, consumer );
 			return;
 		}
 
-		final AnnotationUsage<AnyDiscriminatorValue> valueAnn = property.locateAnnotationUsage( AnyDiscriminatorValue.class );
+		final AnyDiscriminatorValue valueAnn = property.locateAnnotationUsage( AnyDiscriminatorValue.class, sourceModelContext );
 		if ( valueAnn != null ) {
 			consumer.accept( valueAnn );
 		}
@@ -898,31 +902,31 @@ public class BinderHelper {
 		return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, isId ? "" : propertyName );
 	}
 
-	public static Map<String,String> toAliasTableMap(List<AnnotationUsage<SqlFragmentAlias>> aliases){
+	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> ret = new HashMap<>();
-		for ( AnnotationUsage<SqlFragmentAlias> aliasAnnotation : aliases ) {
-			final String table = aliasAnnotation.getString( "table" );
+		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
+			final String table = aliasAnnotation.table();
 			if ( isNotEmpty( table ) ) {
-				ret.put( aliasAnnotation.getString( "alias" ), table );
+				ret.put( aliasAnnotation.alias(), table );
 			}
 		}
 		return ret;
 	}
 
-	public static Map<String,String> toAliasEntityMap(List<AnnotationUsage<SqlFragmentAlias>> aliases){
+	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> result = new HashMap<>();
-		for ( AnnotationUsage<SqlFragmentAlias> aliasAnnotation : aliases ) {
-			final ClassDetails entityClassDetails = aliasAnnotation.getClassDetails( "entity" );
-			if ( entityClassDetails != ClassDetails.VOID_CLASS_DETAILS ) {
-				result.put( aliasAnnotation.getString( "alias" ), entityClassDetails.getName() );
+		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
+			final Class<?> entityClass = aliasAnnotation.entity();
+			if ( entityClass != void.class ) {
+				result.put( aliasAnnotation.alias(), entityClass.getName() );
 			}
 		}
 		return result;
 	}
 
 	public static boolean hasToOneAnnotation(AnnotationTarget property) {
-		return property.hasAnnotationUsage(ManyToOne.class)
-			|| property.hasAnnotationUsage(OneToOne.class);
+		return property.hasDirectAnnotationUsage(ManyToOne.class)
+			|| property.hasDirectAnnotationUsage(OneToOne.class);
 	}
 
 
@@ -934,16 +938,16 @@ public class BinderHelper {
 	}
 
 	public static String getCascadeStrategy(
-			List<jakarta.persistence.CascadeType> ejbCascades,
-			AnnotationUsage<Cascade> hibernateCascadeAnnotation,
+			jakarta.persistence.CascadeType[] ejbCascades,
+			Cascade hibernateCascadeAnnotation,
 			boolean orphanRemoval,
 			MetadataBuildingContext context) {
 		final EnumSet<CascadeType> cascadeTypes = convertToHibernateCascadeType( ejbCascades );
-		final List<CascadeType> hibernateCascades = hibernateCascadeAnnotation == null
+		final CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null
 				? null
-				: hibernateCascadeAnnotation.getList( "value" );
-		if ( hibernateCascades != null && !hibernateCascades.isEmpty() ) {
-			cascadeTypes.addAll( hibernateCascades );
+				: hibernateCascadeAnnotation.value();
+		if ( !ArrayHelper.isEmpty( hibernateCascades ) ) {
+			Collections.addAll( cascadeTypes, hibernateCascades );
 		}
 		if ( orphanRemoval ) {
 			cascadeTypes.add( CascadeType.DELETE_ORPHAN );
@@ -953,7 +957,7 @@ public class BinderHelper {
 		return renderCascadeTypeList( cascadeTypes );
 	}
 
-	private static EnumSet<CascadeType> convertToHibernateCascadeType(List<jakarta.persistence.CascadeType> ejbCascades) {
+	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] ejbCascades) {
 		final EnumSet<CascadeType> cascadeTypes = EnumSet.noneOf( CascadeType.class );
 		if ( ejbCascades != null ) {
 			for ( jakarta.persistence.CascadeType cascade: ejbCascades ) {
@@ -1050,8 +1054,8 @@ public class BinderHelper {
 	}
 
 	static boolean isCompositeId(ClassDetails entityClass, MemberDetails idProperty) {
-		return entityClass.hasAnnotationUsage( Embeddable.class )
-			|| idProperty.hasAnnotationUsage( EmbeddedId.class );
+		return entityClass.hasDirectAnnotationUsage( Embeddable.class )
+			|| idProperty.hasDirectAnnotationUsage( EmbeddedId.class );
 	}
 
 	public static boolean isDefault(ClassDetails clazz, MetadataBuildingContext context) {
@@ -1110,12 +1114,12 @@ public class BinderHelper {
 		return false;
 	}
 
-	public static boolean noConstraint(AnnotationUsage<ForeignKey> foreignKey, boolean noConstraintByDefault) {
+	public static boolean noConstraint(ForeignKey foreignKey, boolean noConstraintByDefault) {
 		if ( foreignKey == null ) {
 			return false;
 		}
 		else {
-			final ConstraintMode mode = foreignKey.getEnum( "value" );
+			final ConstraintMode mode = foreignKey.value();
 			return mode == NO_CONSTRAINT
 					|| mode == PROVIDER_DEFAULT && noConstraintByDefault;
 		}
@@ -1130,7 +1134,7 @@ public class BinderHelper {
 	 *
 	 * @return The annotation or {@code null}
 	 */
-	public static <A extends Annotation> AnnotationUsage<A> extractFromPackage(
+	public static <A extends Annotation> A extractFromPackage(
 			Class<A> annotationType,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
@@ -1148,14 +1152,13 @@ public class BinderHelper {
 		if ( isEmpty( packageName ) ) {
 			return null;
 		}
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
 
-		final ClassDetailsRegistry classDetailsRegistry = context.getMetadataCollector()
-				.getSourceModelBuildingContext()
-				.getClassDetailsRegistry();
 		final String packageInfoName = packageName + ".package-info";
 		try {
 			final ClassDetails packageInfoClassDetails = classDetailsRegistry.resolveClassDetails( packageInfoName );
-			return packageInfoClassDetails.getAnnotationUsage( annotationType );
+			return packageInfoClassDetails.getAnnotationUsage( annotationType, sourceModelContext );
 		}
 		catch (ClassLoadingException ignore) {
 		}

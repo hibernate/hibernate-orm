@@ -12,7 +12,6 @@ import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Join;
-import org.hibernate.models.spi.AnnotationUsage;
 
 import jakarta.persistence.OrderColumn;
 
@@ -33,9 +32,9 @@ public class IndexColumn extends AnnotatedColumn {
 	}
 
 	public static IndexColumn fromAnnotations(
-			AnnotationUsage<OrderColumn> orderColumn,
-			AnnotationUsage<org.hibernate.annotations.IndexColumn> indexColumn,
-			AnnotationUsage<ListIndexBase> listIndexBase,
+			OrderColumn orderColumn,
+			org.hibernate.annotations.IndexColumn indexColumn,
+			ListIndexBase listIndexBase,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
@@ -46,7 +45,7 @@ public class IndexColumn extends AnnotatedColumn {
 		}
 		else if ( indexColumn != null ) {
 			column = buildColumnFromIndexColumn( indexColumn, propertyHolder, inferredData, context );
-			column.setBase( indexColumn.getInteger( "base" ) );
+			column.setBase( indexColumn.base() );
 		}
 		else {
 			column = new IndexColumn();
@@ -59,7 +58,7 @@ public class IndexColumn extends AnnotatedColumn {
 		}
 
 		if ( listIndexBase != null ) {
-			column.setBase( listIndexBase.getInteger( "value" ) );
+			column.setBase( listIndexBase.value() );
 		}
 
 		return column;
@@ -96,25 +95,25 @@ public class IndexColumn extends AnnotatedColumn {
 	 * @return The index column
 	 */
 	public static IndexColumn buildColumnFromOrderColumn(
-			AnnotationUsage<OrderColumn> orderColumn,
+			OrderColumn orderColumn,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
 		if ( orderColumn != null ) {
-			final String sqlType = nullIfEmpty( orderColumn.getString( "columnDefinition" ) );
-			final String explicitName = orderColumn.getString( "name" );
+			final String sqlType = nullIfEmpty( orderColumn.columnDefinition() );
+			final String explicitName = orderColumn.name();
 			final String name = explicitName.isEmpty()
 					? inferredData.getPropertyName() + "_ORDER"
 					: explicitName;
 			final IndexColumn column = new IndexColumn();
 			column.setLogicalColumnName( name );
 			column.setSqlType( sqlType );
-			column.setNullable( orderColumn.getBoolean( "nullable" ) );
+			column.setNullable( orderColumn.nullable() );
 //			column.setJoins( secondaryTables );
-			column.setInsertable( orderColumn.getBoolean( "insertable" ) );
-			column.setUpdatable( orderColumn.getBoolean( "updatable" ) );
-			column.setOptions( orderColumn.getString( "options" ) );
+			column.setInsertable( orderColumn.insertable() );
+			column.setUpdatable( orderColumn.updatable() );
+			column.setOptions( orderColumn.options() );
 //			column.setContext( context );
 //			column.setPropertyHolder( propertyHolder );
 			createParent( propertyHolder, secondaryTables, column, context );
@@ -142,22 +141,22 @@ public class IndexColumn extends AnnotatedColumn {
 	 * @return The index column
 	 */
 	public static IndexColumn buildColumnFromIndexColumn(
-			AnnotationUsage<org.hibernate.annotations.IndexColumn> indexColumn,
+			org.hibernate.annotations.IndexColumn indexColumn,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			MetadataBuildingContext context) {
 		if ( indexColumn != null ) {
-			final String explicitName = indexColumn.getString( "name" );
+			final String explicitName = indexColumn.name();
 			final String name = explicitName.isEmpty()
 					? inferredData.getPropertyName()
 					: explicitName;
-			final String sqlType = nullIfEmpty( indexColumn.getString( "columnDefinition" ) );
+			final String sqlType = nullIfEmpty( indexColumn.columnDefinition() );
 			//TODO move it to a getter based system and remove the constructor
 			final IndexColumn column = new IndexColumn();
 			column.setLogicalColumnName( name );
 			column.setSqlType( sqlType );
-			column.setNullable( indexColumn.getBoolean( "nullable" ) );
-			column.setBase( indexColumn.getInteger( "base" ) );
+			column.setNullable( indexColumn.nullable() );
+			column.setBase( indexColumn.base() );
 //			column.setContext( context );
 //			column.setPropertyHolder( propertyHolder );
 			createParent( propertyHolder, null, column, context );

@@ -24,6 +24,7 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -31,11 +32,11 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
@@ -160,18 +161,19 @@ public class EmbeddableBinder {
 	}
 
 	static boolean isEmbedded(MemberDetails property, ClassDetails returnedClass) {
-		return property.hasAnnotationUsage( Embedded.class )
-			|| property.hasAnnotationUsage( EmbeddedId.class )
-			|| returnedClass.hasAnnotationUsage( Embeddable.class ) && !property.hasAnnotationUsage( Convert.class );
+		return property.hasDirectAnnotationUsage( Embedded.class )
+			|| property.hasDirectAnnotationUsage( EmbeddedId.class )
+			|| returnedClass.hasDirectAnnotationUsage( Embeddable.class ) && !property.hasDirectAnnotationUsage( Convert.class );
 	}
 
 	static boolean isEmbedded(MemberDetails property, TypeDetails returnedClass) {
-		if ( property.hasAnnotationUsage( Embedded.class ) || property.hasAnnotationUsage( EmbeddedId.class ) ) {
+		if ( property.hasDirectAnnotationUsage( Embedded.class ) || property.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 			return true;
 		}
 
 		final ClassDetails returnClassDetails = returnedClass.determineRawClass();
-		return returnClassDetails.hasAnnotationUsage( Embeddable.class ) && !property.hasAnnotationUsage( Convert.class );
+		return returnClassDetails.hasDirectAnnotationUsage( Embeddable.class )
+				&& !property.hasDirectAnnotationUsage( Convert.class );
 	}
 
 	public static Component bindEmbeddable(
@@ -234,14 +236,22 @@ public class EmbeddableBinder {
 	}
 
 	private static void callTypeBinders(Component component, MetadataBuildingContext context, TypeDetails annotatedClass ) {
-		final List<AnnotationUsage<?>> metaAnnotatedAnnotations = annotatedClass.determineRawClass().getMetaAnnotated( TypeBinderType.class );
-		for ( AnnotationUsage<?> metaAnnotated : metaAnnotatedAnnotations ) {
-			final AnnotationUsage<TypeBinderType> binderType = metaAnnotated.getAnnotationDescriptor().getAnnotationUsage( TypeBinderType.class );
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+
+		final List<? extends Annotation> metaAnnotatedAnnotations = annotatedClass.determineRawClass().getMetaAnnotated( TypeBinderType.class, sourceModelContext );
+		if ( CollectionHelper.isEmpty( metaAnnotatedAnnotations ) ) {
+			return;
+		}
+
+		for ( Annotation metaAnnotated : metaAnnotatedAnnotations ) {
+			final TypeBinderType binderType = metaAnnotated.annotationType().getAnnotation( TypeBinderType.class );
 			try {
-				final ClassDetails binderImpl = binderType.getClassDetails( "binder" );
-				final Class<? extends TypeBinder<Annotation>> binderJavaType = binderImpl.toJavaClass();
-				final TypeBinder<Annotation> binder = binderJavaType.getDeclaredConstructor().newInstance();
-				binder.bind( metaAnnotated.toAnnotation(), context, component );
+				//noinspection rawtypes
+				final Class<? extends TypeBinder> binderImpl = binderType.binder();
+				//noinspection rawtypes
+				final TypeBinder binder = binderImpl.getDeclaredConstructor().newInstance();
+				//noinspection unchecked
+				binder.bind( metaAnnotated, context, component );
 			}
 			catch ( Exception e ) {
 				throw new AnnotationException( "error processing @TypeBinderType annotation '" + metaAnnotated + "'", e );
@@ -458,7 +468,7 @@ public class EmbeddableBinder {
 			);
 
 			final MemberDetails property = propertyAnnotatedElement.getAttributeMember();
-			if ( property.hasAnnotationUsage( GeneratedValue.class ) ) {
+			if ( property.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
 				if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
 					processGeneratedId( context, component, property );
 				}
@@ -525,8 +535,8 @@ public class EmbeddableBinder {
 			PropertyHolder holder,
 			InheritanceState inheritanceState,
 			MetadataBuildingContext context) {
-		final AnnotationUsage<DiscriminatorColumn> discriminatorColumn = annotatedClass.getAnnotationUsage( DiscriminatorColumn.class );
-		final AnnotationUsage<DiscriminatorFormula> discriminatorFormula = getOverridableAnnotation(
+		final DiscriminatorColumn discriminatorColumn = annotatedClass.getDirectAnnotationUsage( DiscriminatorColumn.class );
+		final DiscriminatorFormula discriminatorFormula = getOverridableAnnotation(
 				annotatedClass,
 				DiscriminatorFormula.class,
 				context
@@ -535,7 +545,7 @@ public class EmbeddableBinder {
 			if ( inheritanceState.hasSiblings() ) {
 				final String path = qualify( holder.getPath(), EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
 				final String columnPrefix;
-				final List<AnnotationUsage<Column>> overrides;
+				final Column[] overrides;
 				if ( holder.isWithinElementCollection() ) {
 					columnPrefix = unqualify( parentHolder.getPath() );
 					overrides = parentHolder.getOverriddenColumn( path );
@@ -547,7 +557,7 @@ public class EmbeddableBinder {
 				return buildDiscriminatorColumn(
 						discriminatorColumn,
 						discriminatorFormula,
-						overrides == null ? null : overrides.get(0),
+						overrides == null ? null : overrides[0],
 						columnPrefix + "_" + DEFAULT_DISCRIMINATOR_COLUMN_NAME,
 						context
 				);
@@ -683,8 +693,8 @@ public class EmbeddableBinder {
 			ClassDetails annotatedClass,
 			BasicType<?> discriminatorType,
 			Map<Object, String> discriminatorValues) {
-		final String explicitValue = annotatedClass.hasAnnotationUsage( DiscriminatorValue.class )
-				? annotatedClass.getAnnotationUsage( DiscriminatorValue.class ).getString( "value" )
+		final String explicitValue = annotatedClass.hasDirectAnnotationUsage( DiscriminatorValue.class )
+				? annotatedClass.getDirectAnnotationUsage( DiscriminatorValue.class ).value()
 				: null;
 		final String discriminatorValue;
 		if ( isEmpty( explicitValue ) ) {
@@ -717,7 +727,7 @@ public class EmbeddableBinder {
 			return false;
 		}
 
-		return superClass.hasAnnotationUsage( MappedSuperclass.class )
+		return superClass.hasDirectAnnotationUsage( MappedSuperclass.class )
 				|| ( isIdClass
 				&& !superClass.getName().equals( Object.class.getName() )
 				&& !superClass.getName().equals( "java.lang.Record" ) );
@@ -789,21 +799,21 @@ public class EmbeddableBinder {
 	}
 
 	private static boolean hasTriggeringAnnotation(MemberDetails property) {
-		return property.hasAnnotationUsage(Column.class)
-			|| property.hasAnnotationUsage(OneToMany.class)
-			|| property.hasAnnotationUsage(ManyToOne.class)
-			|| property.hasAnnotationUsage(Id.class)
-			|| property.hasAnnotationUsage(GeneratedValue.class)
-			|| property.hasAnnotationUsage(OneToOne.class)
-			|| property.hasAnnotationUsage(ManyToMany.class);
+		return property.hasDirectAnnotationUsage(Column.class)
+			|| property.hasDirectAnnotationUsage(OneToMany.class)
+			|| property.hasDirectAnnotationUsage(ManyToOne.class)
+			|| property.hasDirectAnnotationUsage(Id.class)
+			|| property.hasDirectAnnotationUsage(GeneratedValue.class)
+			|| property.hasDirectAnnotationUsage(OneToOne.class)
+			|| property.hasDirectAnnotationUsage(ManyToMany.class);
 	}
 
 	private static void processGeneratedId(MetadataBuildingContext context, Component component, MemberDetails property) {
-		final AnnotationUsage<GeneratedValue> generatedValue = property.getAnnotationUsage( GeneratedValue.class );
+		final GeneratedValue generatedValue = property.getDirectAnnotationUsage( GeneratedValue.class );
 		final String generatorType = generatedValue != null
 				? generatorType( generatedValue, property.getType().determineRawClass(), context )
 				: GeneratorBinder.ASSIGNED_GENERATOR_NAME;
-		final String generator = generatedValue != null ? generatedValue.getString( "generator" ) : "";
+		final String generator = generatedValue != null ? generatedValue.generator() : "";
 
 		if ( isGlobalGeneratorNameGlobal( context ) ) {
 			buildGenerators( property, context );
@@ -922,21 +932,21 @@ public class EmbeddableBinder {
 			MemberDetails property,
 			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
-		if ( property.hasAnnotationUsage( EmbeddedId.class ) ) {
+		if ( property.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 			// we don't allow custom instantiators for composite ids
 			return null;
 		}
 
-		final AnnotationUsage<org.hibernate.annotations.EmbeddableInstantiator> propertyAnnotation =
-				property.getAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final org.hibernate.annotations.EmbeddableInstantiator propertyAnnotation =
+				property.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( propertyAnnotation != null ) {
-			return propertyAnnotation.getClassDetails( "value" ).toJavaClass();
+			return propertyAnnotation.value();
 		}
 
-		final AnnotationUsage<org.hibernate.annotations.EmbeddableInstantiator> classAnnotation =
-				returnedClass.getAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation =
+				returnedClass.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( classAnnotation != null ) {
-			return classAnnotation.getClassDetails( "value" ).toJavaClass();
+			return classAnnotation.value();
 		}
 
 		if ( returnedClass.getClassName() != null ) {

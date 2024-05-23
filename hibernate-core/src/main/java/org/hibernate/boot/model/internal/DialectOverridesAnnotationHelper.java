@@ -8,18 +8,18 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.DialectOverride;
+import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 /**
  * @author Sanne Grinovero
@@ -75,46 +75,34 @@ public class DialectOverridesAnnotationHelper {
 		return (Class<O>) OVERRIDE_MAP.get( annotationType );
 	}
 
-	public static <T extends Annotation> AnnotationUsage<T> getOverridableAnnotation(
+	public static <T extends Annotation> T getOverridableAnnotation(
 			AnnotationTarget element,
 			Class<T> annotationType,
 			MetadataBuildingContext context) {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 		final Class<? extends Annotation> overrideAnnotation = OVERRIDE_MAP.get( annotationType );
+
 		if ( overrideAnnotation != null ) {
 			// the requested annotation does have a DialectOverride variant - look for matching one of those...
 			final Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
-			final DatabaseVersion version = dialect.getVersion();
 
-			final List<? extends AnnotationUsage<? extends Annotation>> overrides = element.getRepeatedAnnotationUsages( overrideAnnotation );
-			for ( AnnotationUsage<? extends Annotation> override : overrides ) {
-				if ( overrideMatchesDialect( override, dialect ) ) {
-					// we found an override match...
-					// the override's `override` attribute is the thing to return
-					return override.getNestedUsage( "override" );
+			final Annotation[] overrides = element.getRepeatedAnnotationUsages( overrideAnnotation, sourceModelContext );
+			if ( CollectionHelper.isNotEmpty( overrides ) ) {
+				for ( int i = 0; i < overrides.length; i++ ) {
+					//noinspection unchecked
+					final DialectOverrider<T> override = (DialectOverrider<T>) overrides[i];
+					if ( override.matches( dialect ) ) {
+						return override.override();
+					}
 				}
 			}
 		}
 
 		// no override was found.  return the base annotation (if one)
-		return element.getSingleAnnotationUsage( annotationType );
+		return element.getAnnotationUsage( annotationType, sourceModelContext );
 	}
 
-	public static boolean overrideMatchesDialect(AnnotationUsage<? extends Annotation> override, Dialect dialect) {
-		final ClassDetails overrideDialect = override.getClassDetails( "dialect" );
-		final Class<? extends Dialect> overrideDialectJavaType = overrideDialect.toJavaClass();
-		if ( !overrideDialectJavaType.isAssignableFrom( dialect.getClass() ) ) {
-			return false;
-		}
-
-		final AnnotationUsage<DialectOverride.Version> beforeAnn = override.getNestedUsage( "before" );
-		final AnnotationUsage<DialectOverride.Version> sameOrAfterAnn = override.getNestedUsage( "sameOrAfter" );
-		final DatabaseVersion version = dialect.getVersion();
-
-		if ( version.isBefore( beforeAnn.getInteger( "major" ), beforeAnn.getInteger( "minor" ) )
-				&& version.isSameOrAfter( sameOrAfterAnn.getInteger( "major" ), sameOrAfterAnn.getInteger( "minor" ) ) ) {
-			return true;
-		}
-
-		return false;
+	public static boolean overrideMatchesDialect(DialectOverrider<?> override, Dialect dialect) {
+		return override.matches( dialect );
 	}
 }

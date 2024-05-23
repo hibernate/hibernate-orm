@@ -7,8 +7,6 @@
 package org.hibernate.boot.model.internal;
 
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
@@ -40,11 +38,11 @@ public class AttributeConversionInfo {
 		this.source = source;
 	}
 
-	public AttributeConversionInfo(AnnotationUsage<Convert> convertAnnotation, AnnotationTarget source) {
+	public AttributeConversionInfo(Convert convertAnnotation, AnnotationTarget source) {
 		this(
-				convertAnnotation.getClassDetails( "converter" ).toJavaClass(),
-				convertAnnotation.getBoolean( "disableConversion" ),
-				convertAnnotation.getString( "attributeName" ),
+				convertAnnotation.converter(),
+				convertAnnotation.disableConversion(),
+				convertAnnotation.attributeName(),
 				source
 		);
 	}

@@ -6,14 +6,11 @@
  */
 package org.hibernate.boot.models.xml.internal.db;
 
-import java.lang.annotation.Annotation;
-
 import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
+import org.hibernate.boot.models.annotations.internal.ForeignKeyJpaAnnotation;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.ForeignKey;
@@ -34,85 +31,50 @@ public class ForeignKeyProcessing {
 		createForeignKeyAnnotation( jaxbForeignKey, memberDetails, xmlDocumentContext );
 	}
 
-	public static MutableAnnotationUsage<ForeignKey> createForeignKeyAnnotation(
+	public static ForeignKey createForeignKeyAnnotation(
 			JaxbForeignKeyImpl jaxbForeignKey,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbForeignKey == null ) {
 			return null;
 		}
-		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = memberDetails.applyAnnotationUsage(
+		final ForeignKeyJpaAnnotation foreignKeyUsage = (ForeignKeyJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.FOREIGN_KEY,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-
-		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "name", jaxbForeignKey.getName() );
-		XmlAnnotationHelper.applyOptionalAttribute(
-				foreignKeyUsage,
-				"value",
-				jaxbForeignKey.getConstraintMode()
-		);
-		XmlAnnotationHelper.applyOptionalAttribute(
-				foreignKeyUsage,
-				"foreignKeyDefinition",
-				jaxbForeignKey.getForeignKeyDefinition()
-		);
-		XmlAnnotationHelper.applyOptionalAttribute(
-				foreignKeyUsage,
-				"options",
-				jaxbForeignKey.getOptions()
-		);
-
+		transferFkDetails( jaxbForeignKey, foreignKeyUsage, xmlDocumentContext );
 		return foreignKeyUsage;
 	}
 
-	public static MutableAnnotationUsage<ForeignKey> createNestedForeignKeyAnnotation(
+	private static void transferFkDetails(
 			JaxbForeignKeyImpl jaxbForeignKey,
-			AnnotationTarget annotationTarget,
+			ForeignKeyJpaAnnotation foreignKeyUsage,
 			XmlDocumentContext xmlDocumentContext) {
-		assert jaxbForeignKey != null;
-
-		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage( xmlDocumentContext.getModelBuildingContext() );
-
-		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "name", jaxbForeignKey.getName() );
-		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "value", jaxbForeignKey.getConstraintMode() );
-		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "foreignKeyDefinition", jaxbForeignKey.getForeignKeyDefinition() );
-		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "options", jaxbForeignKey.getOptions() );
-
-		return foreignKeyUsage;
-	}
-
-	public static <A extends Annotation> void applyForeignKey(
-			JaxbForeignKeyImpl jaxbForeignKey,
-			MutableAnnotationUsage<A> tableAnn,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbForeignKey == null ) {
-			return;
+		if ( StringHelper.isNotEmpty( jaxbForeignKey.getName() ) ) {
+			foreignKeyUsage.name( jaxbForeignKey.getName() );
 		}
-		final MutableAnnotationUsage<ForeignKey> foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage(
-				xmlDocumentContext.getModelBuildingContext()
-		);
 
-		XmlAnnotationHelper.applyOptionalAttribute( foreignKeyUsage, "name", jaxbForeignKey.getName() );
-		XmlAnnotationHelper.applyOptionalAttribute(
-				foreignKeyUsage,
-				"value",
-				jaxbForeignKey.getConstraintMode()
-		);
-		XmlAnnotationHelper.applyOptionalAttribute(
-				foreignKeyUsage,
-				"foreignKeyDefinition",
-				jaxbForeignKey.getForeignKeyDefinition()
-		);
-		XmlAnnotationHelper.applyOptionalAttribute(
-				foreignKeyUsage,
-				"options",
-				jaxbForeignKey.getOptions()
-		);
+		if ( jaxbForeignKey.getConstraintMode() != null ) {
+			foreignKeyUsage.value( jaxbForeignKey.getConstraintMode() );
+		}
 
-		tableAnn.setAttributeValue(
-				"foreignkey",
-				foreignKeyUsage
-		);;
+		if ( StringHelper.isNotEmpty( jaxbForeignKey.getForeignKeyDefinition() ) ) {
+			foreignKeyUsage.foreignKeyDefinition( jaxbForeignKey.getForeignKeyDefinition() );
+		}
+		if ( StringHelper.isNotEmpty( jaxbForeignKey.getOptions() ) ) {
+			foreignKeyUsage.options( jaxbForeignKey.getOptions() );
+		}
 	}
+
+	public static ForeignKeyJpaAnnotation createNestedForeignKeyAnnotation(
+			JaxbForeignKeyImpl jaxbForeignKey,
+			XmlDocumentContext xmlDocumentContext) {
+		final ForeignKeyJpaAnnotation foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage( xmlDocumentContext.getModelBuildingContext() );
+		if ( jaxbForeignKey != null ) {
+			transferFkDetails( jaxbForeignKey, foreignKeyUsage, xmlDocumentContext );
+		}
+
+		return foreignKeyUsage;
+	}
+
 }

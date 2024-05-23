@@ -24,7 +24,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -87,7 +86,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			return;
 		}
 
-		collectionProperty.forEachAnnotationUsage( Convert.class, (usage) -> {
+		collectionProperty.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 			applyLocalConvert(
 					usage,
 					collectionProperty,
@@ -99,7 +98,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private void applyLocalConvert(
-			AnnotationUsage<Convert> convertAnnotation,
+			Convert convertAnnotation,
 			MemberDetails collectionProperty,
 			boolean isComposite,
 			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
@@ -311,12 +310,12 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public Join addJoin(AnnotationUsage<JoinTable> joinTableAnn, boolean noDelayInPkColumnCreation) {
+	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
 		throw new AssertionFailure( "Add join in a second pass" );
 	}
 
 	@Override
-	public Join addJoin(AnnotationUsage<JoinTable> joinTableAnn, Table table, boolean noDelayInPkColumnCreation) {
+	public Join addJoin(JoinTable joinTableAnn, Table table, boolean noDelayInPkColumnCreation) {
 		throw new AssertionFailure( "Add join in a second pass" );
 	}
 
@@ -340,16 +339,16 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		prepared = true;
 
 		if ( collection.isMap() ) {
-			if ( collectionProperty.hasAnnotationUsage( MapKeyEnumerated.class ) ) {
+			if ( collectionProperty.hasDirectAnnotationUsage( MapKeyEnumerated.class ) ) {
 				canKeyBeConverted = false;
 			}
-			else if ( collectionProperty.hasAnnotationUsage( MapKeyTemporal.class ) ) {
+			else if ( collectionProperty.hasDirectAnnotationUsage( MapKeyTemporal.class ) ) {
 				canKeyBeConverted = false;
 			}
-			else if ( collectionProperty.hasAnnotationUsage( MapKeyClass.class ) ) {
+			else if ( collectionProperty.hasDirectAnnotationUsage( MapKeyClass.class ) ) {
 				canKeyBeConverted = false;
 			}
-			else if ( collectionProperty.hasAnnotationUsage( MapKeyType.class ) ) {
+			else if ( collectionProperty.hasDirectAnnotationUsage( MapKeyType.class ) ) {
 				canKeyBeConverted = false;
 			}
 		}
@@ -357,22 +356,22 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			canKeyBeConverted = false;
 		}
 
-		if ( collectionProperty.hasAnnotationUsage( ManyToAny.class ) ) {
+		if ( collectionProperty.hasDirectAnnotationUsage( ManyToAny.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.hasAnnotationUsage( OneToMany.class ) ) {
+		else if ( collectionProperty.hasDirectAnnotationUsage( OneToMany.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.hasAnnotationUsage( ManyToMany.class ) ) {
+		else if ( collectionProperty.hasDirectAnnotationUsage( ManyToMany.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.hasAnnotationUsage( Enumerated.class ) ) {
+		else if ( collectionProperty.hasDirectAnnotationUsage( Enumerated.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.hasAnnotationUsage( Temporal.class ) ) {
+		else if ( collectionProperty.hasDirectAnnotationUsage( Temporal.class ) ) {
 			canElementBeConverted = false;
 		}
-		else if ( collectionProperty.hasAnnotationUsage( CollectionType.class ) ) {
+		else if ( collectionProperty.hasDirectAnnotationUsage( CollectionType.class ) ) {
 			canElementBeConverted = false;
 		}
 

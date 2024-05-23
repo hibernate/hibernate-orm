@@ -49,7 +49,9 @@ public abstract class AbstractNamedQueryBuilder<R, T extends AbstractNamedQueryB
 	protected abstract T getThis();
 
 	public T setResultClass(Class<R> resultClass) {
-		this.resultClass = resultClass;
+		if ( resultClass != void.class ) {
+			this.resultClass = resultClass;
+		}
 		return getThis();
 	}
 

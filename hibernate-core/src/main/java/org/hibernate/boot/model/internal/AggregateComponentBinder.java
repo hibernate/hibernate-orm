@@ -20,7 +20,8 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
-import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -128,15 +129,16 @@ public final class AggregateComponentBinder {
 			MetadataBuildingContext context) {
 		final MemberDetails property = inferredData.getAttributeMember();
 		if ( property != null ) {
-			final AnnotationUsage<Struct> struct = property.getAnnotationUsage( Struct.class );
+			final Struct struct = property.getDirectAnnotationUsage( Struct.class );
 			if ( struct != null ) {
 				return toQualifiedName( struct, context );
 			}
-			final AnnotationUsage<JdbcTypeCode> jdbcTypeCode = property.getAnnotationUsage( JdbcTypeCode.class );
-			if ( jdbcTypeCode != null
-					&& ( jdbcTypeCode.getInteger( "value" ) == SqlTypes.STRUCT
-					|| jdbcTypeCode.getInteger( "value" ) == SqlTypes.STRUCT_ARRAY
-					|| jdbcTypeCode.getInteger( "value" ) == SqlTypes.STRUCT_TABLE )
+
+			final JdbcTypeCode jdbcTypeCodeAnn = property.getDirectAnnotationUsage( JdbcTypeCode.class );
+			if ( jdbcTypeCodeAnn != null
+					&& ( jdbcTypeCodeAnn.value() == SqlTypes.STRUCT
+					|| jdbcTypeCodeAnn.value() == SqlTypes.STRUCT_ARRAY
+					|| jdbcTypeCodeAnn.value() == SqlTypes.STRUCT_TABLE )
 					&& columns != null ) {
 				final List<AnnotatedColumn> columnList = columns.getColumns();
 				final String sqlType;
@@ -149,11 +151,10 @@ public final class AggregateComponentBinder {
 							null,
 							context.getMetadataCollector().getDatabase().toIdentifier( sqlType )
 					);
-				}
-			}
+				}			}
 		}
 
-		final AnnotationUsage<Struct> struct = returnedClassOrElement.getAnnotationUsage( Struct.class );
+		final Struct struct = returnedClassOrElement.getDirectAnnotationUsage( Struct.class );
 		if ( struct != null ) {
 			return toQualifiedName( struct, context );
 		}
@@ -161,29 +162,27 @@ public final class AggregateComponentBinder {
 		return null;
 	}
 
-	private static QualifiedName toQualifiedName(AnnotationUsage<Struct> struct, MetadataBuildingContext context) {
+	private static QualifiedName toQualifiedName(Struct struct, MetadataBuildingContext context) {
 		final Database database = context.getMetadataCollector().getDatabase();
 		return new QualifiedNameImpl(
-				database.toIdentifier( struct.getString( "catalog" ) ),
-				database.toIdentifier( struct.getString( "schema" ) ),
-				database.toIdentifier( struct.getString( "name" ) )
+				database.toIdentifier( struct.catalog() ),
+				database.toIdentifier( struct.schema() ),
+				database.toIdentifier( struct.name() )
 		);
 	}
 
 	private static String[] determineStructAttributeNames(PropertyData inferredData, ClassDetails returnedClassOrElement) {
 		final MemberDetails property = inferredData.getAttributeMember();
 		if ( property != null ) {
-			final AnnotationUsage<Struct> struct = property.getAnnotationUsage( Struct.class );
+			final Struct struct = property.getDirectAnnotationUsage( Struct.class );
 			if ( struct != null ) {
-				final List<String> attributes = struct.getList( "attributes" );
-				return attributes.toArray( new String[0] );
+				return struct.attributes();
 			}
 		}
 
-		final AnnotationUsage<Struct> struct = returnedClassOrElement.getAnnotationUsage( Struct.class );
+		final Struct struct = returnedClassOrElement.getDirectAnnotationUsage( Struct.class );
 		if ( struct != null ) {
-			final List<String> attributes = struct.getList( "attributes" );
-			return attributes.toArray( new String[0] );
+			return struct.attributes();
 		}
 
 		return null;
@@ -194,13 +193,13 @@ public final class AggregateComponentBinder {
 			TypeDetails returnedClass,
 			MetadataBuildingContext context) {
 		if ( property != null ) {
-			if ( property.hasAnnotationUsage( Struct.class ) ) {
+			if ( property.hasDirectAnnotationUsage( Struct.class ) ) {
 				return true;
 			}
 
-			final AnnotationUsage<JdbcTypeCode> jdbcTypeCode = property.getAnnotationUsage( JdbcTypeCode.class );
+			final JdbcTypeCode jdbcTypeCode = property.getDirectAnnotationUsage( JdbcTypeCode.class );
 			if ( jdbcTypeCode != null ) {
-				switch ( jdbcTypeCode.getInteger( "value" ) ) {
+				switch ( jdbcTypeCode.value() ) {
 					case SqlTypes.STRUCT:
 					case SqlTypes.JSON:
 					case SqlTypes.SQLXML:
@@ -215,7 +214,7 @@ public final class AggregateComponentBinder {
 		}
 
 		if ( returnedClass != null ) {
-			return returnedClass.determineRawClass().hasAnnotationUsage( Struct.class );
+			return returnedClass.determineRawClass().hasDirectAnnotationUsage( Struct.class );
 		}
 
 		return false;

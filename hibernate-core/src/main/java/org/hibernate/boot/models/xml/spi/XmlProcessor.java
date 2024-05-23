@@ -7,13 +7,12 @@
 package org.hibernate.boot.models.xml.spi;
 
 import org.hibernate.boot.internal.RootMappingDefaults;
-import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.xml.internal.ManagedTypeProcessor;
 import org.hibernate.boot.models.xml.internal.XmlDocumentContextImpl;
 import org.hibernate.boot.models.xml.internal.XmlDocumentImpl;
 import org.hibernate.boot.models.xml.internal.XmlProcessingResultImpl;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 /**
@@ -33,7 +32,6 @@ public class XmlProcessor {
 		final XmlProcessingResultImpl xmlOverlay = new XmlProcessingResultImpl();
 
 		xmlPreProcessingResult.getDocuments().forEach( (jaxbRoot) -> {
-			modelCategorizationCollector.apply( jaxbRoot );
 			final XmlDocumentImpl xmlDocument = XmlDocumentImpl.consume(
 					jaxbRoot,
 					xmlPreProcessingResult.getPersistenceUnitMetadata()
@@ -44,6 +42,7 @@ public class XmlProcessor {
 					sourceModelBuildingContext,
 					bootstrapContext
 			);
+			modelCategorizationCollector.apply( jaxbRoot, xmlDocumentContext );
 
 			jaxbRoot.getEmbeddables().forEach( (jaxbEmbeddable) -> {
 				if ( xmlMappingsGloballyComplete || jaxbEmbeddable.isMetadataComplete() == Boolean.TRUE ) {

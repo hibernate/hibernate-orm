@@ -6,25 +6,26 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.XmlAnnotations;
+import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
-import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
-import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.ElementCollection;
 
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -45,24 +46,16 @@ public class ElementCollectionAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<ElementCollection> elementCollectionUsage = memberDetails.applyAnnotationUsage(
+		final ElementCollectionJpaAnnotation elementCollectionUsage = (ElementCollectionJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ELEMENT_COLLECTION,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		XmlProcessingHelper.applyAttributeIfSpecified(
-				"fetch",
-				jaxbElementCollection.getFetch(),
-				elementCollectionUsage
-		);
 
-		final String targetClass = jaxbElementCollection.getTargetClass();
-		if ( targetClass != null ) {
-			final MutableAnnotationUsage<Target> targetUsage = memberDetails.applyAnnotationUsage(
-					HibernateAnnotations.TARGET,
-					xmlDocumentContext.getModelBuildingContext()
-			);
-			targetUsage.setAttributeValue( "value", xmlDocumentContext.resolveClassName( targetClass ) );
+		if ( jaxbElementCollection.getFetch() != null ) {
+			elementCollectionUsage.fetch( jaxbElementCollection.getFetch() );
 		}
+
+		applyTarget( jaxbElementCollection, xmlDocumentContext, memberDetails );
 
 		// NOTE: it is important that this happens before the `CommonPluralAttributeProcessing#applyPluralAttributeStructure`
 		// call below
@@ -73,7 +66,10 @@ public class ElementCollectionAttributeProcessing {
 				xmlDocumentContext
 		);
 
-		CommonAttributeProcessing.applyAttributeBasics( jaxbElementCollection, memberDetails, elementCollectionUsage, accessType, xmlDocumentContext );
+		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAttributeAccessor( jaxbElementCollection, memberDetails, xmlDocumentContext );
+		applyFetching( jaxbElementCollection, memberDetails, elementCollectionUsage, xmlDocumentContext );
+		applyOptimisticLock( jaxbElementCollection, memberDetails, xmlDocumentContext );
 
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbElementCollection, memberDetails, xmlDocumentContext );
 
@@ -97,6 +93,23 @@ public class ElementCollectionAttributeProcessing {
 		return memberDetails;
 	}
 
+	private static void applyTarget(
+			JaxbElementCollectionImpl jaxbElementCollection,
+			XmlDocumentContext xmlDocumentContext,
+			MutableMemberDetails memberDetails) {
+		// todo (7.0) : we need a distinction here between hbm.xml target and orm.xml target-entity
+		//		- for orm.xml target-entity we should apply the package name, if one
+		//		- for hbm.xml target we should not since it could refer to a dynamic mapping
+		final String targetClass = jaxbElementCollection.getTargetClass();
+		if ( StringHelper.isNotEmpty( targetClass ) ) {
+			final TargetXmlAnnotation targetUsage = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
+					XmlAnnotations.TARGET,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			targetUsage.value( xmlDocumentContext.resolveClassName( targetClass ) );
+		}
+	}
+
 	public static void applyCollectionTable(
 			JaxbCollectionTableImpl jaxbCollectionTable,
 			MutableMemberDetails memberDetails,
@@ -105,45 +118,11 @@ public class ElementCollectionAttributeProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<CollectionTable> collectionTableAnn = memberDetails.applyAnnotationUsage(
+		final CollectionTableJpaAnnotation collectionTableAnn = (CollectionTableJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.COLLECTION_TABLE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		final AnnotationDescriptor<CollectionTable> collectionTableDescriptor = xmlDocumentContext.getModelBuildingContext()
-				.getAnnotationDescriptorRegistry()
-				.getDescriptor( CollectionTable.class );
 
-		XmlAnnotationHelper.applyOr( jaxbCollectionTable, JaxbCollectionTableImpl::getName, "name", collectionTableAnn, collectionTableDescriptor );
-		XmlAnnotationHelper.applyOrSchema(
-				jaxbCollectionTable,
-				collectionTableAnn,
-				collectionTableDescriptor,
-				xmlDocumentContext
-		);
-
-		XmlAnnotationHelper.applyOrCatalog(
-				jaxbCollectionTable,
-				collectionTableAnn,
-				collectionTableDescriptor,
-				xmlDocumentContext
-		);
-		XmlAnnotationHelper.applyOr( jaxbCollectionTable, JaxbCollectionTableImpl::getOptions, "options", collectionTableAnn, collectionTableDescriptor );
-
-		collectionTableAnn.setAttributeValue( "joinColumns", JoinColumnProcessing.transformJoinColumnList(
-				jaxbCollectionTable.getJoinColumns(),
-				memberDetails,
-				xmlDocumentContext
-		) );
-
-		if ( jaxbCollectionTable.getForeignKeys() != null ) {
-			collectionTableAnn.setAttributeValue(
-					"foreignKey",
-					ForeignKeyProcessing.createNestedForeignKeyAnnotation( jaxbCollectionTable.getForeignKeys(), memberDetails, xmlDocumentContext )
-			);
-		}
-
-		XmlAnnotationHelper.applyUniqueConstraints( jaxbCollectionTable.getUniqueConstraints(), memberDetails, collectionTableAnn, xmlDocumentContext );
-
-		XmlAnnotationHelper.applyIndexes( jaxbCollectionTable.getIndexes(), memberDetails, collectionTableAnn, xmlDocumentContext );
+		collectionTableAnn.apply( jaxbCollectionTable, xmlDocumentContext );
 	}
 }

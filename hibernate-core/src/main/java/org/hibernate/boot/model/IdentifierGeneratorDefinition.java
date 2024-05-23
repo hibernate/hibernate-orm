@@ -16,20 +16,18 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.boot.internal.GenerationStrategyInterpreter;
-import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.internal.util.StringHelper;
 
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.boot.internal.GenerationStrategyInterpreter.STRATEGY_INTERPRETER;
 import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
-import static org.hibernate.boot.models.internal.AnnotationUsageHelper.applyStringAttributeIfSpecified;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -153,16 +151,20 @@ public class IdentifierGeneratorDefinition implements Serializable {
 
 	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		final MutableAnnotationUsage<TableGenerator> tableGeneratorUsage = TABLE_GENERATOR.createUsage( null );
-		tableGeneratorUsage.setAttributeValue( "name", name );
+		final TableGeneratorJpaAnnotation tableGeneratorUsage = TABLE_GENERATOR.createUsage( null );
+		if ( StringHelper.isNotEmpty( name ) ) {
+			tableGeneratorUsage.name( name );
+		}
 		STRATEGY_INTERPRETER.interpretTableGenerator( tableGeneratorUsage, builder );
 		return builder.build();
 	}
 
 	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		final MutableAnnotationUsage<SequenceGenerator> sequenceGeneratorUsage = SEQUENCE_GENERATOR.createUsage( null );
-		applyStringAttributeIfSpecified( "name", name, sequenceGeneratorUsage );
+		final SequenceGeneratorJpaAnnotation sequenceGeneratorUsage = SEQUENCE_GENERATOR.createUsage( null );
+		if ( StringHelper.isNotEmpty( name ) ) {
+			sequenceGeneratorUsage.name( name );
+		}
 		STRATEGY_INTERPRETER.interpretSequenceGenerator( sequenceGeneratorUsage, builder );
 		return builder.build();
 	}

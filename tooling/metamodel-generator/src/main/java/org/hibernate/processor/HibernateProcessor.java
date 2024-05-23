@@ -557,8 +557,11 @@ public class HibernateProcessor extends AbstractProcessor {
 		if ( isClassOrRecordType( element ) ) {
 			if ( hasAnnotation( element, ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE ) ) {
 				final TypeElement typeElement = (TypeElement) element;
+				indexPackage( typeElement );
+				indexEntityName( typeElement );
+				indexEnumFields( typeElement );
+
 				final String qualifiedName = typeElement.getQualifiedName().toString();
-				updateIndex( element, typeElement, qualifiedName );
 				final Metamodel alreadyExistingMetaEntity =
 						tryGettingExistingEntityFromContext( typeElement, qualifiedName );
 				if ( alreadyExistingMetaEntity != null && alreadyExistingMetaEntity.isMetaComplete() ) {
@@ -605,30 +608,35 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 	}
 
-	private void updateIndex(Element element, TypeElement typeElement, String qualifiedName) {
-		final AnnotationMirror mirror = getAnnotationMirror( element, ENTITY );
+	private void indexEntityName(TypeElement typeElement) {
+		final AnnotationMirror mirror = getAnnotationMirror( typeElement, ENTITY );
 		if ( mirror != null ) {
-			final Element parent = element.getEnclosingElement();
-			if ( parent.getKind() == ElementKind.PACKAGE ) {
-				final PackageElement packageElement = (PackageElement) parent;
-				final String packageName = packageElement.getQualifiedName().toString();
-				if ( !context.getPackages().contains( packageName ) ) {
-					readIndex(processingEnv, packageName);
-					context.addPackage(packageName);
-				}
-			}
+			context.addEntityNameMapping( entityName( typeElement, mirror ),
+					typeElement.getQualifiedName().toString() );
+ 		}
+	}
 
-			final String entityName = entityName( typeElement, mirror );
-			context.addEntityNameMapping( entityName, qualifiedName);
-			for ( Element member : context.getAllMembers(typeElement) ) {
-				switch ( member.getKind() ) {
-					case FIELD:
-						indexEnumValues( member.asType() );
-						break;
-					case METHOD:
-						indexEnumValues( ((ExecutableElement) member).getReturnType() );
-						break;
-				}
+	private void indexPackage(TypeElement typeElement) {
+		final Element parent = typeElement.getEnclosingElement();
+		if ( parent.getKind() == ElementKind.PACKAGE ) { //todo: static inner classes?
+			final PackageElement packageElement = (PackageElement) parent;
+			final String packageName = packageElement.getQualifiedName().toString();
+			if ( !context.getPackages().contains( packageName ) ) {
+				readIndex(processingEnv, packageName);
+				context.addPackage(packageName);
+			}
+		}
+	}
+
+	private void indexEnumFields(TypeElement typeElement) {
+		for ( Element member : context.getAllMembers(typeElement) ) {
+			switch ( member.getKind() ) {
+				case FIELD:
+					indexEnumValues( member.asType() );
+					break;
+				case METHOD:
+					indexEnumValues( ((ExecutableElement) member).getReturnType() );
+					break;
 			}
 		}
 	}

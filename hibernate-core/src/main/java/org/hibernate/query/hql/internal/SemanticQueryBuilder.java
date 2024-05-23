@@ -2603,7 +2603,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				ctx = ctx.getChild( 0 );
 
 				if ( ctx instanceof HqlParser.SimplePathContext ) {
-					return creationContext.getJpaMetamodel().getAllowedEnumLiteralTexts( ctx.getText() );
+					return creationContext.getJpaMetamodel().getEnumTypesForValue( ctx.getText() );
 				}
 			}
 		}

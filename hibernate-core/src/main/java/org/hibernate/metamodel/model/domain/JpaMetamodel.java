@@ -13,6 +13,7 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
 
 import jakarta.persistence.metamodel.Metamodel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -89,7 +90,8 @@ public interface JpaMetamodel extends Metamodel {
 
 	String qualifyImportableName(String queryName);
 
-	Set<String> getAllowedEnumLiteralTexts(String enumValue);
+	@Nullable
+	Set<String> getEnumTypesForValue(String enumValue);
 
 	EnumJavaType<?> getEnumType(String prefix);
 

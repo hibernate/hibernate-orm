@@ -530,8 +530,8 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public Set<String> getAllowedEnumLiteralTexts(String enumValue) {
-		return jpaMetamodel.getAllowedEnumLiteralTexts(enumValue);
+	public Set<String> getEnumTypesForValue(String enumValue) {
+		return jpaMetamodel.getEnumTypesForValue(enumValue);
 	}
 
 	@Override

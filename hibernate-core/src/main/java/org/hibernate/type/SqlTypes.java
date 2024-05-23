@@ -661,7 +661,7 @@ public class SqlTypes {
 	 *
 	 * @see OrdinalEnumJdbcType
 	 *
-	 * @since 6.5
+	 * @since 6.6
 	 */
 	public static final int ORDINAL_ENUM = 6002;
 
@@ -672,7 +672,7 @@ public class SqlTypes {
 	 *
 	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
 	 *
-	 * @since 6.5
+	 * @since 6.6
 	 */
 	public static final int NAMED_ORDINAL_ENUM = 6003;
 

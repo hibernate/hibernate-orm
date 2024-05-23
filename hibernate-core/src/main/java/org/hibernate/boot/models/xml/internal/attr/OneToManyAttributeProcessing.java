@@ -6,25 +6,27 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.XmlAnnotations;
+import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.MutableAnnotationUsage;
+import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
-import jakarta.persistence.OneToMany;
 
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -43,15 +45,15 @@ public class OneToManyAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<OneToMany> oneToManyAnn = applyOneToMany(
+		final OneToManyJpaAnnotation oneToManyAnn = applyOneToMany(
 				jaxbOneToMany,
 				memberDetails,
+				accessType,
 				xmlDocumentContext
 		);
 
-		applyTargetEntity( jaxbOneToMany, oneToManyAnn, xmlDocumentContext );
+		applyTargetEntity( jaxbOneToMany, memberDetails, xmlDocumentContext );
 
-		CommonAttributeProcessing.applyAttributeBasics( jaxbOneToMany, memberDetails, oneToManyAnn, accessType, xmlDocumentContext );
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbOneToMany, memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyCascading( jaxbOneToMany.getCascade(), memberDetails, xmlDocumentContext );
 
@@ -76,32 +78,36 @@ public class OneToManyAttributeProcessing {
 
 		JoinColumnProcessing.applyJoinColumns( jaxbOneToMany.getJoinColumn(), memberDetails, xmlDocumentContext );
 
-		if ( jaxbOneToMany.getOnDelete() != null ) {
-			final MutableAnnotationUsage<OnDelete> onDeleteAnn = memberDetails.applyAnnotationUsage(
-					HibernateAnnotations.ON_DELETE,
-					xmlDocumentContext.getModelBuildingContext()
-			);
-			onDeleteAnn.setAttributeValue( "action", jaxbOneToMany.getOnDelete() );
-		}
+		CommonAttributeProcessing.applyOnDelete( jaxbOneToMany.getOnDelete(), memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyNotFound( jaxbOneToMany, memberDetails, xmlDocumentContext );
 
 		return memberDetails;
 	}
 
-	private static MutableAnnotationUsage<OneToMany> applyOneToMany(
+	private static OneToManyJpaAnnotation applyOneToMany(
 			JaxbOneToManyImpl jaxbOneToMany,
 			MutableMemberDetails memberDetails,
+			AccessType accessType,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<OneToMany> oneToManyAnn = memberDetails.applyAnnotationUsage(
+		final OneToManyJpaAnnotation oneToManyAnn = (OneToManyJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ONE_TO_MANY,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
 		if ( jaxbOneToMany != null ) {
-			XmlAnnotationHelper.applyOptionalAttribute( oneToManyAnn, "fetch", jaxbOneToMany.getFetch() );
-			XmlAnnotationHelper.applyOptionalAttribute( oneToManyAnn, "mappedBy", jaxbOneToMany.getMappedBy() );
-			XmlAnnotationHelper.applyOptionalAttribute( oneToManyAnn, "orphanRemoval", jaxbOneToMany.isOrphanRemoval() );
+			applyAccess( accessType, memberDetails, xmlDocumentContext );
+			applyAttributeAccessor( jaxbOneToMany, memberDetails, xmlDocumentContext );
+			applyFetching( jaxbOneToMany, memberDetails, oneToManyAnn, xmlDocumentContext );
+			applyOptimisticLock( jaxbOneToMany, memberDetails, xmlDocumentContext );
+
+			if ( StringHelper.isNotEmpty( jaxbOneToMany.getMappedBy() ) ) {
+				oneToManyAnn.mappedBy( jaxbOneToMany.getMappedBy() );
+			}
+
+			if ( jaxbOneToMany.isOrphanRemoval() != null ) {
+				oneToManyAnn.orphanRemoval( jaxbOneToMany.isOrphanRemoval() );
+			}
 		}
 
 		return oneToManyAnn;
@@ -109,14 +115,19 @@ public class OneToManyAttributeProcessing {
 
 	private static void applyTargetEntity(
 			JaxbOneToManyImpl jaxbOneToMany,
-			MutableAnnotationUsage<OneToMany> oneToManyAnn,
+			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final String targetEntity = jaxbOneToMany.getTargetEntity();
-		if ( StringHelper.isNotEmpty( targetEntity ) ) {
-			oneToManyAnn.setAttributeValue(
-					"targetEntity",
-					xmlDocumentContext.resolveJavaType( targetEntity )
-			);
+		// todo (7.0) : we need a distinction here between hbm.xml target and orm.xml target-entity
+		//		- for orm.xml target-entity we should apply the package name, if one
+		//		- for hbm.xml target we should not since it could refer to a dynamic mapping
+		final String targetEntityName = jaxbOneToMany.getTargetEntity();
+		if ( StringHelper.isEmpty( targetEntityName ) ) {
+			return;
 		}
+		final TargetXmlAnnotation annotation = (TargetXmlAnnotation) target.applyAnnotationUsage(
+				XmlAnnotations.TARGET,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		annotation.value( xmlDocumentContext.resolveClassName( targetEntityName ) );
 	}
 }

@@ -6,32 +6,33 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.SortComparator;
-import org.hibernate.boot.internal.CollectionClassification;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.XmlAnnotations;
+import org.hibernate.boot.models.annotations.internal.CollectionClassificationXmlAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyClassJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyEnumeratedJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyTemporalJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SortComparatorAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
-import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import jakarta.persistence.MapKey;
-import jakarta.persistence.MapKeyClass;
-import jakarta.persistence.MapKeyEnumerated;
-import jakarta.persistence.MapKeyTemporal;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.OrderColumn;
 
 /**
  * @author Marco Belladelli
@@ -45,11 +46,11 @@ public class CommonPluralAttributeProcessing {
 		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
 
 		if ( jaxbPluralAttribute.getFetchMode() != null ) {
-			final MutableAnnotationUsage<Fetch> fetchAnn = memberDetails.applyAnnotationUsage(
+			final FetchAnnotation fetchAnn = (FetchAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.FETCH,
 					buildingContext
 			);
-			fetchAnn.setAttributeValue( "value", jaxbPluralAttribute.getFetchMode() );
+			fetchAnn.value( interpretFetchMode( jaxbPluralAttribute.getFetchMode() ) );
 		}
 
 		if ( jaxbPluralAttribute.getClassification() != null ) {
@@ -57,11 +58,11 @@ public class CommonPluralAttributeProcessing {
 				memberDetails.applyAnnotationUsage( HibernateAnnotations.BAG, buildingContext );
 			}
 			else {
-				final MutableAnnotationUsage<CollectionClassification> collectionClassificationAnn = memberDetails.applyAnnotationUsage(
-						HibernateAnnotations.COLLECTION_CLASSIFICATION,
+				final CollectionClassificationXmlAnnotation collectionClassificationAnn = (CollectionClassificationXmlAnnotation) memberDetails.applyAnnotationUsage(
+						XmlAnnotations.COLLECTION_CLASSIFICATION,
 						buildingContext
 				);
-				collectionClassificationAnn.setAttributeValue( "value", jaxbPluralAttribute.getClassification() );
+				collectionClassificationAnn.value( jaxbPluralAttribute.getClassification() );
 			}
 		}
 
@@ -73,22 +74,22 @@ public class CommonPluralAttributeProcessing {
 		XmlAnnotationHelper.applyCollectionId( jaxbPluralAttribute.getCollectionId(), memberDetails, xmlDocumentContext );
 
 		if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getOrderBy() ) ) {
-			final MutableAnnotationUsage<OrderBy> orderByAnn = memberDetails.applyAnnotationUsage(
+			final OrderByJpaAnnotation orderByAnn = (OrderByJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.ORDER_BY,
 					buildingContext
 			);
-			orderByAnn.setAttributeValue( "value", jaxbPluralAttribute.getOrderBy() );
+			orderByAnn.value( jaxbPluralAttribute.getOrderBy() );
 		}
 
 		applyOrderColumn( jaxbPluralAttribute, memberDetails, xmlDocumentContext );
 
 		if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getSort() ) ) {
-			final MutableAnnotationUsage<SortComparator> sortAnn = memberDetails.applyAnnotationUsage(
+			final SortComparatorAnnotation sortAnn = (SortComparatorAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.SORT_COMPARATOR,
 					buildingContext
 			);
 			final ClassDetails comparatorClassDetails = classDetailsRegistry.resolveClassDetails( jaxbPluralAttribute.getSort() );
-			sortAnn.setAttributeValue( "value", comparatorClassDetails );
+			sortAnn.value( comparatorClassDetails.toJavaClass() );
 		}
 
 		if ( jaxbPluralAttribute.getSortNatural() != null ) {
@@ -99,46 +100,55 @@ public class CommonPluralAttributeProcessing {
 		// map-key
 
 		if ( jaxbPluralAttribute.getMapKey() != null ) {
-			final MutableAnnotationUsage<MapKey> mapKeyAnn = memberDetails.applyAnnotationUsage(
+			final MapKeyJpaAnnotation mapKeyAnn = (MapKeyJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.MAP_KEY,
 					buildingContext
 			);
-			if ( jaxbPluralAttribute.getMapKey() != null ) {
-				XmlAnnotationHelper.applyOptionalAttribute( mapKeyAnn, "name", jaxbPluralAttribute.getMapKey().getName() );
+			if ( jaxbPluralAttribute.getMapKey() != null && StringHelper.isNotEmpty( jaxbPluralAttribute.getMapKey().getName() ) ) {
+				mapKeyAnn.name( jaxbPluralAttribute.getMapKey().getName() );
 			}
 		}
 
 		if ( jaxbPluralAttribute.getMapKeyClass() != null ) {
 			final String className = xmlDocumentContext.resolveClassName( jaxbPluralAttribute.getMapKeyClass().getClazz() );
 			final ClassDetails mapKeyClass = classDetailsRegistry.resolveClassDetails( className );
-			final MutableAnnotationUsage<MapKeyClass> mapKeyClassAnn = memberDetails.applyAnnotationUsage(
+			final MapKeyClassJpaAnnotation mapKeyClassAnn = (MapKeyClassJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.MAP_KEY_CLASS,
 					buildingContext
 			);
-			mapKeyClassAnn.setAttributeValue( "value", mapKeyClass );
+			mapKeyClassAnn.value( mapKeyClass.toJavaClass() );
 		}
 
 		if ( jaxbPluralAttribute.getMapKeyTemporal() != null ) {
-			final MutableAnnotationUsage<MapKeyTemporal> mapKeyTemporalAnn = memberDetails.applyAnnotationUsage(
+			final MapKeyTemporalJpaAnnotation mapKeyTemporalAnn = (MapKeyTemporalJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.MAP_KEY_TEMPORAL,
 					buildingContext
 			);
-			mapKeyTemporalAnn.setAttributeValue( "value", jaxbPluralAttribute.getMapKeyTemporal() );
+			mapKeyTemporalAnn.value( jaxbPluralAttribute.getMapKeyTemporal() );
 		}
 
 		if ( jaxbPluralAttribute.getMapKeyEnumerated() != null ) {
-			final MutableAnnotationUsage<MapKeyEnumerated> mapKeyEnumeratedAnn = memberDetails.applyAnnotationUsage(
+			final MapKeyEnumeratedJpaAnnotation mapKeyEnumeratedAnn = (MapKeyEnumeratedJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.MAP_KEY_ENUMERATED,
 					buildingContext
 			);
-			mapKeyEnumeratedAnn.setAttributeValue( "value", jaxbPluralAttribute.getMapKeyEnumerated() );
+			mapKeyEnumeratedAnn.value( jaxbPluralAttribute.getMapKeyEnumerated() );
 		}
 
-		jaxbPluralAttribute.getMapKeyConverts().forEach( (jaxbConvert) -> {
-			XmlAnnotationHelper.applyConvert( jaxbConvert, memberDetails, "key", xmlDocumentContext );
-		} );
+		XmlAnnotationHelper.applyConverts(
+				jaxbPluralAttribute.getMapKeyConverts(),
+				"key",
+				memberDetails,
+				xmlDocumentContext
+		);
 
-		ColumnProcessing.applyMapKeyColumn( jaxbPluralAttribute.getMapKeyColumn(), memberDetails, xmlDocumentContext );
+		if ( jaxbPluralAttribute.getMapKeyColumn() != null ) {
+			final MapKeyColumnJpaAnnotation columnAnn = (MapKeyColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAP_KEY_COLUMN,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			columnAnn.apply( jaxbPluralAttribute.getMapKeyColumn(), xmlDocumentContext );
+		}
 
 		JoinColumnProcessing.applyMapKeyJoinColumns(
 				jaxbPluralAttribute.getMapKeyJoinColumns(),
@@ -153,10 +163,38 @@ public class CommonPluralAttributeProcessing {
 
 		XmlAnnotationHelper.applyFilters( jaxbPluralAttribute.getFilters(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applySqlRestriction( jaxbPluralAttribute.getSqlRestriction(), memberDetails, xmlDocumentContext );
-		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlInsert(), memberDetails, HibernateAnnotations.SQL_INSERT, xmlDocumentContext );
-		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlUpdate(), memberDetails, HibernateAnnotations.SQL_UPDATE, xmlDocumentContext );
-		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlDelete(), memberDetails, HibernateAnnotations.SQL_DELETE, xmlDocumentContext );
-		XmlAnnotationHelper.applyCustomSql( jaxbPluralAttribute.getSqlDeleteAll(), memberDetails, HibernateAnnotations.SQL_DELETE_ALL, xmlDocumentContext );
+		XmlAnnotationHelper.applyCustomSql(
+				jaxbPluralAttribute.getSqlInsert(),
+				memberDetails,
+				HibernateAnnotations.SQL_INSERT,
+				xmlDocumentContext
+		);
+		XmlAnnotationHelper.applyCustomSql(
+				jaxbPluralAttribute.getSqlUpdate(),
+				memberDetails,
+				HibernateAnnotations.SQL_UPDATE,
+				xmlDocumentContext
+		);
+		XmlAnnotationHelper.applyCustomSql(
+				jaxbPluralAttribute.getSqlDelete(),
+				memberDetails,
+				HibernateAnnotations.SQL_DELETE,
+				xmlDocumentContext
+		);
+		XmlAnnotationHelper.applyCustomSql(
+				jaxbPluralAttribute.getSqlDeleteAll(),
+				memberDetails,
+				HibernateAnnotations.SQL_DELETE_ALL,
+				xmlDocumentContext
+		);
+	}
+
+	private static FetchMode interpretFetchMode(JaxbPluralFetchModeImpl fetchMode) {
+		return switch ( fetchMode ) {
+			case JOIN -> FetchMode.JOIN;
+			case SELECT -> FetchMode.SELECT;
+			case SUBSELECT -> FetchMode.SELECT;
+		};
 	}
 
 	private static void applyOrderColumn(
@@ -168,16 +206,11 @@ public class CommonPluralAttributeProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<OrderColumn> orderColumnAnn = memberDetails.applyAnnotationUsage(
+		final OrderColumnJpaAnnotation orderColumnAnn = (OrderColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ORDER_COLUMN,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "name", jaxbOrderColumn.getName() );
-		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "nullable", jaxbOrderColumn.isNullable() );
-		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "insertable", jaxbOrderColumn.isInsertable() );
-		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "updatable", jaxbOrderColumn.isUpdatable() );
-		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "columnDefinition", jaxbOrderColumn.getColumnDefinition() );
-		XmlAnnotationHelper.applyOptionalAttribute( orderColumnAnn, "options", jaxbOrderColumn.getOptions() );
+		orderColumnAnn.apply( jaxbOrderColumn, xmlDocumentContext );
 	}
 }

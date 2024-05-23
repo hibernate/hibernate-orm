@@ -13,29 +13,13 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.Consumer;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.CollectionType;
-import org.hibernate.annotations.DiscriminatorFormula;
-import org.hibernate.annotations.DiscriminatorOptions;
-import org.hibernate.annotations.JavaType;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.NaturalIdCache;
-import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.ResultCheckStyle;
-import org.hibernate.annotations.RowId;
-import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicMapping;
@@ -54,6 +38,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHbmFilterImpl;
@@ -76,69 +61,110 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
-import org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckable;
-import org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.categorize.spi.JpaEventListener;
+import org.hibernate.boot.models.XmlAnnotations;
+import org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AssociationOverridesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AttributeOverrideJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AttributeOverridesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CheckConstraintJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionTypeAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ConvertJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ConvertsJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.DiscriminatorFormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.DiscriminatorOptionsAnnotation;
+import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EnumeratedJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterJoinTableAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterJoinTablesAnnotation;
+import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
+import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.IdClassJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.IndexJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JavaTypeAnnotation;
+import org.hibernate.boot.models.annotations.internal.JdbcTypeAnnotation;
+import org.hibernate.boot.models.annotations.internal.JdbcTypeCodeAnnotation;
+import org.hibernate.boot.models.annotations.internal.NaturalIdCacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
+import org.hibernate.boot.models.annotations.internal.ParameterAnnotation;
+import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLJoinTableRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryTablesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
+import org.hibernate.boot.models.annotations.internal.TemporalJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TypeAnnotation;
+import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
+import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
+import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
+import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
-import org.hibernate.boot.models.internal.AnnotationUsageHelper;
-import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.internal.util.KeyedConsumer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableAnnotationTarget;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.AssociationOverride;
-import jakarta.persistence.AssociationOverrides;
 import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CheckConstraint;
-import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
-import jakarta.persistence.Converts;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.Index;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.PrimaryKeyJoinColumns;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.SecondaryTables;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.boot.models.JpaAnnotations.ASSOCIATION_OVERRIDE;
+import static org.hibernate.boot.models.JpaAnnotations.ASSOCIATION_OVERRIDES;
+import static org.hibernate.boot.models.JpaAnnotations.ATTRIBUTE_OVERRIDE;
+import static org.hibernate.boot.models.JpaAnnotations.ATTRIBUTE_OVERRIDES;
+import static org.hibernate.boot.models.JpaAnnotations.CHECK_CONSTRAINT;
+import static org.hibernate.boot.models.JpaAnnotations.COLUMN;
+import static org.hibernate.boot.models.JpaAnnotations.CONVERT;
+import static org.hibernate.boot.models.JpaAnnotations.EXCLUDE_DEFAULT_LISTENERS;
+import static org.hibernate.boot.models.JpaAnnotations.EXCLUDE_SUPERCLASS_LISTENERS;
+import static org.hibernate.boot.models.HibernateAnnotations.FILTER;
+import static org.hibernate.boot.models.HibernateAnnotations.FILTER_JOIN_TABLE;
+import static org.hibernate.boot.models.JpaAnnotations.INDEX;
+import static org.hibernate.boot.models.HibernateAnnotations.PARAMETER;
+import static org.hibernate.boot.models.HibernateAnnotations.SQL_RESTRICTION;
+import static org.hibernate.boot.models.JpaAnnotations.SECONDARY_TABLE;
+import static org.hibernate.boot.models.JpaAnnotations.UNIQUE_CONSTRAINT;
 
 /**
  * Helper for creating annotation from equivalent JAXB
@@ -146,19 +172,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  * @author Steve Ebersole
  */
 public class XmlAnnotationHelper {
-
-	public static void applyOptionalAttribute(MutableAnnotationUsage<? extends Annotation> annotationUsage, String attributeName, Object value) {
-		if ( value != null ) {
-			annotationUsage.setAttributeValue( attributeName, value );
-		}
-	}
-
-	public static void applyOptionalAttribute(MutableAnnotationUsage<? extends Annotation> annotationUsage, String attributeName, String value) {
-		if ( StringHelper.isNotEmpty( value ) ) {
-			annotationUsage.setAttributeValue( attributeName, value );
-		}
-	}
-
 	/**
 	 * Handle creating {@linkplain Entity @Entity} from an {@code <entity/>} element.
 	 * Used in both complete and override modes.
@@ -167,11 +180,13 @@ public class XmlAnnotationHelper {
 			JaxbEntity jaxbEntity,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<Entity> entityAnn = classDetails.applyAnnotationUsage(
+		final EntityJpaAnnotation entityAnn = (EntityJpaAnnotation) classDetails.applyAnnotationUsage(
 				JpaAnnotations.ENTITY,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbEntity.getName(), entityAnn );
+		if ( StringHelper.isNotEmpty( jaxbEntity.getName() ) ) {
+			entityAnn.name( jaxbEntity.getName() );
+		}
 	}
 
 	public static void applyColumn(
@@ -185,59 +200,17 @@ public class XmlAnnotationHelper {
 		createColumnAnnotation( jaxbColumn, memberDetails, xmlDocumentContext );
 	}
 
-	private static MutableAnnotationUsage<Column> createColumnAnnotation(
+	private static ColumnJpaAnnotation createColumnAnnotation(
 			JaxbColumnImpl jaxbColumn,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<Column> columnAnnotationUsage = target.applyAnnotationUsage(
-				JpaAnnotations.COLUMN,
+		final ColumnJpaAnnotation columnAnnotationUsage = (ColumnJpaAnnotation) target.applyAnnotationUsage(
+				COLUMN,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-
-		ColumnProcessing.applyColumnDetails( jaxbColumn, target, columnAnnotationUsage, xmlDocumentContext );
-
+		columnAnnotationUsage.apply( jaxbColumn, xmlDocumentContext );
 		return columnAnnotationUsage;
 	}
-
-
-	public static <T,N> void applyOr(
-			N jaxbNode,
-			Function<N,T> jaxbValueAccess,
-			String name,
-			KeyedConsumer<String, T> valueConsumer,
-			Supplier<T> defaultValueProvider) {
-		if ( jaxbNode != null ) {
-			final T value = jaxbValueAccess.apply( jaxbNode );
-			if ( value != null ) {
-				valueConsumer.accept( name, value );
-				return;
-			}
-		}
-
-		valueConsumer.accept( name, defaultValueProvider.get() );
-	}
-
-	public static <T,N,A extends Annotation> void applyOr(
-			N jaxbNode,
-			Function<N,T> jaxbValueAccess,
-			String name,
-			MutableAnnotationUsage<A> annotationUsage,
-			AnnotationDescriptor<A> annotationDescriptor) {
-		//noinspection unchecked
-		applyOr(
-				jaxbNode,
-				jaxbValueAccess,
-				name,
-				(key, value) -> annotationUsage.setAttributeValue( name, value ),
-				() -> (T) annotationDescriptor.getAttribute( name ).getAttributeMethod().getDefaultValue()
-		);
-	}
-
-
-
-
-
-
 
 	public static void applyUserType(
 			JaxbUserTypeImpl jaxbType,
@@ -247,33 +220,40 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<Type> typeAnn = memberDetails.applyAnnotationUsage(
+		final TypeAnnotation typeAnn = (TypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.TYPE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
 		final ClassDetails userTypeImpl = resolveJavaType( jaxbType.getValue(), xmlDocumentContext );
-		typeAnn.setAttributeValue( "value", userTypeImpl );
-		typeAnn.setAttributeValue( "parameters", collectParameters( jaxbType.getParameters(), memberDetails, xmlDocumentContext ) );
+		typeAnn.value( userTypeImpl.toJavaClass() );
+		typeAnn.parameters( collectParameters( jaxbType.getParameters(), xmlDocumentContext ) );
 	}
 
-	public static List<AnnotationUsage<Parameter>> collectParameters(
+	private static final Parameter[] NO_PARAMETERS = new Parameter[0];
+
+	public static Parameter[] collectParameters(
 			List<JaxbConfigurationParameterImpl> jaxbParameters,
-			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
+		return collectParameters( jaxbParameters, xmlDocumentContext.getModelBuildingContext() );
+	}
+
+	public static Parameter[] collectParameters(
+			List<JaxbConfigurationParameterImpl> jaxbParameters,
+			SourceModelBuildingContext sourceModelContext) {
 		if ( CollectionHelper.isEmpty( jaxbParameters ) ) {
-			return emptyList();
+			return NO_PARAMETERS;
 		}
 
-		List<AnnotationUsage<Parameter>> parameterAnnList = new ArrayList<>( jaxbParameters.size() );
-		jaxbParameters.forEach( (jaxbParam) -> {
-			final MutableAnnotationUsage<Parameter> parameterUsage =
-					HibernateAnnotations.PARAMETER.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			parameterAnnList.add( parameterUsage );
-			parameterUsage.setAttributeValue( "name", jaxbParam.getName() );
-			parameterUsage.setAttributeValue( "value", jaxbParam.getValue() );
-		} );
-		return parameterAnnList;
+		final Parameter[] parameters = new Parameter[jaxbParameters.size()];
+		for ( int i = 0; i < jaxbParameters.size(); i++ ) {
+			final JaxbConfigurationParameterImpl jaxbParameter = jaxbParameters.get( i );
+			final ParameterAnnotation usage = PARAMETER.createUsage( sourceModelContext );
+			parameters[i] = usage;
+			usage.name( jaxbParameter.getName() );
+			usage.value( jaxbParameter.getValue() );
+		}
+		return parameters;
 	}
 
 	public static void applyCollectionUserType(
@@ -284,13 +264,13 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<CollectionType> typeAnn = memberDetails.applyAnnotationUsage(
+		final CollectionTypeAnnotation typeAnn = (CollectionTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.COLLECTION_TYPE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 		final ClassDetails userTypeImpl = resolveJavaType( jaxbType.getType(), xmlDocumentContext );
-		typeAnn.setAttributeValue( "type", userTypeImpl );
-		typeAnn.setAttributeValue( "parameters", collectParameters( jaxbType.getParameters(), memberDetails, xmlDocumentContext ) );
+		typeAnn.type( userTypeImpl.toJavaClass() );
+		typeAnn.parameters( collectParameters( jaxbType.getParameters(), xmlDocumentContext ) );
 	}
 
 	public static void applyCollectionId(
@@ -301,14 +281,14 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<CollectionId> collectionIdAnn = memberDetails.applyAnnotationUsage(
+		final CollectionIdAnnotation collectionIdAnn = (CollectionIdAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.COLLECTION_ID,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
 		final JaxbColumnImpl jaxbColumn = jaxbCollectionId.getColumn();
 		if ( jaxbColumn != null ) {
-			collectionIdAnn.setAttributeValue( "column", createColumnAnnotation(
+			collectionIdAnn.column( createColumnAnnotation(
 					jaxbColumn,
 					memberDetails,
 					xmlDocumentContext
@@ -317,7 +297,7 @@ public class XmlAnnotationHelper {
 
 		final JaxbGeneratedValueImpl generator = jaxbCollectionId.getGenerator();
 		if ( generator != null && StringHelper.isNotEmpty( generator.getGenerator() ) ) {
-			collectionIdAnn.setAttributeValue( "generator", generator.getGenerator() );
+			collectionIdAnn.generator( generator.getGenerator() );
 		}
 	}
 
@@ -359,117 +339,11 @@ public class XmlAnnotationHelper {
 		}
 
 		if ( !cascadeTypes.isEmpty() ) {
-			final MutableAnnotationUsage<Cascade> cascadeAnn = memberDetails.applyAnnotationUsage(
+			final CascadeAnnotation cascadeAnn = (CascadeAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.CASCADE,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			cascadeAnn.setAttributeValue( "value", cascadeTypes );
-		}
-	}
-
-	public static <A extends Annotation> void applyUniqueConstraints(
-			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
-			AnnotationTarget target,
-			MutableAnnotationUsage<A> annotationUsage,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbUniqueConstraints ) ) {
-			return;
-		}
-
-		final List<AnnotationUsage<UniqueConstraint>> uniqueConstraintUsages = new ArrayList<>( jaxbUniqueConstraints.size() );
-		annotationUsage.setAttributeValue( "uniqueConstraints", uniqueConstraintUsages );
-
-		jaxbUniqueConstraints.forEach( (jaxbUniqueConstraint) -> {
-			final MutableAnnotationUsage<UniqueConstraint> ucUsage =
-					JpaAnnotations.UNIQUE_CONSTRAINT.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "name", jaxbUniqueConstraint.getName() );
-			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "options", jaxbUniqueConstraint.getOptions() );
-			ucUsage.setAttributeValue( "columnNames", jaxbUniqueConstraint.getColumnName() );
-			uniqueConstraintUsages.add( ucUsage );
-		} );
-	}
-
-	public static <A extends Annotation> void applyUniqueConstraints(
-			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
-			MutableAnnotationUsage<A> annotationUsage,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbUniqueConstraints ) ) {
-			return;
-		}
-
-		final List<AnnotationUsage<UniqueConstraint>> uniqueConstraintUsages = new ArrayList<>( jaxbUniqueConstraints.size() );
-		annotationUsage.setAttributeValue( "uniqueConstraints", uniqueConstraintUsages );
-
-		jaxbUniqueConstraints.forEach( (jaxbUniqueConstraint) -> {
-			final MutableAnnotationUsage<UniqueConstraint> ucUsage =
-					JpaAnnotations.UNIQUE_CONSTRAINT.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "name", jaxbUniqueConstraint.getName() );
-			XmlAnnotationHelper.applyOptionalAttribute( ucUsage, "options", jaxbUniqueConstraint.getOptions() );
-			ucUsage.setAttributeValue( "columnNames", jaxbUniqueConstraint.getColumnName() );
-			uniqueConstraintUsages.add( ucUsage );
-		} );
-	}
-
-	public static <A extends Annotation> void applyIndexes(
-			List<JaxbIndexImpl> jaxbIndexes,
-			AnnotationTarget target,
-			MutableAnnotationUsage<A> annotationUsage,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbIndexes ) ) {
-			return;
-		}
-
-		final List<AnnotationUsage<Index>> indexes = new ArrayList<>( jaxbIndexes.size() );
-		jaxbIndexes.forEach( jaxbIndex -> {
-			final MutableAnnotationUsage<Index> indexAnn =
-					JpaAnnotations.INDEX.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			applyOr( jaxbIndex, JaxbIndexImpl::getName, "name", indexAnn, JpaAnnotations.INDEX );
-			applyOr( jaxbIndex, JaxbIndexImpl::getColumnList, "columnList", indexAnn, JpaAnnotations.INDEX );
-			applyOr( jaxbIndex, JaxbIndexImpl::isUnique, "unique", indexAnn, JpaAnnotations.INDEX );
-			applyOr( jaxbIndex, JaxbIndexImpl::getOptions, "options", indexAnn, JpaAnnotations.INDEX );
-			indexes.add( indexAnn );
-		} );
-
-		annotationUsage.setAttributeValue( "indexes", indexes );
-	}
-
-	public static <A extends Annotation> void applyIndexes(
-			List<JaxbIndexImpl> jaxbIndexes,
-			MutableAnnotationUsage<A> annotationUsage,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbIndexes ) ) {
-			return;
-		}
-
-		final List<AnnotationUsage<Index>> indexes = new ArrayList<>( jaxbIndexes.size() );
-		jaxbIndexes.forEach( jaxbIndex -> {
-			final MutableAnnotationUsage<Index> indexAnn =
-					JpaAnnotations.INDEX.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			applyOr( jaxbIndex, JaxbIndexImpl::getName, "name", indexAnn, JpaAnnotations.INDEX );
-			applyOr( jaxbIndex, JaxbIndexImpl::getColumnList, "columnList", indexAnn, JpaAnnotations.INDEX );
-			applyOr( jaxbIndex, JaxbIndexImpl::isUnique, "unique", indexAnn, JpaAnnotations.INDEX );
-			applyOr( jaxbIndex, JaxbIndexImpl::getOptions, "options", indexAnn, JpaAnnotations.INDEX );
-			indexes.add( indexAnn );
-		} );
-
-		annotationUsage.setAttributeValue( "indexes", indexes );
-	}
-
-	public static <A extends Annotation> void applyCheckConstraints(
-			JaxbCheckable jaxbCheckable,
-			AnnotationTarget target,
-			MutableAnnotationUsage<A> annotationUsage,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbCheckable!= null && CollectionHelper.isNotEmpty( jaxbCheckable.getCheckConstraints() ) ) {
-			final List<AnnotationUsage<CheckConstraint>> checks = new ArrayList<>( jaxbCheckable.getCheckConstraints().size() );
-			for ( JaxbCheckConstraintImpl jaxbCheck : jaxbCheckable.getCheckConstraints() ) {
-				final MutableAnnotationUsage<CheckConstraint> checkAnn = JpaAnnotations.CHECK_CONSTRAINT.createUsage( xmlDocumentContext.getModelBuildingContext() );
-				checkAnn.setAttributeValue( "constraint", jaxbCheck.getConstraint() );
-				applyOptionalAttribute( checkAnn, "name", jaxbCheck.getName() );
-				applyOptionalAttribute( checkAnn, "options", jaxbCheck.getOptions() );
-				checks.add( checkAnn );
-			}
-			annotationUsage.setAttributeValue( "check", checks );
+			cascadeAnn.value( cascadeTypes.toArray(CascadeType[]::new) );
 		}
 	}
 
@@ -477,12 +351,11 @@ public class XmlAnnotationHelper {
 			String name,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final ClassDetails classDetails = resolveJavaType( name, xmlDocumentContext );
-		final MutableAnnotationUsage<Target> targetAnn = memberDetails.applyAnnotationUsage(
-				HibernateAnnotations.TARGET,
+		final TargetXmlAnnotation targetAnn = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
+				XmlAnnotations.TARGET,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		targetAnn.setAttributeValue( "value", classDetails );
+		targetAnn.value( name );
 	}
 
 	@SuppressWarnings("deprecation")
@@ -494,11 +367,11 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<Temporal> temporalAnn = memberDetails.applyAnnotationUsage(
+		final TemporalJpaAnnotation temporalAnn = (TemporalJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.TEMPORAL,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		temporalAnn.setAttributeValue( "value", temporalType );
+		temporalAnn.value( temporalType );
 	}
 
 	public static void applyLob(JaxbLobImpl jaxbLob, MutableMemberDetails memberDetails, XmlDocumentContext xmlDocumentContext) {
@@ -514,12 +387,12 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<Enumerated> annotationUsage = memberDetails.applyAnnotationUsage(
+		final EnumeratedJpaAnnotation annotationUsage = (EnumeratedJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ENUMERATED,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		annotationUsage.setAttributeValue( "value", enumType );
+		annotationUsage.value( enumType );
 	}
 
 	public static void applyNationalized(
@@ -541,105 +414,72 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<GeneratedValue> generatedValueAnn = memberDetails.applyAnnotationUsage(
+		final GeneratedValueJpaAnnotation generatedValueAnn = (GeneratedValueJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.GENERATED_VALUE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		memberDetails.addAnnotationUsage( generatedValueAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "strategy", jaxbGeneratedValue.getStrategy(), generatedValueAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "generator", jaxbGeneratedValue.getGenerator(), generatedValueAnn );
+
+		if ( jaxbGeneratedValue.getStrategy() != null ) {
+			generatedValueAnn.strategy( jaxbGeneratedValue.getStrategy() );
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbGeneratedValue.getGenerator() ) ) {
+			generatedValueAnn.generator( jaxbGeneratedValue.getGenerator() );
+		}
 	}
 
 	public static void applySequenceGenerator(
 			JaxbSequenceGeneratorImpl jaxbGenerator,
-			MutableMemberDetails memberDetails,
+			MutableAnnotationTarget generatorTarget,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbGenerator == null ) {
 			return;
 		}
 
-		final MutableAnnotationUsage<SequenceGenerator> sequenceAnn = memberDetails.applyAnnotationUsage(
+		final SequenceGeneratorJpaAnnotation sequenceAnn = (SequenceGeneratorJpaAnnotation) generatorTarget.applyAnnotationUsage(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		applySequenceGeneratorAttributes( jaxbGenerator, sequenceAnn );
-	}
-
-	public static void applySequenceGenerator(
-			JaxbSequenceGeneratorImpl jaxbGenerator,
-			MutableClassDetails classDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbGenerator == null ) {
-			return;
+		if ( StringHelper.isNotEmpty( jaxbGenerator.getName() ) ) {
+			sequenceAnn.name( jaxbGenerator.getName() );
 		}
 
-		final MutableAnnotationUsage<SequenceGenerator> sequenceAnn = classDetails.replaceAnnotationUsage(
-				JpaAnnotations.SEQUENCE_GENERATOR,
-				xmlDocumentContext.getModelBuildingContext()
-		);
+		if ( jaxbGenerator.getSequenceName() != null ) {
+			sequenceAnn.sequenceName( jaxbGenerator.getSequenceName() );
+		}
 
-		applySequenceGeneratorAttributes( jaxbGenerator, sequenceAnn );
-	}
+		if ( StringHelper.isNotEmpty( jaxbGenerator.getCatalog() ) ) {
+			sequenceAnn.catalog( jaxbGenerator.getCatalog() );
+		}
 
-	private static void applySequenceGeneratorAttributes(
-			JaxbSequenceGeneratorImpl jaxbGenerator,
-			MutableAnnotationUsage<SequenceGenerator> sequenceAnn) {
-		XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbGenerator.getName(), sequenceAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "sequenceName", jaxbGenerator.getSequenceName(), sequenceAnn );
+		if ( StringHelper.isNotEmpty( jaxbGenerator.getSchema() ) ) {
+			sequenceAnn.schema( jaxbGenerator.getSchema() );
+		}
 
-		XmlProcessingHelper.applyAttributeIfSpecified( "catalog", jaxbGenerator.getCatalog(), sequenceAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "schema", jaxbGenerator.getSchema(), sequenceAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "initialValue", jaxbGenerator.getInitialValue(), sequenceAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "allocationSize", jaxbGenerator.getInitialValue(), sequenceAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "options", jaxbGenerator.getOptions(), sequenceAnn );
+		if ( jaxbGenerator.getInitialValue() != null ) {
+			sequenceAnn.initialValue( jaxbGenerator.getInitialValue() );
+		}
+
+		if ( jaxbGenerator.getAllocationSize() != null ) {
+			sequenceAnn.allocationSize( jaxbGenerator.getAllocationSize() );
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbGenerator.getOptions() ) ) {
+			sequenceAnn.options( jaxbGenerator.getOptions() );
+		}
 	}
 
 	public static void applyTableGenerator(
 			JaxbTableGeneratorImpl jaxbGenerator,
-			MutableClassDetails classDetails,
+			MutableAnnotationTarget generatorTarget,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbGenerator == null ) {
 			return;
 		}
 
-		final MutableAnnotationUsage<TableGenerator> tableAnn = classDetails.replaceAnnotationUsage(
-				JpaAnnotations.TABLE_GENERATOR,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-
-		applyTableGeneratorAttributes( jaxbGenerator, tableAnn );
-		applyUniqueConstraints( jaxbGenerator.getUniqueConstraints(), tableAnn, xmlDocumentContext );
-		applyIndexes( jaxbGenerator.getIndexes(), tableAnn, xmlDocumentContext );
-	}
-
-	public static void applyTableGenerator(
-			JaxbTableGeneratorImpl jaxbGenerator,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbGenerator == null ) {
-			return;
-		}
-
-		final MutableAnnotationUsage<TableGenerator> tableAnn = memberDetails.applyAnnotationUsage( JpaAnnotations.TABLE_GENERATOR, xmlDocumentContext.getModelBuildingContext() );
-		applyTableGeneratorAttributes( jaxbGenerator, tableAnn );
-		applyUniqueConstraints( jaxbGenerator.getUniqueConstraints(), memberDetails, tableAnn, xmlDocumentContext );
-		applyIndexes( jaxbGenerator.getIndexes(), memberDetails, tableAnn, xmlDocumentContext );
-	}
-
-	private static void applyTableGeneratorAttributes(
-			JaxbTableGeneratorImpl jaxbGenerator,
-			MutableAnnotationUsage<TableGenerator> tableAnn) {
-		XmlProcessingHelper.applyAttributeIfSpecified( "name", jaxbGenerator.getName(), tableAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "table", jaxbGenerator.getTable(), tableAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "catalog", jaxbGenerator.getCatalog(), tableAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "schema", jaxbGenerator.getSchema(), tableAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "pkColumnName", jaxbGenerator.getPkColumnName(), tableAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "valueColumnName", jaxbGenerator.getValueColumnName(), tableAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "pkColumnValue", jaxbGenerator.getPkColumnValue(), tableAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "initialValue", jaxbGenerator.getInitialValue(), tableAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "allocationSize", jaxbGenerator.getInitialValue(), tableAnn );
-		XmlProcessingHelper.applyAttributeIfSpecified( "options", jaxbGenerator.getOptions(), tableAnn );
+		final TableGeneratorJpaAnnotation tableAnn = (TableGeneratorJpaAnnotation) generatorTarget.applyAnnotationUsage( JpaAnnotations.TABLE_GENERATOR, xmlDocumentContext.getModelBuildingContext() );
+		tableAnn.apply( jaxbGenerator, xmlDocumentContext );
 	}
 
 	public static void applyUuidGenerator(
@@ -650,12 +490,12 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<UuidGenerator> uuidGenAnn = memberDetails.applyAnnotationUsage(
+		final UuidGeneratorAnnotation uuidGenAnn = (UuidGeneratorAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.UUID_GENERATOR,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		uuidGenAnn.setAttributeValue( "style", jaxbGenerator.getStyle() );
+		uuidGenAnn.style( jaxbGenerator.getStyle() );
 	}
 
 	public static void applyAttributeOverrides(
@@ -671,63 +511,63 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<AttributeOverrides> overridesUsage = memberDetails.applyAnnotationUsage(
-				JpaAnnotations.ATTRIBUTE_OVERRIDES,
+		final AttributeOverridesJpaAnnotation overridesUsage = (AttributeOverridesJpaAnnotation) memberDetails.applyAnnotationUsage(
+				ATTRIBUTE_OVERRIDES,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
 		final int numberOfOverrides = jaxbMapKeyOverrides.size() + jaxbElementOverrides.size();
-		final List<MutableAnnotationUsage<AttributeOverride>> overrideUsages = arrayList( numberOfOverrides );
-		overridesUsage.setAttributeValue( "value", overrideUsages );
+		final AttributeOverride[] overrideUsages = new AttributeOverride[numberOfOverrides];
+		overridesUsage.value( overrideUsages );
 
 		// We need to handle overrides for maps specially...
 		if ( memberDetails.getMapKeyType() != null ) {
-			jaxbMapKeyOverrides.forEach( (jaxbOverride) -> {
-				overrideUsages.add( createAttributeOverrideUsage(
+			int position = 0;
+			for ( JaxbAttributeOverrideImpl jaxbOverride : jaxbMapKeyOverrides ) {
+				overrideUsages[position++] = createAttributeOverrideUsage(
 						jaxbOverride,
 						"key",
 						memberDetails,
 						xmlDocumentContext
-				) );
-			} );
-			jaxbElementOverrides.forEach( (jaxbOverride) -> {
-				overrideUsages.add( createAttributeOverrideUsage(
+				);
+			}
+			for ( JaxbAttributeOverrideImpl jaxbOverride : jaxbElementOverrides ) {
+				overrideUsages[position++] = createAttributeOverrideUsage(
 						jaxbOverride,
 						"value",
 						memberDetails,
 						xmlDocumentContext
-				) );
-			} );
+				);
+			}
 		}
 		else {
 			assert CollectionHelper.isEmpty( jaxbMapKeyOverrides );
-			jaxbElementOverrides.forEach( (jaxbOverride) -> {
-				overrideUsages.add( createAttributeOverrideUsage(
-						jaxbOverride,
-						null,
+			for ( int i = 0; i < jaxbElementOverrides.size(); i++ ) {
+				overrideUsages[i] = createAttributeOverrideUsage(
+						jaxbElementOverrides.get(i),
+						"value",
 						memberDetails,
 						xmlDocumentContext
-				) );
-			} );
+				);
+			}
 		}
 	}
 
-	private static MutableAnnotationUsage<AttributeOverride> createAttributeOverrideUsage(
+	private static AttributeOverrideJpaAnnotation createAttributeOverrideUsage(
 			JaxbAttributeOverrideImpl jaxbOverride,
 			String namePrefix,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
 		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 
-		final MutableAnnotationUsage<AttributeOverride> overrideUsage = JpaAnnotations.ATTRIBUTE_OVERRIDE.createUsage( modelBuildingContext );
+		final AttributeOverrideJpaAnnotation overrideUsage = ATTRIBUTE_OVERRIDE.createUsage( modelBuildingContext );
 
 		final String name = StringHelper.qualifyConditionally( namePrefix, jaxbOverride.getName() );
-		overrideUsage.setAttributeValue( "name", name );
+		overrideUsage.name( name );
 
-		final MutableAnnotationUsage<Column> columnAnn = JpaAnnotations.COLUMN.createUsage( modelBuildingContext );
-		overrideUsage.setAttributeValue( "column", columnAnn );
-		ColumnProcessing.applyColumnDetails( jaxbOverride.getColumn(), target, columnAnn, xmlDocumentContext );
-
+		final ColumnJpaAnnotation columnAnn = COLUMN.createUsage( modelBuildingContext );
+		overrideUsage.column( columnAnn );
+		columnAnn.apply( jaxbOverride.getColumn(), xmlDocumentContext );
 		return overrideUsage;
 	}
 
@@ -747,22 +587,23 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<AttributeOverrides> overridesUsage = target.replaceAnnotationUsage(
-				JpaAnnotations.ATTRIBUTE_OVERRIDE,
-				JpaAnnotations.ATTRIBUTE_OVERRIDES,
+		final AttributeOverridesJpaAnnotation overridesUsage = (AttributeOverridesJpaAnnotation) target.replaceAnnotationUsage(
+				ATTRIBUTE_OVERRIDE,
+				ATTRIBUTE_OVERRIDES,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		final ArrayList<MutableAnnotationUsage<AttributeOverride>> overrideUsages = arrayList( jaxbOverrides.size() );
-		overridesUsage.setAttributeValue( "value", overrideUsages );
 
-		jaxbOverrides.forEach( (jaxbOverride) -> {
-			overrideUsages.add( createAttributeOverrideUsage(
-					jaxbOverride,
+		final AttributeOverride[] overrideUsages = new AttributeOverride[jaxbOverrides.size()];
+		overridesUsage.value( overrideUsages );
+
+		for ( int i = 0; i < jaxbOverrides.size(); i++ ) {
+			overrideUsages[i] = createAttributeOverrideUsage(
+					jaxbOverrides.get( i ),
 					namePrefix,
 					target,
 					xmlDocumentContext
-			) );
-		} );
+			);
+		}
 	}
 
 	public static void applyAssociationOverrides(
@@ -773,49 +614,65 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<AssociationOverrides> overridesUsage = target.replaceAnnotationUsage(
-				JpaAnnotations.ASSOCIATION_OVERRIDE,
-				JpaAnnotations.ASSOCIATION_OVERRIDES,
+		final AssociationOverridesJpaAnnotation overridesUsage = (AssociationOverridesJpaAnnotation) target.replaceAnnotationUsage(
+				ASSOCIATION_OVERRIDE,
+				ASSOCIATION_OVERRIDES,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		final ArrayList<MutableAnnotationUsage<AssociationOverride>> overrideUsages = arrayList( jaxbOverrides.size() );
-		overridesUsage.setAttributeValue( "value", overrideUsages );
 
-		jaxbOverrides.forEach( (jaxbOverride) -> {
-			final MutableAnnotationUsage<AssociationOverride> overrideUsage =
-					JpaAnnotations.ASSOCIATION_OVERRIDE.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			transferAssociationOverride( jaxbOverride, overrideUsage, target, xmlDocumentContext );
-			overrideUsages.add( overrideUsage );
-		} );
+		final AssociationOverride[] overrideUsages = new AssociationOverride[jaxbOverrides.size()];
+		overridesUsage.value( overrideUsages );
+
+		for ( int i = 0; i < jaxbOverrides.size(); i++ ) {
+			final AssociationOverrideJpaAnnotation override = ASSOCIATION_OVERRIDE.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			overrideUsages[i] = override;
+			transferAssociationOverride( jaxbOverrides.get(i), override, target, xmlDocumentContext );
+		}
 	}
 	
 	private static void transferAssociationOverride(
 			JaxbAssociationOverrideImpl jaxbOverride,
-			MutableAnnotationUsage<AssociationOverride> overrideUsage,
+			AssociationOverrideJpaAnnotation overrideUsage,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		overrideUsage.setAttributeValue( "name", jaxbOverride.getName() );
+		overrideUsage.name( jaxbOverride.getName() );
 
 		final List<JaxbJoinColumnImpl> joinColumns = jaxbOverride.getJoinColumns();
 		if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
-			overrideUsage.setAttributeValue( 
-					"joinColumns",
-					JoinColumnProcessing.transformJoinColumnList( joinColumns, target, xmlDocumentContext )
-			);
+			overrideUsage.joinColumns( JoinColumnProcessing.transformJoinColumnList(
+					joinColumns,
+					xmlDocumentContext
+			) );
 		}
 		if ( jaxbOverride.getJoinTable() != null ) {
-			overrideUsage.setAttributeValue(
-					"joinTable",
-					TableProcessing.transformJoinTable( jaxbOverride.getJoinTable(), target, xmlDocumentContext )
-			);
+			overrideUsage.joinTable( TableProcessing.transformJoinTable(
+					jaxbOverride.getJoinTable(),
+					target,
+					xmlDocumentContext
+			) );
 		}
 		if ( jaxbOverride.getForeignKeys() != null ) {
-			overrideUsage.setAttributeValue(
-					"foreignKey",
-					ForeignKeyProcessing.createNestedForeignKeyAnnotation( jaxbOverride.getForeignKeys(), target, xmlDocumentContext )
-			);
+			overrideUsage.foreignKey( ForeignKeyProcessing.createNestedForeignKeyAnnotation(
+					jaxbOverride.getForeignKeys(),
+					xmlDocumentContext
+			) );
 		}
-		
+
+	}
+
+	public static void applyConvert(
+			JaxbConvertImpl jaxbConvert,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbConvert == null ) {
+			return;
+		}
+
+		final ConvertJpaAnnotation annotation = (ConvertJpaAnnotation) memberDetails.replaceAnnotationUsage(
+				CONVERT,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		transferConvertDetails( jaxbConvert, annotation, null, xmlDocumentContext );
 	}
 
 	public static void applyConverts(
@@ -827,68 +684,52 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<Converts> convertsUsage = memberDetails.replaceAnnotationUsage(
-				JpaAnnotations.CONVERT,
+		final ConvertsJpaAnnotation convertsUsage = (ConvertsJpaAnnotation) memberDetails.replaceAnnotationUsage(
+				CONVERT,
 				JpaAnnotations.CONVERTS,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		final ArrayList<MutableAnnotationUsage<Convert>> convertUsages = arrayList( jaxbConverts.size() );
-		convertsUsage.setAttributeValue( "value", convertUsages );
+		final Convert[] convertUsages = new Convert[jaxbConverts.size()];
+		convertsUsage.value( convertUsages );
 
-		for ( JaxbConvertImpl jaxbConvert : jaxbConverts ) {
-			final MutableAnnotationUsage<Convert> convertUsage = JpaAnnotations.CONVERT.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			convertUsages.add( convertUsage );
-
-			final ClassDetailsRegistry classDetailsRegistry = xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry();
-			final ClassDetails converter;
-			if ( StringHelper.isNotEmpty( jaxbConvert.getConverter() ) ) {
-				converter = classDetailsRegistry.resolveClassDetails( jaxbConvert.getConverter() );
-				convertUsage.setAttributeValue( "converter", converter );
-			}
-
-			XmlProcessingHelper.applyAttributeIfSpecified(
-					"attributeName",
-					prefixIfNotAlready( jaxbConvert.getAttributeName(), namePrefix ),
-					convertUsage
+		for ( int i = 0; i < jaxbConverts.size(); i++ ) {
+			convertUsages[i] = transformConvert(
+					jaxbConverts.get( i ),
+					namePrefix,
+					xmlDocumentContext
 			);
-			XmlProcessingHelper.applyAttributeIfSpecified( "disableConversion", jaxbConvert.isDisableConversion(), convertUsage );
 		}
 	}
 
-	public static void applyConvert(
+	public static Convert transformConvert(
 			JaxbConvertImpl jaxbConvert,
-			MutableMemberDetails memberDetails,
-			XmlDocumentContext xmlDocumentContext) {
-		applyConvert( jaxbConvert, memberDetails, null, xmlDocumentContext );
-	}
-
-	public static void applyConvert(
-			JaxbConvertImpl jaxbConvert,
-			MutableMemberDetails memberDetails,
 			String namePrefix,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbConvert == null ) {
-			return;
+			return null;
 		}
 
-		final MutableAnnotationUsage<Convert> convertUsage = memberDetails.applyAnnotationUsage(
-				JpaAnnotations.CONVERT,
-				xmlDocumentContext.getModelBuildingContext()
-		);
+		final ConvertJpaAnnotation convert = CONVERT.createUsage( xmlDocumentContext.getModelBuildingContext() );
 
-		final ClassDetailsRegistry classDetailsRegistry = xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry();
-		final ClassDetails converter;
+		transferConvertDetails( jaxbConvert, convert, namePrefix, xmlDocumentContext );
+
+		return convert;
+	}
+
+	private static void transferConvertDetails(
+			JaxbConvertImpl jaxbConvert,
+			ConvertJpaAnnotation convert,
+			String namePrefix,
+			XmlDocumentContext xmlDocumentContext) {
 		if ( StringHelper.isNotEmpty( jaxbConvert.getConverter() ) ) {
-			converter = classDetailsRegistry.resolveClassDetails( jaxbConvert.getConverter() );
-			convertUsage.setAttributeValue( "converter", converter );
+			convert.converter( xmlDocumentContext.resolveJavaType( jaxbConvert.getConverter() ).toJavaClass() );
 		}
-
-		XmlProcessingHelper.applyAttributeIfSpecified(
-				"attributeName",
-				prefixIfNotAlready( jaxbConvert.getAttributeName(), namePrefix ),
-				convertUsage
-		);
-		XmlProcessingHelper.applyAttributeIfSpecified( "disableConversion", jaxbConvert.isDisableConversion(), convertUsage );
+		if ( StringHelper.isNotEmpty( jaxbConvert.getAttributeName() ) ) {
+			convert.attributeName( prefixIfNotAlready( jaxbConvert.getAttributeName(), namePrefix ) );
+		}
+		if ( jaxbConvert.isDisableConversion() != null ) {
+			convert.disableConversion( jaxbConvert.isDisableConversion() );
+		}
 	}
 
 	public static void applyTable(
@@ -900,42 +741,32 @@ public class XmlAnnotationHelper {
 			final String catalog = defaults.getCatalog();
 			final String schema = defaults.getSchema();
 			if ( StringHelper.isNotEmpty( catalog ) || StringHelper.isNotEmpty( schema ) ) {
-				final MutableAnnotationUsage<Table> tableAnn = target.applyAnnotationUsage(
+				final TableJpaAnnotation tableAnn = (TableJpaAnnotation) target.applyAnnotationUsage(
 						JpaAnnotations.TABLE,
 						xmlDocumentContext.getModelBuildingContext()
 				);
 				if ( StringHelper.isNotEmpty( catalog ) ) {
-					tableAnn.setAttributeValue( "catalog", catalog );
+					tableAnn.catalog( catalog );
 
 				}
 				if ( StringHelper.isNotEmpty( schema ) ) {
-					tableAnn.setAttributeValue( "schema", schema );
+					tableAnn.schema( schema );
 				}
 			}
 		}
 		else {
-			final MutableAnnotationUsage<Table> tableAnn = target.applyAnnotationUsage(
+			final TableJpaAnnotation tableAnn = (TableJpaAnnotation) target.applyAnnotationUsage(
 					JpaAnnotations.TABLE,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			applyOr( jaxbTable, JaxbTableImpl::getName, "name", tableAnn, JpaAnnotations.TABLE );
-			applyTableAttributes( jaxbTable, target, tableAnn, JpaAnnotations.TABLE, xmlDocumentContext );
+			tableAnn.apply( jaxbTable, xmlDocumentContext );
 		}
 	}
 
-	public static <A extends Annotation> void applyTableAttributes(
-			JaxbTableMapping jaxbTable,
-			AnnotationTarget target,
-			MutableAnnotationUsage<A> tableAnn,
-			AnnotationDescriptor<A> annotationDescriptor,
-			XmlDocumentContext xmlDocumentContext) {
-		applyOrCatalog( jaxbTable, tableAnn, annotationDescriptor, xmlDocumentContext );
-		applyOrSchema( jaxbTable, tableAnn, annotationDescriptor, xmlDocumentContext);
-		applyOr( jaxbTable, JaxbTableMapping::getOptions, "options", tableAnn, annotationDescriptor );
-		applyOr( jaxbTable, JaxbTableMapping::getComment, "comment", tableAnn, annotationDescriptor );
-		applyCheckConstraints( jaxbTable, target, tableAnn, xmlDocumentContext );
-		applyUniqueConstraints( jaxbTable.getUniqueConstraints(), target, tableAnn, xmlDocumentContext );
-		applyIndexes( jaxbTable.getIndexes(), target, tableAnn, xmlDocumentContext );
+	public static void applyOptionalString(String value, Consumer<String> target) {
+		if ( StringHelper.isNotEmpty( value ) ) {
+			target.accept( value );
+		}
 	}
 
 	public static void applyNaturalIdCache(
@@ -946,13 +777,15 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<NaturalIdCache> naturalIdCacheUsage = classDetails.applyAnnotationUsage(
+		final NaturalIdCacheAnnotation naturalIdCacheUsage = (NaturalIdCacheAnnotation) classDetails.applyAnnotationUsage(
 				HibernateAnnotations.NATURAL_ID_CACHE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
 		final JaxbCachingImpl jaxbCaching = jaxbNaturalId.getCaching();
-		XmlProcessingHelper.applyAttributeIfSpecified( "region", jaxbCaching.getRegion(), naturalIdCacheUsage );
+		if ( StringHelper.isNotEmpty( jaxbCaching.getRegion() ) ) {
+			naturalIdCacheUsage.region( jaxbCaching.getRegion() );
+		}
 	}
 
 	static void applyInheritance(
@@ -963,11 +796,13 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<Inheritance> inheritanceUsage = classDetails.applyAnnotationUsage(
+		final InheritanceJpaAnnotation inheritanceUsage = (InheritanceJpaAnnotation) classDetails.applyAnnotationUsage(
 				JpaAnnotations.INHERITANCE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		XmlProcessingHelper.applyAttributeIfSpecified( "strategy", jaxbEntity.getInheritance().getStrategy(), inheritanceUsage );
+		if ( jaxbEntity.getInheritance().getStrategy() != null ) {
+			inheritanceUsage.strategy( jaxbEntity.getInheritance().getStrategy() );
+		}
 	}
 
 	public static ClassDetails resolveJavaType(String value, XmlDocumentContext xmlDocumentContext) {
@@ -1081,7 +916,7 @@ public class XmlAnnotationHelper {
 			String descriptorClassName,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<JavaType> typeAnn = memberDetails.applyAnnotationUsage(
+		final JavaTypeAnnotation typeAnn = (JavaTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.JAVA_TYPE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
@@ -1090,7 +925,7 @@ public class XmlAnnotationHelper {
 				.getModelBuildingContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( descriptorClassName );
-		typeAnn.setAttributeValue( "value", descriptorClass );
+		typeAnn.value( descriptorClass.toJavaClass() );
 	}
 
 
@@ -1102,11 +937,11 @@ public class XmlAnnotationHelper {
 				.getModelBuildingContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( descriptorClassName );
-		final MutableAnnotationUsage<JdbcType> jdbcTypeAnn = memberDetails.applyAnnotationUsage(
+		final JdbcTypeAnnotation jdbcTypeAnn = (JdbcTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.JDBC_TYPE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		jdbcTypeAnn.setAttributeValue( "value", descriptorClassDetails );
+		jdbcTypeAnn.value( descriptorClassDetails.toJavaClass() );
 
 	}
 
@@ -1118,147 +953,134 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<JdbcTypeCode> typeCodeAnn = memberDetails.applyAnnotationUsage(
+		final JdbcTypeCodeAnnotation typeCodeAnn = (JdbcTypeCodeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.JDBC_TYPE_CODE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		typeCodeAnn.setAttributeValue( "value", jdbcTypeCode );
+		typeCodeAnn.value( jdbcTypeCode );
 	}
 
 	public static void applyFilters(
-			List<JaxbHbmFilterImpl> filters,
+			List<JaxbHbmFilterImpl> jaxbFilters,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		applyFilters( filters, target, HibernateAnnotations.FILTER, xmlDocumentContext );
-	}
-
-	public static void applyJoinTableFilters(
-			List<JaxbHbmFilterImpl> filters,
-			MutableAnnotationTarget target,
-			XmlDocumentContext xmlDocumentContext) {
-		applyFilters( filters, target, HibernateAnnotations.FILTER_JOIN_TABLE, xmlDocumentContext );
-	}
-
-	public static <F extends Annotation> void applyFilters(
-			List<JaxbHbmFilterImpl> filters,
-			MutableAnnotationTarget target,
-			AnnotationDescriptor<F> filterAnnotationDescriptor,
-			XmlDocumentContext xmlDocumentContext) {
-		assert filterAnnotationDescriptor.getRepeatableContainer() != null;
-
-		if ( filters.isEmpty() ) {
+		if ( CollectionHelper.isEmpty( jaxbFilters ) ) {
 			return;
 		}
 
-		// replaces existing
-		final MutableAnnotationUsage<?> containerUsage = target.replaceAnnotationUsage(
-				filterAnnotationDescriptor,
-				filterAnnotationDescriptor.getRepeatableContainer(),
+		final FiltersAnnotation filters = (FiltersAnnotation) target.replaceAnnotationUsage(
+				FILTER,
+				HibernateAnnotations.FILTERS,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		final ArrayList<Object> filterUsages = arrayList( filters.size() );
-		containerUsage.setAttributeValue( "value", filterUsages );
+		final FilterAnnotation[] filterUsages = new FilterAnnotation[jaxbFilters.size()];
+		filters.value( filterUsages );
 
-		filters.forEach( (jaxbFilter) -> {
-			final MutableAnnotationUsage<F> filterUsage = filterAnnotationDescriptor.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			filterUsages.add( filterUsage );
-
-			filterUsage.setAttributeValue( "name", jaxbFilter.getName() );
-			XmlProcessingHelper.applyAttributeIfSpecified( "condition", jaxbFilter.getCondition(), filterUsage );
-			XmlProcessingHelper.applyAttributeIfSpecified( "deduceAliasInjectionPoints", jaxbFilter.isAutoAliasInjection(), filterUsage );
-
-			final List<JaxbHbmFilterImpl.JaxbAliasesImpl> aliases = jaxbFilter.getAliases();
-			if ( !CollectionHelper.isEmpty( aliases ) ) {
-				filterUsage.setAttributeValue( "aliases", getSqlFragmentAliases( aliases, target, xmlDocumentContext ) );
-			}
-		} );
+		for ( int i = 0; i < jaxbFilters.size(); i++ ) {
+			final FilterAnnotation filterUsage = FILTER.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			filterUsages[i] = filterUsage;
+			filterUsage.apply( jaxbFilters.get(i), xmlDocumentContext );
+		}
 	}
 
-	private static List<AnnotationUsage<SqlFragmentAlias>> getSqlFragmentAliases(
-			List<JaxbHbmFilterImpl.JaxbAliasesImpl> aliases,
+	public static void applyJoinTableFilters(
+			List<JaxbHbmFilterImpl> jaxbFilters,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final List<AnnotationUsage<SqlFragmentAlias>> sqlFragmentAliases = new ArrayList<>( aliases.size() );
-		for ( JaxbHbmFilterImpl.JaxbAliasesImpl alias : aliases ) {
-			final MutableAnnotationUsage<SqlFragmentAlias> aliasAnn =
-					HibernateAnnotations.SQL_FRAGMENT_ALIAS.createUsage( xmlDocumentContext.getModelBuildingContext() );
-
-			aliasAnn.setAttributeValue( "alias", alias.getAlias() );
-			XmlProcessingHelper.applyAttributeIfSpecified( "table", alias.getTable(), aliasAnn );
-			if ( StringHelper.isNotEmpty( alias.getEntity() ) ) {
-				aliasAnn.setAttributeValue(
-						"entity",
-						xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry().resolveClassDetails( alias.getEntity() )
-				);
-			}
-			sqlFragmentAliases.add( aliasAnn );
+		if ( CollectionHelper.isEmpty( jaxbFilters ) ) {
+			return;
 		}
-		return sqlFragmentAliases;
+
+		final FilterJoinTablesAnnotation filters = (FilterJoinTablesAnnotation) target.replaceAnnotationUsage(
+				FILTER_JOIN_TABLE,
+				HibernateAnnotations.FILTER_JOIN_TABLES,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		final FilterJoinTableAnnotation[] filterUsages = new FilterJoinTableAnnotation[jaxbFilters.size()];
+		filters.value( filterUsages );
+
+		for ( int i = 0; i < jaxbFilters.size(); i++ ) {
+			final FilterJoinTableAnnotation filterUsage = FILTER_JOIN_TABLE.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			filterUsages[i] = filterUsage;
+
+			filterUsage.apply( jaxbFilters.get(i), xmlDocumentContext );
+		}
 	}
 
 	public static void applySqlRestriction(
 			String sqlRestriction,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		applySqlRestriction( sqlRestriction, target, HibernateAnnotations.SQL_RESTRICTION, xmlDocumentContext );
+		if ( StringHelper.isEmpty( sqlRestriction ) ) {
+			return;
+		}
+
+		final SQLRestrictionAnnotation sqlRestrictionAnn = (SQLRestrictionAnnotation) target.applyAnnotationUsage(
+				SQL_RESTRICTION,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		sqlRestrictionAnn.value( sqlRestriction );
 	}
 
 	public static void applySqlJoinTableRestriction(
-			String sqlJoinTableRestriction,
-			MutableAnnotationTarget target,
-			XmlDocumentContext xmlDocumentContext) {
-		applySqlRestriction( sqlJoinTableRestriction, target, HibernateAnnotations.SQL_RESTRICTION_JOIN_TABLE, xmlDocumentContext );
-	}
-
-	private static <A extends Annotation> void applySqlRestriction(
 			String sqlRestriction,
 			MutableAnnotationTarget target,
-			AnnotationDescriptor<A> annotationDescriptor,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isNotEmpty( sqlRestriction ) ) {
-			final MutableAnnotationUsage<A> restrictionUsage = target.applyAnnotationUsage(
-					annotationDescriptor,
-					xmlDocumentContext.getModelBuildingContext()
-			);
-			restrictionUsage.setAttributeValue( "value", sqlRestriction );
+		if ( StringHelper.isEmpty( sqlRestriction ) ) {
+			return;
 		}
+		final SQLJoinTableRestrictionAnnotation sqlRestrictionAnn = (SQLJoinTableRestrictionAnnotation) target.applyAnnotationUsage(
+				HibernateAnnotations.SQL_JOIN_TABLE_RESTRICTION,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		sqlRestrictionAnn.value( sqlRestriction );
 	}
 
-	public static <A extends Annotation> void applyCustomSql(
+	public static void applyCustomSql(
 			JaxbCustomSqlImpl jaxbCustomSql,
 			MutableAnnotationTarget target,
-			AnnotationDescriptor<A> annotationDescriptor,
+			AnnotationDescriptor descriptor,
 			XmlDocumentContext xmlDocumentContext) {
-		// todo (7.0) : account for secondary-table custom SQL
 		if ( jaxbCustomSql == null ) {
 			return;
 		}
 
-		final MutableAnnotationUsage<A> annotationUsage = target.applyAnnotationUsage(
-				annotationDescriptor,
+		final CustomSqlDetails annotation = (CustomSqlDetails) target.applyAnnotationUsage(
+				descriptor,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		annotationUsage.setAttributeValue( "sql", jaxbCustomSql.getValue() );
-		annotationUsage.setAttributeValue( "callable", jaxbCustomSql.isCallable() );
-		XmlProcessingHelper.applyAttributeIfSpecified( "table", jaxbCustomSql.getTable(), annotationUsage );
+
+		applyCustomSql( jaxbCustomSql, annotation );
+	}
+
+	public static void applyCustomSql(
+			JaxbCustomSqlImpl jaxbCustomSql,
+			CustomSqlDetails annotation) {
+		if ( jaxbCustomSql == null ) {
+			return;
+		}
+
+		annotation.sql( jaxbCustomSql.getValue() );
+		annotation.callable( jaxbCustomSql.isCallable() );
+
+		if ( StringHelper.isNotEmpty( jaxbCustomSql.getTable() ) ) {
+			annotation.table( jaxbCustomSql.getTable() );
+		}
+
 		if ( jaxbCustomSql.getResultCheck() != null ) {
-			annotationUsage.setAttributeValue( "check", getResultCheckStyle( jaxbCustomSql.getResultCheck() ) );
+			annotation.check( interpretResultCheckStyle( jaxbCustomSql.getResultCheck() ) );
 		}
 	}
 
 	@SuppressWarnings({ "deprecation", "removal" })
-	private static ResultCheckStyle getResultCheckStyle(ExecuteUpdateResultCheckStyle style) {
-		switch ( style ) {
-			case NONE:
-				return ResultCheckStyle.NONE;
-			case COUNT:
-				return ResultCheckStyle.COUNT;
-			case PARAM:
-				return ResultCheckStyle.PARAM;
-			default:
-				return null;
-		}
+	private static ResultCheckStyle interpretResultCheckStyle(ExecuteUpdateResultCheckStyle style) {
+		return switch ( style ) {
+			case NONE -> ResultCheckStyle.NONE;
+			case COUNT -> ResultCheckStyle.COUNT;
+			case PARAM -> ResultCheckStyle.PARAM;
+		};
 	}
 
 	static void applyIdClass(
@@ -1269,7 +1091,7 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<IdClass> idClassAnn = target.applyAnnotationUsage(
+		final IdClassJpaAnnotation idClassAnn = (IdClassJpaAnnotation) target.applyAnnotationUsage(
 				JpaAnnotations.ID_CLASS,
 				xmlDocumentContext.getModelBuildingContext()
 		);
@@ -1277,7 +1099,7 @@ public class XmlAnnotationHelper {
 		final ClassDetails idClassImpl = xmlDocumentContext.getModelBuildingContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( jaxbIdClass.getClazz() );
-		idClassAnn.setAttributeValue( "value", idClassImpl );
+		idClassAnn.value( idClassImpl.toJavaClass() );
 	}
 
 	public static void applyLifecycleCallbacks(
@@ -1287,11 +1109,11 @@ public class XmlAnnotationHelper {
 		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 
 		if ( jaxbClass.getExcludeDefaultListeners() != null ) {
-			classDetails.applyAnnotationUsage( JpaAnnotations.EXCLUDE_DEFAULT_LISTENERS, modelBuildingContext );
+			classDetails.applyAnnotationUsage( EXCLUDE_DEFAULT_LISTENERS, modelBuildingContext );
 		}
 
 		if ( jaxbClass.getExcludeSuperclassListeners() != null ) {
-			classDetails.applyAnnotationUsage( JpaAnnotations.EXCLUDE_SUPERCLASS_LISTENERS, modelBuildingContext );
+			classDetails.applyAnnotationUsage( EXCLUDE_SUPERCLASS_LISTENERS, modelBuildingContext );
 		}
 
 		applyLifecycleCallbacks( jaxbClass, JpaEventListenerStyle.CALLBACK, classDetails, xmlDocumentContext );
@@ -1307,14 +1129,16 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<EntityListeners> listenersUsage = classDetails.replaceAnnotationUsage(
+		final EntityListenersJpaAnnotation listenersUsage = (EntityListenersJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.ENTITY_LISTENERS,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		final List<ClassDetails> values = arrayList( entityListenerContainer.getEntityListeners().size() );
-		listenersUsage.setAttributeValue( "value", values );
 
-		entityListenerContainer.getEntityListeners().forEach( (jaxbEntityListener) -> {
+		final Class<?>[] listeners = new Class[entityListenerContainer.getEntityListeners().size()];
+		listenersUsage.value( listeners );
+
+		for ( int i = 0; i < entityListenerContainer.getEntityListeners().size(); i++ ) {
+			final JaxbEntityListenerImpl jaxbEntityListener = entityListenerContainer.getEntityListeners().get( i );
 			final MutableClassDetails entityListenerClass = xmlDocumentContext.resolveJavaType( jaxbEntityListener.getClazz() );
 			applyLifecycleCallbacks(
 					jaxbEntityListener,
@@ -1322,9 +1146,10 @@ public class XmlAnnotationHelper {
 					entityListenerClass,
 					xmlDocumentContext
 			);
-			values.add( entityListenerClass );
-		} );
 
+			// todo (7.0) : need to make sure we look up the ClassDetails later when applying listeners; the *Class* won't be correct
+			listeners[i] = entityListenerClass.toJavaClass();
+		}
 	}
 
 	static void applyLifecycleCallbacks(
@@ -1385,11 +1210,13 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<RowId> rowIdAnn = target.applyAnnotationUsage(
+		final RowIdAnnotation rowIdAnn = (RowIdAnnotation) target.applyAnnotationUsage(
 				HibernateAnnotations.ROW_ID,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		XmlProcessingHelper.applyAttributeIfSpecified( "value", rowId, rowIdAnn );
+		if ( StringHelper.isNotEmpty( rowId ) ) {
+			rowIdAnn.value( rowId );
+		}
 	}
 
 	private static String prefixIfNotAlready(String value, String prefix) {
@@ -1410,11 +1237,11 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<DiscriminatorValue> valueAnn = target.applyAnnotationUsage(
+		final DiscriminatorValueJpaAnnotation valueAnn = (DiscriminatorValueJpaAnnotation) target.applyAnnotationUsage(
 				JpaAnnotations.DISCRIMINATOR_VALUE,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		valueAnn.setAttributeValue( "value", discriminatorValue );
+		valueAnn.value( discriminatorValue );
 	}
 
 	static void applyDiscriminatorColumn(
@@ -1425,56 +1252,22 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<DiscriminatorColumn> discriminatorColumnAnn = target.applyAnnotationUsage(
+		final DiscriminatorColumnJpaAnnotation discriminatorColumnAnn = (DiscriminatorColumnJpaAnnotation) target.applyAnnotationUsage(
 				JpaAnnotations.DISCRIMINATOR_COLUMN,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-
-		AnnotationUsageHelper.applyStringAttributeIfSpecified(
-				"name",
-				jaxbDiscriminatorColumn.getName(),
-				discriminatorColumnAnn
-		);
-		AnnotationUsageHelper.applyAttributeIfSpecified(
-				"discriminatorType",
-				jaxbDiscriminatorColumn.getDiscriminatorType(),
-				discriminatorColumnAnn
-		);
-
-		applyOr(
-				jaxbDiscriminatorColumn,
-				JaxbDiscriminatorColumnImpl::getColumnDefinition,
-				"columnDefinition",
-				discriminatorColumnAnn,
-				JpaAnnotations.DISCRIMINATOR_COLUMN
-		);
-		applyOr(
-				jaxbDiscriminatorColumn,
-				JaxbDiscriminatorColumnImpl::getOptions,
-				"options",
-				discriminatorColumnAnn,
-				JpaAnnotations.DISCRIMINATOR_COLUMN
-		);
-		applyOr(
-				jaxbDiscriminatorColumn,
-				JaxbDiscriminatorColumnImpl::getLength,
-				"length",
-				discriminatorColumnAnn,
-				JpaAnnotations.DISCRIMINATOR_COLUMN
-		);
+		discriminatorColumnAnn.apply( jaxbDiscriminatorColumn, xmlDocumentContext );
 
 		if ( jaxbDiscriminatorColumn.isForceSelection() || jaxbDiscriminatorColumn.isInsertable() == FALSE ) {
-			final MutableAnnotationUsage<DiscriminatorOptions> optionsAnn = target.applyAnnotationUsage(
+			final DiscriminatorOptionsAnnotation optionsAnn = (DiscriminatorOptionsAnnotation) target.applyAnnotationUsage(
 					HibernateAnnotations.DISCRIMINATOR_OPTIONS,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			optionsAnn.setAttributeValue( "force", true );
+			optionsAnn.force( true );
 
-			AnnotationUsageHelper.applyAttributeIfSpecified(
-					"insert",
-					jaxbDiscriminatorColumn.isInsertable(),
-					discriminatorColumnAnn
-			);
+			if ( jaxbDiscriminatorColumn.isInsertable() != null ) {
+				optionsAnn.insert( jaxbDiscriminatorColumn.isInsertable() );
+			}
 		}
 	}
 
@@ -1489,21 +1282,22 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<DiscriminatorFormula> discriminatorFormulaAnn = target.applyAnnotationUsage(
+		final DiscriminatorFormulaAnnotation discriminatorFormulaAnn = (DiscriminatorFormulaAnnotation) target.applyAnnotationUsage(
 				HibernateAnnotations.DISCRIMINATOR_FORMULA,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		discriminatorFormulaAnn.setAttributeValue( "value", jaxbDiscriminatorFormula.getFragment() );
-		XmlProcessingHelper.applyAttributeIfSpecified( "discriminatorType", jaxbDiscriminatorFormula.getDiscriminatorType(), discriminatorFormulaAnn );
-
+		discriminatorFormulaAnn.value( jaxbDiscriminatorFormula.getFragment() );
+		if ( jaxbDiscriminatorFormula.getDiscriminatorType() != null ) {
+			discriminatorFormulaAnn.discriminatorType( jaxbDiscriminatorFormula.getDiscriminatorType() );
+		}
 
 		if ( jaxbDiscriminatorFormula.isForceSelection() ) {
-			final MutableAnnotationUsage<DiscriminatorOptions> optionsAnn = target.applyAnnotationUsage(
+			final DiscriminatorOptionsAnnotation optionsAnn = (DiscriminatorOptionsAnnotation) target.applyAnnotationUsage(
 					HibernateAnnotations.DISCRIMINATOR_OPTIONS,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			optionsAnn.setAttributeValue( "force", true );
+			optionsAnn.force( true );
 		}
 	}
 
@@ -1522,57 +1316,74 @@ public class XmlAnnotationHelper {
 		return explicitName;
 	}
 
-	public static <T, N, A extends Annotation> void applyOrSchema(
+
+	/**
+	 * Applies the schema defined either <ol>
+	 *     <li>The JAXB node directly</li>
+	 *     <li>The XML document's {@code <schema/>} element</li>
+	 * </ol>
+	 *
+	 * @apiNote The schema defined in {@code <persistence-unit-defaults/>}, if any,
+	 * is NOT handled here
+	 */
+	public static void applySchema(
 			JaxbSchemaAware jaxbNode,
-			MutableAnnotationUsage<A> annotationUsage,
-			AnnotationDescriptor<A> annotationDescriptor,
+			DatabaseObjectDetails annotationUsage,
 			XmlDocumentContext xmlDocumentContext) {
-		applyOr(
-				jaxbNode,
-				(table) -> {
-					if ( StringHelper.isNotEmpty( table.getSchema() ) ) {
-						return table.getSchema();
-					}
-					else if ( StringHelper.isNotEmpty( defaultSchema( xmlDocumentContext ) ) ) {
-						return defaultSchema( xmlDocumentContext );
-					}
-					return null;
-				},
-				"schema",
-				annotationUsage,
-				annotationDescriptor
-		);
+		if ( jaxbNode == null ) {
+			return;
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbNode.getSchema() ) ) {
+			annotationUsage.schema( jaxbNode.getSchema() );
+		}
+		else if ( StringHelper.isNotEmpty( documentSchema( xmlDocumentContext ) ) ) {
+			annotationUsage.schema( documentSchema( xmlDocumentContext ) );
+		}
 	}
 
-	private static String defaultSchema(XmlDocumentContext xmlDocumentContext) {
+	/**
+	 * Returns the XML document's {@code <schema/>} element value, if one
+	 *
+	 * @apiNote This is NOT the same as a {@code <schema/>} defined in {@code <persistence-unit-defaults/>}
+	 */
+	private static String documentSchema(XmlDocumentContext xmlDocumentContext) {
 		return xmlDocumentContext.getXmlDocument()
 				.getDefaults()
 				.getSchema();
 	}
 
-	public static <T, N, A extends Annotation> void applyOrCatalog(
+	/**
+	 * Applies the catalog defined either <ol>
+	 *     <li>The JAXB node directly</li>
+	 *     <li>The XML document's {@code <catalog/>} element</li>
+	 * </ol>
+	 *
+	 * @apiNote The catalog defined in {@code <persistence-unit-defaults/>}, if any,
+	 * is NOT handled here
+	 */
+	public static void applyCatalog(
 			JaxbSchemaAware jaxbNode,
-			MutableAnnotationUsage<A> annotationUsage,
-			AnnotationDescriptor<A> annotationDescriptor,
+			DatabaseObjectDetails annotationUsage,
 			XmlDocumentContext xmlDocumentContext) {
-		applyOr(
-				jaxbNode,
-				(table) -> {
-					if ( StringHelper.isNotEmpty( table.getCatalog() ) ) {
-						return table.getCatalog();
-					}
-					else if ( StringHelper.isNotEmpty( defaultCatalog( xmlDocumentContext ) ) ) {
-						return defaultCatalog( xmlDocumentContext );
-					}
-					return null;
-				},
-				"catalog",
-				annotationUsage,
-				annotationDescriptor
-		);
+		if ( jaxbNode == null ) {
+			return;
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbNode.getCatalog() ) ) {
+			annotationUsage.catalog( jaxbNode.getCatalog() );
+		}
+		else if ( StringHelper.isNotEmpty( documentCatalog( xmlDocumentContext ) ) ) {
+			annotationUsage.catalog( documentCatalog( xmlDocumentContext ) );
+		}
 	}
 
-	private static String defaultCatalog(XmlDocumentContext xmlDocumentContext) {
+	/**
+	 * Returns the XML document's {@code <catalog/>} element value, if one
+	 *
+	 * @apiNote This is NOT the same as a {@code <catalog/>} defined in {@code <persistence-unit-defaults/>}
+	 */
+	private static String documentCatalog(XmlDocumentContext xmlDocumentContext) {
 		return xmlDocumentContext.getXmlDocument()
 				.getDefaults()
 				.getCatalog();
@@ -1589,75 +1400,137 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final MutableAnnotationUsage<NotFound> notFoundAnn = memberDetails.applyAnnotationUsage(
+		final NotFoundAnnotation notFoundAnn = (NotFoundAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.NOT_FOUND,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		notFoundAnn.setAttributeValue( "action", notFoundAction );
+		notFoundAnn.action( notFoundAction );
 	}
 
-	public static void applySecondaryTables(List<JaxbSecondaryTableImpl> secondaryTables, MutableAnnotationTarget target, XmlDocumentContext xmlDocumentContext) {
-		if ( secondaryTables == null || secondaryTables.isEmpty() ) {
+	public static void applySecondaryTables(List<JaxbSecondaryTableImpl> jaxbSecondaryTables, MutableAnnotationTarget target, XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbSecondaryTables == null || jaxbSecondaryTables.isEmpty() ) {
 			return;
 		}
 
-		final MutableAnnotationUsage<SecondaryTables> listenersUsage = target.replaceAnnotationUsage(
-				JpaAnnotations.SECONDARY_TABLE,
+		final SecondaryTablesJpaAnnotation tablesUsage = (SecondaryTablesJpaAnnotation) target.replaceAnnotationUsage(
+				SECONDARY_TABLE,
 				JpaAnnotations.SECONDARY_TABLES,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		final List<MutableAnnotationUsage<SecondaryTable>> values = arrayList( secondaryTables.size() );
-		listenersUsage.setAttributeValue( "value", values );
+		final SecondaryTable[] tableUsages = new SecondaryTable[jaxbSecondaryTables.size()];
+		tablesUsage.value( tableUsages );
 
-		for ( JaxbSecondaryTableImpl secondaryTable : secondaryTables ) {
-			final MutableAnnotationUsage<SecondaryTable> tableAnn = JpaAnnotations.SECONDARY_TABLE
-					.createUsage( xmlDocumentContext.getModelBuildingContext() );
-			tableAnn.setAttributeValue( "name", secondaryTable.getName() );
+		for ( int i = 0; i < jaxbSecondaryTables.size(); i++ ) {
+			final SecondaryTableJpaAnnotation tableUsage = SECONDARY_TABLE.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			tableUsages[i] = tableUsage;
 
-			ForeignKeyProcessing.applyForeignKey( secondaryTable.getForeignKey(), tableAnn, xmlDocumentContext );
-
-			JoinColumnProcessing.applyPrimaryKeyJoinColumns(
-					secondaryTable.getPrimaryKeyJoinColumn(),
-					tableAnn,
-					xmlDocumentContext
-			);
-
-			applyTableAttributes(
-					secondaryTable,
-					target,
-					tableAnn,
-					JpaAnnotations.SECONDARY_TABLE,
-					xmlDocumentContext
-			);
-
-			values.add( tableAnn );
+			final JaxbSecondaryTableImpl jaxbSecondaryTable = jaxbSecondaryTables.get( i );
+			tableUsage.apply( jaxbSecondaryTable, xmlDocumentContext );
 		}
 	}
+
+	private static final CheckConstraint[] NO_CHECK_CONSTRAINTS = new CheckConstraint[0];
+	public static CheckConstraint[] collectCheckConstraints(
+			List<JaxbCheckConstraintImpl> jaxbChecks,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( CollectionHelper.isEmpty( jaxbChecks ) ) {
+			return NO_CHECK_CONSTRAINTS;
+		}
+
+		final CheckConstraint[] checks = new CheckConstraint[jaxbChecks.size()];
+		for ( int i = 0; i < jaxbChecks.size(); i++ ) {
+			final JaxbCheckConstraintImpl jaxbCheck = jaxbChecks.get( i );
+			final CheckConstraintJpaAnnotation annotation = CHECK_CONSTRAINT.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			checks[i] = annotation;
+			annotation.constraint( jaxbCheck.getConstraint() );
+			applyOptionalString( jaxbCheck.getName(), annotation::name );
+			applyOptionalString( jaxbCheck.getOptions(), annotation::options );
+		}
+		return checks;
+	}
+
+	private static final UniqueConstraint[] NO_UNIQUE_CONSTRAINTS = new UniqueConstraint[0];
+	public static UniqueConstraint[] collectUniqueConstraints(
+			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
+			XmlDocumentContext xmlDocumentContext) {
+		return collectUniqueConstraints( jaxbUniqueConstraints, xmlDocumentContext.getModelBuildingContext() );
+	}
+
+	public static UniqueConstraint[] collectUniqueConstraints(
+			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
+			SourceModelBuildingContext modelContext) {
+		if ( CollectionHelper.isEmpty( jaxbUniqueConstraints ) ) {
+			return NO_UNIQUE_CONSTRAINTS;
+		}
+
+		final UniqueConstraint[] constraints = new UniqueConstraint[jaxbUniqueConstraints.size()];
+		for ( int i = 0; i < jaxbUniqueConstraints.size(); i++ ) {
+			final UniqueConstraintJpaAnnotation uniqueConstraint = UNIQUE_CONSTRAINT.createUsage( modelContext );
+			constraints[i] = uniqueConstraint;
+
+			final JaxbUniqueConstraintImpl jaxbUniqueConstraint = jaxbUniqueConstraints.get( i );
+			uniqueConstraint.columnNames( jaxbUniqueConstraint.getColumnName().toArray(String[]::new) );
+			applyOptionalString( jaxbUniqueConstraint.getName(), uniqueConstraint::name );
+			applyOptionalString( jaxbUniqueConstraint.getOptions(), uniqueConstraint::options );
+		}
+		return constraints;
+	}
+
+	private static final Index[] NO_INDICES = new Index[0];
+	public static Index[] collectIndexes(
+			List<JaxbIndexImpl> jaxbIndexes,
+			XmlDocumentContext xmlDocumentContext) {
+		return collectIndexes( jaxbIndexes, xmlDocumentContext.getModelBuildingContext() );
+	}
+
+	public static Index[] collectIndexes(
+			List<JaxbIndexImpl> jaxbIndexes,
+			SourceModelBuildingContext sourceModelContext) {
+		if ( CollectionHelper.isEmpty( jaxbIndexes ) ) {
+			return NO_INDICES;
+		}
+
+		final Index[] indexes = new Index[jaxbIndexes.size()];
+		for ( int i = 0; i < jaxbIndexes.size(); i++ ) {
+			final IndexJpaAnnotation index = INDEX.createUsage( sourceModelContext );
+			indexes[i] = index;
+
+			final JaxbIndexImpl jaxbIndex = jaxbIndexes.get( i );
+			index.columnList( jaxbIndex.getColumnList() );
+			applyOptionalString( jaxbIndex.getName(), index::name );
+			if ( jaxbIndex.isUnique() != null ) {
+				index.unique( jaxbIndex.isUnique() );
+			}
+		}
+		return indexes;
+	}
+
+
 
 	public static void applyPrimaryKeyJoinColumns(
 			JaxbEntityImpl jaxbEntity,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		List<JaxbPrimaryKeyJoinColumnImpl> primaryKeyJoinColumns = jaxbEntity.getPrimaryKeyJoinColumns();
-		if ( CollectionHelper.isEmpty( primaryKeyJoinColumns ) ) {
+		List<JaxbPrimaryKeyJoinColumnImpl> jaxbColumns = jaxbEntity.getPrimaryKeyJoinColumns();
+		if ( CollectionHelper.isEmpty( jaxbColumns ) ) {
 			return;
 		}
 
 		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
-		final MutableAnnotationUsage<PrimaryKeyJoinColumns> primaryKeyJoinColumnsAnnotationUsage = classDetails.replaceAnnotationUsage(
+		final PrimaryKeyJoinColumnsJpaAnnotation columnsAnn = (PrimaryKeyJoinColumnsJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMNS,
 				modelBuildingContext
 		);
 
-		final ArrayList<Object> primaryKeyJoinColumnList = arrayList( primaryKeyJoinColumns.size() );
-		primaryKeyJoinColumnsAnnotationUsage.setAttributeValue( "value", primaryKeyJoinColumnList );
-
-		for ( JaxbPrimaryKeyJoinColumnImpl primaryKeyJoinColumn : primaryKeyJoinColumns ) {
-			primaryKeyJoinColumnList.add(
-					JoinColumnProcessing.createPrimaryKeyJoinColumnUsage( primaryKeyJoinColumn, xmlDocumentContext )
-			);
+		final PrimaryKeyJoinColumn[] columns = new PrimaryKeyJoinColumn[jaxbColumns.size()];
+		for ( int i = 0; i < jaxbColumns.size(); i++ ) {
+			final PrimaryKeyJoinColumnJpaAnnotation column = JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage( modelBuildingContext );
+			final JaxbPrimaryKeyJoinColumnImpl jaxbColumn = jaxbColumns.get( i );
+			column.apply( jaxbColumn, xmlDocumentContext );
+			columns[i] = column;
 		}
+		columnsAnn.value( columns );
 	}
 }

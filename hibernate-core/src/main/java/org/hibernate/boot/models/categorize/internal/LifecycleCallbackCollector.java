@@ -10,7 +10,7 @@ import java.lang.annotation.Annotation;
 import java.util.Locale;
 
 import org.hibernate.boot.models.categorize.spi.AllMemberConsumer;
-import org.hibernate.boot.models.categorize.spi.JpaEventListener;
+import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
 import org.hibernate.models.ModelsException;
@@ -26,7 +26,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
 
-import static org.hibernate.boot.models.categorize.spi.JpaEventListener.matchesSignature;
+import static org.hibernate.boot.models.spi.JpaEventListener.matchesSignature;
 
 /**
  * @author Steve Ebersole
@@ -56,31 +56,31 @@ public class LifecycleCallbackCollector implements AllMemberConsumer {
 
 		final MethodDetails methodDetails = (MethodDetails) memberDetails;
 
-		if ( methodDetails.getAnnotationUsage( PrePersist.class ) != null
+		if ( methodDetails.hasDirectAnnotationUsage( PrePersist.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			prePersist = apply( methodDetails, PrePersist.class, managedTypeDetails, prePersist );
 		}
-		else if ( methodDetails.getAnnotationUsage( PostPersist.class ) != null
+		else if ( methodDetails.hasDirectAnnotationUsage( PostPersist.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			postPersist = apply( methodDetails, PostPersist.class, managedTypeDetails, postPersist );
 		}
-		else if ( methodDetails.getAnnotationUsage( PreRemove.class ) != null
+		else if ( methodDetails.hasDirectAnnotationUsage( PreRemove.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			preRemove = apply( methodDetails, PreRemove.class, managedTypeDetails, preRemove );
 		}
-		else if ( methodDetails.getAnnotationUsage( PostRemove.class ) != null
+		else if ( methodDetails.hasDirectAnnotationUsage( PostRemove.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			postRemove = apply( methodDetails, PostRemove.class, managedTypeDetails, postRemove );
 		}
-		else if ( methodDetails.getAnnotationUsage( PreUpdate.class ) != null
+		else if ( methodDetails.hasDirectAnnotationUsage( PreUpdate.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			preUpdate = apply( methodDetails, PreUpdate.class, managedTypeDetails, preUpdate );
 		}
-		else if ( methodDetails.getAnnotationUsage( PostUpdate.class ) != null
+		else if ( methodDetails.hasDirectAnnotationUsage( PostUpdate.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			postUpdate = apply( methodDetails, PostUpdate.class, managedTypeDetails, postUpdate );
 		}
-		else if ( methodDetails.getAnnotationUsage( PostLoad.class ) != null
+		else if ( methodDetails.hasDirectAnnotationUsage( PostLoad.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			postLoad = apply( methodDetails, PostLoad.class, managedTypeDetails, postLoad );
 		}

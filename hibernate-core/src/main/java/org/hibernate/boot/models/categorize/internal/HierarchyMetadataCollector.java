@@ -22,8 +22,8 @@ import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.KeyMapping;
+import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
 import org.hibernate.models.ModelsException;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -45,30 +45,33 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 	private final EntityHierarchy entityHierarchy;
 	private final ClassDetails rootEntityClassDetails;
 	private final HierarchyTypeConsumer delegateConsumer;
+	private final ModelCategorizationContext categorizationContext;
 
 	private boolean belowRootEntity;
 
 	private EntityTypeMetadata rootEntityMetadata;
-	private AnnotationUsage<Inheritance> inheritanceAnnotation;
-	private AnnotationUsage<OptimisticLocking> optimisticLockingAnnotation;
-	private AnnotationUsage<Cache> cacheAnnotation;
-	private AnnotationUsage<NaturalIdCache> naturalIdCacheAnnotation;
+	private Inheritance inheritanceAnnotation;
+	private OptimisticLocking optimisticLockingAnnotation;
+	private Cache cacheAnnotation;
+	private NaturalIdCache naturalIdCacheAnnotation;
 
 	private KeyMapping idMapping;
 	private AttributeMetadata versionAttribute;
 	private AttributeMetadata tenantIdAttribute;
 
-	private AnnotationUsage<IdClass> idClassAnnotation;
+	private IdClass idClassAnnotation;
 	private Object collectedIdAttributes;
 	private Object collectedNaturalIdAttributes;
 
 	public HierarchyMetadataCollector(
 			EntityHierarchy entityHierarchy,
 			ClassDetails rootEntityClassDetails,
-			HierarchyTypeConsumer delegateConsumer) {
+			HierarchyTypeConsumer delegateConsumer,
+			ModelCategorizationContext categorizationContext) {
 		this.entityHierarchy = entityHierarchy;
 		this.rootEntityClassDetails = rootEntityClassDetails;
 		this.delegateConsumer = delegateConsumer;
+		this.categorizationContext = categorizationContext;
 	}
 
 	public EntityTypeMetadata getRootEntityMetadata() {
@@ -83,7 +86,7 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 		return idMapping;
 	}
 
-	public AnnotationUsage<Inheritance> getInheritanceAnnotation() {
+	public Inheritance getInheritanceAnnotation() {
 		return inheritanceAnnotation;
 	}
 
@@ -95,15 +98,15 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 		return tenantIdAttribute;
 	}
 
-	public AnnotationUsage<OptimisticLocking> getOptimisticLockingAnnotation() {
+	public OptimisticLocking getOptimisticLockingAnnotation() {
 		return optimisticLockingAnnotation;
 	}
 
-	public AnnotationUsage<Cache> getCacheAnnotation() {
+	public Cache getCacheAnnotation() {
 		return cacheAnnotation;
 	}
 
-	public AnnotationUsage<NaturalIdCache> getNaturalIdCacheAnnotation() {
+	public NaturalIdCache getNaturalIdCacheAnnotation() {
 		return naturalIdCacheAnnotation;
 	}
 
@@ -120,7 +123,7 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 				idClassDetails = null;
 			}
 			else {
-				idClassDetails = idClassAnnotation.getAttributeValue( "value" );
+				idClassDetails = toClassDetails( idClassAnnotation.value() );
 			}
 			return new NonAggregatedKeyMappingImpl( idAttributes, idClassDetails );
 		}
@@ -142,7 +145,7 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 				idClassDetails = null;
 			}
 			else {
-				idClassDetails = idClassAnnotation.getAttributeValue( "value" );
+				idClassDetails = toClassDetails( idClassAnnotation.value() );
 			}
 			return new NonAggregatedKeyMappingImpl( idAttributes, idClassDetails );
 		}
@@ -155,6 +158,13 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 						entityHierarchy.getRoot().getEntityName()
 				)
 		);
+	}
+
+	private ClassDetails toClassDetails(Class<?> value) {
+		if ( value == null ) {
+			return null;
+		}
+		return categorizationContext.getClassDetailsRegistry().getClassDetails( value.getName() );
 	}
 
 	public KeyMapping getNaturalIdMapping() {
@@ -222,29 +232,29 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 				final MemberDetails attributeMember = attributeMetadata.getMember();
 
 				if ( collectIds ) {
-					final AnnotationUsage<EmbeddedId> eIdAnn = attributeMember.getAnnotationUsage( EmbeddedId.class );
+					final EmbeddedId eIdAnn = attributeMember.getDirectAnnotationUsage( EmbeddedId.class );
 					if ( eIdAnn != null ) {
 						collectIdAttribute( attributeMetadata );
 					}
 
-					final AnnotationUsage<Id> idAnn = attributeMember.getAnnotationUsage( Id.class );
+					final Id idAnn = attributeMember.getDirectAnnotationUsage( Id.class );
 					if ( idAnn != null ) {
 						collectIdAttribute( attributeMetadata );
 					}
 				}
 
-				if ( attributeMember.getAnnotationUsage( NaturalId.class ) != null ) {
+				if ( attributeMember.getDirectAnnotationUsage( NaturalId.class ) != null ) {
 					collectNaturalIdAttribute( attributeMetadata );
 				}
 
 				if ( versionAttribute == null ) {
-					if ( attributeMember.getAnnotationUsage( Version.class ) != null ) {
+					if ( attributeMember.getDirectAnnotationUsage( Version.class ) != null ) {
 						versionAttribute = attributeMetadata;
 					}
 				}
 
 				if ( tenantIdAttribute == null ) {
-					if ( attributeMember.getAnnotationUsage( TenantId.class ) != null ) {
+					if ( attributeMember.getDirectAnnotationUsage( TenantId.class ) != null ) {
 						tenantIdAttribute = attributeMetadata;
 					}
 				}
@@ -252,8 +262,8 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 		}
 	}
 
-	private <A extends Annotation> AnnotationUsage<A> applyLocalAnnotation(Class<A> annotationType, ClassDetails classDetails, AnnotationUsage<A> currentValue) {
-		final AnnotationUsage<A> localInheritanceAnnotation = classDetails.getAnnotationUsage( annotationType );
+	private <A extends Annotation> A applyLocalAnnotation(Class<A> annotationType, ClassDetails classDetails, A currentValue) {
+		final A localInheritanceAnnotation = classDetails.getDirectAnnotationUsage( annotationType );
 		if ( localInheritanceAnnotation != null ) {
 			// the one "closest" to the root-entity should win
 			return localInheritanceAnnotation;

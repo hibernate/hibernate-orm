@@ -6,23 +6,26 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import org.hibernate.annotations.Formula;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
-import org.hibernate.boot.models.xml.internal.db.ColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
 import jakarta.persistence.AccessType;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
 
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptionality;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
 /**
@@ -42,26 +45,31 @@ public class BasicAttributeProcessing {
 				declarer
 		);
 
-		final MutableAnnotationUsage<Basic> basicAnn = memberDetails.applyAnnotationUsage(
+		final BasicJpaAnnotation basicAnn = (BasicJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.BASIC,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		CommonAttributeProcessing.applyAttributeBasics( jaxbBasic, memberDetails, basicAnn, accessType, xmlDocumentContext );
+
+		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAttributeAccessor( jaxbBasic, memberDetails, xmlDocumentContext );
+		applyFetching( jaxbBasic, memberDetails, basicAnn, xmlDocumentContext );
+		applyOptionality( jaxbBasic, basicAnn, xmlDocumentContext );
+		applyOptimisticLock( jaxbBasic, memberDetails, xmlDocumentContext );
 
 		if ( StringHelper.isNotEmpty( jaxbBasic.getFormula() ) ) {
 			assert jaxbBasic.getColumn() == null;
-			final MutableAnnotationUsage<Formula> formulaAnn = memberDetails.applyAnnotationUsage(
+			final FormulaAnnotation formulaAnn = (FormulaAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.FORMULA,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			formulaAnn.setAttributeValue( "value", jaxbBasic.getFormula() );
+			formulaAnn.value( jaxbBasic.getFormula() );
 		}
 		else if ( jaxbBasic.getColumn() != null ) {
-			final MutableAnnotationUsage<Column> columnAnn = memberDetails.applyAnnotationUsage(
+			final ColumnJpaAnnotation columnAnn = (ColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.COLUMN,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			ColumnProcessing.applyColumnDetails( jaxbBasic.getColumn(), memberDetails, columnAnn, xmlDocumentContext );
+			columnAnn.apply( jaxbBasic.getColumn(), xmlDocumentContext );
 		}
 
 		XmlAnnotationHelper.applyConvert( jaxbBasic.getConvert(), memberDetails, xmlDocumentContext );

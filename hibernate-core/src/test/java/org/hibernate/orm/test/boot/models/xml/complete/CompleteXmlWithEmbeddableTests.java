@@ -17,6 +17,10 @@ import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.boot.models.categorize.spi.AttributeMetadata.AttributeNature.BASIC;
 import static org.hibernate.boot.models.categorize.spi.AttributeMetadata.AttributeNature.EMBEDDED;
 import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor.processManagedResources;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 
 /**
  * @author Steve Ebersole
@@ -45,27 +50,22 @@ public class CompleteXmlWithEmbeddableTests {
 					serviceRegistry,
 					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry )
 			);
-			final CategorizedDomainModel categorizedDomainModel = processManagedResources(
+			final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
 					managedResources,
+					false,
+					new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() ),
 					bootstrapContext
 			);
 
-			assertThat( categorizedDomainModel.getEntityHierarchies() ).hasSize( 1 );
+			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+			final ClassDetails personClassDetails = classDetailsRegistry.getClassDetails( SimplePerson.class.getName() );
 
-			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
-			final EntityTypeMetadata personMetadata = hierarchy.getRoot();
-			assertThat( personMetadata.getClassLevelAccessType() ).isEqualTo( ClassAttributeAccessType.EXPLICIT_FIELD );
+			final FieldDetails idAttribute = personClassDetails.findFieldByName( "id" );
+			assertThat( idAttribute.getDirectAnnotationUsage( Basic.class ) ).isNotNull();
+			assertThat( idAttribute.getDirectAnnotationUsage( Id.class ) ).isNotNull();
 
-			assertThat( personMetadata.getAttributes() ).hasSize( 2 );
-
-			final AttributeMetadata idAttribute = personMetadata.findAttribute( "id" );
-			assertThat( idAttribute.getNature() ).isEqualTo( BASIC );
-			assertThat( idAttribute.getMember().getAnnotationUsage( Basic.class ) ).isNotNull();
-			assertThat( idAttribute.getMember().getAnnotationUsage( Id.class ) ).isNotNull();
-
-			final AttributeMetadata nameAttribute = personMetadata.findAttribute( "name" );
-			assertThat( nameAttribute.getNature() ).isEqualTo( EMBEDDED );
-			assertThat( nameAttribute.getMember().getAnnotationUsage( Embedded.class ) ).isNotNull();
+			final FieldDetails nameAttribute = personClassDetails.findFieldByName( "name" );
+			assertThat( nameAttribute.getDirectAnnotationUsage( Embedded.class ) ).isNotNull();
 		}
 	}
 }

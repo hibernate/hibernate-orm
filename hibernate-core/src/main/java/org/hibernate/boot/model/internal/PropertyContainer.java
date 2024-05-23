@@ -29,7 +29,6 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -179,9 +178,9 @@ public class PropertyContainer {
 		// Check fields...
 		for ( int i = 0; i < fields.size(); i++ ) {
 			final FieldDetails fieldDetails = fields.get( i );
-			final AnnotationUsage<Access> localAccessAnnotation = fieldDetails.getAnnotationUsage( Access.class );
+			final Access localAccessAnnotation = fieldDetails.getDirectAnnotationUsage( Access.class );
 			if ( localAccessAnnotation == null
-					|| localAccessAnnotation.getEnum( "value" ) != jakarta.persistence.AccessType.FIELD ) {
+					|| localAccessAnnotation.value() != jakarta.persistence.AccessType.FIELD ) {
 				continue;
 			}
 			persistentAttributeMap.put( fieldDetails.getName(), fieldDetails );
@@ -190,9 +189,9 @@ public class PropertyContainer {
 		// Check getters...
 		for ( int i = 0; i < getters.size(); i++ ) {
 			final MethodDetails getterDetails = getters.get( i );
-			final AnnotationUsage<Access> localAccessAnnotation = getterDetails.getAnnotationUsage( Access.class );
+			final Access localAccessAnnotation = getterDetails.getDirectAnnotationUsage( Access.class );
 			if ( localAccessAnnotation == null
-					|| localAccessAnnotation.getEnum( "value" ) != jakarta.persistence.AccessType.PROPERTY ) {
+					|| localAccessAnnotation.value() != jakarta.persistence.AccessType.PROPERTY ) {
 				continue;
 			}
 
@@ -218,7 +217,7 @@ public class PropertyContainer {
 		// Check record components...
 		for ( int i = 0; i < recordComponents.size(); i++ ) {
 			final RecordComponentDetails componentDetails = recordComponents.get( i );
-			final AnnotationUsage<Access> localAccessAnnotation = componentDetails.getAnnotationUsage( Access.class );
+			final Access localAccessAnnotation = componentDetails.getDirectAnnotationUsage( Access.class );
 			if ( localAccessAnnotation == null ) {
 				continue;
 			}
@@ -330,65 +329,60 @@ public class PropertyContainer {
 
 	private AccessType determineLocalClassDefinedAccessStrategy() {
 		AccessType classDefinedAccessType = AccessType.DEFAULT;
-		final AnnotationUsage<Access> access = classDetails.getAnnotationUsage( Access.class );
+		final Access access = classDetails.getDirectAnnotationUsage( Access.class );
 		if ( access != null ) {
-			classDefinedAccessType = AccessType.getAccessStrategy( access.getEnum( "value" ) );
+			classDefinedAccessType = AccessType.getAccessStrategy( access.value() );
 		}
 		return classDefinedAccessType;
 	}
 
 	private static boolean discoverTypeWithoutReflection(ClassDetails classDetails, MemberDetails memberDetails) {
-		if ( memberDetails.hasAnnotationUsage( Target.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( Target.class ) ) {
 			return true;
 		}
 
-		if ( memberDetails.hasAnnotationUsage( Basic.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( Basic.class ) ) {
 			return true;
 		}
 
-		if ( memberDetails.hasAnnotationUsage( Type.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( Type.class ) ) {
 			return true;
 		}
 
-		if ( memberDetails.hasAnnotationUsage( JavaType.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( JavaType.class ) ) {
 			return true;
 		}
 
-		final AnnotationUsage<OneToOne> oneToOneAnn = memberDetails.getAnnotationUsage( OneToOne.class );
+		final OneToOne oneToOneAnn = memberDetails.getDirectAnnotationUsage( OneToOne.class );
 		if ( oneToOneAnn != null ) {
-			final ClassDetails targetEntity = oneToOneAnn.getClassDetails( "targetEntity" );
-			return targetEntity != ClassDetails.VOID_CLASS_DETAILS;
+			return oneToOneAnn.targetEntity() != void.class;
 		}
 
-
-		final AnnotationUsage<OneToMany> oneToManyAnn = memberDetails.getAnnotationUsage( OneToMany.class );
+		final OneToMany oneToManyAnn = memberDetails.getDirectAnnotationUsage( OneToMany.class );
 		if ( oneToManyAnn != null ) {
-			final ClassDetails targetEntity = oneToManyAnn.getClassDetails( "targetEntity" );
-			return targetEntity != ClassDetails.VOID_CLASS_DETAILS;
+			return oneToManyAnn.targetEntity() != void.class;
 		}
 
-
-		final AnnotationUsage<ManyToOne> manToOneAnn = memberDetails.getAnnotationUsage( ManyToOne.class );
-		if ( manToOneAnn != null ) {
-			final ClassDetails targetEntity = manToOneAnn.getClassDetails( "targetEntity" );
-			return targetEntity != ClassDetails.VOID_CLASS_DETAILS;
+		final ManyToOne manyToOneAnn = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
+		if ( manyToOneAnn != null ) {
+			return manyToOneAnn.targetEntity() != void.class;
 		}
 
-		final AnnotationUsage<ManyToMany> manToManyAnn = memberDetails.getAnnotationUsage( ManyToMany.class );
-		if ( manToManyAnn != null ) {
-			final ClassDetails targetEntity = manToManyAnn.getClassDetails( "targetEntity" );
-			return targetEntity != ClassDetails.VOID_CLASS_DETAILS;
+		final ManyToMany manyToManyAnn = memberDetails.getDirectAnnotationUsage( ManyToMany.class );
+		if ( manyToManyAnn != null ) {
+			return manyToManyAnn.targetEntity() != void.class;
 		}
 
-		if ( memberDetails.hasAnnotationUsage( Any.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( Any.class ) ) {
 			return true;
 		}
 
-		final AnnotationUsage<ManyToAny> manToAnyAnn = memberDetails.getAnnotationUsage( ManyToAny.class );
+		final ManyToAny manToAnyAnn = memberDetails.getDirectAnnotationUsage( ManyToAny.class );
 		if ( manToAnyAnn != null ) {
 			return true;
 		}
-		else if ( memberDetails.hasAnnotationUsage( JdbcTypeCode.class ) ) {
+
+		if ( memberDetails.hasDirectAnnotationUsage( JdbcTypeCode.class ) ) {
 			return true;
 		}
 
@@ -403,7 +397,7 @@ public class PropertyContainer {
 
 	private static boolean mustBeSkipped(MemberDetails memberDetails) {
 		//TODO make those hardcoded tests more portable (through the bytecode provider?)
-		return memberDetails.hasAnnotationUsage( Transient.class )
+		return memberDetails.hasDirectAnnotationUsage( Transient.class )
 				|| (memberDetails.getType() != null && "net.sf.cglib.transform.impl.InterceptFieldCallback".equals( memberDetails.getType().getName() ) );
 	}
 }

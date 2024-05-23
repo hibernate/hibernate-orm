@@ -6,7 +6,8 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.JoinTable;
+import java.util.Map;
+
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -17,9 +18,8 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.spi.AnnotationUsage;
 
-import java.util.Map;
+import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.model.internal.ToOneBinder.getReferenceEntityName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -38,7 +38,7 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 	private final PropertyData inferredData;
 	private final MetadataBuildingContext context;
 	private final AnnotatedJoinColumns joinColumns;
-	private final AnnotationUsage<JoinTable> joinTable;
+	private final JoinTable joinTable;
 	private final NotFoundAction notFoundAction;
 	private final ManyToOne value;
 
@@ -47,7 +47,7 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 			PropertyData inferredData,
 			MetadataBuildingContext context,
 			AnnotatedJoinColumns joinColumns,
-			AnnotationUsage<JoinTable> joinTable,
+			JoinTable joinTable,
 			NotFoundAction notFoundAction,
 			ManyToOne value) {
 		this.propertyHolder = propertyHolder;
@@ -89,24 +89,24 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 		final TableBinder tableBinder = new TableBinder();
 		tableBinder.setBuildingContext( context );
 
-		final String schema = joinTable.getString( "schema" );
+		final String schema = joinTable.schema();
 		if ( StringHelper.isNotEmpty( schema ) ) {
 			tableBinder.setSchema( schema );
 		}
 
-		final String catalog = joinTable.getString( "catalog" );
+		final String catalog = joinTable.catalog();
 		if ( StringHelper.isNotEmpty( catalog ) ) {
 			tableBinder.setCatalog( catalog );
 		}
 
-		final String tableName = joinTable.getString( "name" );
+		final String tableName = joinTable.name();
 		if ( StringHelper.isNotEmpty( tableName ) ) {
 			tableBinder.setName( tableName );
 		}
 
-		tableBinder.setUniqueConstraints( joinTable.getList( "uniqueConstraints" ) );
-		tableBinder.setJpaIndex( joinTable.getList( "indexes" ) );
-		tableBinder.setOptions( joinTable.getString( "options" ) );
+		tableBinder.setUniqueConstraints( joinTable.uniqueConstraints() );
+		tableBinder.setJpaIndex( joinTable.indexes() );
+		tableBinder.setOptions( joinTable.options() );
 
 		return tableBinder;
 	}

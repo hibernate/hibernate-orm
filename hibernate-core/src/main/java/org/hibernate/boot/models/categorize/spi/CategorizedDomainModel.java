@@ -9,6 +9,7 @@ package org.hibernate.boot.models.categorize.spi;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.KeyedConsumer;

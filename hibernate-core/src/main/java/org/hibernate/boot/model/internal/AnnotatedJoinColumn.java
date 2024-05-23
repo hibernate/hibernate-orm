@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.List;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.JoinFormula;
@@ -21,7 +19,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.models.spi.AnnotationUsage;
 
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
@@ -74,13 +71,13 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	}
 
 	static AnnotatedJoinColumn buildJoinColumn(
-			AnnotationUsage<JoinColumn> joinColumn,
+			JoinColumn joinColumn,
 			String mappedBy,
 			AnnotatedJoinColumns parent,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData) {
 		final String path = qualify( propertyHolder.getPath(), inferredData.getPropertyName() );
-		final List<AnnotationUsage<JoinColumn>> overrides = propertyHolder.getOverriddenJoinColumn( path );
+		final JoinColumn[] overrides = propertyHolder.getOverriddenJoinColumn( path );
 		if ( overrides != null ) {
 			//TODO: relax this restriction
 			throw new AnnotationException( "Property '" + path
@@ -90,11 +87,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	}
 
 	public static AnnotatedJoinColumn buildJoinFormula(
-			AnnotationUsage<JoinFormula> joinFormula,
+			JoinFormula joinFormula,
 			AnnotatedJoinColumns parent) {
 		final AnnotatedJoinColumn formulaColumn = new AnnotatedJoinColumn();
-		formulaColumn.setFormula( joinFormula.getString( "value" ) );
-		formulaColumn.setReferencedColumn( joinFormula.getString( "referencedColumnName" ) );
+		formulaColumn.setFormula( joinFormula.value() );
+		formulaColumn.setReferencedColumn( joinFormula.referencedColumnName() );
 //		formulaColumn.setContext( buildingContext );
 //		formulaColumn.setPropertyHolder( propertyHolder );
 //		formulaColumn.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
@@ -105,7 +102,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	}
 
 	static AnnotatedJoinColumn buildJoinColumn(
-			AnnotationUsage<JoinColumn> joinColumn,
+			JoinColumn joinColumn,
 //			Comment comment,
 			String mappedBy,
 			AnnotatedJoinColumns parent,
@@ -126,7 +123,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	}
 
 	private static AnnotatedJoinColumn explicitJoinColumn(
-			AnnotationUsage<JoinColumn> joinColumn,
+			JoinColumn joinColumn,
 //			Comment comment,
 			AnnotatedJoinColumns parent,
 			PropertyData inferredData,
@@ -173,32 +170,32 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 
 	// TODO default name still useful in association table
-	public void applyJoinAnnotation(AnnotationUsage<JoinColumn> joinColumn, String defaultName) {
+	public void applyJoinAnnotation(JoinColumn joinColumn, String defaultName) {
 		if ( joinColumn == null ) {
 			setImplicit( true );
 		}
 		else {
 			setImplicit( false );
 
-			final String name = joinColumn.getString( "name" );
+			final String name = joinColumn.name();
 			if ( !name.isEmpty() ) {
 				setLogicalColumnName( name );
 			}
 
-			final String columnDefinition = joinColumn.getString( "columnDefinition" );
+			final String columnDefinition = joinColumn.columnDefinition();
 			if ( !columnDefinition.isEmpty() ) {
 				setSqlType( getBuildingContext().getObjectNameNormalizer().applyGlobalQuoting( columnDefinition ) );
 			}
 
-			setNullable( joinColumn.getBoolean( "nullable" ) );
-			setUnique( joinColumn.getBoolean( "unique" ) );
-			setInsertable( joinColumn.getBoolean( "insertable" ) );
-			setUpdatable( joinColumn.getBoolean( "updatable" ) );
-			setReferencedColumn( joinColumn.getString( "referencedColumnName" ) );
+			setNullable( joinColumn.nullable() );
+			setUnique( joinColumn.unique() );
+			setInsertable( joinColumn.insertable() );
+			setUpdatable( joinColumn.updatable() );
+			setReferencedColumn( joinColumn.referencedColumnName() );
 			applyColumnCheckConstraint( joinColumn );
-			setOptions( joinColumn.getString( "options" ) );
+			setOptions( joinColumn.options() );
 
-			final String table = joinColumn.getString( "table" );
+			final String table = joinColumn.table();
 			if ( table.isEmpty() ) {
 				setExplicitTableName( "" );
 			}
@@ -217,8 +214,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	 * Called for {@link jakarta.persistence.InheritanceType#JOINED} entities.
 	 */
 	public static AnnotatedJoinColumn buildInheritanceJoinColumn(
-			AnnotationUsage<PrimaryKeyJoinColumn> primaryKeyJoinColumn,
-			AnnotationUsage<JoinColumn> joinColumn,
+			PrimaryKeyJoinColumn primaryKeyJoinColumn,
+			JoinColumn joinColumn,
 			Value identifier,
 			AnnotatedJoinColumns parent,
 			MetadataBuildingContext context) {
@@ -230,8 +227,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	}
 
 	private static AnnotatedJoinColumn buildExplicitInheritanceJoinColumn(
-			AnnotationUsage<PrimaryKeyJoinColumn> primaryKeyJoinColumn,
-			AnnotationUsage<JoinColumn> joinColumn,
+			PrimaryKeyJoinColumn primaryKeyJoinColumn,
+			JoinColumn joinColumn,
 			AnnotatedJoinColumns parent,
 			MetadataBuildingContext context,
 			String defaultColumnName) {
@@ -240,16 +237,16 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final String referencedColumnName;
 		final String options;
 		if ( primaryKeyJoinColumn != null ) {
-			columnName = primaryKeyJoinColumn.getString( "name" );
-			columnDefinition = primaryKeyJoinColumn.getString( "columnDefinition" );
-			referencedColumnName = primaryKeyJoinColumn.getString( "referencedColumnName" );
-			options = primaryKeyJoinColumn.getString( "options" );
+			columnName = primaryKeyJoinColumn.name();
+			columnDefinition = primaryKeyJoinColumn.columnDefinition();
+			referencedColumnName = primaryKeyJoinColumn.referencedColumnName();
+			options = primaryKeyJoinColumn.options();
 		}
 		else {
-			columnName = joinColumn.getString( "name" );
-			columnDefinition = joinColumn.getString( "columnDefinition" );
-			referencedColumnName = joinColumn.getString( "referencedColumnName" );
-			options = joinColumn.getString( "options" );
+			columnName = joinColumn.name();
+			columnDefinition = joinColumn.columnDefinition();
+			referencedColumnName = joinColumn.referencedColumnName();
+			options = joinColumn.options();
 		}
 
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
@@ -474,7 +471,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			AnnotatedJoinColumns parent,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			AnnotationUsage<JoinColumn> joinColumn) {
+			JoinColumn joinColumn) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 		column.setImplicit( true );
 //		column.setPropertyHolder( propertyHolder );
@@ -523,7 +520,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		super.setParent( parent );
 	}
 
-	private void applyColumnCheckConstraint(AnnotationUsage<jakarta.persistence.JoinColumn> column) {
-		applyCheckConstraints( column.findAttributeValue( "check" ) );
+	private void applyColumnCheckConstraint(jakarta.persistence.JoinColumn column) {
+		applyCheckConstraints( column.check() );
 	}
 }

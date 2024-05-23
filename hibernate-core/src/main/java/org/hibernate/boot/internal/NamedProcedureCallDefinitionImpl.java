@@ -20,8 +20,6 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
@@ -50,15 +48,15 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	private final ParameterDefinitions parameterDefinitions;
 	private final Map<String, Object> hints;
 
-	public NamedProcedureCallDefinitionImpl(AnnotationUsage<NamedStoredProcedureQuery> annotation) {
-		this.registeredName = annotation.getString( "name" );
-		this.procedureName = annotation.getString( "procedureName" );
-		this.hints = new QueryHintDefinition( registeredName, annotation.getList( "hints" ) ).getHintsMap();
+	public NamedProcedureCallDefinitionImpl(NamedStoredProcedureQuery annotation) {
+		this.registeredName = annotation.name();
+		this.procedureName = annotation.procedureName();
+		this.hints = new QueryHintDefinition( registeredName, annotation.hints() ).getHintsMap();
 
-		this.resultClasses = interpretResultClasses( annotation );
-		this.resultSetMappings = interpretResultMappings( annotation );
+		this.resultClasses = annotation.resultClasses();
+		this.resultSetMappings = annotation.resultSetMappings();
 
-		this.parameterDefinitions = new ParameterDefinitions( annotation.getList( "parameters" ) );
+		this.parameterDefinitions = new ParameterDefinitions( annotation.parameters() );
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
@@ -71,30 +69,6 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 					)
 			);
 		}
-	}
-
-	private Class<?>[] interpretResultClasses(AnnotationUsage<NamedStoredProcedureQuery> annotation) {
-		final List<ClassDetails> resultClassDetails = annotation.getList( "resultClasses" );
-		if ( resultClassDetails == null ) {
-			return null;
-		}
-		final Class<?>[] resultClasses = new Class<?>[resultClassDetails.size()];
-		for ( int i = 0; i < resultClassDetails.size(); i++ ) {
-			resultClasses[i] = resultClassDetails.get( i ).toJavaClass();
-		}
-		return resultClasses;
-	}
-
-	private String[] interpretResultMappings(AnnotationUsage<NamedStoredProcedureQuery> annotation) {
-		final List<String> list = annotation.getList( "resultSetMappings" );
-		if ( list == null ) {
-			return null;
-		}
-		final String[] strings = new String[list.size()];
-		for ( int i = 0; i < list.size(); i++ ) {
-			strings[i] = list.get( i );
-		}
-		return strings;
 	}
 
 	@Override
@@ -164,22 +138,22 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		private final ParameterStrategy parameterStrategy;
 		private final ParameterDefinition<?>[] parameterDefinitions;
 
-		ParameterDefinitions(List<AnnotationUsage<StoredProcedureParameter>> parameters) {
+		ParameterDefinitions(StoredProcedureParameter[] parameters) {
 			if ( CollectionHelper.isEmpty( parameters ) ) {
 				parameterStrategy = ParameterStrategy.POSITIONAL;
 				parameterDefinitions = new ParameterDefinition[0];
 			}
 			else {
-				final AnnotationUsage<StoredProcedureParameter> parameterAnn = parameters.get( 0 );
-				final boolean firstParameterHasName = StringHelper.isNotEmpty( parameterAnn.findAttributeValue( "name" ) );
+				final StoredProcedureParameter parameterAnn = parameters[0];
+				final boolean firstParameterHasName = StringHelper.isNotEmpty( parameterAnn.name() );
 				parameterStrategy = firstParameterHasName
 						? ParameterStrategy.NAMED
 						: ParameterStrategy.POSITIONAL;
-				parameterDefinitions = new ParameterDefinition[ parameters.size() ];
+				parameterDefinitions = new ParameterDefinition[ parameters.length ];
 
-				for ( int i = 0; i < parameters.size(); i++ ) {
+				for ( int i = 0; i < parameters.length; i++ ) {
 					// i+1 for the position because the apis say the numbers are 1-based, not zero
-					parameterDefinitions[i] = new ParameterDefinition<>(i + 1, parameters.get( i ));
+					parameterDefinitions[i] = new ParameterDefinition<>(i + 1, parameters[i]);
 				}
 			}
 		}
@@ -203,11 +177,12 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		private final ParameterMode parameterMode;
 		private final Class<T> type;
 
-		ParameterDefinition(int position, AnnotationUsage<StoredProcedureParameter> annotation) {
+		ParameterDefinition(int position, StoredProcedureParameter annotation) {
 			this.position = position;
-			this.name = normalize( annotation.getString( "name" ) );
-			this.parameterMode = annotation.getEnum( "mode" );
-			this.type = annotation.getClassDetails( "type" ).toJavaClass();
+			this.name = normalize( annotation.name() );
+			this.parameterMode = annotation.mode();
+			//noinspection unchecked
+			this.type = (Class<T>) annotation.type();
 		}
 
 		public ParameterMemento toMemento(SessionFactoryImplementor sessionFactory) {

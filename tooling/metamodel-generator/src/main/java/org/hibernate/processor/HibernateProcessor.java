@@ -24,6 +24,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.ModuleElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -52,9 +53,9 @@ import static org.hibernate.processor.HibernateProcessor.ADD_GENERATED_ANNOTATIO
 import static org.hibernate.processor.HibernateProcessor.ADD_GENERATION_DATE;
 import static org.hibernate.processor.HibernateProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION;
 import static org.hibernate.processor.HibernateProcessor.DEBUG_OPTION;
+import static org.hibernate.processor.HibernateProcessor.EXCLUDE;
 import static org.hibernate.processor.HibernateProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
 import static org.hibernate.processor.HibernateProcessor.INCLUDE;
-import static org.hibernate.processor.HibernateProcessor.EXCLUDE;
 import static org.hibernate.processor.HibernateProcessor.LAZY_XML_PARSING;
 import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
@@ -607,14 +608,17 @@ public class HibernateProcessor extends AbstractProcessor {
 	private void updateIndex(Element element, TypeElement typeElement, String qualifiedName) {
 		final AnnotationMirror mirror = getAnnotationMirror( element, ENTITY );
 		if ( mirror != null ) {
-			String entityName = typeElement.getSimpleName().toString();
-			final AnnotationValue name = getAnnotationValue( mirror, "name" );
-			if (name != null) {
-				final String explicitName = name.getValue().toString();
-				if ( !explicitName.isEmpty() ) {
-					entityName = explicitName;
+			final Element parent = element.getEnclosingElement();
+			if ( parent.getKind() == ElementKind.PACKAGE ) {
+				final PackageElement packageElement = (PackageElement) parent;
+				final String packageName = packageElement.getQualifiedName().toString();
+				if ( !context.getPackages().contains( packageName ) ) {
+					readIndex(processingEnv, packageName);
+					context.addPackage(packageName);
 				}
 			}
+
+			final String entityName = entityName( typeElement, mirror );
 			context.addEntityNameMapping( entityName, qualifiedName);
 			for ( Element member : context.getAllMembers(typeElement) ) {
 				switch ( member.getKind() ) {
@@ -627,6 +631,18 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 		}
+	}
+
+	private static String entityName(TypeElement entityType, AnnotationMirror mirror) {
+		final String className = entityType.getSimpleName().toString();
+		final AnnotationValue name = getAnnotationValue(mirror, "name" );
+		if (name != null) {
+			final String explicitName = name.getValue().toString();
+			if ( !explicitName.isEmpty() ) {
+				return explicitName;
+			}
+		}
+		return className;
 	}
 
 	private void indexEnumValues(TypeMirror type) {
@@ -695,91 +711,144 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private void writeIndex() {
-		try {
-			final FileObject resource = context.getProcessingEnvironment().getFiler()
-					.createResource(StandardLocation.SOURCE_OUTPUT, "", "entity-index");
-			try (BufferedWriter writer = new BufferedWriter(resource.openWriter())) {
-				context.getEntityNameMappings()
-						.forEach( (entityName, qualifiedName) -> {
-							try {
-								writer.write(entityName);
-								writer.write(' ');
-								writer.write(qualifiedName);
-								writer.newLine();
-								writer.flush();
-							}
-							catch (IOException e) {
-							}
-						} );
+		for ( String packageName : context.getPackages() ) {
+			try {
+				final FileObject resource = context.getProcessingEnvironment().getFiler()
+						.createResource(StandardLocation.SOURCE_OUTPUT, packageName, "entity-index");
+				writeEntityMappingsToResource(resource);
 			}
-		}
-		catch (IOException e) {
-		}
+			catch (IOException e) {
+			}
 
-		try {
-			final FileObject resource = context.getProcessingEnvironment().getFiler()
-					.createResource(StandardLocation.SOURCE_OUTPUT, "", "enum-index");
-			try (BufferedWriter writer = new BufferedWriter(resource.openWriter())) {
-				context.getEnumTypesByValue()
-						.forEach( (value, types) -> {
-							try {
-								writer.write(value);
-								writer.write(' ');
-								for (String type : types) {
-									writer.write(type);
-									writer.write(' ');
-								}
-								writer.newLine();
-								writer.flush();
-							}
-							catch (IOException e) {
-							}
-						} );
+			try {
+				final FileObject resource = context.getProcessingEnvironment().getFiler()
+						.createResource(StandardLocation.SOURCE_OUTPUT, packageName, "enum-index");
+				writeEnumIndexToResource(resource);
+			}
+			catch (IOException e) {
 			}
 		}
-		catch (IOException e) {
-		}	}
+	}
 
-	private void readIndex(ProcessingEnvironment processingEnvironment) {
-		final Map<String,String> entityNameMappings = new HashMap<>();
+	private void writeEnumIndexToResource(FileObject resource) throws IOException {
+		try (BufferedWriter writer = new BufferedWriter(resource.openWriter())) {
+			context.getEnumTypesByValue()
+					.forEach( (value, types) -> {
+						try {
+							writer.write(value);
+							writer.write(' ');
+							for (String type : types) {
+								writer.write(type);
+								writer.write(' ');
+							}
+							writer.newLine();
+							writer.flush();
+						}
+						catch (IOException e) {
+						}
+					} );
+		}
+	}
+
+	private void writeEntityMappingsToResource(FileObject resource) throws IOException {
+		try (BufferedWriter writer = new BufferedWriter(resource.openWriter())) {
+			context.getEntityNameMappings()
+					.forEach( (entityName, qualifiedName) -> {
+						try {
+							writer.write(entityName);
+							writer.write(' ');
+							writer.write(qualifiedName);
+							writer.newLine();
+							writer.flush();
+						}
+						catch (IOException e) {
+						}
+					} );
+		}
+	}
+
+	private void readIndex(ProcessingEnvironment environment, String packageName) {
 		try {
-			final FileObject resource = processingEnvironment.getFiler()
-					.getResource(StandardLocation.SOURCE_OUTPUT, "", "entity-index");
-			try (Reader reader = resource.openReader(true)) {
-				new BufferedReader(reader).lines()
-						.map(line -> line.split(" "))
-						.forEach(tokens -> entityNameMappings.put(tokens[0], tokens[1]));
-			}
-			catch (IOException ioe) {
-			}
+			final FileObject resource = environment.getFiler()
+					.getResource(StandardLocation.SOURCE_OUTPUT, packageName,
+							"entity-index");
+			readEntityMappingsFromResource(resource, context.getEntityNameMappings());
 			resource.delete();
 		}
 		catch (IOException e) {
 		}
-		context.setEntityNameMappings(entityNameMappings);
+		try {
+			final FileObject resource = environment.getFiler()
+					.getResource(StandardLocation.SOURCE_OUTPUT, packageName,
+							"entity-index");
+			readEnumIndexFromResource(resource, context.getEnumTypesByValue());
+			resource.delete();
+		}
+		catch (IOException e) {
+		}
+	}
 
+	private void readIndex(ProcessingEnvironment environment) {
+		// entity name index
+		for (ModuleElement moduleElement : environment.getElementUtils().getAllModuleElements()) {
+			for (Element element : moduleElement.getEnclosedElements()) {
+				if ( element.getKind() == ElementKind.PACKAGE ) {
+					try {
+						final PackageElement packageElement = (PackageElement) element;
+						final FileObject binaryResource = processingEnv.getFiler()
+								.getResource(StandardLocation.CLASS_PATH, packageElement.getQualifiedName(),
+										"entity-index");
+						readEntityMappingsFromResource(binaryResource, context.getEntityNameMappings());
+					}
+					catch (IOException e) {
+					}
+				}
+			}
+		}
+
+		// enum value/type index
 		final Map<String,Set<String>> enumTypesByValue = new HashMap<>();
-		try {
-			final FileObject resource = processingEnvironment.getFiler()
-					.getResource(StandardLocation.SOURCE_OUTPUT, "", "entity-index");
-			try (Reader reader = resource.openReader(true)) {
-				new BufferedReader(reader).lines()
-						.map(line -> line.split(" "))
-						.forEach(tokens -> {
-							HashSet<String> set = new HashSet<>();
-							for (int i = 1; i < tokens.length; i++) {
-								set.add(tokens[i]);
-							}
-							enumTypesByValue.put(tokens[0], set);
-						});
+		for (ModuleElement moduleElement : environment.getElementUtils().getAllModuleElements()) {
+			for (Element element : moduleElement.getEnclosedElements()) {
+				if ( element.getKind() == ElementKind.PACKAGE ) {
+					try {
+						final PackageElement packageElement = (PackageElement) element;
+						final FileObject binaryResource = processingEnv.getFiler()
+								.getResource(StandardLocation.CLASS_PATH, packageElement.getQualifiedName(),
+										"entity-index");
+						readEnumIndexFromResource(binaryResource, enumTypesByValue);
+					}
+					catch (IOException e) {
+					}
+				}
 			}
-			catch (IOException ioe) {
-			}
-			resource.delete();
 		}
-		catch (IOException e) {
+	}
+
+	private static void readEnumIndexFromResource(FileObject resource, Map<String, Set<String>> enumTypesByValue) {
+		try (Reader reader = resource.openReader(true)) {
+			new BufferedReader(reader).lines()
+					.map(line -> line.split(" "))
+					.forEach(tokens -> {
+						HashSet<String> set = new HashSet<>();
+						for (int i = 1; i < tokens.length; i++) {
+							set.add(tokens[i]);
+						}
+						enumTypesByValue.put(tokens[0], set);
+					});
 		}
-		context.setEnumTypesByValue(enumTypesByValue);
+		catch (IOException ioe) {
+		}
+	}
+
+	private static void readEntityMappingsFromResource(FileObject resource, Map<String, String> entityNameMappings) {
+		try (Reader reader = resource.openReader(true)) {
+			new BufferedReader(reader).lines()
+					.map(line -> line.split(" "))
+					.forEach(tokens -> entityNameMappings.put(tokens[0], tokens[1]));
+		}
+		catch (IOException ioe) {
+		}
 	}
 
 }

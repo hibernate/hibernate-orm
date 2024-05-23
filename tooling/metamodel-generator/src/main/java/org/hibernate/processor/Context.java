@@ -106,8 +106,9 @@ public final class Context {
 	private String[] includes = {"*"};
 	private String[] excludes = {};
 
-	private Map<String, String> entityNameMappings;
-	private Map<String, Set<String>> enumTypesByValue;
+	private final Map<String, String> entityNameMappings = new HashMap<>();
+	private final Map<String, Set<String>> enumTypesByValue = new HashMap<>();
+	private final Set<String> packages = new HashSet<>();
 
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
@@ -487,10 +488,6 @@ public final class Context {
 				&& getElementUtils().overrides((ExecutableElement) member, (ExecutableElement) inherited, type));
 	}
 
-	public void setEntityNameMappings(Map<String, String> entityNameMapping) {
-		this.entityNameMappings = entityNameMapping;
-	}
-
 	public Map<String, String> getEntityNameMappings() {
 		return entityNameMappings;
 	}
@@ -507,11 +504,15 @@ public final class Context {
 		return enumTypesByValue;
 	}
 
-	public void setEnumTypesByValue(Map<String, Set<String>> enumTypesByValue) {
-		this.enumTypesByValue = enumTypesByValue;
-	}
-
 	public void addEnumValue(String type, String value) {
 		enumTypesByValue.computeIfAbsent( value, s -> new HashSet<>() ).add( type );
+	}
+
+	public Set<String> getPackages() {
+		return packages;
+	}
+
+	public void addPackage(String packageName) {
+		packages.add( packageName );
 	}
 }

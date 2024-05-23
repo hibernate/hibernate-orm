@@ -6,8 +6,10 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
@@ -31,6 +33,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.ForeignKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.QueryOptions;
@@ -57,6 +60,8 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -88,6 +93,25 @@ public class InformixDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 	private final LimitHandler limitHandler;
+	private final StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this ) {
+		@Override
+		public String[] getSqlCreateStrings(
+				ForeignKey foreignKey,
+				Metadata metadata,
+				SqlStringGenerationContext context) {
+			String[] results = super.getSqlCreateStrings( foreignKey, metadata, context );
+			for ( int i = 0; i < results.length; i++ ) {
+				String result = results[i];
+				if ( result.contains( " on delete " ) ) {
+					String constraintName = "constraint " + foreignKey.getName();
+					result = result.replace( constraintName + " ", "" );
+					result = result + " " + constraintName;
+					results[i] = result;
+				}
+			}
+			return results;
+		}
+	};
 
 	public InformixDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
@@ -354,6 +378,13 @@ public class InformixDialect extends Dialect {
 			String foreignKeyDefinition) {
 		return " add constraint " + foreignKeyDefinition
 				+ " constraint " + constraintName;
+	}
+
+	public Exporter<ForeignKey> getForeignKeyExporter() {
+		if ( getVersion().isSameOrAfter( 12, 10 ) ) {
+			return super.getForeignKeyExporter();
+		}
+		return foreignKeyExporter;
 	}
 
 	/**

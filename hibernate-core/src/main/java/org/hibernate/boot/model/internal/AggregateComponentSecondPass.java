@@ -14,7 +14,6 @@ import java.util.TreeSet;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Comment;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -49,19 +48,19 @@ public class AggregateComponentSecondPass implements SecondPass {
 
 	private final PropertyHolder propertyHolder;
 	private final Component component;
-	private final ClassDetails returnedClassOrElement;
+	private final ClassDetails componentClassDetails;
 	private final String propertyName;
 	private final MetadataBuildingContext context;
 
 	public AggregateComponentSecondPass(
 			PropertyHolder propertyHolder,
 			Component component,
-			ClassDetails returnedClassOrElement,
+			ClassDetails componentClassDetails,
 			String propertyName,
 			MetadataBuildingContext context) {
 		this.propertyHolder = propertyHolder;
 		this.component = component;
-		this.returnedClassOrElement = returnedClassOrElement;
+		this.componentClassDetails = componentClassDetails;
 		this.propertyName = propertyName;
 		this.context = context;
 	}
@@ -94,7 +93,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 					structName.getSchemaName()
 			);
 			final UserDefinedObjectType udt = new UserDefinedObjectType( "orm", namespace, structName.getObjectName() );
-			final Comment comment = returnedClassOrElement.getDirectAnnotationUsage( Comment.class );
+			final Comment comment = componentClassDetails.getDirectAnnotationUsage( Comment.class );
 			if ( comment != null ) {
 				udt.setComment( comment.value() );
 			}
@@ -433,7 +432,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 						String.format(
 								"Struct [%s] of class [%s] is defined by multiple components with different mappings [%s] and [%s] for column [%s]",
 								udt1.getName(),
-								returnedClassOrElement.getName(),
+								componentClassDetails.getName(),
 								column1.getSqlType(),
 								column2.getSqlType(),
 								column1.getCanonicalName()
@@ -448,7 +447,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 							"Struct [%s] is defined by multiple components %s but some columns are missing in [%s]: %s",
 							udt1.getName(),
 							findComponentClasses(),
-							returnedClassOrElement.getName(),
+							componentClassDetails.getName(),
 							missingColumns
 					)
 			);

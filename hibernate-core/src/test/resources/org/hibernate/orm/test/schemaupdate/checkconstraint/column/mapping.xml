@@ -16,9 +16,6 @@
                     <check-constraint name="column_constraint" constraint="name_column is not null" options="enforced"/>
                 </column>
             </basic>
-            <basic name="name" >
-                <column name="NAME_COLUMN" />
-            </basic>
             <many-to-one name="testEntity">
                 <join-column name="MANY_TO_ONE_JOIN_COLUMN_NAME">
                     <check-constraint name="MANY_TO_ONE_JOIN_COLUMN_CONSTRAINT" constraint="ID = 3"/>

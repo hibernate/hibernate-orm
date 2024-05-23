@@ -40,7 +40,6 @@ import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.models.spi.AnnotationUsage;
 
 import org.jboss.logging.Logger;
 
@@ -76,8 +75,8 @@ public class TableBinder {
 	private String associatedEntity;
 	private String associatedJpaEntity;
 	private boolean isJPA2ElementCollection;
-	private List<AnnotationUsage<UniqueConstraint>> uniqueConstraints;
-	private List<AnnotationUsage<Index>> indexes;
+	private UniqueConstraint[] uniqueConstraints;
+	private Index[] indexes;
 	private String options;
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
@@ -104,11 +103,11 @@ public class TableBinder {
 		isAbstract = anAbstract;
 	}
 
-	public void setUniqueConstraints(List<AnnotationUsage<UniqueConstraint>> uniqueConstraints) {
+	public void setUniqueConstraints(UniqueConstraint[] uniqueConstraints) {
 		this.uniqueConstraints = uniqueConstraints;
 	}
 
-	public void setJpaIndex(List<AnnotationUsage<Index>> indexes){
+	public void setJpaIndex(Index[] indexes){
 		this.indexes = indexes;
 	}
 
@@ -441,7 +440,7 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			List<AnnotationUsage<UniqueConstraint>> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			MetadataBuildingContext buildingContext) {
 		return buildAndFillTable(
 				schema,
@@ -462,7 +461,7 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			List<AnnotationUsage<UniqueConstraint>> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
@@ -485,8 +484,8 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			List<AnnotationUsage<UniqueConstraint>> uniqueConstraints,
-			List<AnnotationUsage<Index>> indexes,
+			UniqueConstraint[] uniqueConstraints,
+			Index[] indexes,
 			String options,
 			MetadataBuildingContext buildingContext,
 			String subselect,
@@ -863,10 +862,10 @@ public class TableBinder {
 		}
 	}
 
-	static void addIndexes(Table table, List<AnnotationUsage<org.hibernate.annotations.Index>> indexes, MetadataBuildingContext context) {
-		for ( AnnotationUsage<org.hibernate.annotations.Index> indexUsage : indexes ) {
-			final String name = indexUsage.getString( "name" );
-			final String[] columnNames = indexUsage.<String>getList( "columnNames" ).toArray(new String[0]);
+	static void addIndexes(Table table, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext context) {
+		for ( org.hibernate.annotations.Index indexUsage : indexes ) {
+			final String name = indexUsage.name();
+			final String[] columnNames = indexUsage.columnNames();
 
 			//no need to handle inSecondPass here since it is only called from EntityBinder
 			context.getMetadataCollector().addSecondPass( new IndexOrUniqueKeySecondPass(
@@ -880,21 +879,21 @@ public class TableBinder {
 
 	static void addJpaIndexes(
 			Table table,
-			List<AnnotationUsage<jakarta.persistence.Index>> indexes,
+			jakarta.persistence.Index[] indexes,
 			MetadataBuildingContext context) {
 		new IndexBinder( context ).bindIndexes( table, indexes );
 	}
 
 	static void addTableCheck(
 			Table table,
-			List<AnnotationUsage<jakarta.persistence.CheckConstraint>> checkConstraintAnnotationUsages) {
+			jakarta.persistence.CheckConstraint[] checkConstraintAnnotationUsages) {
 		if ( CollectionHelper.isNotEmpty( checkConstraintAnnotationUsages ) ) {
-			for ( AnnotationUsage<jakarta.persistence.CheckConstraint> checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
+			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
 				table.addCheck(
 						new CheckConstraint(
-								checkConstraintAnnotationUsage.getString( "name" ),
-								checkConstraintAnnotationUsage.getString( "constraint" ),
-								checkConstraintAnnotationUsage.getString( "options" )
+								checkConstraintAnnotationUsage.name(),
+								checkConstraintAnnotationUsage.constraint(),
+								checkConstraintAnnotationUsage.options()
 						)
 				);
 			}

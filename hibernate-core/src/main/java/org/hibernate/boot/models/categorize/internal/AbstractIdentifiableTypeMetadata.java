@@ -15,12 +15,12 @@ import java.util.function.Consumer;
 import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
-import org.hibernate.boot.models.categorize.spi.JpaEventListener;
+import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
@@ -195,7 +195,7 @@ public abstract class AbstractIdentifiableTypeMetadata
 
 		final List<JpaEventListener> combined = new ArrayList<>();
 
-		if ( classDetails.getAnnotationUsage( ExcludeSuperclassListeners.class ) == null ) {
+		if ( !classDetails.hasDirectAnnotationUsage( ExcludeSuperclassListeners.class ) ) {
 			final IdentifiableTypeMetadata superType = getSuperType();
 			if ( superType != null ) {
 				combined.addAll( superType.getHierarchyJpaEventListeners() );
@@ -214,24 +214,27 @@ public abstract class AbstractIdentifiableTypeMetadata
 	private void applyLocalEventListeners(Consumer<JpaEventListener> consumer) {
 		final ClassDetails classDetails = getClassDetails();
 
-		final AnnotationUsage<EntityListeners> entityListenersAnnotation = classDetails.getAnnotationUsage( EntityListeners.class );
+		final EntityListeners entityListenersAnnotation = classDetails.getDirectAnnotationUsage( EntityListeners.class );
 		if ( entityListenersAnnotation == null ) {
 			return;
 		}
 
-		final List<ClassDetails> entityListenerClasses = entityListenersAnnotation.getAttributeValue( "value" );
+		final Class<?>[] entityListenerClasses = entityListenersAnnotation.value();
 		if ( CollectionHelper.isEmpty( entityListenerClasses ) ) {
 			return;
 		}
 
-		entityListenerClasses.forEach( (listenerClass) -> {
-			consumer.accept( JpaEventListener.from( JpaEventListenerStyle.LISTENER, listenerClass ) );
+		ArrayHelper.forEach( entityListenerClasses, (listenerClass) -> {
+			consumer.accept( JpaEventListener.from(
+					JpaEventListenerStyle.LISTENER,
+					getModelContext().getClassDetailsRegistry().findClassDetails( listenerClass.getName() )
+			) );
 		} );
 	}
 
 	protected List<JpaEventListener> collectCompleteEventListeners(ModelCategorizationContext modelContext) {
 		final ClassDetails classDetails = getClassDetails();
-		if ( classDetails.getAnnotationUsage( ExcludeDefaultListeners.class ) != null ) {
+		if ( classDetails.hasDirectAnnotationUsage( ExcludeDefaultListeners.class ) ) {
 			return getHierarchyJpaEventListeners();
 		}
 

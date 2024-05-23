@@ -9,6 +9,7 @@ package org.hibernate.boot.model.internal;
 import java.lang.annotation.Annotation;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
@@ -32,6 +33,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -42,6 +44,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.GeneratorCreator;
@@ -55,18 +58,15 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.AnnotationDescriptor;
+import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
-
-import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
-import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.Basic;
@@ -107,7 +107,6 @@ import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 
 /**
  * A stateful binder responsible for creating {@link Property} objects.
@@ -138,6 +137,10 @@ public class PropertyBinder {
 	private EntityBinder entityBinder;
 	private boolean toMany;
 	private String referencedEntityName;
+
+	protected SourceModelBuildingContext getSourceModelContext() {
+		return buildingContext.getMetadataCollector().getSourceModelBuildingContext();
+	}
 
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
@@ -286,17 +289,29 @@ public class PropertyBinder {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void callAttributeBinders(Property property, Map<String, PersistentClass> persistentClasses) {
-		for ( AnnotationUsage<?> binderAnnotationUsage : memberDetails.getMetaAnnotated( AttributeBinderType.class ) ) {
-			final AttributeBinderType binderType = binderAnnotationUsage.getAnnotationType().getAnnotation( AttributeBinderType.class );
+		final List<? extends Annotation> metaAnnotatedTargets = memberDetails.getMetaAnnotated(
+				AttributeBinderType.class,
+				getSourceModelContext()
+		);
+
+		if ( CollectionHelper.isEmpty( metaAnnotatedTargets ) ) {
+			return;
+		}
+
+		final AnnotationDescriptorRegistry descriptorRegistry = getSourceModelContext().getAnnotationDescriptorRegistry();
+		for ( int i = 0; i < metaAnnotatedTargets.size(); i++ ) {
+			final Annotation metaAnnotatedTarget = metaAnnotatedTargets.get( i );
+			final AnnotationDescriptor<? extends Annotation> metaAnnotatedDescriptor = descriptorRegistry.getDescriptor( metaAnnotatedTarget.annotationType() );
+			final AttributeBinderType binderTypeAnn = metaAnnotatedDescriptor.getDirectAnnotationUsage( AttributeBinderType.class );
 			try {
-				final AttributeBinder binder = binderType.binder().getConstructor().newInstance();
+				final AttributeBinder binder = binderTypeAnn.binder().getConstructor().newInstance();
 				final PersistentClass persistentClass = entityBinder != null
 						? entityBinder.getPersistentClass()
 						: persistentClasses.get( holder.getEntityName() );
-				binder.bind( binderAnnotationUsage.toAnnotation(), buildingContext, persistentClass, property );
+				binder.bind( metaAnnotatedTarget, buildingContext, persistentClass, property );
 			}
 			catch ( Exception e ) {
-				throw new AnnotationException( "error processing @AttributeBinderType annotation '" + binderAnnotationUsage.getAnnotationType() + "'", e );
+				throw new AnnotationException( "error processing @AttributeBinderType annotation '" + metaAnnotatedDescriptor.getAnnotationType().getName() + "'", e );
 			}
 		}
 	}
@@ -394,20 +409,20 @@ public class PropertyBinder {
 		}
 	}
 
-	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(MemberDetails property, ClassDetails embeddableClass) {
-		if ( property.hasAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class ) ) {
-			final AnnotationUsage<org.hibernate.annotations.EmbeddableInstantiator> annotationUsage = property.getAnnotationUsage(
-					org.hibernate.annotations.EmbeddableInstantiator.class );
-			return annotationUsage.getClassDetails( "value" ).toJavaClass();
+	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(
+			MemberDetails property,
+			ClassDetails embeddableClass) {
+		final org.hibernate.annotations.EmbeddableInstantiator onEmbedded = property.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+		if ( onEmbedded != null ) {
+			return onEmbedded.value();
 		}
-		else if ( embeddableClass.hasAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class ) ) {
-			final AnnotationUsage<org.hibernate.annotations.EmbeddableInstantiator> annotationUsage = embeddableClass.getAnnotationUsage(
-					org.hibernate.annotations.EmbeddableInstantiator.class );
-			return annotationUsage.getClassDetails( "value" ).toJavaClass();
+
+		final org.hibernate.annotations.EmbeddableInstantiator onEmbeddable = embeddableClass.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+		if ( onEmbeddable != null ) {
+			return onEmbeddable.value();
 		}
-		else {
-			return null;
-		}
+
+		return null;
 	}
 
 	//used when the value is provided and the binding is done elsewhere
@@ -443,10 +458,13 @@ public class PropertyBinder {
 	 * Returns the value generation strategy for the given property, if any.
 	 */
 	private GeneratorCreator getValueGenerationFromAnnotations(MemberDetails property) {
-		final BeanContainer beanContainer = beanContainer( buildingContext );
 		GeneratorCreator creator = null;
-		for ( AnnotationUsage<?> usage : property.getAllAnnotationUsages() ) {
-			final GeneratorCreator candidate = generatorCreator( property, usage, beanContainer );
+		final List<? extends Annotation> metaAnnotatedTargets = property.getMetaAnnotated(
+				ValueGenerationType.class,
+				getSourceModelContext()
+		);
+		for ( Annotation metaAnnotatedTarget : metaAnnotatedTargets ) {
+			final GeneratorCreator candidate = generatorCreator( property, metaAnnotatedTarget, beanContainer( buildingContext ) );
 			if ( candidate != null ) {
 				if ( creator != null ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
@@ -463,12 +481,12 @@ public class PropertyBinder {
 	private void handleLob(Property property) {
 		if ( this.memberDetails != null ) {
 			// HHH-4635 -- needed for dialect-specific property ordering
-			property.setLob( this.memberDetails.hasAnnotationUsage( Lob.class ) );
+			property.setLob( this.memberDetails.hasDirectAnnotationUsage( Lob.class ) );
 		}
 	}
 
 	private void handleMutability(Property property) {
-		if ( this.memberDetails != null && this.memberDetails.hasAnnotationUsage( Immutable.class ) ) {
+		if ( this.memberDetails != null && this.memberDetails.hasDirectAnnotationUsage( Immutable.class ) ) {
 			updatable = false;
 		}
 		property.setInsertable( insertable );
@@ -507,14 +525,14 @@ public class PropertyBinder {
 
 	private void handleNaturalId(Property property) {
 		if ( this.memberDetails != null && entityBinder != null ) {
-			final AnnotationUsage<NaturalId> naturalId = this.memberDetails.getAnnotationUsage( NaturalId.class );
+			final NaturalId naturalId = this.memberDetails.getDirectAnnotationUsage( NaturalId.class );
 			if ( naturalId != null ) {
 				if ( !entityBinder.isRootEntity() ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
 							+ "' belongs to an entity subclass and may not be annotated '@NaturalId'" +
 							" (only a property of a root '@Entity' or a '@MappedSuperclass' may be a '@NaturalId')" );
 				}
-				if ( !naturalId.getBoolean( "mutable" ) ) {
+				if ( !naturalId.mutable() ) {
 					updatable = false;
 				}
 				property.setNaturalIdentifier( true );
@@ -527,9 +545,9 @@ public class PropertyBinder {
 		if ( value instanceof Collection ) {
 			property.setOptimisticLocked( ((Collection) value).isOptimisticLocked() );
 		}
-		else if ( this.memberDetails != null && this.memberDetails.hasAnnotationUsage( OptimisticLock.class ) ) {
-			final AnnotationUsage<OptimisticLock> optimisticLock = this.memberDetails.getAnnotationUsage( OptimisticLock.class );
-			final boolean excluded = optimisticLock.getBoolean( "excluded" );
+		else if ( this.memberDetails != null && this.memberDetails.hasDirectAnnotationUsage( OptimisticLock.class ) ) {
+			final OptimisticLock optimisticLock = this.memberDetails.getDirectAnnotationUsage( OptimisticLock.class );
+			final boolean excluded = optimisticLock.excluded();
 			validateOptimisticLock( excluded );
 			property.setOptimisticLocked( !excluded );
 		}
@@ -540,15 +558,15 @@ public class PropertyBinder {
 
 	private void validateOptimisticLock(boolean excluded) {
 		if ( excluded ) {
-			if ( memberDetails.hasAnnotationUsage( Version.class ) ) {
+			if ( memberDetails.hasDirectAnnotationUsage( Version.class ) ) {
 				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Version'" );
 			}
-			if ( memberDetails.hasAnnotationUsage( Id.class ) ) {
+			if ( memberDetails.hasDirectAnnotationUsage( Id.class ) ) {
 				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Id'" );
 			}
-			if ( memberDetails.hasAnnotationUsage( EmbeddedId.class ) ) {
+			if ( memberDetails.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 				throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@EmbeddedId'" );
 			}
@@ -613,7 +631,7 @@ public class PropertyBinder {
 		else {
 			inFlightPropertyDataList.add( propertyAnnotatedElement );
 		}
-		if ( element.hasAnnotationUsage( MapsId.class ) ) {
+		if ( element.hasDirectAnnotationUsage( MapsId.class ) ) {
 			context.getMetadataCollector().addPropertyAnnotatedWithMapsId( ownerType.determineRawClass(), propertyAnnotatedElement );
 		}
 
@@ -621,8 +639,8 @@ public class PropertyBinder {
 	}
 
 	private static void checkIdProperty(MemberDetails property, PropertyData propertyData) {
-		final AnnotationUsage<Id> incomingIdProperty = property.getAnnotationUsage( Id.class );
-		final AnnotationUsage<Id> existingIdProperty = propertyData.getAttributeMember().getAnnotationUsage( Id.class );
+		final Id incomingIdProperty = property.getDirectAnnotationUsage( Id.class );
+		final Id existingIdProperty = propertyData.getAttributeMember().getDirectAnnotationUsage( Id.class );
 		if ( incomingIdProperty != null && existingIdProperty == null ) {
 			throw new MappingException(
 					String.format(
@@ -645,11 +663,12 @@ public class PropertyBinder {
 		//TODO support true/false/default on the property instead of present / not present
 		//TODO is @Column mandatory?
 		//TODO add method support
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 		if ( context.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
-			if ( element.hasAnnotationUsage( Id.class ) && element.hasAnnotationUsage( Column.class ) ) {
-				final String columnName = element.getAnnotationUsage( Column.class ).getString( "name" );
+			if ( element.hasDirectAnnotationUsage( Id.class ) && element.hasDirectAnnotationUsage( Column.class ) ) {
+				final String columnName = element.getDirectAnnotationUsage( Column.class ).name();
 				declaringClass.forEachField( (index, fieldDetails) -> {
-					if ( !element.hasAnnotationUsage( MapsId.class ) && isJoinColumnPresent( columnName, element ) ) {
+					if ( !element.hasDirectAnnotationUsage( MapsId.class ) && isJoinColumnPresent( columnName, element, sourceModelContext ) ) {
 						//create a PropertyData for the specJ property holding the mapping
 						context.getMetadataCollector().addPropertyAnnotatedWithMapsIdSpecj(
 								ownerType.determineRawClass(),
@@ -671,12 +690,15 @@ public class PropertyBinder {
 		}
 	}
 
-	private static boolean isJoinColumnPresent(String columnName, MemberDetails property) {
+	private static boolean isJoinColumnPresent(String columnName, MemberDetails property, SourceModelBuildingContext modelContext) {
 		//The detection of a configured individual JoinColumn differs between Annotation
 		//and XML configuration processing.
-		final List<AnnotationUsage<JoinColumn>> joinColumnAnnotations = property.getRepeatedAnnotationUsages( JoinColumn.class );
-		for ( AnnotationUsage<JoinColumn> joinColumnAnnotation : joinColumnAnnotations ) {
-			if ( joinColumnAnnotation.getString( "name" ).equals( columnName ) ) {
+		final JoinColumn[] joinColumnAnnotations = property.getRepeatedAnnotationUsages(
+				JpaAnnotations.JOIN_COLUMN,
+				modelContext
+		);
+		for ( JoinColumn joinColumnAnnotation : joinColumnAnnotations ) {
+			if ( joinColumnAnnotation.name().equals( columnName ) ) {
 				return true;
 			}
 		}
@@ -684,8 +706,8 @@ public class PropertyBinder {
 	}
 
 	static boolean hasIdAnnotation(MemberDetails element) {
-		return element.hasAnnotationUsage( Id.class )
-			|| element.hasAnnotationUsage( EmbeddedId.class );
+		return element.hasDirectAnnotationUsage( Id.class )
+			|| element.hasDirectAnnotationUsage( EmbeddedId.class );
 	}
 
 	/**
@@ -724,7 +746,7 @@ public class PropertyBinder {
 			}
 
 			final MemberDetails property = inferredData.getAttributeMember();
-			if ( property.hasAnnotationUsage( Parent.class ) ) {
+			if ( property.hasDirectAnnotationUsage( Parent.class ) ) {
 				handleParentProperty( propertyHolder, inferredData, property );
 			}
 			else {
@@ -803,9 +825,9 @@ public class PropertyBinder {
 		propertyBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		propertyBinder.setId( !entityBinder.isIgnoreIdAnnotations() && hasIdAnnotation( property ) );
 
-		final AnnotationUsage<LazyGroup> lazyGroupAnnotation = property.getAnnotationUsage( LazyGroup.class );
+		final LazyGroup lazyGroupAnnotation = property.getDirectAnnotationUsage( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {
-			propertyBinder.setLazyGroup( lazyGroupAnnotation.getString( "value" ) );
+			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
 		}
 
 		final AnnotatedJoinColumns joinColumns = columnsBuilder.getJoinColumns();
@@ -929,27 +951,32 @@ public class PropertyBinder {
 	}
 
 	private static boolean isVersion(MemberDetails property) {
-		return property.hasAnnotationUsage( Version.class );
+		return property.hasDirectAnnotationUsage( Version.class );
 	}
 
 	private static boolean isOneToOne(MemberDetails property) {
-		return property.hasAnnotationUsage( OneToOne.class );
+		return property.hasDirectAnnotationUsage( OneToOne.class );
 	}
 
 	private static boolean isManyToOne(MemberDetails property) {
-		return property.hasAnnotationUsage( ManyToOne.class );
+		return property.hasDirectAnnotationUsage( ManyToOne.class );
 	}
 
 	private static boolean isAny(MemberDetails property) {
-		return property.hasAnnotationUsage( Any.class );
+		return property.hasDirectAnnotationUsage( Any.class );
 	}
 
 	private static boolean isCollection(MemberDetails property) {
-		return property.hasAnnotationUsage( OneToMany.class )
-			|| property.hasAnnotationUsage( ManyToMany.class )
-			|| property.hasAnnotationUsage( ElementCollection.class )
-			|| property.hasAnnotationUsage( ManyToAny.class );
-}
+		return property.hasDirectAnnotationUsage( OneToMany.class )
+			|| property.hasDirectAnnotationUsage( ManyToMany.class )
+			|| property.hasDirectAnnotationUsage( ElementCollection.class )
+			|| property.hasDirectAnnotationUsage( ManyToAny.class );
+	}
+
+	private static boolean isForcePersist(MemberDetails property) {
+		return property.hasDirectAnnotationUsage( MapsId.class )
+			|| property.hasDirectAnnotationUsage( Id.class );
+	}
 
 	private static void bindVersionProperty(
 			PropertyHolder propertyHolder,
@@ -1267,13 +1294,13 @@ public class PropertyBinder {
 	 * @apiNote Poorly named to a degree.  The intention is really whether non-optional is explicit
 	 */
 	private static boolean isExplicitlyOptional(MemberDetails attributeMember) {
-		final AnnotationUsage<Basic> basicAnn = attributeMember.getAnnotationUsage( Basic.class );
+		final Basic basicAnn = attributeMember.getDirectAnnotationUsage( Basic.class );
 		if ( basicAnn == null ) {
 			// things are optional (nullable) by default.  If there is no annotation, that cannot be altered
 			return true;
 		}
 
-		return basicAnn.getBoolean( "optional" );
+		return basicAnn.optional();
 	}
 
 	/**
@@ -1281,9 +1308,9 @@ public class PropertyBinder {
 	 * account whether it is primitive?
 	 */
 	public static boolean isOptional(MemberDetails attributeMember, PropertyHolder propertyHolder) {
-		final AnnotationUsage<Basic> basicAnn = attributeMember.getAnnotationUsage( Basic.class );
+		final Basic basicAnn = attributeMember.getDirectAnnotationUsage( Basic.class );
 		if ( basicAnn != null ) {
-			return basicAnn.getBoolean( "optional" );
+			return basicAnn.optional();
 		}
 
 		if ( attributeMember.isArray() ) {
@@ -1302,8 +1329,8 @@ public class PropertyBinder {
 	}
 
 	private static boolean isLazy(MemberDetails property) {
-		final AnnotationUsage<Basic> annotationUsage = property.getAnnotationUsage( Basic.class );
-		return annotationUsage != null && annotationUsage.getEnum( "fetch" ) == LAZY;
+		final Basic annotationUsage = property.getDirectAnnotationUsage( Basic.class );
+		return annotationUsage != null && annotationUsage.fetch() == LAZY;
 	}
 
 	private static void addIndexes(
@@ -1312,7 +1339,7 @@ public class PropertyBinder {
 			AnnotatedColumns columns,
 			AnnotatedJoinColumns joinColumns) {
 		//process indexes after everything: in second pass, many to one has to be done before indexes
-		final AnnotationUsage<Index> index = property.getAnnotationUsage( Index.class );
+		final Index index = property.getDirectAnnotationUsage( Index.class );
 		if ( index == null ) {
 			return;
 		}
@@ -1341,61 +1368,59 @@ public class PropertyBinder {
 		// For now, simply ensure consistent naming.
 		// TODO: AFAIK, there really isn't a reason for these UKs to be created
 		// on the SecondPass. This whole area should go away...
-		final AnnotationUsage<NaturalId> naturalId = property.getAnnotationUsage( NaturalId.class );
+		final NaturalId naturalId = property.getDirectAnnotationUsage( NaturalId.class );
 		if ( naturalId != null ) {
 			final Database database = context.getMetadataCollector().getDatabase();
 			final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 			if ( joinColumns != null ) {
-				final Identifier name =
-						implicitNamingStrategy.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-							@Override
-							public Identifier getTableName() {
-								return joinColumns.getTable().getNameIdentifier();
-							}
+				final Identifier name = implicitNamingStrategy.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
+					@Override
+					public Identifier getTableName() {
+						return joinColumns.getTable().getNameIdentifier();
+					}
 
-							@Override
-							public List<Identifier> getColumnNames() {
-								return singletonList(toIdentifier("_NaturalID"));
-							}
+					@Override
+					public List<Identifier> getColumnNames() {
+						return singletonList(toIdentifier("_NaturalID"));
+					}
 
-							@Override
-							public Identifier getUserProvidedIdentifier() {
-								return null;
-							}
+					@Override
+					public Identifier getUserProvidedIdentifier() {
+						return null;
+					}
 
-							@Override
-							public MetadataBuildingContext getBuildingContext() {
-								return context;
-							}
-						});
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return context;
+					}
+				});
 				final String keyName = name.render( database.getDialect() );
 				for ( AnnotatedColumn column : joinColumns.getColumns() ) {
 					column.addUniqueKey( keyName, inSecondPass );
 				}
 			}
 			else {
-				final Identifier name =
-						implicitNamingStrategy.determineUniqueKeyName(new ImplicitUniqueKeyNameSource() {
-							@Override
-							public Identifier getTableName() {
-								return columns.getTable().getNameIdentifier();
-							}
+				final Identifier name = implicitNamingStrategy.determineUniqueKeyName(new ImplicitUniqueKeyNameSource() {
+					@Override
+					public Identifier getTableName() {
+						return columns.getTable().getNameIdentifier();
+					}
 
-							@Override
-							public List<Identifier> getColumnNames() {
-								return singletonList(toIdentifier("_NaturalID"));
-							}
+					@Override
+					public List<Identifier> getColumnNames() {
+						return singletonList(toIdentifier("_NaturalID"));
+					}
 
-							@Override
-							public Identifier getUserProvidedIdentifier() {
-								return null;
-							}
+					@Override
+					public Identifier getUserProvidedIdentifier() {
+						return null;
+					}
 
-							@Override
-							public MetadataBuildingContext getBuildingContext() {
-								return context;
-							}
-						});
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return context;
+					}
+				});
 				final String keyName = name.render( database.getDialect() );
 				for ( AnnotatedColumn column : columns.getColumns() ) {
 					column.addUniqueKey( keyName, inSecondPass );
@@ -1407,14 +1432,15 @@ public class PropertyBinder {
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
 			PropertyData inferredData,
 			MetadataBuildingContext context) {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 		final MemberDetails attributeMember = inferredData.getAttributeMember();
 		final TypeDetails classOrElementType = inferredData.getClassOrElementType();
 		final ClassDetails returnedClass = classOrElementType.determineRawClass();
 
 		if ( attributeMember != null ) {
-			final AnnotationUsage<CompositeType> compositeType = attributeMember.locateAnnotationUsage( CompositeType.class );
+			final CompositeType compositeType = attributeMember.locateAnnotationUsage( CompositeType.class, sourceModelContext );
 			if ( compositeType != null ) {
-				return compositeType.getClassDetails( "value" ).toJavaClass();
+				return compositeType.value();
 			}
 			final Class<? extends CompositeUserType<?>> compositeUserType = resolveTimeZoneStorageCompositeUserType( attributeMember, returnedClass, context );
 			if ( compositeUserType != null ) {
@@ -1443,24 +1469,36 @@ public class PropertyBinder {
 			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
 					+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
 		}
+
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 		final MemberDetails idAttributeMember = inferredData.getAttributeMember();
-		final List<AnnotationUsage<? extends Annotation>> idGeneratorAnnotations = idAttributeMember.getMetaAnnotated( IdGeneratorType.class );
-		final List<AnnotationUsage<? extends Annotation>> generatorAnnotations = idAttributeMember.getMetaAnnotated( ValueGenerationType.class );
+		final List<? extends Annotation> idGeneratorAnnotations = idAttributeMember.getMetaAnnotated( IdGeneratorType.class, sourceModelContext );
+		final List<? extends Annotation> generatorAnnotations = idAttributeMember.getMetaAnnotated( ValueGenerationType.class, sourceModelContext );
 		removeIdGenerators( generatorAnnotations, idGeneratorAnnotations );
 		if ( idGeneratorAnnotations.size() + generatorAnnotations.size() > 1 ) {
-			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
-					+ "' has too many generator annotations " + combine( idGeneratorAnnotations, generatorAnnotations ) );
+			throw new AnnotationException( String.format(
+					Locale.ROOT,
+					"Property `%s` has too many generator annotations : %s",
+					getPath( propertyHolder, inferredData ),
+					CollectionHelper.combineUntyped( idGeneratorAnnotations, generatorAnnotations )
+			) );
 		}
 		if ( !idGeneratorAnnotations.isEmpty() ) {
-			final AnnotationUsage annotation = idGeneratorAnnotations.get(0);
-			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idAttributeMember, annotation,
-					idValue, beanContainer( context ) ) );
+			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator(
+					idAttributeMember,
+					idGeneratorAnnotations.get(0),
+					idValue,
+					beanContainer( context )
+			) );
 		}
 		else if ( !generatorAnnotations.isEmpty() ) {
 //			idValue.setCustomGeneratorCreator( generatorCreator( idAttributeMember, generatorAnnotation ) );
-			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
-					+ "' is annotated '" + generatorAnnotations.get(0).getAnnotationType()
-					+ "' which is not an '@IdGeneratorType'" );
+			throw new AnnotationException( String.format(
+					Locale.ROOT,
+					"Property '%s' is annotated `%s` which is not an `@IdGeneratorType`",
+					getPath( propertyHolder, inferredData ),
+					generatorAnnotations.get(0).annotationType()
+			) );
 		}
 		else {
 			final ClassDetails entityClass = inferredData.getClassOrElementType().determineRawClass();
@@ -1479,12 +1517,11 @@ public class PropertyBinder {
 	// collection methods as those proxies do not implement hashcode/equals and even a simple `a.equals(a)` will return `false`.
 	// Instead, we will check the annotation types, since generator annotations should not be "repeatable" we should have only
 	// at most one annotation for a generator:
-	// todo (jpa32) : is this still necessary with s/hibernate-common-annotations/hibernate-models?
 	private static void removeIdGenerators(
-			List<AnnotationUsage<? extends Annotation>> generatorAnnotations,
-			List<AnnotationUsage<? extends Annotation>> idGeneratorAnnotations) {
-		for ( AnnotationUsage<? extends Annotation> id : idGeneratorAnnotations ) {
-			generatorAnnotations.removeIf( gen -> gen.getAnnotationType().equals( id.getAnnotationType() ) );
+			List<? extends Annotation> generatorAnnotations,
+			List<? extends Annotation> idGeneratorAnnotations) {
+		for ( Annotation id : idGeneratorAnnotations ) {
+			generatorAnnotations.removeIf( gen -> gen.annotationType().equals( id.annotationType() ) );
 		}
 	}
 }

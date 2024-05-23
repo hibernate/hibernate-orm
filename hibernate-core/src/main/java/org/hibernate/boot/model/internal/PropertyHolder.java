@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.List;
-
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.mapping.Join;
@@ -15,7 +13,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -65,22 +62,22 @@ public interface PropertyHolder {
 	/**
 	 * return null if the column is not overridden, or an array of column if true
 	 */
-	List<AnnotationUsage<Column>> getOverriddenColumn(String propertyName);
+	Column[] getOverriddenColumn(String propertyName);
 
 	/**
 	 * return null if the column is not overridden, or an array of column if true
 	 */
-	List<AnnotationUsage<JoinColumn>> getOverriddenJoinColumn(String propertyName);
+	JoinColumn[] getOverriddenJoinColumn(String propertyName);
 
 	/**
 	 * return null if hte foreign key is not overridden, or the foreign key if true
 	 */
-	default AnnotationUsage<ForeignKey> getOverriddenForeignKey(String propertyName) {
+	default ForeignKey getOverriddenForeignKey(String propertyName) {
 		// todo: does this necessarily need to be a default method?
 		return null;
 	}
 
-	AnnotationUsage<ColumnTransformer> getOverriddenColumnTransformer(String logicalColumnName);
+	ColumnTransformer getOverriddenColumnTransformer(String logicalColumnName);
 
 	/**
 	 * return
@@ -88,13 +85,13 @@ public interface PropertyHolder {
 	 * - the join table if not overridden,
 	 * - the overridden join table otherwise
 	 */
-	AnnotationUsage<JoinTable> getJoinTable(MemberDetails attributeMember);
+	JoinTable getJoinTable(MemberDetails attributeMember);
 
 	String getEntityName();
 
-	Join addJoin(AnnotationUsage<JoinTable> joinTableAnn, boolean noDelayInPkColumnCreation);
+	Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation);
 
-	Join addJoin(AnnotationUsage<JoinTable> joinTable, Table table, boolean noDelayInPkColumnCreation);
+	Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation);
 
 	boolean isInIdClass();
 

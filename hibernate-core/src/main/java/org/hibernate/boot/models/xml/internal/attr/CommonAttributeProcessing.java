@@ -6,12 +6,8 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
-import java.lang.annotation.Annotation;
-
-import org.hibernate.annotations.AttributeAccessor;
-import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLockableAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
@@ -21,15 +17,20 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbStandardAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
+import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AttributeAccessorAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapsIdJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.OnDeleteAnnotation;
+import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
+import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.MutableAnnotationUsage;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
-import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
 
@@ -38,37 +39,18 @@ import jakarta.persistence.FetchType;
  */
 public class CommonAttributeProcessing {
 
-	public static <A extends Annotation> void applyAttributeBasics(
-			JaxbPersistentAttribute jaxbAttribute,
-			MutableMemberDetails memberDetails,
-			MutableAnnotationUsage<A> attributeAnn,
-			AccessType accessType,
-			XmlDocumentContext xmlDocumentContext) {
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
-		applyAttributeAccessor( jaxbAttribute, memberDetails, xmlDocumentContext );
-
-		if ( jaxbAttribute instanceof JaxbStandardAttribute jaxbStandardAttribute ) {
-			applyFetching( jaxbStandardAttribute, memberDetails, attributeAnn, xmlDocumentContext );
-			applyOptionality( jaxbStandardAttribute, memberDetails, attributeAnn, xmlDocumentContext );
-		}
-
-		if ( jaxbAttribute instanceof JaxbLockableAttribute jaxbLockableAttribute ) {
-			applyOptimisticLock( jaxbLockableAttribute, memberDetails, xmlDocumentContext );
-		}
-	}
-
 	public static void applyAccess(
 			AccessType accessType,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final MutableAnnotationUsage<Access> accessAnn = memberDetails.applyAnnotationUsage(
+		final AccessJpaAnnotation accessAnn = (AccessJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ACCESS,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		accessAnn.setAttributeValue( "value", accessType );
+		accessAnn.value( accessType );
 	}
 
-	public static <A extends Annotation> void applyAttributeAccessor(
+	public static void applyAttributeAccessor(
 			JaxbPersistentAttribute jaxbAttribute,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
@@ -77,7 +59,7 @@ public class CommonAttributeProcessing {
 			return;
 		}
 
-		final MutableAnnotationUsage<AttributeAccessor> accessorAnn = memberDetails.applyAnnotationUsage(
+		final AttributeAccessorAnnotation accessorAnn = (AttributeAccessorAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.ATTRIBUTE_ACCESSOR,
 				xmlDocumentContext.getModelBuildingContext()
 		);
@@ -86,41 +68,41 @@ public class CommonAttributeProcessing {
 				.getModelBuildingContext()
 				.getClassDetailsRegistry()
 				.getClassDetails( attributeAccessor );
-		XmlAnnotationHelper.applyOptionalAttribute( accessorAnn, "strategy", strategyClassDetails );
+		accessorAnn.strategy( strategyClassDetails.toJavaClass() );
 	}
 
-	public static <A extends Annotation> void applyOptionality(
+	public static void applyOptionality(
 			JaxbStandardAttribute jaxbAttribute,
-			MutableMemberDetails memberDetails,
-			MutableAnnotationUsage<A> attributeAnn,
+			AttributeMarker.Optionalable attributeAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		// todo : fix this in jpa32
 		if ( jaxbAttribute.isOptional() == null ) {
 			return;
 		}
 
-		attributeAnn.setAttributeValue( "optional", jaxbAttribute.isOptional() );
+		attributeAnn.optional( jaxbAttribute.isOptional() );
 	}
 
-	public static <A extends Annotation> void applyOptimisticLock(
+	public static void applyOptimisticLock(
 			JaxbLockableAttribute jaxbAttribute,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final boolean includeInOptimisticLock = jaxbAttribute.isOptimisticLock();
-		final MutableAnnotationUsage<OptimisticLock> optLockAnn = memberDetails.applyAnnotationUsage(
+		final OptimisticLockAnnotation optLockAnn = (OptimisticLockAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.OPTIMISTIC_LOCK,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		optLockAnn.setAttributeValue( "excluded", !includeInOptimisticLock );
+		optLockAnn.excluded( !includeInOptimisticLock );
 	}
 
-	public static <A extends Annotation> void applyFetching(
+	public static void applyFetching(
 			JaxbStandardAttribute jaxbAttribute,
 			MutableMemberDetails memberDetails,
-			MutableAnnotationUsage<A> attributeAnn,
+			AttributeMarker.Fetchable attributeAnn,
 			XmlDocumentContext xmlDocumentContext) {
 		final FetchType fetchType = jaxbAttribute.getFetch();
-		XmlProcessingHelper.applyAttributeIfSpecified( "fetch", fetchType, attributeAnn );
+		if ( fetchType != null ) {
+			attributeAnn.fetch( fetchType );
+		}
 
 		if ( jaxbAttribute instanceof JaxbSingularAssociationAttribute jaxbSingularAttribute ) {
 			final JaxbSingularFetchModeImpl jaxbFetchMode = jaxbSingularAttribute.getFetchMode();
@@ -138,11 +120,11 @@ public class CommonAttributeProcessing {
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbFetchMode != null ) {
 			final FetchMode fetchMode = FetchMode.valueOf( jaxbFetchMode.value() );
-			final MutableAnnotationUsage<Fetch> fetchAnn = memberDetails.applyAnnotationUsage(
+			final FetchAnnotation fetchAnn = (FetchAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.FETCH,
 					xmlDocumentContext.getModelBuildingContext()
 			);
-			fetchAnn.setAttributeValue( "value", fetchMode );
+			fetchAnn.value( fetchMode );
 		}
 	}
 
@@ -157,5 +139,43 @@ public class CommonAttributeProcessing {
 			declarer
 		);
 		memberDetails.applyAnnotationUsage( JpaAnnotations.TRANSIENT, xmlDocumentContext.getModelBuildingContext() );
+	}
+
+	public static void applyMappedBy(
+			String mappedBy,
+			AttributeMarker.Mappable mappable,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( StringHelper.isNotEmpty( mappedBy ) ) {
+			mappable.mappedBy( mappedBy );
+		}
+	}
+
+	public static void applyMapsId(
+			String mapsId,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( StringHelper.isNotEmpty( mapsId ) ) {
+			final MapsIdJpaAnnotation mapsIdUsage = (MapsIdJpaAnnotation) memberDetails.applyAnnotationUsage(
+					JpaAnnotations.MAPS_ID,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			mapsIdUsage.value( mapsId );
+		}
+
+	}
+
+	public static void applyOnDelete(
+			OnDeleteAction action,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( action == null ) {
+			return;
+		}
+
+		final OnDeleteAnnotation notFoundAnn = (OnDeleteAnnotation) memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.ON_DELETE,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		notFoundAnn.action( action );
 	}
 }

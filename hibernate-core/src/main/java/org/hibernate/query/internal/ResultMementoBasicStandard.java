@@ -12,8 +12,6 @@ import java.util.function.Consumer;
 import org.hibernate.boot.model.convert.internal.ConverterHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderBasicValuedConverted;
@@ -71,15 +69,14 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 	 * Creation for JPA descriptor
 	 */
 	public ResultMementoBasicStandard(
-			AnnotationUsage<ColumnResult> definition,
+			ColumnResult definition,
 			ResultSetMappingResolutionContext context) {
-		this.explicitColumnName = definition.getString( "name" );
+		this.explicitColumnName = definition.name();
 
 		final SessionFactoryImplementor sessionFactory = context.getSessionFactory();
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 
-		final ClassDetails definedTypeDetails = definition.getClassDetails( "type" );
-		final Class<?> definedType = definedTypeDetails.toJavaClass();
+		final Class<?> definedType = definition.type();
 
 		if ( void.class == definedType ) {
 			builder = new CompleteResultBuilderBasicValuedStandard( explicitColumnName, null, null );
@@ -109,7 +106,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			final JavaType<?> explicitJavaType;
 
 			// see if this is a registered BasicType...
-			final BasicType<Object> registeredBasicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( definedTypeDetails.getName() );
+			final BasicType<Object> registeredBasicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( definedType.getName() );
 			if ( registeredBasicType != null ) {
 				explicitType = registeredBasicType;
 				explicitJavaType = registeredBasicType.getJavaTypeDescriptor();

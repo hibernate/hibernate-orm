@@ -41,7 +41,6 @@ import org.hibernate.generator.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -884,22 +883,14 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 	private static Annotation[] getAnnotations(MemberDetails memberDetails) {
-		final Annotation[] annotations;
-		final Collection<AnnotationUsage<?>> allAnnotationUsages = memberDetails != null
-				? memberDetails.getAllAnnotationUsages() :
-				null;
-		if ( allAnnotationUsages == null ) {
-			annotations = new Annotation[0];
-		}
-		else {
-			annotations = new Annotation[allAnnotationUsages.size()];
-			int index = 0;
-			for ( AnnotationUsage<?> annotationUsage : allAnnotationUsages ) {
-				annotations[ index++ ] = annotationUsage.toAnnotation();
-			}
-		}
-		return annotations;
+		final Collection<? extends Annotation> directAnnotationUsages = memberDetails == null
+				? null
+				: memberDetails.getDirectAnnotationUsages();
+		return directAnnotationUsages == null
+				? NO_ANNOTATIONS
+				: directAnnotationUsages.toArray( Annotation[]::new );
 	}
 
 	public DynamicParameterizedType.ParameterType makeParameterImpl() {

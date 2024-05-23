@@ -287,7 +287,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
 				persistentClass.addMappedSuperclassProperty( property );
-				addPropertyToMappedSuperclass( property, declaringClass );
+				addPropertyToMappedSuperclass( property, declaringClass, getContext() );
 			}
 			else {
 				persistentClass.addProperty( property );
@@ -298,10 +298,10 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	private void addPropertyToMappedSuperclass(Property prop, XClass declaringClass) {
-		final Class<?> type = getContext().getBootstrapContext().getReflectionManager().toClass( declaringClass );
-		final MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( type );
-		prepareActualProperty( prop, type, true, getContext(), superclass::addDeclaredProperty );
+	static void addPropertyToMappedSuperclass(Property prop, XClass declaringClass, MetadataBuildingContext context) {
+		final Class<?> type = context.getBootstrapContext().getReflectionManager().toClass( declaringClass );
+		final MappedSuperclass superclass = context.getMetadataCollector().getMappedSuperclass( type );
+		prepareActualProperty( prop, type, true, context, superclass::addDeclaredProperty );
 	}
 
 	static void prepareActualProperty(
@@ -458,7 +458,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
 				join.addMappedSuperclassProperty( property );
-				addPropertyToMappedSuperclass( property, declaringClass );
+				addPropertyToMappedSuperclass( property, declaringClass, getContext() );
 			}
 			else {
 				join.addProperty( property );

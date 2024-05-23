@@ -14,12 +14,12 @@ import org.hibernate.mapping.UniqueKey;
 
 /**
  * Informix requires the constraint name to come last.
- * 
+ *
  * @author Brett Meyer
  */
 public class InformixUniqueDelegate extends SkipNullableUniqueDelegate {
-	
-	public InformixUniqueDelegate( Dialect dialect ) {
+
+	public InformixUniqueDelegate(Dialect dialect) {
 		super( dialect );
 	}
 
@@ -27,7 +27,7 @@ public class InformixUniqueDelegate extends SkipNullableUniqueDelegate {
 	protected void appendUniqueConstraint(StringBuilder fragment, UniqueKey uniqueKey) {
 		if ( !uniqueKey.hasNullableColumn() ) {
 			fragment.append( ", " );
-			fragment.append( uniqueConstraintSql(uniqueKey) );
+			fragment.append( uniqueConstraintSql( uniqueKey ) );
 			if ( uniqueKey.isNameExplicit() ) {
 				fragment.append( " constraint " ).append( uniqueKey.getName() );
 			}
@@ -35,11 +35,13 @@ public class InformixUniqueDelegate extends SkipNullableUniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
+	public String getAlterTableToAddUniqueKeyCommand(
+			UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
-		if (uniqueKey.hasNullableColumn() || !context.isMigration()){
+		if ( uniqueKey.hasNullableColumn() || !context.isMigration() ) {
 			return "";
-		} else {
+		}
+		else {
 			final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
 			final String constraintName = dialect.quote( uniqueKey.getName() );
 			return dialect.getAlterTableString( tableName )

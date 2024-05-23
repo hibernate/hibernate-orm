@@ -30,7 +30,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.addPropertyToMappedSuperclass;
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.model.internal.HCANNHelper.hasAnnotation;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
@@ -67,6 +70,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	private final Component component;
 	private final boolean isOrWithinEmbeddedId;
 	private final boolean isWithinElementCollection;
+	private final Map<XClass, InheritanceState> inheritanceStatePerClass;
 
 	private final String embeddedAttributeName;
 	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
@@ -76,7 +80,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			String path,
 			PropertyData inferredData,
 			PropertyHolder parent,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		super( path, parent, inferredData.getPropertyClass(), context );
 		final XProperty embeddedXProperty = inferredData.getProperty();
 		setCurrentProperty( embeddedXProperty );
@@ -85,6 +90,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 				|| hasAnnotation( embeddedXProperty, Id.class, EmbeddedId.class );
 		this.isWithinElementCollection = parent.isWithinElementCollection() ||
 			parent instanceof CollectionPropertyHolder;
+		this.inheritanceStatePerClass = inheritanceStatePerClass;
 
 		if ( embeddedXProperty != null ) {
 			this.embeddedAttributeName = embeddedXProperty.getName();
@@ -314,6 +320,13 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public void addProperty(Property prop, XClass declaringClass) {
+		handleGenericComponentProperty( prop, getContext() );
+		if ( declaringClass != null ) {
+			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
+			if ( inheritanceState != null && inheritanceState.isEmbeddableSuperclass() ) {
+				addPropertyToMappedSuperclass( prop, declaringClass, getContext() );
+			}
+		}
 		component.addProperty( prop, declaringClass );
 	}
 

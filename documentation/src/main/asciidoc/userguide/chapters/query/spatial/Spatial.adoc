@@ -13,7 +13,7 @@ Since 5.0, Hibernate Spatial is now part of the Hibernate ORM project,
 and it allows you to deal with geographic data in a standardized way.
 
 Hibernate Spatial provides a standardized, cross-database interface to geographic data storage and query functions.
-It supports most of the functions described by the OGC Simple Feature Specification. Supported databases are Oracle 10g/11g,
+It supports most of the functions described by the OGC Simple Feature Specification. Supported databases are Oracle 19c/21c/23ai,
 PostgreSQL/PostGIS, MySQL, Microsoft SQL Server, DB2, CockroachDB and H2/GeoDB.
 
 Spatial data types are not part of the Java standard library, and they are absent from the JDBC specification.
@@ -72,7 +72,7 @@ functions largely correspond to those specified in the https://portal.opengeospa
 .Hibernate Spatial dialect function support
 [cols=",,,,,,,," |options="header",]
 |================================
-|Function | Description | PostgresSQL | Oracle 10g/11g | MySQL | SQLServer | H2GIS | DB2 | CockroachDB
+|Function | Description | PostgresSQL | Oracle 19c/21c/23ai | MySQL | SQLServer | H2GIS | DB2 | CockroachDB
 |Basic functions on Geometry | | | | | | | |
 |`int st_dimension(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
 |`String st_geometrytype(Geometry)` | SFS §2.1.1.1 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
@@ -148,7 +148,7 @@ For more information, see this page in the MySQL reference guide (esp. the secti
 
 
 [[spatial-configuration-dialect-oracle]]
-Oracle10g/11g::
+Oracle 19c/21c/23ai::
 
 There is currently only support for the `SDO_GEOMETRY` type.
 +

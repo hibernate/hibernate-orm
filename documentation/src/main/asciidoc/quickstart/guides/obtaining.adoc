@@ -43,6 +43,7 @@ transitive dependencies based on the features being used or not.
 |hibernate-envers| Entity versioning and auditing
 |hibernate-spatial| Support for spatial/GIS data types using https://github.com/GeoLatte/geolatte-geom[GeoLatte]
 |hibernate-jpamodelgen| An annotation processor that generates a JPA-compliant metamodel, plus optional Hibernate extras
+|hibernate-vector| Support for mathematical vector types and functions useful for AI/ML topics like vector similarity search and Retrieval-Augmented Generation (RAG)
 |===
 
 [cols="40m,~"]
@@ -53,6 +54,7 @@ transitive dependencies based on the features being used or not.
 |hibernate-hikaricp| Support for https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pooling
 |hibernate-vibur| Support for https://www.vibur.org/[Vibur DBCP] connection pooling
 |hibernate-proxool| Support for https://proxool.sourceforge.net/[Proxool] connection pooling
+|hibernate-ucp| Support for https://docs.oracle.com/en/database/oracle/oracle-database/23/jjucp/intro.html[Universal Connection Pool] connection pooling
 |hibernate-jcache| Integration with https://jcp.org/en/jsr/detail?id=107$$[JCache], allowing any compliant implementation as a second-level cache provider
 |hibernate-graalvm| Experimental extension to make it easier to compile applications as a https://www.graalvm.org/[GraalVM] native image
 |hibernate-micrometer| Integration with https://micrometer.io[Micrometer] metrics

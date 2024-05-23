@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.validation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
@@ -58,7 +59,6 @@ import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -729,6 +729,11 @@ public abstract class MockSessionFactory
 		public EntityPersister findEntityDescriptor(String entityName) {
 			return createEntityPersister(entityName);
 		}
+
+		@Override
+		public Set<String> getEnumTypesForValue(String enumValue) {
+			return MockSessionFactory.this.getEnumTypesForValue(enumValue);
+		}
 	}
 
 	@Override
@@ -868,9 +873,9 @@ public abstract class MockSessionFactory
 			return null;
 		}
 
-		@Override
-		public Set<String> getAllowedEnumLiteralTexts(String enumValue) {
-			return MockSessionFactory.this.getAllowedEnumLiteralTexts().get(enumValue);
+		@Override @Nullable
+		public Set<String> getEnumTypesForValue(String enumValue) {
+			return MockSessionFactory.this.getEnumTypesForValue(enumValue);
 		}
 
 		@Override
@@ -879,8 +884,9 @@ public abstract class MockSessionFactory
 		}
 	}
 
-	Map<String, Set<String>> getAllowedEnumLiteralTexts() {
-		return emptyMap();
+	@Nullable
+	Set<String> getEnumTypesForValue(String value) {
+		return emptySet();
 	}
 
 	class MockMappedDomainType<X> extends MappedSuperclassTypeImpl<X>{

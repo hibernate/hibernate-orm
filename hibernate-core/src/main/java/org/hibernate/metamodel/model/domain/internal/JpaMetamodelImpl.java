@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -281,8 +282,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				.collect( Collectors.toSet() );
 	}
 
-	@Override
-	public Set<String> getAllowedEnumLiteralTexts(String enumValue) {
+	@Override @Nullable
+	public Set<String> getEnumTypesForValue(String enumValue) {
 		return allowedEnumLiteralTexts.get(enumValue);
 	}
 

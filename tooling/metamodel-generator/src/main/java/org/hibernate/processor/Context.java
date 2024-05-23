@@ -106,6 +106,9 @@ public final class Context {
 	private String[] includes = {"*"};
 	private String[] excludes = {};
 
+	private final Map<String, String> entityNameMappings = new HashMap<>();
+	private final Map<String, Set<String>> enumTypesByValue = new HashMap<>();
+
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
 
@@ -482,5 +485,25 @@ public final class Context {
 		return !(inherited instanceof ExecutableElement)
 			|| elements.stream().noneMatch(member -> member instanceof ExecutableElement
 				&& getElementUtils().overrides((ExecutableElement) member, (ExecutableElement) inherited, type));
+	}
+
+	public Map<String, String> getEntityNameMappings() {
+		return entityNameMappings;
+	}
+
+	public void addEntityNameMapping(String entityName, String qualifiedName) {
+		entityNameMappings.put( entityName, qualifiedName );
+	}
+
+	public @Nullable String qualifiedNameForEntityName(String entityName) {
+		return entityNameMappings.get(entityName);
+	}
+
+	public Map<String,Set<String>> getEnumTypesByValue() {
+		return enumTypesByValue;
+	}
+
+	public void addEnumValue(String type, String value) {
+		enumTypesByValue.computeIfAbsent( value, s -> new HashSet<>() ).add( type );
 	}
 }

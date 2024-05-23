@@ -84,7 +84,8 @@ public abstract class AnnotationMeta implements Metamodel {
 		final AnnotationValue nameValue = getAnnotationValue( mirror, "name" );
 		if ( nameValue != null ) {
 			final String name = nameValue.getValue().toString();
-			final boolean reportErrors = getContext().checkNamedQuery( name );
+			final Context context = getContext();
+			final boolean reportErrors = context.checkNamedQuery( name );
 			final AnnotationValue value = getAnnotationValue( mirror, "query" );
 			if ( value != null ) {
 				final Object query = value.getValue();
@@ -98,9 +99,10 @@ public abstract class AnnotationMeta implements Metamodel {
 									// If we are in the scope of @CheckHQL, semantic errors in the
 									// query result in compilation errors. Otherwise, they only
 									// result in warnings, so we don't break working code.
-									new WarningErrorHandler( getContext(), getElement(), mirror, value, hql,
+									new WarningErrorHandler( context, getElement(), mirror, value, hql,
 											reportErrors, checkHql ),
-									ProcessorSessionFactory.create( getContext().getProcessingEnvironment() )
+									ProcessorSessionFactory.create( context.getProcessingEnvironment(),
+											context.getEntityNameMappings(), context.getEnumTypesByValue() )
 							);
 					if ( statement instanceof SqmSelectStatement
 							&& isQueryMethodName( name ) ) {
@@ -112,7 +114,7 @@ public abstract class AnnotationMeta implements Metamodel {
 										isRepository(),
 										getSessionType(),
 										getSessionVariableName(),
-										getContext().addNonnullAnnotation()
+										context.addNonnullAnnotation()
 								)
 						);
 					}

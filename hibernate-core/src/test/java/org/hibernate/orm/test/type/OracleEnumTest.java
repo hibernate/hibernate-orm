@@ -43,7 +43,7 @@ public class OracleEnumTest {
 		assertEquals( ts.activity.activityType, ActivityType.Play );
 	}
 
-	@Test public void testOrdinalEnum(SessionFactoryScope scope) {
+	@Test public void testNamedOrdinalEnum(SessionFactoryScope scope) {
 		Weather weather = new Weather();
 		Sky sky = new Sky();
 		sky.skyType = SkyType.Sunny;
@@ -57,31 +57,62 @@ public class OracleEnumTest {
 		scope.inSession( s -> {
 			s.doWork(
 					c -> {
+						boolean namedEnumFound = false;
+						boolean namedOrdinalEnumFound = false;
+
 						try(Statement stmt = c.createStatement()) {
 							try(ResultSet typeInfo = stmt.executeQuery("select name, decode(instr(data_display,'WHEN '''),0,'NUMBER','VARCHAR2') from user_domains where type='ENUMERATED'")) {
 								while (typeInfo.next()) {
 									String name = typeInfo.getString(1);
 									String baseType = typeInfo.getString(2);
 									if (name.equalsIgnoreCase("ActivityType") && baseType.equals("VARCHAR2")) {
-										return;
+										namedEnumFound = true;
+										continue;
+									}
+									if (name.equalsIgnoreCase("SkyType") && baseType.equals("NUMBER")) {
+										namedOrdinalEnumFound = true;
+										continue;
 									}
 								}
 							}
 						}
-						fail("named enum type not exported");
+
+						if (!namedEnumFound) {
+							fail("named enum type not exported");
+						}
+						if (!namedOrdinalEnumFound) {
+							fail("named ordinal enum type not exported");
+						}
 					}
 			);
 		});
 		scope.inSession( s -> {
 			s.doWork(
 					c -> {
+						boolean namedEnumFound = false;
+						boolean namedOrdinalEnumFound = false;
+
 						ResultSet tableInfo = c.getMetaData().getColumns(null, null, "ACTIVITY", "ACTIVITYTYPE" );
 						while ( tableInfo.next() ) {
 							String type = tableInfo.getString(6);
 							assertEquals( "VARCHAR2", type );
-							return;
+							namedEnumFound = true;
+							break;
 						}
-						fail("named enum column not exported");
+						tableInfo = c.getMetaData().getColumns(null, null, "SKY", "SKYTYPE" );
+						while ( tableInfo.next() ) {
+							String type = tableInfo.getString(6);
+							assertEquals( "NUMBER", type );
+							namedOrdinalEnumFound = true;
+							break;
+						}
+
+						if (!namedEnumFound) {
+							fail("named enum type not exported");
+						}
+						if (!namedOrdinalEnumFound) {
+							fail("named ordinal enum type not exported");
+						}
 					}
 			);
 		});

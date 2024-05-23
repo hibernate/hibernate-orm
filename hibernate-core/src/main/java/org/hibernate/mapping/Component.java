@@ -86,6 +86,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private boolean isKey;
 	private Boolean isGeneric;
 	private String roleName;
+	private MappedSuperclass mappedSuperclass;
 	private Value discriminator;
 	private transient DiscriminatorType<?> discriminatorType;
 	private Map<Object, String> discriminatorValues;
@@ -599,6 +600,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void setRoleName(String roleName) {
 		this.roleName = roleName;
+	}
+
+	public MappedSuperclass getMappedSuperclass() {
+		return mappedSuperclass;
+	}
+
+	public void setMappedSuperclass(MappedSuperclass mappedSuperclass) {
+		this.mappedSuperclass = mappedSuperclass;
 	}
 
 	public Value getDiscriminator() {

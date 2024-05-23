@@ -107,6 +107,7 @@ public final class Context {
 	private String[] excludes = {};
 
 	private Map<String, String> entityNameMappings;
+	private Map<String, Set<String>> enumTypesByValue;
 
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
@@ -500,5 +501,17 @@ public final class Context {
 
 	public @Nullable String qualifiedNameForEntityName(String entityName) {
 		return entityNameMappings.get(entityName);
+	}
+
+	public Map<String,Set<String>> getEnumTypesByValue() {
+		return enumTypesByValue;
+	}
+
+	public void setEnumTypesByValue(Map<String, Set<String>> enumTypesByValue) {
+		this.enumTypesByValue = enumTypesByValue;
+	}
+
+	public void addEnumValue(String type, String value) {
+		enumTypesByValue.computeIfAbsent( value, s -> new HashSet<>() ).add( type );
 	}
 }

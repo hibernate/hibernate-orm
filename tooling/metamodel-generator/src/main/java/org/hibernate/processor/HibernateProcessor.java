@@ -22,8 +22,11 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
@@ -554,18 +557,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			if ( hasAnnotation( element, ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE ) ) {
 				final TypeElement typeElement = (TypeElement) element;
 				final String qualifiedName = typeElement.getQualifiedName().toString();
-				final AnnotationMirror mirror = getAnnotationMirror(element, ENTITY);
-				if ( mirror != null ) {
-					String entityName = typeElement.getSimpleName().toString();
-					final AnnotationValue name = getAnnotationValue(mirror, "name");
-					if (name != null) {
-						final String explicitName = name.getValue().toString();
-						if ( !explicitName.isEmpty() ) {
-							entityName = explicitName;
-						}
-					}
-					context.addEntityNameMapping( entityName, qualifiedName );
-				}
+				updateIndex( element, typeElement, qualifiedName );
 				final Metamodel alreadyExistingMetaEntity =
 						tryGettingExistingEntityFromContext( typeElement, qualifiedName );
 				if ( alreadyExistingMetaEntity != null && alreadyExistingMetaEntity.isMetaComplete() ) {
@@ -606,6 +598,46 @@ public class HibernateProcessor extends AbstractProcessor {
 //							dataMetaEntity.mergeInMembers( alreadyExistingDataMetaEntity );
 //						}
 						addDataMetamodelToContext( typeElement, dataMetaEntity );
+					}
+				}
+			}
+		}
+	}
+
+	private void updateIndex(Element element, TypeElement typeElement, String qualifiedName) {
+		final AnnotationMirror mirror = getAnnotationMirror( element, ENTITY );
+		if ( mirror != null ) {
+			String entityName = typeElement.getSimpleName().toString();
+			final AnnotationValue name = getAnnotationValue( mirror, "name" );
+			if (name != null) {
+				final String explicitName = name.getValue().toString();
+				if ( !explicitName.isEmpty() ) {
+					entityName = explicitName;
+				}
+			}
+			context.addEntityNameMapping( entityName, qualifiedName);
+			for ( Element member : context.getAllMembers(typeElement) ) {
+				switch ( member.getKind() ) {
+					case FIELD:
+						indexEnumValues( member.asType() );
+						break;
+					case METHOD:
+						indexEnumValues( ((ExecutableElement) member).getReturnType() );
+						break;
+				}
+			}
+		}
+	}
+
+	private void indexEnumValues(TypeMirror type) {
+		if ( type.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) type;
+			final TypeElement fieldType = (TypeElement) declaredType.asElement();
+			if ( fieldType.getKind() == ElementKind.ENUM ) {
+				for  (Element enumMember : fieldType.getEnclosedElements() ) {
+					if ( enumMember.getKind() == ElementKind.ENUM_CONSTANT) {
+						context.addEnumValue( fieldType.getQualifiedName().toString(),
+								enumMember.getSimpleName().toString() );
 					}
 				}
 			}
@@ -665,7 +697,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	private void writeIndex() {
 		try {
 			final FileObject resource = context.getProcessingEnvironment().getFiler()
-					.createResource(StandardLocation.SOURCE_OUTPUT, "", "index");
+					.createResource(StandardLocation.SOURCE_OUTPUT, "", "entity-index");
 			try (BufferedWriter writer = new BufferedWriter(resource.openWriter())) {
 				context.getEntityNameMappings()
 						.forEach( (entityName, qualifiedName) -> {
@@ -683,17 +715,40 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 		catch (IOException e) {
 		}
-	}
+
+		try {
+			final FileObject resource = context.getProcessingEnvironment().getFiler()
+					.createResource(StandardLocation.SOURCE_OUTPUT, "", "enum-index");
+			try (BufferedWriter writer = new BufferedWriter(resource.openWriter())) {
+				context.getEnumTypesByValue()
+						.forEach( (value, types) -> {
+							try {
+								writer.write(value);
+								writer.write(' ');
+								for (String type : types) {
+									writer.write(type);
+									writer.write(' ');
+								}
+								writer.newLine();
+								writer.flush();
+							}
+							catch (IOException e) {
+							}
+						} );
+			}
+		}
+		catch (IOException e) {
+		}	}
 
 	private void readIndex(ProcessingEnvironment processingEnvironment) {
-		final Map<String,String> map = new HashMap<>();
+		final Map<String,String> entityNameMappings = new HashMap<>();
 		try {
 			final FileObject resource = processingEnvironment.getFiler()
-					.getResource(StandardLocation.SOURCE_OUTPUT, "", "index");
+					.getResource(StandardLocation.SOURCE_OUTPUT, "", "entity-index");
 			try (Reader reader = resource.openReader(true)) {
 				new BufferedReader(reader).lines()
 						.map(line -> line.split(" "))
-						.forEach(tokens -> map.put(tokens[0], tokens[1]));
+						.forEach(tokens -> entityNameMappings.put(tokens[0], tokens[1]));
 			}
 			catch (IOException ioe) {
 			}
@@ -701,7 +756,30 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 		catch (IOException e) {
 		}
-		context.setEntityNameMappings(map);
+		context.setEntityNameMappings(entityNameMappings);
+
+		final Map<String,Set<String>> enumTypesByValue = new HashMap<>();
+		try {
+			final FileObject resource = processingEnvironment.getFiler()
+					.getResource(StandardLocation.SOURCE_OUTPUT, "", "entity-index");
+			try (Reader reader = resource.openReader(true)) {
+				new BufferedReader(reader).lines()
+						.map(line -> line.split(" "))
+						.forEach(tokens -> {
+							HashSet<String> set = new HashSet<>();
+							for (int i = 1; i < tokens.length; i++) {
+								set.add(tokens[i]);
+							}
+							enumTypesByValue.put(tokens[0], set);
+						});
+			}
+			catch (IOException ioe) {
+			}
+			resource.delete();
+		}
+		catch (IOException e) {
+		}
+		context.setEnumTypesByValue(enumTypesByValue);
 	}
 
 }

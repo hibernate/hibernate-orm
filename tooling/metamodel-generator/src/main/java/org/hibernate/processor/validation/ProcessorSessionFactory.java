@@ -7,6 +7,7 @@
 package org.hibernate.processor.validation;
 
 import jakarta.persistence.AccessType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.BasicType;
@@ -43,7 +44,6 @@ import javax.lang.model.util.Types;
 import java.beans.Introspector;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,8 +65,11 @@ import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 @SuppressWarnings("nullness")
 public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
-	public static MockSessionFactory create(ProcessingEnvironment environment, Map<String,String> entityNameMappings) {
-		return instance.make(environment, entityNameMappings);
+	public static MockSessionFactory create(
+			ProcessingEnvironment environment,
+			Map<String,String> entityNameMappings,
+			Map<String, Set<String>> enumTypesByValue) {
+		return instance.make(environment, entityNameMappings, enumTypesByValue);
 	}
 
 	static final Mocker<ProcessorSessionFactory> instance = Mocker.variadic(ProcessorSessionFactory.class);
@@ -81,11 +84,16 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final Elements elementUtil;
 	private final Types typeUtil;
 	private final Map<String, String> entityNameMappings;
+	private final Map<String, Set<String>> enumTypesByValue;
 
-	public ProcessorSessionFactory(ProcessingEnvironment processingEnv, Map<String,String> entityNameMappings) {
-		elementUtil = processingEnv.getElementUtils();
-		typeUtil = processingEnv.getTypeUtils();
+	public ProcessorSessionFactory(
+			ProcessingEnvironment processingEnvironment,
+			Map<String,String> entityNameMappings,
+			Map<String, Set<String>> enumTypesByValue) {
+		elementUtil = processingEnvironment.getElementUtils();
+		typeUtil = processingEnvironment.getTypeUtils();
 		this.entityNameMappings = entityNameMappings;
+		this.enumTypesByValue = enumTypesByValue;
 	}
 
 	@Override
@@ -198,28 +206,31 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				: IntegerJdbcType.INSTANCE;
 	}
 
-	final Map<String, Set<String>> result = new HashMap<>();
+	final Map<String, Set<String>> cachedEnumTypesByValue = new HashMap<>();
 
-	@Override
-	Map<String, Set<String>> getAllowedEnumLiteralTexts() {
-		//TODO: elementUtil.getAllModuleElements();
-		if ( result.isEmpty() ) {
-			for (Element mod : elementUtil.getModuleElement("").getEnclosedElements()) {
-				for (Element element : mod.getEnclosedElements()) {
-					if (element.getKind() == ElementKind.ENUM) {
-						TypeElement typeElement = (TypeElement) element;
-						for (Element member : element.getEnclosedElements()) {
-							if (member.getKind() == ElementKind.ENUM_CONSTANT) {
-								String name = member.getSimpleName().toString();
-								result.computeIfAbsent( name, s -> new HashSet<>() )
-										.add( typeElement.getQualifiedName().toString() );
-							}
-						}
-					}
-				}
-			}
+	@Override @Nullable
+	Set<String> getEnumTypesForValue(String value) {
+		Set<String> result = enumTypesByValue.get(value);
+		if ( result != null ) {
+			return result;
 		}
-		return result;
+//		if ( cachedEnumTypesByValue.isEmpty() ) {
+//			for (Element mod : elementUtil.getModuleElement("").getEnclosedElements()) {
+//				for (Element element : mod.getEnclosedElements()) {
+//					if (element.getKind() == ElementKind.ENUM) {
+//						TypeElement typeElement = (TypeElement) element;
+//						for (Element member : element.getEnclosedElements()) {
+//							if (member.getKind() == ElementKind.ENUM_CONSTANT) {
+//								String name = member.getSimpleName().toString();
+//								cachedEnumTypesByValue.computeIfAbsent( name, s -> new HashSet<>() )
+//										.add( typeElement.getQualifiedName().toString() );
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+		return cachedEnumTypesByValue.get(value);
 	}
 
 	private static Type elementCollectionElementType(TypeElement elementType,

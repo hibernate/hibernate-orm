@@ -102,7 +102,7 @@ public abstract class AnnotationMeta implements Metamodel {
 									new WarningErrorHandler( context, getElement(), mirror, value, hql,
 											reportErrors, checkHql ),
 									ProcessorSessionFactory.create( context.getProcessingEnvironment(),
-											context.getEntityNameMappings() )
+											context.getEntityNameMappings(), context.getEnumTypesByValue() )
 							);
 					if ( statement instanceof SqmSelectStatement
 							&& isQueryMethodName( name ) ) {

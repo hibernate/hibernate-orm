@@ -7,6 +7,7 @@
 package org.hibernate.processor.validation;
 
 import jakarta.persistence.AccessType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.BasicType;
@@ -21,6 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -40,10 +42,13 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.StandardLocation;
 import java.beans.Introspector;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,8 +70,11 @@ import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 @SuppressWarnings("nullness")
 public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
-	public static MockSessionFactory create(ProcessingEnvironment environment) {
-		return instance.make(environment);
+	public static MockSessionFactory create(
+			ProcessingEnvironment environment,
+			Map<String,String> entityNameMappings,
+			Map<String, Set<String>> enumTypesByValue) {
+		return instance.make(environment, entityNameMappings, enumTypesByValue);
 	}
 
 	static final Mocker<ProcessorSessionFactory> instance = Mocker.variadic(ProcessorSessionFactory.class);
@@ -80,10 +88,19 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private final Elements elementUtil;
 	private final Types typeUtil;
+	private final Filer filer;
+	private final Map<String, String> entityNameMappings;
+	private final Map<String, Set<String>> enumTypesByValue;
 
-	public ProcessorSessionFactory(ProcessingEnvironment processingEnv) {
-		elementUtil = processingEnv.getElementUtils();
-		typeUtil = processingEnv.getTypeUtils();
+	public ProcessorSessionFactory(
+			ProcessingEnvironment processingEnvironment,
+			Map<String,String> entityNameMappings,
+			Map<String, Set<String>> enumTypesByValue) {
+		elementUtil = processingEnvironment.getElementUtils();
+		typeUtil = processingEnvironment.getTypeUtils();
+		filer = processingEnvironment.getFiler();
+		this.entityNameMappings = entityNameMappings;
+		this.enumTypesByValue = enumTypesByValue;
 	}
 
 	@Override
@@ -196,28 +213,27 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				: IntegerJdbcType.INSTANCE;
 	}
 
-	final Map<String, Set<String>> result = new HashMap<>();
+	public static final String ENTITY_INDEX = "entity.index";
 
-	@Override
-	Map<String, Set<String>> getAllowedEnumLiteralTexts() {
-		//TODO: elementUtil.getAllModuleElements();
-		if ( result.isEmpty() ) {
-			for (Element mod : elementUtil.getModuleElement("").getEnclosedElements()) {
-				for (Element element : mod.getEnclosedElements()) {
-					if (element.getKind() == ElementKind.ENUM) {
-						TypeElement typeElement = (TypeElement) element;
-						for (Element member : element.getEnclosedElements()) {
-							if (member.getKind() == ElementKind.ENUM_CONSTANT) {
-								String name = member.getSimpleName().toString();
-								result.computeIfAbsent( name, s -> new HashSet<>() )
-										.add( typeElement.getQualifiedName().toString() );
-							}
-						}
-					}
-				}
-			}
+	@Override @Nullable
+	Set<String> getEnumTypesForValue(String value) {
+		Set<String> result = enumTypesByValue.get(value);
+		if ( result != null ) {
+			return result;
 		}
-		return result;
+		try (Reader reader = filer.getResource(StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, value)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			return Set.of(buffered.readLine().split(" "));
+		}
+		catch (IOException e) {
+		}
+		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, '.' + value)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			return Set.of(buffered.readLine().split(" "));
+		}
+		catch (IOException e) {
+		}
+		return null;
 	}
 
 	private static Type elementCollectionElementType(TypeElement elementType,
@@ -430,6 +446,30 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if ( cached != null ) {
 			return cached;
 		}
+		String qualifiedName = entityNameMappings.get(entityName);
+		if ( qualifiedName != null ) {
+			TypeElement result = elementUtil.getTypeElement(qualifiedName);
+			entityCache.put(entityName, result);
+			return result;
+		}
+		StandardLocation location = StandardLocation.SOURCE_OUTPUT;
+		try (Reader reader = filer.getResource(location, ENTITY_INDEX, entityName)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			TypeElement result = elementUtil.getTypeElement(buffered.readLine());
+			entityCache.put(entityName, result);
+			return result;
+		}
+		catch (IOException e) {
+		}
+		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, entityName)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			TypeElement result = elementUtil.getTypeElement(buffered.readLine());
+			entityCache.put(entityName, result);
+			return result;
+		}
+		catch (IOException e) {
+		}
+
 		TypeElement symbol =
 				findEntityByUnqualifiedName(entityName,
 						elementUtil.getModuleElement(""));

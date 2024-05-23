@@ -701,7 +701,12 @@ public class QuerySqmImpl<R>
 	}
 
 	protected int doExecuteUpdate() {
-		return resolveNonSelectQueryPlan().executeUpdate( this );
+		try {
+			return resolveNonSelectQueryPlan().executeUpdate( this );
+		}
+		finally {
+			domainParameterXref.clearExpansions();
+		}
 	}
 
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {

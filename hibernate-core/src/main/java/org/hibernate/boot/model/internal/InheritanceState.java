@@ -17,7 +17,9 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.EmbeddedId;
@@ -163,6 +165,15 @@ public class InheritanceState {
 		return elementsToProcess;
 	}
 
+	public void postProcess(Component component) {
+		if ( classesToProcessForMappedSuperclass.isEmpty() ) {
+			// Component classes might be processed more than once,
+			// so only do this the first time we encounter them
+			getMappedSuperclassesTillNextEntityOrdered();
+		}
+		addMappedSuperClassInMetadata( component );
+	}
+
 	public XClass getClassWithIdClass(boolean evenIfSubclass) {
 		if ( !evenIfSubclass && hasParents() ) {
 			return null;
@@ -300,7 +311,21 @@ public class InheritanceState {
 		while ( superclassState != null && superclassState.isEmbeddableSuperclass() );
 	}
 
+	private void addMappedSuperClassInMetadata(Component component) {
+		org.hibernate.mapping.MappedSuperclass mappedSuperclass = processMappedSuperclass( component.getTable() );
+		if ( mappedSuperclass != null ) {
+			component.setMappedSuperclass( mappedSuperclass );
+		}
+	}
+
 	private void addMappedSuperClassInMetadata(PersistentClass persistentClass) {
+		org.hibernate.mapping.MappedSuperclass mappedSuperclass = processMappedSuperclass( persistentClass.getImplicitTable() );
+		if ( mappedSuperclass != null ) {
+			persistentClass.setSuperMappedSuperclass( mappedSuperclass );
+		}
+	}
+
+	private org.hibernate.mapping.MappedSuperclass processMappedSuperclass(Table implicitTable) {
 		//add @MappedSuperclass in the metadata
 		// classes from 0 to n-1 are @MappedSuperclass and should be linked
 		final InheritanceState superEntityState = getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
@@ -317,14 +342,12 @@ public class InheritanceState {
 			//add MappedSuperclass if not already there
 			mappedSuperclass = buildingContext.getMetadataCollector().getMappedSuperclass( type );
 			if ( mappedSuperclass == null ) {
-				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass( parentSuperclass, superEntity, persistentClass.getImplicitTable() );
+				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass( parentSuperclass, superEntity, implicitTable );
 				mappedSuperclass.setMappedClass( type );
 				buildingContext.getMetadataCollector().addMappedSuperclass( type, mappedSuperclass );
 			}
 		}
-		if ( mappedSuperclass != null ) {
-			persistentClass.setSuperMappedSuperclass( mappedSuperclass );
-		}
+		return mappedSuperclass;
 	}
 
 	public static final class ElementsToProcess {

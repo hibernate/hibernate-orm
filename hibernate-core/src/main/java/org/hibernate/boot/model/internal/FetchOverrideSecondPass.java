@@ -6,28 +6,26 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.Map;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchProfile.FetchOverride;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.ClassDetails;
-
-import java.util.Map;
 
 /**
  * @author Hardy Ferentschik
  */
 public class FetchOverrideSecondPass implements SecondPass {
 	private final String fetchProfileName;
-	private final AnnotationUsage<FetchOverride> fetch;
+	private final FetchOverride fetch;
 	private final MetadataBuildingContext buildingContext;
 
 	public FetchOverrideSecondPass(
 			String fetchProfileName,
-			AnnotationUsage<FetchOverride> fetch,
+			FetchOverride fetch,
 			MetadataBuildingContext buildingContext) {
 		this.fetchProfileName = fetchProfileName;
 		this.fetch = fetch;
@@ -36,8 +34,8 @@ public class FetchOverrideSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		final ClassDetails entityClassDetails = fetch.getClassDetails( "entity" );
-		final String attributeName = fetch.getString( "association" );
+		final Class<?> entityClassDetails = fetch.entity();
+		final String attributeName = fetch.association();
 
 		// throws MappingException in case the property does not exist
 		buildingContext.getMetadataCollector()
@@ -49,8 +47,8 @@ public class FetchOverrideSecondPass implements SecondPass {
 		profile.addFetch( new FetchProfile.Fetch(
 				entityClassDetails.getName(),
 				attributeName,
-				fetch.getEnum( "mode" ),
-				fetch.getEnum( "fetch" )
+				fetch.mode(),
+				fetch.fetch()
 		) );
 	}
 }

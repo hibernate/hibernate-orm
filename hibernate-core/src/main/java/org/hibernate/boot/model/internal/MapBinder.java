@@ -34,7 +34,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -112,7 +111,7 @@ public class MapBinder extends CollectionBinder {
 
 	private void makeOneToManyMapKeyColumnNullableIfNotInProperty(MemberDetails property) {
 		final Map map = (Map) this.collection;
-		if ( map.isOneToMany() && property.hasAnnotationUsage( MapKeyColumn.class ) ) {
+		if ( map.isOneToMany() && property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
 			final Value indexValue = map.getIndex();
 			if ( indexValue.getColumnSpan() != 1 ) {
 				throw new AssertionFailure( "Map key mapped by @MapKeyColumn does not have 1 column" );
@@ -234,9 +233,9 @@ public class MapBinder extends CollectionBinder {
 	private static String getKeyType(MemberDetails property) {
 		//target has priority over reflection for the map key type
 		//JPA 2 has priority
-		final AnnotationUsage<MapKeyClass> mapKeyClassAnn = property.getAnnotationUsage( MapKeyClass.class );
+		final MapKeyClass mapKeyClassAnn = property.getDirectAnnotationUsage( MapKeyClass.class );
 		final Class<?> target = mapKeyClassAnn != null
-				? mapKeyClassAnn.getClassDetails( "value" ).toJavaClass()
+				? mapKeyClassAnn.value()
 				: void.class;
 		return void.class.equals( target ) ? property.getMapKeyType().getName() : target.getName();
 	}
@@ -290,16 +289,16 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private void handleForeignKey(MemberDetails property, ManyToOne element) {
-		final AnnotationUsage<ForeignKey> foreignKey = getMapKeyForeignKey( property );
+		final ForeignKey foreignKey = getMapKeyForeignKey( property );
 		if ( foreignKey != null ) {
-			final ConstraintMode constraintMode = foreignKey.getEnum( "value" );
+			final ConstraintMode constraintMode = foreignKey.value();
 			if ( constraintMode == ConstraintMode.NO_CONSTRAINT
 					|| constraintMode == ConstraintMode.PROVIDER_DEFAULT && getBuildingContext().getBuildingOptions().isNoConstraintByDefault() ) {
 				element.disableForeignKey();
 			}
 			else {
-				element.setForeignKeyName( nullIfEmpty( foreignKey.getString( "name" ) ) );
-				element.setForeignKeyDefinition( nullIfEmpty( foreignKey.getString( "foreignKeyDefinition" ) ) );
+				element.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+				element.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
 			}
 		}
 	}
@@ -378,7 +377,7 @@ public class MapBinder extends CollectionBinder {
 				accessType,
 				//TODO be smart with isNullable
 				true,
-				new EntityBinder(),
+				new EntityBinder( buildingContext ),
 				false,
 				false,
 				true,
@@ -401,10 +400,9 @@ public class MapBinder extends CollectionBinder {
 			MemberDetails property,
 			TypeDetails returnedClass,
 			MetadataBuildingContext context) {
-		final AnnotationUsage<MapKeyCompositeType> compositeType = property.getAnnotationUsage( MapKeyCompositeType.class );
+		final MapKeyCompositeType compositeType = property.getDirectAnnotationUsage( MapKeyCompositeType.class );
 		if ( compositeType != null ) {
-			final ClassDetails compositeTypeImplDetails = compositeType.getClassDetails( "value" );
-			return compositeTypeImplDetails.toJavaClass();
+			return compositeType.value();
 		}
 
 		if ( returnedClass != null ) {
@@ -414,28 +412,30 @@ public class MapBinder extends CollectionBinder {
 		return null;
 	}
 
-	private AnnotationUsage<jakarta.persistence.ForeignKey> getMapKeyForeignKey(MemberDetails property) {
-		final AnnotationUsage<MapKeyJoinColumns> mapKeyJoinColumns = property.getAnnotationUsage( MapKeyJoinColumns.class );
-		final AnnotationUsage<MapKeyJoinColumn> mapKeyJoinColumn = property.getSingleAnnotationUsage( MapKeyJoinColumn.class );
+	private jakarta.persistence.ForeignKey getMapKeyForeignKey(MemberDetails property) {
+		final MapKeyJoinColumns mapKeyJoinColumns = property.getDirectAnnotationUsage( MapKeyJoinColumns.class );
 		if ( mapKeyJoinColumns != null ) {
-			return mapKeyJoinColumns.getNestedUsage( "foreignKey" );
+			return mapKeyJoinColumns.foreignKey();
 		}
-		else if ( mapKeyJoinColumn != null ) {
-			return mapKeyJoinColumn.getNestedUsage( "foreignKey" );
+
+		final MapKeyJoinColumn mapKeyJoinColumn = property.getDirectAnnotationUsage( MapKeyJoinColumn.class );
+		if ( mapKeyJoinColumn != null ) {
+			return mapKeyJoinColumn.foreignKey();
 		}
-		else {
-			return null;
-		}
+
+		return null;
 	}
 
 	private boolean mappingDefinedAttributeOverrideOnMapKey(MemberDetails property) {
-		if ( property.hasAnnotationUsage( AttributeOverride.class ) ) {
-			return namedMapKey( property.getAnnotationUsage( AttributeOverride.class ) );
+		final AttributeOverride overrideAnn = property.getDirectAnnotationUsage( AttributeOverride.class );
+		if ( overrideAnn != null ) {
+			return namedMapKey( overrideAnn );
 		}
-		if ( property.hasAnnotationUsage( AttributeOverrides.class ) ) {
-			final AnnotationUsage<AttributeOverrides> annotations = property.getAnnotationUsage( AttributeOverrides.class );
-			for ( AnnotationUsage<AttributeOverride> attributeOverride : annotations.<AnnotationUsage<AttributeOverride>>getList( "value" ) ) {
-				if ( namedMapKey( attributeOverride ) ) {
+
+		final AttributeOverrides overridesAnn = property.getDirectAnnotationUsage( AttributeOverrides.class );
+		if ( overridesAnn != null ) {
+			for ( AttributeOverride nestedAnn : overridesAnn.value() ) {
+				if ( namedMapKey( nestedAnn ) ) {
 					return true;
 				}
 			}
@@ -443,8 +443,8 @@ public class MapBinder extends CollectionBinder {
 		return false;
 	}
 
-	private boolean namedMapKey(AnnotationUsage<AttributeOverride> annotation) {
-		return annotation.getString( "name" ).startsWith( "key." );
+	private boolean namedMapKey(AttributeOverride annotation) {
+		return annotation.name().startsWith( "key." );
 	}
 
 	private Value createFormulatedValue(

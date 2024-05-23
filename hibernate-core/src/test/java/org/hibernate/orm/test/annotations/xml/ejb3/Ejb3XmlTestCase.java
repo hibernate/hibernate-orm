@@ -10,8 +10,9 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
-import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
-import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
+import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
+import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
@@ -57,7 +58,7 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 	protected MemberDetails getAttributeMember(Class<?> entityClass, String fieldName, String xmlResourceName) {
 		final ClassDetails classDetails = getClassDetails( entityClass, xmlResourceName );
 		final FieldDetails fieldByName = classDetails.findFieldByName( fieldName );
-		if ( !fieldByName.getAllAnnotationUsages().isEmpty() ) {
+		if ( !fieldByName.getDirectAnnotationUsages().isEmpty() ) {
 			return fieldByName;
 		}
 
@@ -72,6 +73,8 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 		throw new IllegalStateException( "Unable to locate persistent attribute : " + fieldName );
 	}
 
+	private SourceModelBuildingContext sourceModelContext;
+
 	protected ClassDetails getClassDetails(Class<?> entityClass, String xmlResourceName) {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder().addLoadedClasses( entityClass )
 				.addXmlMappings( "org/hibernate/orm/test/annotations/xml/ejb3/" + xmlResourceName )
@@ -82,7 +85,13 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 				persistenceUnitMetadata
 		);
 
-		final SourceModelBuildingContext modelBuildingContext = new SourceModelBuildingContextImpl( SIMPLE_CLASS_LOADING, null );
+		final SourceModelBuildingContext modelBuildingContext = new SourceModelBuildingContextImpl(
+				SIMPLE_CLASS_LOADING,
+				null,
+				(contributions, inFlightContext) -> {
+					OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
+				}
+		);
 		final BootstrapContext bootstrapContext = new BootstrapContextImpl();
 		final GlobalRegistrationsImpl globalRegistrations = new GlobalRegistrationsImpl(
 				modelBuildingContext,

@@ -13,7 +13,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Set;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -38,7 +37,7 @@ public class SetBinder extends CollectionBinder {
 	}
 
 	@Override
-	public void setSqlOrderBy(AnnotationUsage<OrderBy> orderByAnn) {
+	public void setSqlOrderBy(OrderBy orderByAnn) {
 		if ( orderByAnn != null ) {
 			super.setSqlOrderBy( orderByAnn );
 		}

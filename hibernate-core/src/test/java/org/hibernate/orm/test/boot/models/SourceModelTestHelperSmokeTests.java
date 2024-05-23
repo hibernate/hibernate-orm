@@ -6,12 +6,9 @@
  */
 package org.hibernate.orm.test.boot.models;
 
-import java.util.List;
-
 import org.hibernate.models.AnnotationAccessException;
 import org.hibernate.models.internal.jandex.JandexClassDetails;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
@@ -47,44 +44,44 @@ public class SourceModelTestHelperSmokeTests {
 		assertThat( classDetails ).isNotNull();
 		assertThat( classDetails ).isInstanceOf( JandexClassDetails.class );
 
-		final AnnotationUsage<Entity> entityAnnotation = classDetails.getAnnotationUsage( Entity.class );
+		final Entity entityAnnotation = classDetails.getDirectAnnotationUsage( Entity.class );
 		assertThat( entityAnnotation ).isNotNull();
-		assertThat( entityAnnotation.<String>getAttributeValue( "name" ) ).isEqualTo( "AnEntity" );
+		assertThat( entityAnnotation.name() ).isEqualTo( "AnEntity" );
 
-		final AnnotationUsage<Table> tableAnnotation = classDetails.getAnnotationUsage( Table.class );
+		final Table tableAnnotation = classDetails.getDirectAnnotationUsage( Table.class );
 		assertThat( tableAnnotation ).isNotNull();
-		assertThat( tableAnnotation.<String>getAttributeValue( "name" ) ).isEqualTo( "the_table" );
+		assertThat( tableAnnotation.name() ).isEqualTo( "the_table" );
 
-		final AnnotationUsage<Inheritance> inheritanceAnnotation = classDetails.getAnnotationUsage( Inheritance.class );
+		final Inheritance inheritanceAnnotation = classDetails.getDirectAnnotationUsage( Inheritance.class );
 		assertThat( inheritanceAnnotation ).isNull();
 
 		final FieldDetails idField = classDetails.findFieldByName( "id" );
 		assertThat( idField ).isNotNull();
-		final AnnotationUsage<Id> idAnnotation = idField.getAnnotationUsage( Id.class );
+		final Id idAnnotation = idField.getDirectAnnotationUsage( Id.class );
 		assertThat( idAnnotation ).isNotNull();
 
 		final FieldDetails nameField = classDetails.findFieldByName( "name" );
 		assertThat( nameField ).isNotNull();
-		final AnnotationUsage<Column> nameColumnAnnotation = nameField.getAnnotationUsage( Column.class );
+		final Column nameColumnAnnotation = nameField.getDirectAnnotationUsage( Column.class );
 		assertThat( nameColumnAnnotation ).isNotNull();
 
 		try {
-			classDetails.getAnnotationUsage( NamedQuery.class );
+			classDetails.getAnnotationUsage( NamedQuery.class, buildingContext );
 			fail( "Expecting failure" );
 		}
 		catch (AnnotationAccessException expected) {
 		}
 
-		final List<AnnotationUsage<NamedQuery>> repeatedUsages = classDetails.getRepeatedAnnotationUsages( NamedQuery.class );
+		final NamedQuery[] repeatedUsages = classDetails.getRepeatedAnnotationUsages( NamedQuery.class, buildingContext );
 		assertThat( repeatedUsages ).hasSize( 2 );
 
-		final AnnotationUsage<NamedQuery> queryOne = classDetails.getNamedAnnotationUsage( NamedQuery.class, "one" );
+		final NamedQuery queryOne = classDetails.getNamedAnnotationUsage( NamedQuery.class, "one", buildingContext );
 		assertThat( queryOne ).isNotNull();
 
-		final AnnotationUsage<NamedQuery> queryTwo = classDetails.getNamedAnnotationUsage( NamedQuery.class, "two", "name" );
+		final NamedQuery queryTwo = classDetails.getNamedAnnotationUsage( NamedQuery.class, "two", "name",  buildingContext );
 		assertThat( queryTwo ).isNotNull();
 
-		assertThat( classDetails.getRepeatedAnnotationUsages( NamedQuery.class ) ).hasSize( 2 );
+		assertThat( classDetails.getRepeatedAnnotationUsages( NamedQuery.class, buildingContext ) ).hasSize( 2 );
 	}
 
 	@Entity(name="AnEntity")

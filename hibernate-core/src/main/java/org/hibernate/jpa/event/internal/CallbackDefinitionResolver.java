@@ -6,21 +6,23 @@
  */
 package org.hibernate.jpa.event.internal;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
-import org.hibernate.boot.models.categorize.spi.JpaEventListener;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
+import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.Property;
-import org.hibernate.models.spi.AnnotationUsage;
+import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MethodDetails;
@@ -48,8 +50,10 @@ public final class CallbackDefinitionResolver {
 			MetadataBuildingContext metadataBuildingContext,
 			ClassDetails entityClass,
 			CallbackType callbackType) {
-		final GlobalRegistrations globalRegistrations = metadataBuildingContext.getMetadataCollector().getGlobalRegistrations();
+		final InFlightMetadataCollector metadataCollector = metadataBuildingContext.getMetadataCollector();
+		final GlobalRegistrations globalRegistrations = metadataCollector.getGlobalRegistrations();
 		final List<JpaEventListener> globalListenerRegistrations = globalRegistrations.getEntityListenerRegistrations();
+		final SourceModelBuildingContext sourceModelContext = metadataCollector.getSourceModelBuildingContext();
 
 		List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		List<String> callbacksMethodNames = new ArrayList<>();
@@ -63,7 +67,7 @@ public final class CallbackDefinitionResolver {
 			CallbackDefinition callbackDefinition = null;
 			final List<MethodDetails> methodsDetailsList = currentClazz.getMethods();
 			for ( MethodDetails methodDetails : methodsDetailsList ) {
-				if ( !methodDetails.hasAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
+				if ( !methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
 					continue;
 				}
 				if ( callbacksMethodNames.contains( methodDetails.getName() ) ) {
@@ -102,17 +106,17 @@ public final class CallbackDefinitionResolver {
 				}
 			}
 			if ( !stopListeners ) {
-				applyListeners( currentClazz, orderedListeners );
-				stopListeners = currentClazz.hasAnnotationUsage( ExcludeSuperclassListeners.class );
-				stopDefaultListeners = currentClazz.hasAnnotationUsage( ExcludeDefaultListeners.class );
+				applyListeners( currentClazz, orderedListeners, sourceModelContext );
+				stopListeners = currentClazz.hasDirectAnnotationUsage( ExcludeSuperclassListeners.class );
+				stopDefaultListeners = currentClazz.hasDirectAnnotationUsage( ExcludeDefaultListeners.class );
 			}
 
 			do {
 				currentClazz = currentClazz.getSuperClass();
 			}
 			while ( currentClazz != null
-					&& !( currentClazz.hasAnnotationUsage( Entity.class )
-					|| currentClazz.hasAnnotationUsage( MappedSuperclass.class ) )
+					&& !( currentClazz.hasDirectAnnotationUsage( Entity.class )
+					|| currentClazz.hasDirectAnnotationUsage( MappedSuperclass.class ) )
 					);
 		}
 		while ( currentClazz != null );
@@ -131,7 +135,7 @@ public final class CallbackDefinitionResolver {
 			CallbackDefinition callbackDefinition = null;
 			if ( listenerClassDetails != null ) {
 				for ( MethodDetails methodDetails : listenerClassDetails.getMethods() ) {
-					if ( methodDetails.hasAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
+					if ( methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
 						final String methodName = methodDetails.getName();
 						//overridden method, remove the superclass overridden method
 						if ( callbackDefinition == null ) {
@@ -195,7 +199,7 @@ public final class CallbackDefinitionResolver {
 			CallbackDefinition callbackDefinition = null;
 			final List<MethodDetails> methodsDetailsList = currentClazz.getMethods();
 			for ( MethodDetails methodDetails : methodsDetailsList ) {
-				if ( !methodDetails.hasAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
+				if ( !methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
 					continue;
 				}
 
@@ -237,7 +241,7 @@ public final class CallbackDefinitionResolver {
 			do {
 				currentClazz = currentClazz.getSuperClass();
 			}
-			while ( currentClazz != null && !currentClazz.hasAnnotationUsage( MappedSuperclass.class ) );
+			while ( currentClazz != null && !currentClazz.hasDirectAnnotationUsage( MappedSuperclass.class ) );
 		}
 		while ( currentClazz != null );
 
@@ -260,24 +264,32 @@ public final class CallbackDefinitionResolver {
 		}
 	}
 
-	private static void applyListeners(ClassDetails currentClazz, List<ClassDetails> listOfListeners) {
-		final AnnotationUsage<EntityListeners> entityListeners = currentClazz.getAnnotationUsage( EntityListeners.class );
+	private static void applyListeners(
+			ClassDetails currentClazz,
+			List<ClassDetails> listOfListeners,
+			SourceModelBuildingContext sourceModelContext) {
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
+
+		final EntityListeners entityListeners = currentClazz.getDirectAnnotationUsage( EntityListeners.class );
 		if ( entityListeners != null ) {
-			final List<ClassDetails> listeners = entityListeners.getList( "value" );
-			int size = listeners.size();
+			final Class<?>[] listeners = entityListeners.value();
+			int size = listeners.length;
 			for ( int index = size - 1; index >= 0; index-- ) {
-				listOfListeners.add( listeners.get( index ) );
+				listOfListeners.add( classDetailsRegistry.resolveClassDetails( listeners[index].getName() ) );
 			}
 		}
 
 		if ( useAnnotationAnnotatedByListener ) {
-			final List<AnnotationUsage<?>> metaAnnotatedUsageList = currentClazz.getMetaAnnotated( EntityListeners.class );
-			for ( AnnotationUsage<?> metaAnnotatedUsage : metaAnnotatedUsageList ) {
-				final AnnotationUsage<EntityListeners> metaAnnotatedListeners = metaAnnotatedUsage.getAnnotationDescriptor().getAnnotationUsage( EntityListeners.class );
-				final List<ClassDetails> listeners = metaAnnotatedListeners.getList( "value" );
-				int size = listeners.size();
-				for ( int index = size - 1; index >= 0; index-- ) {
-					listOfListeners.add( listeners.get( index ) );
+			final List<? extends Annotation> metaAnnotatedUsageList = currentClazz.getMetaAnnotated( EntityListeners.class, sourceModelContext );
+			for ( Annotation metaAnnotatedUsage : metaAnnotatedUsageList ) {
+				final AnnotationDescriptor<? extends Annotation> descriptor = sourceModelContext.getAnnotationDescriptorRegistry()
+						.getDescriptor( metaAnnotatedUsage.getClass() );
+				final EntityListeners metaAnnotatedListeners = descriptor.getDirectAnnotationUsage( EntityListeners.class );
+				final Class<?>[] listeners = metaAnnotatedListeners.value();
+				for ( int index = listeners.length - 1; index >= 0; index-- ) {
+					listOfListeners.add(
+							sourceModelContext.getClassDetailsRegistry().resolveClassDetails( listeners[index].getName() )
+					);
 				}
 			}
 		}

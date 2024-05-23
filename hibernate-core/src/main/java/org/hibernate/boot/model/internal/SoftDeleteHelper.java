@@ -21,7 +21,6 @@ import org.hibernate.metamodel.mapping.SoftDeletableModelPart;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SoftDeleteMappingImpl;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -45,19 +44,18 @@ public class SoftDeleteHelper {
 	/**
 	 * Creates and binds the column and value for modeling the soft-delete in the database
 	 *
-	 * @param softDeleteConfigAnnotation The SoftDelete annotation
+	 * @param softDeleteConfig The SoftDelete annotation
 	 * @param target The thing which is to be soft-deleted
 	 * @param table The table to which the soft-delete should be applied
 	 * @param context The processing context for access to needed info and services
 	 */
 	public static void bindSoftDeleteIndicator(
-			AnnotationUsage<SoftDelete> softDeleteConfigAnnotation,
+			SoftDelete softDeleteConfig,
 			SoftDeletable target,
 			Table table,
 			MetadataBuildingContext context) {
-		assert softDeleteConfigAnnotation != null;
+		assert softDeleteConfig != null;
 
-		final SoftDelete softDeleteConfig = softDeleteConfigAnnotation.toAnnotation();
 		final BasicValue softDeleteIndicatorValue = createSoftDeleteIndicatorValue( softDeleteConfig, table, context );
 		final Column softDeleteIndicatorColumn = createSoftDeleteIndicatorColumn(
 				softDeleteConfig,

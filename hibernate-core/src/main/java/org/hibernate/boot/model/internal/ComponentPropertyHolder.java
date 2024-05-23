@@ -8,7 +8,6 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
@@ -21,7 +20,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -111,7 +109,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			return false;
 		}
 
-		return memberDetails.hasAnnotationUsage( annotationType );
+		return memberDetails.hasDirectAnnotationUsage( annotationType );
 	}
 
 	private boolean hasAnnotation(
@@ -149,7 +147,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		processAttributeConversions( embeddableTypeDetails, infoMap );
 
 		// then we can overlay any conversions from the Embedded attribute
-		embeddedMemberDetails.forEachAnnotationUsage( Convert.class, (usage) -> {
+		embeddedMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 			final AttributeConversionInfo info = new AttributeConversionInfo( usage, embeddedMemberDetails );
 			if ( isEmpty( info.getAttributeName() ) ) {
 				throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
@@ -162,7 +160,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	private void processAttributeConversions(TypeDetails embeddableTypeDetails, Map<String, AttributeConversionInfo> infoMap) {
 		final ClassDetails embeddableClassDetails = embeddableTypeDetails.determineRawClass();
-		embeddableClassDetails.forEachAnnotationUsage( Convert.class, (usage) -> {
+		embeddableClassDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 			final AttributeConversionInfo info = new AttributeConversionInfo( usage, embeddableClassDetails );
 			if ( isEmpty( info.getAttributeName() ) ) {
 				throw new IllegalStateException( "@Convert placed on @Embeddable must define attributeName" );
@@ -205,7 +203,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			return;
 		}
 
-		propertyMemberDetails.forEachAnnotationUsage( Convert.class, (usage) -> {
+		propertyMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 			final AttributeConversionInfo info = new AttributeConversionInfo( usage, propertyMemberDetails );
 			attributeConversionInfoMap.put( attributeName, info );
 		} );
@@ -263,12 +261,12 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public Join addJoin(AnnotationUsage<JoinTable> joinTable, boolean noDelayInPkColumnCreation) {
+	public Join addJoin(JoinTable joinTable, boolean noDelayInPkColumnCreation) {
 		return parent.addJoin( joinTable, noDelayInPkColumnCreation );
 	}
 
 	@Override
-	public Join addJoin(AnnotationUsage<JoinTable> joinTable, Table table, boolean noDelayInPkColumnCreation) {
+	public Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation) {
 		return parent.addJoin( joinTable, table, noDelayInPkColumnCreation );
 	}
 
@@ -340,9 +338,9 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public List<AnnotationUsage<Column>> getOverriddenColumn(String propertyName) {
+	public Column[] getOverriddenColumn(String propertyName) {
 		//FIXME this is yukky
-		List<AnnotationUsage<Column>> result = super.getOverriddenColumn( propertyName );
+		Column[] result = super.getOverriddenColumn( propertyName );
 		if ( result == null ) {
 			final String userPropertyName = extractUserPropertyName( "id", propertyName );
 			if ( userPropertyName != null ) {

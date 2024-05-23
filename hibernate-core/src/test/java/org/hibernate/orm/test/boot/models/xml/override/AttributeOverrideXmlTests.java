@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.boot.models.xml.override;
 
-import java.util.List;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -17,7 +15,6 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
@@ -74,33 +71,27 @@ public class AttributeOverrideXmlTests {
 		assertThat( embeddable.getFields() ).hasSize( 4 );
 
 		final FieldDetails cityField = embeddable.findFieldByName( "city" );
-		assertThat( cityField.hasAnnotationUsage( Column.class ) ).isFalse();
+		assertThat( cityField.hasDirectAnnotationUsage( Column.class ) ).isFalse();
 	}
 
 	private static void checkOverrides(FieldDetails embedded, String prefix) {
-		final AnnotationUsage<AttributeOverrides> overridesUsage = embedded.getAnnotationUsage( AttributeOverrides.class );
+		final AttributeOverrides overridesUsage = embedded.getDirectAnnotationUsage( AttributeOverrides.class );
 		assertThat( overridesUsage ).isNotNull();
 
-		final List<AnnotationUsage<AttributeOverride>> overrideList = overridesUsage.getList( "value" );
+		final AttributeOverride[] overrideList = overridesUsage.value();
 		assertThat( overrideList ).hasSize( 4 );
 
-		for ( AnnotationUsage<AttributeOverride> overrideUsage : overrideList ) {
-			final String attributeName = overrideUsage.getString( "name" );
+		for ( AttributeOverride overrideUsage : overrideList ) {
+			final String attributeName = overrideUsage.name();
 
-			final AnnotationUsage<Column> columnUsage = overrideUsage.getNestedUsage( "column" );
-			final String columnName = columnUsage.getString( "name" );
+			final Column columnUsage = overrideUsage.column();
+			final String columnName = columnUsage.name();
 
-			if ( attributeName.equals( "street" ) ) {
-				assertThat( columnName ).isEqualTo( prefix + "street" );
-			}
-			else if ( attributeName.equals( "city" ) ) {
-				assertThat( columnName ).isEqualTo( prefix + "city" );
-			}
-			else if ( attributeName.equals( "state" ) ) {
-				assertThat( columnName ).isEqualTo( prefix + "state" );
-			}
-			else if ( attributeName.equals( "zip" ) ) {
-				assertThat( columnName ).isEqualTo( prefix + "zip" );
+			switch ( attributeName ) {
+				case "street" -> assertThat( columnName ).isEqualTo( prefix + "street" );
+				case "city" -> assertThat( columnName ).isEqualTo( prefix + "city" );
+				case "state" -> assertThat( columnName ).isEqualTo( prefix + "state" );
+				case "zip" -> assertThat( columnName ).isEqualTo( prefix + "zip" );
 			}
 		}
 

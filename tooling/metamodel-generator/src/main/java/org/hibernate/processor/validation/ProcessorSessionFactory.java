@@ -65,8 +65,8 @@ import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 @SuppressWarnings("nullness")
 public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
-	public static MockSessionFactory create(ProcessingEnvironment environment) {
-		return instance.make(environment);
+	public static MockSessionFactory create(ProcessingEnvironment environment, Map<String,String> entityNameMappings) {
+		return instance.make(environment, entityNameMappings);
 	}
 
 	static final Mocker<ProcessorSessionFactory> instance = Mocker.variadic(ProcessorSessionFactory.class);
@@ -80,10 +80,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private final Elements elementUtil;
 	private final Types typeUtil;
+	private final Map<String, String> entityNameMappings;
 
-	public ProcessorSessionFactory(ProcessingEnvironment processingEnv) {
+	public ProcessorSessionFactory(ProcessingEnvironment processingEnv, Map<String,String> entityNameMappings) {
 		elementUtil = processingEnv.getElementUtils();
 		typeUtil = processingEnv.getTypeUtils();
+		this.entityNameMappings = entityNameMappings;
 	}
 
 	@Override
@@ -429,6 +431,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		TypeElement cached = entityCache.get(entityName);
 		if ( cached != null ) {
 			return cached;
+		}
+		String qualifiedName = entityNameMappings.get(entityName);
+		if ( qualifiedName != null ) {
+			TypeElement result = elementUtil.getTypeElement(qualifiedName);
+			entityCache.put(entityName, result);
+			return result;
 		}
 		TypeElement symbol =
 				findEntityByUnqualifiedName(entityName,

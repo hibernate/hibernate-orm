@@ -27,9 +27,16 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,11 +50,35 @@ import static org.hibernate.processor.HibernateProcessor.ADD_GENERATION_DATE;
 import static org.hibernate.processor.HibernateProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION;
 import static org.hibernate.processor.HibernateProcessor.DEBUG_OPTION;
 import static org.hibernate.processor.HibernateProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
+import static org.hibernate.processor.HibernateProcessor.INCLUDE;
+import static org.hibernate.processor.HibernateProcessor.EXCLUDE;
 import static org.hibernate.processor.HibernateProcessor.LAZY_XML_PARSING;
 import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.SUPPRESS_JAKARTA_DATA_METAMODEL;
-import static org.hibernate.processor.util.Constants.*;
+import static org.hibernate.processor.util.Constants.EMBEDDABLE;
+import static org.hibernate.processor.util.Constants.ENTITY;
+import static org.hibernate.processor.util.Constants.FIND;
+import static org.hibernate.processor.util.Constants.HIB_FETCH_PROFILE;
+import static org.hibernate.processor.util.Constants.HIB_FETCH_PROFILES;
+import static org.hibernate.processor.util.Constants.HIB_FILTER_DEF;
+import static org.hibernate.processor.util.Constants.HIB_FILTER_DEFS;
+import static org.hibernate.processor.util.Constants.HIB_NAMED_NATIVE_QUERIES;
+import static org.hibernate.processor.util.Constants.HIB_NAMED_NATIVE_QUERY;
+import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERIES;
+import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERY;
+import static org.hibernate.processor.util.Constants.HQL;
+import static org.hibernate.processor.util.Constants.JD_REPOSITORY;
+import static org.hibernate.processor.util.Constants.MAPPED_SUPERCLASS;
+import static org.hibernate.processor.util.Constants.NAMED_ENTITY_GRAPH;
+import static org.hibernate.processor.util.Constants.NAMED_ENTITY_GRAPHS;
+import static org.hibernate.processor.util.Constants.NAMED_NATIVE_QUERIES;
+import static org.hibernate.processor.util.Constants.NAMED_NATIVE_QUERY;
+import static org.hibernate.processor.util.Constants.NAMED_QUERIES;
+import static org.hibernate.processor.util.Constants.NAMED_QUERY;
+import static org.hibernate.processor.util.Constants.SQL;
+import static org.hibernate.processor.util.Constants.SQL_RESULT_SET_MAPPING;
+import static org.hibernate.processor.util.Constants.SQL_RESULT_SET_MAPPINGS;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
@@ -85,7 +116,8 @@ import static org.hibernate.processor.util.TypeUtils.isClassOrRecordType;
 		ADD_GENERATION_DATE,
 		ADD_GENERATED_ANNOTATION,
 		ADD_SUPPRESS_WARNINGS_ANNOTATION,
-		SUPPRESS_JAKARTA_DATA_METAMODEL
+		SUPPRESS_JAKARTA_DATA_METAMODEL,
+		INCLUDE, EXCLUDE
 })
 public class HibernateProcessor extends AbstractProcessor {
 
@@ -168,13 +200,15 @@ public class HibernateProcessor extends AbstractProcessor {
 				"Hibernate compile-time tooling " + Version.getVersionString()
 		);
 
-		boolean fullyAnnotationConfigured = handleSettings( processingEnvironment );
+		final boolean fullyAnnotationConfigured = handleSettings( processingEnvironment );
 		if ( !fullyAnnotationConfigured ) {
 			new JpaDescriptorParser( context ).parseXml();
 			if ( context.isFullyXmlConfigured() ) {
 				createMetaModelClasses();
 			}
 		}
+
+		readIndex(processingEnvironment);
 	}
 
 	private boolean handleSettings(ProcessingEnvironment environment) {
@@ -275,6 +309,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			if ( !elementsToRedo.isEmpty() ) {
 				context.logMessage( Diagnostic.Kind.ERROR, "Failed to generate code for " + elementsToRedo );
 			}
+			writeIndex();
 		}
 		else if ( context.isFullyXmlConfigured() ) {
 			context.logMessage(
@@ -519,6 +554,18 @@ public class HibernateProcessor extends AbstractProcessor {
 			if ( hasAnnotation( element, ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE ) ) {
 				final TypeElement typeElement = (TypeElement) element;
 				final String qualifiedName = typeElement.getQualifiedName().toString();
+				final AnnotationMirror mirror = getAnnotationMirror(element, ENTITY);
+				if ( mirror != null ) {
+					String entityName = typeElement.getSimpleName().toString();
+					final AnnotationValue name = getAnnotationValue(mirror, "name");
+					if (name != null) {
+						final String explicitName = name.getValue().toString();
+						if ( !explicitName.isEmpty() ) {
+							entityName = explicitName;
+						}
+					}
+					context.addEntityNameMapping( entityName, qualifiedName );
+				}
 				final Metamodel alreadyExistingMetaEntity =
 						tryGettingExistingEntityFromContext( typeElement, qualifiedName );
 				if ( alreadyExistingMetaEntity != null && alreadyExistingMetaEntity.isMetaComplete() ) {
@@ -613,6 +660,48 @@ public class HibernateProcessor extends AbstractProcessor {
 		else if ( hasAnnotation( typeElement, EMBEDDABLE ) ) {
 			context.addDataMetaEmbeddable( key, entity );
 		}
+	}
+
+	private void writeIndex() {
+		try {
+			final FileObject resource = context.getProcessingEnvironment().getFiler()
+					.createResource(StandardLocation.SOURCE_OUTPUT, "", "index");
+			try (BufferedWriter writer = new BufferedWriter(resource.openWriter())) {
+				context.getEntityNameMappings()
+						.forEach( (entityName, qualifiedName) -> {
+							try {
+								writer.write(entityName);
+								writer.write(' ');
+								writer.write(qualifiedName);
+								writer.newLine();
+								writer.flush();
+							}
+							catch (IOException e) {
+							}
+						} );
+			}
+		}
+		catch (IOException e) {
+		}
+	}
+
+	private void readIndex(ProcessingEnvironment processingEnvironment) {
+		final Map<String,String> map = new HashMap<>();
+		try {
+			final FileObject resource = processingEnvironment.getFiler()
+					.getResource(StandardLocation.SOURCE_OUTPUT, "", "index");
+			try (Reader reader = resource.openReader(true)) {
+				new BufferedReader(reader).lines()
+						.map(line -> line.split(" "))
+						.forEach(tokens -> map.put(tokens[0], tokens[1]));
+			}
+			catch (IOException ioe) {
+			}
+			resource.delete();
+		}
+		catch (IOException e) {
+		}
+		context.setEntityNameMappings(map);
 	}
 
 }

@@ -106,6 +106,8 @@ public final class Context {
 	private String[] includes = {"*"};
 	private String[] excludes = {};
 
+	private Map<String, String> entityNameMappings;
+
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
 
@@ -482,5 +484,21 @@ public final class Context {
 		return !(inherited instanceof ExecutableElement)
 			|| elements.stream().noneMatch(member -> member instanceof ExecutableElement
 				&& getElementUtils().overrides((ExecutableElement) member, (ExecutableElement) inherited, type));
+	}
+
+	public void setEntityNameMappings(Map<String, String> entityNameMapping) {
+		this.entityNameMappings = entityNameMapping;
+	}
+
+	public Map<String, String> getEntityNameMappings() {
+		return entityNameMappings;
+	}
+
+	public void addEntityNameMapping(String entityName, String qualifiedName) {
+		entityNameMappings.put( entityName, qualifiedName );
+	}
+
+	public @Nullable String qualifiedNameForEntityName(String entityName) {
+		return entityNameMappings.get(entityName);
 	}
 }

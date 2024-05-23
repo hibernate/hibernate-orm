@@ -108,7 +108,6 @@ public final class Context {
 
 	private final Map<String, String> entityNameMappings = new HashMap<>();
 	private final Map<String, Set<String>> enumTypesByValue = new HashMap<>();
-	private final Set<String> packages = new HashSet<>();
 
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
@@ -506,13 +505,5 @@ public final class Context {
 
 	public void addEnumValue(String type, String value) {
 		enumTypesByValue.computeIfAbsent( value, s -> new HashSet<>() ).add( type );
-	}
-
-	public Set<String> getPackages() {
-		return packages;
-	}
-
-	public void addPackage(String packageName) {
-		packages.add( packageName );
 	}
 }

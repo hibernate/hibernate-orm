@@ -41,14 +41,14 @@ public final class AggregateComponentBinder {
 			Component component,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			ClassDetails returnedClassOrElement,
+			ClassDetails componentClassDetails,
 			AnnotatedColumns columns,
 			MetadataBuildingContext context) {
-		if ( isAggregate( inferredData.getAttributeMember(), inferredData.getClassOrElementType(), context ) ) {
+		if ( isAggregate( inferredData.getAttributeMember(), componentClassDetails, context ) ) {
 			final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
 			final TypeConfiguration typeConfiguration = metadataCollector.getTypeConfiguration();
 			// Determine a struct name if this is a struct through some means
-			final QualifiedName structQualifiedName = determineStructName( columns, inferredData, returnedClassOrElement, context );
+			final QualifiedName structQualifiedName = determineStructName( columns, inferredData, componentClassDetails, context );
 			final String structName = structQualifiedName == null ? null : structQualifiedName.render();
 
 			// We must register a special JavaType for the embeddable which can provide a recommended JdbcType
@@ -57,7 +57,7 @@ public final class AggregateComponentBinder {
 					() -> new EmbeddableAggregateJavaType<>( component.getComponentClass(), structName )
 			);
 			component.setStructName( structQualifiedName );
-			component.setStructColumnNames( determineStructAttributeNames( inferredData, returnedClassOrElement ) );
+			component.setStructColumnNames( determineStructAttributeNames( inferredData, componentClassDetails ) );
 
 			// Determine the aggregate column
 			BasicValueBinder basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, component, context );
@@ -98,7 +98,7 @@ public final class AggregateComponentBinder {
 					new AggregateComponentSecondPass(
 							propertyHolder,
 							component,
-							returnedClassOrElement,
+							componentClassDetails,
 							inferredData.getPropertyName(),
 							context
 					)
@@ -191,7 +191,7 @@ public final class AggregateComponentBinder {
 
 	private static boolean isAggregate(
 			MemberDetails property,
-			TypeDetails returnedClass,
+			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
 		if ( property != null ) {
 			if ( property.hasDirectAnnotationUsage( Struct.class ) ) {
@@ -215,7 +215,7 @@ public final class AggregateComponentBinder {
 		}
 
 		if ( returnedClass != null ) {
-			return returnedClass.determineRawClass().hasDirectAnnotationUsage( Struct.class );
+			return returnedClass.hasDirectAnnotationUsage( Struct.class );
 		}
 
 		return false;

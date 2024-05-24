@@ -80,9 +80,9 @@ public class LazyLoadingLoggingTest {
 		}
 		catch (LazyInitializationException expected) {
 			assertEquals(
-					"could not initialize proxy " +
+					"Could not initialize proxy " +
 							"[org.hibernate.orm.test.lazyload.LazyLoadingLoggingTest$Address#1] " +
-							"- no Session",
+							"- no session",
 					expected.getMessage()
 			);
 		}
@@ -103,9 +103,9 @@ public class LazyLoadingLoggingTest {
 					}
 					catch (LazyInitializationException expected) {
 						assertEquals(
-								"could not initialize proxy " +
+								"Could not initialize proxy " +
 										"[org.hibernate.orm.test.lazyload.LazyLoadingLoggingTest$Address#1] " +
-										"- the owning Session is disconnected",
+										"- the owning session is disconnected",
 								expected.getMessage()
 						);
 					}

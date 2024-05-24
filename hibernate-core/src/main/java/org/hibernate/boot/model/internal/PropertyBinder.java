@@ -63,6 +63,11 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.internal.Helper;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.usertype.CompositeUserType;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.Basic;

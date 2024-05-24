@@ -95,4 +95,12 @@ public interface Filter {
 	 * @return The flag value
 	 */
 	boolean isAutoEnabled();
+
+	/**
+	 * Get the associated {@link FilterDefinition applyToLoadByKey} of this
+	 * named filter.
+	 *
+	 * @return The flag value
+	 */
+	boolean isApplyToLoadByKey();
 }

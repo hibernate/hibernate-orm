@@ -59,7 +59,8 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 							"",
 							singletonMap( PARAMETER_NAME, tenantIdType ),
 							Collections.emptyMap(),
-							false
+							true,
+                            true
 					)
 			);
 		}

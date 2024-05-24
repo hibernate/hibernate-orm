@@ -95,4 +95,13 @@ public @interface FilterDef {
 	 * The flag used to auto-enable the filter on the session.
 	 */
 	boolean autoEnabled() default false;
+
+	/**
+	 * The flag used to decide if the filter will
+	 * be applied on direct fetches or not.
+	 * <p>
+	 * If the flag is true, the filter will be
+	 * applied on direct fetches, such as findById().
+	 */
+	boolean applyToLoadByKey() default false;
 }

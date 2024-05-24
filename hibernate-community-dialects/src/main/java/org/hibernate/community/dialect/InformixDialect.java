@@ -49,15 +49,23 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
@@ -286,6 +294,82 @@ public class InformixDialect extends Dialect {
 						loadQueryInfluencers,
 						creationContext,
 						deduplicateSelectionItems
+				);
+			}
+
+			@Override
+			public SqmTranslator<? extends MutationStatement> createMutationTranslator(
+					SqmDmlStatement<?> sqmDeleteStatement,
+					QueryOptions queryOptions,
+					DomainParameterXref domainParameterXref,
+					QueryParameterBindings domainParameterBindings,
+					LoadQueryInfluencers loadQueryInfluencers,
+					SqlAstCreationContext creationContext) {
+				return new InformixSqmToSqlAstConverter<>(
+						sqmDeleteStatement,
+						queryOptions,
+						domainParameterXref,
+						domainParameterBindings,
+						loadQueryInfluencers,
+						creationContext,
+						false
+				);
+			}
+
+			@Override
+			public SqmTranslator<DeleteStatement> createSimpleDeleteTranslator(
+					SqmDeleteStatement<?> sqmDeleteStatement,
+					QueryOptions queryOptions,
+					DomainParameterXref domainParameterXref,
+					QueryParameterBindings domainParameterBindings,
+					LoadQueryInfluencers loadQueryInfluencers,
+					SqlAstCreationContext creationContext) {
+				return new InformixSqmToSqlAstConverter<>(
+						sqmDeleteStatement,
+						queryOptions,
+						domainParameterXref,
+						domainParameterBindings,
+						loadQueryInfluencers,
+						creationContext,
+						false
+				);
+			}
+
+			@Override
+			public SqmTranslator<InsertStatement> createInsertTranslator(
+					SqmInsertStatement<?> sqmInsertStatement,
+					QueryOptions queryOptions,
+					DomainParameterXref domainParameterXref,
+					QueryParameterBindings domainParameterBindings,
+					LoadQueryInfluencers loadQueryInfluencers,
+					SqlAstCreationContext creationContext) {
+				return new InformixSqmToSqlAstConverter<>(
+						sqmInsertStatement,
+						queryOptions,
+						domainParameterXref,
+						domainParameterBindings,
+						loadQueryInfluencers,
+						creationContext,
+						false
+				);
+			}
+
+			@Override
+			public SqmTranslator<UpdateStatement> createSimpleUpdateTranslator(
+					SqmUpdateStatement<?> sqmUpdateStatement,
+					QueryOptions queryOptions,
+					DomainParameterXref domainParameterXref,
+					QueryParameterBindings domainParameterBindings,
+					LoadQueryInfluencers loadQueryInfluencers,
+					SqlAstCreationContext creationContext) {
+				return new InformixSqmToSqlAstConverter<>(
+						sqmUpdateStatement,
+						queryOptions,
+						domainParameterXref,
+						domainParameterBindings,
+						loadQueryInfluencers,
+						creationContext,
+						false
 				);
 			}
 		};

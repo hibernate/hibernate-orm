@@ -59,6 +59,11 @@ import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 import org.hibernate.usertype.CompositeUserType;
 
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.internal.Helper;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.usertype.CompositeUserType;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.Basic;
@@ -1382,7 +1387,9 @@ public class PropertyBinder {
 					+ "' has too many generator annotations " + combine( idGeneratorAnnotations, generatorAnnotations ) );
 		}
 		if ( !idGeneratorAnnotations.isEmpty() ) {
-			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idAttributeMember, idGeneratorAnnotations.get(0) ) );
+			final ServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
+			final BeanContainer beanContainer = Helper.allowExtensionsInCdi( serviceRegistry ) ? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer() : null;
+			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idAttributeMember, idGeneratorAnnotations.get(0), beanContainer ) );
 		}
 		else if ( !generatorAnnotations.isEmpty() ) {
 //			idValue.setCustomGeneratorCreator( generatorCreator( idAttributeMember, generatorAnnotation ) );

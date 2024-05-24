@@ -350,7 +350,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 									Opcodes.INVOKEVIRTUAL,
 									entity.getInternalName(),
 									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + field.getName(),
-									Type.getMethodDescriptor( Type.getType( field.getDescriptor() ) ),
+									Type.getMethodDescriptor( Type.getType( field.asDefined().getDescriptor() ) ),
 									false
 							);
 						}

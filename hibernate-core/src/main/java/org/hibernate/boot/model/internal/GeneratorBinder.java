@@ -65,8 +65,8 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -552,14 +552,53 @@ public class GeneratorBinder {
 		final Class<? extends Generator> generatorClass = idGeneratorType.value();
 		return creationContext -> {
 			checkGeneratorClass( generatorClass );
-			final Generator generator = instantiateGenerator(
-					annotation,
-					beanContainer,
-					creationContext,
-					generatorClass,
-					idAttributeMember,
-					annotationType
-			);
+			Generator generator;
+			if ( beanContainer != null ) {
+				final ContainedBean<? extends Generator> bean = beanContainer.getBean(
+						generatorClass,
+						new BeanContainer.LifecycleOptions() {
+							@Override
+							public boolean canUseCachedReferences() {
+								return false;
+							}
+
+							@Override
+							public boolean useJpaCompliantCreation() {
+								return true;
+							}
+						},
+						new BeanInstanceProducer() {
+							@SuppressWarnings("unchecked")
+							@Override
+							public <B> B produceBeanInstance(Class<B> beanType) {
+								return (B) instantiateGenerator(
+										annotation,
+										idAttributeMember,
+										annotationType,
+										CustomIdGeneratorCreationContext.class,
+										generatorClass,
+										creationContext
+								);
+							}
+
+							@Override
+							public <B> B produceBeanInstance(String name, Class<B> beanType) {
+								return produceBeanInstance( beanType );
+							}
+						}
+				);
+				generator = bean.getBeanInstance();
+			}
+			else {
+				generator = instantiateGenerator(
+						annotation,
+						beanContainer,
+						creationContext,
+						generatorClass,
+						idAttributeMember,
+						annotationType
+				);
+			}
 			callInitialize( annotation, idAttributeMember, creationContext, generator );
 			callConfigure( creationContext, generator );
 			checkIdGeneratorTiming( annotationType, generator );

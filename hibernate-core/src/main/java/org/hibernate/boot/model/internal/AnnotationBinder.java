@@ -416,11 +416,11 @@ public final class AnnotationBinder {
 			//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
 			if ( annotatedClass.isAnnotationPresent( Entity.class ) ) {
 				throw new AnnotationException( "Type '" + annotatedClass.getName()
-													   + "' is annotated both '@Entity' and '@MappedSuperclass'" );
+						+ "' is annotated both '@Entity' and '@MappedSuperclass'" );
 			}
 			if ( annotatedClass.isAnnotationPresent( Table.class ) ) {
 				throw new AnnotationException( "Mapped superclass '" + annotatedClass.getName()
-													   + "' may not specify a '@Table'" );
+						+ "' may not specify a '@Table'" );
 			}
 			if ( annotatedClass.isAnnotationPresent( Inheritance.class ) ) {
 				throw new AnnotationException( "Mapped superclass '" + annotatedClass.getName()
@@ -651,8 +651,8 @@ public final class AnnotationBinder {
 			for ( FetchOverride fetch : fetchProfile.fetchOverrides() ) {
 				if ( fetch.fetch() == FetchType.LAZY && fetch.mode() == FetchMode.JOIN ) {
 					throw new AnnotationException( "Fetch profile '" + name
-														   + "' has a '@FetchOverride' with 'fetch=LAZY' and 'mode=JOIN'"
-														   + " (join fetching is eager by nature)");
+							+ "' has a '@FetchOverride' with 'fetch=LAZY' and 'mode=JOIN'"
+							+ " (join fetching is eager by nature)");
 				}
 				context.getMetadataCollector()
 						.addSecondPass( new FetchOverrideSecondPass( name, fetch, context ) );

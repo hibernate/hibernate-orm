@@ -178,6 +178,50 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         });
 
         doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "minimumAmount");
+            //tag::pc-filter-entity-example[]
+            entityManager
+                    .unwrap(Session.class)
+                    .enableFilter("minimumAmount")
+                    .setParameter("amount", 9000d);
+
+            Account account = entityManager.find(Account.class, 1L);
+
+            assertNull( account );
+            //end::pc-filter-entity-example[]
+        });
+
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "minimumAmount");
+            //tag::pc-filter-entity-example[]
+            entityManager
+                    .unwrap(Session.class)
+                    .enableFilter("minimumAmount")
+                    .setParameter("amount", 100d);
+
+            Account account = entityManager.find(Account.class, 1L);
+
+            assertNotNull( account );
+            //end::pc-filter-entity-example[]
+        });
+
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "minimumAmount");
+            //tag::pc-filter-entity-query-example[]
+            entityManager
+                    .unwrap(Session.class)
+                    .enableFilter("minimumAmount")
+                    .setParameter("amount", 500d);
+
+            List<Account> accounts = entityManager.createQuery(
+                            "select a from Account a", Account.class)
+                    .getResultList();
+
+            assertEquals(1, accounts.size());
+            //end::pc-filter-entity-query-example[]
+        });
+
+        doInJPA(this::entityManagerFactory, entityManager -> {
             //tag::pc-no-filter-collection-query-example[]
             Client client = entityManager.find(Client.class, 1L);
 
@@ -280,9 +324,22 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
        )
    )
     @Filter(
-        name="activeAccount",
-        condition="active_status = :active"
-   )
+            name="activeAccount",
+            condition="active_status = :active"
+    )
+    @FilterDef(
+            name="minimumAmount",
+            parameters = @ParamDef(
+                    name="amount",
+                    type=Double.class
+            ),
+            applyToLoadByKey = true
+    )
+    @Filter(
+            name="minimumAmount",
+            condition="amount > :amount"
+    )
+
     public static class Account {
 
         @Id

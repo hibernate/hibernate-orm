@@ -1565,6 +1565,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		mutableJpaCompliance().setListCompliance( enabled );
 	}
 
+	public void enableJpaCascadeCompliance(boolean enabled) {
+		mutableJpaCompliance().setCascadeCompliance( enabled );
+	}
+
 	public void enableJpaClosedCompliance(boolean enabled) {
 		mutableJpaCompliance().setClosedCompliance( enabled );
 	}

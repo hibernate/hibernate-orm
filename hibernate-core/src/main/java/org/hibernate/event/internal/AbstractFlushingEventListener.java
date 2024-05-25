@@ -146,7 +146,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.debug( "Processing flush-time cascades" );
 
-		final PersistContext context = getContext();
+		final PersistContext context = getContext( session );
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
@@ -169,19 +169,25 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
-			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
+			Cascade.cascade( getCascadingAction(session), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
 		}
 		finally {
 			persistenceContext.decrementCascadeLevel();
 		}
 	}
 
-	protected PersistContext getContext() {
-		return jpaBootstrap ? PersistContext.create() : null;
+	protected PersistContext getContext(EventSource session) {
+		return jpaBootstrap || isJpaCascadeComplianceEnabled( session ) ? PersistContext.create() : null;
 	}
 
-	protected CascadingAction<PersistContext> getCascadingAction() {
-		return jpaBootstrap ? CascadingActions.PERSIST_ON_FLUSH : CascadingActions.SAVE_UPDATE;
+	protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
+		return jpaBootstrap || isJpaCascadeComplianceEnabled( session )
+				? CascadingActions.PERSIST_ON_FLUSH
+				: CascadingActions.SAVE_UPDATE;
+	}
+
+	private static boolean isJpaCascadeComplianceEnabled(EventSource session) {
+		return session.getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isJpaCascadeComplianceEnabled();
 	}
 
 	/**

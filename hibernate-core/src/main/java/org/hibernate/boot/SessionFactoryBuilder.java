@@ -732,6 +732,13 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder enableJpaListCompliance(boolean enabled);
 
 	/**
+	 * @see JpaCompliance#isJpaCascadeComplianceEnabled()
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_CASCADE_COMPLIANCE
+	 */
+	SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled);
+
+	/**
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JPA_CLOSED_COMPLIANCE

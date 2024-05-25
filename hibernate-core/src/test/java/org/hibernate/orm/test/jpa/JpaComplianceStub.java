@@ -25,6 +25,11 @@ public class JpaComplianceStub implements JpaCompliance {
 	}
 
 	@Override
+	public boolean isJpaCascadeComplianceEnabled() {
+		return false;
+	}
+
+	@Override
 	public boolean isJpaListComplianceEnabled() {
 		return false;
 	}

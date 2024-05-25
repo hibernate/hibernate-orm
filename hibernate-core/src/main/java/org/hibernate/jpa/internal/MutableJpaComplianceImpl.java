@@ -26,6 +26,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean closedCompliance;
 	private boolean cachingCompliance;
 	private boolean loadByIdCompliance;
+	private boolean cascadeCompliance;
 
 	public MutableJpaComplianceImpl(Map<?,?> configurationSettings) {
 		this(
@@ -38,6 +39,11 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	public MutableJpaComplianceImpl(Map<?,?> configurationSettings, boolean jpaByDefault) {
 		final Object legacyQueryCompliance = configurationSettings.get( AvailableSettings.JPAQL_STRICT_COMPLIANCE );
 
+		cascadeCompliance = ConfigurationHelper.getBoolean(
+				AvailableSettings.JPA_CASCADE_COMPLIANCE,
+				configurationSettings,
+				jpaByDefault
+		);
 		//noinspection deprecation
 		listCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_LIST_COMPLIANCE,
@@ -96,6 +102,10 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 		return transactionCompliance;
 	}
 
+	public boolean isJpaCascadeComplianceEnabled() {
+		return cascadeCompliance;
+	}
+
 	@Override
 	public boolean isJpaListComplianceEnabled() {
 		return listCompliance;
@@ -137,6 +147,11 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	@Override
 	public void setListCompliance(boolean listCompliance) {
 		this.listCompliance = listCompliance;
+	}
+
+	@Override
+	public void setCascadeCompliance(boolean cascadeCompliance) {
+		this.cascadeCompliance = cascadeCompliance;
 	}
 
 	@Override
@@ -182,6 +197,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	public JpaCompliance immutableCopy() {
 		JpaComplianceImpl.JpaComplianceBuilder builder = new JpaComplianceImpl.JpaComplianceBuilder();
 		builder = builder.setListCompliance( listCompliance )
+				.setCascadeCompliance( cascadeCompliance )
 				.setProxyCompliance( proxyCompliance )
 				.setOrderByMappingCompliance( orderByMappingCompliance )
 				.setGlobalGeneratorNameCompliance( generatorNameScopeCompliance )

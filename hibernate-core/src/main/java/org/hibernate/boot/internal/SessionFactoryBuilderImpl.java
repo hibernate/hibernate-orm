@@ -425,6 +425,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled) {
+		this.optionsBuilder.enableJpaCascadeCompliance( enabled );
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
 		this.optionsBuilder.enableJpaClosedCompliance( enabled );
 		return this;

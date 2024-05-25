@@ -245,7 +245,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			mergedIntegrationSettings.putAll( integrationSettings );
 		}
 
-		// Build the boot-strap service registry, which mainly handles class loader interactions
+		// Build the bootstrap service registry, which mainly handles classloader interactions
 		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry(
 				mergedIntegrationSettings != null ? mergedIntegrationSettings : integrationSettings,
 				providedClassLoader,

@@ -21,6 +21,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 	private final boolean closedCompliance;
 	private final boolean cachingCompliance;
 	private final boolean loadByIdCompliance;
+	private final boolean cascadeCompliance;
 
 	public JpaComplianceImpl(
 			boolean listCompliance,
@@ -31,7 +32,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 			boolean transactionCompliance,
 			boolean closedCompliance,
 			boolean cachingCompliance,
-			boolean loadByIdCompliance) {
+			boolean loadByIdCompliance,
+			boolean cascadeCompliance) {
 		this.queryCompliance = queryCompliance;
 		this.transactionCompliance = transactionCompliance;
 		this.listCompliance = listCompliance;
@@ -41,6 +43,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 		this.globalGeneratorNameScopeCompliance = globalGeneratorNameScopeCompliance;
 		this.orderByMappingCompliance = orderByMappingCompliance;
 		this.loadByIdCompliance = loadByIdCompliance;
+		this.cascadeCompliance = cascadeCompliance;
 	}
 
 	@Override
@@ -51,6 +54,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 	@Override
 	public boolean isJpaTransactionComplianceEnabled() {
 		return transactionCompliance;
+	}
+
+	@Override
+	public boolean isJpaCascadeComplianceEnabled() {
+		return cascadeCompliance;
 	}
 
 	@Override
@@ -98,8 +106,14 @@ public class JpaComplianceImpl implements JpaCompliance {
 		private boolean transactionCompliance;
 		private boolean closedCompliance;
 		private boolean loadByIdCompliance;
+		private boolean cascadeCompliance;
 
 		public JpaComplianceBuilder() {
+		}
+
+		public JpaComplianceBuilder setCascadeCompliance(boolean cascadeCompliance) {
+			this.cascadeCompliance = cascadeCompliance;
+			return this;
 		}
 
 		public JpaComplianceBuilder setListCompliance(boolean listCompliance) {
@@ -157,7 +171,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 					transactionCompliance,
 					closedCompliance,
 					cachingCompliance,
-					loadByIdCompliance
+					loadByIdCompliance,
+					cascadeCompliance
 			);
 		}
 	}

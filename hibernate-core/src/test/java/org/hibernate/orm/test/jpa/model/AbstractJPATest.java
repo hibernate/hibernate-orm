@@ -23,6 +23,7 @@ import org.hibernate.event.internal.DefaultFlushEventListener;
 import org.hibernate.event.internal.DefaultPersistEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEventListener;
@@ -142,12 +143,12 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 		public static final AutoFlushEventListener INSTANCE = new JPAAutoFlushEventListener();
 
 		@Override
-		protected CascadingAction<PersistContext> getCascadingAction() {
+		protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
 			return CascadingActions.PERSIST_ON_FLUSH;
 		}
 
 		@Override
-		protected PersistContext getContext() {
+		protected PersistContext getContext(EventSource session) {
 			return PersistContext.create();
 		}
 	}
@@ -157,12 +158,12 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 		public static final FlushEventListener INSTANCE = new JPAFlushEventListener();
 
 		@Override
-		protected CascadingAction<PersistContext> getCascadingAction() {
+		protected CascadingAction<PersistContext> getCascadingAction(EventSource session) {
 			return CascadingActions.PERSIST_ON_FLUSH;
 		}
 
 		@Override
-		protected PersistContext getContext() {
+		protected PersistContext getContext(EventSource session) {
 			return PersistContext.create();
 		}
 	}

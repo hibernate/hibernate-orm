@@ -280,6 +280,7 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
@@ -2673,11 +2674,11 @@ public abstract class AbstractEntityPersister
 		final SingularAttributeMapping attribute = (SingularAttributeMapping) findByPath( attributeName );
 		final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
 		// no subselect fetching for entities for now
-		if ( isAffectedByInfluencersForLoadByKey( influencers ) ) {
+		if ( isAffectedByInfluencers( influencers, true ) ) {
 			return new SingleUniqueKeyEntityLoaderStandard<>(
 					this,
 					attribute,
-					influencers.copyForLoadByKey()
+					influencers
 			);
 		}
 		final SingleUniqueKeyEntityLoader<?> existing;
@@ -3291,6 +3292,7 @@ public abstract class AbstractEntityPersister
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			SqlAstCreationState creationState) {
 		if ( filterHelper != null ) {
 			final FilterAliasGenerator filterAliasGenerator = useQualifier && tableGroup != null
@@ -3300,6 +3302,7 @@ public abstract class AbstractEntityPersister
 					predicateConsumer,
 					filterAliasGenerator,
 					enabledFilters,
+					onlyApplyLoadByKeyFilters,
 					tableGroup,
 					creationState
 			);
@@ -3311,9 +3314,17 @@ public abstract class AbstractEntityPersister
 			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup, boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState) {
-		applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
+		applyFilterRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				onlyApplyLoadByKeyFilters,
+				creationState
+		);
 		applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
 	}
 
@@ -3765,8 +3776,8 @@ public abstract class AbstractEntityPersister
 		else {
 			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
 			// no subselect fetching for entities for now
-			return isAffectedByInfluencersForLoadByKey( influencers )
-					? buildSingleIdEntityLoader( influencers.copyForLoadByKey() )
+			return isAffectedByInfluencers( influencers, true )
+					? buildSingleIdEntityLoader( influencers )
 					: getSingleIdLoader();
 		}
 	}
@@ -3861,49 +3872,15 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
+	public boolean isAffectedByEnabledFilters(
+			LoadQueryInfluencers loadQueryInfluencers,
+			boolean onlyApplyForLoadByKeyFilters) {
 		if ( filterHelper != null && loadQueryInfluencers.hasEnabledFilters() ) {
-			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
+			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters(), onlyApplyForLoadByKeyFilters ) ) {
 				return true;
 			}
 
-			// we still need to verify collection fields to be eagerly loaded by join
-			final AttributeMappingsList attributeMappings = getAttributeMappings();
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
-					if ( pluralAttributeMapping.getMappedFetchOptions().getTiming() == FetchTiming.IMMEDIATE
-							&& pluralAttributeMapping.getMappedFetchOptions().getStyle() == FetchStyle.JOIN
-							&& pluralAttributeMapping.getCollectionDescriptor().isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public boolean isAffectedByEnabledFiltersForLoadByKey(LoadQueryInfluencers loadQueryInfluencers) {
-		if ( filterHelper != null && loadQueryInfluencers.hasEnabledFilters() ) {
-			if ( filterHelper.isAffectedByApplyToLoadByKey( loadQueryInfluencers.getEnabledFilters() ) ) {
-				return true;
-			}
-
-			// we still need to verify collection fields to be eagerly loaded by join
-			final AttributeMappingsList attributeMappings = getAttributeMappings();
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
-					if ( pluralAttributeMapping.getMappedFetchOptions().getTiming() == FetchTiming.IMMEDIATE
-							&& pluralAttributeMapping.getMappedFetchOptions().getStyle() == FetchStyle.JOIN
-							&& pluralAttributeMapping.getCollectionDescriptor().isAffectedByEnabledFiltersForLoadByKey( loadQueryInfluencers ) ) {
-						return true;
-					}
-				}
-			}
+			return isAffectedByEnabledFilters( new HashSet<>(), loadQueryInfluencers, onlyApplyForLoadByKeyFilters );
 		}
 		return false;
 	}

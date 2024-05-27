@@ -58,7 +58,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private int batchSize = -1;
 
-	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
+	private final EffectiveEntityGraph effectiveEntityGraph;
 
 	private Boolean readOnly;
 
@@ -66,12 +66,14 @@ public class LoadQueryInfluencers implements Serializable {
 		this.sessionFactory = sessionFactory;
 		batchSize = sessionFactory.getSessionFactoryOptions().getDefaultBatchFetchSize();
 		subselectFetchEnabled = sessionFactory.getSessionFactoryOptions().isSubselectFetchEnabled();
+		effectiveEntityGraph = new EffectiveEntityGraph();
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, SessionCreationOptions options) {
 		this.sessionFactory = sessionFactory;
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
+		effectiveEntityGraph = new EffectiveEntityGraph();
 		for (FilterDefinition filterDefinition : sessionFactory.getAutoEnabledFilters()) {
 			FilterImpl filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
@@ -79,31 +81,6 @@ public class LoadQueryInfluencers implements Serializable {
 			}
 			enabledFilters.put( filterDefinition.getFilterName(), filter );
 		}
-	}
-
-	/**
-	 * Special constructor for {@link #copyForLoadByKey()}.
-	 */
-	private LoadQueryInfluencers(LoadQueryInfluencers original) {
-		this.sessionFactory = original.sessionFactory;
-		this.enabledCascadingFetchProfile = original.enabledCascadingFetchProfile;
-		this.enabledFetchProfileNames = original.enabledFetchProfileNames == null ? null : new HashSet<>( original.enabledFetchProfileNames );
-		this.subselectFetchEnabled = original.subselectFetchEnabled;
-		this.batchSize = original.batchSize;
-		this.readOnly = original.readOnly;
-		HashMap<String,Filter> enabledFilters;
-		if ( original.enabledFilters == null ) {
-			enabledFilters = null;
-		}
-		else {
-			enabledFilters = new HashMap<>( original.enabledFilters.size() );
-			for ( Map.Entry<String, Filter> entry : original.enabledFilters.entrySet() ) {
-				if ( entry.getValue().isApplyToLoadByKey() ) {
-					enabledFilters.put( entry.getKey(), entry.getValue() );
-				}
-			}
-		}
-		this.enabledFilters = enabledFilters;
 	}
 
 	public EffectiveEntityGraph applyEntityGraph(@Nullable RootGraphImplementor<?> rootGraph, @Nullable GraphSemantic graphSemantic) {
@@ -406,9 +383,5 @@ public class LoadQueryInfluencers implements Serializable {
 			}
 		}
 		return false;
-	}
-
-	public LoadQueryInfluencers copyForLoadByKey() {
-		return new LoadQueryInfluencers( this );
 	}
 }

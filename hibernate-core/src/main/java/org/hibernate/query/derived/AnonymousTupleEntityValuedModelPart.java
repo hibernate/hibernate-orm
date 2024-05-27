@@ -747,6 +747,11 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		return false;
+	}
+
+	@Override
 	public boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
 		return true;
 	}

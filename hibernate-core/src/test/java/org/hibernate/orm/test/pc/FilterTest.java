@@ -112,6 +112,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
     @After
     public void tearDown() {
         doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.createQuery( "update Account set parentAccount = null" ).executeUpdate();
             entityManager.createQuery( "delete from Account" ).executeUpdate();
             entityManager.createQuery( "delete from Client" ).executeUpdate();
         });
@@ -302,6 +303,21 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
                             2L,
                             Map.of( AvailableHints.HINT_SPEC_LOAD_GRAPH, entityGraph )
                     )
+            );
+            // Account with id 1 does not exist
+            assertTrue( exception.getMessage().contains( "`1`" ) );
+        });
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap(Session.class)
+                    .enableFilter("accountType")
+                    .setParameter("type", "DEBIT");
+
+            FetchNotFoundException exception = assertThrows(
+                    FetchNotFoundException.class,
+                    () -> entityManager.createQuery(
+                            "select a from Account a left join fetch a.parentAccount where a.id = 2",
+                            Account.class
+                    ).getResultList()
             );
             // Account with id 1 does not exist
             assertTrue( exception.getMessage().contains( "`1`" ) );

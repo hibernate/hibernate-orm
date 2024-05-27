@@ -785,7 +785,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 			return false;
 		}
 

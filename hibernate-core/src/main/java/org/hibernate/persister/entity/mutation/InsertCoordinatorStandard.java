@@ -142,8 +142,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			for ( int i = 0; i < generators.length; i++ ) {
 				final Generator generator = generators[i];
 				if ( generator != null
-						&& !generator.generatedOnExecution( entity, session )
-						&& generator.generatesOnInsert() ) {
+						&& generator.generatesOnInsert()
+						&& !generator.generatedOnExecution( entity, session ) ) {
 					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
 					persister.setPropertyValue( entity, i, values[i] );
 					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();

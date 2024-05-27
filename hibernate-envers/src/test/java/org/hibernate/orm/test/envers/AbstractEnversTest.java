@@ -26,10 +26,6 @@ import org.jboss.logging.Logger;
 @RunWith(EnversRunner.class)
 public abstract class AbstractEnversTest {
 
-	static {
-		DatabaseCleaner.clearSchemas();
-	}
-
 	protected final Logger log = Logger.getLogger( getClass() );
 
 	private String auditStrategy;

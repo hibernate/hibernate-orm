@@ -6,6 +6,16 @@
  */
 package org.hibernate.orm.test.type;
 
+import java.sql.ResultSet;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,25 +23,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.type.SqlTypes;
-import org.junit.jupiter.api.Test;
-
-import java.sql.ResultSet;
-import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+/**
+ * @author Yanming Zhou
+ */
 @SessionFactory
-@DomainModel(annotatedClasses = {OracleEnumTest.Timeslot.class, OracleEnumTest.Activity.class, OracleEnumTest.Weather.class, OracleEnumTest.Sky.class})
-@RequiresDialect(value = OracleDialect.class, majorVersion = 23)
-public class OracleEnumTest {
+@DomainModel(annotatedClasses = { AbstractNamedEnumTest.Timeslot.class, AbstractNamedEnumTest.Activity.class, AbstractNamedEnumTest.Weather.class, AbstractNamedEnumTest.Sky.class})
+public abstract class AbstractNamedEnumTest {
 
 	@Test public void testNamedEnum(SessionFactoryScope scope) {
 		Timeslot timeslot = new Timeslot();
@@ -60,49 +61,17 @@ public class OracleEnumTest {
 						boolean namedEnumFound = false;
 						boolean namedOrdinalEnumFound = false;
 
-						try(Statement stmt = c.createStatement()) {
-							try(ResultSet typeInfo = stmt.executeQuery("select name, decode(instr(data_display,'WHEN '''),0,'NUMBER','VARCHAR2') from user_domains where type='ENUMERATED'")) {
-								while (typeInfo.next()) {
-									String name = typeInfo.getString(1);
-									String baseType = typeInfo.getString(2);
-									if (name.equalsIgnoreCase("ActivityType") && baseType.equals("VARCHAR2")) {
-										namedEnumFound = true;
-										continue;
-									}
-									if (name.equalsIgnoreCase("SkyType") && baseType.equals("NUMBER")) {
-										namedOrdinalEnumFound = true;
-										continue;
-									}
-								}
-							}
-						}
-
-						if (!namedEnumFound) {
-							fail("named enum type not exported");
-						}
-						if (!namedOrdinalEnumFound) {
-							fail("named ordinal enum type not exported");
-						}
-					}
-			);
-		});
-		scope.inSession( s -> {
-			s.doWork(
-					c -> {
-						boolean namedEnumFound = false;
-						boolean namedOrdinalEnumFound = false;
-
-						ResultSet tableInfo = c.getMetaData().getColumns(null, null, "ACTIVITY", "ACTIVITYTYPE" );
+						ResultSet tableInfo = c.getMetaData().getColumns(null, null, normalizeNameForQueryingMetadata("Activity"), normalizeNameForQueryingMetadata("ActivityType"));
 						while ( tableInfo.next() ) {
 							String type = tableInfo.getString(6);
-							assertEquals( "VARCHAR2", type );
+							assertEquals( getDataTypeForNamedEnum( "ActivityType"), type );
 							namedEnumFound = true;
 							break;
 						}
-						tableInfo = c.getMetaData().getColumns(null, null, "SKY", "SKYTYPE" );
+						tableInfo = c.getMetaData().getColumns(null, null, normalizeNameForQueryingMetadata("Sky"), normalizeNameForQueryingMetadata("SkyType"));
 						while ( tableInfo.next() ) {
 							String type = tableInfo.getString(6);
-							assertEquals( "NUMBER", type );
+							assertEquals( getDataTypeForNamedOrdinalEnum("SkyType"), type );
 							namedOrdinalEnumFound = true;
 							break;
 						}
@@ -117,6 +86,12 @@ public class OracleEnumTest {
 			);
 		});
 	}
+
+	protected abstract String normalizeNameForQueryingMetadata(String name);
+
+	protected abstract String getDataTypeForNamedEnum(String namedEnum);
+
+	protected abstract String getDataTypeForNamedOrdinalEnum(String namedEnum);
 
 	public enum ActivityType {Work, Play, Sleep }
 

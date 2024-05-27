@@ -16,6 +16,7 @@ import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -84,21 +85,21 @@ public abstract class AbstractSqmDmlStatement<E>
 
 	@Override
 	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
-		return withInternal( Long.toString( System.nanoTime() ), criteria );
+		return withInternal( SqmCreationHelper.acquireUniqueAlias(), criteria );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( Long.toString( System.nanoTime() ), baseCriteria, false, recursiveCriteriaProducer );
+		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( Long.toString( System.nanoTime() ), baseCriteria, true, recursiveCriteriaProducer );
+		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
 	@Override

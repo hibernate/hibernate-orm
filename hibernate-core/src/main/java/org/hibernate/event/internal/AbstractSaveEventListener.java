@@ -114,7 +114,7 @@ public abstract class AbstractSaveEventListener<C>
 			// and is not yet available
 			generatedId = null;
 		}
-		else if ( generator instanceof Assigned ) {
+		else if ( !generator.generatesOnInsert() ) {
 			// get it from the entity later, since we need
 			// the @PrePersist callback to happen first
 			generatedId = null;
@@ -204,10 +204,8 @@ public abstract class AbstractSaveEventListener<C>
 		if ( generator instanceof Assigned || generator instanceof CompositeNestedGeneratedValueGenerator ) {
 			id = persister.getIdentifier( entity, source );
 			if ( id == null ) {
-				throw new IdentifierGenerationException(
-						"Identifier of entity '" + persister.getEntityName()
-								+ "' must be manually assigned before calling 'persist()'"
-				);
+				throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName()
+						+ "' must be manually assigned before calling 'persist()'" );
 			}
 		}
 

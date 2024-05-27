@@ -109,7 +109,6 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.id.Assigned;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
@@ -4663,7 +4662,7 @@ public abstract class AbstractEntityPersister
 			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
-		if ( entityMetamodel.getIdentifierProperty().getGenerator() instanceof Assigned ) {
+		if ( entityMetamodel.getIdentifierProperty().getGenerator().allowAssignedIdentifiers() ) {
 			return;
 		}
 

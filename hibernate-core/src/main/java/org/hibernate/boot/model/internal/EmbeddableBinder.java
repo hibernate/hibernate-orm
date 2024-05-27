@@ -381,10 +381,6 @@ public class EmbeddableBinder {
 				context
 		);
 
-		final XClass annotatedClass = inferredData.getPropertyClass();
-		final List<PropertyData> classElements =
-				collectClassElements( propertyAccessor, context, returnedClassOrElement, annotatedClass, isIdClass );
-		// Main entry point for binding embeddable inheritance
 		bindDiscriminator(
 				component,
 				returnedClassOrElement,
@@ -394,13 +390,24 @@ public class EmbeddableBinder {
 				inheritanceStatePerClass,
 				context
 		);
+
+		final Map<String, String> subclassToSuperclass = component.isPolymorphic() ? new HashMap<>() : null;
+		final XClass annotatedClass = inferredData.getPropertyClass();
+		final List<PropertyData> classElements = collectClassElements(
+				propertyAccessor,
+				context,
+				returnedClassOrElement,
+				annotatedClass,
+				isIdClass,
+				subclassToSuperclass
+		);
+
 		if ( component.isPolymorphic() ) {
 			validateInheritanceIsSupported( subholder, compositeUserType );
 			final BasicType<?> discriminatorType = (BasicType<?>) component.getDiscriminator().getType();
 			// Discriminator values are used to construct the embeddable domain
 			// type hierarchy so order of processing is important
 			final Map<Object, String> discriminatorValues = new TreeMap<>();
-			final Map<String, String> subclassToSuperclass = new HashMap<>();
 			collectDiscriminatorValue( returnedClassOrElement, discriminatorType, discriminatorValues );
 			collectSubclassElements(
 					propertyAccessor,
@@ -414,6 +421,7 @@ public class EmbeddableBinder {
 			component.setDiscriminatorValues( discriminatorValues );
 			component.setSubclassToSuperclass( subclassToSuperclass );
 		}
+
 		final List<PropertyData> baseClassElements =
 				collectBaseClassElements( baseInferredData, propertyAccessor, context, annotatedClass );
 		if ( baseClassElements != null
@@ -529,7 +537,7 @@ public class EmbeddableBinder {
 						discriminatorColumn,
 						discriminatorFormula,
 						overrides == null ? null : overrides[0],
-						columnPrefix + DEFAULT_DISCRIMINATOR_COLUMN_NAME,
+						columnPrefix + "_" + DEFAULT_DISCRIMINATOR_COLUMN_NAME,
 						context
 				);
 			}
@@ -598,20 +606,25 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context,
 			XClass returnedClassOrElement,
 			XClass annotatedClass,
-			boolean isIdClass) {
+			boolean isIdClass,
+			Map<String, String> subclassToSuperclass) {
 		final List<PropertyData> classElements = new ArrayList<>();
 		//embeddable elements can have type defs
 		final PropertyContainer container =
 				new PropertyContainer( returnedClassOrElement, annotatedClass, propertyAccessor );
 		addElementsOfClass( classElements, container, context);
 		//add elements of the embeddable's mapped superclasses
-		XClass superClass = returnedClassOrElement.getSuperclass();
-		while ( isValidSuperclass( superClass, isIdClass ) ) {
+		XClass subclass = returnedClassOrElement;
+		XClass superClass;
+		while ( isValidSuperclass( superClass = subclass.getSuperclass(), isIdClass ) ) {
 			//FIXME: proper support of type variables incl var resolved at upper levels
 			final PropertyContainer superContainer =
 					new PropertyContainer( superClass, annotatedClass, propertyAccessor );
 			addElementsOfClass( classElements, superContainer, context );
-			superClass = superClass.getSuperclass();
+			if ( subclassToSuperclass != null ) {
+				subclassToSuperclass.put( subclass.getName(), superClass.getName() );
+			}
+			subclass = superClass;
 		}
 		return classElements;
 	}

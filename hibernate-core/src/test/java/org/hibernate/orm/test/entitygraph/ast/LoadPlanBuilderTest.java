@@ -54,7 +54,7 @@ public class LoadPlanBuilderTest {
 				.getMappingMetamodel()
 				.getEntityDescriptor( Message.class );
 
-		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
+		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 
 		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan(
 				LockOptions.READ,
@@ -89,7 +89,7 @@ public class LoadPlanBuilderTest {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityPersister entityDescriptor = (EntityPersister) sessionFactory.getRuntimeMetamodels().getEntityMappingType( Message.class );
 
-		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
+		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 
 		final LoadQueryInfluencers influencers = new LoadQueryInfluencers( sessionFactory ) {
 			@Override

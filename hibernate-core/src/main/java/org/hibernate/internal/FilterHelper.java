@@ -123,9 +123,23 @@ public class FilterHelper {
 		return aliasTableMap.size() == 1 && aliasTableMap.containsKey( null );
 	}
 
+	public String[] getFilterNames() {
+		return filterNames;
+	}
+
 	public boolean isAffectedBy(Map<String, Filter> enabledFilters) {
 		for ( String filterName : filterNames ) {
 			if ( enabledFilters.containsKey( filterName ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean isAffectedByApplyToLoadByKey(Map<String, Filter> enabledFilters) {
+		for ( String filterName : filterNames ) {
+			Filter filter = enabledFilters.get( filterName );
+			if ( filter != null && filter.isApplyToLoadByKey() ) {
 				return true;
 			}
 		}

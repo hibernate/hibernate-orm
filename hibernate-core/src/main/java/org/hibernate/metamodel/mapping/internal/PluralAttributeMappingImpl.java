@@ -1078,6 +1078,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public boolean isAffectedByEnabledFiltersForLoadByKey(LoadQueryInfluencers influencers) {
+		return getCollectionDescriptor().isAffectedByEnabledFiltersForLoadByKey( influencers );
+	}
+
+	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEntityGraph( influencers );
 	}

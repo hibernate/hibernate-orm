@@ -1678,6 +1678,18 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
+	public boolean isAffectedByEnabledFiltersForLoadByKey(LoadQueryInfluencers influencers) {
+		if ( influencers.hasEnabledFilters() ) {
+			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
+			return filterHelper != null && filterHelper.isAffectedByApplyToLoadByKey( enabledFilters )
+					|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedByApplyToLoadByKey( enabledFilters );
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
 		// todo (6.0) : anything to do here?
 		return false;

@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -26,6 +25,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -536,6 +536,16 @@ public abstract class AbstractEntityPersister
 				? MutableEntityEntryFactory.INSTANCE
 				: ImmutableEntityEntryFactory.INSTANCE;
 
+		// Handle any filters applied to the class level
+		filterHelper = isNotEmpty( persistentClass.getFilters() ) ? new FilterHelper(
+				persistentClass.getFilters(),
+				getEntityNameByTableNameMap(
+						persistentClass,
+						factory.getSqlStringGenerationContext()
+				),
+				factory
+		) : null;
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
@@ -804,16 +814,6 @@ public abstract class AbstractEntityPersister
 
 		propertyDefinedOnSubclass = toBooleanArray( definedBySubclass );
 
-		// Handle any filters applied to the class level
-		filterHelper = isNotEmpty( persistentClass.getFilters() ) ? new FilterHelper(
-				persistentClass.getFilters(),
-				getEntityNameByTableNameMap(
-						persistentClass,
-						factory.getSqlStringGenerationContext()
-				),
-				factory
-		) : null;
-
 		useReferenceCacheEntries = shouldUseReferenceCacheEntries( creationContext.getSessionFactoryOptions() );
 		useShallowQueryCacheLayout = shouldUseShallowCacheLayout(
 				persistentClass.getQueryCacheLayout(),
@@ -884,10 +884,10 @@ public abstract class AbstractEntityPersister
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
 					.requireService( BatchLoaderFactory.class )
-					.createEntityBatchLoader( batchSize, this, factory );
+					.createEntityBatchLoader( batchSize, this, loadQueryInfluencers );
 		}
 		else {
-			return new SingleIdEntityLoaderStandardImpl<>( this, factory );
+			return new SingleIdEntityLoaderStandardImpl<>( this, loadQueryInfluencers );
 		}
 	}
 
@@ -1253,6 +1253,18 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean storeDiscriminatorInShallowQueryCacheLayout() {
 		return storeDiscriminatorInShallowQueryCacheLayout;
+	}
+
+	@Override
+	public boolean hasFilterForLoadByKey() {
+		if ( filterHelper != null ) {
+			for ( String filterName : filterHelper.getFilterNames() ) {
+				if ( factory.getFilterDefinition( filterName ).isApplyToLoadByKey() ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -2039,7 +2051,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		return getUniqueKeyLoader( uniquePropertyName ).resolveId( key, session );
+		return getUniqueKeyLoader( uniquePropertyName, session ).resolveId( key, session );
 	}
 
 
@@ -2652,16 +2664,25 @@ public abstract class AbstractEntityPersister
 			Object uniqueKey,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) throws HibernateException {
-		return getUniqueKeyLoader( propertyName ).load( uniqueKey, LockOptions.NONE, readOnly, session );
+		return getUniqueKeyLoader( propertyName, session ).load( uniqueKey, LockOptions.NONE, readOnly, session );
 	}
 
 	private Map<SingularAttributeMapping, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
 
-	protected SingleUniqueKeyEntityLoader<?> getUniqueKeyLoader(String attributeName) {
+	protected SingleUniqueKeyEntityLoader<?> getUniqueKeyLoader(String attributeName, SharedSessionContractImplementor session) {
 		final SingularAttributeMapping attribute = (SingularAttributeMapping) findByPath( attributeName );
+		final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
+		// no subselect fetching for entities for now
+		if ( isAffectedByInfluencersForLoadByKey( influencers ) ) {
+			return new SingleUniqueKeyEntityLoaderStandard<>(
+					this,
+					attribute,
+					influencers.copyForLoadByKey()
+			);
+		}
 		final SingleUniqueKeyEntityLoader<?> existing;
 		if ( uniqueKeyLoadersNew == null ) {
-			uniqueKeyLoadersNew = new IdentityHashMap<>();
+			uniqueKeyLoadersNew = new ConcurrentHashMap<>();
 			existing = null;
 		}
 		else {
@@ -2673,7 +2694,7 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			final SingleUniqueKeyEntityLoader<?> loader =
-					new SingleUniqueKeyEntityLoaderStandard<>( this, attribute );
+					new SingleUniqueKeyEntityLoaderStandard<>( this, attribute, new LoadQueryInfluencers( factory ) );
 			uniqueKeyLoadersNew.put( attribute, loader );
 			return loader;
 		}
@@ -3744,8 +3765,8 @@ public abstract class AbstractEntityPersister
 		else {
 			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
 			// no subselect fetching for entities for now
-			return isAffectedByInfluencers( influencers )
-					? buildSingleIdEntityLoader( influencers )
+			return isAffectedByInfluencersForLoadByKey( influencers )
+					? buildSingleIdEntityLoader( influencers.copyForLoadByKey() )
 					: getSingleIdLoader();
 		}
 	}
@@ -3855,6 +3876,30 @@ public abstract class AbstractEntityPersister
 					if ( pluralAttributeMapping.getMappedFetchOptions().getTiming() == FetchTiming.IMMEDIATE
 							&& pluralAttributeMapping.getMappedFetchOptions().getStyle() == FetchStyle.JOIN
 							&& pluralAttributeMapping.getCollectionDescriptor().isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFiltersForLoadByKey(LoadQueryInfluencers loadQueryInfluencers) {
+		if ( filterHelper != null && loadQueryInfluencers.hasEnabledFilters() ) {
+			if ( filterHelper.isAffectedByApplyToLoadByKey( loadQueryInfluencers.getEnabledFilters() ) ) {
+				return true;
+			}
+
+			// we still need to verify collection fields to be eagerly loaded by join
+			final AttributeMappingsList attributeMappings = getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				if ( attributeMapping instanceof PluralAttributeMapping ) {
+					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
+					if ( pluralAttributeMapping.getMappedFetchOptions().getTiming() == FetchTiming.IMMEDIATE
+							&& pluralAttributeMapping.getMappedFetchOptions().getStyle() == FetchStyle.JOIN
+							&& pluralAttributeMapping.getCollectionDescriptor().isAffectedByEnabledFiltersForLoadByKey( loadQueryInfluencers ) ) {
 						return true;
 					}
 				}

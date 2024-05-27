@@ -97,10 +97,10 @@ public interface Filter {
 	boolean isAutoEnabled();
 
 	/**
-	 * Get the associated {@link FilterDefinition applyToLoadByKey} of this
+	 * Get the associated {@link FilterDefinition applyToLoadById} of this
 	 * named filter.
 	 *
 	 * @return The flag value
 	 */
-	boolean isApplyToLoadByKey();
+	boolean isApplyToLoadById();
 }

@@ -32,7 +32,7 @@ public class FilterImpl implements Filter, Serializable {
 	private final String filterName;
 	private final Map<String,Object> parameters = new HashMap<>();
 	private final boolean autoEnabled;
-	private final boolean applyToLoadByKey;
+	private final boolean applyToLoadById;
 
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition( filterName );
@@ -48,7 +48,7 @@ public class FilterImpl implements Filter, Serializable {
 		this.definition = configuration;
 		filterName = definition.getFilterName();
 		this.autoEnabled = definition.isAutoEnabled();
-		this.applyToLoadByKey = definition.isApplyToLoadByKey();
+		this.applyToLoadById = definition.isApplyToLoadById();
 	}
 
 	public FilterDefinition getFilterDefinition() {
@@ -80,8 +80,8 @@ public class FilterImpl implements Filter, Serializable {
 	 *
 	 * @return The flag value.
 	 */
-	public boolean isApplyToLoadByKey() {
-		return applyToLoadByKey;
+	public boolean isApplyToLoadById() {
+		return applyToLoadById;
 	}
 
 	public Map<String,?> getParameters() {

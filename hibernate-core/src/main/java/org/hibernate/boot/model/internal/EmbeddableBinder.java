@@ -65,7 +65,6 @@ import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClas
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 /**
  * A binder responsible for interpreting {@link Embeddable} classes and producing
@@ -563,7 +562,7 @@ public class EmbeddableBinder {
 		final AnnotationUsage<GeneratedValue> generatedValue = property.getAnnotationUsage( GeneratedValue.class );
 		final String generatorType = generatedValue != null
 				? generatorType( generatedValue, property.getType().determineRawClass(), context )
-				: DEFAULT_ID_GEN_STRATEGY;
+				: GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 		final String generator = generatedValue != null ? generatedValue.getString( "generator" ) : "";
 
 		if ( isGlobalGeneratorNameGlobal( context ) ) {

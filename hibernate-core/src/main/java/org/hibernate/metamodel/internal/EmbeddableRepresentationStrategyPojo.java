@@ -73,9 +73,14 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		boolean foundCustomAccessor = false;
 		for ( int i = 0; i < bootDescriptor.getProperties().size(); i++ ) {
 			final Property property = bootDescriptor.getProperty( i );
-			final Class<?> embeddableClass = bootDescriptor.isPolymorphic() ?
-					castNonNull( subclassesByName ).get( bootDescriptor.getPropertyDeclaringClass( property ) ) :
-					getEmbeddableJavaType().getJavaTypeClass();
+			final Class<?> embeddableClass;
+			if ( bootDescriptor.isPolymorphic() ) {
+				final Class<?> subclass = castNonNull( subclassesByName ).get( bootDescriptor.getPropertyDeclaringClass( property ) );
+				embeddableClass = subclass != null ? subclass : getEmbeddableJavaType().getJavaTypeClass();
+			}
+			else {
+				embeddableClass = getEmbeddableJavaType().getJavaTypeClass();
+			}
 			propertyAccesses[i] = buildPropertyAccess( property, embeddableClass, customInstantiator == null );
 			attributeNameToPositionMap.put( property.getName(), i );
 

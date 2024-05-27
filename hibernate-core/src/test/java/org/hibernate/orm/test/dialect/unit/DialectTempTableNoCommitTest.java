@@ -57,7 +57,7 @@ public class DialectTempTableNoCommitTest {
 	@ServiceRegistry(
 			settings = @Setting(name = LocalTemporaryTableStrategy.DROP_ID_TABLES, value = "true")
 	)
-	@SkipForDialect(dialectClass = H2Dialect.class)
+//	@SkipForDialect(dialectClass = H2Dialect.class)
 	@SessionFactory
 	public void noCommitAfterTempTableCreationAndDropTempTableTest(SessionFactoryScope scope) {
 		scope.inTransaction(

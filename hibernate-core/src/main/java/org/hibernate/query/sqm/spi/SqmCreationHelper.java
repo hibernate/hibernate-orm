@@ -11,6 +11,8 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * @author Steve Ebersole
  */
@@ -27,6 +29,8 @@ public class SqmCreationHelper {
 	 */
 	public static final String IMPLICIT_ALIAS = "{implicit}";
 
+	private static final AtomicLong UNIQUE_ID_COUNTER = new AtomicLong();
+
 	public static NavigablePath buildRootNavigablePath(String base, String alias) {
 		return new NavigablePath( base, determineAlias( alias ) );
 	}
@@ -35,10 +39,14 @@ public class SqmCreationHelper {
 		return lhs.append( base, determineAlias( alias ) );
 	}
 
+	public static String acquireUniqueAlias() {
+		return Long.toString(UNIQUE_ID_COUNTER.incrementAndGet());
+	}
+
 	public static String determineAlias(String alias) {
 		// Make sure we always create a unique alias, otherwise we might use a wrong table group for the same join
 		if ( alias == null ) {
-			return Long.toString( System.nanoTime() );
+			return acquireUniqueAlias();
 		}
 		else if ( alias == IMPLICIT_ALIAS ) {
 			return null;

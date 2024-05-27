@@ -37,7 +37,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.generator.Generator;
-import org.hibernate.id.Assigned;
 import org.hibernate.generator.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -64,6 +63,8 @@ import jakarta.persistence.AttributeConverter;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
+import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_GENERATOR_NAME;
+import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 
 /**
@@ -75,7 +76,8 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray
 public abstract class SimpleValue implements KeyValue {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( SimpleValue.class );
 
-	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
+	@Deprecated(since = "7.0", forRemoval = true)
+	public static final String DEFAULT_ID_GEN_STRATEGY = ASSIGNED_GENERATOR_NAME;
 
 	private final MetadataBuildingContext buildingContext;
 	private final MetadataImplementor metadata;
@@ -103,17 +105,7 @@ public abstract class SimpleValue implements KeyValue {
 	private ConverterDescriptor attributeConverterDescriptor;
 	private Type type;
 
-	private IdentifierGeneratorCreator customIdGeneratorCreator = new IdentifierGeneratorCreator() {
-		@Override
-		public Generator createGenerator(CustomIdGeneratorCreationContext context) {
-			return new Assigned();
-		}
-
-		@Override
-		public boolean isAssigned() {
-			return true;
-		}
-	};
+	private IdentifierGeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
 	private Generator generator;
 
 	public SimpleValue(MetadataBuildingContext buildingContext) {

@@ -10,6 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.service.ServiceRegistry;
 
 @Incubating
@@ -21,6 +22,7 @@ public interface GeneratorCreationContext {
 	String getDefaultSchema();
 
 	PersistentClass getPersistentClass();
+	RootClass getRootClass();
 
 	Property getProperty();
 }

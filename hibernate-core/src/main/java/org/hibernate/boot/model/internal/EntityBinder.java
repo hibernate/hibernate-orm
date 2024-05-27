@@ -169,7 +169,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
-import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 
 /**
@@ -750,7 +749,7 @@ public class EntityBinder {
 			buildingContext.getMetadataCollector().addSecondPass( new IdGeneratorResolverSecondPass(
 					id,
 					inferredData.getAttributeMember(),
-					DEFAULT_ID_GEN_STRATEGY,
+					GeneratorBinder.ASSIGNED_GENERATOR_NAME,
 					"",
 					buildingContext
 			) );
@@ -759,7 +758,7 @@ public class EntityBinder {
 			makeIdGenerator(
 					id,
 					inferredData.getAttributeMember(),
-					DEFAULT_ID_GEN_STRATEGY,
+					GeneratorBinder.ASSIGNED_GENERATOR_NAME,
 					"",
 					buildingContext,
 					Collections.emptyMap()

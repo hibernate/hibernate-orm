@@ -18,7 +18,9 @@ import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
+import org.hibernate.TransientObjectException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -26,7 +28,13 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
+
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.
@@ -186,6 +194,67 @@ public final class IdentifierGeneratorHelper {
 			return ( (BigDecimalHolder) holder ).value;
 		}
 		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
+	}
+
+	public static Object getForeignId(
+			String entityName, String propertyName, SharedSessionContractImplementor sessionImplementor, Object object) {
+		final EntityPersister entityDescriptor =
+				sessionImplementor.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
+		if ( sessionImplementor.isSessionImplementor()
+				&& sessionImplementor.asSessionImplementor().contains( entityName, object ) ) {
+			//abort the save (the object is already saved by a circular cascade)
+			return SHORT_CIRCUIT_INDICATOR;
+			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
+		}
+		else {
+			return identifier( sessionImplementor, entityType( propertyName, entityDescriptor ),
+					associatedEntity( entityName, propertyName, object, entityDescriptor ) );
+		}
+	}
+
+	private static Object associatedEntity(
+			String entityName, String propertyName, Object object, EntityPersister entityDescriptor) {
+		final Object associatedObject = entityDescriptor.getPropertyValue( object, propertyName );
+		if ( associatedObject == null ) {
+			throw new IdentifierGenerationException( "Could not assign id from null association '" + propertyName
+					+ "' of entity '" + entityName + "'" );
+		}
+		return associatedObject;
+	}
+
+	private static Object identifier(
+			SharedSessionContractImplementor sessionImplementor,
+			EntityType foreignValueSourceType,
+			Object associatedEntity) {
+		final String associatedEntityName = foreignValueSourceType.getAssociatedEntityName();
+		try {
+			return getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedEntity, sessionImplementor );
+		}
+		catch (TransientObjectException toe) {
+			if ( sessionImplementor.isSessionImplementor() ) {
+				return sessionImplementor.asSessionImplementor().save( associatedEntityName, associatedEntity );
+			}
+			else if ( sessionImplementor.isStatelessSession() ) {
+				return sessionImplementor.asStatelessSession().insert( associatedEntityName, associatedEntity );
+			}
+			else {
+				throw new IdentifierGenerationException("sessionImplementor is neither Session nor StatelessSession");
+			}
+		}
+	}
+
+	private static EntityType entityType(String propertyName, EntityPersister entityDescriptor) {
+		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
+		if ( propertyType.isEntityType() ) {
+			// the normal case
+			return (EntityType) propertyType;
+		}
+		else {
+			// try identifier mapper
+			final String mapperPropertyName = IDENTIFIER_MAPPER_PROPERTY + "." + propertyName;
+			return (EntityType) entityDescriptor.getPropertyType( mapperPropertyName );
+		}
 	}
 
 	@Internal

@@ -62,7 +62,7 @@ import jakarta.persistence.OneToOne;
 
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
-import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
@@ -802,7 +802,7 @@ public class EmbeddableBinder {
 		final AnnotationUsage<GeneratedValue> generatedValue = property.getAnnotationUsage( GeneratedValue.class );
 		final String generatorType = generatedValue != null
 				? generatorType( generatedValue, property.getType().determineRawClass(), context )
-				: DEFAULT_ID_GEN_STRATEGY;
+				: GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 		final String generator = generatedValue != null ? generatedValue.getString( "generator" ) : "";
 
 		if ( isGlobalGeneratorNameGlobal( context ) ) {

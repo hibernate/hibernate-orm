@@ -33,19 +33,20 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 
 	@Override
 	public <T> EntityBatchLoader<T> createEntityBatchLoader(
-			int domainBatchSize, EntityMappingType entityDescriptor,
-			SessionFactoryImplementor factory) {
-
+			int domainBatchSize,
+			EntityMappingType entityDescriptor,
+			LoadQueryInfluencers loadQueryInfluencers) {
+		final SessionFactoryImplementor factory = loadQueryInfluencers.getSessionFactory();
 		// NOTE : don't use the EntityIdentifierMapping here because it will not be known until later
 		final Type identifierType = entityDescriptor.getEntityPersister().getIdentifierType();
 		if ( identifierType.getColumnSpan( factory ) == 1
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() )
 				&& identifierType instanceof BasicType ) {
 			// we can use a single ARRAY parameter to send all the ids
-			return new EntityBatchLoaderArrayParam<>( domainBatchSize, entityDescriptor, factory );
+			return new EntityBatchLoaderArrayParam<>( domainBatchSize, entityDescriptor, loadQueryInfluencers );
 		}
 		else {
-			return new EntityBatchLoaderInPredicate<>( domainBatchSize, entityDescriptor, factory );
+			return new EntityBatchLoaderInPredicate<>( domainBatchSize, entityDescriptor, loadQueryInfluencers );
 		}
 	}
 

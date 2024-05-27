@@ -93,7 +93,7 @@ class FilterDefBinder {
 				explicitParamJaMappings,
 				parameterResolvers,
 				filterDef.autoEnabled(),
-				filterDef.applyToLoadById()
+				filterDef.applyToLoadByKey()
 		);
 		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );

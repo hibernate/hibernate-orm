@@ -35,6 +35,13 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 			|| isAffectedByBatchSize( influencers );
 	}
 
+	default boolean isAffectedByInfluencersForLoadByKey(LoadQueryInfluencers influencers) {
+		return isAffectedByEntityGraph( influencers )
+				|| isAffectedByEnabledFetchProfiles( influencers )
+				|| isAffectedByEnabledFiltersForLoadByKey( influencers )
+				|| isAffectedByBatchSize( influencers );
+	}
+
 	default boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
 		return !isAffectedByEntityGraph( influencers )
 			&& !isAffectedByEnabledFetchProfiles( influencers )
@@ -54,6 +61,13 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 	 * Whether any of the "influencers" affect this loadable.
 	 */
 	boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers);
+
+	/**
+	 * Whether any of the "influencers" affect this loadable.
+	 */
+	default boolean isAffectedByEnabledFiltersForLoadByKey(LoadQueryInfluencers influencers) {
+		return isAffectedByInfluencers( influencers.copyForLoadByKey() );
+	}
 
 	/**
 	 * Whether the {@linkplain LoadQueryInfluencers#getEffectiveEntityGraph() effective entity-graph}

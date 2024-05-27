@@ -548,6 +548,11 @@ public interface EntityMappingType
 	}
 
 	@Override
+	default boolean isAffectedByEnabledFiltersForLoadByKey(LoadQueryInfluencers influencers) {
+		return getEntityPersister().isAffectedByEnabledFiltersForLoadByKey( influencers );
+	}
+
+	@Override
 	default boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
 		return getEntityPersister().isAffectedByEntityGraph( influencers );
 	}

@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -23,13 +24,18 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.jpa.AvailableHints;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
@@ -38,6 +44,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -58,47 +66,59 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
     }
 
-    @Test
-    public void testLifecycle() {
+    @Before
+    public void setup() {
         doInJPA(this::entityManagerFactory, entityManager -> {
-
             //tag::pc-filter-persistence-example[]
             Client client = new Client()
-            .setId(1L)
-            .setName("John Doe")
-            .setType(AccountType.DEBIT);
+                    .setId(1L)
+                    .setName("John Doe")
+                    .setType(AccountType.DEBIT);
+
+            Account account1;
+            client.addAccount(
+                    account1 = new Account()
+                            .setId(1L)
+                            .setType(AccountType.CREDIT)
+                            .setAmount(5000d)
+                            .setRate(1.25 / 100)
+                            .setActive(true)
+            );
 
             client.addAccount(
-                new Account()
-                .setId(1L)
-                .setType(AccountType.CREDIT)
-                .setAmount(5000d)
-                .setRate(1.25 / 100)
-                .setActive(true)
-           );
+                    new Account()
+                            .setId(2L)
+                            .setType(AccountType.DEBIT)
+                            .setAmount(0d)
+                            .setRate(1.05 / 100)
+                            .setActive(false)
+                            .setParentAccount( account1 )
+            );
 
             client.addAccount(
-                new Account()
-                .setId(2L)
-                .setType(AccountType.DEBIT)
-                .setAmount(0d)
-                .setRate(1.05 / 100)
-                .setActive(false)
-           );
-
-            client.addAccount(
-                new Account()
-                .setType(AccountType.DEBIT)
-                .setId(3L)
-                .setAmount(250d)
-                .setRate(1.05 / 100)
-                .setActive(true)
-           );
+                    new Account()
+                            .setType(AccountType.DEBIT)
+                            .setId(3L)
+                            .setAmount(250d)
+                            .setRate(1.05 / 100)
+                            .setActive(true)
+            );
 
             entityManager.persist(client);
             //end::pc-filter-persistence-example[]
         });
+    }
 
+    @After
+    public void tearDown() {
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.createQuery( "delete from Account" ).executeUpdate();
+            entityManager.createQuery( "delete from Client" ).executeUpdate();
+        });
+    }
+
+    @Test
+    public void testLifecycle() {
         doInJPA(this::entityManagerFactory, entityManager -> {
             log.infof("Activate filter [%s]", "activeAccount");
 
@@ -178,6 +198,33 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         });
 
         doInJPA(this::entityManagerFactory, entityManager -> {
+            //tag::pc-no-filter-collection-query-example[]
+            Client client = entityManager.find(Client.class, 1L);
+
+            assertEquals(3, client.getAccounts().size());
+            //end::pc-no-filter-collection-query-example[]
+        });
+
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "activeAccount");
+
+            //tag::pc-filter-collection-query-example[]
+            entityManager
+                .unwrap(Session.class)
+                .enableFilter("activeAccount")
+                .setParameter("active", true);
+
+            Client client = entityManager.find(Client.class, 1L);
+
+            assertEquals(2, client.getAccounts().size());
+            //end::pc-filter-collection-query-example[]
+        });
+    }
+
+    @Test
+    @JiraKey("HHH-16830")
+    public void testApplyToLoadByKey() {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             log.infof("Activate filter [%s]", "minimumAmount");
             //tag::pc-filter-entity-example[]
             entityManager
@@ -220,28 +267,44 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             assertEquals(1, accounts.size());
             //end::pc-filter-entity-query-example[]
         });
+    }
 
+    @Test
+    @JiraKey("HHH-16830")
+    public void testApplyToLoadByKeyAssociationFiltering() {
         doInJPA(this::entityManagerFactory, entityManager -> {
-            //tag::pc-no-filter-collection-query-example[]
-            Client client = entityManager.find(Client.class, 1L);
-
-            assertEquals(3, client.getAccounts().size());
-            //end::pc-no-filter-collection-query-example[]
+            Account account = entityManager.find(Account.class, 2L);
+            assertNotNull( account.getParentAccount() );
         });
-
         doInJPA(this::entityManagerFactory, entityManager -> {
-            log.infof("Activate filter [%s]", "activeAccount");
+            entityManager.unwrap(Session.class)
+                    .enableFilter("accountType")
+                    .setParameter("type", "DEBIT");
 
-            //tag::pc-filter-collection-query-example[]
-            entityManager
-                .unwrap(Session.class)
-                .enableFilter("activeAccount")
-                .setParameter("active", true);
+            FetchNotFoundException exception = assertThrows(
+                    FetchNotFoundException.class,
+                    () -> entityManager.find( Account.class, 2L )
+            );
+            // Account with id 1 does not exist
+            assertTrue( exception.getMessage().contains( "`1`" ) );
+        });
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.unwrap(Session.class)
+                    .enableFilter("accountType")
+                    .setParameter("type", "DEBIT");
+            EntityGraph<Account> entityGraph = entityManager.createEntityGraph( Account.class );
+            entityGraph.addAttributeNodes( "parentAccount" );
 
-            Client client = entityManager.find(Client.class, 1L);
-
-            assertEquals(2, client.getAccounts().size());
-            //end::pc-filter-collection-query-example[]
+            FetchNotFoundException exception = assertThrows(
+                    FetchNotFoundException.class,
+                    () -> entityManager.find(
+                            Account.class,
+                            2L,
+                            Map.of( AvailableHints.HINT_SPEC_LOAD_GRAPH, entityGraph )
+                    )
+            );
+            // Account with id 1 does not exist
+            assertTrue( exception.getMessage().contains( "`1`" ) );
         });
     }
 
@@ -333,11 +396,23 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
                     name="amount",
                     type=Double.class
             ),
-            applyToLoadById = true
+            applyToLoadByKey = true
     )
     @Filter(
             name="minimumAmount",
             condition="amount > :amount"
+    )
+    @FilterDef(
+            name="accountType",
+            parameters = @ParamDef(
+                    name="type",
+                    type=String.class
+            ),
+            applyToLoadByKey = true
+    )
+    @Filter(
+            name="accountType",
+            condition="account_type = :type"
     )
 
     public static class Account {
@@ -361,6 +436,10 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
         //Getters and setters omitted for brevity
     //end::pc-filter-Account-example[]
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        private Account parentAccount;
+
         public Long getId() {
             return id;
         }
@@ -415,6 +494,14 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             return this;
         }
 
+        public Account getParentAccount() {
+            return parentAccount;
+        }
+
+        public Account setParentAccount(Account parentAccount) {
+            this.parentAccount = parentAccount;
+            return this;
+        }
     //tag::pc-filter-Account-example[]
     }
     //end::pc-filter-Account-example[]

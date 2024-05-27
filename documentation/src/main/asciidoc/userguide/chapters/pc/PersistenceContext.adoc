@@ -558,11 +558,11 @@ include::{example-dir-pc}/FilterTest.java[tags=pc-filter-resolver-Account-exampl
 
 [IMPORTANT]
 ====
-Filters apply to entity queries, but not to direct fetching, unless otherwise configured using the `applyToLoadByKey` flag
+Filters apply to entity queries, but not to direct fetching, unless otherwise configured using the `applyToLoadById` flag
 on the `@FilterDef`, that should be set to `true` in order to activate the filter with direct fetching.
 
 Therefore, in the following example, the `activeAccount` filter is not taken into consideration when fetching an entity from the Persistence Context.
-On the other hand, the `minimumAmount` filter is taken into consideration, because its `applyToLoadByKey` flag is set to `true`.
+On the other hand, the `minimumAmount` filter is taken into consideration, because its `applyToLoadById` flag is set to `true`.
 
 [[pc-filter-entity-example]]
 .Fetching entities mapped with `@Filter`

@@ -333,7 +333,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
                     name="amount",
                     type=Double.class
             ),
-            applyToLoadByKey = true
+            applyToLoadById = true
     )
     @Filter(
             name="minimumAmount",

@@ -546,19 +546,70 @@ public class GeneratorBinder {
 		final Class<? extends Generator> generatorClass = idGeneratorType.value();
 		return creationContext -> {
 			checkGeneratorClass( generatorClass );
-			Generator generator;
-			if ( beanContainer != null ) {
-				generator = beanContainer.getBean( generatorClass, new BeanContainer.LifecycleOptions() {
+			final Generator generator =
+					instantiateGenerator(
+							annotation,
+							beanContainer,
+							creationContext,
+							generatorClass,
+							idAttributeMember,
+							annotationType
+					);
+			callInitialize( annotation, idAttributeMember, creationContext, generator );
+			callConfigure( creationContext, generator );
+			checkIdGeneratorTiming( annotationType, generator );
+			return generator;
+		};
+	}
+
+	private static Generator instantiateGenerator(
+			AnnotationUsage<? extends Annotation> annotation,
+			BeanContainer beanContainer,
+			CustomIdGeneratorCreationContext creationContext,
+			Class<? extends Generator> generatorClass,
+			MemberDetails idAttributeMember,
+			Class<? extends Annotation> annotationType) {
+		if ( beanContainer != null ) {
+			return instantiateGeneratorAsBean(
+					annotation,
+					beanContainer,
+					creationContext,
+					generatorClass,
+					idAttributeMember,
+					annotationType
+			);
+		}
+		else {
+			return instantiateGenerator(
+					annotation,
+					idAttributeMember,
+					annotationType,
+					creationContext,
+					CustomIdGeneratorCreationContext.class,
+					generatorClass
+			);
+		}
+	}
+
+	private static Generator instantiateGeneratorAsBean(
+			AnnotationUsage<? extends Annotation> annotation,
+			BeanContainer beanContainer,
+			CustomIdGeneratorCreationContext creationContext,
+			Class<? extends Generator> generatorClass,
+			MemberDetails idAttributeMember,
+			Class<? extends Annotation> annotationType) {
+		return beanContainer.getBean( generatorClass,
+				new BeanContainer.LifecycleOptions() {
 					@Override
 					public boolean canUseCachedReferences() {
 						return false;
 					}
-
 					@Override
 					public boolean useJpaCompliantCreation() {
 						return true;
 					}
-				}, new BeanInstanceProducer() {
+				},
+				new BeanInstanceProducer() {
 					@SuppressWarnings( "unchecked" )
 					@Override
 					public <B> B produceBeanInstance(Class<B> beanType) {
@@ -571,28 +622,11 @@ public class GeneratorBinder {
 								generatorClass
 						);
 					}
-
 					@Override
 					public <B> B produceBeanInstance(String name, Class<B> beanType) {
-						return produceBeanInstance(beanType);
+						return produceBeanInstance( beanType );
 					}
 				} ).getBeanInstance();
-			}
-			else {
-				generator = instantiateGenerator(
-						annotation,
-						idAttributeMember,
-						annotationType,
-						creationContext,
-						CustomIdGeneratorCreationContext.class,
-						generatorClass
-				);
-			}
-			callInitialize( annotation, idAttributeMember, creationContext, generator );
-			callConfigure( creationContext, generator );
-			checkIdGeneratorTiming( annotationType, generator );
-			return generator;
-		};
 	}
 
 	private static <C, G extends Generator> G instantiateGenerator(

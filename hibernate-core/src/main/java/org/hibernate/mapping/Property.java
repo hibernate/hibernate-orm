@@ -535,6 +535,11 @@ public class Property implements Serializable, MetaAttributable {
 		}
 
 		@Override
+		public RootClass getRootClass() {
+			return persistentClass.getRootClass();
+		}
+
+		@Override
 		public Property getProperty() {
 			return Property.this;
 		}

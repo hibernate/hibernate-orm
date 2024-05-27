@@ -468,7 +468,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		final Map<String, Generator> generators = new HashMap<>();
 		for ( PersistentClass model : bootMetamodel.getEntityBindings() ) {
 			if ( !model.isInherited() ) {
-				KeyValue id = model.getIdentifier();
+				final KeyValue id = model.getIdentifier();
 				final Generator generator = id.createGenerator( dialect, (RootClass) model );
 				if ( generator instanceof Configurable ) {
 					final Configurable identifierGenerator = (Configurable) generator;
@@ -476,7 +476,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 				}
 				//TODO: this isn't a great place to do this
 				if ( generator.allowAssignedIdentifiers() && id instanceof SimpleValue ) {
-					SimpleValue simpleValue = (SimpleValue) id;
+					final SimpleValue simpleValue = (SimpleValue) id;
 					if ( simpleValue.getNullValue() == null ) {
 						simpleValue.setNullValue( "undefined" );
 					}

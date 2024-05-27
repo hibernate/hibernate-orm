@@ -2088,7 +2088,19 @@ public class ToOneAttributeMapping
 							creationState
 					) );
 
-					// Note specifically we DO NOT apply `@Filter` restrictions
+					// Note specifically we only apply `@Filter` restrictions that are applyToLoadByKey = true
+					// to make the behavior consistent with lazy loading of an association
+					if ( getAssociatedEntityMappingType().getEntityPersister().hasFilterForLoadByKey() ) {
+						getAssociatedEntityMappingType().applyBaseRestrictions(
+								join::applyPredicate,
+								tableGroup,
+								true,
+								creationState.getLoadQueryInfluencers().getEnabledFilters(),
+								creationState.applyOnlyLoadByKeyFilters(),
+								null,
+								creationState
+						);
+					}
 					getAssociatedEntityMappingType().applyWhereRestrictions(
 							join::applyPredicate,
 							tableGroup,

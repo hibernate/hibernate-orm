@@ -155,6 +155,11 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	public boolean applyOnlyLoadByKeyFilters() {
+		return true;
+	}
+
+	@Override
 	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
 		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings" );
 	}

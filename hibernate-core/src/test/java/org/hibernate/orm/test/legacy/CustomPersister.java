@@ -942,7 +942,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return false;
 	}
 

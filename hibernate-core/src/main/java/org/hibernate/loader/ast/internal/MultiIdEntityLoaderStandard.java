@@ -219,7 +219,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				getLoadable().getIdentifierMapping(),
 				null,
 				numberOfIdsInBatch,
-				session.getLoadQueryInfluencers().copyForLoadByKey(),
+				session.getLoadQueryInfluencers(),
 				lockOptions,
 				jdbcParametersBuilder::add,
 				getSessionFactory()

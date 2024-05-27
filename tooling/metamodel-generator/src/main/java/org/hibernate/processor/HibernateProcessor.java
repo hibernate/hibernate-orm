@@ -287,7 +287,7 @@ public class HibernateProcessor extends AbstractProcessor {
 
 	private static boolean packagePresent(@Nullable PackageElement pack) {
 		return pack != null
-			//HHH-18019 ejc always returns a non-null PackageElement
+			//HHH-18019 ecj always returns a non-null PackageElement
 			&& !pack.getEnclosedElements().isEmpty();
 	}
 

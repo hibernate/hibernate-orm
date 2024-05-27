@@ -77,3 +77,8 @@ ORM 6.6 introduced support for `@Embeddable` type inheritance.
 With it, we also enabled the `type()` and `treat()` functions to work with embeddable-typed paths.
 As a consequence, the `SqmTreatedPath#getTreatTarget()` method will now return a generic `ManagedDomainType` object,
 which could in turn be an `EntityDomainType` (as it was before) or also an `EmbeddableDomainType` instance.
+
+[[h2-dialect]]
+== H2 database and bulk mutation strategy
+
+With ORM 6.6 when a bulk mutation involves multiple tables, H2 dialect will make use of global temporary tables instead of local ones.

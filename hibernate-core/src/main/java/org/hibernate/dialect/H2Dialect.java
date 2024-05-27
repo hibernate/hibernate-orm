@@ -47,9 +47,8 @@ import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
@@ -675,7 +674,7 @@ public class H2Dialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
+		return new GlobalTemporaryTableMutationStrategy(
 				TemporaryTable.createIdTable(
 						entityDescriptor,
 						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
@@ -690,7 +689,7 @@ public class H2Dialect extends Dialect {
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
+		return new GlobalTemporaryTableInsertStrategy(
 				TemporaryTable.createEntityTable(
 						entityDescriptor,
 						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
@@ -708,12 +707,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.LOCAL;
-	}
-
-	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return TemporaryTableKind.GLOBAL;
 	}
 
 	@Override

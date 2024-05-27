@@ -4670,7 +4670,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final Expression expression = new SelfRenderingAggregateFunctionSqlAstExpression(
 					functionDescriptor.getName(),
 					functionDescriptor,
-					singletonList( new QueryLiteral<>( 1, integerType ) ),
+					singletonList( Star.INSTANCE ),
 					null,
 					integerType,
 					integerType

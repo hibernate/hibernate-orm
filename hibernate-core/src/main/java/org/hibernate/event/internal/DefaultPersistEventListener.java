@@ -17,7 +17,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.PersistEvent;
 import org.hibernate.event.spi.PersistEventListener;
-import org.hibernate.id.ForeignGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
@@ -84,7 +83,7 @@ public class DefaultPersistEventListener
 		final EventSource source = event.getSession();
 		final EntityEntry entityEntry = source.getPersistenceContextInternal().getEntry( entity );
 		final String entityName = entityName( event, entity, entityEntry );
-		switch ( entityState( event, entity, entityName, entityEntry ) ) {
+		switch ( getEntityState( entity, entityName, entityEntry, source, true ) ) {
 			case DETACHED:
 				throw new PersistentObjectException( "detached entity passed to persist: "
 						+ EventUtil.getLoggableName( event.getEntityName(), entity) );
@@ -107,32 +106,6 @@ public class DefaultPersistEventListener
 						EventUtil.getLoggableName( event.getEntityName(), entity )
 				);
 		}
-	}
-
-	private static EntityState entityState(PersistEvent event, Object entity, String entityName, EntityEntry entityEntry) {
-		final EventSource source = event.getSession();
-		EntityState entityState = getEntityState( entity, entityName, entityEntry, source, true );
-		if ( entityState == EntityState.DETACHED ) {
-			// JPA 2, in its version of a "foreign generated", allows the id attribute value
-			// to be manually set by the user, even though this manual value is irrelevant.
-			// The issue is that this causes problems with the Hibernate unsaved-value strategy
-			// which comes into play here in determining detached/transient state.
-			//
-			// Detect if we have this situation and if so null out the id value and calculate the
-			// entity state again.
-
-			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
-			final EntityPersister persister = event.getFactory().getMappingMetamodel()
-					.getEntityDescriptor( entityName );
-			if ( persister.getGenerator() instanceof ForeignGenerator ) {
-				if ( LOG.isDebugEnabled() && persister.getIdentifier( entity, source ) != null ) {
-					LOG.debug( "Resetting entity id attribute to null for foreign generator" );
-				}
-				persister.setIdentifier( entity, null, source );
-				entityState = getEntityState( entity, entityName, entityEntry, source, true );
-			}
-		}
-		return entityState;
 	}
 
 	private static String entityName(PersistEvent event, Object entity, EntityEntry entityEntry) {

@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +37,10 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.id.ForeignGenerator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -63,8 +67,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.service.ServiceRegistry;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.Basic;
@@ -95,17 +97,17 @@ import static org.hibernate.boot.model.internal.CollectionBinder.bindCollection;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createCompositeBinder;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createEmbeddable;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbedded;
+import static org.hibernate.boot.model.internal.GeneratorBinder.beanContainer;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGenerator;
-import static org.hibernate.boot.model.internal.GeneratorBinder.createLegacyIdentifierGenerator;
 import static org.hibernate.boot.model.internal.GeneratorBinder.generatorCreator;
 import static org.hibernate.boot.model.internal.GeneratorBinder.identifierGeneratorCreator;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
-import static org.hibernate.resource.beans.internal.Helper.allowExtensionsInCdi;
 
 /**
  * A stateful binder responsible for creating {@link Property} objects.
@@ -441,9 +443,10 @@ public class PropertyBinder {
 	 * Returns the value generation strategy for the given property, if any.
 	 */
 	private GeneratorCreator getValueGenerationFromAnnotations(MemberDetails property) {
+		final BeanContainer beanContainer = beanContainer( buildingContext );
 		GeneratorCreator creator = null;
 		for ( AnnotationUsage<?> usage : property.getAllAnnotationUsages() ) {
-			final GeneratorCreator candidate = generatorCreator( property, usage, buildingContext );
+			final GeneratorCreator candidate = generatorCreator( property, usage, beanContainer );
 			if ( candidate != null ) {
 				if ( creator != null ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
@@ -1187,13 +1190,26 @@ public class PropertyBinder {
 		final SimpleValue idValue = (SimpleValue) propertyBinder.getValue();
 		final RootClass rootClass = propertyHolder.getPersistentClass().getRootClass();
 		final String propertyName = mapsIdProperty.getPropertyName();
+		final String entityName = rootClass.getEntityName();
 		idValue.setCustomIdGeneratorCreator( creationContext ->
-				createLegacyIdentifierGenerator( "foreign",
-						idValue,
-						creationContext.getDatabase().getDialect(),
-						rootClass,
-						Map.of( ForeignGenerator.PROPERTY, propertyName )
-				)
+				new BeforeExecutionGenerator() {
+					@Override
+					public Object generate(
+							SharedSessionContractImplementor session,
+							Object owner,
+							Object currentValue,
+							EventType eventType) {
+						return getForeignId( entityName, propertyName, session, owner );
+					}
+					@Override
+					public EnumSet<EventType> getEventTypes() {
+						return EventTypeSets.INSERT_ONLY;
+					}
+					@Override
+					public boolean allowAssignedIdentifiers() {
+						return true;
+					}
+				}
 		);
 	}
 
@@ -1437,12 +1453,8 @@ public class PropertyBinder {
 		}
 		if ( !idGeneratorAnnotations.isEmpty() ) {
 			final AnnotationUsage annotation = idGeneratorAnnotations.get(0);
-			final ServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-			final BeanContainer beanContainer =
-					allowExtensionsInCdi( serviceRegistry )
-							? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
-							: null;
-			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idAttributeMember, annotation, beanContainer ) );
+			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idAttributeMember, annotation,
+					idValue, beanContainer( context ) ) );
 		}
 		else if ( !generatorAnnotations.isEmpty() ) {
 //			idValue.setCustomGeneratorCreator( generatorCreator( idAttributeMember, generatorAnnotation ) );

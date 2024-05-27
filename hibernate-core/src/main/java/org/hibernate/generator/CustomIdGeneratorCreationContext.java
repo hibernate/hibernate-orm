@@ -7,13 +7,8 @@
 package org.hibernate.generator;
 
 import org.hibernate.Incubating;
-import org.hibernate.mapping.RootClass;
 
 @Incubating
+@Deprecated(since = "7.0", forRemoval = true)
 public interface CustomIdGeneratorCreationContext extends GeneratorCreationContext {
-	RootClass getRootClass();
-
-	// we could add these if it helps integrate old infrastructure
-//	Properties getParameters();
-//	SqlStringGenerationContext getSqlStringGenerationContext();
 }

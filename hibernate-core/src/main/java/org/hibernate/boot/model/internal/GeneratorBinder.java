@@ -30,11 +30,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.Assigned;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.id.Assigned;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.GUIDGenerator;
@@ -96,7 +96,7 @@ public class GeneratorBinder {
 			new IdentifierGeneratorCreator() {
 				@Override
 				public Generator createGenerator(CustomIdGeneratorCreationContext context) {
-					return new Assigned( context.getRootClass().getEntityName() );
+					return new Assigned();
 				}
 				@Override
 				public boolean isAssigned() {
@@ -115,7 +115,7 @@ public class GeneratorBinder {
 		}
 		switch (strategy) {
 			case "assigned":
-				return Assigned.class;
+				return org.hibernate.id.Assigned.class;
 			case "enhanced-sequence":
 			case "sequence":
 				return SequenceStyleGenerator.class;
@@ -899,7 +899,7 @@ public class GeneratorBinder {
 			String generatorStrategy,
 			BeanContainer beanContainer) {
 		if ( ASSIGNED_GENERATOR_NAME.equals( generatorStrategy )
-				|| Assigned.class.getName().equals( generatorStrategy ) ) {
+				|| org.hibernate.id.Assigned.class.getName().equals( generatorStrategy ) ) {
 			identifierValue.setCustomIdGeneratorCreator( ASSIGNED_IDENTIFIER_GENERATOR_CREATOR );
 		}
 		else {

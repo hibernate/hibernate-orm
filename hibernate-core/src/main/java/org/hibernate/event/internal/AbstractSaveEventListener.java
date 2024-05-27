@@ -25,7 +25,6 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.id.Assigned;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -113,7 +112,7 @@ public abstract class AbstractSaveEventListener<C>
 			// and is not yet available
 			generatedId = null;
 		}
-		else if ( generator instanceof Assigned ) {
+		else if ( !generator.generatesOnInsert() ) {
 			// get it from the entity later, since we need
 			// the @PrePersist callback to happen first
 			generatedId = null;
@@ -199,13 +198,11 @@ public abstract class AbstractSaveEventListener<C>
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 		processIfManagedEntity( entity, (managedEntity) -> managedEntity.$$_hibernate_setUseTracker( true ) );
 
-		if ( persister.getGenerator() instanceof Assigned ) {
+		if ( !persister.getGenerator().generatesOnInsert() ) {
 			id = persister.getIdentifier( entity, source );
 			if ( id == null ) {
-				throw new IdentifierGenerationException(
-						"Identifier of entity '" + persister.getEntityName()
-								+ "' must be manually assigned before calling 'persist()'"
-				);
+				throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName()
+						+ "' must be manually assigned before calling 'persist()'" );
 			}
 		}
 

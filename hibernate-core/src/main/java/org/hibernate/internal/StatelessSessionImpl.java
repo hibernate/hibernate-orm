@@ -125,13 +125,18 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id;
 		final Object[] state = persister.getValues( entity );
+		if ( persister.isVersioned() ) {
+			if ( seedVersion( entity, state, persister, this ) ) {
+				persister.setValues( entity, state );
+			}
+		}
 		final Generator generator = persister.getGenerator();
 		if ( !generator.generatedOnExecution( entity, this ) ) {
-			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
-			if ( persister.isVersioned() ) {
-				if ( seedVersion( entity, state, persister, this ) ) {
-					persister.setValues( entity, state );
-				}
+			if ( generator.generatesOnInsert() ) {
+				id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+			}
+			else {
+				id = persister.getIdentifier( entity, this );
 			}
 			if ( firePreInsert(entity, id, state, persister) ) {
 				return id;

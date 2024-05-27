@@ -552,53 +552,15 @@ public class GeneratorBinder {
 		final Class<? extends Generator> generatorClass = idGeneratorType.value();
 		return creationContext -> {
 			checkGeneratorClass( generatorClass );
-			Generator generator;
-			if ( beanContainer != null ) {
-				final ContainedBean<? extends Generator> bean = beanContainer.getBean(
-						generatorClass,
-						new BeanContainer.LifecycleOptions() {
-							@Override
-							public boolean canUseCachedReferences() {
-								return false;
-							}
-
-							@Override
-							public boolean useJpaCompliantCreation() {
-								return true;
-							}
-						},
-						new BeanInstanceProducer() {
-							@SuppressWarnings("unchecked")
-							@Override
-							public <B> B produceBeanInstance(Class<B> beanType) {
-								return (B) instantiateGenerator(
-										annotation,
-										idAttributeMember,
-										annotationType,
-										CustomIdGeneratorCreationContext.class,
-										generatorClass,
-										creationContext
-								);
-							}
-
-							@Override
-							public <B> B produceBeanInstance(String name, Class<B> beanType) {
-								return produceBeanInstance( beanType );
-							}
-						}
-				);
-				generator = bean.getBeanInstance();
-			}
-			else {
-				generator = instantiateGenerator(
-						annotation,
-						beanContainer,
-						creationContext,
-						generatorClass,
-						idAttributeMember,
-						annotationType
-				);
-			}
+			final Generator generator =
+					instantiateGenerator(
+							annotation,
+							beanContainer,
+							creationContext,
+							generatorClass,
+							idAttributeMember,
+							annotationType
+					);
 			callInitialize( annotation, idAttributeMember, creationContext, generator );
 			callConfigure( creationContext, generator );
 			checkIdGeneratorTiming( annotationType, generator );
@@ -611,7 +573,7 @@ public class GeneratorBinder {
 			BeanContainer beanContainer,
 			CustomIdGeneratorCreationContext creationContext,
 			Class<? extends Generator> generatorClass,
-			MemberDetails memberDetails,
+			MemberDetails idAttributeMember,
 			Class<? extends Annotation> annotationType) {
 		if ( beanContainer != null ) {
 			return instantiateGeneratorAsBean(
@@ -619,14 +581,14 @@ public class GeneratorBinder {
 					beanContainer,
 					creationContext,
 					generatorClass,
-					memberDetails,
+					idAttributeMember,
 					annotationType
 			);
 		}
 		else {
 			return instantiateGenerator(
 					annotation,
-					memberDetails,
+					idAttributeMember,
 					annotationType,
 					CustomIdGeneratorCreationContext.class,
 					generatorClass,
@@ -640,7 +602,7 @@ public class GeneratorBinder {
 			BeanContainer beanContainer,
 			CustomIdGeneratorCreationContext creationContext,
 			Class<? extends Generator> generatorClass,
-			MemberDetails memberDetails,
+			MemberDetails idAttributeMember,
 			Class<? extends Annotation> annotationType) {
 		return beanContainer.getBean( generatorClass,
 				new BeanContainer.LifecycleOptions() {
@@ -659,7 +621,7 @@ public class GeneratorBinder {
 					public <B> B produceBeanInstance(Class<B> beanType) {
 						return (B) instantiateGenerator(
 								annotation,
-								memberDetails,
+								idAttributeMember,
 								annotationType,
 								CustomIdGeneratorCreationContext.class,
 								generatorClass,
@@ -670,8 +632,7 @@ public class GeneratorBinder {
 					public <B> B produceBeanInstance(String name, Class<B> beanType) {
 						return produceBeanInstance( beanType );
 					}
-				} )
-				.getBeanInstance();
+				} ).getBeanInstance();
 	}
 
 	private static <C, G extends Generator> G instantiateGenerator(

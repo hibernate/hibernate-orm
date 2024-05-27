@@ -7,7 +7,6 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -64,10 +63,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.usertype.CompositeUserType;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.Basic;
@@ -1474,13 +1471,7 @@ public class PropertyBinder {
 			List<AnnotationUsage<? extends Annotation>> generatorAnnotations,
 			List<AnnotationUsage<? extends Annotation>> idGeneratorAnnotations) {
 		for ( AnnotationUsage<? extends Annotation> id : idGeneratorAnnotations ) {
-			final Iterator<AnnotationUsage<? extends Annotation>> iterator = generatorAnnotations.iterator();
-			while ( iterator.hasNext() ) {
-				final AnnotationUsage<? extends Annotation> gen = iterator.next();
-				if ( gen.getAnnotationType().equals( id.getAnnotationType() ) ) {
-					iterator.remove();
-				}
-			}
+			generatorAnnotations.removeIf( gen -> gen.getAnnotationType().equals( id.getAnnotationType() ) );
 		}
 	}
 }

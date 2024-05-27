@@ -6,36 +6,15 @@
  */
 package org.hibernate.id;
 
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-
 /**
- * An {@link IdentifierGenerator} that returns the current identifier assigned
- * to an instance.
+ * An {@link IdentifierGenerator} that returns the current identifier assigned to an instance.
  *
  * @author Gavin King
  *
  * @implNote This also implements the {@code assigned} generation type in {@code hbm.xml} mappings.
+ *
+ * @deprecated replaced by {@link org.hibernate.generator.Assigned}
  */
-public class Assigned implements IdentifierGenerator {
-	private final String entityName;
-
-	public Assigned(String entityName) {
-		this.entityName = entityName;
-	}
-
-	@Override
-	public boolean allowAssignedIdentifiers() {
-		return true;
-	}
-
-	public Object generate(SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		//TODO: cache the persister, this shows up in yourkit
-		final Object id = session.getEntityPersister( entityName, owner ).getIdentifier( owner, session );
-		if ( id == null ) {
-			throw new IdentifierGenerationException( "Identifier for entity '" + entityName
-					+ "' must be manually assigned before making the entity persistent" );
-		}
-		return id;
-	}
+@Deprecated(since = "7.0", forRemoval = true)
+public class Assigned extends org.hibernate.generator.Assigned {
 }

@@ -296,6 +296,10 @@ public interface CollectionPersister extends Restrictable {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
+	default boolean isAffectedByEnabledFiltersForLoadByKey(LoadQueryInfluencers influencers) {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
+
 	default boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}

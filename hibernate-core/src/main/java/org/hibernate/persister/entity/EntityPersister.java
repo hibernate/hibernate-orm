@@ -1258,6 +1258,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Incubating
 	boolean storeDiscriminatorInShallowQueryCacheLayout();
 
+	boolean hasFilterForLoadByKey();
+
 	/**
 	 * The property name of the "special" identifier property in HQL
 	 *

@@ -37,30 +37,37 @@ public class FilterDefinition implements Serializable {
 	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
 	private final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap = new HashMap<>();
 	private final boolean autoEnabled;
-	private final boolean applyToLoadById;
+	private final boolean applyToLoadByKey;
 
 	/**
 	 * Construct a new FilterDefinition instance.
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
+	public FilterDefinition(
+			String name,
+			String defaultCondition,
+			@Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
 		this( name, defaultCondition, explicitParamJaMappings, Collections.emptyMap(), false, false);
 	}
 
 	public FilterDefinition(
-			String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings,
-			Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap, boolean autoEnabled, boolean applyToLoadById) {
+			String name,
+			String defaultCondition,
+			@Nullable Map<String, JdbcMapping> explicitParamJaMappings,
+			Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap,
+			boolean autoEnabled,
+			boolean applyToLoadByKey) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		if ( explicitParamJaMappings != null ) {
 			this.explicitParamJaMappings.putAll( explicitParamJaMappings );
 		}
-		this.applyToLoadById = applyToLoadById;
 		if ( parameterResolverMap != null ) {
 			this.parameterResolverMap.putAll( parameterResolverMap );
 		}
 		this.autoEnabled = autoEnabled;
+		this.applyToLoadByKey = applyToLoadByKey;
 	}
 
 	/**
@@ -109,8 +116,8 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The flag value.
 	 */
-	public boolean isApplyToLoadById() {
-		return applyToLoadById;
+	public boolean isApplyToLoadByKey() {
+		return applyToLoadByKey;
 	}
 
 	/**

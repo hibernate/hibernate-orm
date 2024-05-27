@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.hibernate.Filter;
 import org.hibernate.Internal;
@@ -50,10 +49,10 @@ public class LoadQueryInfluencers implements Serializable {
 	private CascadingFetchProfile enabledCascadingFetchProfile;
 
 	//Lazily initialized!
-	private HashSet<String> enabledFetchProfileNames;
+	private @Nullable HashSet<String> enabledFetchProfileNames;
 
 	//Lazily initialized!
-	private HashMap<String,Filter> enabledFilters;
+	private @Nullable HashMap<String,Filter> enabledFilters;
 
 	private boolean subselectFetchEnabled;
 
@@ -76,10 +75,35 @@ public class LoadQueryInfluencers implements Serializable {
 		for (FilterDefinition filterDefinition : sessionFactory.getAutoEnabledFilters()) {
 			FilterImpl filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
-				this.enabledFilters = new HashMap<>();
+				enabledFilters = new HashMap<>();
 			}
 			enabledFilters.put( filterDefinition.getFilterName(), filter );
 		}
+	}
+
+	/**
+	 * Special constructor for {@link #copyForLoadByKey()}.
+	 */
+	private LoadQueryInfluencers(LoadQueryInfluencers original) {
+		this.sessionFactory = original.sessionFactory;
+		this.enabledCascadingFetchProfile = original.enabledCascadingFetchProfile;
+		this.enabledFetchProfileNames = original.enabledFetchProfileNames == null ? null : new HashSet<>( original.enabledFetchProfileNames );
+		this.subselectFetchEnabled = original.subselectFetchEnabled;
+		this.batchSize = original.batchSize;
+		this.readOnly = original.readOnly;
+		HashMap<String,Filter> enabledFilters;
+		if ( original.enabledFilters == null ) {
+			enabledFilters = null;
+		}
+		else {
+			enabledFilters = new HashMap<>( original.enabledFilters.size() );
+			for ( Map.Entry<String, Filter> entry : original.enabledFilters.entrySet() ) {
+				if ( entry.getValue().isApplyToLoadByKey() ) {
+					enabledFilters.put( entry.getKey(), entry.getValue() );
+				}
+			}
+		}
+		this.enabledFilters = enabledFilters;
 	}
 
 	public EffectiveEntityGraph applyEntityGraph(@Nullable RootGraphImplementor<?> rootGraph, @Nullable GraphSemantic graphSemantic) {
@@ -156,6 +180,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Map<String,Filter> getEnabledFilters() {
+		final HashMap<String, Filter> enabledFilters = this.enabledFilters;
 		if ( enabledFilters == null ) {
 			return Collections.emptyMap();
 		}
@@ -167,20 +192,6 @@ public class LoadQueryInfluencers implements Serializable {
 			}
 			return enabledFilters;
 		}
-	}
-
-	/**
-	 * Returns a Map of enabled filters that have the applyToLoadById
-	 * flag set to true
-	 * @return a Map of enabled filters that have the applyToLoadById
-	 * flag set to true
-	 */
-	public Map<String, Filter> getEnabledFiltersForFind() {
-		return getEnabledFilters()
-				.entrySet()
-				.stream()
-				.filter(f -> f.getValue().isApplyToLoadById())
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 	/**
@@ -283,8 +294,14 @@ public class LoadQueryInfluencers implements Serializable {
 
 	@Internal
 	public @Nullable HashSet<String> adjustFetchProfiles(@Nullable Set<String> disabledFetchProfiles, @Nullable Set<String> enabledFetchProfiles) {
-		final HashSet<String> oldFetchProfiles =
-				hasEnabledFetchProfiles() ? new HashSet<>( enabledFetchProfileNames ) : null;
+		final HashSet<String> currentEnabledFetchProfileNames = this.enabledFetchProfileNames;
+		final HashSet<String> oldFetchProfiles;
+		if ( currentEnabledFetchProfileNames == null || currentEnabledFetchProfileNames.isEmpty() ) {
+			oldFetchProfiles = null;
+		}
+		else {
+			oldFetchProfiles = new HashSet<>( currentEnabledFetchProfileNames );
+		}
 		if ( disabledFetchProfiles != null && enabledFetchProfileNames != null ) {
 			enabledFetchProfileNames.removeAll( disabledFetchProfiles );
 		}
@@ -391,4 +408,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return false;
 	}
 
+	public LoadQueryInfluencers copyForLoadByKey() {
+		return new LoadQueryInfluencers( this );
+	}
 }

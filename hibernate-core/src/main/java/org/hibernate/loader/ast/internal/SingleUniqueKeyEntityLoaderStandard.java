@@ -25,7 +25,6 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -52,7 +51,8 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 	public SingleUniqueKeyEntityLoaderStandard(
 			EntityMappingType entityDescriptor,
-			SingularAttributeMapping uniqueKeyAttribute) {
+			SingularAttributeMapping uniqueKeyAttribute,
+			LoadQueryInfluencers loadQueryInfluencers) {
 		this.entityDescriptor = entityDescriptor;
 		this.uniqueKeyAttributePath = getAttributePath( uniqueKeyAttribute );
 		if ( uniqueKeyAttribute instanceof ToOneAttributeMapping ) {
@@ -69,7 +69,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				Collections.emptyList(),
 				uniqueKeyAttribute,
 				null,
-				new LoadQueryInfluencers( sessionFactory ),
+				loadQueryInfluencers,
 				LockOptions.NONE,
 				builder::add,
 				sessionFactory

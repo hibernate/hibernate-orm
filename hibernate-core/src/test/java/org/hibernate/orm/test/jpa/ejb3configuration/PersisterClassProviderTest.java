@@ -740,6 +740,11 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean hasFilterForLoadByKey() {
+			return false;
+		}
+
+		@Override
 		public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
 			return Collections.emptyList();
 		}

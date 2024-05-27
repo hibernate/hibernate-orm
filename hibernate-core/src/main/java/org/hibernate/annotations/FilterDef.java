@@ -10,6 +10,8 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import org.hibernate.Incubating;
+
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -101,7 +103,8 @@ public @interface FilterDef {
 	 * be applied on direct fetches or not.
 	 * <p>
 	 * If the flag is true, the filter will be
-	 * applied on direct fetches, such as findById().
+	 * applied on direct fetches, such as {@link org.hibernate.Session#find(Class, Object)}.
 	 */
-	boolean applyToLoadById() default false;
+	@Incubating
+	boolean applyToLoadByKey() default false;
 }

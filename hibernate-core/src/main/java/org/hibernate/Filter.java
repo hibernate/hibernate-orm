@@ -102,5 +102,5 @@ public interface Filter {
 	 *
 	 * @return The flag value
 	 */
-	boolean isApplyToLoadById();
+	boolean isApplyToLoadByKey();
 }

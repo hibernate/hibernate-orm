@@ -248,7 +248,7 @@ public class ToOneAttributeMapping
 				stateArrayPosition,
 				fetchableIndex,
 				attributeMetadata,
-				adjustFetchTiming( mappedFetchTiming, bootValue ),
+				adjustFetchTiming( mappedFetchTiming, bootValue, entityMappingType ),
 				mappedFetchStyle,
 				declaringType,
 				propertyAccess
@@ -270,7 +270,7 @@ public class ToOneAttributeMapping
 		);
 		if ( bootValue instanceof ManyToOne ) {
 			final ManyToOne manyToOne = (ManyToOne) bootValue;
-			this.notFoundAction = ( (ManyToOne) bootValue ).getNotFoundAction();
+			this.notFoundAction = determineNotFoundAction( ( (ManyToOne) bootValue ).getNotFoundAction(), entityMappingType );
 			if ( manyToOne.isLogicalOneToOne() ) {
 				cardinality = Cardinality.LOGICAL_ONE_TO_ONE;
 			}
@@ -424,7 +424,7 @@ public class ToOneAttributeMapping
 			else {
 				this.bidirectionalAttributePath = SelectablePath.parse( oneToOne.getMappedByProperty() );
 			}
-			notFoundAction = null;
+			notFoundAction = determineNotFoundAction( null, entityMappingType );
 			isKeyTableNullable = isNullable();
 			isOptional = !bootValue.isConstrained();
 			isInternalLoadNullable = isNullable();
@@ -569,6 +569,16 @@ public class ToOneAttributeMapping
 		}
 	}
 
+	private NotFoundAction determineNotFoundAction(NotFoundAction notFoundAction, EntityMappingType entityMappingType) {
+		// When a filter exists that affects a singular association, we have to enable NotFound handling
+		// to force an exception if the filter would result in the entity not being found.
+		// If we silently just read null, this could lead to data loss on flush
+		if ( entityMappingType.getEntityPersister().hasFilterForLoadByKey() && notFoundAction == null ) {
+			return NotFoundAction.EXCEPTION;
+		}
+		return notFoundAction;
+	}
+
 	private static SelectablePath findBidirectionalOneToManyAttributeName(
 			String propertyPath,
 			ManagedMappingType declaringType,
@@ -638,11 +648,17 @@ public class ToOneAttributeMapping
 		return null;
 	}
 
-	private static FetchTiming adjustFetchTiming(FetchTiming mappedFetchTiming, ToOne bootValue) {
+	private static FetchTiming adjustFetchTiming(
+			FetchTiming mappedFetchTiming,
+			ToOne bootValue,
+			EntityMappingType entityMappingType) {
 		if ( bootValue instanceof ManyToOne ) {
 			if ( ( (ManyToOne) bootValue ).getNotFoundAction() != null ) {
 				return FetchTiming.IMMEDIATE;
 			}
+		}
+		if ( entityMappingType.getEntityPersister().hasFilterForLoadByKey() ) {
+			return FetchTiming.IMMEDIATE;
 		}
 		return mappedFetchTiming;
 	}

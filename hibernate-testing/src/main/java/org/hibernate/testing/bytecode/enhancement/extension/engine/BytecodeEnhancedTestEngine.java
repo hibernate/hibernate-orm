@@ -62,13 +62,6 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
-		// Make sure this runs first
-		try {
-			BaseUnitTestCase.checkClearSchema();
-		}
-		catch (Throwable e) {
-			throw new RuntimeException( e );
-		}
 		JupiterConfiguration configuration = new CachingJupiterConfiguration(
 				new DefaultJupiterConfiguration( discoveryRequest.getConfigurationParameters() ) );
 		JupiterEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor( uniqueId, configuration );

@@ -686,27 +686,26 @@ public class LoaderSelectBuilder {
 			TableGroup tableGroup,
 			PluralAttributeMapping pluralAttributeMapping,
 			SqlAstCreationState astCreationState) {
-		final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
-		if ( parentNavigablePath == null ) {
-			// Only apply restrictions for root table groups,
-			// because for table group joins the restriction is applied via PluralAttributeMappingImpl.createTableGroupJoin
-			pluralAttributeMapping.applyBaseRestrictions(
-					querySpec::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-			pluralAttributeMapping.applyBaseManyToManyRestrictions(
-					querySpec::applyPredicate,
-					tableGroup,
-					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					null,
-					astCreationState
-			);
-		}
+		// Only apply restrictions for root table groups,
+		// because for table group joins the restriction is applied via PluralAttributeMappingImpl.createTableGroupJoin
+		assert tableGroup.getNavigablePath().getParent() == null;
+		pluralAttributeMapping.applyBaseRestrictions(
+				querySpec::applyPredicate,
+				tableGroup,
+				true,
+				loadQueryInfluencers.getEnabledFilters(),
+				false,
+				null,
+				astCreationState
+		);
+		pluralAttributeMapping.applyBaseManyToManyRestrictions(
+				querySpec::applyPredicate,
+				tableGroup,
+				true,
+				loadQueryInfluencers.getEnabledFilters(),
+				null,
+				astCreationState
+		);
 	}
 
 	private void applyFiltering(
@@ -719,6 +718,7 @@ public class LoaderSelectBuilder {
 				tableGroup,
 				true,
 				loadQueryInfluencers.getEnabledFilters(),
+				true,
 				null,
 				astCreationState
 		);
@@ -966,32 +966,11 @@ public class LoaderSelectBuilder {
 				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && joined ) {
 					if ( isFetchablePluralAttributeMapping ) {
 						final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-						final TableGroup joinTableGroup = creationState.getFromClauseAccess()
-								.getTableGroup( fetchablePath );
 						final QuerySpec querySpec = creationState.getInflightQueryPart().getFirstQuerySpec();
-						applyFiltering(
-								querySpec,
-								joinTableGroup,
-								pluralAttributeMapping,
-								creationState
-						);
 						applyOrdering(
 								querySpec,
 								fetchablePath,
 								pluralAttributeMapping,
-								creationState
-						);
-					}
-					else if ( fetchable instanceof ToOneAttributeMapping ) {
-						final EntityMappingType entityType = ( (ToOneAttributeMapping) fetchable ).getEntityMappingType();
-						final FromClauseAccess fromClauseAccess = creationState.getFromClauseAccess();
-						final TableGroup joinTableGroup = fromClauseAccess.getTableGroup( fetchablePath );
-						final TableGroupJoin join = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() )
-								.findTableGroupJoin( joinTableGroup );
-						applyFiltering(
-								join,
-								joinTableGroup,
-								entityType,
 								creationState
 						);
 					}

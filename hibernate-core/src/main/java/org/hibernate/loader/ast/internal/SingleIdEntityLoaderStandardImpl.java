@@ -95,7 +95,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 
-		if ( getLoadable().isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
+		if ( getLoadable().isAffectedByEnabledFilters( loadQueryInfluencers, true ) ) {
 			// This case is special because the filters need to be applied in order to
 			// properly restrict the SQL/JDBC results.  For this reason it has higher
 			// precedence than even "internal" fetch profiles.

@@ -70,6 +70,11 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	}
 
 	@Override
+	public boolean applyOnlyLoadByKeyFilters() {
+		return false;
+	}
+
+	@Override
 	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
 		creationState.registerLockMode( identificationVariable, explicitLockMode );
 	}

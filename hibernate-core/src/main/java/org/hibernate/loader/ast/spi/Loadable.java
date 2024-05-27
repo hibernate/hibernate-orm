@@ -28,17 +28,18 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 	 */
 	String getRootPathName();
 
+	/**
+	 * @deprecated Use {@link #isAffectedByInfluencers(LoadQueryInfluencers, boolean)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	default boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
-		return isAffectedByEntityGraph( influencers )
-			|| isAffectedByEnabledFetchProfiles( influencers )
-			|| isAffectedByEnabledFilters( influencers )
-			|| isAffectedByBatchSize( influencers );
+		return isAffectedByInfluencers( influencers, false );
 	}
 
-	default boolean isAffectedByInfluencersForLoadByKey(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByInfluencers(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return isAffectedByEntityGraph( influencers )
 				|| isAffectedByEnabledFetchProfiles( influencers )
-				|| isAffectedByEnabledFiltersForLoadByKey( influencers )
+				|| isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters )
 				|| isAffectedByBatchSize( influencers );
 	}
 
@@ -59,15 +60,17 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 
 	/**
 	 * Whether any of the "influencers" affect this loadable.
+	 * @deprecated Use {@link #isAffectedByEnabledFilters(LoadQueryInfluencers, boolean)} instead
 	 */
-	boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers);
+	@Deprecated(forRemoval = true)
+	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		return isAffectedByEnabledFilters( influencers, false );
+	}
 
 	/**
 	 * Whether any of the "influencers" affect this loadable.
 	 */
-	default boolean isAffectedByEnabledFiltersForLoadByKey(LoadQueryInfluencers influencers) {
-		return isAffectedByInfluencers( influencers.copyForLoadByKey() );
-	}
+	boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters);
 
 	/**
 	 * Whether the {@linkplain LoadQueryInfluencers#getEffectiveEntityGraph() effective entity-graph}

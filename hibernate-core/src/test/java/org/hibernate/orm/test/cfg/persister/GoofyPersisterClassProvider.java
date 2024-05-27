@@ -58,7 +58,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
-import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -796,7 +795,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 			return false;
 		}
 
@@ -1100,12 +1099,30 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void applyFilterRestrictions(Consumer<Predicate> predicateConsumer, TableGroup tableGroup, boolean useQualifier, Map<String, Filter> enabledFilters, SqlAstCreationState creationState) {
+		public void applyFilterRestrictions(
+				Consumer<Predicate> predicateConsumer,
+				TableGroup tableGroup,
+				boolean useQualifier,
+				Map<String, Filter> enabledFilters,
+				boolean onlyApplyLoadByKeyFilters,
+				SqlAstCreationState creationState) {
 
 		}
 
 		@Override
 		public void applyBaseRestrictions(Consumer<Predicate> predicateConsumer, TableGroup tableGroup, boolean useQualifier, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations, SqlAstCreationState creationState) {
+
+		}
+
+		@Override
+		public void applyBaseRestrictions(
+				Consumer<Predicate> predicateConsumer,
+				TableGroup tableGroup,
+				boolean useQualifier,
+				Map<String, Filter> enabledFilters,
+				boolean onlyApplyLoadByKeyFilters,
+				Set<String> treatAsDeclarations,
+				SqlAstCreationState creationState) {
 
 		}
 

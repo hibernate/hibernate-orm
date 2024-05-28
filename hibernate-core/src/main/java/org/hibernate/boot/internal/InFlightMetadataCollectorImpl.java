@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
@@ -1271,9 +1272,18 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private static AnnotatedClassType getAnnotatedClassType(XClass clazz) {
 		if ( clazz.isAnnotationPresent( Entity.class ) ) {
+			if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
+				throw new AnnotationException( "Invalid class annotated both '@Entity' and '@Embeddable': '" + clazz.getName() + "'" );
+			}
+			else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+				throw new AnnotationException( "Invalid class annotated both '@Entity' and '@MappedSuperclass': '" + clazz.getName() + "'" );
+			}
 			return AnnotatedClassType.ENTITY;
 		}
 		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
+			if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+				throw new AnnotationException( "Invalid class annotated both '@Embeddable' and '@MappedSuperclass': '" + clazz.getName() + "'" );
+			}
 			return AnnotatedClassType.EMBEDDABLE;
 		}
 		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
@@ -1286,7 +1296,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			return AnnotatedClassType.NONE;
 		}
 	}
-
 
 	@Override
 	public void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass) {

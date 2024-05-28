@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -36,8 +35,8 @@ public class ArgumentReader<A> implements DomainResultAssembler<A> {
 	}
 
 	@Override
-	public A assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		return delegateAssembler.assemble( rowProcessingState, options );
+	public @Nullable A assemble(RowProcessingState rowProcessingState) {
+		return delegateAssembler.assemble( rowProcessingState );
 	}
 
 	@Override
@@ -46,22 +45,17 @@ public class ArgumentReader<A> implements DomainResultAssembler<A> {
 	}
 
 	@Override
-	public @Nullable A assemble(RowProcessingState rowProcessingState) {
-		return delegateAssembler.assemble( rowProcessingState );
-	}
-
-	@Override
 	public void resolveState(RowProcessingState rowProcessingState) {
 		delegateAssembler.resolveState( rowProcessingState );
 	}
 
 	@Override
-	public @Nullable Initializer getInitializer() {
+	public @Nullable Initializer<?> getInitializer() {
 		return delegateAssembler.getInitializer();
 	}
 
 	@Override
-	public <X> void forEachResultAssembler(BiConsumer<Initializer, X> consumer, X arg) {
+	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
 		delegateAssembler.forEachResultAssembler( consumer, arg );
 	}
 }

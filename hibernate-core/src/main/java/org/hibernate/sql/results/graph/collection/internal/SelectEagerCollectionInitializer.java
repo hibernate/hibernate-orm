@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.InitializerParent;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,54 +20,41 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * @author Andrea Boriero
  */
-public class SelectEagerCollectionInitializer extends AbstractCollectionInitializer {
-
-	/**
-	 * @deprecated Use {@link #SelectEagerCollectionInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, DomainResult, AssemblerCreationState)}  instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public SelectEagerCollectionInitializer(
-			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedMapping,
-			FetchParentAccess parentAccess,
-			@Nullable DomainResult<?> collectionKeyResult,
-			AssemblerCreationState creationState) {
-		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResult, false, creationState );
-	}
+public class SelectEagerCollectionInitializer extends AbstractCollectionInitializer<AbstractCollectionInitializer.CollectionInitializerData> {
 
 	public SelectEagerCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			AssemblerCreationState creationState) {
 		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, creationState );
 	}
 
 	@Override
-	public void resolveInstance() {
-		resolveInstance( rowProcessingState, true );
+	public void resolveInstance(CollectionInitializerData data) {
+		resolveInstance( data, true );
 	}
 
 	@Override
-	public void resolveInstance(@Nullable Object instance) {
-		resolveInstance( instance, rowProcessingState, true );
+	public void resolveInstance(@Nullable Object instance, CollectionInitializerData data) {
+		resolveInstance( instance, data, true );
 	}
 
 	@Override
-	public void initializeInstanceFromParent(Object parentInstance) {
+	public void initializeInstanceFromParent(Object parentInstance, CollectionInitializerData data) {
 		final Object instance = getInitializedPart().getValue( parentInstance );
 		if ( collectionAttributeMapping.getCollectionDescriptor()
 				.getCollectionSemantics()
 				.getCollectionClassification() == CollectionClassification.ARRAY ) {
-			collectionInstance = rowProcessingState.getSession().getPersistenceContextInternal()
-					.getCollectionHolder( instance );
+			data.setCollectionInstance( data.getRowProcessingState().getSession().getPersistenceContextInternal()
+					.getCollectionHolder( instance ) );
 		}
 		else {
-			collectionInstance = (PersistentCollection<?>) instance;
+			data.setCollectionInstance( (PersistentCollection<?>) instance );
 		}
-		state = State.INITIALIZED;
-		collectionInstance.forceInitialization();
+		data.setState( State.INITIALIZED );
+		data.getCollectionInstance().forceInitialization();
 	}
 
 	@Override

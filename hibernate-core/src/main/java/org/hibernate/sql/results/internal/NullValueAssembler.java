@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.internal;
 
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -22,7 +21,7 @@ public class NullValueAssembler<J> implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public J assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+	public J assemble(RowProcessingState rowProcessingState) {
 		return null;
 	}
 

@@ -31,7 +31,7 @@ public class NonAggregatedIdentifierMappingFetch extends EmbeddableFetchImpl {
 	}
 
 	@Override
-	public EmbeddableInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new NonAggregatedIdentifierMappingInitializer( this, parent, creationState, false );
 	}
 }

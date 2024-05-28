@@ -6,259 +6,227 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.function.BiConsumer;
-
+import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
-public abstract class AbstractBatchEntitySelectFetchInitializer extends AbstractInitializer implements EntityInitializer {
+public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends AbstractBatchEntitySelectFetchInitializer.AbstractBatchEntitySelectFetchInitializerData>
+		extends EntitySelectFetchInitializer<Data> implements EntityInitializer<Data> {
 
-	protected final InitializerParent parent;
-	private final NavigablePath navigablePath;
-	private final boolean isPartOfKey;
+	protected final EntityInitializer<InitializerData> owningEntityInitializer;
 
-	protected final EntityPersister concreteDescriptor;
-	protected final DomainResultAssembler<?> identifierAssembler;
-	protected final ToOneAttributeMapping referencedModelPart;
-	protected final EntityInitializer owningEntityInitializer;
+	protected boolean batchDisabled;
 
-	// per-row state
-	protected @Nullable Object initializedEntityInstance;
-	protected @Nullable Object entityIdentifier;
-	protected @Nullable EntityKey entityKey;
+	public static abstract class AbstractBatchEntitySelectFetchInitializerData extends EntitySelectFetchInitializerData {
+		// per-row state
+		protected @Nullable EntityKey entityKey;
 
-	/**
-	 *
-	 * @deprecated Use {@link #AbstractBatchEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public AbstractBatchEntitySelectFetchInitializer(
-			FetchParentAccess parent,
-			ToOneAttributeMapping referencedModelPart,
-			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		this(
-				(InitializerParent) parent,
-				referencedModelPart,
-				fetchedNavigable,
-				concreteDescriptor,
-				identifierAssembler
-		);
+		public AbstractBatchEntitySelectFetchInitializerData(RowProcessingState rowProcessingState) {
+			super( rowProcessingState );
+		}
 	}
 
 	public AbstractBatchEntitySelectFetchInitializer(
-			InitializerParent parent,
-			ToOneAttributeMapping referencedModelPart,
+			InitializerParent<?> parent,
+			ToOneAttributeMapping toOneMapping,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		this.parent = parent;
-		this.referencedModelPart = referencedModelPart;
-		this.navigablePath = fetchedNavigable;
-		this.isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
-		this.concreteDescriptor = concreteDescriptor;
-		this.identifierAssembler = identifierAssembler;
-		this.owningEntityInitializer = Initializer.findOwningEntityInitializer( parent );
+			DomainResult<?> keyResult,
+			AssemblerCreationState creationState) {
+		super( parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyResult, creationState );
+		//noinspection unchecked
+		this.owningEntityInitializer = (EntityInitializer<InitializerData>) Initializer.findOwningEntityInitializer( parent );
 		assert owningEntityInitializer != null : "This initializer requires an owning parent entity initializer";
 	}
 
-	public ModelPart getInitializedPart() {
-		return referencedModelPart;
+	protected abstract void registerResolutionListener(Data data);
+
+	@Override
+	public void startLoading(RowProcessingState rowProcessingState) {
+		batchDisabled = rowProcessingState.isScrollResult()
+				|| !rowProcessingState
+				.getLoadQueryInfluencers()
+				.effectivelyBatchLoadable( toOneMapping.getEntityMappingType().getEntityPersister() );
+		super.startLoading( rowProcessingState );
 	}
 
 	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
-	}
-
-	@Override
-	public boolean isPartOfKey() {
-		return isPartOfKey;
-	}
-
-	@Override
-	public boolean isResultInitializer() {
-		return false;
-	}
-
-	protected abstract void registerResolutionListener();
-
-	@Override
-	public void resolveKey() {
-		if ( state != State.UNINITIALIZED ) {
+	public void resolveKey(Data data) {
+		if ( data.getState() != State.UNINITIALIZED ) {
 			return;
 		}
 
-		entityKey = null;
-		initializedEntityInstance = null;
-		final Initializer initializer = identifierAssembler.getInitializer();
+		data.entityKey = null;
+		data.setInstance( null );
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		//noinspection unchecked
+		final Initializer<InitializerData> initializer = (Initializer<InitializerData>) keyAssembler.getInitializer();
 		if ( initializer != null ) {
-			initializer.resolveKey();
-			entityIdentifier = null;
-			state = initializer.getState() == State.MISSING
-					? State.MISSING
-					: State.KEY_RESOLVED;
+			final InitializerData subData = initializer.getData( rowProcessingState );
+			initializer.resolveKey( subData );
+			data.entityIdentifier = null;
+			data.setState( subData.getState() == State.MISSING ? State.MISSING : State.KEY_RESOLVED );
 		}
 		else {
-			entityIdentifier = identifierAssembler.assemble( rowProcessingState );
-			state = entityIdentifier == null
-					? State.MISSING
-					: State.KEY_RESOLVED;
+			data.entityIdentifier = keyAssembler.assemble( rowProcessingState );
+			data.setState( data.entityIdentifier == null ? State.MISSING : State.KEY_RESOLVED );
 		}
 	}
 
 	@Override
-	public void resolveInstance() {
-		if ( state != State.KEY_RESOLVED ) {
+	public void resolveInstance(Data data) {
+		if ( data.getState() != State.KEY_RESOLVED ) {
 			return;
 		}
 
-		state = State.RESOLVED;
-		if ( entityIdentifier == null ) {
+		data.setState( State.RESOLVED );
+		final RowProcessingState initializerRowProcessingState = data.getRowProcessingState();
+		if ( data.entityIdentifier == null ) {
 			// entityIdentifier can be null if the identifier is based on an initializer
-			entityIdentifier = identifierAssembler.assemble( rowProcessingState );
-			if ( entityIdentifier == null ) {
-				entityKey = null;
-				initializedEntityInstance = null;
-				state = State.MISSING;
+			data.entityIdentifier = keyAssembler.assemble( initializerRowProcessingState );
+			if ( data.entityIdentifier == null ) {
+				data.entityKey = null;
+				data.setInstance( null );
+				data.setState( State.MISSING );
 				return;
 			}
 		}
-		entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
-		initializedEntityInstance = getExistingInitializedInstance( rowProcessingState );
-		if ( initializedEntityInstance == null ) {
-			// need to add the key to the batch queue only when the entity has not been already loaded or
-			// there isn't another initializer that is loading it
-			registerToBatchFetchQueue( rowProcessingState );
+		if ( batchDisabled ) {
+			initialize( data );
+		}
+		else {
+			data.entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
+			data.setInstance( getExistingInitializedInstance( data ) );
+			if ( data.getInstance() == null ) {
+				// need to add the key to the batch queue only when the entity has not been already loaded or
+				// there isn't another initializer that is loading it
+				registerToBatchFetchQueue( data );
+			}
 		}
 	}
 
 	@Override
-	public void resolveInstance(Object instance) {
+	public void resolveInstance(Object instance, Data data) {
 		if ( instance == null ) {
-			state = State.MISSING;
-			entityKey = null;
-			initializedEntityInstance = null;
+			data.setState( State.MISSING );
+			data.entityKey = null;
+			data.setInstance( null );
 			return;
 		}
-		final Initializer initializer = identifierAssembler.getInitializer();
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final Initializer<?> initializer = keyAssembler.getInitializer();
 		// Only need to extract the identifier if the identifier has a many to one
 		final boolean hasKeyManyToOne = initializer != null;
-		final SharedSessionContractImplementor session = rowProcessingState.getSession();
 		final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
-		entityKey = null;
+		data.entityKey = null;
 		if ( lazyInitializer == null ) {
 			// Entity is initialized
-			state = State.INITIALIZED;
+			data.setState( State.INITIALIZED );
 			if ( hasKeyManyToOne ) {
-				entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
+				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
 			}
-			initializedEntityInstance = instance;
+			data.setInstance( instance );
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
-			state = State.RESOLVED;
+			data.setState( State.RESOLVED );
 			if ( hasKeyManyToOne ) {
-				entityIdentifier = lazyInitializer.getIdentifier();
+				data.entityIdentifier = lazyInitializer.getIdentifier();
 			}
 			// Resolve and potentially create the entity instance
-			registerToBatchFetchQueue( rowProcessingState );
+			registerToBatchFetchQueue( data );
 		}
 		else {
 			// Entity is initialized
-			state = State.INITIALIZED;
+			data.setState( State.INITIALIZED );
 			if ( hasKeyManyToOne ) {
-				entityIdentifier = lazyInitializer.getIdentifier();
+				data.entityIdentifier = lazyInitializer.getIdentifier();
 			}
-			initializedEntityInstance = lazyInitializer.getImplementation();
+			data.setInstance( lazyInitializer.getImplementation() );
 		}
 		if ( hasKeyManyToOne ) {
-			initializer.resolveInstance( entityIdentifier );
+			initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 		}
-		else if ( !rowProcessingState.isQueryCacheHit() && rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+		else if ( rowProcessingState.needsResolveState() ) {
 			// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
-			identifierAssembler.resolveState( rowProcessingState );
+			keyAssembler.resolveState( rowProcessingState );
 		}
 	}
 
-	protected Object getExistingInitializedInstance(RowProcessingState rowProcessingState) {
-		final SharedSessionContractImplementor session = rowProcessingState.getSession();
+	@Override
+	public void initializeInstance(Data data) {
+		if ( data.getState() != State.RESOLVED ) {
+			return;
+		}
+		data.setState( State.INITIALIZED );
+		if ( batchDisabled ) {
+			Hibernate.initialize( data.getInstance() );
+		}
+	}
+
+	protected Object getExistingInitializedInstance(Data data) {
+		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+		final EntityHolder holder = persistenceContext.getEntityHolder( data.entityKey );
 		if ( holder != null && holder.getEntity() != null && holder.isEventuallyInitialized() ) {
 			return holder.getEntity();
 		}
 		// we need to register a resolution listener only if there is not an already initialized instance
 		// or an instance that another initializer is loading
-		registerResolutionListener();
+		registerResolutionListener( data );
 		return null;
 	}
 
-	protected void registerToBatchFetchQueue(RowProcessingState rowProcessingState) {
-		assert entityKey != null;
-		rowProcessingState.getSession().getPersistenceContext()
-				.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+	protected void registerToBatchFetchQueue(Data data) {
+		assert data.entityKey != null;
+		data.getRowProcessingState().getSession().getPersistenceContext()
+				.getBatchFetchQueue().addBatchLoadableEntityKey( data.entityKey );
 	}
 
 	@Override
-	public void initializeInstanceFromParent(Object parentInstance) {
+	public void initializeInstanceFromParent(Object parentInstance, Data data) {
 		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
 		final Object instance = attributeMapping != null
 				? attributeMapping.getValue( parentInstance )
 				: parentInstance;
 		// No need to initialize these fields
-		entityKey = null;
-		initializedEntityInstance = null;
+		data.entityKey = null;
+		data.setInstance( null );
 		if ( instance == null ) {
-			state = State.MISSING;
+			data.setState( State.MISSING );
 		}
 		else {
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( instance );
 			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
-				entityKey = new EntityKey( lazyInitializer.getIdentifier(), concreteDescriptor );
-				registerToBatchFetchQueue( rowProcessingState );
+				data.entityKey = new EntityKey( lazyInitializer.getIdentifier(), concreteDescriptor );
+				registerToBatchFetchQueue( data );
 			}
-			state = State.INITIALIZED;
+			data.setState( State.INITIALIZED );
 		}
 	}
 
 	@Override
-	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
-		final Initializer initializer = identifierAssembler.getInitializer();
-		if ( initializer != null ) {
-			consumer.accept( initializer, arg );
-		}
-	}
-
-	@Override
-	public EntityPersister getEntityDescriptor() {
-		return concreteDescriptor;
-	}
-
-	@Override
-	public Object getEntityInstance() {
-		return state == State.RESOLVED || state == State.INITIALIZED ? initializedEntityInstance : null;
+	public Object getEntityInstance(Data data) {
+		return data.getState() == State.RESOLVED || data.getState() == State.INITIALIZED ? data.getInstance() : null;
 	}
 
 	protected static Object loadInstance(
@@ -282,13 +250,13 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 				];
 		parentEntityAttributes[entityDescriptor.getSubclassId()] = getParentEntityAttribute(
 				entityDescriptor,
-				referencedModelPart,
+				toOneMapping,
 				attributeName
 		);
 		for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
 			parentEntityAttributes[subMappingType.getSubclassId()] = getParentEntityAttribute(
 					subMappingType,
-					referencedModelPart,
+					toOneMapping,
 					attributeName
 			);
 		}
@@ -307,33 +275,6 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 			return parentAttribute;
 		}
 		return null;
-	}
-
-	@Override
-	public FetchParentAccess getFetchParentAccess() {
-		return (FetchParentAccess) parent;
-	}
-
-	@Override
-	public InitializerParent getParent() {
-		return parent;
-	}
-
-	@Override
-	public EntityPersister getConcreteDescriptor() {
-		return concreteDescriptor;
-	}
-
-	@Override
-	public EntityKey getEntityKey() {
-		throw new UnsupportedOperationException(
-				"This should never happen, because this initializer has not child initializers" );
-	}
-
-	@Override
-	public Object getParentKey() {
-		throw new UnsupportedOperationException(
-				"This should never happen, because this initializer has not child initializers" );
 	}
 
 }

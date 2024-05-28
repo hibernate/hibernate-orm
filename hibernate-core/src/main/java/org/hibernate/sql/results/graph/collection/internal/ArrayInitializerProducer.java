@@ -12,9 +12,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
@@ -36,22 +34,10 @@ public class ArrayInitializerProducer implements CollectionInitializerProducer {
 	}
 
 	@Override
-	public CollectionInitializer produceInitializer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			FetchParentAccess parentAccess,
-			LockMode lockMode,
-			DomainResultAssembler<?> collectionKeyAssembler,
-			DomainResultAssembler<?> collectionValueKeyAssembler,
-			AssemblerCreationState creationState) {
-		throw new UnsupportedOperationException( "Use the non-deprecated method variant instead." );
-	}
-
-	@Override
-	public CollectionInitializer produceInitializer(
+	public CollectionInitializer<?> produceInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attribute,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,

@@ -25,14 +25,14 @@ import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
  */
 public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 	private final CollectionPersister collectionDescriptor;
-	private final CollectionInitializer initializer;
+	private final CollectionInitializer<?> initializer;
 	private final Object key;
 	private final PersistentCollection<?> collectionInstance;
 	private final List<Object> loadingState = new ArrayList<>();
 
 	public LoadingCollectionEntryImpl(
 			CollectionPersister collectionDescriptor,
-			CollectionInitializer initializer,
+			CollectionInitializer<?> initializer,
 			Object key,
 			PersistentCollection<?> collectionInstance) {
 		this.collectionDescriptor = collectionDescriptor;
@@ -51,7 +51,7 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 	/**
 	 * Access to the initializer that is responsible for initializing this collection
 	 */
-	@Override public CollectionInitializer getInitializer() {
+	@Override public CollectionInitializer<?> getInitializer() {
 		return initializer;
 	}
 

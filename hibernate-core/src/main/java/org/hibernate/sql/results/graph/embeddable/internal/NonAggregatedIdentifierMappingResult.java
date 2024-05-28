@@ -23,9 +23,9 @@ public class NonAggregatedIdentifierMappingResult<T> extends EmbeddableResultImp
 	}
 
 	@Override
-	public Initializer createInitializer(
+	public Initializer<?> createInitializer(
 			EmbeddableResultImpl<T> resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return new NonAggregatedIdentifierMappingInitializer( resultGraphNode, parent, creationState, true );
 	}

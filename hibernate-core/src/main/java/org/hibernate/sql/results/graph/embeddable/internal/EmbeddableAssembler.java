@@ -8,9 +8,9 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import java.util.function.BiConsumer;
 
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -18,10 +18,10 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class EmbeddableAssembler implements DomainResultAssembler {
-	protected final EmbeddableInitializer initializer;
+	protected final EmbeddableInitializer<InitializerData> initializer;
 
-	public EmbeddableAssembler(EmbeddableInitializer initializer) {
-		this.initializer = initializer;
+	public EmbeddableAssembler(EmbeddableInitializer<?> initializer) {
+		this.initializer = (EmbeddableInitializer<InitializerData>) initializer;
 	}
 
 	@Override
@@ -30,9 +30,10 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	}
 
 	@Override
-	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		initializer.resolveInstance();
-		return initializer.getCompositeInstance();
+	public Object assemble(RowProcessingState rowProcessingState) {
+		final InitializerData data = initializer.getData( rowProcessingState );
+		initializer.resolveInstance( data );
+		return initializer.getCompositeInstance( data );
 	}
 
 	@Override
@@ -43,7 +44,7 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	}
 
 	@Override
-	public EmbeddableInitializer getInitializer() {
+	public EmbeddableInitializer<?> getInitializer() {
 		return initializer;
 	}
 

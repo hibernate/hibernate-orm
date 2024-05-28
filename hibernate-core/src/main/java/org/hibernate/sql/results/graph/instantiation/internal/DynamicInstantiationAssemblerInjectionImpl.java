@@ -20,7 +20,6 @@ import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.query.sqm.sql.internal.InstantiationException;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -32,14 +31,14 @@ import static org.hibernate.sql.results.graph.instantiation.internal.Instantiati
  */
 public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResultAssembler<T> {
 	private final JavaType<T> target;
-	private final List<BeanInjection> beanInjections = new ArrayList<>();
+	private final List<BeanInjection> beanInjections;
 
 	public DynamicInstantiationAssemblerInjectionImpl(
 			JavaType<T> target,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.target = target;
 		final Class<?> targetJavaType = target.getJavaTypeClass();
-
+		final List<BeanInjection> beanInjections = new ArrayList<>( argumentReaders.size() );
 		BeanInfoHelper.visitBeanInfo(
 				targetJavaType,
 				beanInfo -> {
@@ -52,6 +51,12 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 		if ( argumentReaders.size() != beanInjections.size() ) {
 			throw new IllegalStateException( "The number of readers did not match the number of injections" );
 		}
+		this.beanInjections = beanInjections;
+	}
+
+	private DynamicInstantiationAssemblerInjectionImpl(List<BeanInjection> beanInjections, JavaType<T> target) {
+		this.target = target;
+		this.beanInjections = beanInjections;
 	}
 
 	private static BeanInjection injection(BeanInfo beanInfo, ArgumentReader<?> argument, Class<?> targetJavaType) {
@@ -86,7 +91,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public T assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+	public T assemble(RowProcessingState rowProcessingState) {
 		final T result;
 		try {
 			final Constructor<T> constructor = target.getJavaTypeClass().getDeclaredConstructor();
@@ -99,14 +104,14 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 					+ target.getTypeName() + "' using default constructor: " + e.getMessage(), e );
 		}
 		for ( BeanInjection beanInjection : beanInjections ) {
-			final Object assembled = beanInjection.getValueAssembler().assemble( rowProcessingState, options );
+			final Object assembled = beanInjection.getValueAssembler().assemble( rowProcessingState );
 			beanInjection.getBeanInjector().inject( result, assembled );
 		}
 		return result;
 	}
 
 	@Override
-	public <X> void forEachResultAssembler(BiConsumer<Initializer, X> consumer, X arg) {
+	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
 		for ( BeanInjection beanInjection : beanInjections ) {
 			beanInjection.getValueAssembler().forEachResultAssembler( consumer, arg );
 		}

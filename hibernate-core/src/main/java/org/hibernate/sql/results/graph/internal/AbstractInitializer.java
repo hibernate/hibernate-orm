@@ -8,47 +8,51 @@ package org.hibernate.sql.results.graph.internal;
 
 import java.util.function.BiConsumer;
 
-import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
-public abstract class AbstractInitializer implements Initializer {
+public abstract class AbstractInitializer<Data extends InitializerData> implements Initializer<Data> {
 
-	protected RowProcessingState rowProcessingState;
-	protected State state = State.UNINITIALIZED;
+	protected final int initializerId;
+
+	protected AbstractInitializer(AssemblerCreationState creationState) {
+		this.initializerId = creationState.acquireInitializerId();
+	}
 
 	@Override
 	public void startLoading(RowProcessingState rowProcessingState) {
-		this.rowProcessingState = rowProcessingState;
-		forEachSubInitializer( Initializer::startLoading, rowProcessingState );
+		final InitializerData data = createInitializerData( rowProcessingState );
+		rowProcessingState.setInitializerData( initializerId, data );
+		forEachSubInitializer( Initializer::startLoading, data );
+	}
+
+	protected abstract InitializerData createInitializerData(RowProcessingState rowProcessingState);
+
+	@Override
+	public void resolveKey(Data data) {
+		data.setState( State.KEY_RESOLVED );
+		forEachSubInitializer( Initializer::resolveKey, data );
 	}
 
 	@Override
-	public void endLoading(ExecutionContext executionContext) {
-		rowProcessingState = null;
-	}
-
-	@Override
-	public void resolveKey() {
-		state = State.KEY_RESOLVED;
-		forEachSubInitializer( (initializer, processingState) -> initializer.resolveKey(), rowProcessingState );
-	}
-
-	@Override
-	public void initializeInstance() {
+	public void initializeInstance(Data data) {
 		// No-op by default
 	}
 
 	@Override
-	public State getState() {
-		return state;
+	public Data getData(RowProcessingState rowProcessingState) {
+		return rowProcessingState.getInitializerData( initializerId );
 	}
 
 	@Override
-	public void finishUpRow() {
-		state = State.UNINITIALIZED;
+	public void finishUpRow(Data data) {
+		data.setState( Initializer.State.UNINITIALIZED );
 	}
 
-	protected abstract <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg);
+	protected abstract void forEachSubInitializer(
+			BiConsumer<Initializer<?>, RowProcessingState> consumer,
+			InitializerData data);
 
 }

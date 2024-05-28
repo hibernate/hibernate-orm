@@ -12,7 +12,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -42,17 +41,16 @@ public class DynamicInstantiationAssemblerListImpl implements DomainResultAssemb
 
 	@Override
 	public List<?> assemble(
-			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) {
+			RowProcessingState rowProcessingState) {
 		final ArrayList<Object> result = new ArrayList<>();
 		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
-			result.add( argumentReader.assemble( rowProcessingState, options ) );
+			result.add( argumentReader.assemble( rowProcessingState ) );
 		}
 		return result;
 	}
 
 	@Override
-	public <X> void forEachResultAssembler(BiConsumer<Initializer, X> consumer, X arg) {
+	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
 		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
 			argumentReader.forEachResultAssembler( consumer, arg );
 		}

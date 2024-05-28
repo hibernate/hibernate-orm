@@ -26,12 +26,11 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
@@ -44,32 +43,59 @@ import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideE
 /**
  * @author Steve Ebersole
  */
-public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializer
-		implements EmbeddableInitializer, ValueAccess {
+public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializer<NonAggregatedIdentifierMappingInitializer.NonAggregatedIdentifierMappingInitializerData>
+		implements EmbeddableInitializer<NonAggregatedIdentifierMappingInitializer.NonAggregatedIdentifierMappingInitializerData> {
 
 	private final NavigablePath navigablePath;
 	private final NonAggregatedIdentifierMapping embedded;
 	private final EmbeddableMappingType representationEmbeddable;
 	private final EmbeddableRepresentationStrategy representationStrategy;
-	private final @Nullable InitializerParent parent;
+	private final @Nullable InitializerParent<?> parent;
 	private final SessionFactoryImplementor sessionFactory;
 	private final boolean isResultInitializer;
 
 	private final DomainResultAssembler<?>[] assemblers;
-	private final Initializer[] initializers;
+	private final Initializer<InitializerData>[] initializers;
 	private final boolean hasIdClass;
 
+	public static class NonAggregatedIdentifierMappingInitializerData extends InitializerData implements ValueAccess {
+		protected final InitializerData parentData;
+		protected final Object[] virtualIdState;
+		protected final Object[] idClassState;
 
-	// per-row state
-	private final Object[] virtualIdState;
-	private final Object[] idClassState;
-	protected Object compositeInstance;
+		public NonAggregatedIdentifierMappingInitializerData(NonAggregatedIdentifierMappingInitializer initializer, RowProcessingState rowProcessingState) {
+			super( rowProcessingState );
+			this.parentData = initializer.parent == null ? null : initializer.parent.getData( rowProcessingState );
+			final EmbeddableMappingType virtualIdEmbeddable = initializer.embedded.getEmbeddableTypeDescriptor();
+			final int size = virtualIdEmbeddable.getNumberOfFetchables();
+			this.virtualIdState = new Object[ size ];
+			this.idClassState = new Object[ size ];
+		}
+
+		@Override
+		public Object[] getValues() {
+			assert getState() == State.RESOLVED;
+			return idClassState;
+		}
+
+		@Override
+		public <T> T getValue(int i, Class<T> clazz) {
+			assert getState() == State.RESOLVED;
+			return clazz.cast( idClassState[i] );
+		}
+
+		@Override
+		public Object getOwner() {
+			return parentData == null ? null : parentData.getInstance();
+		}
+	}
 
 	public NonAggregatedIdentifierMappingInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState,
 			boolean isResultInitializer) {
+		super( creationState );
 		this.navigablePath = resultDescriptor.getNavigablePath();
 		this.embedded = (NonAggregatedIdentifierMapping) resultDescriptor.getReferencedMappingContainer();
 		this.parent = parent;
@@ -80,25 +106,23 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 		this.representationStrategy = representationEmbeddable.getRepresentationStrategy();
 		this.hasIdClass = embedded.hasContainingClass() && virtualIdEmbeddable != representationEmbeddable;
 
-		final int size = virtualIdEmbeddable.getNumberOfFetchables();
-		this.virtualIdState = new Object[ size ];
-		this.idClassState = new Object[ size ];
-
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		this.assemblers = createAssemblers( this, resultDescriptor, creationState, virtualIdEmbeddable );
-		final ArrayList<Initializer> initializers = new ArrayList<>( assemblers.length );
+		final ArrayList<Initializer<?>> initializers = new ArrayList<>( assemblers.length );
 		for ( DomainResultAssembler<?> assembler : assemblers ) {
-			final Initializer initializer = assembler.getInitializer();
+			final Initializer<?> initializer = assembler.getInitializer();
 			if ( initializer != null ) {
 				initializers.add( initializer );
 			}
 		}
-		this.initializers = initializers.isEmpty() ? Initializer.EMPTY_ARRAY : initializers.toArray( EMPTY_ARRAY );
+		//noinspection unchecked
+		this.initializers = (Initializer<InitializerData>[]) (
+				initializers.isEmpty() ? Initializer.EMPTY_ARRAY : initializers.toArray( EMPTY_ARRAY )
+		);
 	}
 
-
 	protected static DomainResultAssembler<?>[] createAssemblers(
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			EmbeddableResultGraphNode resultDescriptor,
 			AssemblerCreationState creationState,
 			EmbeddableMappingType embeddableTypeDescriptor) {
@@ -123,12 +147,7 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 	}
 
 	@Override
-	public @Nullable FetchParentAccess getFetchParentAccess() {
-		return (FetchParentAccess) parent;
-	}
-
-	@Override
-	public @Nullable InitializerParent getParent() {
+	public @Nullable InitializerParent<?> getParent() {
 		return parent;
 	}
 
@@ -143,27 +162,35 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 	}
 
 	@Override
-	public Object getCompositeInstance() {
-		return state == State.RESOLVED || state == State.INITIALIZED ? compositeInstance : null;
+	public Object getCompositeInstance(NonAggregatedIdentifierMappingInitializerData data) {
+		final State state = data.getState();
+		return state == State.RESOLVED || state == State.INITIALIZED ? data.getInstance() : null;
 	}
 
 	@Override
-	public void resolveKey() {
-		if ( state != State.UNINITIALIZED ) {
+	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
+		return new NonAggregatedIdentifierMappingInitializerData( this, rowProcessingState );
+	}
+
+	@Override
+	public void resolveKey(NonAggregatedIdentifierMappingInitializerData data) {
+		if ( data.getState() != State.UNINITIALIZED ) {
 			return;
 		}
 		// We need to possibly wrap the processing state if the embeddable is within an aggregate
-		compositeInstance = null;
-		state = State.KEY_RESOLVED;
+		data.setInstance( null );
+		data.setState( State.KEY_RESOLVED );
 		if ( initializers.length == 0 ) {
 			// Resolve the component early to know if the key is missing or not
-			resolveInstance();
+			resolveInstance( data );
 		}
 		else {
-			for ( Initializer initializer : initializers ) {
-				initializer.resolveKey();
-				if ( initializer.getState() == State.MISSING ) {
-					state = State.MISSING;
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			for ( Initializer<InitializerData> initializer : initializers ) {
+				final InitializerData subData = initializer.getData( rowProcessingState );
+				initializer.resolveKey( subData );
+				if ( subData.getState() == State.MISSING ) {
+					data.setState( State.MISSING );
 					return;
 				}
 			}
@@ -171,51 +198,51 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 	}
 
 	@Override
-	public void resolveInstance() {
-		if ( state != State.KEY_RESOLVED ) {
+	public void resolveInstance(NonAggregatedIdentifierMappingInitializerData data) {
+		if ( data.getState() != State.KEY_RESOLVED ) {
 			return;
 		}
 
 		// If we don't have an id class and this is a find by id lookup, we just use that instance
-		if ( isFindByIdLookup() ) {
-			compositeInstance = rowProcessingState.getEntityId();
-			state = State.INITIALIZED;
+		if ( isFindByIdLookup( data.getRowProcessingState() ) ) {
+			data.setInstance( data.getRowProcessingState().getEntityId() );
+			data.setState( State.INITIALIZED );
 			return;
 		}
-		state = State.RESOLVED;
+		data.setState( State.RESOLVED );
 		// We need to possibly wrap the processing state if the embeddable is within an aggregate
-		extractRowState();
-		if ( state == State.MISSING ) {
-			compositeInstance = null;
+		extractRowState( data );
+		if ( data.getState() == State.MISSING ) {
+			data.setInstance( null );
 		}
 		else {
-			compositeInstance = representationStrategy.getInstantiator().instantiate( this, sessionFactory );
+			data.setInstance( representationStrategy.getInstantiator().instantiate( data, sessionFactory ) );
 		}
 	}
 
 	@Override
-	public void resolveInstance(@Nullable Object instance) {
+	public void resolveInstance(@Nullable Object instance, NonAggregatedIdentifierMappingInitializerData data) {
 		if ( instance == null ) {
-			state = State.MISSING;
-			compositeInstance = null;
+			data.setState( State.MISSING );
+			data.setInstance( null );
 		}
 		else {
-			state = State.INITIALIZED;
-			compositeInstance = instance;
-			for ( Initializer initializer : initializers ) {
+			data.setState( State.INITIALIZED );
+			data.setInstance( instance );
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			for ( Initializer<?> initializer : initializers ) {
 				final Object subInstance = initializer.getInitializedPart()
 						.asAttributeMapping()
 						.getValue( instance );
 				if ( subInstance == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 					// Go through the normal initializer process
-					initializer.resolveKey();
+					initializer.resolveKey( rowProcessingState );
 				}
 				else {
-					initializer.resolveInstance( subInstance );
+					initializer.resolveInstance( subInstance, rowProcessingState );
 				}
 			}
-			if ( !rowProcessingState.isQueryCacheHit() && rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
-				// Resolve the state of the assemblers if result caching is enabled and this is not a query cache hit
+			if ( rowProcessingState.needsResolveState() ) {
 				for ( DomainResultAssembler<?> assembler : assemblers ) {
 					assembler.resolveState( rowProcessingState );
 				}
@@ -224,16 +251,15 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 	}
 
 	@Override
-	public void initializeInstance() {
-		if ( state != State.RESOLVED ) {
+	public void initializeInstance(NonAggregatedIdentifierMappingInitializerData data) {
+		if ( data.getState() != State.RESOLVED ) {
 			return;
 		}
-		state = State.INITIALIZED;
-		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Initializing composite instance [%s]", navigablePath );
+		data.setState( State.INITIALIZED );
 
 		if ( parent != null ) {
 			assert parent.isEntityInitializer();
-			final Object parentInstance = parent.getInitializedInstance();
+			final Object parentInstance = parent.getResolvedInstance( data.getRowProcessingState() );
 			assert parentInstance != null;
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( parentInstance );
 			// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
@@ -241,48 +267,46 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 			if ( lazyInitializer != null ) {
 				embedded.getVirtualIdEmbeddable().setValues(
 						lazyInitializer.getImplementation(),
-						virtualIdState
+						data.virtualIdState
 				);
 			}
 			else {
-				embedded.getVirtualIdEmbeddable().setValues( parentInstance, virtualIdState );
+				embedded.getVirtualIdEmbeddable().setValues( parentInstance, data.virtualIdState );
 			}
 		}
 	}
 
 	@Override
-	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
-		for ( Initializer initializer : initializers ) {
-			consumer.accept( initializer, arg );
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		for ( Initializer<?> initializer : initializers ) {
+			consumer.accept( initializer, rowProcessingState );
 		}
 	}
 
-	private boolean isFindByIdLookup() {
+	private boolean isFindByIdLookup(RowProcessingState rowProcessingState) {
 		return !hasIdClass && rowProcessingState.getEntityId() != null
 				&& navigablePath.getParent().getParent() == null
 				&& navigablePath instanceof EntityIdentifierNavigablePath;
 	}
 
-	private void extractRowState() {
+	private void extractRowState(NonAggregatedIdentifierMappingInitializerData data) {
 		for ( int i = 0; i < assemblers.length; i++ ) {
 			final DomainResultAssembler<?> assembler = assemblers[i];
-			final Object contributorValue = assembler.assemble(
-					rowProcessingState,
-					rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
-			);
+			final Object contributorValue = assembler.assemble( data.getRowProcessingState() );
 
 			if ( contributorValue == null ) {
 				// This is a key and there is a null part, the whole thing has to be turned into null
-				state = State.MISSING;
+				data.setState( State.MISSING );
 				return;
 			}
 			if ( contributorValue == BATCH_PROPERTY ) {
-				virtualIdState[i] = null;
-				idClassState[i] = null;
+				data.virtualIdState[i] = null;
+				data.idClassState[i] = null;
 			}
 			else {
-				virtualIdState[i] = contributorValue;
-				idClassState[i] = contributorValue;
+				data.virtualIdState[i] = contributorValue;
+				data.idClassState[i] = contributorValue;
 				if ( hasIdClass ) {
 					final AttributeMapping virtualIdAttribute = embedded.getEmbeddableTypeDescriptor().getAttributeMapping( i );
 					final AttributeMapping mappedIdAttribute = representationEmbeddable.getAttributeMapping( i );
@@ -291,11 +315,11 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
 						final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
 						final Object associationKey = fkDescriptor.getAssociationKeyFromSide(
-								virtualIdState[i],
+								data.virtualIdState[i],
 								toOneAttributeMapping.getSideNature().inverse(),
-								rowProcessingState.getSession()
+								data.getRowProcessingState().getSession()
 						);
-						idClassState[i] = associationKey;
+						data.idClassState[i] = associationKey;
 					}
 				}
 			}
@@ -304,28 +328,11 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 
 	@Override
 	public void resolveState(RowProcessingState rowProcessingState) {
-		if ( !isFindByIdLookup() ) {
+		if ( !isFindByIdLookup( rowProcessingState ) ) {
 			for ( final DomainResultAssembler<?> assembler : assemblers ) {
 				assembler.resolveState( rowProcessingState );
 			}
 		}
-	}
-
-	@Override
-	public Object[] getValues() {
-		assert state == State.RESOLVED;
-		return idClassState;
-	}
-
-	@Override
-	public <T> T getValue(int i, Class<T> clazz) {
-		assert state == State.RESOLVED;
-		return clazz.cast( idClassState[i] );
-	}
-
-	@Override
-	public Object getOwner() {
-		return parent == null ? null : parent.getInitializedInstance();
 	}
 
 	@Override

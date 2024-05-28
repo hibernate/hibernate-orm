@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -44,8 +42,10 @@ import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.collection.internal.AbstractImmediateCollectionInitializer;
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
+import org.hibernate.sql.results.jdbc.internal.StandardJdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -58,33 +58,21 @@ public class ResultsHelper {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsHelper.class );
 
 	public static <R> RowReader<R> createRowReader(
-			ExecutionContext executionContext,
-			LockOptions lockOptions,
+			SessionFactoryImplementor sessionFactory,
 			RowTransformer<R> rowTransformer,
 			Class<R> transformedResultJavaType,
 			JdbcValues jdbcValues) {
-		return createRowReader( executionContext, lockOptions, rowTransformer, transformedResultJavaType, jdbcValues.getValuesMapping());
+		return createRowReader( sessionFactory, rowTransformer, transformedResultJavaType, jdbcValues.getValuesMapping() );
 	}
 
 	public static <R> RowReader<R> createRowReader(
-			ExecutionContext executionContext,
-			LockOptions lockOptions,
+			SessionFactoryImplementor sessionFactory,
 			RowTransformer<R> rowTransformer,
 			Class<R> transformedResultJavaType,
 			JdbcValuesMapping jdbcValuesMapping) {
-		final AssemblerCreationStateImpl creationState = new AssemblerCreationStateImpl(
-				executionContext,
-				jdbcValuesMapping,
-				lockOptions
-		);
-
-		final List<DomainResultAssembler<?>> assemblers = jdbcValuesMapping.resolveAssemblers( creationState );
-		creationState.initializerMap.logInitializers();
-
+		final JdbcValuesMappingResolution jdbcValuesMappingResolution = jdbcValuesMapping.resolveAssemblers( sessionFactory );
 		return new StandardRowReader<>(
-				assemblers,
-				creationState.hasCollectionInitializers,
-				creationState.initializerListBuilder.build(),
+				jdbcValuesMappingResolution,
 				rowTransformer,
 				transformedResultJavaType
 		);
@@ -263,119 +251,6 @@ public class ResultsHelper {
 				}
 
 			}
-		}
-	}
-
-	private static class AssemblerCreationStateImpl implements AssemblerCreationState {
-		private final ExecutionContext executionContext;
-		private final JdbcValuesMapping jdbcValuesMapping;
-		private final LockOptions lockOptions;
-		private final SessionFactoryImplementor sessionFactory;
-		//custom Map<NavigablePath, Initializer>
-		private final NavigablePathMapToInitializer initializerMap = new NavigablePathMapToInitializer();
-		private final InitializersList.Builder initializerListBuilder = new InitializersList.Builder();
-		boolean hasCollectionInitializers;
-		Boolean dynamicInstantiation;
-
-		public AssemblerCreationStateImpl(
-				ExecutionContext executionContext,
-				JdbcValuesMapping jdbcValuesMapping,
-				LockOptions lockOptions) {
-			this.executionContext = executionContext;
-			this.jdbcValuesMapping = jdbcValuesMapping;
-			this.lockOptions = lockOptions;
-			this.sessionFactory = executionContext.getSession().getFactory();
-		}
-
-		@Override
-		public boolean isScrollResult() {
-			return executionContext.isScrollResult();
-		}
-
-		@Override
-		public boolean isDynamicInstantiation() {
-			if ( dynamicInstantiation == null ) {
-				dynamicInstantiation = jdbcValuesMapping.getDomainResults()
-						.stream()
-						.anyMatch( domainResult -> domainResult instanceof DynamicInstantiationResult );
-			}
-			return dynamicInstantiation;
-		}
-
-		@Override
-		public LockMode determineEffectiveLockMode(String identificationVariable) {
-			return lockOptions.getEffectiveLockMode( identificationVariable );
-		}
-
-		@Override
-		public Initializer resolveInitializer(
-				NavigablePath navigablePath,
-				ModelPart fetchedModelPart,
-				Supplier<Initializer> producer) {
-			return resolveInitializer(
-					navigablePath,
-					fetchedModelPart,
-					null,
-					null,
-					(resultGraphNode, parent, creationState) -> producer.get()
-			);
-		}
-
-		@Override
-		public <P extends FetchParent> Initializer resolveInitializer(
-				P resultGraphNode,
-				InitializerParent parent,
-				InitializerProducer<P> producer) {
-			return resolveInitializer(
-					resultGraphNode.getNavigablePath(),
-					resultGraphNode.getReferencedModePart(),
-					resultGraphNode,
-					parent,
-					producer
-			);
-		}
-
-		public <T extends FetchParent> Initializer resolveInitializer(
-				NavigablePath navigablePath,
-				ModelPart fetchedModelPart,
-				T resultGraphNode,
-				InitializerParent parent,
-				InitializerProducer<T> producer) {
-			final Initializer existing = initializerMap.get( navigablePath );
-			if ( existing != null ) {
-				if ( fetchedModelPart.getNavigableRole().equals(
-						existing.getInitializedPart().getNavigableRole() ) ) {
-					ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-							"Returning previously-registered initializer : %s",
-							existing
-					);
-					return existing;
-				}
-			}
-
-			final Initializer initializer = producer.createInitializer( resultGraphNode, parent, this );
-			ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-					"Registering initializer : %s",
-					initializer
-			);
-
-			if ( initializer instanceof AbstractImmediateCollectionInitializer ) {
-				hasCollectionInitializers = true;
-			}
-			initializerMap.put( navigablePath, initializer );
-			initializerListBuilder.addInitializer( initializer );
-
-			return initializer;
-		}
-
-		@Override
-		public SqlAstCreationContext getSqlAstCreationContext() {
-			return sessionFactory;
-		}
-
-		@Override
-		public ExecutionContext getExecutionContext() {
-			return executionContext;
 		}
 	}
 }

@@ -13,7 +13,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
@@ -27,15 +26,14 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
@@ -49,12 +47,12 @@ import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideE
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableInitializerImpl extends AbstractInitializer
-		implements EmbeddableInitializer, ValueAccess {
+public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableInitializerImpl.EmbeddableInitializerData>
+		implements EmbeddableInitializer<EmbeddableInitializerImpl.EmbeddableInitializerData> {
 
 	private final NavigablePath navigablePath;
 	private final EmbeddableValuedModelPart embedded;
-	private final InitializerParent parent;
+	private final InitializerParent<InitializerData> parent;
 	private final boolean isResultInitializer;
 	private final boolean isPartOfKey;
 	private final boolean createEmptyCompositesEnabled;
@@ -62,27 +60,54 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 
 	protected final DomainResultAssembler<?>[][] assemblers;
 	private final BasicResultAssembler<?> discriminatorAssembler;
-	protected final Initializer[][] subInitializers;
+	protected final Initializer<InitializerData>[][] subInitializers;
 
-	// per-row state
-	private final Object[] rowState;
-	protected Object compositeInstance;
-	protected EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType;
+	public static class EmbeddableInitializerData extends InitializerData implements ValueAccess {
+		protected final InitializerData parentData;
+		protected final Object[] rowState;
+		protected EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType;
+
+		public EmbeddableInitializerData(EmbeddableInitializerImpl initializer, RowProcessingState rowProcessingState) {
+			super( rowProcessingState );
+			this.parentData = initializer.parent == null ? null : initializer.parent.getData( rowProcessingState );
+			final EmbeddableMappingType embeddableTypeDescriptor = initializer.embedded.getEmbeddableTypeDescriptor();
+			final int size = embeddableTypeDescriptor.getNumberOfFetchables();
+			this.rowState = new Object[ size ];
+		}
+
+		@Override
+		public Object[] getValues() {
+			return getState() == State.MISSING ? null : rowState;
+		}
+
+		@Override
+		public <T> T getValue(int i, Class<T> clazz) {
+			return getState() == State.MISSING ? null : clazz.cast( rowState[i] );
+		}
+
+		@Override
+		public Object getOwner() {
+			return parentData == null ? null : parentData.getInstance();
+		}
+
+		public int getSubclassId() {
+			return concreteEmbeddableType == null ? 0 : concreteEmbeddableType.getSubclassId();
+		}
+	}
 
 	public EmbeddableInitializerImpl(
 			EmbeddableResultGraphNode resultDescriptor,
 			BasicFetch<?> discriminatorFetch,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState,
 			boolean isResultInitializer) {
+		super( creationState );
 		this.navigablePath = resultDescriptor.getNavigablePath();
 		this.embedded = resultDescriptor.getReferencedMappingContainer();
-		this.parent = parent;
+		this.parent = (InitializerParent<InitializerData>) parent;
 		this.isResultInitializer = isResultInitializer;
 
 		final EmbeddableMappingType embeddableTypeDescriptor = embedded.getEmbeddableTypeDescriptor();
-		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
-		this.rowState = new Object[ size ];
 
 		this.isPartOfKey = embedded.isEntityIdentifierMapping() || Initializer.isPartOfKey( navigablePath, parent );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
@@ -111,7 +136,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 
 			final DomainResultAssembler<?> stateAssembler = fetch == null
 					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
-					: fetch.createAssembler( (InitializerParent) this, creationState );
+					: fetch.createAssembler( this, creationState );
 
 			overallAssemblers[i] = stateAssembler;
 		}
@@ -132,15 +157,15 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 		return new DomainResultAssembler[][] { overallAssemblers };
 	}
 
-	protected static Initializer[][] createInitializers(DomainResultAssembler<?>[][] assemblers) {
-		Initializer[][] subInitializers = new Initializer[assemblers.length][];
+	protected static Initializer<InitializerData>[][] createInitializers(DomainResultAssembler<?>[][] assemblers) {
+		Initializer<?>[][] subInitializers = new Initializer<?>[assemblers.length][];
 		for ( int i = 0; i < assemblers.length; i++ ) {
 			final DomainResultAssembler<?>[] subAssemblers = assemblers[i];
 			if ( subAssemblers != null ) {
-				final ArrayList<Initializer> initializers = new ArrayList<>( subAssemblers.length );
+				final ArrayList<Initializer<?>> initializers = new ArrayList<>( subAssemblers.length );
 				for ( DomainResultAssembler<?> assembler : subAssemblers ) {
 					if ( assembler != null ) {
-						final Initializer initializer = assembler.getInitializer();
+						final Initializer<?> initializer = assembler.getInitializer();
 						if ( initializer != null ) {
 							initializers.add( initializer );
 						}
@@ -154,7 +179,8 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 				subInitializers[i] = Initializer.EMPTY_ARRAY;
 			}
 		}
-		return subInitializers;
+		//noinspection unchecked
+		return (Initializer<InitializerData>[][]) subInitializers;
 	}
 
 	@Override
@@ -163,12 +189,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 	}
 
 	@Override
-	public @Nullable FetchParentAccess getFetchParentAccess() {
-		return (FetchParentAccess) parent;
-	}
-
-	@Override
-	public @Nullable InitializerParent getParent() {
+	public @Nullable InitializerParent<?> getParent() {
 		return parent;
 	}
 
@@ -183,8 +204,9 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 	}
 
 	@Override
-	public Object getCompositeInstance() {
-		return state == State.RESOLVED || state == State.INITIALIZED ? compositeInstance : null;
+	public Object getCompositeInstance(EmbeddableInitializerData data) {
+		final State state = data.getState();
+		return state == State.RESOLVED || state == State.INITIALIZED ? data.getInstance() : null;
 	}
 
 	@Override
@@ -193,82 +215,87 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 	}
 
 	@Override
-	public void resolveKey() {
-		if ( state != State.UNINITIALIZED ) {
+	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
+		return new EmbeddableInitializerData( this, rowProcessingState );
+	}
+
+	@Override
+	public void resolveKey(EmbeddableInitializerData data) {
+		if ( data.getState() != State.UNINITIALIZED ) {
 			return;
 		}
 		// We need to possibly wrap the processing state if the embeddable is within an aggregate
-		compositeInstance = null;
+		data.setInstance( null );
 		if ( discriminatorAssembler != null ) {
-			final EmbeddableDiscriminatorMapping discriminatorMapping = embedded.getEmbeddableTypeDescriptor()
-					.getDiscriminatorMapping();
-			assert discriminatorMapping != null;
+			assert embedded.getEmbeddableTypeDescriptor().getDiscriminatorMapping() != null;
 			// todo: add more info into EmbeddableDiscriminatorConverter to extract this details object directly
-			final Object discriminatorValue = discriminatorAssembler.extractRawValue( rowProcessingState );
-			concreteEmbeddableType = discriminatorValue == null
+			final Object discriminatorValue = discriminatorAssembler.extractRawValue( data.getRowProcessingState() );
+			data.concreteEmbeddableType = discriminatorValue == null
 					? null
 					: embedded.getEmbeddableTypeDescriptor().findSubtypeByDiscriminator( discriminatorValue );
 		}
 		if ( isPartOfKey ) {
-			state = State.KEY_RESOLVED;
+			data.setState( State.KEY_RESOLVED );
 			if ( subInitializers.length == 0 ) {
 				// Resolve the component early to know if the key is missing or not
-				resolveInstance();
+				resolveInstance( data );
 			}
 			else {
-				resolveKeySubInitializers( rowProcessingState );
+				resolveKeySubInitializers( data );
 			}
 		}
 		else {
-			super.resolveKey();
+			super.resolveKey( data );
 		}
 	}
 
-	private void resolveKeySubInitializers(RowProcessingState rowProcessingState) {
-		for ( Initializer initializer : subInitializers[getSubclassId()] ) {
-			initializer.resolveKey();
-			if ( initializer.getState() == State.MISSING ) {
-				state = State.MISSING;
+	private void resolveKeySubInitializers(EmbeddableInitializerData data) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		for ( Initializer<InitializerData> initializer : subInitializers[data.getSubclassId()] ) {
+			final InitializerData subData = initializer.getData( rowProcessingState );
+			initializer.resolveKey( subData );
+			if ( subData.getState() == State.MISSING ) {
+				data.setState( State.MISSING );
 				return;
 			}
 		}
 	}
 
 	@Override
-	public void resolveInstance() {
-		if ( state != State.KEY_RESOLVED ) {
+	public void resolveInstance(EmbeddableInitializerData data) {
+		if ( data.getState() != State.KEY_RESOLVED ) {
 			return;
 		}
 
-		state = State.RESOLVED;
-		extractRowState();
-		prepareCompositeInstance();
+		data.setState( State.RESOLVED );
+		extractRowState( data );
+		prepareCompositeInstance( data );
 	}
 
 	@Override
-	public void resolveInstance(@Nullable Object instance) {
+	public void resolveInstance(@Nullable Object instance, EmbeddableInitializerData data) {
 		if ( instance == null ) {
-			state = State.MISSING;
-			compositeInstance = null;
+			data.setState( State.MISSING );
+			data.setInstance( null );
 		}
 		else {
-			state = State.INITIALIZED;
-			compositeInstance = instance;
-			for ( Initializer initializer : subInitializers[getSubclassId()] ) {
+			data.setState( State.INITIALIZED );
+			data.setInstance( instance );
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			for ( Initializer<?> initializer : subInitializers[data.getSubclassId()] ) {
 				final Object subInstance = initializer.getInitializedPart()
 						.asAttributeMapping()
 						.getValue( instance );
 				if ( subInstance == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 					// Go through the normal initializer process
-					initializer.resolveKey();
+					initializer.resolveKey( rowProcessingState );
 				}
 				else {
-					initializer.resolveInstance( subInstance );
+					initializer.resolveInstance( subInstance, rowProcessingState );
 				}
 			}
-			if ( !rowProcessingState.isQueryCacheHit() && rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
-				// Resolve the state of the assemblers if result caching is enabled and this is not a query cache hit
-				for ( DomainResultAssembler<?> assembler : assemblers[getSubclassId()] ) {
+			if ( rowProcessingState.needsResolveState() ) {
+				for ( DomainResultAssembler<?> assembler : assemblers[data.getSubclassId()] ) {
 					assembler.resolveState( rowProcessingState );
 				}
 			}
@@ -276,24 +303,23 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 	}
 
 	@Override
-	public void initializeInstance() {
-		if ( state != State.RESOLVED ) {
+	public void initializeInstance(EmbeddableInitializerData data) {
+		if ( data.getState() != State.RESOLVED ) {
 			return;
 		}
-		state = State.INITIALIZED;
-		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Initializing composite instance [%s]", navigablePath );
+		data.setState( State.INITIALIZED );
 
 		if ( embedded.getParentInjectionAttributePropertyAccess() != null || embedded instanceof VirtualModelPart ) {
-			handleParentInjection();
+			handleParentInjection( data );
 
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( compositeInstance );
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( data.getInstance() );
 			// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
 			// and the compositeInstance == entity, so we have to inject the row state into the entity when it finishes resolution
 			if ( lazyInitializer != null ) {
 				if ( parent != null ) {
 					embedded.getEmbeddableTypeDescriptor().setValues(
 							lazyInitializer.getImplementation(),
-							rowState
+							data.rowState
 					);
 				}
 				else {
@@ -305,88 +331,84 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 					//		interprets that as the values are not known or were all null.
 					final Object target = embedded.getEmbeddableTypeDescriptor().getRepresentationStrategy()
 							.getInstantiator()
-							.instantiate( this, sessionFactory );
+							.instantiate( data, sessionFactory );
 					lazyInitializer.setImplementation( target );
 				}
 			}
 			else {
-				embedded.getEmbeddableTypeDescriptor().setValues( compositeInstance, rowState );
+				embedded.getEmbeddableTypeDescriptor().setValues( data.getInstance(), data.rowState );
 			}
 		}
 	}
 
 	@Override
-	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
-		if ( concreteEmbeddableType == null ) {
-			for ( Initializer[] initializers : subInitializers ) {
-				for ( Initializer initializer : initializers ) {
-					consumer.accept( initializer, arg );
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		final EmbeddableInitializerData embeddableInitializerData = (EmbeddableInitializerData) data;
+		final RowProcessingState rowProcessingState = embeddableInitializerData.getRowProcessingState();
+		if ( embeddableInitializerData.concreteEmbeddableType == null ) {
+			for ( Initializer<?>[] initializers : subInitializers ) {
+				for ( Initializer<?> initializer : initializers ) {
+					consumer.accept( initializer, rowProcessingState );
 				}
 			}
 		}
 		else {
-			for ( Initializer initializer : subInitializers[getSubclassId()] ) {
-				consumer.accept( initializer, arg );
+			for ( Initializer<?> initializer : subInitializers[embeddableInitializerData.getSubclassId()] ) {
+				consumer.accept( initializer, rowProcessingState );
 			}
 		}
 	}
 
 	@Override
-	public void initializeInstanceFromParent(Object parentInstance) {
+	public void initializeInstanceFromParent(Object parentInstance, EmbeddableInitializerData data) {
 		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
 		final Object instance = attributeMapping != null
 				? attributeMapping.getValue( parentInstance )
 				: parentInstance;
-		compositeInstance = instance;
+		data.setInstance( instance );
 		if ( instance == null ) {
-			state = State.MISSING;
+			data.setState( State.MISSING );
 		}
 		else {
-			state = State.INITIALIZED;
-			for ( Initializer initializer : subInitializers[getSubclassId()] ) {
-				initializer.initializeInstanceFromParent( instance );
+			data.setState( State.INITIALIZED );
+			for ( Initializer<?> initializer : subInitializers[data.getSubclassId()] ) {
+				initializer.initializeInstanceFromParent( instance, data.getRowProcessingState() );
 			}
 		}
 	}
 
-	private void prepareCompositeInstance() {
+	private void prepareCompositeInstance(EmbeddableInitializerData data) {
 		// Virtual model parts use the owning entity as container which the fetch parent access provides.
 		// For an identifier or foreign key this is called during the resolveKey phase of the fetch parent,
 		// so we can't use the fetch parent access in that case.
 		if ( parent != null && embedded instanceof VirtualModelPart && !isPartOfKey ) {
-			parent.resolveInstance();
-			compositeInstance = parent.getInitializedInstance();
-			EntityInitializer entityInitializer = parent.asEntityInitializer();
-			if ( entityInitializer != null && entityInitializer.isEntityInitialized() ) {
+			final InitializerData subData = parent.getData( data.getRowProcessingState() );
+			parent.resolveInstance( subData );
+			data.setInstance( parent.getResolvedInstance( subData ) );
+			if ( data.getState() == State.INITIALIZED ) {
 				return;
 			}
 		}
 
-		if ( compositeInstance == null ) {
-			compositeInstance = createCompositeInstance();
+		if ( data.getInstance() == null ) {
+			data.setInstance( createCompositeInstance( data ) );
 		}
-
-		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
-				"Created composite instance [%s]",
-				navigablePath
-		);
 	}
 
-	private void extractRowState() {
+	private void extractRowState(EmbeddableInitializerData data) {
 		boolean stateAllNull = true;
-		final DomainResultAssembler<?>[] subAssemblers = assemblers[getSubclassId()];
+		final DomainResultAssembler<?>[] subAssemblers = assemblers[data.getSubclassId()];
 		for ( int i = 0; i < subAssemblers.length; i++ ) {
 			final DomainResultAssembler<?> assembler = subAssemblers[i];
 			final Object contributorValue = assembler == null ? null : assembler.assemble(
-					rowProcessingState,
-					rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
+					data.getRowProcessingState()
 			);
 
 			if ( contributorValue == BATCH_PROPERTY ) {
-				rowState[i] = null;
+				data.rowState[i] = null;
 			}
 			else {
-				rowState[i] = contributorValue;
+				data.rowState[i] = contributorValue;
 			}
 			if ( contributorValue != null ) {
 				stateAllNull = false;
@@ -398,19 +420,20 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 			}
 		}
 		if ( stateAllNull ) {
-			state = State.MISSING;
+			data.setState( State.MISSING );
 		}
 	}
 
 	@Override
 	public void resolveState(RowProcessingState rowProcessingState) {
-		for ( final DomainResultAssembler<?> assembler : assemblers[getSubclassId()] ) {
+		final EmbeddableInitializerData data = getData( rowProcessingState );
+		for ( final DomainResultAssembler<?> assembler : assemblers[data.getSubclassId()] ) {
 			assembler.resolveState( rowProcessingState );
 		}
 	}
 
-	private Object createCompositeInstance() {
-		if ( state == State.MISSING ) {
+	private Object createCompositeInstance(EmbeddableInitializerData data) {
+		if ( data.getState() == State.MISSING ) {
 			// todo (6.0) : should we initialize the composite instance if it has a parent attribute?
 //			if ( !createEmptyCompositesEnabled && embedded.getParentInjectionAttributePropertyAccess() == null ) {
 			if ( !createEmptyCompositesEnabled ) {
@@ -418,72 +441,38 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 			}
 		}
 
-		final EmbeddableInstantiator instantiator = concreteEmbeddableType == null
+		final EmbeddableInstantiator instantiator = data.concreteEmbeddableType == null
 				? embedded.getEmbeddableTypeDescriptor().getRepresentationStrategy().getInstantiator()
-				: concreteEmbeddableType.getInstantiator();
-		final Object instance = instantiator.instantiate( this, sessionFactory );
-		state = State.RESOLVED;
-
-		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
-
+				: data.concreteEmbeddableType.getInstantiator();
+		final Object instance = instantiator.instantiate( data, sessionFactory );
+		data.setState( State.RESOLVED );
 		return instance;
 	}
 
-	@Override
-	public Object[] getValues() {
-		return state == State.MISSING ? null : rowState;
-	}
-
-	@Override
-	public <T> T getValue(int i, Class<T> clazz) {
-		return state == State.MISSING ? null : clazz.cast( rowState[i] );
-	}
-
-	public int getSubclassId() {
-		return concreteEmbeddableType == null ? 0 : concreteEmbeddableType.getSubclassId();
-	}
-
-	@Override
-	public Object getOwner() {
-		return parent.getInitializedInstance();
-	}
-
-	private void handleParentInjection() {
+	private void handleParentInjection(EmbeddableInitializerData data) {
 		final PropertyAccess parentInjectionAccess = embedded.getParentInjectionAttributePropertyAccess();
 		if ( parentInjectionAccess == null ) {
 			// embeddable defined no parent injection
 			return;
 		}
 
-		final Initializer owningInitializer = determineOwningInitializer();
-		final Object parent = determineParentInstance( owningInitializer );
+		final Initializer<?> owningInitializer = determineOwningInitializer();
+		final Object parent = determineParentInstance( owningInitializer, data.getRowProcessingState() );
 		if ( parent == null ) {
-			EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
-					"Unable to determine parent for injection into embeddable [%s]",
-					navigablePath
-			);
 			return;
 		}
-
-		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf(
-				"Injecting parent into embeddable [%s] : `%s` -> `%s`",
-				navigablePath,
-				parent,
-				compositeInstance
-		);
-
 
 		final Setter setter = parentInjectionAccess.getSetter();
 		assert setter != null;
 
-		setter.set( compositeInstance, parent );
+		setter.set( data.getInstance(), parent );
 	}
 
-	private Initializer determineOwningInitializer() {
+	private Initializer<?> determineOwningInitializer() {
 		// Try to find the first non-embeddable fetch parent access
 		// todo (6.x) - allow injection of containing composite as parent if
 		//  	it is the direct parent
-		InitializerParent parent = this.parent;
+		InitializerParent<?> parent = this.parent;
 		while ( parent != null ) {
 			if ( !parent.isEmbeddableInitializer() ) {
 				return parent;
@@ -493,19 +482,19 @@ public class EmbeddableInitializerImpl extends AbstractInitializer
 		throw new UnsupportedOperationException( "Injection of parent instance into embeddable result is not possible" );
 	}
 
-	private Object determineParentInstance(Initializer parentInitializer) {
+	private Object determineParentInstance(Initializer<?> parentInitializer, RowProcessingState rowProcessingState) {
 		if ( parentInitializer == null ) {
 			throw new UnsupportedOperationException( "Cannot determine Embeddable: " + navigablePath + " parent instance, parent initializer is null" );
 		}
 
-		final CollectionInitializer collectionInitializer = parentInitializer.asCollectionInitializer();
+		final CollectionInitializer<?> collectionInitializer = parentInitializer.asCollectionInitializer();
 		if ( collectionInitializer != null ) {
-			return collectionInitializer.getCollectionInstance().getOwner();
+			return collectionInitializer.getCollectionInstance( rowProcessingState ).getOwner();
 		}
 
-		final EntityInitializer parentEntityInitializer = parentInitializer.asEntityInitializer();
+		final EntityInitializer<?> parentEntityInitializer = parentInitializer.asEntityInitializer();
 		if ( parentEntityInitializer != null ) {
-			return parentEntityInitializer.getTargetInstance();
+			return parentEntityInitializer.getTargetInstance( rowProcessingState );
 		}
 
 		throw new UnsupportedOperationException( "The Embeddable: " + navigablePath + " parent initializer is neither an instance of an EntityInitializer nor of a CollectionInitializer" );

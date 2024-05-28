@@ -12,9 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -58,11 +56,8 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 
 	@Override
 	public J assemble(
-			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) {
+			RowProcessingState rowProcessingState) {
 		final Object jdbcValue = extractRawValue( rowProcessingState );
-
-		ResultsLogger.RESULTS_LOGGER.debugf( "Extracted JDBC value [%d] - [%s]", valuesArrayPosition, jdbcValue );
 
 		if ( valueConverter != null ) {
 			if ( jdbcValue != null ) {

@@ -45,7 +45,7 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 		return false;
 	}
 
-	public CollectionInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new SelectEagerCollectionInitializer(
 				getNavigablePath(),
 				getFetchedMapping(),

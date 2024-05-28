@@ -20,7 +20,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
@@ -127,35 +126,28 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 
 	@Override
 	public DomainResultAssembler<?> createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return createAssembler( (InitializerParent) parentAccess, creationState );
-	}
-
-	@Override
-	public DomainResultAssembler<?> createAssembler(
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return buildEntityAssembler( creationState.resolveInitializer( this, parent, this ).asEntityInitializer() );
 	}
 
-	protected EntityAssembler buildEntityAssembler(EntityInitializer entityInitializer) {
+	protected EntityAssembler buildEntityAssembler(EntityInitializer<?> entityInitializer) {
 		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 
 	@Override
-	public Initializer createInitializer(
+	public Initializer<?> createInitializer(
 			EntityFetchJoinedImpl resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public EntityInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new EntityInitializerImpl(
 				this,
-				creationState.determineEffectiveLockMode( sourceAlias ),
+				sourceAlias,
 				entityResult.getIdentifierFetch(),
 				entityResult.getDiscriminatorFetch(),
 				keyResult,
@@ -165,31 +157,6 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 				false,
 				creationState
 		);
-//		return new EntityJoinedFetchInitializer(
-//				entityResult,
-//				getReferencedModePart(),
-//				getNavigablePath(),
-//				creationState.determineEffectiveLockMode( sourceAlias ),
-//				notFoundAction,
-//				keyResult,
-//				entityResult.getRowIdResult(),
-//				entityResult.getIdentifierFetch(),
-//				entityResult.getDiscriminatorFetch(),
-//				parentAccess,
-//				creationState
-//		);
-//		return new EntityInitializerImpl(
-//				this,
-//				creationState.determineEffectiveLockMode( sourceAlias ),
-//				entityResult.getIdentifierFetch(),
-//				entityResult.getDiscriminatorFetch(),
-//				keyResult,
-//				entityResult.getRowIdResult(),
-//				notFoundAction,
-//				parentAccess,
-//				false,
-//				creationState
-//		);
 	}
 
 	@Override

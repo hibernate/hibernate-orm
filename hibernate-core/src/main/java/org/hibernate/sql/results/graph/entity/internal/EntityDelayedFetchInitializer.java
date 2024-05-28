@@ -22,13 +22,17 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -39,48 +43,36 @@ import static org.hibernate.sql.results.graph.entity.internal.EntityInitializerI
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class EntityDelayedFetchInitializer extends AbstractInitializer implements EntityInitializer {
+public class EntityDelayedFetchInitializer
+		extends AbstractInitializer<EntityDelayedFetchInitializer.EntityDelayedFetchInitializerData>
+		implements EntityInitializer<EntityDelayedFetchInitializer.EntityDelayedFetchInitializerData> {
 
-	private final InitializerParent parent;
+	private final InitializerParent<?> parent;
 	private final NavigablePath navigablePath;
 	private final boolean isPartOfKey;
 	private final ToOneAttributeMapping referencedModelPart;
 	private final boolean selectByUniqueKey;
 	private final DomainResultAssembler<?> identifierAssembler;
-	private final BasicResultAssembler<?> discriminatorAssembler;
+	private final @Nullable BasicResultAssembler<?> discriminatorAssembler;
 
-	// per-row state
-	private Object entityInstance;
-	private Object identifier;
+	public static class EntityDelayedFetchInitializerData extends InitializerData {
+		// per-row state
+		protected @Nullable Object entityIdentifier;
 
-	/**
-	 * @deprecated Use {@link #EntityDelayedFetchInitializer(InitializerParent, NavigablePath, ToOneAttributeMapping, boolean, DomainResultAssembler, BasicResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public EntityDelayedFetchInitializer(
-			FetchParentAccess parentAccess,
-			NavigablePath fetchedNavigable,
-			ToOneAttributeMapping referencedModelPart,
-			boolean selectByUniqueKey,
-			DomainResultAssembler<?> identifierAssembler,
-			BasicResultAssembler<?> discriminatorAssembler) {
-		this(
-				(InitializerParent) parentAccess,
-				fetchedNavigable,
-				referencedModelPart,
-				selectByUniqueKey,
-				identifierAssembler,
-				discriminatorAssembler
-		);
+		public EntityDelayedFetchInitializerData(RowProcessingState rowProcessingState) {
+			super( rowProcessingState );
+		}
 	}
 
 	public EntityDelayedFetchInitializer(
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			NavigablePath fetchedNavigable,
 			ToOneAttributeMapping referencedModelPart,
 			boolean selectByUniqueKey,
-			DomainResultAssembler<?> identifierAssembler,
-			BasicResultAssembler<?> discriminatorAssembler) {
+			DomainResult<?> keyResult,
+			@Nullable BasicFetch<?> discriminatorResult,
+			AssemblerCreationState creationState) {
+		super( creationState );
 		// associations marked with `@NotFound` are ALWAYS eagerly fetched, unless we're resolving the concrete type
 		assert !referencedModelPart.hasNotFoundAction() || referencedModelPart.getEntityMappingType().isConcreteProxy();
 
@@ -89,8 +81,15 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 		this.isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
 		this.referencedModelPart = referencedModelPart;
 		this.selectByUniqueKey = selectByUniqueKey;
-		this.identifierAssembler = identifierAssembler;
-		this.discriminatorAssembler = discriminatorAssembler;
+		this.identifierAssembler = keyResult.createResultAssembler( this, creationState );
+		this.discriminatorAssembler = discriminatorResult == null
+				? null
+				: (BasicResultAssembler<?>) discriminatorResult.createResultAssembler( this, creationState );
+	}
+
+	@Override
+	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
+		return new EntityDelayedFetchInitializerData( rowProcessingState );
 	}
 
 	@Override
@@ -104,18 +103,19 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 	}
 
 	@Override
-	public void resolveInstance() {
-		if ( state != State.KEY_RESOLVED ) {
+	public void resolveInstance(EntityDelayedFetchInitializerData data) {
+		if ( data.getState() != State.KEY_RESOLVED ) {
 			return;
 		}
 
-		state = State.RESOLVED;
+		data.setState( State.RESOLVED );
 
-		identifier = identifierAssembler.assemble( rowProcessingState );
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		data.entityIdentifier = identifierAssembler.assemble( rowProcessingState );
 
-		if ( identifier == null ) {
-			entityInstance = null;
-			state = State.MISSING;
+		if ( data.entityIdentifier == null ) {
+			data.setInstance( null );
+			data.setState( State.MISSING );
 		}
 		else {
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
@@ -131,10 +131,10 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 				if ( concreteDescriptor == null ) {
 					// If we find no discriminator it means there's no entity in the target table
 					if ( !referencedModelPart.isOptional() ) {
-						throw new FetchNotFoundException( entityPersister.getEntityName(), identifier );
+						throw new FetchNotFoundException( entityPersister.getEntityName(), data.entityIdentifier );
 					}
-					entityInstance = null;
-					state = State.MISSING;
+					data.setInstance( null );
+					data.setState( State.MISSING );
 					return;
 				}
 			}
@@ -156,55 +156,55 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 				final EntityUniqueKey euk = new EntityUniqueKey(
 						concreteDescriptor.getEntityName(),
 						uniqueKeyPropertyName,
-						identifier,
+						data.entityIdentifier,
 						uniqueKeyPropertyType,
 						session.getFactory()
 				);
-				entityInstance = persistenceContext.getEntity( euk );
-				if ( entityInstance == null ) {
+				data.setInstance( persistenceContext.getEntity( euk ) );
+				if ( data.getInstance() == null ) {
 					// For unique-key mappings, we always use bytecode-laziness if possible,
 					// because we can't generate a proxy based on the unique key yet
 					if ( referencedModelPart.isLazy() ) {
-						entityInstance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+						data.setInstance( LazyPropertyInitializer.UNFETCHED_PROPERTY );
 					}
 					else {
-						entityInstance = concreteDescriptor.loadByUniqueKey(
+						data.setInstance( concreteDescriptor.loadByUniqueKey(
 								uniqueKeyPropertyName,
-								identifier,
+								data.entityIdentifier,
 								session
-						);
+						) );
 
 						// If the entity was not in the Persistence Context, but was found now,
 						// add it to the Persistence Context
-						if ( entityInstance != null ) {
-							persistenceContext.addEntity( euk, entityInstance );
+						if ( data.getInstance() != null ) {
+							persistenceContext.addEntity( euk, data.getInstance() );
 						}
 					}
 				}
-				if ( entityInstance != null ) {
-					entityInstance = persistenceContext.proxyFor( entityInstance );
+				if ( data.getInstance() != null ) {
+					data.setInstance( persistenceContext.proxyFor( data.getInstance() ) );
 				}
 			}
 			else {
-				final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
+				final EntityKey entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
 				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
 				if ( holder != null && holder.getEntity() != null ) {
-					entityInstance = persistenceContext.proxyFor( holder, concreteDescriptor );
+					data.setInstance( persistenceContext.proxyFor( holder, concreteDescriptor ) );
 				}
 				// For primary key based mappings we only use bytecode-laziness if the attribute is optional,
 				// because the non-optionality implies that it is safe to have a proxy
 				else if ( referencedModelPart.isOptional() && referencedModelPart.isLazy() ) {
-					entityInstance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+					data.setInstance( LazyPropertyInitializer.UNFETCHED_PROPERTY );
 				}
 				else {
-					entityInstance = session.internalLoad(
+					data.setInstance( session.internalLoad(
 							concreteDescriptor.getEntityName(),
-							identifier,
+							data.entityIdentifier,
 							false,
 							false
-					);
+					) );
 
-					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
+					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( data.getInstance() );
 					if ( lazyInitializer != null ) {
 						lazyInitializer.setUnwrap( referencedModelPart.isUnwrapProxy() && concreteDescriptor.isInstrumented() );
 					}
@@ -214,23 +214,24 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 	}
 
 	@Override
-	public void resolveInstance(Object instance) {
+	public void resolveInstance(Object instance, EntityDelayedFetchInitializerData data) {
 		if ( instance == null ) {
-			state = State.MISSING;
-			identifier = null;
-			entityInstance = null;
+			data.setState( State.MISSING );
+			data.entityIdentifier = null;
+			data.setInstance( null );
 		}
 		else {
-			state = State.RESOLVED;
+			data.setState( State.RESOLVED );
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 			final EntityPersister concreteDescriptor = referencedModelPart.getEntityMappingType().getEntityPersister();
-			identifier = concreteDescriptor.getIdentifier( instance, session );
-			entityInstance = instance;
-			final Initializer initializer = identifierAssembler.getInitializer();
+			data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
+			data.setInstance( instance );
+			final Initializer<?> initializer = identifierAssembler.getInitializer();
 			if ( initializer != null ) {
-				initializer.resolveInstance( identifier );
+				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 			}
-			else if ( !rowProcessingState.isQueryCacheHit() && rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+			else if ( rowProcessingState.needsResolveState() ) {
 				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
 				identifierAssembler.resolveState( rowProcessingState );
 			}
@@ -238,10 +239,10 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 	}
 
 	@Override
-	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
-		final Initializer initializer = identifierAssembler.getInitializer();
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		final Initializer<?> initializer = identifierAssembler.getInitializer();
 		if ( initializer != null ) {
-			consumer.accept( initializer, arg );
+			consumer.accept( initializer, data.getRowProcessingState() );
 		}
 	}
 
@@ -251,22 +252,12 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 	}
 
 	@Override
-	public Object getEntityInstance() {
-		return entityInstance;
+	public Object getEntityInstance(EntityDelayedFetchInitializerData data) {
+		return data.getInstance();
 	}
 
 	@Override
-	public boolean isEntityInitialized() {
-		return false;
-	}
-
-	@Override
-	public FetchParentAccess getFetchParentAccess() {
-		return (FetchParentAccess) parent;
-	}
-
-	@Override
-	public @Nullable InitializerParent getParent() {
+	public @Nullable InitializerParent<?> getParent() {
 		return parent;
 	}
 
@@ -281,8 +272,13 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 	}
 
 	@Override
-	public EntityPersister getConcreteDescriptor() {
+	public EntityPersister getConcreteDescriptor(EntityDelayedFetchInitializerData data) {
 		return getEntityDescriptor();
+	}
+
+	@Override
+	public @Nullable Object getEntityIdentifier(EntityDelayedFetchInitializerData data) {
+		return data.entityIdentifier;
 	}
 
 	@Override
@@ -293,17 +289,6 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 	//#########################
 	// For Hibernate Reactive
 	//#########################
-	protected void setEntityInstance(Object entityInstance) {
-		this.entityInstance = entityInstance;
-	}
-
-	protected Object getIdentifier() {
-		return identifier;
-	}
-
-	protected void setIdentifier(Object identifier) {
-		this.identifier = identifier;
-	}
 
 	protected boolean isSelectByUniqueKey() {
 		return selectByUniqueKey;
@@ -313,15 +298,4 @@ public class EntityDelayedFetchInitializer extends AbstractInitializer implement
 		return identifierAssembler;
 	}
 
-	@Override
-	public EntityKey getEntityKey() {
-		throw new UnsupportedOperationException(
-				"This should never happen, because this initializer has not child initializers" );
-	}
-
-	@Override
-	public Object getParentKey() {
-		throw new UnsupportedOperationException(
-				"This should never happen, because this initializer has not child initializers" );
-	}
 }

@@ -6,7 +6,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -30,9 +29,8 @@ public class StatelessSessionVersioningTest {
 			assertEquals(0, v.version);
 			s.update(v);
 			assertEquals(1, v.version);
-			if ( !(dialect instanceof SQLServerDialect) && !(dialect instanceof OracleDialect) ) {
+			if ( !(dialect instanceof SQLServerDialect) ) {
 				//TODO: upsert() with IDENTITY not working on SQL Server
-				//TODO: upsert() with version not working on Oracle
 				s.upsert(v);
 				assertEquals(2, v.version);
 			}
@@ -47,11 +45,8 @@ public class StatelessSessionVersioningTest {
 			assertEquals(0, v.version);
 			s.update(v);
 			assertEquals(1, v.version);
-			if ( !(dialect instanceof OracleDialect) ) {
-				//TODO: upsert() with version not working on Oracle
-				s.upsert(v);
-				assertEquals(2, v.version);
-			}
+			s.upsert(v);
+			assertEquals(2, v.version);
 			s.delete(v);
 		});
 	}

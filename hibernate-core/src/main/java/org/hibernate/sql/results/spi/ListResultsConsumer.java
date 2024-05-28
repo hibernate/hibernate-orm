@@ -148,7 +148,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader) {
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final TypeConfiguration typeConfiguration = session.getTypeConfiguration();
 		final QueryOptions queryOptions = rowProcessingState.getQueryOptions();
 		RuntimeException ex = null;
@@ -178,14 +178,14 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 					|| uniqueSemantic == UniqueSemantic.ASSERT && rowReader.hasCollectionInitializers()
 					|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
 				while ( rowProcessingState.next() ) {
-					final boolean added = results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) );
+					final boolean added = results.addUnique( rowReader.readRow( rowProcessingState ) );
 					rowProcessingState.finishRowProcessing( added );
 					readRows++;
 				}
 			}
 			else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
 				while ( rowProcessingState.next() ) {
-					if ( !results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) ) ) {
+					if ( !results.addUnique( rowReader.readRow( rowProcessingState ) ) ) {
 						throw new HibernateException(
 								String.format(
 										Locale.ROOT,
@@ -200,13 +200,13 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 			else {
 				while ( rowProcessingState.next() ) {
-					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
+					results.add( rowReader.readRow( rowProcessingState ) );
 					rowProcessingState.finishRowProcessing( true );
 					readRows++;
 				}
 			}
 
-			rowReader.finishUp( jdbcValuesSourceProcessingState );
+			rowReader.finishUp( rowProcessingState );
 			jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
 
 			//noinspection unchecked

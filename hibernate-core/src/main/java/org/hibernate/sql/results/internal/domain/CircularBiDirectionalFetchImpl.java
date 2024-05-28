@@ -18,10 +18,10 @@ import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -96,12 +96,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		return createAssembler( (InitializerParent) parentAccess, creationState );
-	}
-
-	@Override
-	public DomainResultAssembler createAssembler(InitializerParent parent, AssemblerCreationState creationState) {
+	public DomainResultAssembler createAssembler(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new CircularBiDirectionalFetchAssembler(
 				getResultJavaType(),
 				keyResult == null ? null : keyResult.createResultAssembler( parent, creationState ),
@@ -109,7 +104,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 		);
 	}
 
-	private EntityInitializer resolveCircularInitializer(InitializerParent parent) {
+	private EntityInitializer<?> resolveCircularInitializer(InitializerParent<?> parent) {
 		while (parent != null && getReferencedPath().isParent( parent.getNavigablePath() ) ) {
 			parent = parent.getParent();
 		}
@@ -120,36 +115,37 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	private static class CircularBiDirectionalFetchAssembler implements DomainResultAssembler<Object> {
 		private final JavaType<Object> javaType;
 		private final @Nullable DomainResultAssembler<?> keyDomainResultAssembler;
-		private final EntityInitializer initializer;
+		private final EntityInitializer<InitializerData> initializer;
 
 		public CircularBiDirectionalFetchAssembler(
 				JavaType<?> javaType,
 				@Nullable DomainResultAssembler<?> keyDomainResultAssembler,
-				EntityInitializer initializer) {
+				EntityInitializer<?> initializer) {
 			//noinspection unchecked
 			this.javaType = (JavaType<Object>) javaType;
 			this.keyDomainResultAssembler = keyDomainResultAssembler;
-			this.initializer = initializer;
+			this.initializer = (EntityInitializer<InitializerData>) initializer;
 		}
 
 		@Override
-		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+		public Object assemble(RowProcessingState rowProcessingState) {
 			if ( keyDomainResultAssembler != null ) {
-				final Object foreignKey = keyDomainResultAssembler.assemble( rowProcessingState, options );
+				final Object foreignKey = keyDomainResultAssembler.assemble( rowProcessingState );
 				if ( foreignKey == null ) {
 					return null;
 				}
 			}
-			initializer.resolveInstance();
-			final Object initializedInstance = initializer.getInitializedInstance();
+			final InitializerData data = initializer.getData( rowProcessingState );
+			initializer.resolveInstance( data );
+			final Object initializedInstance = initializer.getEntityInstance( data );
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( initializedInstance );
 			if ( lazyInitializer != null ) {
-				final Class<?> concreteProxyClass = initializer.getConcreteDescriptor().getConcreteProxyClass();
+				final Class<?> concreteProxyClass = initializer.getConcreteDescriptor( data ).getConcreteProxyClass();
 				if ( concreteProxyClass.isInstance( initializedInstance ) ) {
 					return initializedInstance;
 				}
 				else {
-					initializer.initializeInstance();
+					initializer.initializeInstance( rowProcessingState );
 					return lazyInitializer.getImplementation();
 				}
 			}
@@ -161,6 +157,11 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 			if ( keyDomainResultAssembler != null ) {
 				keyDomainResultAssembler.resolveState( rowProcessingState );
 			}
+		}
+
+		@Override
+		public @Nullable Initializer<?> getInitializer() {
+			return keyDomainResultAssembler == null ? null : keyDomainResultAssembler.getInitializer();
 		}
 
 		@Override

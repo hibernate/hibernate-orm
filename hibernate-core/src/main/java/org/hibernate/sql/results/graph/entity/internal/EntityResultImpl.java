@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import org.hibernate.LockMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.spi.NavigablePath;
@@ -15,7 +14,6 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.Initializer;
@@ -75,15 +73,8 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode
 		return resultVariable;
 	}
 
-	protected LockMode getLockMode(AssemblerCreationState creationState) {
-		return creationState.determineEffectiveLockMode( tableGroup.getSourceAlias() );
-	}
-
-	@Override
-	public DomainResultAssembler createResultAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return createResultAssembler( (InitializerParent) parentAccess, creationState );
+	protected String getSourceAlias() {
+		return tableGroup.getSourceAlias();
 	}
 
 	@Override
@@ -97,18 +88,18 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode
 	}
 
 	@Override
-	public Initializer createInitializer(
+	public Initializer<?> createInitializer(
 			EntityResultImpl resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public Initializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public Initializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new EntityInitializerImpl(
 				this,
-				getLockMode( creationState ),
+				getSourceAlias(),
 				getIdentifierFetch(),
 				getDiscriminatorFetch(),
 				null,

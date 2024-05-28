@@ -7,12 +7,10 @@
 package org.hibernate.sql.results.graph.collection;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -22,7 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
-public interface CollectionInitializer extends FetchParentAccess {
+public interface CollectionInitializer<Data extends InitializerData> extends InitializerParent<Data> {
 	@Override
 	PluralAttributeMapping getInitializedPart();
 
@@ -30,11 +28,10 @@ public interface CollectionInitializer extends FetchParentAccess {
 		return getInitializedPart().getCollectionDescriptor();
 	}
 
-	@Nullable PersistentCollection<?> getCollectionInstance();
+	@Nullable PersistentCollection<?> getCollectionInstance(Data data);
 
-	@Override
-	default Object getInitializedInstance() {
-		return getCollectionInstance();
+	default @Nullable PersistentCollection<?> getCollectionInstance(RowProcessingState rowProcessingState) {
+		return getCollectionInstance( getData( rowProcessingState ) );
 	}
 
 	@Override
@@ -42,11 +39,8 @@ public interface CollectionInitializer extends FetchParentAccess {
 		return true;
 	}
 
-	@Deprecated(forRemoval = true)
-	@Nullable CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState);
-
 	@Override
-	default CollectionInitializer asCollectionInitializer() {
+	default CollectionInitializer<?> asCollectionInitializer() {
 		return this;
 	}
 }

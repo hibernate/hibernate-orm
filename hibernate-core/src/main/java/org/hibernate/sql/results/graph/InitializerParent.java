@@ -12,6 +12,6 @@ package org.hibernate.sql.results.graph;
  *
  * @author Steve Ebersole
  */
-public interface InitializerParent extends Initializer {
+public interface InitializerParent<Data extends InitializerData> extends Initializer<Data> {
 
 }

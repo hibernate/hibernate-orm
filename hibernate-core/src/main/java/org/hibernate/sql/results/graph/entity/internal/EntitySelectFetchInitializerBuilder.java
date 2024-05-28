@@ -15,8 +15,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -27,26 +25,8 @@ import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchI
 
 public class EntitySelectFetchInitializerBuilder {
 
-	public static EntityInitializer createInitializer(
-			FetchParentAccess parentAccess,
-			ToOneAttributeMapping fetchedAttribute,
-			EntityPersister entityPersister,
-			DomainResult<?> keyResult,
-			NavigablePath navigablePath,
-			boolean selectByUniqueKey,
-			AssemblerCreationState creationState) {
-		return createInitializer(
-				(InitializerParent) parentAccess,
-				fetchedAttribute,
-				entityPersister,
-				keyResult,
-				navigablePath,
-				selectByUniqueKey,
-				creationState
-		);
-	}
-	public static EntityInitializer createInitializer(
-			InitializerParent parent,
+	public static EntityInitializer<?> createInitializer(
+			InitializerParent<?> parent,
 			ToOneAttributeMapping fetchedAttribute,
 			EntityPersister entityPersister,
 			DomainResult<?> keyResult,
@@ -59,28 +39,31 @@ public class EntitySelectFetchInitializerBuilder {
 					fetchedAttribute,
 					navigablePath,
 					entityPersister,
-					keyResult.createResultAssembler( parent, creationState )
+					keyResult,
+					creationState
 			);
 		}
 		if ( !parent.isEntityInitializer() && parent.findOwningEntityInitializer() == null ) {
 			// Batch initializers require an owning parent initializer
-			return new EntitySelectFetchInitializer(
+			return new EntitySelectFetchInitializer<>(
 					parent,
 					fetchedAttribute,
 					navigablePath,
 					entityPersister,
-					keyResult.createResultAssembler( parent, creationState )
+					keyResult,
+					creationState
 			);
 		}
 		final BatchMode batchMode = determineBatchMode( entityPersister, parent, creationState );
 		switch ( batchMode ) {
 			case NONE:
-				return new EntitySelectFetchInitializer(
+				return new EntitySelectFetchInitializer<>(
 						parent,
 						fetchedAttribute,
 						navigablePath,
 						entityPersister,
-						keyResult.createResultAssembler( parent, creationState )
+						keyResult,
+						creationState
 				);
 			case BATCH_LOAD:
 				if ( parent.isEmbeddableInitializer() ) {
@@ -89,7 +72,8 @@ public class EntitySelectFetchInitializerBuilder {
 							fetchedAttribute,
 							navigablePath,
 							entityPersister,
-							keyResult.createResultAssembler( parent, creationState )
+							keyResult,
+							creationState
 					);
 				}
 				else {
@@ -98,7 +82,8 @@ public class EntitySelectFetchInitializerBuilder {
 							fetchedAttribute,
 							navigablePath,
 							entityPersister,
-							keyResult.createResultAssembler( parent, creationState )
+							keyResult,
+							creationState
 					);
 				}
 			case BATCH_INITIALIZE:
@@ -107,7 +92,8 @@ public class EntitySelectFetchInitializerBuilder {
 						fetchedAttribute,
 						navigablePath,
 						entityPersister,
-						keyResult.createResultAssembler( parent, creationState )
+						keyResult,
+						creationState
 				);
 		}
 		throw new IllegalStateException( "Should be unreachable" );
@@ -115,23 +101,19 @@ public class EntitySelectFetchInitializerBuilder {
 
 	private static BatchMode determineBatchMode(
 			EntityPersister entityPersister,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		if ( creationState.isScrollResult()
-				|| !creationState.getExecutionContext()
-						.getSession()
-						.getLoadQueryInfluencers()
-						.effectivelyBatchLoadable( entityPersister ) ) {
+		if ( !entityPersister.isBatchLoadable() ) {
 			return NONE;
 		}
-		else if ( creationState.isDynamicInstantiation() ) {
+		if ( creationState.isDynamicInstantiation() ) {
 			if ( canBatchInitializeBeUsed( entityPersister ) ) {
 				return BatchMode.BATCH_INITIALIZE;
 			}
 			return NONE;
 		}
 		while ( parent.isEmbeddableInitializer() ) {
-			final EmbeddableInitializer embeddableInitializer = parent.asEmbeddableInitializer();
+			final EmbeddableInitializer<?> embeddableInitializer = parent.asEmbeddableInitializer();
 			final EmbeddableValuedModelPart initializedPart = embeddableInitializer.getInitializedPart();
 			// For entity identifier mappings we can't batch load,
 			// because the entity identifier needs the instance in the resolveKey phase,
@@ -139,6 +121,7 @@ public class EntitySelectFetchInitializerBuilder {
 			if ( initializedPart.isEntityIdentifierMapping()
 					// todo: check if the virtual check is necessary
 					|| initializedPart.isVirtual()
+					|| initializedPart.getMappedType().isPolymorphic()
 					// If the parent embeddable has a custom instantiator,
 					// we can't inject entities later through setValues()
 					|| !( initializedPart.getMappedType().getRepresentationStrategy().getInstantiator()

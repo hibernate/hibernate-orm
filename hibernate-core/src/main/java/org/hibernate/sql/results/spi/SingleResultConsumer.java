@@ -33,9 +33,9 @@ public class SingleResultConsumer<T> implements ResultsConsumer<T, T> {
 			RowReader<T> rowReader) {
 		rowReader.startLoading( rowProcessingState );
 		rowProcessingState.next();
-		final T result = rowReader.readRow( rowProcessingState, processingOptions );
+		final T result = rowReader.readRow( rowProcessingState );
 		rowProcessingState.finishRowProcessing( true );
-		rowReader.finishUp( jdbcValuesSourceProcessingState );
+		rowReader.finishUp( rowProcessingState );
 		jdbcValuesSourceProcessingState.finishUp( false );
 		return result;
 	}

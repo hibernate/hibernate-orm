@@ -20,8 +20,8 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -35,45 +35,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
-public class MapInitializer extends AbstractImmediateCollectionInitializer {
+public class MapInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
 	private static final String CONCRETE_NAME = MapInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<?> mapKeyAssembler;
 	private final DomainResultAssembler<?> mapValueAssembler;
 
-	/**
-	 * @deprecated Use {@link #MapInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch, Fetch)} instead.
-	 */
-	@Deprecated(forRemoval = true)
 	public MapInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
-			FetchParentAccess parentAccess,
-			LockMode lockMode,
-			DomainResult<?> collectionKeyResult,
-			DomainResult<?> collectionValueKeyResult,
-			Fetch mapKeyFetch,
-			Fetch mapValueFetch,
-			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				navigablePath,
-				attributeMapping,
-				(InitializerParent) parentAccess,
-				lockMode,
-				collectionKeyResult,
-				collectionValueKeyResult,
-				isResultInitializer,
-				creationState,
-				mapKeyFetch,
-				mapValueFetch
-		);
-	}
-
-	public MapInitializer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
@@ -91,8 +62,8 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 				isResultInitializer,
 				creationState
 		);
-		this.mapKeyAssembler = mapKeyFetch.createAssembler( (InitializerParent) this, creationState );
-		this.mapValueAssembler = mapValueFetch.createAssembler( (InitializerParent) this, creationState );
+		this.mapKeyAssembler = mapKeyFetch.createAssembler( this, creationState );
+		this.mapValueAssembler = mapValueFetch.createAssembler( this, creationState );
 	}
 
 	@Override
@@ -101,21 +72,21 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
-		super.forEachSubInitializer( consumer, arg );
-		final Initializer keyInitializer = mapKeyAssembler.getInitializer();
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		super.forEachSubInitializer( consumer, data );
+		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
 		if ( keyInitializer != null ) {
-			consumer.accept( keyInitializer, arg );
+			consumer.accept( keyInitializer, data.getRowProcessingState() );
 		}
-		final Initializer valueInitializer = mapValueAssembler.getInitializer();
+		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
 		if ( valueInitializer != null ) {
-			consumer.accept( valueInitializer, arg );
+			consumer.accept( valueInitializer, data.getRowProcessingState() );
 		}
 	}
 
 	@Override
-	public @Nullable PersistentMap<?, ?> getCollectionInstance() {
-		return (PersistentMap<?, ?>) super.getCollectionInstance();
+	public @Nullable PersistentMap<?, ?> getCollectionInstance(ImmediateCollectionInitializerData data) {
+		return (PersistentMap<?, ?>) super.getCollectionInstance( data );
 	}
 
 	@Override
@@ -137,36 +108,38 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void initializeSubInstancesFromParent(RowProcessingState rowProcessingState) {
-		final Initializer keyInitializer = mapKeyAssembler.getInitializer();
-		final Initializer valueInitializer = mapValueAssembler.getInitializer();
+	protected void initializeSubInstancesFromParent(ImmediateCollectionInitializerData data) {
+		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
+		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
 		if ( keyInitializer != null || valueInitializer != null ) {
-			final PersistentMap<?, ?> map = getCollectionInstance();
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final PersistentMap<?, ?> map = getCollectionInstance( data );
 			assert map != null;
 			for ( Map.Entry<?, ?> entry : map.entrySet() ) {
 				if ( keyInitializer != null ) {
-					keyInitializer.initializeInstanceFromParent( entry.getKey() );
+					keyInitializer.initializeInstanceFromParent( entry.getKey(), rowProcessingState );
 				}
 				if ( valueInitializer != null ) {
-					valueInitializer.initializeInstanceFromParent( entry.getValue() );
+					valueInitializer.initializeInstanceFromParent( entry.getValue(), rowProcessingState );
 				}
 			}
 		}
 	}
 
 	@Override
-	protected void resolveInstanceSubInitializers(RowProcessingState rowProcessingState) {
-		final Initializer keyInitializer = mapKeyAssembler.getInitializer();
-		final Initializer valueInitializer = mapValueAssembler.getInitializer();
+	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
+		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
+		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
 		if ( keyInitializer != null || valueInitializer != null ) {
-			final PersistentMap<?, ?> map = getCollectionInstance();
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final PersistentMap<?, ?> map = getCollectionInstance( data );
 			assert map != null;
 			for ( Map.Entry<?, ?> entry : map.entrySet() ) {
 				if ( keyInitializer != null ) {
-					keyInitializer.resolveInstance( entry.getKey() );
+					keyInitializer.resolveInstance( entry.getKey(), rowProcessingState );
 				}
 				if ( valueInitializer != null ) {
-					valueInitializer.resolveInstance( entry.getValue() );
+					valueInitializer.resolveInstance( entry.getValue(), rowProcessingState );
 				}
 			}
 		}

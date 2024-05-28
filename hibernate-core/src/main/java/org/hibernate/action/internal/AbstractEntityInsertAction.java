@@ -14,6 +14,7 @@ import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
@@ -134,8 +135,11 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		nullifyTransientReferencesIfNotAlready();
 		final Object version = getVersion( getState(), getPersister() );
 		final PersistenceContext persistenceContextInternal = getSession().getPersistenceContextInternal();
-		persistenceContextInternal.addEntity( getEntityKey(), getInstance() );
-		persistenceContextInternal.addEntry(
+		final EntityHolder entityHolder = persistenceContextInternal.addEntityHolder(
+				getEntityKey(),
+				getInstance()
+		);
+		final EntityEntry entityEntry = persistenceContextInternal.addEntry(
 				getInstance(),
 				( getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				getState(),
@@ -147,6 +151,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 				getPersister(),
 				isVersionIncrementDisabled
 		);
+		entityHolder.setEntityEntry( entityEntry );
 		if ( isEarlyInsert() ) {
 			addCollectionsByKeyToPersistenceContext( persistenceContextInternal, getState() );
 		}

@@ -19,8 +19,8 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -29,42 +29,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * @author Steve Ebersole
  */
-public class SetInitializer extends AbstractImmediateCollectionInitializer {
+public class SetInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
 	private static final String CONCRETE_NAME = SetInitializer.class.getSimpleName();
 
 	private final DomainResultAssembler<?> elementAssembler;
 
-	/**
-	 * @deprecated Use {@link #SetInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, LockMode, DomainResult, DomainResult, boolean, AssemblerCreationState, Fetch)} instead.
-	 */
-	@Deprecated(forRemoval = true)
 	public SetInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping setDescriptor,
-			FetchParentAccess parentAccess,
-			LockMode lockMode,
-			DomainResult<?> collectionKeyResult,
-			DomainResult<?> collectionValueKeyResult,
-			Fetch elementFetch,
-			boolean isResultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				navigablePath,
-				setDescriptor,
-				(InitializerParent) parentAccess,
-				lockMode,
-				collectionKeyResult,
-				collectionValueKeyResult,
-				isResultInitializer,
-				creationState,
-				elementFetch
-		);
-	}
-
-	public SetInitializer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping setDescriptor,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
@@ -81,7 +54,7 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 				isResultInitializer,
 				creationState
 		);
-		this.elementAssembler = elementFetch.createAssembler( (InitializerParent) this, creationState );
+		this.elementAssembler = elementFetch.createAssembler( this, creationState );
 	}
 
 	@Override
@@ -90,17 +63,17 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
-		super.forEachSubInitializer( consumer, arg );
-		final Initializer initializer = elementAssembler.getInitializer();
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		super.forEachSubInitializer( consumer, data );
+		final Initializer<?> initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
-			consumer.accept( initializer, arg );
+			consumer.accept( initializer, data.getRowProcessingState() );
 		}
 	}
 
 	@Override
-	public @Nullable PersistentSet<?> getCollectionInstance() {
-		return (PersistentSet<?>) super.getCollectionInstance();
+	public @Nullable PersistentSet<?> getCollectionInstance(ImmediateCollectionInitializerData data) {
+		return (PersistentSet<?>) super.getCollectionInstance( data );
 	}
 
 	@Override
@@ -117,25 +90,27 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void initializeSubInstancesFromParent(RowProcessingState rowProcessingState) {
-		final Initializer initializer = elementAssembler.getInitializer();
+	protected void initializeSubInstancesFromParent(ImmediateCollectionInitializerData data) {
+		final Initializer<?> initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
-			final PersistentSet<?> set = getCollectionInstance();
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final PersistentSet<?> set = getCollectionInstance( data );
 			assert set != null;
 			for ( Object element : set ) {
-				initializer.initializeInstanceFromParent( element );
+				initializer.initializeInstanceFromParent( element, rowProcessingState );
 			}
 		}
 	}
 
 	@Override
-	protected void resolveInstanceSubInitializers(RowProcessingState rowProcessingState) {
-		final Initializer initializer = elementAssembler.getInitializer();
+	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
+		final Initializer<?> initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
-			final PersistentSet<?> set = getCollectionInstance();
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final PersistentSet<?> set = getCollectionInstance( data );
 			assert set != null;
 			for ( Object element : set ) {
-				initializer.resolveInstance( element );
+				initializer.resolveInstance( element, rowProcessingState );
 			}
 		}
 	}

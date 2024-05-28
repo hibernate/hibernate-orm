@@ -20,7 +20,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
@@ -99,29 +98,22 @@ public class EmbeddableForeignKeyResultImpl<T>
 
 	@Override
 	public DomainResultAssembler<T> createResultAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return createResultAssembler( (InitializerParent) parentAccess, creationState );
-	}
-
-	@Override
-	public DomainResultAssembler<T> createResultAssembler(
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		//noinspection unchecked
 		return new EmbeddableAssembler( creationState.resolveInitializer( this, parent, this ).asEmbeddableInitializer() );
 	}
 
 	@Override
-	public Initializer createInitializer(
+	public Initializer<?> createInitializer(
 			EmbeddableForeignKeyResultImpl<T> resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public EmbeddableInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return getReferencedModePart() instanceof NonAggregatedIdentifierMapping
 				? new NonAggregatedIdentifierMappingInitializer( this, null, creationState, true )
 				: new EmbeddableInitializerImpl( this, null, null, creationState, true );

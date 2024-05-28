@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -14,17 +15,18 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 
 public class NestedRowProcessingState extends BaseExecutionContext implements RowProcessingState {
-	private final AggregateEmbeddableInitializer aggregateEmbeddableInitializer;
+	private final AggregateEmbeddableInitializerImpl aggregateEmbeddableInitializer;
 	final RowProcessingState processingState;
 
 	public NestedRowProcessingState(
-			AggregateEmbeddableInitializer aggregateEmbeddableInitializer,
+			AggregateEmbeddableInitializerImpl aggregateEmbeddableInitializer,
 			RowProcessingState processingState) {
 		super( processingState.getSession() );
 		this.aggregateEmbeddableInitializer = aggregateEmbeddableInitializer;
@@ -32,7 +34,7 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	}
 
 	public static NestedRowProcessingState wrap(
-			AggregateEmbeddableInitializer aggregateEmbeddableInitializer,
+			AggregateEmbeddableInitializerImpl aggregateEmbeddableInitializer,
 			RowProcessingState processingState) {
 		if ( processingState instanceof NestedRowProcessingState ) {
 			return new NestedRowProcessingState(
@@ -57,8 +59,28 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	// -- delegate the rest
 
 	@Override
+	public <T extends InitializerData> T getInitializerData(int initializerId) {
+		return processingState.getInitializerData( initializerId );
+	}
+
+	@Override
+	public void setInitializerData(int initializerId, InitializerData state) {
+		processingState.setInitializerData( initializerId, state );
+	}
+
+	@Override
 	public JdbcValuesSourceProcessingState getJdbcValuesSourceProcessingState() {
 		return processingState.getJdbcValuesSourceProcessingState();
+	}
+
+	@Override
+	public LockMode determineEffectiveLockMode(String alias) {
+		return processingState.determineEffectiveLockMode( alias );
+	}
+
+	@Override
+	public boolean needsResolveState() {
+		return processingState.needsResolveState();
 	}
 
 	@Override
@@ -74,11 +96,6 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	@Override
 	public boolean isQueryCacheHit() {
 		return processingState.isQueryCacheHit();
-	}
-
-	@Override
-	public void finishRowProcessing() {
-		processingState.finishRowProcessing();
 	}
 
 	@Override

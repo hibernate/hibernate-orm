@@ -18,7 +18,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -83,14 +82,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 	}
 
 	@Override
-	public DomainResultAssembler<R> createResultAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return createResultAssembler( (InitializerParent) parentAccess, creationState );
-	}
-
-	@Override
-	public DomainResultAssembler<R> createResultAssembler(InitializerParent parent, AssemblerCreationState creationState) {
+	public DomainResultAssembler<R> createResultAssembler(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		boolean areAllArgumentsAliased = true;
 		boolean areAnyArgumentsAliased = false;
 		final Set<String> aliases = new HashSet<>();

@@ -97,7 +97,7 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 			return;
 		}
 
-		rowReader.finishUp( jdbcValuesSourceProcessingState );
+		rowReader.finishUp( rowProcessingState );
 		jdbcValues.finishUp( persistenceContext );
 
 		getPersistenceContext().getJdbcCoordinator().afterStatementExecution();

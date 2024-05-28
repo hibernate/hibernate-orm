@@ -8,37 +8,31 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Supplier;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * @author Steve Ebersole
  */
 public interface AssemblerCreationState {
-	default boolean isScrollResult() {
-		return false;
-	}
 
 	default boolean isDynamicInstantiation() {
 		return false;
 	}
 
-	LockMode determineEffectiveLockMode(String identificationVariable);
+	int acquireInitializerId();
 
-	Initializer resolveInitializer(
+	Initializer<?> resolveInitializer(
 			NavigablePath navigablePath,
 			ModelPart fetchedModelPart,
-			Supplier<Initializer> producer);
+			Supplier<Initializer<?>> producer);
 
-	<P extends FetchParent> Initializer resolveInitializer(
+	<P extends FetchParent> Initializer<?> resolveInitializer(
 			P resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			InitializerProducer<P> producer);
 
 	SqlAstCreationContext getSqlAstCreationContext();
 
-	ExecutionContext getExecutionContext();
 }

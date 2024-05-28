@@ -14,7 +14,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
@@ -62,14 +61,7 @@ public class DiscriminatedEntityFetch extends AbstractDiscriminatedEntityResultG
 
 	@Override
 	public DomainResultAssembler<?> createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return createAssembler( (InitializerParent) parentAccess, creationState );
-	}
-
-	@Override
-	public DomainResultAssembler<?> createAssembler(
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return new EntityAssembler(
 				getReferencedMappingContainer().getJavaType(),
@@ -78,15 +70,15 @@ public class DiscriminatedEntityFetch extends AbstractDiscriminatedEntityResultG
 	}
 
 	@Override
-	public Initializer createInitializer(
+	public Initializer<?> createInitializer(
 			DiscriminatedEntityFetch resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public Initializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public Initializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new DiscriminatedEntityInitializer(
 				parent,
 				getReferencedMappingType(),

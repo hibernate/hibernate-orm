@@ -9,11 +9,7 @@ package org.hibernate.sql.results.spi;
 import java.util.List;
 
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.internal.InitializersList;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -48,14 +44,7 @@ public interface RowReader<R> {
 	 */
 	List<JavaType<?>> getResultJavaTypes();
 
-	/**
-	 * The initializers associated with this reader.
-	 *
-	 * @see org.hibernate.sql.results.graph.DomainResult
-	 * @deprecated Not needed anymore
-	 */
-	@Deprecated(forRemoval = true)
-	List<Initializer> getInitializers();
+	int getInitializerCount();
 
 	/**
 	 * Called before reading the first row.
@@ -65,21 +54,12 @@ public interface RowReader<R> {
 	/**
 	 * The actual coordination of reading a row
 	 */
-	R readRow(RowProcessingState processingState, JdbcValuesSourceProcessingOptions options);
+	R readRow(RowProcessingState processingState);
 
 	/**
 	 * Called at the end of processing all rows
 	 */
-	void finishUp(JdbcValuesSourceProcessingState context);
-
-	/**
-	 * The initializers associated with this reader.
-	 *
-	 * @see org.hibernate.sql.results.graph.DomainResult
-	 * @deprecated Not needed anymore. Also, was exposing internal type
-	 */
-	@Deprecated(forRemoval = true)
-	InitializersList getInitializersList();
+	void finishUp(RowProcessingState processingState);
 
 	@Nullable EntityKey resolveSingleResultEntityKey(RowProcessingState rowProcessingState);
 

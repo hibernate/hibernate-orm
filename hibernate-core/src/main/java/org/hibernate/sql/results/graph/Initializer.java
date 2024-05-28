@@ -11,7 +11,6 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -27,77 +26,59 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 @Incubating
-public interface Initializer {
+public interface Initializer<Data extends InitializerData> {
 
-	Initializer[] EMPTY_ARRAY = new Initializer[0];
+	Initializer<?>[] EMPTY_ARRAY = new Initializer<?>[0];
 
 	/**
 	 * Returns the parent {@link Initializer} or {@code null} if this is a result initializer.
 	 */
-	default @Nullable InitializerParent getParent() {
+	default @Nullable InitializerParent<?> getParent() {
 		return null;
-	}
-
-	/**
-	 * Find the first entity access up the fetch parent graph
-	 * @deprecated use {@link #findOwningEntityInitializer()} instead
-	 */
-	@Deprecated(forRemoval = true)
-	default @Nullable EntityInitializer findFirstEntityDescriptorAccess() {
-		return findOwningEntityInitializer();
 	}
 
 	/**
 	 * Find the entity initializer that owns this initializer
 	 * by traversing up {@link #getParent()}.
 	 */
-	default @Nullable EntityInitializer findOwningEntityInitializer() {
+	default @Nullable EntityInitializer<?> findOwningEntityInitializer() {
 		return Initializer.findOwningEntityInitializer( getParent() );
 	}
 	/**
 	 * Find the entity initializer that owns this initializer
 	 * by traversing up {@link #getParent()}.
 	 */
-	static @Nullable EntityInitializer findOwningEntityInitializer(@Nullable Initializer parent) {
+	static @Nullable EntityInitializer<?> findOwningEntityInitializer(@Nullable Initializer<?> parent) {
 		if ( parent == null || parent.isCollectionInitializer() ) {
 			return null;
 		}
-		final EntityInitializer entityInitializer = parent.asEntityInitializer();
+		final EntityInitializer<?> entityInitializer = parent.asEntityInitializer();
 		if ( entityInitializer != null ) {
 			return entityInitializer;
 		}
 		return findOwningEntityInitializer( parent.getParent() );
 	}
 
-	/**
-	 * Find the first {@link EntityInitializer},
-	 * returning {@code this} if {@link #isEntityInitializer()} returns {@code true}.
-	 * @deprecated Use {@link #findOwningEntityInitializer()} instead, optionally in combination with
-	 * {@link #asEntityInitializer()} if the type of the {@code this} {@link Initializer} is unknown.
-	 */
-	@Deprecated(forRemoval = true)
-	default @Nullable EntityInitializer findFirstEntityInitializer() {
-		final EntityInitializer entityInitializer = this.asEntityInitializer();
-		if ( entityInitializer != null ) {
-			return entityInitializer;
-		}
-		return findOwningEntityInitializer();
-	}
-
 	NavigablePath getNavigablePath();
 
 	ModelPart getInitializedPart();
 
-	Object getInitializedInstance();
+	default Object getResolvedInstance(Data data) {
+		return data.getState() == State.RESOLVED || data.getState() == State.INITIALIZED ? data.getInstance() : null;
+	}
+	default Object getResolvedInstance(RowProcessingState rowProcessingState) {
+		return getResolvedInstance( getData( rowProcessingState ) );
+	}
 
 	/**
-	 * The current state of this initializer.
+	 * The current data of this initializer.
 	 */
-	State getState();
+	Data getData(RowProcessingState rowProcessingState);
 
 	/**
 	 * Step 0 - Callback for initializers before the first row is read.
-	 * It is the responsibility of this initializer to recurse to the sub-initializers.
+	 * It is the responsibility of this initializer to recurse to the sub-initializers
+	 * and register {@link InitializerData} for the initializer id via {@link RowProcessingState#setInitializerData(int, InitializerData)}.
 	 *
 	 * This is useful for e.g. preparing initializers in case of a cache hit.
 	 */
@@ -111,7 +92,11 @@ public interface Initializer {
 	 * After this point, the initializer knows whether further processing is necessary
 	 * for the current row i.e. if the object is missing.
 	 */
-	void resolveKey();
+	void resolveKey(Data data);
+
+	default void resolveKey(RowProcessingState rowProcessingState) {
+		resolveKey( getData( rowProcessingState ) );
+	}
 
 	/**
 	 * Step 2.1 - Using the key resolved in {@link #resolveKey}, resolve the
@@ -119,9 +104,13 @@ public interface Initializer {
 	 *
 	 * After this point, the initializer knows the entity/collection/component
 	 * instance for the current row based on the resolved key.
-	 * If the resolving was successful, {@link #getInitializedInstance()} will return that instance.
+	 * If the resolving was successful, {@link #getResolvedInstance(RowProcessingState)} will return that instance.
 	 */
-	void resolveInstance();
+	void resolveInstance(Data data);
+
+	default void resolveInstance(RowProcessingState rowProcessingState) {
+		resolveInstance( getData( rowProcessingState ) );
+	}
 
 	/**
 	 * Step 2.2 - Use the given instance as resolved instance for this initializer.
@@ -129,8 +118,12 @@ public interface Initializer {
 	 *
 	 * This alternative initialization protocol is used when a parent instance was already part of the persistence context.
 	 */
-	default void resolveInstance(@Nullable Object instance) {
-		resolveKey();
+	default void resolveInstance(@Nullable Object instance, Data data) {
+		resolveKey( data );
+	}
+
+	default void resolveInstance(@Nullable Object instance, RowProcessingState rowProcessingState) {
+		resolveInstance( instance, getData( rowProcessingState ) );
 	}
 
 	/**
@@ -140,7 +133,11 @@ public interface Initializer {
 	 * All resolved state for the current row is injected into the resolved
 	 * instance
 	 */
-	void initializeInstance();
+	void initializeInstance(Data data);
+
+	default void initializeInstance(RowProcessingState rowProcessingState) {
+		initializeInstance( getData( rowProcessingState ) );
+	}
 
 	/**
 	 * Step 3.1 - Initialize the state of the instance as extracted from the given parentInstance.
@@ -151,7 +148,11 @@ public interface Initializer {
 	 * in which case there is no data available in the {@link org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit}
 	 * to initialize potentially lazy associations.
 	 */
-	default void initializeInstanceFromParent(Object parentInstance) {
+	default void initializeInstanceFromParent(Object parentInstance, Data data) {
+	}
+
+	default void initializeInstanceFromParent(Object parentInstance, RowProcessingState rowProcessingState) {
+		initializeInstanceFromParent( parentInstance, getData( rowProcessingState ) );
 	}
 
 	/**
@@ -159,13 +160,24 @@ public interface Initializer {
 	 * Provides ability to complete processing from the current row and
 	 * prepare for the next row.
 	 */
-	void finishUpRow();
+	void finishUpRow(Data data);
+
+	default void finishUpRow(RowProcessingState rowProcessingState) {
+		finishUpRow( getData( rowProcessingState ) );
+	}
 
 	/**
 	 * Lifecycle method called at the very end of the result values processing
 	 */
-	default void endLoading(ExecutionContext executionContext) {
+	default void endLoading(Data data) {
 		// by default - nothing to do
+	}
+
+	default void endLoading(RowProcessingState rowProcessingState) {
+		final Data data = getData( rowProcessingState );
+		if ( data != null ) {
+			endLoading( data );
+		}
 	}
 
 	/**
@@ -173,15 +185,7 @@ public interface Initializer {
 	 */
 	boolean isPartOfKey();
 
-	/**
-	 * @deprecated Use {@link #isPartOfKey(NavigablePath, InitializerParent)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	static boolean isPartOfKey(NavigablePath navigablePath, FetchParentAccess parentAccess) {
-		return isPartOfKey( navigablePath, (InitializerParent) parentAccess );
-	}
-
-	static boolean isPartOfKey(NavigablePath navigablePath, InitializerParent parent) {
+	static boolean isPartOfKey(NavigablePath navigablePath, InitializerParent<?> parent) {
 		return parent != null && parent.isEmbeddableInitializer() && parent.isPartOfKey()
 				|| navigablePath instanceof EntityIdentifierNavigablePath
 				|| ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
@@ -210,7 +214,7 @@ public interface Initializer {
 	 *
 	 * @return EntityInitializer if this is an instance of EntityInitializer otherwise {@code null}
 	 */
-	default @Nullable EntityInitializer asEntityInitializer() {
+	default @Nullable EntityInitializer<?> asEntityInitializer() {
 		return null;
 	}
 
@@ -219,7 +223,7 @@ public interface Initializer {
 	 *
 	 * @return EmbeddableInitializer if this is an instance of EmbeddableInitializer otherwise {@code null}
 	 */
-	default @Nullable EmbeddableInitializer asEmbeddableInitializer() {
+	default @Nullable EmbeddableInitializer<?> asEmbeddableInitializer() {
 		return null;
 	}
 
@@ -228,7 +232,7 @@ public interface Initializer {
 	 *
 	 * @return CollectionInitializer if this is an instance of CollectionInitializer otherwise {@code null}
 	 */
-	default @Nullable CollectionInitializer asCollectionInitializer() {
+	default @Nullable CollectionInitializer<?> asCollectionInitializer() {
 		return null;
 	}
 

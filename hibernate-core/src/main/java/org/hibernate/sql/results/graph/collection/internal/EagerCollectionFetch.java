@@ -153,7 +153,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
-	public CollectionInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return initializerProducer.produceInitializer(
 				getNavigablePath(),
 				getFetchedMapping(),

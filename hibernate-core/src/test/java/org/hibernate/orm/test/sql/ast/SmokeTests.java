@@ -175,7 +175,7 @@ public class SmokeTests {
 					// ScalarDomainResultImpl creates and caches the assembler at its creation.
 					// this just gets access to that cached one
 					final DomainResultAssembler<?> resultAssembler = domainResult.createResultAssembler(
-							(InitializerParent) null,
+							null,
 							null
 					);
 

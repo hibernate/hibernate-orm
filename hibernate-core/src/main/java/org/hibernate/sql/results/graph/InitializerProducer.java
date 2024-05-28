@@ -13,8 +13,8 @@ package org.hibernate.sql.results.graph;
  * @since 6.5
  */
 public interface InitializerProducer<P extends FetchParent> {
-	Initializer createInitializer(
+	Initializer<?> createInitializer(
 			P resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState);
 }

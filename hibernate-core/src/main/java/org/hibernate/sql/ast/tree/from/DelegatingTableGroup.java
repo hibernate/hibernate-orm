@@ -49,20 +49,6 @@ public abstract class DelegatingTableGroup implements TableGroup {
 			int jdbcPosition,
 			int valuesArrayPosition,
 			JavaType javaType,
-			TypeConfiguration typeConfiguration) {
-		return getTableGroup().createSqlSelection(
-				jdbcPosition,
-				valuesArrayPosition,
-				javaType,
-				typeConfiguration
-		);
-	}
-
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaType javaType,
 			boolean virtual,
 			TypeConfiguration typeConfiguration) {
 		return getTableGroup().createSqlSelection(

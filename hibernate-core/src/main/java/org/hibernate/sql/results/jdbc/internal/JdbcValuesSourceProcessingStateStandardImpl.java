@@ -41,7 +41,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private List<EntityHolder> loadingEntityHolders;
 	private List<EntityHolder> reloadedEntityHolders;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
-	private List<CollectionInitializer> arrayInitializers;
+	private List<CollectionInitializer<?>> arrayInitializers;
 
 	private final PreLoadEvent preLoadEvent;
 	private final PostLoadEvent postLoadEvent;

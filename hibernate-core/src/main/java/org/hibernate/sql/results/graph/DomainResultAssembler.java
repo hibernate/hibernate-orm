@@ -9,7 +9,6 @@ package org.hibernate.sql.results.graph;
 import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -28,14 +27,7 @@ public interface DomainResultAssembler<J> {
 	/**
 	 * The main "assembly" contract.  Assemble the result and return it.
 	 */
-	@Nullable J assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options);
-
-	/**
-	 * Convenience form of {@link #assemble(RowProcessingState, JdbcValuesSourceProcessingOptions)}
-	 */
-	default @Nullable J assemble(RowProcessingState rowProcessingState) {
-		return assemble( rowProcessingState, rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions() );
-	}
+	@Nullable J assemble(RowProcessingState rowProcessingState);
 
 	/**
 	 * The JavaType describing the Java type that this assembler
@@ -51,7 +43,7 @@ public interface DomainResultAssembler<J> {
 		assemble( rowProcessingState );
 	}
 
-	default @Nullable Initializer getInitializer() {
+	default @Nullable Initializer<?> getInitializer() {
 		return null;
 	}
 
@@ -59,7 +51,8 @@ public interface DomainResultAssembler<J> {
 	 * Invokes the consumer with every initializer part of this assembler that returns {@code true} for
 	 * {@link Initializer#isResultInitializer()}.
 	 */
-	default <X> void forEachResultAssembler(BiConsumer<Initializer, X> consumer, X arg) {
+	default <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
 
 	}
+
 }

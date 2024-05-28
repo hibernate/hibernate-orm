@@ -10,8 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -315,7 +313,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		loadContexts.register( getJdbcValuesSourceProcessingState() );
 		persistenceContext.beforeLoad();
 		try {
-			currentRow = rowReader.readRow( rowProcessingState, getProcessingOptions() );
+			currentRow = rowReader.readRow( rowProcessingState );
 
 			rowProcessingState.finishRowProcessing( true );
 
@@ -327,7 +325,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 						last = false;
 					}
 					else {
-						rowReader.readRow( rowProcessingState, getProcessingOptions() );
+						rowReader.readRow( rowProcessingState );
 						rowProcessingState.finishRowProcessing( false );
 					}
 				}

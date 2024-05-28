@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.spi.GraphImplementor;
-import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -23,7 +22,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
@@ -151,29 +149,22 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return createAssembler( (InitializerParent) parentAccess, creationState );
-	}
-
-	@Override
 	public DomainResultAssembler<?> createAssembler(
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return new EmbeddableAssembler( creationState.resolveInitializer( this, parent, this ).asEmbeddableInitializer() );
 	}
 
 	@Override
-	public Initializer createInitializer(
+	public Initializer<?> createInitializer(
 			EmbeddableFetchImpl resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public EmbeddableInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new EmbeddableInitializerImpl( this, discriminatorFetch, parent, creationState, true );
 	}
 

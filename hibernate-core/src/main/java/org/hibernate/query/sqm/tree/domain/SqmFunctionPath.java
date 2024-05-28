@@ -17,6 +17,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -155,11 +156,11 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 
 	@Override
 	public <S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType) {
-		throw new FunctionArgumentException( "Embeddable paths cannot be TREAT-ed" );
+		throw new TreatException( "Embeddable paths cannot be TREAT-ed" );
 	}
 
 	@Override
 	public <S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) {
-		throw new FunctionArgumentException( "Embeddable paths cannot be TREAT-ed" );
+		throw new TreatException( "Embeddable paths cannot be TREAT-ed" );
 	}
 }

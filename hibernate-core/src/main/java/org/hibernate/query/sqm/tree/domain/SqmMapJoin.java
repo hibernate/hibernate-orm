@@ -186,20 +186,6 @@ public class SqmMapJoin<L, K, V>
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetched );
-	}
-
-	@Override
-	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched) {
-		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
-		if ( treat == null ) {
-			return addTreat( new SqmTreatedMapJoin<>( this, treatTarget, alias ) );
-		}
-		return treat;
-	}
-
-	@Override
 	public SqmMapJoin<L, K, V> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmMapJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),

@@ -664,6 +664,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				assert isOwningInitializer;
 				// If this initializer owns the entity, we have to remove the entity holder,
 				// because the subsequent loading process will claim the entity
+				rowProcessingState.getJdbcValuesSourceProcessingState().getLoadingEntityHolders().remove( holder );
 				session.getPersistenceContextInternal().removeEntityHolder( entityKey );
 				return session.internalLoad(
 						concreteDescriptor.getEntityName(),

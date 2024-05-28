@@ -54,6 +54,7 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -137,6 +138,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				id = persister.getIdentifier( entity, this );
+				if ( id == null ) {
+					throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName()
+							+ "' must be manually assigned before calling 'insert()'" );
+				}
 			}
 			if ( firePreInsert(entity, id, state, persister) ) {
 				return id;

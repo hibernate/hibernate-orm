@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -17,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 @SessionFactory
 @DomainModel(annotatedClasses = UpsertVersionedTest.Record.class)
 public class UpsertVersionedTest {
+    @RequiresDialect(OracleDialect.class)
     @RequiresDialect(H2Dialect.class)
     @RequiresDialect(SQLServerDialect.class)
     @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)

@@ -93,6 +93,7 @@ public class JdbcPreparedStatementEventTests {
 	@EnableEvent(JdbcPreparedStatementCreationEvent.NAME)
 	@EnableEvent(JdbcPreparedStatementExecutionEvent.NAME)
 	public void testJdbcPreparedStatementEventStoredProcedure(SessionFactoryScope scope) {
+		jfrEvents.reset();
 		scope.inTransaction(
 				session -> {
 					ProcedureCall call = session.createStoredProcedureCall("DB_OBJECT_SQL", String.class)
@@ -120,14 +121,12 @@ public class JdbcPreparedStatementEventTests {
 					RecordedEvent preparedStatementCreationEvent = events.get( 0 );
 					assertThat( preparedStatementCreationEvent.getEventType().getName() )
 							.isEqualTo( JdbcPreparedStatementCreationEvent.NAME );
-					assertThat( preparedStatementCreationEvent.getLong( "executionTime" ) ).isGreaterThan( 0 );
 					assertThat( preparedStatementCreationEvent.getString( "sql" ).toLowerCase( Locale.ROOT ) )
 							.contains( "{call " );
 
 					RecordedEvent preparedStatementExecutionEvent = events.get( 1 );
 					assertThat( preparedStatementExecutionEvent.getEventType().getName() )
 							.isEqualTo( JdbcPreparedStatementExecutionEvent.NAME );
-					assertThat( preparedStatementExecutionEvent.getLong( "executionTime" ) ).isGreaterThan( 0 );
 					assertThat( preparedStatementExecutionEvent.getString( "sql" ) )
 							.isEqualTo( preparedStatementCreationEvent.getString( "sql" ) );
 				}

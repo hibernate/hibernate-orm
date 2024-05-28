@@ -201,7 +201,7 @@ public abstract class AbstractSaveEventListener<C>
 		processIfManagedEntity( entity, (managedEntity) -> managedEntity.$$_hibernate_setUseTracker( true ) );
 
 		final Generator generator = persister.getGenerator();
-		if ( generator instanceof Assigned || generator instanceof CompositeNestedGeneratedValueGenerator ) {
+		if ( !generator.generatesOnInsert() || generator instanceof CompositeNestedGeneratedValueGenerator ) {
 			id = persister.getIdentifier( entity, source );
 			if ( id == null ) {
 				throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName()

@@ -14,7 +14,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
- * An {@link Exporter} for {@link Sequence sequences}.
+ * An {@link Exporter} for {@linkplain Sequence sequences}.
  *
  * @author Steve Ebersole
  */

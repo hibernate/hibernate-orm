@@ -116,6 +116,7 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -3330,7 +3331,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Get an {@link Exporter} for unique key {@link Constraint}s,
 	 * usually {@link StandardUniqueKeyExporter}.
 	 */
-	public Exporter<Constraint> getUniqueKeyExporter() {
+	public Exporter<UniqueKey> getUniqueKeyExporter() {
 		return uniqueKeyExporter;
 	}
 

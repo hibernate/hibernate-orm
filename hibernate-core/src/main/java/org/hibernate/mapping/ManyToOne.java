@@ -105,6 +105,7 @@ public class ManyToOne extends ToOne {
 							getConstraintColumns(), 
 							( (EntityType) getType() ).getAssociatedEntityName(), 
 							getForeignKeyDefinition(),
+							getForeignKeyOptions(),
 							new ArrayList<>( property.getColumns() )
 					);
 					foreignKey.setReferencedTable( property.getValue().getTable() );

@@ -210,6 +210,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 							getConstraintColumns(),
 							referencedEntity.getEntityName(),
 							getForeignKeyDefinition(),
+							getForeignKeyOptions(),
 							join.getKey().getColumns()
 					);
 					foreignKey.setOnDeleteAction( getOnDeleteAction() );

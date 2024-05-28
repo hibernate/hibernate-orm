@@ -633,6 +633,7 @@ public class ToOneBinder {
 					else if ( foreignKey != null ) {
 						value.setForeignKeyName( nullIfEmpty( foreignKey.getString( "name" ) ) );
 						value.setForeignKeyDefinition( nullIfEmpty( foreignKey.getString( "foreignKeyDefinition" ) ) );
+						value.setForeignKeyOptions( foreignKey.getString( "options" ) );
 					}
 					else if ( noConstraintByDefault ) {
 						value.disableForeignKey();
@@ -641,11 +642,13 @@ public class ToOneBinder {
 						final AnnotationUsage<ForeignKey> joinColumnsForeignKey = joinColumns.getNestedUsage( "foreignKey" );
 						value.setForeignKeyName( nullIfEmpty( joinColumnsForeignKey.getString( "name" ) ) );
 						value.setForeignKeyDefinition( nullIfEmpty( joinColumnsForeignKey.getString( "foreignKeyDefinition" ) ) );
+						value.setForeignKeyOptions( joinColumnsForeignKey.getString( "options" ) );
 					}
 					else if ( joinColumn != null ) {
 						final AnnotationUsage<ForeignKey> joinColumnForeignKey = joinColumn.getNestedUsage( "foreignKey" );
 						value.setForeignKeyName( nullIfEmpty( joinColumnForeignKey.getString( "name" ) ) );
 						value.setForeignKeyDefinition( nullIfEmpty( joinColumnForeignKey.getString( "foreignKeyDefinition" ) ) );
+						value.setForeignKeyOptions( joinColumnForeignKey.getString( "options" ) );
 					}
 				}
 			}

@@ -267,9 +267,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				}
 				else if ( !dialect.canBatchTruncate() ) {
 					applySqlStrings(
-							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata,
-									context
-							),
+							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata, context ),
 							formatter,
 							options,
 							targets

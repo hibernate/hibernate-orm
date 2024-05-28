@@ -45,19 +45,13 @@ public record JoinedSubclassKeyHandler(
 
 		final AnnotationUsage<ForeignKey> fkAnn = subclassDetails.getAnnotationUsage( ForeignKey.class );
 
-		final String foreignKeyName = fkAnn == null
-				// todo : generate the name here - this *is* equiv to legacy second pass
-				? ""
-				: fkAnn.getString( "name" );
-		final String foreignKeyDefinition = fkAnn == null
-				? ""
-				: fkAnn.getString( "foreignKeyDefinition" );
-
 		final org.hibernate.mapping.ForeignKey foreignKey = subclass.getTable().createForeignKey(
-				foreignKeyName,
+				// todo : generate the name here - this *is* equiv to legacy second pass
+				fkAnn == null ? "" : fkAnn.getString( "name" ),
 				fkValue.getColumns(),
 				subclass.getRootClass().getEntityName(),
-				foreignKeyDefinition,
+				fkAnn == null ? "" : fkAnn.getString( "foreignKeyDefinition" ),
+				fkAnn == null ? "" : fkAnn.getString( "options" ),
 				targetKeyValue.getColumns()
 		);
 		foreignKey.setReferencedTable( subclass.getRootTable() );

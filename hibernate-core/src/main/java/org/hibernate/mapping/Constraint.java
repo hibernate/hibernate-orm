@@ -31,6 +31,7 @@ public abstract class Constraint implements Exportable, Serializable {
 	private String name;
 	private final ArrayList<Column> columns = new ArrayList<>();
 	private Table table;
+	private String options = "";
 
 	public String getName() {
 		return name;
@@ -38,6 +39,14 @@ public abstract class Constraint implements Exportable, Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
 	}
 
 	/**

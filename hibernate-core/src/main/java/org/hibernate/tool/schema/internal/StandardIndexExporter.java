@@ -13,6 +13,7 @@ import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -47,6 +48,9 @@ public class StandardIndexExporter implements Exporter<Index> {
 				.append( " (" );
 		appendColumnList( index, createIndex );
 		createIndex.append( ")" );
+		if ( StringHelper.isNotEmpty( index.getOptions() ) ) {
+			createIndex.append( " " ).append( index.getOptions() );
+		}
 		return new String[] { createIndex.toString() };
 	}
 

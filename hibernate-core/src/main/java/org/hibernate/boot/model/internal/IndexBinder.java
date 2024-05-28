@@ -162,6 +162,7 @@ class IndexBinder {
 			List<String> columnNames,
 			String[] orderings,
 			boolean unique,
+			String options,
 			Selectable[] columns) {
 		final IndexOrUniqueKeyNameSource source =
 				new IndexOrUniqueKeyNameSource( context, table, columnNames, originalKeyName );
@@ -184,6 +185,7 @@ class IndexBinder {
 			final String keyName = getImplicitNamingStrategy().determineIndexName( source ).render( getDialect() );
 			final Index index = table.getOrCreateIndex( keyName );
 			index.setUnique( unique );
+			index.setOptions( options );
 			for ( int i = 0; i < columns.length; i++ ) {
 				index.addColumn( columns[i], orderings != null ? orderings[i] : null );
 			}
@@ -205,6 +207,7 @@ class IndexBinder {
 			initializeColumns( columnExpressions, ordering, parsed );
 			final String name = index.getString( "name" );
 			final boolean unique = index.getBoolean( "unique" );
+			final String options = index.getString( "options" );
 			createIndexOrUniqueKey(
 					table,
 					name,
@@ -212,6 +215,7 @@ class IndexBinder {
 					columnExpressions,
 					ordering,
 					unique,
+					options,
 					selectables( table, name, columnExpressions )
 			);
 		}
@@ -221,6 +225,7 @@ class IndexBinder {
 		for ( AnnotationUsage<UniqueConstraint> constraint : constraints ) {
 			final String name = constraint.getString( "name" );
 			final List<String> columnNames = constraint.getList( "columnNames" );
+			final String options = constraint.getString( "options" );
 			createIndexOrUniqueKey(
 					table,
 					name,
@@ -228,6 +233,7 @@ class IndexBinder {
 					columnNames,
 					null,
 					true,
+					options,
 					columns( table, name, columnNames )
 			);
 		}

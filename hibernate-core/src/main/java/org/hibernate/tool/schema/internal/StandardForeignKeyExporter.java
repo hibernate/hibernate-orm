@@ -14,6 +14,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -82,6 +83,10 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
 				buffer.append( " on delete " ).append( onDeleteAction.toSqlString() );
 			}
+		}
+
+		if ( StringHelper.isNotEmpty( foreignKey.getOptions() ) ) {
+			buffer.append( " " ).append( foreignKey.getOptions() );
 		}
 
 		return new String[] { buffer.toString() };

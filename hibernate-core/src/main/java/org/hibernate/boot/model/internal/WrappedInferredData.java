@@ -32,7 +32,7 @@ public class WrappedInferredData implements PropertyData {
 	}
 
 	@Override
-	public XClass getClassOrPluralElement() throws MappingException {
+	public ClassDetails getClassOrPluralElement() throws MappingException {
 		return wrappedInferredData.getClassOrPluralElement();
 	}
 

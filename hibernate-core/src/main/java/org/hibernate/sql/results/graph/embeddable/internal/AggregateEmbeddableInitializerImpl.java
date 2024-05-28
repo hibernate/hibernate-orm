@@ -13,6 +13,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -21,19 +22,19 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * The aggregate selection reads an Object[] from JDBC which serves as data for the nested {@link DomainResultAssembler}.
  * This class exposes the Object[] of the aggregate to the nested assemblers through a wrapping {@link RowProcessingState}.
  */
-public class AggregateEmbeddableInitializerImpl extends EmbeddableInitializerImpl implements AggregateEmbeddableInitializer {
+public class AggregateEmbeddableInitializerImpl extends EmbeddableInitializerImpl {
 
 	private final int[] aggregateValuesArrayPositions;
 
 	public AggregateEmbeddableInitializerImpl(
 			EmbeddableResultGraphNode resultDescriptor,
 			BasicFetch<?> discriminatorFetch,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState,
 			boolean isResultInitializer,
 			SqlSelection structSelection) {
 		super( resultDescriptor, discriminatorFetch, parent, creationState, isResultInitializer );
-		this.aggregateValuesArrayPositions = AggregateEmbeddableInitializer.determineAggregateValuesArrayPositions(
+		this.aggregateValuesArrayPositions = determineAggregateValuesArrayPositions(
 				parent,
 				structSelection
 		);
@@ -43,7 +44,7 @@ public class AggregateEmbeddableInitializerImpl extends EmbeddableInitializerImp
 				resultDescriptor.getReferencedMappingType()
 		);
 		System.arraycopy( assemblers, 0, this.assemblers, 0, assemblers.length );
-		final Initializer[][] initializers = createInitializers( assemblers );
+		final Initializer<?>[][] initializers = createInitializers( assemblers );
 		System.arraycopy( initializers, 0, this.subInitializers, 0, initializers.length );
 	}
 
@@ -62,9 +63,42 @@ public class AggregateEmbeddableInitializerImpl extends EmbeddableInitializerImp
 		return new DomainResultAssembler[embeddableTypeDescriptor.isPolymorphic() ? embeddableTypeDescriptor.getConcreteEmbeddableTypes().size() : 1][];
 	}
 
-	@Override
 	public int[] getAggregateValuesArrayPositions() {
 		return aggregateValuesArrayPositions;
+	}
+
+	public Object[] getJdbcValues(RowProcessingState processingState) {
+		final int[] aggregateValuesArrayPositions = getAggregateValuesArrayPositions();
+		Object[] jdbcValue = (Object[]) processingState.getJdbcValue( aggregateValuesArrayPositions[0] );
+		for ( int i = 1; i < aggregateValuesArrayPositions.length; i++ ) {
+			if ( jdbcValue == null ) {
+				break;
+			}
+			jdbcValue = (Object[]) jdbcValue[aggregateValuesArrayPositions[i]];
+		}
+		return jdbcValue;
+	}
+
+	static int[] determineAggregateValuesArrayPositions(
+			InitializerParent<?> parent,
+			SqlSelection structSelection) {
+		if ( parent instanceof AggregateEmbeddableInitializerImpl ) {
+			final int[] parentAggregateValuesArrayPositions = ( (AggregateEmbeddableInitializerImpl) parent ).getAggregateValuesArrayPositions();
+			final int[] aggregateValuesArrayPositions = new int[parentAggregateValuesArrayPositions.length + 1];
+			System.arraycopy(
+					parentAggregateValuesArrayPositions,
+					0,
+					aggregateValuesArrayPositions,
+					0,
+					parentAggregateValuesArrayPositions.length
+			);
+			aggregateValuesArrayPositions[aggregateValuesArrayPositions.length - 1] = structSelection.getValuesArrayPosition();
+			return aggregateValuesArrayPositions;
+		}
+		else if ( parent instanceof EmbeddableInitializer ) {
+			return determineAggregateValuesArrayPositions( parent.getParent(), structSelection );
+		}
+		return new int[] { structSelection.getValuesArrayPosition() };
 	}
 
 }

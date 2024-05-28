@@ -53,7 +53,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 	}
 
 	@Override
-	public EntityInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return EntitySelectFetchInitializerBuilder.createInitializer(
 				parent,
 				getFetchedMapping(),

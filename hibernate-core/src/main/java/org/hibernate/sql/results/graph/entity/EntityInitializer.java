@@ -8,7 +8,8 @@ package org.hibernate.sql.results.graph.entity;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -18,64 +19,52 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
-public interface EntityInitializer extends FetchParentAccess {
+public interface EntityInitializer<Data extends InitializerData> extends InitializerParent<Data> {
 
 	/**
 	 * Get the descriptor for the type of entity being initialized
 	 */
 	EntityPersister getEntityDescriptor();
 
-	EntityPersister getConcreteDescriptor();
+	EntityPersister getConcreteDescriptor(Data data);
 
-	@Override
-	default @Nullable EntityInitializer findFirstEntityDescriptorAccess() {
-		// Keep this method around for binary backwards compatibility
-		return this;
-	}
-
-	@Override
-	default EntityInitializer findFirstEntityInitializer() {
-		return this;
+	default EntityPersister getConcreteDescriptor(RowProcessingState rowProcessingState) {
+		return getConcreteDescriptor( getData( rowProcessingState ) );
 	}
 
 	/**
 	 * Get the entity instance for the currently processing "row".
 	 *
 	 * @apiNote Calling this method is only valid from the time
-	 * {@link #resolveKey} has been called until {@link #finishUpRow}
+	 * {@link #resolveKey(InitializerData)} has been called until {@link #finishUpRow(InitializerData)}
 	 * has been called for the currently processing row
 	 */
-	Object getEntityInstance();
-
-	default Object getManagedInstance() {
-		return getEntityInstance();
+	Object getEntityInstance(Data data);
+	default Object getEntityInstance(RowProcessingState rowProcessingState) {
+		return getEntityInstance( getData( rowProcessingState ) );
 	}
 
-	default Object getTargetInstance() {
-		return getEntityInstance();
+	default Object getTargetInstance(Data data) {
+		return getEntityInstance( data );
 	}
-
-	@Override
-	default Object getInitializedInstance() {
-		return getEntityInstance();
+	default Object getTargetInstance(RowProcessingState rowProcessingState) {
+		return getTargetInstance( getData( rowProcessingState ) );
 	}
 
 	default @Nullable EntityKey resolveEntityKeyOnly(RowProcessingState rowProcessingState) {
-		resolveKey();
-		final EntityKey entityKey = getEntityKey();
-		finishUpRow();
+		final Data data = getData( rowProcessingState );
+		resolveKey( data );
+		final EntityKey entityKey = new EntityKey(
+				getEntityIdentifier( data ),
+				getConcreteDescriptor( data )
+		);
+		finishUpRow( data );
 		return entityKey;
 	}
 
-	/**
-	 * @deprecated Use {@link #resolveEntityKeyOnly(RowProcessingState)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	@Nullable EntityKey getEntityKey();
-
-	default @Nullable Object getEntityIdentifier() {
-		final EntityKey entityKey = getEntityKey();
-		return entityKey == null ? null : entityKey.getIdentifier();
+	@Nullable Object getEntityIdentifier(Data data);
+	default @Nullable Object getEntityIdentifier(RowProcessingState rowProcessingState) {
+		return getEntityIdentifier( getData( rowProcessingState ) );
 	}
 
 	@Override
@@ -84,13 +73,8 @@ public interface EntityInitializer extends FetchParentAccess {
 	}
 
 	@Override
-	default EntityInitializer asEntityInitializer() {
+	default EntityInitializer<?> asEntityInitializer() {
 		return this;
 	}
-
-	/**
-	 * @return true if the current entity associated to this EntityInitializer has been initialized
-	 */
-	boolean isEntityInitialized();
 
 }

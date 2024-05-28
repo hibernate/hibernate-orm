@@ -15,7 +15,6 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -41,14 +40,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 
 	@Override
 	public DomainResultAssembler<?> createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return createAssembler( (InitializerParent) parentAccess, creationState );
-	}
-
-	@Override
-	public DomainResultAssembler<?> createAssembler(
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		// lazy attribute
 		if ( unfetched ) {
@@ -59,7 +51,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 		}
 	}
 
-	public CollectionInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new DelayedCollectionInitializer(
 				getNavigablePath(),
 				getFetchedMapping(),

@@ -19,7 +19,6 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
@@ -44,7 +43,6 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 	private final boolean containsCollectionFetches;
 
 	private final String resultAlias;
-	private final LockMode lockMode;
 
 	public EntityResultImpl(
 			NavigablePath navigablePath,
@@ -56,10 +54,11 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 		this.navigablePath = navigablePath;
 		this.entityValuedModelPart = entityValuedModelPart;
 		this.resultAlias = resultAlias;
-		this.lockMode = lockMode;
-
 
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		if ( resultAlias != null ) {
+			sqlAstCreationState.registerLockMode( resultAlias, lockMode );
+		}
 		sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
 				navigablePath,
 				np -> {
@@ -141,33 +140,26 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 
 	@Override
 	public DomainResultAssembler<?> createResultAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return createResultAssembler( (InitializerParent) parentAccess, creationState );
-	}
-
-	@Override
-	public DomainResultAssembler<?> createResultAssembler(
 			InitializerParent parent,
 			AssemblerCreationState creationState) {
 		return new EntityAssembler( getResultJavaType(), creationState.resolveInitializer( this, parent, this ).asEntityInitializer() );
 	}
 
 	@Override
-	public Initializer createInitializer(
+	public Initializer<?> createInitializer(
 			EntityResultImpl resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public Initializer createInitializer(
-			InitializerParent parent,
+	public Initializer<?> createInitializer(
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return new EntityInitializerImpl(
 				this,
-				lockMode,
+				resultAlias,
 				identifierFetch,
 				discriminatorFetch,
 				null,
@@ -177,26 +169,5 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 				true,
 				creationState
 		);
-//		return new EntityResultInitializer(
-//				this,
-//				getNavigablePath(),
-//				lockMode,
-//				identifierFetch,
-//				discriminatorFetch,
-//				null,
-//				creationState
-//		);
-//		return new EntityInitializerImpl(
-//				this,
-//				lockMode,
-//				identifierFetch,
-//				discriminatorFetch,
-//				null,
-//				null,
-//				NotFoundAction.EXCEPTION,
-//				null,
-//				true,
-//				creationState
-//		);
 	}
 }

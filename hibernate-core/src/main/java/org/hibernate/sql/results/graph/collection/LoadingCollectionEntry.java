@@ -27,7 +27,7 @@ public interface LoadingCollectionEntry {
 	/**
 	 * The initializer responsible for the loading
 	 */
-	CollectionInitializer getInitializer();
+	CollectionInitializer<?> getInitializer();
 
 	/**
 	 * The collection key.

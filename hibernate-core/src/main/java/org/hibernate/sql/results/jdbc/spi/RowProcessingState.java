@@ -6,8 +6,10 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
+import org.hibernate.LockMode;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.spi.RowReader;
 
@@ -21,6 +23,13 @@ public interface RowProcessingState extends ExecutionContext {
 	 * Access to the state related to the overall processing of the results.
 	 */
 	JdbcValuesSourceProcessingState getJdbcValuesSourceProcessingState();
+
+	LockMode determineEffectiveLockMode(String alias);
+
+	boolean needsResolveState();
+
+	<T extends InitializerData> T getInitializerData(int initializerId);
+	void setInitializerData(int initializerId, InitializerData state);
 
 	/**
 	 * Retrieve the value corresponding to the given SqlSelection as part
@@ -55,18 +64,8 @@ public interface RowProcessingState extends ExecutionContext {
 
 	/**
 	 * Callback at the end of processing the current "row"
-	 *
-	 * @deprecated Use {@link #finishRowProcessing(boolean)} instead
 	 */
-	@Deprecated(forRemoval = true)
-	void finishRowProcessing();
-
-	/**
-	 * Callback at the end of processing the current "row"
-	 */
-	default void finishRowProcessing(boolean wasAdded) {
-		finishRowProcessing();
-	}
+	void finishRowProcessing(boolean wasAdded);
 
 	/**
 	 * If this is a row processing state for aggregate components,

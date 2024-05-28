@@ -20,68 +20,62 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
-public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
+public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchEntitySelectFetchInitializer.BatchEntitySelectFetchInitializerData> {
 	protected final AttributeMapping[] parentAttributes;
 	protected final Setter referencedModelPartSetter;
 	protected final Type referencedModelPartType;
 
-	private Map<EntityKey, List<ParentInfo>> toBatchLoad;
+	public static class BatchEntitySelectFetchInitializerData extends AbstractBatchEntitySelectFetchInitializerData {
+		private Map<EntityKey, List<ParentInfo>> toBatchLoad;
 
-	/**
-	 * @deprecated Use {@link #BatchEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public BatchEntitySelectFetchInitializer(
-			FetchParentAccess parentAccess,
-			ToOneAttributeMapping referencedModelPart,
-			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		this(
-				(InitializerParent) parentAccess,
-				referencedModelPart,
-				fetchedNavigable,
-				concreteDescriptor,
-				identifierAssembler
-		);
+		public BatchEntitySelectFetchInitializerData(RowProcessingState rowProcessingState) {
+			super( rowProcessingState );
+		}
 	}
 
 	public BatchEntitySelectFetchInitializer(
-			InitializerParent parentAccess,
+			InitializerParent<?> parentAccess,
 			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
+			DomainResult<?> keyResult,
+			AssemblerCreationState creationState) {
+		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, creationState );
 		this.parentAttributes = getParentEntityAttributes( referencedModelPart.getAttributeName() );
 		this.referencedModelPartSetter = referencedModelPart.getPropertyAccess().getSetter();
-		this.referencedModelPartType = owningEntityInitializer.getEntityDescriptor().getPropertyType( referencedModelPart.getAttributeName() );
+		this.referencedModelPartType = referencedModelPart.findContainingEntityMapping().getEntityPersister()
+				.getPropertyType( referencedModelPart.getAttributeName() );
 	}
 
 	@Override
-	protected void registerResolutionListener() {
+	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
+		return new BatchEntitySelectFetchInitializerData( rowProcessingState );
+	}
+
+	@Override
+	protected void registerResolutionListener(BatchEntitySelectFetchInitializerData data) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final InitializerData owningData = owningEntityInitializer.getData( rowProcessingState );
 		final AttributeMapping parentAttribute;
-		if ( !owningEntityInitializer.isEntityInitialized() && ( parentAttribute = parentAttributes[owningEntityInitializer.getConcreteDescriptor().getSubclassId()] ) != null ) {
-			getParentInfos().add( new ParentInfo( owningEntityInitializer.getTargetInstance(), parentAttribute.getStateArrayPosition() ) );
+		if ( owningData.getState() != State.INITIALIZED
+				&& ( parentAttribute = parentAttributes[owningEntityInitializer.getConcreteDescriptor( owningData ).getSubclassId()] ) != null ) {
+			if ( data.toBatchLoad == null ) {
+				data.toBatchLoad = new HashMap<>();
+			}
+			data.toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() ).add(
+					new ParentInfo(
+							owningEntityInitializer.getTargetInstance( owningData ),
+							parentAttribute.getStateArrayPosition()
+					)
+			);
 		}
-	}
-
-	private List<ParentInfo> getParentInfos() {
-		if ( toBatchLoad == null ) {
-			toBatchLoad = new HashMap<>();
-		}
-		return toBatchLoad.computeIfAbsent( entityKey, key -> new ArrayList<>() );
-	}
-
-	@Override
-	public boolean isEntityInitialized() {
-		return false;
 	}
 
 	private static class ParentInfo {
@@ -95,13 +89,13 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	}
 
 	@Override
-	public void endLoading(ExecutionContext executionContext) {
-		super.endLoading( executionContext );
-		if ( toBatchLoad != null ) {
-			toBatchLoad.forEach(
+	public void endLoading(BatchEntitySelectFetchInitializerData data) {
+		super.endLoading( data );
+		if ( data.toBatchLoad != null ) {
+			data.toBatchLoad.forEach(
 					(entityKey, parentInfos) -> {
-						final SharedSessionContractImplementor session = executionContext.getSession();
-						final Object instance = loadInstance( entityKey, referencedModelPart, session );
+						final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
+						final Object instance = loadInstance( entityKey, toOneMapping, session );
 						for ( ParentInfo parentInfo : parentInfos ) {
 							final Object parentInstance = parentInfo.parentInstance;
 							final EntityEntry entry = session.getPersistenceContext().getEntry( parentInstance );
@@ -116,7 +110,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 						}
 					}
 			);
-			toBatchLoad.clear();
+			data.toBatchLoad.clear();
 		}
 	}
 

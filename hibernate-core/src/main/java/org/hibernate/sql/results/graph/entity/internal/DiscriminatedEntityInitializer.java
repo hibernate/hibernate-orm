@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -24,12 +23,12 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -39,10 +38,12 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 /**
  * Initializer for discriminated mappings.
  */
-public class DiscriminatedEntityInitializer extends AbstractInitializer implements EntityInitializer {
+public class DiscriminatedEntityInitializer
+		extends AbstractInitializer<DiscriminatedEntityInitializer.DiscriminatedEntityInitializerData>
+		implements EntityInitializer<DiscriminatedEntityInitializer.DiscriminatedEntityInitializerData> {
 	private static final String CONCRETE_NAME = DiscriminatedEntityInitializer.class.getSimpleName();
 
-	protected final InitializerParent parent;
+	protected final InitializerParent<?> parent;
 	private final NavigablePath navigablePath;
 	private final boolean isPartOfKey;
 
@@ -52,38 +53,17 @@ public class DiscriminatedEntityInitializer extends AbstractInitializer implemen
 	private final boolean eager;
 	private final boolean resultInitializer;
 
-	// per-row state
-	protected EntityPersister concreteDescriptor;
-	protected Object entityIdentifier;
-	protected Object entityInstance;
+	public static class DiscriminatedEntityInitializerData extends InitializerData {
+		protected EntityPersister concreteDescriptor;
+		protected Object entityIdentifier;
 
-	/**
-	 * @deprecated Use {@link #DiscriminatedEntityInitializer(InitializerParent, DiscriminatedAssociationModelPart, NavigablePath, Fetch, Fetch, boolean, boolean, AssemblerCreationState)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public DiscriminatedEntityInitializer(
-			FetchParentAccess parent,
-			DiscriminatedAssociationModelPart fetchedPart,
-			NavigablePath fetchedNavigable,
-			Fetch discriminatorFetch,
-			Fetch keyFetch,
-			boolean eager,
-			boolean resultInitializer,
-			AssemblerCreationState creationState) {
-		this(
-				(InitializerParent) parent,
-				fetchedPart,
-				fetchedNavigable,
-				discriminatorFetch,
-				keyFetch,
-				eager,
-				resultInitializer,
-				creationState
-		);
+		public DiscriminatedEntityInitializerData(RowProcessingState rowProcessingState) {
+			super( rowProcessingState );
+		}
 	}
 
 	public DiscriminatedEntityInitializer(
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			DiscriminatedAssociationModelPart fetchedPart,
 			NavigablePath fetchedNavigable,
 			Fetch discriminatorFetch,
@@ -91,23 +71,24 @@ public class DiscriminatedEntityInitializer extends AbstractInitializer implemen
 			boolean eager,
 			boolean resultInitializer,
 			AssemblerCreationState creationState) {
+		super( creationState );
 		this.parent = parent;
 		this.fetchedPart = fetchedPart;
 		this.navigablePath = fetchedNavigable;
 		this.isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
-		this.discriminatorValueAssembler = discriminatorFetch.createAssembler( (InitializerParent) this, creationState );
-		this.keyValueAssembler = keyFetch.createAssembler( (InitializerParent) this, creationState );
+		this.discriminatorValueAssembler = discriminatorFetch.createAssembler( this, creationState );
+		this.keyValueAssembler = keyFetch.createAssembler( this, creationState );
 		this.eager = eager;
 		this.resultInitializer = resultInitializer;
 	}
 
 	@Override
-	public FetchParentAccess getFetchParentAccess() {
-		return (FetchParentAccess) parent;
+	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
+		return new DiscriminatedEntityInitializerData( rowProcessingState );
 	}
 
 	@Override
-	public @Nullable InitializerParent getParent() {
+	public @Nullable InitializerParent<?> getParent() {
 		return parent;
 	}
 
@@ -121,130 +102,105 @@ public class DiscriminatedEntityInitializer extends AbstractInitializer implemen
 	}
 
 	@Override
-	public void resolveKey() {
-		if ( state != State.UNINITIALIZED ) {
+	public void resolveKey(DiscriminatedEntityInitializerData data) {
+		if ( data.getState() != State.UNINITIALIZED ) {
 			return;
 		}
 
 		// resolve the key and the discriminator, and then use those to load the indicated entity
 
-		final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
+		final Object discriminatorValue = discriminatorValueAssembler.assemble( data.getRowProcessingState() );
 
 		if ( discriminatorValue == null ) {
-			state = State.MISSING;
-			concreteDescriptor = null;
-			entityIdentifier = null;
-			entityInstance = null;
+			data.setState( State.MISSING );
+			data.concreteDescriptor = null;
+			data.entityIdentifier = null;
+			data.setInstance( null );
 			// null association
-			assert keyValueAssembler.assemble( rowProcessingState ) == null;
+			assert keyValueAssembler.assemble( data.getRowProcessingState() ) == null;
 		}
 		else {
-			state = State.KEY_RESOLVED;
-			concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
-			entityIdentifier = keyValueAssembler.assemble( rowProcessingState );
+			data.setState( State.KEY_RESOLVED );
+			data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
+			data.entityIdentifier = keyValueAssembler.assemble( data.getRowProcessingState() );
 		}
 	}
 
 	@Override
-	public void resolveInstance() {
-		if ( state != State.KEY_RESOLVED ) {
+	public void resolveInstance(DiscriminatedEntityInitializerData data) {
+		if ( data.getState() != State.KEY_RESOLVED ) {
 			return;
 		}
 
-		state = State.INITIALIZED;
+		data.setState( State.INITIALIZED );
 
-		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
-			EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
-					"(%s) Beginning Initializer#resolveInstance process for entity (%s) : %s",
-					StringHelper.collapse( this.getClass().getName() ),
-					getNavigablePath(),
-					entityIdentifier
-			);
-		}
-		final SharedSessionContractImplementor session = rowProcessingState.getSession();
-		final EntityKey entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
+		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
+		final EntityKey entityKey = new EntityKey( data.entityIdentifier, data.concreteDescriptor );
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
 		if ( holder != null ) {
-			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
-				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
-						"(%s) Found existing loading entry [%s] - using loading instance",
-						CONCRETE_NAME,
-						toLoggableString(
-								getNavigablePath(),
-								entityIdentifier
-						)
-				);
-			}
-			entityInstance = holder.getEntity();
+			data.setInstance( holder.getEntity() );
 			if ( holder.getEntityInitializer() == null ) {
-				if ( entityInstance != null && Hibernate.isInitialized( entityInstance ) ) {
+				if ( data.getInstance() != null && Hibernate.isInitialized( data.getInstance() ) ) {
 					return;
 				}
 			}
 			else if ( holder.getEntityInitializer() != this ) {
 				// the entity is already being loaded elsewhere
-				if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
-					EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
-							"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
-							CONCRETE_NAME,
-							toLoggableString( getNavigablePath(), entityIdentifier ),
-							holder.getEntityInitializer()
-					);
-				}
 				return;
 			}
-			else if ( entityInstance == null ) {
+			else if ( data.getInstance() == null ) {
 				// todo: maybe mark this as resolved instead?
 				assert holder.getProxy() == null : "How to handle this case?";
 				return;
 			}
 		}
 
-		entityInstance = rowProcessingState.getSession().internalLoad(
-				concreteDescriptor.getEntityName(),
-				entityIdentifier,
+		data.setInstance( session.internalLoad(
+				data.concreteDescriptor.getEntityName(),
+				data.entityIdentifier,
 				eager,
 				// should not be null since we checked already.  null would indicate bad data (ala, not-found handling)
 				false
-		);
+		) );
 	}
 
 	@Override
-	public void resolveInstance(Object instance) {
+	public void resolveInstance(Object instance, DiscriminatedEntityInitializerData data) {
 		if ( instance == null ) {
-			state = State.MISSING;
-			entityIdentifier = null;
-			concreteDescriptor = null;
-			entityInstance = null;
+			data.setState( State.MISSING );
+			data.entityIdentifier = null;
+			data.concreteDescriptor = null;
+			data.setInstance( null );
 		}
 		else {
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
-			final LazyInitializer lazyInitializer = extractLazyInitializer( entityInstance );
+			final LazyInitializer lazyInitializer = extractLazyInitializer( data.getInstance() );
 			if ( lazyInitializer == null ) {
-				state = State.INITIALIZED;
-				concreteDescriptor = session.getEntityPersister( null, instance );
-				entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
+				data.setState( State.INITIALIZED );
+				data.concreteDescriptor = session.getEntityPersister( null, instance );
+				data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
 			}
 			else if ( lazyInitializer.isUninitialized() ) {
-				state = eager ? State.RESOLVED : State.INITIALIZED;
+				data.setState( eager ? State.RESOLVED : State.INITIALIZED );
 				// Read the discriminator from the result set if necessary
 				final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
-				concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
-				entityIdentifier = lazyInitializer.getIdentifier();
+				data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
+				data.entityIdentifier = lazyInitializer.getIdentifier();
 			}
 			else {
-				state = State.INITIALIZED;
-				concreteDescriptor = session.getEntityPersister( null, lazyInitializer.getImplementation() );
-				entityIdentifier = lazyInitializer.getIdentifier();
+				data.setState( State.INITIALIZED );
+				data.concreteDescriptor = session.getEntityPersister( null, lazyInitializer.getImplementation() );
+				data.entityIdentifier = lazyInitializer.getIdentifier();
 			}
-			entityInstance = instance;
-			final Initializer initializer = keyValueAssembler.getInitializer();
+			data.setInstance( instance );
+			final Initializer<?> initializer = keyValueAssembler.getInitializer();
 			if ( initializer != null ) {
-				initializer.resolveInstance( entityIdentifier );
+				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 			}
-			else if ( !rowProcessingState.isQueryCacheHit() && rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+			else if ( rowProcessingState.needsResolveState() ) {
 				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
 				discriminatorValueAssembler.resolveState( rowProcessingState );
 				keyValueAssembler.resolveState( rowProcessingState );
@@ -253,38 +209,38 @@ public class DiscriminatedEntityInitializer extends AbstractInitializer implemen
 	}
 
 	@Override
-	public void initializeInstance() {
-		if ( state != State.RESOLVED ) {
+	public void initializeInstance(DiscriminatedEntityInitializerData data) {
+		if ( data.getState() != State.RESOLVED ) {
 			return;
 		}
-		state = State.INITIALIZED;
-		entityInstance = rowProcessingState.getSession().internalLoad(
-				concreteDescriptor.getEntityName(),
-				entityIdentifier,
+		data.setState( State.INITIALIZED );
+		data.setInstance( data.getRowProcessingState().getSession().internalLoad(
+				data.concreteDescriptor.getEntityName(),
+				data.entityIdentifier,
 				eager,
 				// should not be null since we checked already.  null would indicate bad data (ala, not-found handling)
 				false
-		);
+		) );
 	}
 
 	@Override
-	public void initializeInstanceFromParent(Object parentInstance) {
+	public void initializeInstanceFromParent(Object parentInstance, DiscriminatedEntityInitializerData data) {
 		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
 		final Object instance = attributeMapping != null
 				? attributeMapping.getValue( parentInstance )
 				: parentInstance;
 		if ( instance == null ) {
-			state = State.MISSING;
-			entityInstance = null;
-			entityIdentifier = null;
-			concreteDescriptor = null;
+			data.setState( State.MISSING );
+			data.setInstance( null );
+			data.entityIdentifier = null;
+			data.concreteDescriptor = null;
 		}
 		else {
-			state = State.INITIALIZED;
-			entityInstance = instance;
+			data.setState( State.INITIALIZED );
+			data.setInstance( instance );
 			// No need to initialize this
-			entityIdentifier = null;
-			concreteDescriptor = null;
+			data.entityIdentifier = null;
+			data.concreteDescriptor = null;
 			if ( eager ) {
 				Hibernate.initialize( instance );
 			}
@@ -292,31 +248,31 @@ public class DiscriminatedEntityInitializer extends AbstractInitializer implemen
 	}
 
 	@Override
-	protected <X> void forEachSubInitializer(BiConsumer<Initializer, X> consumer, X arg) {
-		final Initializer initializer = keyValueAssembler.getInitializer();
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		final Initializer<?> initializer = keyValueAssembler.getInitializer();
 		if ( initializer != null ) {
-			consumer.accept( initializer, arg );
+			consumer.accept( initializer, data.getRowProcessingState() );
 		}
 	}
 
 	@Override
 	public EntityPersister getEntityDescriptor() {
-		return concreteDescriptor;
+		throw new UnsupportedOperationException("Discriminated association has no static entity type");
 	}
 
 	@Override
-	public Object getEntityInstance() {
-		return entityInstance;
+	public Object getEntityInstance(DiscriminatedEntityInitializerData data) {
+		return data.getInstance();
 	}
 
 	@Override
-	public boolean isEntityInitialized() {
-		return state == State.INITIALIZED;
+	public EntityPersister getConcreteDescriptor(DiscriminatedEntityInitializerData data) {
+		return data.concreteDescriptor;
 	}
 
 	@Override
-	public EntityPersister getConcreteDescriptor() {
-		return concreteDescriptor;
+	public @Nullable Object getEntityIdentifier(DiscriminatedEntityInitializerData data) {
+		return data.entityIdentifier;
 	}
 
 	@Override
@@ -334,15 +290,4 @@ public class DiscriminatedEntityInitializer extends AbstractInitializer implemen
 		return "DiscriminatedEntityInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
 	}
 
-	@Override
-	public EntityKey getEntityKey() {
-		throw new UnsupportedOperationException(
-				"This should never happen, because this initializer has not child initializers" );
-	}
-
-	@Override
-	public Object getParentKey() {
-		throw new UnsupportedOperationException(
-				"This should never happen, because this initializer has not child initializers" );
-	}
 }

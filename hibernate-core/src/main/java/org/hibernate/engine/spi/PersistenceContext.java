@@ -519,7 +519,10 @@ public interface PersistenceContext {
 			EntityKey key,
 			@Nullable Object entity,
 			JdbcValuesSourceProcessingState processingState,
-			EntityInitializer initializer);
+			EntityInitializer<?> initializer);
+
+	@Incubating
+	EntityHolder addEntityHolder(EntityKey key, Object entity);
 
 	EntityHolder getEntityHolder(EntityKey key);
 

@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.embeddable;
 
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -19,26 +19,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddableInitializer extends FetchParentAccess {
+public interface EmbeddableInitializer<Data extends InitializerData> extends InitializerParent<Data> {
 	@Override
 	EmbeddableValuedModelPart getInitializedPart();
 
-	Object getCompositeInstance();
-
-	/**
-	 * @deprecated Use {@link #getParent()} instead
-	 */
-	@Override
-	@Deprecated(forRemoval = true)
-	@Nullable FetchParentAccess getFetchParentAccess();
-
-	@Override
-	@Nullable InitializerParent getParent();
-
-	@Override
-	default Object getInitializedInstance() {
-		return getCompositeInstance();
+	Object getCompositeInstance(Data data);
+	default Object getCompositeInstance(RowProcessingState rowProcessingState) {
+		return getCompositeInstance( getData( rowProcessingState ) );
 	}
+
+	@Override
+	@Nullable InitializerParent<?> getParent();
 
 	@Override
 	default boolean isEmbeddableInitializer() {
@@ -46,13 +37,10 @@ public interface EmbeddableInitializer extends FetchParentAccess {
 	}
 
 	@Override
-	default EmbeddableInitializer asEmbeddableInitializer() {
+	default EmbeddableInitializer<?> asEmbeddableInitializer() {
 		return this;
 	}
 
 	void resolveState(RowProcessingState rowProcessingState);
 
-	default Object getDiscriminatorValue() {
-		return null;
-	}
 }

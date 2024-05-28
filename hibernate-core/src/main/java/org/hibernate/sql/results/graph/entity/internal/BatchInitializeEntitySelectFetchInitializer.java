@@ -15,9 +15,9 @@ import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -25,69 +25,57 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * Loads entities from the persistence context or creates proxies if not found there,
  * and initializes all proxies in a batch.
  */
-public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
+public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchInitializeEntitySelectFetchInitializer.BatchInitializeEntitySelectFetchInitializerData> {
 
-	private final Set<EntityKey> toBatchLoad = new HashSet<>();
+	public static class BatchInitializeEntitySelectFetchInitializerData extends AbstractBatchEntitySelectFetchInitializerData {
+		private final Set<EntityKey> toBatchLoad = new HashSet<>();
 
-	/**
-	 * @deprecated Use {@link #BatchInitializeEntitySelectFetchInitializer(InitializerParent, ToOneAttributeMapping, NavigablePath, EntityPersister, DomainResultAssembler)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public BatchInitializeEntitySelectFetchInitializer(
-			FetchParentAccess parentAccess,
-			ToOneAttributeMapping referencedModelPart,
-			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		this(
-				(InitializerParent) parentAccess,
-				referencedModelPart,
-				fetchedNavigable,
-				concreteDescriptor,
-				identifierAssembler
-		);
+		public BatchInitializeEntitySelectFetchInitializerData(RowProcessingState rowProcessingState) {
+			super( rowProcessingState );
+		}
 	}
 
 	public BatchInitializeEntitySelectFetchInitializer(
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
+			DomainResult<?> keyResult,
+			AssemblerCreationState creationState) {
+		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, creationState );
 	}
 
 	@Override
-	protected void registerResolutionListener() {
+	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
+		return new BatchInitializeEntitySelectFetchInitializerData( rowProcessingState );
+	}
+
+	@Override
+	protected void registerResolutionListener(BatchInitializeEntitySelectFetchInitializerData data) {
 		// No-op, because we resolve a proxy
 	}
 
 	@Override
-	protected void registerToBatchFetchQueue(RowProcessingState rowProcessingState) {
-		super.registerToBatchFetchQueue( rowProcessingState );
+	protected void registerToBatchFetchQueue(BatchInitializeEntitySelectFetchInitializerData data) {
+		super.registerToBatchFetchQueue( data );
 		// Force creating a proxy
-		initializedEntityInstance = rowProcessingState.getSession().internalLoad(
-				entityKey.getEntityName(),
-				entityKey.getIdentifier(),
+		data.setInstance( data.getRowProcessingState().getSession().internalLoad(
+				data.entityKey.getEntityName(),
+				data.entityKey.getIdentifier(),
 				false,
 				false
-		);
-		toBatchLoad.add( entityKey );
+		) );
+		data.toBatchLoad.add( data.entityKey );
 	}
 
 	@Override
-	public boolean isEntityInitialized() {
-		return state == State.INITIALIZED;
-	}
-
-	@Override
-	public void endLoading(ExecutionContext executionContext) {
-		super.endLoading( executionContext );
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		for ( EntityKey key : toBatchLoad ) {
-			loadInstance( key, referencedModelPart, session );
+	public void endLoading(BatchInitializeEntitySelectFetchInitializerData data) {
+		super.endLoading( data );
+		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
+		for ( EntityKey key : data.toBatchLoad ) {
+			loadInstance( key, toOneMapping, session );
 		}
-		toBatchLoad.clear();
+		data.toBatchLoad.clear();
 	}
 
 	@Override

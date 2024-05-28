@@ -11,44 +11,30 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.InitializerParent;
 
 /**
  * @author Steve Ebersole
  */
-public class DelayedCollectionInitializer extends AbstractCollectionInitializer {
-
-	/**
-	 * @deprecated Use {@link #DelayedCollectionInitializer(NavigablePath, PluralAttributeMapping, InitializerParent, DomainResult, AssemblerCreationState)}  instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public DelayedCollectionInitializer(
-			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedMapping,
-			FetchParentAccess parentAccess,
-			DomainResult<?> collectionKeyResult,
-			AssemblerCreationState creationState) {
-		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResult, false, creationState );
-	}
+public class DelayedCollectionInitializer extends AbstractCollectionInitializer<AbstractCollectionInitializer.CollectionInitializerData> {
 
 	public DelayedCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			DomainResult<?> collectionKeyResult,
 			AssemblerCreationState creationState) {
 		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, creationState );
 	}
 
 	@Override
-	public void resolveInstance() {
-		resolveInstance( rowProcessingState, false );
+	public void resolveInstance(CollectionInitializerData data) {
+		resolveInstance( data, false );
 	}
 
 	@Override
-	public void resolveInstance(Object instance) {
-		resolveInstance( instance, rowProcessingState, false );
+	public void resolveInstance(Object instance, CollectionInitializerData data) {
+		resolveInstance( instance, data, false );
 	}
 
 	@Override

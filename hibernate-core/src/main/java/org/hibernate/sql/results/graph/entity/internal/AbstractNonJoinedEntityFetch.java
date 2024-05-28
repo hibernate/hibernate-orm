@@ -17,7 +17,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
@@ -143,33 +142,26 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 
 	@Override
 	public DomainResultAssembler<?> createAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return createAssembler( (InitializerParent) parentAccess, creationState );
-	}
-
-	@Override
-	public DomainResultAssembler<?> createAssembler(
-			InitializerParent parent,
-			AssemblerCreationState creationState) {
-		final EntityInitializer entityInitializer = creationState.resolveInitializer( this, parent, this )
+		final EntityInitializer<?> entityInitializer = creationState.resolveInitializer( this, parent, this )
 				.asEntityInitializer();
 		assert entityInitializer != null;
 		return buildEntityAssembler( entityInitializer );
 	}
 
 	@Override
-	public EntityInitializer createInitializer(
+	public EntityInitializer<?> createInitializer(
 			AbstractNonJoinedEntityFetch resultGraphNode,
-			InitializerParent parent,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return resultGraphNode.createInitializer( parent, creationState );
 	}
 
 	@Override
-	public abstract EntityInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState);
+	public abstract EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState);
 
-	protected EntityAssembler buildEntityAssembler(EntityInitializer entityInitializer) {
+	protected EntityAssembler buildEntityAssembler(EntityInitializer<?> entityInitializer) {
 		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 }

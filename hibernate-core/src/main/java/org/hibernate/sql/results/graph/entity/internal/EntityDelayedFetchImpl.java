@@ -14,7 +14,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.InitializerParent;
-import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -46,16 +45,15 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 	}
 
 	@Override
-	public EntityInitializer createInitializer(InitializerParent parent, AssemblerCreationState creationState) {
+	public EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new EntityDelayedFetchInitializer(
 				parent,
 				getNavigablePath(),
 				getEntityValuedModelPart(),
 				isSelectByUniqueKey(),
-				getKeyResult().createResultAssembler( parent, creationState ),
-				getDiscriminatorFetch() != null
-						? (BasicResultAssembler<?>) getDiscriminatorFetch().createResultAssembler( parent, creationState )
-						: null
+				getKeyResult(),
+				getDiscriminatorFetch(),
+				creationState
 		);
 	}
 }

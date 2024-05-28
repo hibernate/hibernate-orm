@@ -69,17 +69,8 @@ public interface Fetch extends DomainResultGraphNode {
 
 	/**
 	 * Create the assembler for this fetch
-	 * @deprecated Use {@link #createAssembler(InitializerParent, AssemblerCreationState)} instead.
 	 */
-	@Deprecated(forRemoval = true)
-	DomainResultAssembler<?> createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState);
-
-	/**
-	 * Create the assembler for this fetch
-	 */
-	default DomainResultAssembler<?> createAssembler(
-			InitializerParent parent,
-			AssemblerCreationState creationState) {
-		return createAssembler( (FetchParentAccess) parent, creationState );
-	}
+	DomainResultAssembler<?> createAssembler(
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState);
 }

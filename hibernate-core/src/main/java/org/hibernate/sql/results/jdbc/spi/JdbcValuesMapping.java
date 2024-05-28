@@ -8,6 +8,8 @@ package org.hibernate.sql.results.jdbc.spi;
 
 import java.util.List;
 
+import org.hibernate.LockMode;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -33,5 +35,7 @@ public interface JdbcValuesMapping {
 
 	List<DomainResult<?>> getDomainResults();
 
-	List<DomainResultAssembler<?>> resolveAssemblers(AssemblerCreationState creationState);
+	JdbcValuesMappingResolution resolveAssemblers(SessionFactoryImplementor sessionFactory);
+
+	LockMode determineDefaultLockMode(String alias, LockMode defaultLockMode);
 }

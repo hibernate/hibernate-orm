@@ -92,7 +92,6 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.InitializerParent;
@@ -1850,13 +1849,6 @@ public class ToOneAttributeMapping
 		@Override
 		public String getResultVariable() {
 			return null;
-		}
-
-		@Override
-		public DomainResultAssembler createResultAssembler(
-				FetchParentAccess parentAccess,
-				AssemblerCreationState creationState) {
-			return createResultAssembler( (InitializerParent) parentAccess, creationState );
 		}
 
 		@Override

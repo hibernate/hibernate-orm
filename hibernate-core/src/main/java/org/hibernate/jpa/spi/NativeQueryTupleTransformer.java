@@ -15,6 +15,11 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Metamodel;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.TypedTupleTransformer;
 import org.hibernate.transform.ResultTransformer;
 
@@ -27,11 +32,32 @@ import static java.util.Locale.ROOT;
  */
 public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, TypedTupleTransformer<Tuple> {
 
+	/**
+	 * @deprecated Use {@link #NativeQueryTupleTransformer(PhysicalNamingStrategy, JdbcEnvironment)} instead.
+	 */
+	@Deprecated
 	public static final NativeQueryTupleTransformer INSTANCE = new NativeQueryTupleTransformer();
+
+	private final PhysicalNamingStrategy physicalNamingStrategy;
+
+	private final JdbcEnvironment jdbcEnvironment;
+
+	/**
+	 * @deprecated Use {@link #NativeQueryTupleTransformer(PhysicalNamingStrategy, JdbcEnvironment)} instead.
+	 */
+	@Deprecated
+	public NativeQueryTupleTransformer() {
+		this( null, null );
+	}
+
+	public NativeQueryTupleTransformer(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment) {
+		this.physicalNamingStrategy = physicalNamingStrategy;
+		this.jdbcEnvironment = jdbcEnvironment;
+	}
 
 	@Override
 	public Tuple transformTuple(Object[] tuple, String[] aliases) {
-		return new NativeTupleImpl( tuple, aliases );
+		return new NativeTupleImpl( physicalNamingStrategy, jdbcEnvironment, tuple, aliases );
 	}
 
 	@Override
@@ -63,6 +89,10 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 
 	private static class NativeTupleImpl implements Tuple {
 
+		private final PhysicalNamingStrategy physicalNamingStrategy;
+
+		private final JdbcEnvironment jdbcEnvironment;
+
 		private final Object[] tuple;
 
 		private final int size;
@@ -70,7 +100,9 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 		private final Map<String, Object> aliasToValue = new LinkedHashMap<>();
 		private final Map<String, String> aliasReferences = new LinkedHashMap<>();
 
-		public NativeTupleImpl(Object[] tuple, String[] aliases) {
+		public NativeTupleImpl(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment, Object[] tuple, String[] aliases) {
+			this.physicalNamingStrategy = physicalNamingStrategy;
+			this.jdbcEnvironment = jdbcEnvironment;
 			if ( tuple == null ) {
 				throw new HibernateException( "Tuple must not be null" );
 			}
@@ -104,6 +136,17 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 			if ( aliasReference != null && aliasToValue.containsKey( aliasReference ) ) {
 				return aliasToValue.get( aliasReference );
 			}
+
+			if ( physicalNamingStrategy != null ) {
+				final String transformedAlias = physicalNamingStrategy.toPhysicalColumnName( Identifier.toIdentifier(alias), jdbcEnvironment ).getText();
+				if ( !alias.equalsIgnoreCase(transformedAlias) ) {
+					final String transformedAliasReference = aliasReferences.get( transformedAlias.toLowerCase(ROOT) );
+					if ( transformedAliasReference != null && aliasToValue.containsKey( transformedAliasReference ) ) {
+						return aliasToValue.get( transformedAliasReference );
+					}
+				}
+			}
+
 			throw new IllegalArgumentException( "Unknown alias [" + alias + "]" );
 		}
 
